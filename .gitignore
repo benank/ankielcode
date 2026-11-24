@@ -50,4 +50,12 @@ node_modules/
 # pnpm content-addressable store; never belongs in the repo.
 .pnpm-store/
 
+# Cloudflare Wrangler / Miniflare local state, caches, and secrets.
+.wrangler/
+.mf/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+wrangler.local.*
+
 /packages/ssh/.ssh-launcher-test-*/
