@@ -8,13 +8,6 @@
 
 <p align="center">All your agents in one spot.</p>
 
-<p align="center">
-  <a href="https://code.ankiel.com"><strong>Download</strong></a> ·
-  <a href="https://app.code.ankiel.com">Web</a> ·
-  <a href="./docs/README.md">Docs</a> ·
-  <a href="https://github.com/benank/ankielcode/issues">Issues</a>
-</p>
-
 Use Claude Code, Codex, and every other coding harness in a single interface. Free and open source with self hosted sync for your phone. You run the server, so your threads, code, and credentials stay on hardware you control.
 
 It works with Claude Code, Codex, Cursor, OpenCode, Grok Build, Antigravity, Kiro, Pi, Muse Code, fx, and any [ACP](./docs/user/providers-acp.md) agent. If an agent is set up on your computer, Ankiel Code can control it.
