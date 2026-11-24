@@ -141,9 +141,10 @@ describe("static site & SEO assets", () => {
     assert.match(html, /name="twitter:card" content="summary_large_image"/);
     assert.match(html, /application\/ld\+json/);
     assert.match(html, /All your agents<br\s*\/>in one spot\./);
-    assert.match(html, />Download for macOS<\/a>/);
-    assert.match(html, />Download for Windows<\/a>/);
-    assert.match(html, />GitHub<\/a>/);
+    assert.match(html, />Download for macOS<\/a\s*>/);
+    assert.match(html, />Download for Windows<\/a\s*>/);
+    assert.match(html, />GitHub<\/a\s*>/);
+    assert.equal((html.match(/target="_blank"/g) ?? []).length, 3);
     assert.doesNotMatch(html, /Ankiel\s*\|/i);
     assert.doesNotMatch(html, /SHA256SUMS/i);
   });
