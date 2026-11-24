@@ -45,9 +45,10 @@ export const AuthFilesystemWriteScope = "filesystem:write" as const;
 const AuthReviewWriteScope = "review:write" as const;
 export const AuthAccessReadScope = "access:read" as const;
 export const AuthAccessWriteScope = "access:write" as const;
-export const AuthRelayReadScope = "relay:read" as const;
-export const AuthRelayWriteScope = "relay:write" as const;
-export const AuthRelayConfigureScope = "relay:configure" as const;
+/** Retained for decoding existing credentials; grants no current RPC access. */
+const AuthRelayReadScope = "relay:read" as const;
+const AuthRelayWriteScope = "relay:write" as const;
+const AuthRelayConfigureScope = "relay:configure" as const;
 export const AuthEnvironmentScope = Schema.Literals([
   AuthOrchestrationReadScope,
   AuthOrchestrationOperateScope,
@@ -73,7 +74,13 @@ export const AuthEnvironmentScopes = Schema.Array(AuthEnvironmentScope);
 export type AuthEnvironmentScopes = typeof AuthEnvironmentScopes.Type;
 
 export const AuthGrantScope = Schema.Literals(
-  AuthEnvironmentScope.literals.filter((scope) => scope !== AuthReviewWriteScope),
+  AuthEnvironmentScope.literals.filter(
+    (scope) =>
+      scope !== AuthReviewWriteScope &&
+      scope !== AuthRelayReadScope &&
+      scope !== AuthRelayWriteScope &&
+      scope !== AuthRelayConfigureScope,
+  ),
 );
 export type AuthGrantScope = typeof AuthGrantScope.Type;
 export const AuthGrantScopes = Schema.Array(AuthGrantScope);
@@ -152,7 +159,7 @@ export function sessionHasLegacyPermissions(session: SessionGrantInput): boolean
   );
 }
 
-// Shell and full-access agent scopes already confer access and relay authority.
+// Shell and full-access agent scopes already confer access authority.
 export const AuthStandardClientScopes = [
   AuthOrchestrationReadScope,
   AuthOrchestrationOperateScope,
@@ -166,15 +173,8 @@ export const AuthStandardClientScopes = [
   AuthSourceControlWriteScope,
   AuthFilesystemReadScope,
   AuthFilesystemWriteScope,
-  AuthRelayReadScope,
   AuthAccessReadScope,
   AuthAccessWriteScope,
-  AuthRelayWriteScope,
-] as const;
-
-export const AuthAdministrativeClientScopes = [
-  ...AuthStandardClientScopes,
-  AuthRelayConfigureScope,
 ] as const;
 
 export const AuthTokenExchangeGrantType =
@@ -334,21 +334,6 @@ export const AuthPairingCredentialResult = Schema.Struct({
 });
 export type AuthPairingCredentialResult = typeof AuthPairingCredentialResult.Type;
 
-const BASE64URL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-
-/**
- * A short code both sides show for a T3 Connect device, read from its proof key thumbprint.
- * The waiting device and the approver compare it so an approval lands on the device in hand.
- */
-export function connectDeviceVerificationCode(proofKeyThumbprint: string): string {
-  let code = "";
-  for (const character of proofKeyThumbprint.slice(0, 8)) {
-    const value = Math.max(0, BASE64URL_ALPHABET.indexOf(character));
-    code += PAIRING_CODE_ALPHABET[value % PAIRING_CODE_ALPHABET.length]!;
-  }
-  return `${code.slice(0, 4)}-${code.slice(4)}`;
-}
-
 export const AuthClientMetadata = Schema.Struct({
   label: Schema.optionalKey(TrimmedNonEmptyString),
   ipAddress: Schema.optionalKey(TrimmedNonEmptyString),
@@ -359,14 +344,6 @@ export const AuthClientMetadata = Schema.Struct({
 });
 export type AuthClientMetadata = typeof AuthClientMetadata.Type;
 
-/** A T3 Connect device waiting for someone on this environment to approve it. */
-export const AuthConnectDeviceRequest = Schema.Struct({
-  verificationCode: TrimmedNonEmptyString,
-  /** What the device said about itself when it first asked. Absent until it does. */
-  client: Schema.optionalKey(AuthClientMetadata),
-});
-export type AuthConnectDeviceRequest = typeof AuthConnectDeviceRequest.Type;
-
 export const AuthPairingLink = Schema.Struct({
   id: TrimmedNonEmptyString,
   ...authScopeResponseFields,
@@ -374,19 +351,8 @@ export const AuthPairingLink = Schema.Struct({
   label: Schema.optionalKey(TrimmedNonEmptyString),
   createdAt: Schema.DateTimeUtc,
   expiresAt: Schema.DateTimeUtc,
-  /** Set while a T3 Connect device waits for approval. Older servers never send it. */
-  connectDeviceRequest: Schema.optionalKey(AuthConnectDeviceRequest),
 });
 export type AuthPairingLink = typeof AuthPairingLink.Type;
-
-/** A T3 Connect device key this environment trusts to connect without asking again. */
-export const AuthConnectDevice = Schema.Struct({
-  proofKeyThumbprint: TrimmedNonEmptyString,
-  verificationCode: TrimmedNonEmptyString,
-  client: Schema.optionalKey(AuthClientMetadata),
-  approvedAt: Schema.DateTimeUtc,
-});
-export type AuthConnectDevice = typeof AuthConnectDevice.Type;
 
 export const AuthClientSession = Schema.Struct({
   sessionId: AuthSessionId,
@@ -405,8 +371,6 @@ export type AuthClientSession = typeof AuthClientSession.Type;
 export const AuthAccessSnapshot = Schema.Struct({
   pairingLinks: Schema.Array(AuthPairingLink),
   clientSessions: Schema.Array(AuthClientSession),
-  /** Older servers omit it; they have no device approval. */
-  connectDevices: Schema.optionalKey(Schema.Array(AuthConnectDevice)),
 });
 export type AuthAccessSnapshot = typeof AuthAccessSnapshot.Type;
 
@@ -490,26 +454,6 @@ export const AuthRevokeClientSessionInput = Schema.Struct({
   sessionId: AuthSessionId,
 });
 export type AuthRevokeClientSessionInput = typeof AuthRevokeClientSessionInput.Type;
-
-export const AuthApproveConnectDeviceInput = Schema.Struct({
-  pairingLinkId: TrimmedNonEmptyString,
-});
-export type AuthApproveConnectDeviceInput = typeof AuthApproveConnectDeviceInput.Type;
-
-export const AuthApproveConnectDeviceResult = Schema.Struct({
-  approved: Schema.Boolean,
-});
-export type AuthApproveConnectDeviceResult = typeof AuthApproveConnectDeviceResult.Type;
-
-export const AuthRevokeConnectDeviceInput = Schema.Struct({
-  proofKeyThumbprint: TrimmedNonEmptyString,
-});
-export type AuthRevokeConnectDeviceInput = typeof AuthRevokeConnectDeviceInput.Type;
-
-export const AuthRevokeConnectDeviceResult = Schema.Struct({
-  revoked: Schema.Boolean,
-});
-export type AuthRevokeConnectDeviceResult = typeof AuthRevokeConnectDeviceResult.Type;
 
 const pairingCredentialFields = {
   label: Schema.optionalKey(TrimmedNonEmptyString),

@@ -4,7 +4,7 @@ import * as NodeCrypto from "node:crypto";
 
 import { vi } from "vite-plus/test";
 import { describe, expect, it } from "@effect/vitest";
-import { DpopProof } from "@t3tools/client-runtime/relay";
+import * as DpopProof from "@t3tools/client-runtime/dpop";
 import { verifyDpopProof } from "@t3tools/shared/dpop";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -120,11 +120,11 @@ describe("mobile DPoP", () => {
     }),
   );
 
-  it.effect("signs proofs that the relay's verifier accepts", () =>
+  it.effect("signs proofs that the server's verifier accepts", () =>
     Effect.gen(function* () {
       secureStore.clear();
       const key = yield* loadOrCreateProofKey();
-      const url = "https://relay.t3.codes/v1/environments";
+      const url = "https://server.example.test/v1/environments";
       const proof = yield* DpopProof.createProof({
         method: "GET",
         url,

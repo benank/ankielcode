@@ -10,7 +10,6 @@ import * as Admission from "./Admission.ts";
 import * as Cache from "./Cache.ts";
 import * as Cleanup from "./Cleanup.ts";
 import * as NativeClients from "./NativeClients.ts";
-import * as Savings from "./Savings.ts";
 import type { ProtocolBindings } from "./protocolTypes.ts";
 import * as Resources from "./resources.ts";
 
@@ -25,7 +24,6 @@ export const layer = Worker.make(
     })),
   ),
   Effect.gen(function* () {
-    const savings = yield* Cloudflare.D1.QueryDatabase(yield* Resources.Savings);
     const database = yield* Cloudflare.D1.QueryDatabase(yield* Resources.Index);
     const artifacts = yield* Cloudflare.R2.ReadWriteBucket(yield* Resources.Artifacts);
     const nativeClients = yield* Cloudflare.R2.ReadWriteBucket(yield* Resources.NativeClients);
@@ -67,25 +65,14 @@ export const layer = Worker.make(
       ),
     );
     const admission = yield* Admission.Admission.pipe(Effect.provide(Admission.layer));
-    const savingsLayer = Savings.layer.pipe(
-      Layer.provide(Layer.effect(Savings.Database, savings.raw)),
-    );
     const runtime = Cache.layer.pipe(
       Layer.provide([
         Layer.succeed(Admission.Admission, admission),
         Layer.effect(Cache.Bindings, bindings),
-        savingsLayer,
       ]),
     );
     yield* Cloudflare.Workers.cron("* * * * *", () =>
       Cleanup.run().pipe(Effect.provide(runtime), Effect.orDie),
-    );
-    yield* Cloudflare.Workers.cron("0 * * * *", () =>
-      Savings.Savings.pipe(
-        Effect.flatMap((savings) => savings.cleanup.pipe(Effect.andThen(savings.emitTotals()))),
-        Effect.provide(savingsLayer),
-        Effect.orDie,
-      ),
     );
     return {
       fetch: Effect.gen(function* () {

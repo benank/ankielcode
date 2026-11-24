@@ -10,7 +10,7 @@ import { msg } from "gt-react-native";
 
 import { m } from "../../i18n/messages";
 import * as SecureStore from "expo-secure-store";
-import { DpopProof } from "@t3tools/client-runtime/relay";
+import * as DpopProof from "@t3tools/client-runtime/dpop";
 import { DpopPublicJwk } from "@t3tools/shared/dpopCommon";
 import * as Layer from "effect/Layer";
 

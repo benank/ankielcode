@@ -35,7 +35,7 @@ import { type HandoffTimelineRun } from "./V2LifecycleRow";
 
 /**
  * Where an expanded row reads an item's detail and a command's output. The owner's rows read them
- * from the environment; the guest page reads them through its own routes.
+ * from the environment; a linked environment's thread reads them through its own routes.
  */
 export interface TurnItemSource {
   readonly detail: TurnItemDetailSource;
@@ -54,7 +54,7 @@ export interface TimelineRowSharedState {
     | ((requestId: RuntimeRequestId, decision: ProviderApprovalDecision) => Promise<unknown>)
     | undefined;
   citationRequest: AssistantCitationTarget | null;
-  /** Absent hides "Reply", as in the guest view. */
+  /** Absent hides "Reply", as in a linked thread. */
   onReplyToResponse: ((response: ResponseContextRecord) => boolean) | undefined;
   listRef: React.RefObject<LegendListRef | null>;
   timestampFormat: TimestampFormat;
@@ -76,8 +76,8 @@ export interface TimelineRowSharedState {
   displayThreadKey?: string;
   onOpenToolDiff: ((target: ToolCallDiffTarget) => void) | undefined;
   /**
-   * Draws a published HTML visual. Unset, the row loads it from the environment; the guest page
-   * loads it through its own route.
+   * Draws a published HTML visual. Unset, the row loads it from the environment; a linked
+   * thread loads it through its own route.
    */
   renderHtmlRender: ((row: Extract<TimelineRow, { kind: "html-render" }>) => ReactNode) | undefined;
   /** Unset, expanded rows read detail and command output from the environment. */
@@ -89,7 +89,7 @@ export interface TimelineRowSharedState {
     intent?: SideThreadOpenIntent,
   ) => void;
   workflowOpening: WorkflowOpening | null;
-  /** Absent hides "Fork from this response", as in the guest view. */
+  /** Absent hides "Fork from this response", as in a linked thread. */
   onForkFromRun:
     | ((input: { readonly sourceThreadId: ThreadId; readonly runId: RunId }) => Promise<void>)
     | undefined;

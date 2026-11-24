@@ -1,4 +1,4 @@
-import { readHostedPairingRequest } from "@t3tools/shared/remote";
+import { extractRelayBasePath, readHostedPairingRequest } from "@t3tools/shared/remote";
 import * as Schema from "effect/Schema";
 import { msg } from "gt-react-native";
 
@@ -68,7 +68,7 @@ export function parsePairingUrl(url: string): { host: string; code: string } {
 
     parsed.hash = "";
     parsed.search = "";
-    parsed.pathname = "/";
+    parsed.pathname = extractRelayBasePath(parsed.pathname);
     return { host: parsed.toString().replace(/\/$/, ""), code };
   } catch {
     return { host: trimmed, code: "" };

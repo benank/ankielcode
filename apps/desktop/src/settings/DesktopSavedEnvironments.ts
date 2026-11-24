@@ -20,6 +20,7 @@ interface PersistedSavedEnvironmentStorageRecord extends Omit<
   "desktopSsh"
 > {
   readonly desktopSsh?: PersistedSavedEnvironmentDesktopSsh;
+  readonly relayManaged?: { readonly relayUrl: string };
   readonly encryptedBearerToken?: string;
 }
 
@@ -48,6 +49,7 @@ const PersistedSavedEnvironmentStorageRecordSchema = Schema.Struct({
   createdAt: Schema.String,
   lastConnectedAt: Schema.NullOr(Schema.String),
   desktopSsh: Schema.optionalKey(DesktopSshTargetSchema),
+  // Legacy T3 Connect records. Their tunnel hosts no longer exist, so they are dropped on read.
   relayManaged: Schema.optionalKey(Schema.Struct({ relayUrl: Schema.String })),
   encryptedBearerToken: Schema.optionalKey(Schema.String),
 });
@@ -158,7 +160,6 @@ function toPersistedSavedEnvironmentRecord(
   return {
     ...nextRecord,
     ...(record.desktopSsh ? { desktopSsh: record.desktopSsh } : {}),
-    ...(record.relayManaged ? { relayManaged: record.relayManaged } : {}),
   };
 }
 
@@ -167,7 +168,7 @@ function normalizeSavedEnvironmentRegistryDocument(
 ): SavedEnvironmentRegistryDocument {
   return {
     version: document.version ?? 1,
-    records: document.records ?? [],
+    records: (document.records ?? []).filter((record) => record.relayManaged === undefined),
   };
 }
 

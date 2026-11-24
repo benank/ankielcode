@@ -279,7 +279,7 @@ export const keepLinkedThreadView = (
 
 /**
  * Follows a linked environment's thread for as long as something consumes the result. The thread
- * is built from the same stream items and with the same reducer as a guest page's, and older
+ * is built from the same stream items and with the same reducer as the owner's, and older
  * turns load through the same cursor. A linked environment that stops answering is asked again
  * after a wait, with what was read kept; any other failure ends the stream.
  */

@@ -261,6 +261,19 @@ function rowToApplicationStoredEvent(
 
 const isKnownProjectEventType = Schema.is(ProjectEventType);
 
+// Event types of removed features stay in existing databases; every reader drops them.
+const REMOVED_V2_EVENT_TYPES: ReadonlySet<string> = new Set(["thread.guest-share-updated"]);
+
+const keepNonRemovedEventTypeRow = (row: ApplicationEventRow) =>
+  row.aggregate_kind === "project" ||
+  (!REMOVED_V2_EVENT_TYPES.has(row.event_type) &&
+    // Turn-item events of the removed agent feedback cards no longer decode.
+    !(
+      row.event_type === "turn-item.updated" &&
+      typeof row.payload_json === "string" &&
+      row.payload_json.includes('"type":"feedback_request"')
+    ));
+
 const keepKnownEventTypeRow = (row: ApplicationEventRow) =>
   (
     row.aggregate_kind === "project"
@@ -595,6 +608,7 @@ const makeEventStore = Effect.gen(function* () {
     ).pipe(
       // Query the next page on the reader while this one decodes.
       Stream.bufferArray({ capacity: 1 }),
+      Stream.filter(keepNonRemovedEventTypeRow),
       input?.skipUnknownEventTypes === true ? Stream.filterEffect(keepKnownEventTypeRow) : identity,
       Stream.mapEffect((row) =>
         rowToV2StoredEvent(row).pipe(
@@ -733,6 +747,7 @@ const makeEventStore = Effect.gen(function* () {
     ).pipe(
       // Query the next page on the reader while this one decodes.
       Stream.bufferArray({ capacity: 1 }),
+      Stream.filter(keepNonRemovedEventTypeRow),
       input.skipUnknownEventTypes === true ? Stream.filterEffect(keepKnownEventTypeRow) : identity,
       Stream.mapEffect((row) =>
         rowToApplicationStoredEvent(row).pipe(

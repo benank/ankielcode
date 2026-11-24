@@ -58,4 +58,14 @@ describe("parsePairingUrl", () => {
       code: "pairing-token",
     });
   });
+
+  it("preserves /h/<hostId> relay paths when scanning workers.dev QR codes", () => {
+    const hostId = "abcdefghijklmnopqrstuvwxyz";
+    expect(
+      parsePairingUrl(`https://ankiel-relay.me.workers.dev/h/${hostId}/#token=pairing-token`),
+    ).toEqual({
+      host: `https://ankiel-relay.me.workers.dev/h/${hostId}`,
+      code: "pairing-token",
+    });
+  });
 });

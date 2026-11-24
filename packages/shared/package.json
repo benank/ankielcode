@@ -55,10 +55,6 @@
       "types": "./src/projectFavicon.ts",
       "import": "./src/projectFavicon.ts"
     },
-    "./mobileSourceMaps": {
-      "types": "./src/mobileSourceMaps.ts",
-      "import": "./src/mobileSourceMaps.ts"
-    },
     "./model": {
       "types": "./src/model.ts",
       "import": "./src/model.ts"
@@ -227,22 +223,6 @@
       "types": "./src/dpopCommon.ts",
       "import": "./src/dpopCommon.ts"
     },
-    "./telemetryId": {
-      "types": "./src/telemetryId.ts",
-      "import": "./src/telemetryId.ts"
-    },
-    "./relayAuth": {
-      "types": "./src/relayAuth.ts",
-      "import": "./src/relayAuth.ts"
-    },
-    "./relayUrl": {
-      "types": "./src/relayUrl.ts",
-      "import": "./src/relayUrl.ts"
-    },
-    "./relayJwt": {
-      "types": "./src/relayJwt.ts",
-      "import": "./src/relayJwt.ts"
-    },
     "./oauthScope": {
       "types": "./src/oauthScope.ts",
       "import": "./src/oauthScope.ts"
@@ -258,10 +238,6 @@
     "./cliArgs": {
       "types": "./src/cliArgs.ts",
       "import": "./src/cliArgs.ts"
-    },
-    "./connectAuth": {
-      "types": "./src/connectAuth.ts",
-      "import": "./src/connectAuth.ts"
     },
     "./symlink": {
       "types": "./src/symlink.ts",
@@ -334,14 +310,6 @@
     "./terminalLabels": {
       "types": "./src/terminalLabels.ts",
       "import": "./src/terminalLabels.ts"
-    },
-    "./relayClient": {
-      "types": "./src/relayClient.ts",
-      "import": "./src/relayClient.ts"
-    },
-    "./relayTracing": {
-      "types": "./src/relayTracing.ts",
-      "import": "./src/relayTracing.ts"
     },
     "./preview": {
       "types": "./src/preview.ts",
@@ -682,6 +650,10 @@
     "./assistantInsights": {
       "types": "./src/assistantInsights.ts",
       "import": "./src/assistantInsights.ts"
+    },
+    "./hostedApp": {
+      "types": "./src/hostedApp.ts",
+      "import": "./src/hostedApp.ts"
     }
   },
   "scripts": {

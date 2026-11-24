@@ -534,7 +534,7 @@ describe("pull request list answers across a reload", () => {
       Atom.make(
         AsyncResult.failure(
           Cause.fail(
-            new Error("Relay could not reach the environment endpoint (endpoint_request_failed)."),
+            new Error("Could not reach the environment endpoint (endpoint_request_failed)."),
           ),
         ),
       ),
@@ -548,7 +548,7 @@ describe("pull request list answers across a reload", () => {
     expect(view.data?.entries.map((row) => [row.environmentId, row.number])).toEqual([[local, 1]]);
     expect(view.error).toEqual({
       environmentId: remote,
-      message: "Relay could not reach the environment endpoint (endpoint_request_failed).",
+      message: "Could not reach the environment endpoint (endpoint_request_failed).",
     });
   });
 

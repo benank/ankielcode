@@ -2,7 +2,7 @@ import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
 import { m as resolveMessage } from "~/i18n/messages";
 import { managedCapabilityDenial } from "@t3tools/client-runtime/contract-labels";
 import { AUTH_SCOPE_OPTIONS as PAIRING_SCOPE_OPTIONS } from "@t3tools/shared/authScopeOptions";
-import { PlugIcon, PlusIcon, QrCodeIcon } from "lucide-react";
+import { PlusIcon, QrCodeIcon } from "lucide-react";
 import { type ReactNode, memo, useId, useRef, useState } from "react";
 import { T, useGT, useMessages } from "gt-react";
 import {
@@ -10,7 +10,6 @@ import {
   AuthDiagnosticsReadScope,
   AuthOrchestrationReadScope,
   AuthFilesystemReadScope,
-  AuthRelayConfigureScope,
   AuthStandardClientScopes,
   AuthTerminalOperateScope,
   AuthTerminalReadScope,
@@ -63,7 +62,6 @@ import { readEnvironmentScope } from "~/state/session";
 import { useManagedPolicy, usePrimaryManagedPolicy } from "~/state/managedPolicy";
 import { useAtomCommand } from "~/state/use-atom-command";
 import { ManagedControl } from "../ManagedPolicy";
-import { openUseInAnotherApp } from "../mcp/UseInAnotherAppDialog";
 import { ConnectionStatusDot } from "../ConnectionStatusDot";
 import { ITEM_ROW_CLASSNAME, ITEM_ROW_INNER_CLASSNAME } from "./itemRows";
 import {
@@ -621,7 +619,6 @@ export const AuthorizedClientsHeaderAction = memo(function AuthorizedClientsHead
   ]);
   const selectedScopes = pairingScopes.filter((scope) => delegatableScopes.includes(scope));
   const terminalSelected = selectedScopes.includes(AuthTerminalOperateScope);
-  const relayAdminSelected = selectedScopes.includes(AuthRelayConfigureScope);
   const [isCreatingPairingLink, setIsCreatingPairingLink] = useState(false);
 
   const handlePairingDialogOpenChange = (open: boolean) => {
@@ -677,10 +674,6 @@ export const AuthorizedClientsHeaderAction = memo(function AuthorizedClientsHead
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
-      <Button size="xs" variant="outline" onClick={() => openUseInAnotherApp(environmentId)}>
-        <PlugIcon className="size-3" />
-        <T>Use in another app (MCP)</T>
-      </Button>
       <Button
         size="xs"
         variant="destructive-outline"
@@ -805,11 +798,6 @@ export const AuthorizedClientsHeaderAction = memo(function AuthorizedClientsHead
                             {gt(
                               "Terminal commands can read or change files within the server account’s permissions.",
                             )}
-                          </span>
-                        ) : null}
-                        {relayAdminSelected && scope === AuthRelayConfigureScope ? (
-                          <span className="block text-xs text-warning">
-                            {gt("This client can change who can issue pairing credentials.")}
                           </span>
                         ) : null}
                       </span>

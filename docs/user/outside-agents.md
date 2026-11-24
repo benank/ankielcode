@@ -11,15 +11,14 @@ in once, and you choose what it may do.
 Open the command palette (`Cmd/Ctrl+K`) and choose **Use T3 Code in another
 app (MCP)**, or use the button in **Settings → Sharing & access**. Pick the
 app and follow the step for that app. Assistants like
-Poke and Claude run in the cloud, so the wizard first asks you to sign in to T3
-Connect and turn it on for the environment. To reach your other machines through
-the same connection, turn on **Linked environments** in Labs and
+Poke and Claude run in the cloud, so they need an `https` address that reaches
+the environment from the internet. To reach your other machines through the
+same connection, turn on **Linked environments** in Labs and
 [link them](./remote-access.md#link-another-environment).
 
-When the app opens the sign-in page, choose what it may do and approve with your
-T3 Connect account. On an older environment, the wizard asks for the level and
-gives you a code to paste instead. A code works once, for 5 minutes, and
-approves only that level.
+When the app opens the sign-in page, choose what it may do and approve. The
+wizard can also give you a code to paste instead. A code works once, for 5
+minutes, and approves only that level.
 
 For an app that is not listed, choose **Something else…**, add a remote MCP
 server with OAuth in that app, and paste the URL. Apps that require their own
@@ -35,28 +34,24 @@ example:
 https://<environment-address>/mcp
 ```
 
-When T3 Connect serves the environment, the copied URL is its T3 Connect
-address, which agents can reach from anywhere. Otherwise it uses the route this
-device is connected over, so an agent on the same device can reach it.
+The copied URL uses the route this device is connected over, so an agent on
+the same device can reach it.
 
-- **An agent on your own computers** can use `localhost` on the host, T3
-  Connect, or any `https` address, such as
+- **An agent on your own computers** can use `localhost` on the host, or
+  any `https` address, such as
   [Tailscale HTTPS](./remote-access.md#tailscale-https). Signing in sends the
   agent's credentials to the environment, and agents only do that over `https`
   or to `localhost`. A plain-`http` LAN or Tailscale address, like
   `http://100.x.y.z:3773`, lets an agent find the environment but not finish
   signing in.
 - **A hosted agent**, such as ChatGPT or a bot running in the cloud, must reach
-  the environment from the internet. Use the T3 Connect address. A Tailscale
-  address only works from your own tailnet.
+  the environment from the internet, so it needs a public `https` address. A
+  Tailscale address only works from your own tailnet.
 
 ## Approve a sign-in
 
-The first time an agent connects, it opens a sign-in page. When the agent
-reaches the environment through T3 Connect, the page opens on the T3 Code web
-app: sign in with the T3 Connect account the environment is linked to and
-approve there, without a code. Otherwise the page opens on the environment.
-Either page names the agent and where its access goes:
+The first time an agent connects, it opens a sign-in page on the environment.
+The page names the agent and where its access goes:
 
 - For an agent on your computer, approval returns to a `localhost` address on
   the computer that opened the page.
@@ -127,8 +122,8 @@ codex mcp login t3
 Add the environment as a custom MCP app in ChatGPT's apps settings:
 
 1. Create a new app or plugin with a custom MCP server.
-2. Set the server URL to `https://<environment-address>/mcp`, using the T3
-   Connect address.
+2. Set the server URL to `https://<environment-address>/mcp`, using a public
+   `https` address for the environment.
 3. Choose **OAuth** for authentication. ChatGPT discovers the rest; you do not
    need a client ID or secret.
 4. Create the app, then approve the sign-in page that opens.
@@ -141,7 +136,7 @@ Agents without OAuth support cannot connect.
 
 A bot that supports MCP Events (`io.modelcontextprotocol/events`) can learn
 when something happens without reading threads over and over: a turn ended, an
-agent waits on a person, a guest asked something, a watched pull request woke
+agent waits on a person, a watched pull request woke
 its thread. [Workflow runs](workflows.md) are events too: a run started, paused,
 resumed or ended, or waits on a person. A bot can poll, stream, or receive each
 event type by webhook, narrowed to projects and threads or to workflows and

@@ -1,6 +1,5 @@
 import { msg } from "gt-i18n";
 import { translatableDetail } from "../errors/translatable.ts";
-import { withRelayClientTracing } from "@t3tools/shared/relayTracing";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -31,7 +30,6 @@ import {
 } from "./model.ts";
 import * as RpcSession from "../rpc/session.ts";
 import { safeErrorLogAttributes } from "../errors/safeLog.ts";
-import { NETWORK_BLOCKING_HINT } from "../errors/network.ts";
 import * as ConnectionWakeups from "./wakeups.ts";
 import {
   connectionRouteId,
@@ -46,10 +44,6 @@ import {
 const RETRY_BASE_DELAY_MS = 1_000;
 const RETRY_MAX_DELAY_MS = 300_000;
 const SESSION_LOSS_RETRY_DELAY_MS = 250;
-// Someone is approving this device on the host; check back soon rather than climbing the ladder.
-const APPROVAL_PENDING_RETRY_DELAY_MS = 4_000;
-// A request lives 10 minutes; past that nobody is approving, so a forgotten device backs off.
-const APPROVAL_PENDING_FAST_RETRIES = 150;
 // A cold server with a large database can take longer than 15 seconds to
 // answer, and that is not a reason to drop a working connection.
 const CONNECTION_ESTABLISHMENT_TIMEOUT = "15 seconds";
@@ -286,15 +280,10 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
   | ConnectionWakeups.ConnectionWakeups
 > {
   const target = entry.target;
-  const usesRelay = connectionRoutes(entry).some(
-    (route) => route.target._tag === "RelayConnectionTarget",
-  );
   const setupTimeout = msg("{host} did not respond during connection setup.", {
     host: target.label,
   });
-  const setupTimeoutDetail = usesRelay
-    ? translatableDetail(setupTimeout, NETWORK_BLOCKING_HINT)
-    : translatableDetail(setupTimeout);
+  const setupTimeoutDetail = translatableDetail(setupTimeout);
   yield* annotateTarget(target);
 
   const connectivity = yield* Connectivity.Connectivity;
@@ -467,15 +456,6 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
     yield* Queue.offer(signals, next);
   });
 
-  const logManagedRelayAccountChange = Effect.logInfo(
-    "Managed relay account changed; restarting the environment connection.",
-  ).pipe(
-    Effect.annotateLogs({
-      "environment.id": target.environmentId,
-      "environment.label": target.label,
-    }),
-  );
-
   const logUnexpectedFailure = (
     failed: "attempt" | "release" | "loop",
     cause: Cause.Cause<TracedAttemptFailure>,
@@ -522,79 +502,6 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
     );
   });
 
-  // Low-cardinality dimensions for time-to-connected dashboards; the error
-  // detail stays in the span status, never in an attribute.
-  const annotateAttemptOutcome = Effect.fnUntraced(function* (
-    exit: Exit.Exit<ConnectionDriver.EnvironmentConnectionLease, ConnectionAttemptError>,
-  ) {
-    if (Exit.isSuccess(exit)) {
-      const leaseTarget = exit.value.prepared.target;
-      const route = (yield* currentRoutes).find(
-        (candidate) => connectionRouteId(candidate.target) === connectionRouteId(leaseTarget),
-      );
-      return yield* Effect.annotateCurrentSpan({
-        "connection.outcome": "connected",
-        "connection.route": connectionRouteKind(
-          route ?? { target: leaseTarget, profile: Option.none() },
-        ),
-      });
-    }
-    if (Cause.hasInterruptsOnly(exit.cause)) {
-      return yield* Effect.annotateCurrentSpan("connection.outcome", "interrupted");
-    }
-    const failure = exit.cause.reasons.find(Cause.isFailReason)?.error;
-    yield* Effect.annotateCurrentSpan({
-      "connection.outcome": "failed",
-      "connection.failure.tag": failure?._tag ?? "defect",
-      "connection.failure.reason": failure?.reason ?? "defect",
-    });
-  });
-
-  const traceRelayEstablishment = (
-    effect: Effect.Effect<
-      ConnectionDriver.EnvironmentConnectionLease,
-      ConnectionAttemptError,
-      Scope.Scope
-    >,
-    attempt: number,
-    nextGeneration: number,
-    pendingRetry: Option.Option<PendingRetryTrace>,
-  ) => {
-    // The span must end with the ConnectionAttemptError itself: the exporter
-    // can only describe an Error-like failure, and a TracedAttemptFailure
-    // wrapper reached it as "[object Object]". The wrapper is added outside.
-    let attemptSpan = Option.none<Tracer.Span>();
-    const traced = Effect.gen(function* () {
-      attemptSpan = Option.some(yield* Effect.currentSpan.pipe(Effect.orDie));
-      yield* Effect.annotateCurrentSpan({
-        "environment.id": target.environmentId,
-        "environment.target.kind": target._tag,
-        "connection.attempt": attempt,
-        "connection.generation": nextGeneration,
-        "connection.retry.failure_count": Option.match(pendingRetry, {
-          onNone: () => 0,
-          onSome: (retry) => retry.failureCount,
-        }),
-      });
-      return yield* effect.pipe(Effect.onExit(annotateAttemptOutcome));
-    }).pipe(Effect.withSpan("relay.connection.attempt", { root: true }));
-
-    return Option.match(pendingRetry, {
-      onNone: () => traced,
-      onSome: (retry) =>
-        traced.pipe(
-          Effect.linkSpans(retry.previousAttempt, {
-            "connection.retry.delay_ms": retry.delayMs,
-            "connection.retry.reason": retry.reason,
-          }),
-        ),
-    }).pipe(
-      Effect.map((lease) => ({ attemptSpan, lease })),
-      Effect.mapError((error): TracedAttemptFailure => ({ error, attemptSpan })),
-      withRelayClientTracing,
-    );
-  };
-
   const establishTracedConnection = Effect.fnUntraced(function* (
     attempt: number,
     nextGeneration: number,
@@ -602,14 +509,6 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
     pendingRetry: Option.Option<PendingRetryTrace>,
     synchronizedRoutes: Ref.Ref<number>,
   ) {
-    if (usesRelay) {
-      return yield* traceRelayEstablishment(
-        establishConnection(attempt, nextGeneration, lastFailure, synchronizedRoutes),
-        attempt,
-        nextGeneration,
-        pendingRetry,
-      );
-    }
     return yield* establishConnection(
       attempt,
       nextGeneration,
@@ -662,33 +561,18 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
           if (next.reason === "application-active-long") {
             return true;
           }
-          if (next.reason === "credentials-changed" && usesRelay) {
-            yield* logManagedRelayAccountChange;
-            return false;
-          }
           break;
       }
     }
   });
 
-  const isRelayLease = (lease: ConnectionDriver.EnvironmentConnectionLease) =>
-    lease.prepared.target._tag === "RelayConnectionTarget";
-
-  const connectedLeaseEnd = Effect.fnUntraced(function* (
-    next: SupervisorSignal,
-    lease: ConnectionDriver.EnvironmentConnectionLease,
-  ) {
+  const connectedLeaseEnd = Effect.fnUntraced(function* (next: SupervisorSignal) {
     if (next._tag === "DisconnectRequested") {
       return "end" as const;
     }
     if (next._tag === "BetterRouteAvailable") {
       yield* Ref.set(preferredRouteId, Option.some(next.routeId));
       return "reset" as const;
-    }
-    // Only a session over T3 Connect holds the old account's credential.
-    if (next._tag === "Wakeup" && next.reason === "credentials-changed" && isRelayLease(lease)) {
-      yield* logManagedRelayAccountChange;
-      return "end" as const;
     }
     return undefined;
   });
@@ -733,7 +617,7 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
           return undefined;
         }
         // Only loopback and LAN answer within 3 seconds reliably. A tailnet
-        // over DERP, a VPN, or the relay can spike past it on a live socket;
+        // over DERP or a VPN can spike past it on a live socket;
         // a dead one is still caught early by the silent socket check.
         return answersQuickly(routeKind)
           ? QUICK_CONNECTION_PROBE_TIMEOUT
@@ -814,7 +698,7 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
     const routeKind = yield* leaseRouteKind(lease);
     for (;;) {
       const next = yield* takeSignal;
-      const end = yield* connectedLeaseEnd(next, lease);
+      const end = yield* connectedLeaseEnd(next);
       if (end !== undefined) {
         return end === "reset";
       }
@@ -926,7 +810,7 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
           yield* probeEvent.exit;
           break;
         }
-        const endDuringProbe = yield* connectedLeaseEnd(probeEvent.signal, lease);
+        const endDuringProbe = yield* connectedLeaseEnd(probeEvent.signal);
         if (endDuringProbe !== undefined) {
           yield* stopProbe;
           return endDuringProbe === "reset";
@@ -1173,15 +1057,10 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
 
   const run = Effect.fnUntraced(function* () {
     let failureCount = 0;
-    // Approval waits count as attempts but not toward backoff, so a later outage starts low.
-    let backoffFailures = 0;
-    let approvalWaits = 0;
     let latestFailure: ConnectionAttemptError | null = null;
     let pendingRetry = Option.none<PendingRetryTrace>();
     const resetRetryLadder = () => {
       failureCount = 0;
-      backoffFailures = 0;
-      approvalWaits = 0;
       pendingRetry = Option.none();
     };
     let replacing = false;
@@ -1190,8 +1069,6 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
       const retryRequested = yield* Ref.getAndSet(resetRetryState, false);
       if (retryRequested) {
         failureCount = 0;
-        backoffFailures = 0;
-        approvalWaits = 0;
         latestFailure = null;
         pendingRetry = Option.none();
       }
@@ -1290,20 +1167,9 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
       // still counts it, so a host that keeps dropping sessions backs off.
       const firstLoss = outcome.established && failureCount === 0;
       failureCount += 1;
-      if (error.reason === "approval-pending") approvalWaits += 1;
-      const awaitingApproval =
-        error.reason === "approval-pending" && approvalWaits <= APPROVAL_PENDING_FAST_RETRIES;
-      if (!awaitingApproval) backoffFailures += 1;
-      const delayMs = awaitingApproval
-        ? APPROVAL_PENDING_RETRY_DELAY_MS
-        : firstLoss
-          ? Math.round(SESSION_LOSS_RETRY_DELAY_MS * (0.5 + (yield* Random.next) / 2))
-          : error.reason === "approval-pending"
-            ? Math.max(
-                APPROVAL_PENDING_RETRY_DELAY_MS,
-                retryDelayMs(backoffFailures - 1, yield* Random.next),
-              )
-            : retryDelayMs(backoffFailures - 1, yield* Random.next);
+      const delayMs = firstLoss
+        ? Math.round(SESSION_LOSS_RETRY_DELAY_MS * (0.5 + (yield* Random.next) / 2))
+        : retryDelayMs(failureCount - 1, yield* Random.next);
       pendingRetry = Option.map(attemptSpan, (previousAttempt) => ({
         previousAttempt,
         failureCount,

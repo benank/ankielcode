@@ -4,7 +4,6 @@ import {
   EnvironmentHttpApi,
   EnvironmentHttpCommonError,
   type EnvironmentAuthInvalidError,
-  type EnvironmentConnectApprovalPendingError,
   type EnvironmentInternalError,
   type EnvironmentOperationForbiddenError,
   type EnvironmentRequestInvalidError,
@@ -91,7 +90,6 @@ export type RemoteEnvironmentRequestError =
   | EnvironmentOperationForbiddenError
   | EnvironmentResourceNotFoundError
   | EnvironmentInternalError
-  | EnvironmentConnectApprovalPendingError
   | RemoteEnvironmentAuthFetchError
   | RemoteEnvironmentAuthInvalidJsonError
   | RemoteEnvironmentAuthUndeclaredStatusError
@@ -107,7 +105,8 @@ export const layerRemoteHttpClient = (
 
 const remoteApiBaseUrl = (httpBaseUrl: string): string => {
   const url = new URL(httpBaseUrl);
-  url.pathname = "/";
+  const relayPrefix = /^\/h\/([a-z2-7]{26})(?:\/|$)/i.exec(url.pathname);
+  url.pathname = relayPrefix ? `/h/${relayPrefix[1]!.toLowerCase()}/` : "/";
   url.search = "";
   url.hash = "";
   return url.toString();

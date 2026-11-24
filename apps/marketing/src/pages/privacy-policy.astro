@@ -20,7 +20,7 @@ const sections = [
   title="Privacy Policy | T3 Code"
   description="How T3 Tools, Inc. handles information when you use T3 Code, app.t3.codes, and t3.codes."
   heading="T3 Code Privacy Policy"
-  lede="This Privacy Policy describes how T3 Tools, Inc. collects, uses, and shares personal information when you use the T3 Code desktop, mobile, and hosted web applications, visit the t3.codes marketing site, or use the optional T3 Connect service."
+  lede="This Privacy Policy describes how T3 Tools, Inc. collects, uses, and shares personal information when you use the T3 Code desktop, mobile, and hosted web applications, visit the t3.codes marketing site."
   effectiveDate="2026-10-06"
   lastUpdated="2026-10-06"
   sections={sections}
@@ -32,8 +32,7 @@ const sections = [
             This Privacy Policy (the “Policy”) describes how T3 Tools, Inc. (the “Company,” “T3
             Tools,” “we,” or “us”) collects, uses, and shares personal information when you use the T3
             Code desktop and mobile applications, the hosted T3 Code web application located at
-            {" "}<a href="https://app.t3.codes">https://app.t3.codes</a>, or the optional T3 Connect
-            service (together, the “Services”), or visit the T3 Code marketing website located at
+            {" "}<a href="https://app.t3.codes">https://app.t3.codes</a> (together, the “Services”), or visit the T3 Code marketing website located at
             {" "}<a href="https://t3.codes">https://t3.codes</a> (the “Site”). This Policy applies to
             personal information we collect through the Site and the Services, as well as personal
             information you provide to us directly.
@@ -42,7 +41,7 @@ const sections = [
             By using the Site or the Services, you acknowledge the practices described in this
             Policy. If you do not agree with this Policy, please do not use the Site or the Services.
             This Policy does not govern third-party coding agents, artificial-intelligence providers,
-            identity providers, or environments that you choose to connect to T3 Code; those third
+            environments that you choose to connect to T3 Code; those third
             parties process information under their own terms and privacy policies.
           </p>
         </section>
@@ -53,40 +52,17 @@ const sections = [
 
           <p>
             We collect personal information about you in different ways depending on how you use
-            T3 Code and which optional features you enable.
+            T3 Code.
           </p>
 
           <h3>Personal Information From Users of T3 Code</h3>
 
           <p>
-            When you use T3 Code, we may collect the following categories of personal information:
+            T3 Code does not send telemetry, analytics, or crash reports, and does not require an
+            account. When you use T3 Code, we may collect the following categories of personal
+            information:
           </p>
           <ul>
-            <li>
-              <strong>Account information.</strong> If you create or sign in to a T3 account, we
-              receive general identifiers and profile information from our authentication provider
-              and the identity provider you select. This may include your name, email address,
-              profile image, user ID, sign-in method, and authentication credentials or tokens.
-            </li>
-            <li>
-              <strong>Environment and device information.</strong> If you enable T3 Connect, we
-              process information needed to connect and secure your environments and devices,
-              including identifiers, labels you assign, public keys, connection endpoints,
-              credential hashes, connection status, app and operating-system versions, and
-              notification preferences.
-            </li>
-            <li>
-              <strong>Agent activity and notifications.</strong> If you enable notifications or Live
-              Activities, we process push tokens and limited activity information needed to provide
-              those features, such as project and thread titles, model name, status, and activity
-              headline.
-            </li>
-            <li>
-              <strong>Product usage data.</strong> By default, T3 Code sends us anonymous usage
-              data, such as which provider and model a turn used, whether it succeeded, and your app
-              version and operating system. We use it to improve the product. You can turn this off
-              at any time; see “Product Usage Data” under Your Choices below.
-            </li>
             <li>
               <strong>Information you provide to us.</strong> We collect information that you choose
               to provide when you request support, send feedback, or otherwise communicate with us.
@@ -110,7 +86,7 @@ const sections = [
           <h3>Information We Get From Others</h3>
           <p>
             We may receive personal information from service providers that help us operate the
-            Services, such as authentication and identity providers, app stores, device-platform
+            Services, such as app stores, device-platform
             providers, and coding-agent providers you choose to use. We may combine this information
             with information we collect through the Site and the Services.
           </p>
@@ -137,10 +113,6 @@ const sections = [
               attach them to a request you initiate.
             </li>
             <li>
-              <strong>Notifications.</strong> Used only if you enable agent-status notifications or
-              Live Activities.
-            </li>
-            <li>
               <strong>Local network.</strong> Used to discover or connect to T3 Code environments
               accessible from your machine over the network.
             </li>
@@ -155,17 +127,11 @@ const sections = [
             services, we may use personal information for the following purposes:
           </p>
           <ul>
-            <li>To establish and verify your identity and authenticate your account;</li>
-            <li>To link and protect devices and environments and deliver optional notifications;</li>
             <li>To process and fulfill requests you make through the Services;</li>
             <li>To provide customer service and respond to support requests and feedback;</li>
             <li>To communicate with you about the Services and your relationship with us;</li>
             <li>To monitor reliability, prevent abuse, and investigate security incidents;</li>
-            <li>To comply with applicable law and enforce the terms governing the Services; and</li>
-            <li>
-              To analyze and improve T3 Code using product usage data and aggregated,
-              de-identified, or other anonymous operational information.
-            </li>
+            <li>To comply with applicable law and enforce the terms governing the Services.</li>
           </ul>
 
           <h3>Training of AI Models</h3>
@@ -215,26 +181,11 @@ const sections = [
           </p>
           <ul class="provider-list">
             <li>
-              <strong>Clerk</strong> <em>(Clerk, Inc.)</em>.<br />
-              We use Clerk to provide account authentication.<br />
-              You can view Clerk's privacy policy here:{" "}<a href="https://clerk.com/legal/privacy"
-                >https://clerk.com/legal/privacy</a
-              >.
-            </li>
-            <li>
               <strong>Cloudflare</strong> <em>(Cloudflare, Inc.)</em>.<br />
-              We use Cloudflare for networking, T3 Connect infrastructure, and content delivery.<br />
+              We use Cloudflare for networking and content delivery.<br />
               You can view Cloudflare's privacy policy here:{" "}<a
                 href="https://www.cloudflare.com/policies/privacy/"
                 >https://www.cloudflare.com/policies/privacy/</a
-              >.
-            </li>
-            <li>
-              <strong>PlanetScale</strong> <em>(PlanetScale, Inc.)</em>.<br />
-              We use PlanetScale to host the database that supports T3 Connect.<br />
-              You can view PlanetScale's privacy policy here:{" "}<a
-                href="https://planetscale.com/legal/privacy"
-                >https://planetscale.com/legal/privacy</a
               >.
             </li>
             <li>
@@ -246,21 +197,6 @@ const sections = [
               >.
             </li>
             <li>
-              <strong>PostHog</strong> <em>(PostHog, Inc.)</em>.<br />
-              We use PostHog to receive and analyze product usage data.<br />
-              You can view PostHog's privacy policy here:{" "}<a href="https://posthog.com/privacy"
-                >https://posthog.com/privacy</a
-              >.
-            </li>
-            <li>
-              <strong>Axiom</strong> <em>(Axiom, Inc.)</em>.<br />
-              We use Axiom for operational diagnostics that help us maintain and troubleshoot the
-              Services.<br />
-              You can view Axiom's privacy policy here:{" "}<a
-                href="https://axiom.co/docs/legal/privacy">https://axiom.co/docs/legal/privacy</a
-              >.
-            </li>
-            <li>
               <strong>Expo</strong> <em>(650 Industries, Inc.)</em>.<br />
               We use Expo for application updates and related mobile-app services.<br />
               You can view Expo's privacy policy here:{" "}<a href="https://expo.dev/privacy"
@@ -269,16 +205,14 @@ const sections = [
             </li>
             <li>
               <strong>Apple</strong> <em>(Apple Inc.)</em>.<br />
-              We use Apple services for app distribution, optional authentication, and platform
-              notifications.<br />
+              We use Apple services for app distribution.<br />
               You can view Apple's privacy policy here:{" "}<a
                 href="https://www.apple.com/legal/privacy/">https://www.apple.com/legal/privacy/</a
               >.
             </li>
             <li>
               <strong>Google</strong> <em>(Google LLC)</em>.<br />
-              We use Google services for app distribution, optional authentication, and Android
-              notifications.<br />
+              We use Google services for app distribution.<br />
               You can view Google's privacy policy here:{" "}<a
                 href="https://policies.google.com/privacy">https://policies.google.com/privacy</a
               >.
@@ -334,19 +268,11 @@ const sections = [
           <p class="section-number">05</p>
           <h2>Your Choices Regarding Your Personal Information</h2>
 
-          <h3>Account and Connection Choices</h3>
+          <h3>Connection Choices</h3>
           <p>
-            You may use local or direct connections without signing in to a T3 account. You can
-            disconnect environments, sign out, disable optional notifications and Live Activities,
-            and clear local caches from Settings. You can grant or revoke camera, photo, local-network,
-            and notification permissions in your device settings.
-          </p>
-
-          <h3>Product Usage Data</h3>
-          <p>
-            To stop sending product usage data, set the environment variable{" "}
-            <code>T3CODE_TELEMETRY_ENABLED=false</code>{" "}where T3 Code runs, for example in your
-            shell profile, and restart T3 Code.
+            T3 Code does not require an account. You can disconnect environments and clear local
+            caches from Settings. You can grant or revoke camera, photo, and local-network
+            permissions in your device settings.
           </p>
 
           <h3>Cookies and Local Data</h3>
@@ -360,20 +286,17 @@ const sections = [
 
           <h3>Retention and Deletion</h3>
           <p>
-            We retain account, environment-link, device-registration, notification, and security
-            information while your account or the relevant feature is active and for as long as
-            reasonably necessary to provide the Services, protect them from abuse, comply with law,
-            and resolve disputes. Operational diagnostic traces are configured to expire after 30
-            days. Some records may remain longer in backups or where retention is required for
-            security, fraud prevention, or legal compliance.
+            We retain information we receive, such as support correspondence and server logs for the
+            Site, for as long as reasonably necessary to provide the Services, protect them from
+            abuse, comply with law, and resolve disputes. Some records may remain longer in backups
+            or where retention is required for security, fraud prevention, or legal compliance.
           </p>
           <p>
-            To request deletion of your T3 account and associated T3 Connect data, email{" "}<a
+            To request deletion of information we hold about you, email{" "}<a
               href="mailto:privacy@t3.tools">privacy@t3.tools</a
-            >{" "}from the email address associated with your account. We may need to verify your
-            identity. Deleting a T3 account does not delete information held by an environment or
-            coding-agent provider you control; contact those providers or delete that information
-            directly.
+            >. We may need to verify your identity. This does not delete information held by an
+            environment or coding-agent provider you control; contact those providers or delete
+            that information directly.
           </p>
 
           <h3>Your Privacy Rights</h3>
@@ -394,8 +317,7 @@ const sections = [
             administrative, technical, and organizational safeguards designed to protect personal
             information from unauthorized access, use, or disclosure. These safeguards include
             encrypted network transport, scoped and proof-bound access tokens for supported
-            connection flows, protected credential storage, and redaction of authorization headers
-            from relay diagnostics.
+            connection flows, and protected credential storage.
           </p>
           <p>
             No method of transmission over the Internet or method of electronic storage is completely

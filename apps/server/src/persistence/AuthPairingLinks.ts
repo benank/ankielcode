@@ -37,7 +37,7 @@ export const AuthPairingLinkRecord = Schema.Struct({
   expiresAt: Schema.DateTimeUtcFromString,
   consumedAt: Schema.NullOr(Schema.DateTimeUtcFromString),
   revokedAt: Schema.NullOr(Schema.DateTimeUtcFromString),
-  /** Spendable only once `proofKeyThumbprint` is a trusted T3 Connect device. */
+  /** Legacy column from removed device approval; always false for new links. */
   requiresConnectApproval: SqliteFlag,
   connectApproved: SqliteFlag,
   requestedClient: Schema.NullOr(Schema.fromJsonString(AuthClientMetadata)),
@@ -52,7 +52,6 @@ export const CreateAuthPairingLinkInput = Schema.Struct({
   subject: Schema.String,
   label: Schema.NullOr(Schema.String),
   proofKeyThumbprint: Schema.NullOr(Schema.String),
-  requiresConnectApproval: Schema.optionalKey(Schema.Boolean),
   createdAt: Schema.DateTimeUtcFromString,
   expiresAt: Schema.DateTimeUtcFromString,
 });
@@ -92,12 +91,6 @@ export const GetActiveAuthPairingLinkByIdInput = Schema.Struct({
 });
 export type GetActiveAuthPairingLinkByIdInput = typeof GetActiveAuthPairingLinkByIdInput.Type;
 
-export const FindPendingConnectPairingLinkInput = Schema.Struct({
-  proofKeyThumbprint: Schema.String,
-  now: Schema.DateTimeUtcFromString,
-});
-export type FindPendingConnectPairingLinkInput = typeof FindPendingConnectPairingLinkInput.Type;
-
 /**
  * Unspent links bound to `proofKeyThumbprint`, or with `keepProofKeyThumbprint` every other bound
  * one. `includeUnbound` adds the links no key is bound to: pairing and approval codes.
@@ -109,12 +102,6 @@ export const RevokeUnspentByProofKeyInput = Schema.Struct({
   revokedAt: Schema.DateTimeUtcFromString,
 });
 export type RevokeUnspentByProofKeyInput = typeof RevokeUnspentByProofKeyInput.Type;
-
-export const RecordConnectRequestClientInput = Schema.Struct({
-  id: Schema.String,
-  client: Schema.fromJsonString(AuthClientMetadata),
-});
-export type RecordConnectRequestClientInput = typeof RecordConnectRequestClientInput.Type;
 
 const AuthPairingLinkRawDbRow = Schema.Struct({
   id: Schema.String,
@@ -156,14 +143,6 @@ export class AuthPairingLinkRepository extends Context.Service<
     readonly getActiveById: (
       input: GetActiveAuthPairingLinkByIdInput,
     ) => Effect.Effect<Option.Option<AuthPairingLinkRecord>, AuthPairingLinkRepositoryError>;
-    /** The device's open or denied request, so its retries do not stack up or re-prompt. */
-    readonly findPendingConnect: (
-      input: FindPendingConnectPairingLinkInput,
-    ) => Effect.Effect<Option.Option<AuthPairingLinkRecord>, AuthPairingLinkRepositoryError>;
-    /** Keeps the first description a device gave, so it cannot be swapped while someone decides. */
-    readonly recordConnectRequestClient: (
-      input: RecordConnectRequestClientInput,
-    ) => Effect.Effect<boolean, AuthPairingLinkRepositoryError>;
     readonly revokeUnspentByProofKey: (
       input: RevokeUnspentByProofKeyInput,
     ) => Effect.Effect<ReadonlyArray<string>, AuthPairingLinkRepositoryError>;
@@ -201,7 +180,6 @@ export const make = Effect.gen(function* () {
           subject,
           label,
           proof_key_thumbprint,
-          requires_connect_approval,
           created_at,
           expires_at,
           consumed_at,
@@ -215,7 +193,6 @@ export const make = Effect.gen(function* () {
           ${input.subject},
           ${input.label},
           ${input.proofKeyThumbprint},
-          ${input.requiresConnectApproval ? 1 : 0},
           ${input.createdAt},
           ${input.expiresAt},
           NULL,
@@ -405,38 +382,6 @@ export const make = Effect.gen(function* () {
       `,
   });
 
-  const findPendingConnectPairingLinkRow = SqlSchema.findOneOption({
-    Request: FindPendingConnectPairingLinkInput,
-    Result: AuthPairingLinkRawDbRow,
-    execute: ({ proofKeyThumbprint, now }) =>
-      sql`
-        ${selectRow}
-        WHERE proof_key_thumbprint = ${proofKeyThumbprint}
-          AND requires_connect_approval = 1
-          -- A denied request stays the device's answer until it expires, so retries get a
-          -- dead credential back instead of prompting the approver again.
-          AND (revoked_at IS NULL OR connect_denied = 1)
-          AND consumed_at IS NULL
-          AND expires_at > ${now}
-        ORDER BY created_at DESC, id DESC
-        LIMIT 1
-      `,
-  });
-
-  const recordConnectRequestClientRow = SqlSchema.findAll({
-    Request: RecordConnectRequestClientInput,
-    Result: Schema.Struct({ id: Schema.String }),
-    execute: ({ id, client }) =>
-      sql`
-        UPDATE auth_pairing_links
-        SET requested_client_json = ${client}
-        WHERE id = ${id}
-          AND requires_connect_approval = 1
-          AND requested_client_json IS NULL
-        RETURNING id AS "id"
-      `,
-  });
-
   const decodeOptionalRow =
     (operation: string) => (rowOption: Option.Option<typeof AuthPairingLinkRawDbRow.Type>) =>
       Option.match(rowOption, {
@@ -463,37 +408,11 @@ export const make = Effect.gen(function* () {
       Effect.flatMap(decodeOptionalRow("AuthPairingLinkRepository.getActiveById:decodeRow")),
     );
 
-  const findPendingConnect: AuthPairingLinkRepository["Service"]["findPendingConnect"] = (input) =>
-    findPendingConnectPairingLinkRow(input).pipe(
-      NodeSqliteClient.readOnly,
-      Effect.mapError(
-        toPersistenceSqlOrDecodeError(
-          "AuthPairingLinkRepository.findPendingConnect:query",
-          "AuthPairingLinkRepository.findPendingConnect:decodeRow",
-        ),
-      ),
-      Effect.flatMap(decodeOptionalRow("AuthPairingLinkRepository.findPendingConnect:decodeRow")),
-    );
-
-  const recordConnectRequestClient: AuthPairingLinkRepository["Service"]["recordConnectRequestClient"] =
-    (input) =>
-      recordConnectRequestClientRow(input).pipe(
-        Effect.mapError(
-          toPersistenceSqlOrDecodeError(
-            "AuthPairingLinkRepository.recordConnectRequestClient:query",
-            "AuthPairingLinkRepository.recordConnectRequestClient:encodeRequest",
-            { pairingLinkId: input.id },
-          ),
-        ),
-        Effect.map((rows) => rows.length > 0),
-      );
-
   const revokeUnspentByProofKeyRows = SqlSchema.findAll({
     Request: RevokeUnspentByProofKeyInput,
     Result: Schema.Struct({ id: Schema.String }),
     execute: ({ proofKeyThumbprint, keepProofKeyThumbprint, includeUnbound, revokedAt }) =>
       sql`
-        -- Only T3 Connect mints bind a proof key, so bound links are that key's connect credentials.
         UPDATE auth_pairing_links
         SET revoked_at = ${revokedAt}
         WHERE revoked_at IS NULL
@@ -630,8 +549,6 @@ export const make = Effect.gen(function* () {
     revoke,
     getByCredential,
     getActiveById,
-    findPendingConnect,
-    recordConnectRequestClient,
     revokeUnspentByProofKey,
   } satisfies AuthPairingLinkRepository["Service"];
 });

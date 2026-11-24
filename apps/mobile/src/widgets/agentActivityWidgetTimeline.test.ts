@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import type { EnvironmentId, ThreadId } from "@t3tools/contracts";
-import type { RelayAgentActivityAggregateState } from "@t3tools/contracts/relay";
 
 import {
   AGENT_ACTIVITY_WIDGET_STALE_AFTER_MS,
+  type AgentActivityAggregate,
   agentActivityWidgetTimeline,
 } from "./agentActivityWidgetTimeline";
 
 const now = Date.parse("2026-10-18T10:00:00.000Z");
 
-type Row = RelayAgentActivityAggregateState["activities"][number];
+type Row = AgentActivityAggregate["activities"][number];
 
 function row(phase: Row["phase"], status: string): Row {
   return {
@@ -26,7 +26,7 @@ function row(phase: Row["phase"], status: string): Row {
   };
 }
 
-function aggregate(activities: ReadonlyArray<Row>): RelayAgentActivityAggregateState {
+function aggregate(activities: ReadonlyArray<Row>): AgentActivityAggregate {
   return {
     title: "T3 Code",
     subtitle: "Agent work in progress",

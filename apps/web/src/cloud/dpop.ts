@@ -1,6 +1,6 @@
 import { msg } from "gt-react";
 import { m } from "../i18n/messages";
-import { DpopProof } from "@t3tools/client-runtime/relay";
+import { DpopProofError, type DpopProofKey } from "@t3tools/client-runtime/dpop";
 import { computeDpopJwkThumbprint, DpopPublicJwk } from "@t3tools/shared/dpop";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
@@ -157,11 +157,11 @@ export const loadOrCreateProofKey = Effect.fn("dpop.loadOrCreateProofKey")(funct
       signature.sign(privateKey, signingInput).pipe(
         Effect.mapError(
           (cause) =>
-            new DpopProof.DpopProofError({
+            new DpopProofError({
               message: m(msg("Could not sign DPoP proof.")),
               cause,
             }),
         ),
       ),
-  } satisfies DpopProof.DpopProofKey;
+  } satisfies DpopProofKey;
 });

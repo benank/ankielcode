@@ -189,6 +189,43 @@ describe("DesktopSavedEnvironments", () => {
     ),
   );
 
+  it.effect("drops legacy relay-managed records on load", () =>
+    withSavedEnvironments(
+      Effect.gen(function* () {
+        const environment = yield* DesktopEnvironment.DesktopEnvironment;
+        const fileSystem = yield* FileSystem.FileSystem;
+        const savedEnvironments = yield* DesktopSavedEnvironments.DesktopSavedEnvironments;
+        yield* fileSystem.makeDirectory(environment.stateDir, { recursive: true });
+        const base = {
+          label: "Remote environment",
+          httpBaseUrl: "https://remote.example.com/",
+          wsBaseUrl: "wss://remote.example.com/",
+          createdAt: "2026-04-09T00:00:00.000Z",
+          lastConnectedAt: null,
+        };
+        yield* fileSystem.writeFileString(
+          environment.savedEnvironmentRegistryPath,
+          JSON.stringify({
+            version: 1,
+            records: [
+              {
+                ...base,
+                environmentId: "relay-environment",
+                relayManaged: { relayUrl: "https://relay.example.com/" },
+              },
+              { ...base, environmentId: savedRegistryRecord.environmentId },
+            ],
+          }),
+        );
+
+        assert.deepEqual(
+          (yield* savedEnvironments.getRegistry).map((record) => record.environmentId),
+          [savedRegistryRecord.environmentId],
+        );
+      }),
+    ),
+  );
+
   it.effect("reads encrypted saved environment secrets when encryption is available", () =>
     withSavedEnvironments(
       Effect.gen(function* () {

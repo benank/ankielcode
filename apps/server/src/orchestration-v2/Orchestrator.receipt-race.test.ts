@@ -124,7 +124,7 @@ it.effect("a command id reused concurrently for two threads succeeds for only on
     );
     const closeShare = (threadId: ThreadId) =>
       orchestrator.dispatch({
-        type: "thread.guest-share.close",
+        type: "thread.stop",
         commandId: CommandId.make("command:shared-noop"),
         threadId,
       });

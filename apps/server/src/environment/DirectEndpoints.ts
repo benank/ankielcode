@@ -24,6 +24,7 @@ import {
 
 import * as ServerConfig from "../config.ts";
 import * as ServerEnvironment from "./ServerEnvironment.ts";
+import { getActiveRelayPublicUrl } from "../relay/RelayTunnelClient.ts";
 import {
   isLoopbackHost,
   isPrivateNetworkAddress,
@@ -151,6 +152,8 @@ export const make = Effect.gen(function* () {
     ];
     const servedUrl = yield* Ref.get(servedEndpoint);
     if (Option.isSome(servedUrl)) endpoints.push({ kind: "tailnet", httpBaseUrl: servedUrl.value });
+    const relayUrl = getActiveRelayPublicUrl();
+    if (relayUrl !== null) endpoints.push({ kind: "relay", httpBaseUrl: relayUrl });
     return endpoints;
   });
 

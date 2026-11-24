@@ -18,11 +18,10 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const worker = yield* Worker.Worker;
-    const observability = yield* Observability;
+    yield* Observability;
     return {
       url: worker.url,
       workerName: worker.workerName,
-      dashboard: observability.dashboard.uid,
     };
   }).pipe(Effect.provide(Worker.layer), adopt(true)),
 );

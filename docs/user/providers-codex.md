@@ -150,8 +150,8 @@ For a task that requested Chrome, follow [OpenAI's setup guide](https://learn.ch
 then select Chrome in a Codex chat in the ChatGPT desktop app.
 If the task runs on a remote environment, `localhost` in the desktop browser
 refers to your computer. Forward the remote page's port or use a URL reachable
-from your computer before repeating the task. Connecting to T3 Code through a
-relay or tunnel does not by itself expose that page. T3 Code's built-in browser
+from your computer before repeating the task. Connecting to T3 Code remotely
+does not by itself expose that page. T3 Code's built-in browser
 preview uses its own browser session.
 
 ## Use Daybreak

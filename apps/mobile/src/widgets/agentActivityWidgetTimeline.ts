@@ -1,4 +1,3 @@
-import type { RelayAgentActivityAggregateState } from "@t3tools/contracts/relay";
 import { msg } from "gt-react-native";
 
 import { m, type MessageResolver } from "../i18n/messages";
@@ -9,11 +8,12 @@ import type { AgentActivityProps, AgentActivityText } from "./AgentActivity";
 // claiming an agent is still working. Matches the Live Activity's stale date.
 export const AGENT_ACTIVITY_WIDGET_STALE_AFTER_MS = 10 * 60_000;
 
-export type AgentActivityWidgetSource =
-  | { readonly kind: "signed-out" }
-  | { readonly kind: "unavailable" }
-  | { readonly kind: "loading" }
-  | { readonly kind: "snapshot"; readonly aggregate: RelayAgentActivityAggregateState | null };
+export type AgentActivityAggregate = Omit<AgentActivityProps, "text">;
+
+export type AgentActivityWidgetSource = {
+  readonly kind: "snapshot";
+  readonly aggregate: AgentActivityAggregate | null;
+};
 
 function countTable(maxCount: number, format: (count: number) => string) {
   return Object.fromEntries(
@@ -70,18 +70,11 @@ export function agentActivityWidgetTimeline(
   resolve: MessageResolver = m,
 ) {
   const updatedAt = new Date(now).toISOString();
-  if (source.kind !== "snapshot" || !source.aggregate) {
+  if (!source.aggregate) {
     const props: AgentActivityProps = {
       text: agentActivityText(0, resolve),
       title: "T3 Code",
-      subtitle:
-        source.kind === "signed-out"
-          ? resolve(msg("Sign in to {product} to see agents", { product: "T3 Connect" }))
-          : source.kind === "unavailable"
-            ? resolve(msg("Couldn't reach {product}", { product: "T3 Connect" }))
-            : source.kind === "loading"
-              ? resolve(msg("Loading agents…"))
-              : resolve(msg("No active agents")),
+      subtitle: resolve(msg("No active agents")),
       activeCount: 0,
       updatedAt,
       activities: [],

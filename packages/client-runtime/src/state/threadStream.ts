@@ -13,7 +13,7 @@ import {
 
 /**
  * A thread built from its stream alone, for a view with no environment connection of its own to
- * the thread: a guest page, or a linked environment's thread read through the link.
+ * the thread, such as a linked environment's thread read through the link.
  */
 export interface ThreadStreamState {
   /** The thread as the owner's client holds it, built with the same reducer. */

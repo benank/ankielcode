@@ -556,6 +556,67 @@ layer("OrchestrationEventStore", (it) => {
   );
 });
 
+it.effect("replay always skips events of removed guest share and agent feedback features", () =>
+  Effect.gen(function* () {
+    const store = yield* OrchestrationEventStore.OrchestrationEventStore;
+    const sql = yield* SqlClient.SqlClient;
+    const streamId = ThreadId.make("skip-removed:thread");
+    const now = "2026-01-06T00:00:00.000Z";
+    const insertRow = Effect.fnUntraced(function* (
+      version: number,
+      eventType: string,
+      payload: string,
+    ) {
+      const [row] = yield* sql<{ sequence: number }>`
+        INSERT INTO orchestration_events (
+          event_id, aggregate_kind, stream_id, stream_version, event_type,
+          occurred_at, actor_kind, payload_json, metadata_json, application_event_version
+        ) VALUES (
+          ${`${streamId}:${version}`}, 'thread', ${streamId}, ${version}, ${eventType},
+          ${now}, 'server', ${payload}, '{}', 2
+        ) RETURNING sequence
+      `;
+      return row!.sequence;
+    });
+    const baseline = yield* store.latestApplicationSequence;
+    const known = yield* insertRow(
+      0,
+      "provider-session.detached",
+      JSON.stringify({ providerSessionId: "session:known", detachedAt: now }),
+    );
+    yield* insertRow(1, "thread.guest-share-updated", "{}");
+    yield* insertRow(
+      2,
+      "turn-item.updated",
+      JSON.stringify({ id: "item:feedback", type: "feedback_request", feedbackStatus: "pending" }),
+    );
+    const last = yield* insertRow(3, "future.trailing", "{}");
+    const sequences = yield* store
+      .readApplicationEvents({ afterSequence: baseline, throughSequence: last })
+      .pipe(
+        Stream.filter((event) => event.sequence === known),
+        Stream.map((event) => event.sequence),
+        Stream.runCollect,
+        Effect.flip,
+      );
+    // The unknown trailing type still fails without opting in; only the removed ones are skipped.
+    assert.isTrue(isPersistenceDecodeError(sequences));
+    assert.deepEqual(
+      yield* store
+        .readApplicationEvents({
+          afterSequence: baseline,
+          throughSequence: last,
+          skipUnknownEventTypes: true,
+        })
+        .pipe(
+          Stream.map((event) => event.sequence),
+          Stream.runCollect,
+        ),
+      [known],
+    );
+  }).pipe(Effect.provide(Layer.fresh(layerTest))),
+);
+
 it.effect.each(["high-water", "replay"] as const)(
   "bounds application live events while the %s query is blocked",
   (phase) =>

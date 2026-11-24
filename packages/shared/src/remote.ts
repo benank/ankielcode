@@ -9,7 +9,7 @@ const PAIRING_APP_LINK_PARAM = "pairingUrl";
 const APP_LINK_PROTOCOL = /^t3code(?:-[a-z]+)?:$/;
 const SUPPORTED_REMOTE_BACKEND_PROTOCOLS = new Set(["http:", "https:", "ws:", "wss:"]);
 
-export const readHashParams = (url: URL): URLSearchParams =>
+const readHashParams = (url: URL): URLSearchParams =>
   new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
 
 export class RemoteBackendUrlMissingError extends Schema.TaggedError<RemoteBackendUrlMissingError>()(
@@ -76,6 +76,14 @@ export type RemotePairingTargetError = typeof RemotePairingTargetError.Type;
 const hasSupportedRemoteBackendProtocol = (url: URL): boolean =>
   SUPPORTED_REMOTE_BACKEND_PROTOCOLS.has(url.protocol);
 
+const RELAY_BASE_PATH_PATTERN = /^\/h\/([a-z2-7]{26})(?:\/|$)/i;
+
+/** Preserves `/h/<hostId>/` path-prefix relay routes while normalizing all other paths to `/`. */
+export const extractRelayBasePath = (pathname: string): string => {
+  const match = RELAY_BASE_PATH_PATTERN.exec(pathname);
+  return match ? `/h/${match[1]!.toLowerCase()}/` : "/";
+};
+
 const normalizeRemoteBaseUrl = (
   rawValue: string,
   source: RemoteBackendUrlInvalidError["source"],
@@ -101,7 +109,7 @@ const normalizeRemoteBaseUrl = (
       protocol: url.protocol,
     });
   }
-  url.pathname = "/";
+  url.pathname = extractRelayBasePath(url.pathname);
   url.search = "";
   url.hash = "";
   return url;
@@ -114,7 +122,7 @@ const toHttpBaseUrl = (url: URL): string => {
   } else if (next.protocol === "wss:") {
     next.protocol = "https:";
   }
-  next.pathname = "/";
+  next.pathname = extractRelayBasePath(next.pathname);
   next.search = "";
   next.hash = "";
   return next.toString();
@@ -127,7 +135,7 @@ const toWsBaseUrl = (url: URL): string => {
   } else if (next.protocol === "https:") {
     next.protocol = "wss:";
   }
-  next.pathname = "/";
+  next.pathname = extractRelayBasePath(next.pathname);
   next.search = "";
   next.hash = "";
   return next.toString();
