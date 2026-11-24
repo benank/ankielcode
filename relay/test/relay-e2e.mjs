@@ -79,11 +79,18 @@ async function run() {
   const health = await healthRes.json();
   assert.equal(health.ok, true);
   assert.equal(health.service, "ankiel-relay");
+  assert.equal(health.configured, true);
 
   // Generate ephemeral Ed25519 host identity
   const keyPair = await crypto.subtle.generateKey("Ed25519", true, ["sign", "verify"]);
   const rawPub = new Uint8Array(await crypto.subtle.exportKey("raw", keyPair.publicKey));
   const hostId = await deriveHostId(rawPub);
+
+  // Status should never expose connected client counts
+  const statusRes = await fetch(`${baseUrl}/relay/status/${hostId}`);
+  assert.equal(statusRes.status, 200);
+  const statusJson = await statusRes.json();
+  assert.deepEqual(statusJson, { hostId, online: false });
 
   // 2. Offline HTTP request returns 503
   const offlineHttp = await fetch(`${baseUrl}/h/${hostId}/api/ping`);

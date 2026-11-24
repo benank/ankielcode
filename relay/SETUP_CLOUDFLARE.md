@@ -2,8 +2,9 @@
 
 Deploy your own anonymous, zero-sign-in Ankiel Code HTTP + WebSocket relay on your personal Cloudflare account in under 2 minutes.
 
+- **Fail-closed by default:** Refuses all traffic (`503 relay_not_configured`) until `RELAY_SECRET` (or `ALLOWED_HOST_IDS`) is configured.
 - **Zero accounts / zero sign-in:** Each computer generates a persistent Ed25519 keypair (`hostId = base32(sha256(pubKey))[0..26]`).
-- **One shared secret (`RELAY_SECRET`):** Set once on Cloudflare to keep strangers off your Worker quota; never sent in plaintext (verified via HMAC-SHA256 over the per-connection challenge nonce).
+- **One shared secret (`RELAY_SECRET`):** Set once on Cloudflare; never sent in plaintext (verified via constant-time `HMAC-SHA256` over a per-connection 32-byte nonce, with failed-auth rate limiting).
 - **Zero external databases:** Single SQLite-backed Durable Object (`RelayRoom`, eligible on Cloudflare's Workers Free plan) with WebSocket Hibernation.
 - **Works with or without a custom domain:**
   - **Custom domain wildcard:** `https://<hostId>.relay.ankiel.com/...`
@@ -11,47 +12,45 @@ Deploy your own anonymous, zero-sign-in Ankiel Code HTTP + WebSocket relay on yo
 
 ---
 
-## Option 1: Automated Deploys on Push (GitHub Actions — Recommended)
+## Option 1: One-Command Setup Script (Easiest)
+
+```bash
+cd relay
+npm install
+npm run setup
+```
+
+`npm run setup` handles everything automatically:
+1. Logs into Cloudflare via `wrangler login` (if needed).
+2. Deploys the Worker + Durable Object (`wrangler deploy`).
+3. Generates a 256-bit random `RELAY_SECRET` and uploads it directly via stdin (never hits shell history).
+4. Copies your `ankiel-relay://<host>#<secret>` setup string to your clipboard.
+5. Offers to configure your local computer immediately (`relay.json` + `0600` `secrets/relay-secret`).
+
+Already deployed via GitHub Actions? Skip the deploy step and just generate + upload your secret and configure your computer:
+
+```bash
+cd relay
+npm run setup -- --skip-deploy --domain ankiel-relay.<you>.workers.dev
+```
+
+---
+
+## Option 2: Automated Deploys on Push (GitHub Actions — Recommended for Ongoing Updates)
 
 1. In Cloudflare Dashboard → **My Profile → API Tokens → Create Token** using the **Edit Cloudflare Workers** template.
 2. In your GitHub repo → **Settings → Secrets and variables → Actions**, add:
    - `CLOUDFLARE_API_TOKEN`
    - `CLOUDFLARE_ACCOUNT_ID`
 3. Push to `main` (or trigger **Deploy Ankiel Relay** manually in the Actions tab).
-4. Set your one-time Worker secret (`RELAY_SECRET`) so only your computers can register tunnels:
-
-```bash
-cd relay
-openssl rand -base64 32 | npx wrangler secret put RELAY_SECRET
-```
-
-Save the generated secret — you'll combine it with your Worker URL into one **Relay Setup String**:
-
-```text
-ankiel-relay://ankiel-relay.<you>.workers.dev#<YOUR_RELAY_SECRET>
-```
-
-*(Or with a wildcard custom domain: `ankiel-relay://relay.ankiel.com#<YOUR_RELAY_SECRET>`.)*
+4. Run `cd relay && npm run setup -- --skip-deploy` once to generate & upload `RELAY_SECRET` and copy your setup string.
 
 ---
 
-## Option 2: One-Prompt / Local Deploy (Manual)
+## Connecting Additional Computers & Your Phone
 
-```bash
-cd relay
-npm install
-npx wrangler login
-npx wrangler deploy
-openssl rand -base64 32 | npx wrangler secret put RELAY_SECRET
-```
-
----
-
-## Connecting Your Computers & Phone
-
-1. **On each computer (Desktop / CLI):**
-   - Set `ANKIEL_RELAY_SETUP=ankiel-relay://<your-relay-host>#<YOUR_RELAY_SECRET>` (or paste it in Settings → Remote Relay).
-   - The server connects outbound to your Cloudflare Worker and displays its **Pairing QR Code**.
+1. **On each additional computer:**
+   - Paste your saved `ankiel-relay://<host>#<secret>` into **Settings → Remote Relay** (or launch with `ANKIEL_RELAY_SETUP="ankiel-relay://<host>#<secret>"`).
 2. **On your phone:**
    - Open Ankiel Code → **Add Computer → Scan QR Code** → scan each computer's screen.
    - Your phone pairs directly with each computer using one-time tokens + DPoP sessions.
@@ -62,11 +61,13 @@ openssl rand -base64 32 | npx wrangler secret put RELAY_SECRET
 
 ```bash
 cd relay
+npm run typecheck
 npm test
-# In another terminal:
-npx wrangler dev --port 8789 --ip 127.0.0.1
-# Run full HTTP + WS E2E test:
-RELAY_URL=http://127.0.0.1:8789 node --experimental-strip-types test/relay-e2e.mjs
+# Test the setup script without touching Cloudflare:
+npm run setup -- --dry-run --no-clipboard
+# Run local Worker + full HTTP/WS E2E test:
+npx wrangler dev --port 8789 --ip 127.0.0.1 --var RELAY_SECRET:test-local-secret-123
+RELAY_URL=http://127.0.0.1:8789 RELAY_SECRET=test-local-secret-123 node --experimental-strip-types test/relay-e2e.mjs
 ```
 
 ---
@@ -75,8 +76,8 @@ RELAY_URL=http://127.0.0.1:8789 node --experimental-strip-types test/relay-e2e.m
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET /health` | Health check (`{ ok, service, version, requiresSecret, restrictedHosts }`) |
-| `GET /relay/status/:hostId` | Reports `{ hostId, online, clients }` |
-| `WSS /relay/host/:hostId` | Outbound host tunnel (Ed25519 + optional `RELAY_SECRET` HMAC) |
+| `GET /health` | Health check (`{ ok, service, version, configured, requiresSecret, restrictedHosts }`) |
+| `GET /relay/status/:hostId` | Reports `{ hostId, online }` (requires configured relay) |
+| `WSS /relay/host/:hostId` | Outbound host tunnel (Ed25519 + `RELAY_SECRET` HMAC) |
 | `HTTPS/WSS https://<hostId>.<domain>/<path>` | Wildcard subdomain HTTP + WS reverse tunnel |
 | `HTTPS/WSS https://<worker>/h/<hostId>/<path>` | Path-prefix HTTP + WS reverse tunnel (`*.workers.dev` friendly) |

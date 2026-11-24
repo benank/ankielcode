@@ -43,7 +43,27 @@ function extractPathPrefixTunnel(
   };
 }
 
-function checkAllowlist(env: RelayEnv, hostId: string): Response | null {
+function isRelayConfigured(env: RelayEnv): boolean {
+  return (
+    Boolean(env.RELAY_SECRET?.trim()) ||
+    parseAllowedHostIds(env.ALLOWED_HOST_IDS) !== null ||
+    env.ALLOW_PUBLIC_RELAY?.trim().toLowerCase() === "true"
+  );
+}
+
+function checkRelayAccess(env: RelayEnv, hostId: string): Response | null {
+  if (!isRelayConfigured(env)) {
+    return withCors(
+      Response.json(
+        {
+          error: "relay_not_configured",
+          message:
+            "This relay is locked until RELAY_SECRET (or ALLOWED_HOST_IDS) is configured.",
+        },
+        { status: 503 },
+      ),
+    );
+  }
   const allowlist = parseAllowedHostIds(env.ALLOWED_HOST_IDS);
   if (allowlist && !allowlist.has(hostId)) {
     return jsonError("host_not_allowed", 403);
@@ -58,7 +78,7 @@ export default {
     // 1. Subdomain reverse tunnel: https://<hostId>.relay.example.com/<path>
     const subdomainHostId = extractSubdomainHostId(url.hostname);
     if (subdomainHostId) {
-      const denied = checkAllowlist(env, subdomainHostId);
+      const denied = checkRelayAccess(env, subdomainHostId);
       if (denied) return denied;
       const stub = env.RELAY_ROOM.get(env.RELAY_ROOM.idFromName(subdomainHostId));
       const internalUrl = new URL("https://relay-room/tunnel");
@@ -70,7 +90,7 @@ export default {
     // 2. Path-prefix reverse tunnel (free *.workers.dev friendly): https://<worker>/h/<hostId>/<path>
     const pathPrefix = extractPathPrefixTunnel(url.pathname);
     if (pathPrefix) {
-      const denied = checkAllowlist(env, pathPrefix.hostId);
+      const denied = checkRelayAccess(env, pathPrefix.hostId);
       if (denied) return denied;
       const stub = env.RELAY_ROOM.get(env.RELAY_ROOM.idFromName(pathPrefix.hostId));
       const internalUrl = new URL("https://relay-room/tunnel");
@@ -90,6 +110,7 @@ export default {
           ok: true,
           service: "ankiel-relay",
           version: "0.2.0",
+          configured: isRelayConfigured(env),
           requiresSecret: Boolean(env.RELAY_SECRET?.trim()),
           restrictedHosts: parseAllowedHostIds(env.ALLOWED_HOST_IDS) !== null,
         }),
@@ -107,7 +128,7 @@ export default {
       return jsonError("invalid_host_id", 400);
     }
 
-    const denied = checkAllowlist(env, hostId);
+    const denied = checkRelayAccess(env, hostId);
     if (denied) return denied;
 
     const stub = env.RELAY_ROOM.get(env.RELAY_ROOM.idFromName(hostId));

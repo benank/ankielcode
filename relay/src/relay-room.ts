@@ -20,6 +20,7 @@ export interface RelayEnv {
   readonly RELAY_ROOM: DurableObjectNamespace;
   readonly RELAY_SECRET?: string;
   readonly ALLOWED_HOST_IDS?: string;
+  readonly ALLOW_PUBLIC_RELAY?: string;
   readonly MAX_CLIENTS_PER_HOST?: string;
 }
 
@@ -53,6 +54,11 @@ interface PendingHttpRequest {
 const AUTH_TIMEOUT_MS = 15_000;
 const HTTP_RESPONSE_START_TIMEOUT_MS = 30_000;
 const HTTP_CHUNK_BYTES = 64 * 1024;
+const MAX_HTTP_REQUEST_BODY_BYTES = 50 * 1024 * 1024;
+const MAX_PENDING_HTTP_REQUESTS = 64;
+const MAX_PENDING_HOST_SOCKETS = 4;
+const FAILED_AUTH_WINDOW_MS = 60_000;
+const MAX_FAILED_AUTH_ATTEMPTS = 10;
 const DEFAULT_MAX_CLIENTS = 32;
 
 const CLOSE_AUTH_FAILED = 4401;
@@ -93,6 +99,22 @@ function sanitizeCloseCode(code: number | undefined): number {
 export class RelayRoom extends DurableObject<RelayEnv> {
   // In-flight HTTP requests keep the DO awake until resolved/closed, so in-memory tracking is safe.
   private readonly pendingHttp = new Map<string, PendingHttpRequest>();
+  private failedAuthTimestamps: number[] = [];
+
+  private pruneFailedAuth(now: number): void {
+    const cutoff = now - FAILED_AUTH_WINDOW_MS;
+    this.failedAuthTimestamps = this.failedAuthTimestamps.filter((ts) => ts > cutoff);
+  }
+
+  private isHostAuthRateLimited(now: number): boolean {
+    this.pruneFailedAuth(now);
+    return this.failedAuthTimestamps.length >= MAX_FAILED_AUTH_ATTEMPTS;
+  }
+
+  private recordFailedAuth(now: number): void {
+    this.pruneFailedAuth(now);
+    this.failedAuthTimestamps.push(now);
+  }
 
   private getAttachment(ws: WebSocket): SocketAttachment | null {
     return (ws.deserializeAttachment() as SocketAttachment | null) ?? null;
@@ -128,11 +150,9 @@ export class RelayRoom extends DurableObject<RelayEnv> {
 
     if (url.pathname === "/status") {
       const host = this.getAuthenticatedHost();
-      const clients = this.ctx.getWebSockets("client").length;
       return Response.json({
         hostId,
         online: host !== null,
-        clients,
       });
     }
 
@@ -168,11 +188,23 @@ export class RelayRoom extends DurableObject<RelayEnv> {
   }
 
   private async handleHostUpgrade(hostId: string): Promise<Response> {
+    const now = Date.now();
+    if (this.isHostAuthRateLimited(now)) {
+      return Response.json({ error: "rate_limited" }, { status: 429 });
+    }
+
+    const pendingCount = this.ctx
+      .getWebSockets("host")
+      .filter((ws) => this.getAttachment(ws)?.role === "host-pending").length;
+    if (pendingCount >= MAX_PENDING_HOST_SOCKETS) {
+      return Response.json({ error: "too_many_pending_auth" }, { status: 429 });
+    }
+
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
 
     const nonce = randomNonce(32);
-    const timestamp = Date.now();
+    const timestamp = now;
     this.ctx.acceptWebSocket(server, ["host"]);
     server.serializeAttachment({
       role: "host-pending",
@@ -246,6 +278,15 @@ export class RelayRoom extends DurableObject<RelayEnv> {
       return Response.json({ error: "host_offline", hostId }, { status: 503 });
     }
 
+    if (this.pendingHttp.size >= MAX_PENDING_HTTP_REQUESTS) {
+      return Response.json({ error: "too_many_requests", hostId }, { status: 429 });
+    }
+
+    const declaredLength = Number.parseInt(request.headers.get("content-length") ?? "", 10);
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_HTTP_REQUEST_BODY_BYTES) {
+      return Response.json({ error: "payload_too_large" }, { status: 413 });
+    }
+
     const reqId = crypto.randomUUID();
     const method = request.method.toUpperCase();
     const hasBody = method !== "GET" && method !== "HEAD" && request.body !== null;
@@ -288,10 +329,17 @@ export class RelayRoom extends DurableObject<RelayEnv> {
 
       if (hasBody && request.body) {
         const reader = request.body.getReader();
+        let totalBytes = 0;
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           if (!value || value.byteLength === 0) continue;
+          totalBytes += value.byteLength;
+          if (totalBytes > MAX_HTTP_REQUEST_BODY_BYTES) {
+            await reader.cancel();
+            this.failPendingHttp(reqId, 413, "Request body exceeded limit.");
+            return responsePromise;
+          }
           for (let offset = 0; offset < value.byteLength; offset += HTTP_CHUNK_BYTES) {
             const slice = value.subarray(
               offset,
@@ -489,6 +537,7 @@ export class RelayRoom extends DurableObject<RelayEnv> {
     });
 
     if (!verification.ok) {
+      this.recordFailedAuth(Date.now());
       sendHostJson(ws, {
         type: "error",
         code: verification.reason,
