@@ -1,0 +1,62 @@
+import { describe } from "@effect/vitest";
+import { FX_SUPPORTED_RUNTIME_MODES } from "@ankielcode/provider-fx/testing";
+
+import { FxOrchestratorReplayHarness } from "../Adapters/FxAdapterV2.testkit.ts";
+import { GrokOrchestratorReplayHarness } from "../Adapters/GrokAdapterV2.testkit.ts";
+import { KiroOrchestratorReplayHarness } from "../Adapters/KiroAdapterV2.testkit.ts";
+import {
+  materializeMuseReplayWorkspace,
+  MuseOrchestratorReplayHarness,
+} from "../Adapters/MuseAdapterV2.testkit.ts";
+import { PiOrchestratorReplayHarness } from "../Adapters/PiAdapterV2.testkit.ts";
+import { providerRuntimeMode } from "../RuntimePolicy.ts";
+import { itRunsReplayFixtures, runReplayFixture } from "./ProviderReplayFixtures.ts";
+
+describe("fx replay fixtures", () => {
+  // Recorded where fx's snapshot offers no Full access (0.0.13), so a thread
+  // set to it runs as RuntimePolicy resolves it there: Supervised.
+  itRunsReplayFixtures("fx", (input) =>
+    runReplayFixture({
+      ...input,
+      buildInput: () => {
+        const fixtureInput = input.buildInput();
+        return {
+          ...fixtureInput,
+          runtimeMode: providerRuntimeMode(
+            fixtureInput.runtimeMode ?? "full-access",
+            FX_SUPPORTED_RUNTIME_MODES,
+          ),
+        };
+      },
+      harness: FxOrchestratorReplayHarness,
+    }),
+  );
+});
+
+describe("Grok replay fixtures", () => {
+  itRunsReplayFixtures("grok", (input) =>
+    runReplayFixture({ ...input, harness: GrokOrchestratorReplayHarness }),
+  );
+});
+
+describe("Kiro replay fixtures", () => {
+  itRunsReplayFixtures("kiro", (input) =>
+    runReplayFixture({ ...input, harness: KiroOrchestratorReplayHarness }),
+  );
+});
+
+describe("Muse replay fixtures", () => {
+  itRunsReplayFixtures("muse", (input) =>
+    runReplayFixture({
+      ...input,
+      harness: MuseOrchestratorReplayHarness,
+      materializeWorkspace: materializeMuseReplayWorkspace,
+    }),
+  );
+});
+
+describe("Pi replay fixtures", () => {
+  itRunsReplayFixtures("pi", (input) =>
+    runReplayFixture({ ...input, harness: PiOrchestratorReplayHarness }),
+  );
+});

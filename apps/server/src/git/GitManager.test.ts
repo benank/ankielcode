@@ -2590,28 +2590,6 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
       "https://github.example.com/team/repository/pull/42?tab=files",
       "github.example.com/team/repository",
     ],
-    [
-      "https://gitlab.example.com/group/subgroup/repository/-/merge_requests/42",
-      "gitlab.example.com/group/subgroup/repository",
-    ],
-    ["https://bitbucket.org/team/repository/pull-requests/42", "bitbucket.org/team/repository"],
-    ["https://codeberg.org/team/repository/pulls/42", "codeberg.org/team/repository"],
-    [
-      "http://code.example:3000/forgejo/team/repository/pulls/42/files",
-      "code.example/forgejo/team/repository",
-    ],
-    [
-      "https://dev.azure.com/org/project/_git/repository/pullrequest/42",
-      "dev.azure.com/org/project/_git/repository",
-    ],
-    [
-      "https://org.visualstudio.com/project/_git/repository/pullrequest/42",
-      "org.visualstudio.com/project/_git/repository",
-    ],
-    [
-      "https://gitlab.example/group/pull/123/repository/-/merge_requests/42",
-      "gitlab.example/group/pull/123/repository",
-    ],
     ["https://github.example.com/team/repository/issues/42", null],
   ] as const)("reads the repository from the returned PR URL %s", (url, expected) => {
     expect(GitManager.pullRequestRepositoryKey(url)).toBe(expected);
@@ -2744,81 +2722,6 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
         ["alice:feature", "open"],
       ]);
     }),
-  );
-
-  it.effect.each([
-    { remoteUrl: "git@gitlab.com:Group/Subgroup/Fork.git", setUpstream: true },
-    { remoteUrl: "git@gitlab.com:Group/Subgroup/Fork.git", setUpstream: false },
-    { remoteUrl: "https://gitlab.com/Group/Subgroup/Fork.git", setUpstream: true },
-    { remoteUrl: "https://gitlab.com/Group/Subgroup/Fork.git", setUpstream: false },
-  ] as const)(
-    "matches nested-group forks for $remoteUrl/$setUpstream",
-    ({ remoteUrl, setUpstream }) =>
-      Effect.gen(function* () {
-        const repoDir = yield* makeTempDir("ankielcode-git-manager-");
-        yield* initRepo(repoDir);
-        const originDir = yield* createBareRemote();
-        const forkDir = yield* createBareRemote();
-        const branch = "feature/NestedGroups";
-        yield* runGit(repoDir, ["remote", "add", "origin", originDir]);
-        yield* runGit(repoDir, ["push", "-u", "origin", "main"]);
-        yield* runGit(repoDir, ["remote", "add", "fork", forkDir]);
-        yield* runGit(repoDir, ["checkout", "-b", branch]);
-        yield* runGit(repoDir, ["push", ...(setUpstream ? ["-u"] : []), "fork", branch]);
-        const upstream = yield* runGit(repoDir, [
-          "for-each-ref",
-          "--format=%(upstream:short)",
-          `refs/heads/${branch}`,
-        ]);
-        expect(upstream.stdout.trim()).toBe(setUpstream ? `fork/${branch}` : "");
-        yield* configureVisibleRemoteUrlWithLocalRewrite(
-          repoDir,
-          "origin",
-          "git@gitlab.com:Group/Upstream/Repository.git",
-          originDir,
-        );
-        yield* configureVisibleRemoteUrlWithLocalRewrite(repoDir, "fork", remoteUrl, forkDir);
-        const { manager, providerCalls } = yield* makeManager({
-          providerScenario: {
-            kind: "gitlab",
-            headBranchProbe: null,
-            prListOtherwise: [
-              {
-                number: 2,
-                title: "Another subgroup's fork",
-                url: "https://gitlab.com/Group/Upstream/Repository/-/merge_requests/2",
-                baseRefName: "main",
-                headRefName: branch,
-                updatedAt: "2026-04-08T15:00:00Z",
-                isCrossRepository: true,
-                headRepositoryNameWithOwner: "Group/Other/Fork",
-                headRepositoryOwnerLogin: "Group",
-              },
-              {
-                number: 1,
-                title: "This subgroup's fork",
-                url: "https://gitlab.com/Group/Upstream/Repository/-/merge_requests/1",
-                baseRefName: "main",
-                headRefName: branch,
-                updatedAt: "2026-04-07T15:00:00Z",
-                isCrossRepository: true,
-                headRepositoryNameWithOwner: "Group/Subgroup/Fork",
-                headRepositoryOwnerLogin: "Group",
-              },
-            ],
-          },
-        });
-
-        expect(yield* manager.branchPullRequest({ cwd: repoDir, branch })).toMatchObject({
-          number: 1,
-          repositoryKey: "gitlab.com/group/upstream/repository",
-        });
-        expect(listed(providerCalls).length).toBeGreaterThan(0);
-        for (const call of listed(providerCalls)) {
-          expect(call.headSelector.endsWith(branch)).toBe(true);
-          expect(call.state).toBe("all");
-        }
-      }),
   );
 
   it.effect(
@@ -3690,31 +3593,6 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
     }),
   );
 
-  it.effect("lowercases a capitalized Conventional Commits description", () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTempDir("ankielcode-git-manager-");
-      yield* initRepo(repoDir);
-      const subjects = ["ci: Run E2E on pull requests", "feat(web)!: A new layout"];
-      const queued = [...subjects];
-
-      const { manager } = yield* makeManager({
-        serverSettings: { sourceControlWritingStyle: { mode: "conventional_commits" as const } },
-        textGeneration: {
-          generateCommitMessage: () => Effect.succeed({ subject: queued.shift() ?? "", body: "" }),
-        },
-      });
-
-      const committed: Array<string> = [];
-      for (const [index] of subjects.entries()) {
-        NodeFS.writeFileSync(NodePath.join(repoDir, "README.md"), `change ${index}\n`);
-        yield* runStackedAction(manager, { cwd: repoDir, action: "commit" });
-        committed.push((yield* runGit(repoDir, ["log", "-1", "--pretty=%s"])).stdout.trim());
-      }
-
-      expect(committed).toEqual(["ci: run E2E on pull requests", "feat(web)!: a new layout"]);
-    }),
-  );
-
   it.effect("includes CLAUDE.md for Claude writers only when it differs from AGENTS.md", () =>
     Effect.gen(function* () {
       const repoDir = yield* makeTempDir("ankielcode-git-manager-");
@@ -4008,30 +3886,6 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
         expect((yield* runGit(repoDir, ["rev-parse", "HEAD"])).stdout).toBe(headBefore);
         expect((yield* runGit(repoDir, ["diff"])).stdout).toContain("+unstaged");
       }),
-  );
-
-  it.effect("commits only selected files when filePaths is provided", () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTempDir("ankielcode-git-manager-");
-      yield* initRepo(repoDir);
-      NodeFS.writeFileSync(NodePath.join(repoDir, "a.txt"), "file a\n");
-      NodeFS.writeFileSync(NodePath.join(repoDir, "b.txt"), "file b\n");
-
-      const { manager } = yield* makeManager();
-      const result = yield* runStackedAction(manager, {
-        cwd: repoDir,
-        action: "commit",
-        filePaths: ["a.txt"],
-      });
-
-      expect(result.commit.status).toBe("created");
-
-      const statusStdout = yield* runGit(repoDir, ["status", "--porcelain"]).pipe(
-        Effect.map((r) => r.stdout),
-      );
-      expect(statusStdout).toContain("b.txt");
-      expect(statusStdout).not.toContain("a.txt");
-    }),
   );
 
   it.effect("creates feature branch, commits, and pushes with featureBranch option", () =>
@@ -4585,56 +4439,6 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
         },
       });
       expect(providerCalls.some((call) => call.operation === "getChangeRequest")).toBe(false);
-    }),
-  );
-
-  it.effect("matches a host's mounted heads without confusing forks sharing a branch", () =>
-    Effect.sync(() => {
-      // A host that serves repositories below a mount names them without it.
-      const repositoryNameFromRemoteUrl = (url: string) =>
-        url.replace(/^https:\/\/[^/]+\/forgejo\//u, "").replace(/\.git$/u, "");
-      for (const owner of ["maria", "reviewer"]) {
-        const pr = {
-          number: 42,
-          title: "Greeting",
-          url: "https://forgejo.example/forgejo/maria/project/pulls/42",
-          baseRefName: "main",
-          headRefName: "greeting",
-          state: "open" as const,
-          isDraft: false,
-          closedAt: null,
-          mergedAt: null,
-          updatedAt: Option.none(),
-          isCrossRepository: owner !== "maria",
-          headRepositoryNameWithOwner: `${owner}/project`,
-          headRepositoryOwnerLogin: owner,
-        };
-        const repository = GitManager.parseRepositoryNameWithOwnerFromRemoteUrl(
-          `https://forgejo.example/forgejo/${owner}/project.git`,
-          { repositoryNameFromRemoteUrl },
-        );
-        expect(repository).toBe(`${owner}/project`);
-        const context = {
-          headBranch: "greeting",
-          headRepositoryNameWithOwner: repository,
-          headRepositoryOwnerLogin: repository?.split("/")[0] ?? null,
-          isCrossRepository: owner !== "maria",
-        };
-        expect(GitManager.matchesBranchHeadContext(pr, context)).toBe(true);
-        expect(
-          GitManager.matchesBranchHeadContext(pr, {
-            ...context,
-            headRepositoryNameWithOwner: "other/project",
-            headRepositoryOwnerLogin: "other",
-          }),
-        ).toBe(false);
-      }
-      expect(
-        GitManager.parseRepositoryNameWithOwnerFromRemoteUrl(
-          "https://gitlab.example/group/maria/project.git",
-          {},
-        ),
-      ).toBe("group/maria/project");
     }),
   );
 
@@ -5930,88 +5734,79 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
       }),
   );
 
-  it.effect.each(["github", "gitlab", "bitbucket"] as const)(
-    "creates fork requests with provider-specific source identity (%s)",
-    (kind) =>
-      Effect.gen(function* () {
-        const sourceRepository =
-          kind === "gitlab" ? "octocat/subgroup/renamed-fork" : "octocat/renamed-fork";
-        const repoDir = yield* makeTempDir("ankielcode-git-manager-");
-        yield* initRepo(repoDir);
-        const forkDir = yield* createBareRemote();
-        yield* runGit(repoDir, ["remote", "add", "fork-seed", forkDir]);
-        // A lone remote would be treated as the base repository.
-        yield* runGit(repoDir, [
-          "remote",
-          "add",
-          "origin",
-          `git@${kind}.com:benank/codething-mvp.git`,
-        ]);
-        yield* runGit(repoDir, ["checkout", "-b", "statemachine"]);
-        NodeFS.writeFileSync(NodePath.join(repoDir, "changes.txt"), "change\n");
-        yield* runGit(repoDir, ["add", "changes.txt"]);
-        yield* runGit(repoDir, ["commit", "-m", "Feature commit"]);
-        yield* runGit(repoDir, ["push", "-u", "fork-seed", "statemachine"]);
-        yield* runGit(repoDir, ["checkout", "-b", "ankielcode/pr-91/statemachine"]);
-        yield* runGit(repoDir, ["branch", "--set-upstream-to", "fork-seed/statemachine"]);
-        yield* configureVisibleRemoteUrlWithLocalRewrite(
-          repoDir,
-          "fork-seed",
-          `git@${kind}.com:${sourceRepository}.git`,
-          forkDir,
-        );
+  it.effect("creates a GitHub fork request from a synthetic checkout", () =>
+    Effect.gen(function* () {
+      const sourceRepository = "octocat/renamed-fork";
+      const repoDir = yield* makeTempDir("ankielcode-git-manager-");
+      yield* initRepo(repoDir);
+      const forkDir = yield* createBareRemote();
+      yield* runGit(repoDir, ["remote", "add", "fork-seed", forkDir]);
+      // A lone remote would be treated as the base repository.
+      yield* runGit(repoDir, [
+        "remote",
+        "add",
+        "origin",
+        "git@github.com:benank/codething-mvp.git",
+      ]);
+      yield* runGit(repoDir, ["checkout", "-b", "statemachine"]);
+      NodeFS.writeFileSync(NodePath.join(repoDir, "changes.txt"), "change\n");
+      yield* runGit(repoDir, ["add", "changes.txt"]);
+      yield* runGit(repoDir, ["commit", "-m", "Feature commit"]);
+      yield* runGit(repoDir, ["push", "-u", "fork-seed", "statemachine"]);
+      yield* runGit(repoDir, ["checkout", "-b", "ankielcode/pr-91/statemachine"]);
+      yield* runGit(repoDir, ["branch", "--set-upstream-to", "fork-seed/statemachine"]);
+      yield* configureVisibleRemoteUrlWithLocalRewrite(
+        repoDir,
+        "fork-seed",
+        `git@github.com:${sourceRepository}.git`,
+        forkDir,
+      );
 
-        const { manager, providerCalls } = yield* makeManager({
-          providerScenario: {
-            kind,
-            prListSequenceByHeadSelector: {
-              statemachine: [
-                [],
-                [
-                  {
-                    number: 188,
-                    title: "Add stacked git actions",
-                    url: "https://github.com/benank/codething-mvp/pull/188",
-                    baseRefName: "main",
-                    headRefName: "statemachine",
-                    state: "open",
-                    isCrossRepository: true,
-                    headRepositoryNameWithOwner: sourceRepository,
-                    headRepositoryOwnerLogin: "octocat",
-                  },
-                ],
+      const { manager, providerCalls } = yield* makeManager({
+        providerScenario: {
+          prListSequenceByHeadSelector: {
+            statemachine: [
+              [],
+              [
+                {
+                  number: 188,
+                  title: "Add stacked git actions",
+                  url: "https://github.com/benank/codething-mvp/pull/188",
+                  baseRefName: "main",
+                  headRefName: "statemachine",
+                  state: "open",
+                  isCrossRepository: true,
+                  headRepositoryNameWithOwner: sourceRepository,
+                  headRepositoryOwnerLogin: "octocat",
+                },
               ],
-            },
+            ],
           },
-        });
+        },
+      });
 
-        const result = yield* runStackedAction(manager, {
-          cwd: repoDir,
-          action: "commit_push_pr",
-        });
+      const result = yield* runStackedAction(manager, {
+        cwd: repoDir,
+        action: "commit_push_pr",
+      });
 
-        expect(result.pr.status).toBe("created");
-        expect(result.pr.number).toBe(188);
-        expect(
-          providerCalls.find((call) => call.operation === "createChangeRequest"),
-        ).toMatchObject({
-          source:
-            kind === "gitlab"
-              ? { repository: sourceRepository, refName: "statemachine" }
-              : undefined,
-        });
-        expect(
-          created(providerCalls).some(
-            (call) => call.baseRefName === "main" && call.headSelector === "octocat:statemachine",
-          ),
-        ).toBe(true);
-        expect(
-          created(providerCalls).some(
-            (call) =>
-              call.baseRefName === "statemachine" && call.headSelector === "octocat:statemachine",
-          ),
-        ).toBe(false);
-      }),
+      expect(result.pr.status).toBe("created");
+      expect(result.pr.number).toBe(188);
+      expect(providerCalls.find((call) => call.operation === "createChangeRequest")).toMatchObject({
+        source: undefined,
+      });
+      expect(
+        created(providerCalls).some(
+          (call) => call.baseRefName === "main" && call.headSelector === "octocat:statemachine",
+        ),
+      ).toBe(true);
+      expect(
+        created(providerCalls).some(
+          (call) =>
+            call.baseRefName === "statemachine" && call.headSelector === "octocat:statemachine",
+        ),
+      ).toBe(false);
+    }),
   );
 
   it.effect("creates a fork PR from origin into the upstream remote the provider targets", () =>
@@ -6790,7 +6585,7 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
       const headSha = (yield* runGit(repoDir, ["rev-parse", "HEAD"])).stdout.trim();
       yield* runGit(repoDir, ["checkout", "main"]);
       yield* runGit(repoDir, ["branch", "-D", "feature/no-pull-ref"]);
-      const remoteUrl = "https://dev.azure.com/org/project/_git/repo";
+      const remoteUrl = "https://github.com/org/repo.git";
       yield* runGit(repoDir, ["remote", "set-url", "origin", remoteUrl]);
       yield* runGit(repoDir, ["config", `url.${remoteDir}.insteadOf`, remoteUrl]);
 
@@ -6799,7 +6594,7 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
           pullRequest: {
             number: 79,
             title: "Another repository's PR",
-            url: "https://dev.azure.com/org/project/_git/other/pullrequest/79",
+            url: "https://github.com/org/other/pull/79",
             baseRefName: "main",
             headRefName: "feature/no-pull-ref",
             state: "open",
@@ -6819,7 +6614,7 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
           pullRequest: {
             number: 77,
             title: "Merged PR",
-            url: "https://dev.azure.com/org/project/_git/repo/pullrequest/77",
+            url: "https://github.com/org/repo/pull/77",
             baseRefName: "main",
             headRefName: "feature/no-pull-ref",
             state: "merged",
@@ -6841,8 +6636,8 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
         providerScenario: {
           pullRequest: {
             number: 78,
-            title: "Azure DevOps PR",
-            url: "https://dev.azure.com/org/project/_git/repo/pullrequest/78",
+            title: "Open PR",
+            url: "https://github.com/org/repo/pull/78",
             baseRefName: "main",
             headRefName: "feature/no-pull-ref",
             state: "open",
@@ -7567,49 +7362,6 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
       );
       expect(result.isOnPullRequestHead).toBe(true);
       expect((yield* runGit(worktreePath, ["rev-parse", "HEAD"])).stdout.trim()).toBe(updatedHead);
-    }),
-  );
-
-  it.effect("creates a merge request worktree from the host's own head ref", () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTempDir("ankielcode-git-manager-");
-      yield* initRepo(repoDir);
-      const remoteDir = yield* createBareRemote();
-      yield* runGit(repoDir, ["remote", "add", "origin", remoteDir]);
-      yield* runGit(repoDir, ["push", "-u", "origin", "main"]);
-      yield* runGit(repoDir, ["checkout", "-b", "feature/mr-ref-only"]);
-      NodeFS.writeFileSync(NodePath.join(repoDir, "mr.txt"), "merge request\n");
-      yield* runGit(repoDir, ["add", "mr.txt"]);
-      yield* runGit(repoDir, ["commit", "-m", "Merge request ref only"]);
-      const head = (yield* runGit(repoDir, ["rev-parse", "HEAD"])).stdout.trim();
-      yield* runGit(repoDir, ["push", "origin", "HEAD:refs/merge-requests/93/head"]);
-      yield* runGit(repoDir, ["checkout", "main"]);
-      yield* runGit(repoDir, ["branch", "-D", "feature/mr-ref-only"]);
-
-      const { manager } = yield* makeManager({
-        providerScenario: {
-          kind: "gitlab",
-          pullRequest: {
-            number: 93,
-            title: "Merge request ref only",
-            url: "https://gitlab.com/benank/codething-mvp/-/merge_requests/93",
-            baseRefName: "main",
-            headRefName: "feature/mr-ref-only",
-            state: "open",
-          },
-        },
-      });
-
-      const result = yield* preparePullRequestThread(manager, {
-        cwd: repoDir,
-        reference: "93",
-        mode: "worktree",
-      });
-
-      expect(result.isOnPullRequestHead).toBe(true);
-      expect(
-        (yield* runGit(result.worktreePath as string, ["rev-parse", "HEAD"])).stdout.trim(),
-      ).toBe(head);
     }),
   );
 

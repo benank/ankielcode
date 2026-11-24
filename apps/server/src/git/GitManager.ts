@@ -386,7 +386,7 @@ function resolvePullRequestWorktreeLocalBranchName(
   }
 }
 
-export function parseRepositoryNameWithOwnerFromRemoteUrl(
+function parseRepositoryNameWithOwnerFromRemoteUrl(
   url: string | null,
   provider?: Pick<
     SourceControlProvider.SourceControlProvider["Service"],

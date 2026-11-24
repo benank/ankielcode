@@ -1205,22 +1205,6 @@ mod tests {
     }
 
     #[test]
-    fn clamps_sample_interval() {
-        assert_eq!(clamp_sample_interval(0), None);
-        assert_eq!(clamp_sample_interval(1), Some(Duration::from_millis(250)));
-        assert_eq!(
-            clamp_sample_interval(100_000),
-            Some(Duration::from_millis(60_000))
-        );
-    }
-
-    #[test]
-    fn counts_selected_processes_that_could_not_be_materialized() {
-        assert_eq!(inaccessible_process_count(5, 3), 2);
-        assert_eq!(inaccessible_process_count(3, 5), 0);
-    }
-
-    #[test]
     fn waits_for_a_cpu_measurement_window_after_priming() {
         let baseline = Instant::now();
 

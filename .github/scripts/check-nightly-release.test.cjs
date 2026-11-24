@@ -154,20 +154,16 @@ test("reads every page when no nightly seen so far settles the gap", async () =>
 
 test("compares against the newest nightly across pages once the gap has passed", async () => {
   const { options, calls } = fixture({
-    pages: [[nightly(10, { tagName: "v1.0.1-nightly.20260905.100" })], [nightly(8)]],
+    pages: [
+      [nightly(10, { tagName: "v1.0.1-nightly.20260905.100" })],
+      [nightly(0, { tagName: "v1.0.0" }), nightly(0, { isDraft: true }), nightly(8)],
+    ],
   });
   assert.equal(await shouldReleaseNightly(options), true);
   assert.deepEqual(
     calls.map((call) => call.basehead),
     ["v1.0.1-nightly.20260905.123...new"],
   );
-});
-
-test("ignores stable releases and drafts when checking the gap", async () => {
-  const { options } = fixture({
-    releases: [nightly(0, { tagName: "v1.0.0" }), nightly(0, { isDraft: true }), nightly(7)],
-  });
-  assert.equal(await shouldReleaseNightly(options), true);
 });
 
 test("fails instead of releasing when GitHub cannot supply release state", async () => {

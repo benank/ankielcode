@@ -313,6 +313,7 @@ describe("FileBrowserPanel", () => {
         />
       </RightPanelSheet>,
     );
+    await expect.element(page.getByRole("dialog")).not.toHaveAccessibleName("");
     const search = page.getByRole("searchbox", { name: "Search repo files" });
     await userEvent.fill(search, "read");
     for (const composition of [
