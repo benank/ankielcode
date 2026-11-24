@@ -938,7 +938,7 @@ describe("review thread decoding", () => {
                         committedDate: "2026-07-05T00:00:00Z",
                         additions: 18,
                         deletions: 7,
-                        authors: { nodes: [{ name: "Julius", user: { login: "julius" } }] },
+                        authors: { nodes: [{ name: "Alex", user: { login: "alex" } }] },
                       },
                     },
                     {
@@ -962,7 +962,7 @@ describe("review thread decoding", () => {
         oid: "abc123",
         messageHeadline: "Ship the timeline",
         committedDate: "2026-07-05T00:00:00Z",
-        authors: [{ login: "julius", name: "Julius", avatarUrl: null }],
+        authors: [{ login: "alex", name: "Alex", avatarUrl: null }],
       },
       {
         oid: "def456",
@@ -977,8 +977,8 @@ describe("review thread decoding", () => {
     const result = expectSuccess(
       decodeReviewThreadsJson(
         reviewJson({
-          requested: [{ login: "julius", avatarUrl: "https://avatars/j.png" }],
-          reviewed: [{ login: "julius", avatarUrl: "https://avatars/j.png" }],
+          requested: [{ login: "alex", avatarUrl: "https://avatars/j.png" }],
+          reviewed: [{ login: "alex", avatarUrl: "https://avatars/j.png" }],
         }),
       ),
     );
@@ -1021,14 +1021,14 @@ describe("review thread decoding", () => {
         reviewJson({
           requested: [
             { __typename: "Mannequin" },
-            { login: "julius", avatarUrl: "https://avatars/j.png" },
+            { login: "alex", avatarUrl: "https://avatars/j.png" },
           ],
         }),
       ),
     );
 
     expect(result.reviewers).toEqual([
-      { login: "julius", name: null, avatarUrl: "https://avatars/j.png" },
+      { login: "alex", name: null, avatarUrl: "https://avatars/j.png" },
     ]);
   });
 
@@ -1198,7 +1198,7 @@ describe("reaction decoding", () => {
           {
             content: "THUMBS_UP",
             viewerHasReacted: true,
-            reactors: { totalCount: 2, nodes: [{ login: "julius" }, { login: "bilal" }] },
+            reactors: { totalCount: 2, nodes: [{ login: "alex" }, { login: "bilal" }] },
           },
           {
             content: "PARTY_PARROT",
@@ -1214,7 +1214,7 @@ describe("reaction decoding", () => {
     );
 
     expect(decoded.comments[0]?.reactions).toEqual([
-      { content: "thumbs-up", count: 2, actors: ["julius", "bilal"], viewerHasReacted: true },
+      { content: "thumbs-up", count: 2, actors: ["alex", "bilal"], viewerHasReacted: true },
       { content: "rocket", count: 140, actors: ["a", "b", "c"], viewerHasReacted: false },
     ]);
   });
@@ -1508,7 +1508,7 @@ describe("review thread decoding", () => {
                   {
                     content: "HEART",
                     viewerHasReacted: true,
-                    reactors: { totalCount: 2, nodes: [{ login: "bilal" }, { login: "julius" }] },
+                    reactors: { totalCount: 2, nodes: [{ login: "bilal" }, { login: "alex" }] },
                   },
                 ],
               },
@@ -1519,7 +1519,7 @@ describe("review thread decoding", () => {
     );
 
     expect(result.reactions).toEqual([
-      { content: "heart", count: 2, actors: ["julius"], viewerHasReacted: true },
+      { content: "heart", count: 2, actors: ["alex"], viewerHasReacted: true },
     ]);
   });
 });

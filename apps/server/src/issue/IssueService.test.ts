@@ -37,13 +37,13 @@ function fakeStandaloneTracker(
 ): StandaloneIssueTrackerApi {
   return {
     ...fakeTracker({
-      getViewer: () => Effect.succeed("usr_julius"),
+      getViewer: () => Effect.succeed("usr_alex"),
       getIssue: (input) =>
         Effect.succeed({
           ...issue(input.key),
           url: `https://linear.app/acme/issue/${input.key}/canonical-title`,
           displayKey: input.key,
-          viewer: "usr_julius",
+          viewer: "usr_alex",
         }),
       ...overrides,
     }),
@@ -68,7 +68,7 @@ function fakeStandaloneTracker(
         ? null
         : { host: "linear.app", workspace, scope: "ENG", key: "ENG-1" };
     },
-    probeCredential: () => Effect.succeed({ account: "julius", scopes: [] }),
+    probeCredential: () => Effect.succeed({ account: "alex", scopes: [] }),
   };
 }
 
@@ -119,7 +119,7 @@ function issue(key: string, updatedAt = "2026-07-02T00:00:00Z"): TrackerIssueDet
     labels: [],
     commentCount: 0,
     body: "",
-    viewer: "julius",
+    viewer: "alex",
     viewerPermissions: { setState: true, comment: true, edit: true, labels: true, assignees: true },
     states: [],
     comments: [],
@@ -144,7 +144,7 @@ function fakeTracker(overrides: Partial<IssueTrackerApi> = {}): IssueTrackerApi 
       events: true,
       search: true,
     },
-    getViewer: () => Effect.succeed("julius"),
+    getViewer: () => Effect.succeed("alex"),
     listIssues: () => Effect.succeed({ items: [], nextCursor: null }),
     getIssue: (input) => Effect.succeed(issue(input.key)),
     getComments: () => Effect.succeed({ comments: [], nextCursor: null }),
@@ -550,7 +550,7 @@ describe("IssueService", () => {
         host: "github.com",
         involvement: "assigned",
       });
-      expect(narrowed.viewers).toEqual({ "github.com": "julius" });
+      expect(narrowed.viewers).toEqual({ "github.com": "alex" });
       expect(narrowed.entries.every((entry) => entry.host === "github.com")).toBe(true);
       expect(narrowed.trackers.map((tracker) => tracker.host)).toEqual([
         "github.com",

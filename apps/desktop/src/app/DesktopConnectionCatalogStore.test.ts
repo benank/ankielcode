@@ -153,7 +153,7 @@ describe("DesktopConnectionCatalogStore", () => {
               desktopSsh: {
                 alias: "devbox",
                 hostname: "devbox.example.com",
-                username: "julius",
+                username: "alex",
                 port: 22,
               },
             },
@@ -215,7 +215,7 @@ describe("DesktopConnectionCatalogStore", () => {
             target: {
               alias: "devbox",
               hostname: "devbox.example.com",
-              username: "julius",
+              username: "alex",
               port: 22,
             },
           });

@@ -42,12 +42,12 @@ describe("ssh command", () => {
       assert.deepEqual(
         parseSshResolveOutput(
           "devbox",
-          ["hostname devbox.example.com", "user julius", "port 2222", ""].join("\n"),
+          ["hostname devbox.example.com", "user alex", "port 2222", ""].join("\n"),
         ),
         {
           alias: "devbox",
           hostname: "devbox.example.com",
-          username: "julius",
+          username: "alex",
           port: 2222,
         },
       );
@@ -107,10 +107,10 @@ describe("ssh command", () => {
         yield* remoteStateKey({
           alias: "devbox",
           hostname: "devbox.example.com",
-          username: "julius",
+          username: "alex",
           port: 2222,
         }),
-        "711bc738002d72fd",
+        "aa11a6ad2248a028",
       );
       assert.equal(
         yield* remoteStateKey({
@@ -236,7 +236,7 @@ describe("ssh command", () => {
           {
             alias: "devbox",
             hostname: "devbox.example.com",
-            username: "julius",
+            username: "alex",
             port: 2222,
           },
           { remoteCommandArgs: ["sh", "-s"] },

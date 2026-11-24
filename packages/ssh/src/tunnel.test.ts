@@ -498,7 +498,7 @@ describe("ssh tunnel scripts", () => {
     const target = {
       alias: "devbox",
       hostname: "devbox.example.com",
-      username: "julius",
+      username: "alex",
       port: 2222,
     } as const;
     const spawner = ChildProcessSpawner.make(() =>
@@ -632,7 +632,7 @@ describe("ssh tunnel scripts", () => {
     const target = {
       alias: "devbox",
       hostname: "devbox.example.com",
-      username: "julius",
+      username: "alex",
       port: 2222,
     } as const;
     const spawner = ChildProcessSpawner.make(() =>
@@ -1024,15 +1024,15 @@ describe("ssh tunnel scripts", () => {
     {
       name: "does not ask for a password when the agent cannot sign an accepted key",
       stderr:
-        'sign_and_send_pubkey: signing failed for ED25519 "/home/julius/.ssh/id_ed25519" from agent: communication with agent failed\r\n' +
-        "julius@devbox: Permission denied (publickey,password).\r\n",
+        'sign_and_send_pubkey: signing failed for ED25519 "/home/alex/.ssh/id_ed25519" from agent: communication with agent failed\r\n' +
+        "alex@devbox: Permission denied (publickey,password).\r\n",
       expectedPromptAttempts: [],
     },
     {
       name: "asks for a password when signing failure has no agent provenance",
       stderr:
         'sign_and_send_pubkey: signing failed for ED25519-CERT "key-cert.pub": agent refused operation\n' +
-        "julius@devbox: Permission denied (publickey,password).\n",
+        "alex@devbox: Permission denied (publickey,password).\n",
       expectedPromptAttempts: [1],
     },
     {
@@ -1042,7 +1042,7 @@ describe("ssh tunnel scripts", () => {
     },
     {
       name: "asks for a password when the server rejects every key",
-      stderr: "julius@devbox: Permission denied (publickey,password).\r\n",
+      stderr: "alex@devbox: Permission denied (publickey,password).\r\n",
       expectedPromptAttempts: [1],
     },
   ])("$name", ({ stderr, expectedPromptAttempts }) =>
@@ -1213,7 +1213,7 @@ describe("ssh tunnel scripts", () => {
     { name: "keeps the auth failure without a live ControlMaster", masterLive: false },
   ])("when the tunnel cannot sign in again, $name", ({ masterLive }) =>
     Effect.gen(function* () {
-      const denied = "julius@devbox: Permission denied (publickey,keyboard-interactive).\n";
+      const denied = "alex@devbox: Permission denied (publickey,keyboard-interactive).\n";
       const openedForwards: Array<string | undefined> = [];
       const cancelledForwards: Array<string | undefined> = [];
       const spawner = ChildProcessSpawner.make((command) =>

@@ -76,7 +76,7 @@ it.effect("serves a writer's multipart upload to readers with its digest", () =>
   const bucket = memoryBucket();
   const bindings = {
     CLIENTS: bucket,
-    developerKeys: JSON.stringify({ julius: tokenDigest }),
+    developerKeys: JSON.stringify({ alex: tokenDigest }),
     readerKeys: JSON.stringify({ "ci-reader": tokenDigest }),
     readLimit: { limit: async () => ({ success: true }) },
     storeLimit: { limit: async () => ({ success: true }) },
@@ -91,7 +91,7 @@ it.effect("serves a writer's multipart upload to readers with its digest", () =>
     expect(denied.status).toBe(403);
 
     const created = yield* request("/uploads", {
-      name: "julius",
+      name: "alex",
       method: "POST",
       headers: { "x-ankiel-digest": digest, "x-ankiel-build-ms": "540000" },
     });
@@ -99,7 +99,7 @@ it.effect("serves a writer's multipart upload to readers with its digest", () =>
     const parts = [];
     for (const [index, chunk] of ["native ", "client"].entries()) {
       const response = yield* request(`/uploads/${encodeURIComponent(uploadId)}/${index + 1}`, {
-        name: "julius",
+        name: "alex",
         method: "PUT",
         body: chunk,
         headers: { "content-length": String(chunk.length) },
@@ -108,7 +108,7 @@ it.effect("serves a writer's multipart upload to readers with its digest", () =>
       parts.push({ partNumber: index + 1, etag });
     }
     const completed = yield* request(`/uploads/${encodeURIComponent(uploadId)}/complete`, {
-      name: "julius",
+      name: "alex",
       method: "POST",
       body: JSON.stringify({ parts }),
       headers: { "content-length": String(JSON.stringify({ parts }).length) },
@@ -123,7 +123,7 @@ it.effect("serves a writer's multipart upload to readers with its digest", () =>
     expect(yield* Effect.promise(() => download.text())).toBe("native client");
 
     const again = yield* request("/uploads", {
-      name: "julius",
+      name: "alex",
       method: "POST",
       headers: { "x-ankiel-digest": digest },
     });

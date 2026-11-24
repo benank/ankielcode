@@ -21,7 +21,7 @@ it.effect("includes successful blob downloads in exported R2 usage", () =>
     const get = vi.fn(async () => ({ size: 4, body: new Blob(["data"]).stream() }));
     const bindings = {
       developerKeys: JSON.stringify({
-        julius: "210eb3d2c67a7207923e1999751300a87a2dd22839b258b80c3d805a6fe64984",
+        alex: "210eb3d2c67a7207923e1999751300a87a2dd22839b258b80c3d805a6fe64984",
       }),
       ARTIFACTS: { get },
       readLimit: { limit: async () => ({ success: true }) },
@@ -34,7 +34,7 @@ it.effect("includes successful blob downloads in exported R2 usage", () =>
           "https://cache.example/projects/ankielcode/blob/12345678-1234-1234-1234-123456789abc",
           {
             headers: {
-              authorization: `Basic ${btoa("julius:fixture-token-012345678901234567890123456789")}`,
+              authorization: `Basic ${btoa("alex:fixture-token-012345678901234567890123456789")}`,
             },
           },
         ),
@@ -62,7 +62,7 @@ it.effect("returns 503 immediately when authenticated requests fill all read per
     });
     const bindings = {
       developerKeys: JSON.stringify({
-        julius: "210eb3d2c67a7207923e1999751300a87a2dd22839b258b80c3d805a6fe64984",
+        alex: "210eb3d2c67a7207923e1999751300a87a2dd22839b258b80c3d805a6fe64984",
       }),
       ARTIFACTS: { get },
       readLimit: { limit: async () => ({ success: true }) },
@@ -75,7 +75,7 @@ it.effect("returns 503 immediately when authenticated requests fill all read per
             "https://cache.example/projects/ankielcode/blob/12345678-1234-1234-1234-123456789abc",
             {
               headers: {
-                authorization: `Basic ${btoa("julius:fixture-token-012345678901234567890123456789")}`,
+                authorization: `Basic ${btoa("alex:fixture-token-012345678901234567890123456789")}`,
               },
             },
           ),
@@ -120,7 +120,7 @@ it.effect("aborts the upstream deadline before disposing it on interruption", ()
     });
     const bindings = {
       developerKeys: JSON.stringify({
-        julius: "210eb3d2c67a7207923e1999751300a87a2dd22839b258b80c3d805a6fe64984",
+        alex: "210eb3d2c67a7207923e1999751300a87a2dd22839b258b80c3d805a6fe64984",
       }),
       ARTIFACTS: {
         get: () => {
@@ -138,7 +138,7 @@ it.effect("aborts the upstream deadline before disposing it on interruption", ()
             "https://cache.example/projects/ankielcode/blob/12345678-1234-1234-1234-123456789abc",
             {
               headers: {
-                authorization: `Basic ${btoa("julius:fixture-token-012345678901234567890123456789")}`,
+                authorization: `Basic ${btoa("alex:fixture-token-012345678901234567890123456789")}`,
               },
             },
           ),
@@ -170,7 +170,7 @@ it.effect("does not charge authenticated budgets for anonymous or malformed requ
     }
     expect(limit).not.toHaveBeenCalled();
     const headers = {
-      authorization: `Basic ${btoa("julius:fixture-token-012345678901234567890123456789")}`,
+      authorization: `Basic ${btoa("alex:fixture-token-012345678901234567890123456789")}`,
     };
     yield* cache.handle(
       new Request(
@@ -186,7 +186,7 @@ it.effect("does not charge authenticated budgets for anonymous or malformed requ
         Layer.provide([
           Layer.succeed(Cache.Bindings, {
             developerKeys: JSON.stringify({
-              julius: "210eb3d2c67a7207923e1999751300a87a2dd22839b258b80c3d805a6fe64984",
+              alex: "210eb3d2c67a7207923e1999751300a87a2dd22839b258b80c3d805a6fe64984",
             }),
             readerKeys: "{}",
             readLimit: { limit },

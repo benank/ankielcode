@@ -56,8 +56,8 @@ vi.mock("node:fs", async (importOriginal) => {
 const SCHTASKS = "D:\\WinNT\\System32\\schtasks.exe";
 
 const windowsTaskOptions = {
-  userId: "PC\\theo",
-  homeDir: "C:\\Users\\theo",
+  userId: "PC\\sam",
+  homeDir: "C:\\Users\\sam",
   conhostPath: "C:\\Windows\\System32\\conhost.exe",
 };
 
@@ -66,50 +66,50 @@ it("reads the served Ankiel home and log back out of a rendered unit, plist, or 
     program: [`${baseDir}/runtime/versions/1.2.3/ac`, "__service-launcher"],
     baseDir,
     logPath: `${baseDir}/userdata/logs/boot-service.log`,
-    unitPath: "/home/theo/.config/systemd/user/ankielcode.service",
+    unitPath: "/home/sam/.config/systemd/user/ankielcode.service",
   });
 
   expect(
-    BootService.bootServiceBaseDirOf(BootService.renderBootServiceUnit(plan("/home/theo/.ac"))),
-  ).toBe("/home/theo/.ac");
+    BootService.bootServiceBaseDirOf(BootService.renderBootServiceUnit(plan("/home/sam/.ac"))),
+  ).toBe("/home/sam/.ac");
   expect(
     BootService.bootServiceBaseDirOf(
-      BootService.renderBootServiceUnit(plan("/home/theo/Ankiel Data/100%")),
+      BootService.renderBootServiceUnit(plan("/home/sam/Ankiel Data/100%")),
     ),
-  ).toBe("/home/theo/Ankiel Data/100%");
+  ).toBe("/home/sam/Ankiel Data/100%");
   expect(
-    serviceUnitLogPathOf(BootService.renderBootServiceUnit(plan("/home/theo/Ankiel Data/100%"))),
-  ).toBe("/home/theo/Ankiel Data/100%/userdata/logs/boot-service.log");
+    serviceUnitLogPathOf(BootService.renderBootServiceUnit(plan("/home/sam/Ankiel Data/100%"))),
+  ).toBe("/home/sam/Ankiel Data/100%/userdata/logs/boot-service.log");
   expect(
     serviceUnitLogPathOf(
-      BootService.renderBootServicePlist(plan("/Users/theo/a&b"), {
-        homeDir: "/Users/theo",
+      BootService.renderBootServicePlist(plan("/Users/sam/a&b"), {
+        homeDir: "/Users/sam",
         environmentPath: "/usr/bin",
       }),
     ),
-  ).toBe("/Users/theo/a&b/userdata/logs/boot-service.log");
+  ).toBe("/Users/sam/a&b/userdata/logs/boot-service.log");
   expect(
     BootService.bootServiceBaseDirOf(
-      BootService.renderBootServicePlist(plan("/Users/theo/a&b"), {
-        homeDir: "/Users/theo",
+      BootService.renderBootServicePlist(plan("/Users/sam/a&b"), {
+        homeDir: "/Users/sam",
         environmentPath: "/usr/bin",
       }),
     ),
-  ).toBe("/Users/theo/a&b");
+  ).toBe("/Users/sam/a&b");
   expect(
     BootService.bootServiceBaseDirOf(
-      BootService.renderBootServiceTask(plan("C:\\Users\\theo\\Ankiel a&b\\"), windowsTaskOptions),
+      BootService.renderBootServiceTask(plan("C:\\Users\\sam\\Ankiel a&b\\"), windowsTaskOptions),
     ),
-  ).toBe("C:\\Users\\theo\\Ankiel a&b\\");
+  ).toBe("C:\\Users\\sam\\Ankiel a&b\\");
   expect(BootService.bootServiceBaseDirOf("[Service]\nExecStart=/x\n")).toBeUndefined();
 });
 
 it("protects the server unit from agents under CPU and memory pressure", () => {
   const unit = BootService.renderBootServiceUnit({
-    program: ["/home/theo/.ac/runtime/versions/1.2.3/ac", "__service-launcher"],
-    baseDir: "/home/theo/.ac",
-    logPath: "/home/theo/.ac/userdata/logs/boot-service.log",
-    unitPath: "/home/theo/.config/systemd/user/ankielcode.service",
+    program: ["/home/sam/.ac/runtime/versions/1.2.3/ac", "__service-launcher"],
+    baseDir: "/home/sam/.ac",
+    logPath: "/home/sam/.ac/userdata/logs/boot-service.log",
+    unitPath: "/home/sam/.config/systemd/user/ankielcode.service",
   });
   const service = unit.slice(unit.indexOf("[Service]"), unit.indexOf("[Install]"));
   for (const line of [
@@ -124,16 +124,16 @@ it("protects the server unit from agents under CPU and memory pressure", () => {
 });
 
 it.each([
-  ["a unit", "/home/theo/Ankiel Data/100%$x", BootService.renderBootServiceUnit],
+  ["a unit", "/home/sam/Ankiel Data/100%$x", BootService.renderBootServiceUnit],
   [
     "a plist",
-    "/Users/theo/a&b <c>",
+    "/Users/sam/a&b <c>",
     (plan: BootService.BootServicePlan) =>
-      BootService.renderBootServicePlist(plan, { homeDir: "/Users/theo", environmentPath: "" }),
+      BootService.renderBootServicePlist(plan, { homeDir: "/Users/sam", environmentPath: "" }),
   ],
   [
     "a task",
-    "C:\\Users\\theo\\Ankiel a&b <c>",
+    "C:\\Users\\sam\\Ankiel a&b <c>",
     (plan: BootService.BootServicePlan) =>
       BootService.renderBootServiceTask(plan, windowsTaskOptions),
   ],
@@ -148,10 +148,10 @@ it.each([
 
 // systemd rejects a unit whose executable has a control character, quote or backslash, even quoted.
 it.each([
-  ["a double quote", '/home/theo/Ankiel "Data"'],
-  ["a single quote", "/home/theo/Theo's Ankiel"],
-  ["a backslash", "/home/theo/Ankiel\\Data"],
-  ["a newline", "/home/theo/Ankiel\nData"],
+  ["a double quote", '/home/sam/Ankiel "Data"'],
+  ["a single quote", "/home/sam/Sam's Ankiel"],
+  ["a backslash", "/home/sam/Ankiel\\Data"],
+  ["a newline", "/home/sam/Ankiel\nData"],
 ])("renders a loadable unit, or refuses, for an Ankiel home with %s", (_, baseDir) => {
   let unit: string;
   try {
@@ -159,7 +159,7 @@ it.each([
       program: [`${baseDir}/runtime/versions/1.2.3/ac`, "__service-launcher"],
       baseDir,
       logPath: `${baseDir}/userdata/logs/boot-service.log`,
-      unitPath: "/home/theo/.config/systemd/user/ankielcode.service",
+      unitPath: "/home/sam/.config/systemd/user/ankielcode.service",
     });
   } catch {
     return;
@@ -182,7 +182,7 @@ it.each([
 });
 
 const macInstallerPath =
-  "/opt/homebrew/bin:/Users/theo/.npm-global/bin:/Users/theo/.nvm/versions/node/v22.16.0/bin:/usr/bin:/bin";
+  "/opt/homebrew/bin:/Users/sam/.npm-global/bin:/Users/sam/.nvm/versions/node/v22.16.0/bin:/usr/bin:/bin";
 
 const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
   platform: NodeJS.Platform = "linux",
@@ -402,7 +402,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
                 LOCALAPPDATA: path.join(home, "AppData", "Local"),
                 USERDOMAIN: "PC",
                 windir: "D:\\WinNT",
-                USERNAME: "theo",
+                USERNAME: "sam",
                 ...(environmentPath === undefined || environmentPath === ""
                   ? {}
                   : { PATH: environmentPath }),
@@ -412,7 +412,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
                         platform === "win32" ? "ankielcode-task.xml" : "ankielcode.service",
                     }
                   : {}),
-                ...(underSudo ? { SUDO_USER: "julius" } : {}),
+                ...(underSudo ? { SUDO_USER: "alex" } : {}),
               },
             }),
           ),
@@ -1584,7 +1584,7 @@ process.disconnect();
       );
       expect(BootService.bootServiceProgramOf(task)).toBe(runtime.entryPath);
       expect(BootService.bootServiceBaseDirOf(task)).toBe(plan.baseDir);
-      expect(task).toContain("<UserId>PC\\theo</UserId>");
+      expect(task).toContain("<UserId>PC\\sam</UserId>");
       expect(task).toContain("<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>");
       // schtasks decodes undeclared UTF-8 with the ANSI code page; UTF-16LE with a BOM is read as is.
       expect([...(yield* fs.readFile(plan.unitPath)).subarray(0, 2)]).toEqual([0xff, 0xfe]);
@@ -1593,8 +1593,8 @@ process.disconnect();
         activeVersion: "1.2.3",
       });
       expect(commands.filter((command) => command.startsWith(`${SCHTASKS} `))).toEqual([
-        `${SCHTASKS} /Create /XML ${plan.unitPath} /TN ankielcode-PC-theo /F`,
-        `${SCHTASKS} /Run /TN ankielcode-PC-theo`,
+        `${SCHTASKS} /Create /XML ${plan.unitPath} /TN ankielcode-PC-sam /F`,
+        `${SCHTASKS} /Run /TN ankielcode-PC-sam`,
       ]);
       // No launcher holds the lock here.
       expect(yield* service.status).toMatchObject({
@@ -1604,7 +1604,7 @@ process.disconnect();
       });
 
       // A task that Task Scheduler refuses to delete stays installed, so a retry finds it.
-      control.failCommand = `${SCHTASKS} /Delete /TN ankielcode-PC-theo /F`;
+      control.failCommand = `${SCHTASKS} /Delete /TN ankielcode-PC-sam /F`;
       expect((yield* service.uninstall.pipe(Effect.flip))._tag).toBe("BootServiceCommandError");
       expect((yield* service.status).installed).toBe(true);
       control.failCommand = undefined;
@@ -1612,9 +1612,9 @@ process.disconnect();
       commands.length = 0;
       expect(yield* service.uninstall).toBe(true);
       expect(commands).toEqual([
-        `${SCHTASKS} /Change /TN ankielcode-PC-theo /DISABLE`,
-        `${SCHTASKS} /End /TN ankielcode-PC-theo`,
-        `${SCHTASKS} /Delete /TN ankielcode-PC-theo /F`,
+        `${SCHTASKS} /Change /TN ankielcode-PC-sam /DISABLE`,
+        `${SCHTASKS} /End /TN ankielcode-PC-sam`,
+        `${SCHTASKS} /Delete /TN ankielcode-PC-sam /F`,
       ]);
       expect(control.task).toBeUndefined();
       expect((yield* service.status).installed).toBe(false);
@@ -1654,11 +1654,11 @@ process.disconnect();
       commands.length = 0;
       yield* service.withStopped(Effect.sync(() => commands.push("repair")));
       expect(commands.filter((command) => !command.includes("/Query"))).toEqual([
-        `${SCHTASKS} /Change /TN ankielcode-PC-theo /DISABLE`,
-        `${SCHTASKS} /End /TN ankielcode-PC-theo`,
+        `${SCHTASKS} /Change /TN ankielcode-PC-sam /DISABLE`,
+        `${SCHTASKS} /End /TN ankielcode-PC-sam`,
         "repair",
-        `${SCHTASKS} /Change /TN ankielcode-PC-theo /ENABLE`,
-        `${SCHTASKS} /Run /TN ankielcode-PC-theo`,
+        `${SCHTASKS} /Change /TN ankielcode-PC-sam /ENABLE`,
+        `${SCHTASKS} /Run /TN ankielcode-PC-sam`,
       ]);
     }),
   );
@@ -1679,9 +1679,9 @@ process.disconnect();
       const inside = yield* makeService(undefined, "1.2.4", undefined, true);
       const relayMarker = `${plan.baseDir}/runtime/${DESKTOP_UPDATE_RESTART_MARKER_FILE}`;
       const handoff = [
-        `${SCHTASKS} /Create /XML ${plan.unitPath} /TN ankielcode-PC-theo /F`,
-        `${SCHTASKS} /End /TN ankielcode-PC-theo`,
-        `${SCHTASKS} /Run /TN ankielcode-PC-theo`,
+        `${SCHTASKS} /Create /XML ${plan.unitPath} /TN ankielcode-PC-sam /F`,
+        `${SCHTASKS} /End /TN ankielcode-PC-sam`,
+        `${SCHTASKS} /Run /TN ankielcode-PC-sam`,
       ];
       commands.length = 0;
 
@@ -1774,7 +1774,7 @@ process.disconnect();
     Effect.gen(function* () {
       const { service, fs } = yield* makeHarness(
         "darwin",
-        "/opt/homebrew/bin:/Users/theo/\u0001invalid:/usr/bin",
+        "/opt/homebrew/bin:/Users/sam/\u0001invalid:/usr/bin",
       );
       const plan = yield* service.install();
       const plist = yield* fs.readFileString(plan.unitPath);

@@ -34,8 +34,8 @@ vi.mock(import("~/state/pullRequests"), async (original) => ({
       targets.length === 0
         ? []
         : [
-            { login: "julius", name: "Julius", avatarUrl: null },
-            { login: "theo", name: "Theo", avatarUrl: null },
+            { login: "alex", name: "Alex", avatarUrl: null },
+            { login: "sam", name: "Sam", avatarUrl: null },
           ],
     references:
       targets.length === 0
@@ -123,23 +123,23 @@ it("completes @mentions and !references on Enter, and Escape closes the list unt
   await using screen = await openEditor({ value: "" });
   const textarea = screen.container.querySelector("textarea")!;
   await userEvent.type(textarea, "Thanks @ju");
-  await expect.element(page.getByRole("option", { name: /julius/ })).toBeVisible();
+  await expect.element(page.getByRole("option", { name: /alex/ })).toBeVisible();
 
   await userEvent.keyboard("{Enter}");
-  expect(textarea.value).toBe("Thanks @julius ");
+  expect(textarea.value).toBe("Thanks @alex ");
   await expect.element(page.getByRole("listbox")).not.toBeInTheDocument();
 
   await userEvent.type(textarea, "and @");
-  await expect.element(page.getByRole("option", { name: /theo/ })).toBeVisible();
+  await expect.element(page.getByRole("option", { name: /sam/ })).toBeVisible();
   await userEvent.keyboard("{Escape}");
   await expect.element(page.getByRole("listbox")).not.toBeInTheDocument();
   await userEvent.type(textarea, "t");
-  await expect.element(page.getByRole("option", { name: /theo/ })).toBeVisible();
+  await expect.element(page.getByRole("option", { name: /sam/ })).toBeVisible();
 
   await userEvent.type(textarea, " fixes !1");
   await expect.element(page.getByRole("option", { name: /Fix/ })).toBeVisible();
   await userEvent.keyboard("{Enter}");
-  expect(textarea.value).toBe("Thanks @julius and @t fixes !12 ");
+  expect(textarea.value).toBe("Thanks @alex and @t fixes !12 ");
   expect(onCancel).not.toHaveBeenCalled();
   expect(onSave).not.toHaveBeenCalled();
 });

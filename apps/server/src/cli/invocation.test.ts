@@ -84,8 +84,8 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
       yield* fs.makeDirectory(path.dirname(shim), { recursive: true });
       yield* fs.writeFileString(shim, "#!/bin/sh\n", { mode: 0o755 });
       const desktop = {
-        node: "/tmp/.mount_T3abc/ankielcode",
-        entry: "/tmp/.mount_T3abc/resources/app.asar/apps/server/dist/bin.mjs",
+        node: "/tmp/.mount_Akabc/ankielcode",
+        entry: "/tmp/.mount_Akabc/resources/app.asar/apps/server/dist/bin.mjs",
         env: { AC_CLI_PATH: shim },
       };
 

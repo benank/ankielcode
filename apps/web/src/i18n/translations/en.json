@@ -7087,7 +7087,7 @@
   "820d2f52218914ef": "Appended to the naming prompt. The model returns the complete branch name; no prefix or suffix is added.",
   "41126a14bd7ce52b": "Reset branch naming instructions to default",
   "011a880d28ad813b": "Mixed. Enter instructions to apply to all selected targets.",
-  "a8edab62f7a0e5dc": "Use julius/ followed by the issue ID and a short description.",
+  "71e72f3d1739979e": "Use you/ followed by the issue ID and a short description.",
   "35c482e288f87f27": "no cookies",
   "08e1362ecbb815d7": "{count, plural, one {{formatted} cookie} other {{formatted} cookies}}",
   "800c4f374a9ad325": "That profile is no longer available. Choose where to import these cookies.",

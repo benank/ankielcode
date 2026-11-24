@@ -125,7 +125,7 @@ describe("DesktopSshPasswordPrompts", () => {
       const fiber = yield* prompts
         .request({
           destination: "devbox",
-          username: "julius",
+          username: "alex",
           prompt: "Enter the SSH password.",
           attempt: 1,
         })
@@ -157,7 +157,7 @@ describe("DesktopSshPasswordPrompts", () => {
         const fiber = yield* prompts
           .request({
             destination: "devbox",
-            username: "julius",
+            username: "alex",
             prompt: "Enter the SSH password.",
             attempt: 1,
           })
@@ -203,7 +203,7 @@ describe("DesktopSshPasswordPrompts", () => {
       const requestFiber = yield* prompts
         .request({
           destination: "devbox",
-          username: "julius",
+          username: "alex",
           prompt: "Enter the SSH password.",
           attempt: 1,
         })

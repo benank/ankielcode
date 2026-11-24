@@ -120,7 +120,7 @@ export function BranchNamingSettings(props: {
               props.instructions === null
                 ? gt("Mixed. Enter instructions for all selected targets.")
                 : gt("Use {prefix} followed by the issue ID and a short description.", {
-                    prefix: "julius/",
+                    prefix: "you/",
                   })
             }
             editable={!props.disabled.instructions}

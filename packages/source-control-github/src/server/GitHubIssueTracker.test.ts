@@ -15,7 +15,7 @@ import * as GitHubIssueTracker from "./GitHubIssueTracker.ts";
 
 const DETAIL_RESPONSE = JSON.stringify({
   data: {
-    viewer: { login: "julius" },
+    viewer: { login: "alex" },
     repository: {
       viewerPermission: "TRIAGE",
       issue: {
@@ -41,7 +41,7 @@ const DETAIL_RESPONSE = JSON.stringify({
             {
               __typename: "IssueComment",
               id: "IC_1",
-              author: { __typename: "User", login: "julius", avatarUrl: "https://avatars/julius" },
+              author: { __typename: "User", login: "alex", avatarUrl: "https://avatars/alex" },
               body: "Repro attached.",
               createdAt: "2026-07-02T00:00:00Z",
               url: "https://github.com/acme/web/issues/42#issuecomment-1",
@@ -52,8 +52,8 @@ const DETAIL_RESPONSE = JSON.stringify({
                   reactors: {
                     totalCount: 2,
                     nodes: [
-                      { __typename: "User", login: "julius" },
-                      { __typename: "User", login: "theo" },
+                      { __typename: "User", login: "alex" },
+                      { __typename: "User", login: "sam" },
                     ],
                   },
                 },
@@ -68,7 +68,7 @@ const DETAIL_RESPONSE = JSON.stringify({
         },
         assignees: {
           pageInfo: { hasNextPage: false, endCursor: null },
-          nodes: [{ login: "theo", name: null, avatarUrl: "https://avatars/julius" }],
+          nodes: [{ login: "sam", name: null, avatarUrl: "https://avatars/alex" }],
         },
         labels: {
           pageInfo: { hasNextPage: true, endCursor: "labels-next" },
@@ -98,14 +98,14 @@ const DETAIL_RESPONSE = JSON.stringify({
               __typename: "LabeledEvent",
               id: "LE_1",
               createdAt: "2026-07-01T01:00:00Z",
-              actor: { __typename: "User", login: "theo", avatarUrl: "https://avatars/theo" },
+              actor: { __typename: "User", login: "sam", avatarUrl: "https://avatars/sam" },
               label: { name: "bug" },
             },
             {
               __typename: "CrossReferencedEvent",
               id: "CRE_1",
               createdAt: "2026-07-02T01:00:00Z",
-              actor: { __typename: "User", login: "julius", avatarUrl: "https://avatars/julius" },
+              actor: { __typename: "User", login: "alex", avatarUrl: "https://avatars/alex" },
               source: {
                 __typename: "PullRequest",
                 number: 50,
@@ -620,13 +620,13 @@ describe("GitHubIssueTracker", () => {
           state: "open",
           involvement: "all",
           labels: ['needs "repro"'],
-          assignee: "theo",
+          assignee: "sam",
           sort: "created",
           limit: 10,
         })
         .pipe(Effect.exit);
       expect(seen[0]).toMatchObject({
-        q: 'is:issue repo:acme/web is:open label:"needs \\"repro\\"" assignee:"theo" sort:created-desc',
+        q: 'is:issue repo:acme/web is:open label:"needs \\"repro\\"" assignee:"sam" sort:created-desc',
       });
     }),
   );
@@ -640,7 +640,7 @@ describe("GitHubIssueTracker", () => {
 description: Report broken behavior.
 title: "[Bug]: "
 labels: [bug, needs-triage]
-assignees: "octocat, theo"
+assignees: "octocat, sam"
 body:
   - type: markdown
     attributes:
@@ -712,7 +712,7 @@ body:
         about: "Report broken behavior.",
         title: "[Bug]: ",
         labels: ["bug", "needs-triage"],
-        assignees: ["octocat", "theo"],
+        assignees: ["octocat", "sam"],
       });
       expect(result.templates[0]?.body).toBe(`Search existing issues first.
 
@@ -794,13 +794,13 @@ Redact secrets before uploading.`);
           name: "Octo Cat",
           avatarUrl: "https://avatars/octocat",
         },
-        assignees: [{ login: "theo" }],
+        assignees: [{ login: "sam" }],
         labels: [
           { name: "bug", color: "d73a4a" },
           { name: "needs repro", color: "ffffff" },
         ],
         commentCount: 3,
-        viewer: "julius",
+        viewer: "alex",
         // Triage may label, assign, close and reopen; `viewerCanUpdate: false` withholds edits.
         viewerPermissions: {
           setState: true,
@@ -813,7 +813,7 @@ Redact secrets before uploading.`);
       });
       // The viewer is left out of `actors` and shown as "You"; an empty group is dropped.
       expect(issue.comments[0]?.reactions).toEqual([
-        { content: "thumbs-up", count: 2, actors: ["theo"], viewerHasReacted: true },
+        { content: "thumbs-up", count: 2, actors: ["sam"], viewerHasReacted: true },
       ]);
       // The closing reference wins over the cross-reference sighting of the same pull request.
       expect(issue.linkedPullRequests).toEqual([

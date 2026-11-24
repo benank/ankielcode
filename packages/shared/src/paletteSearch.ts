@@ -88,7 +88,7 @@ function isWordStart(
   character: string,
   next: string,
 ): boolean {
-  // "Julius’s": a possessive or contraction does not start a word.
+  // "Alex’s": a possessive or contraction does not start a word.
   const afterApostrophe = APOSTROPHE.test(previous) && ALPHANUMERIC.test(beforePrevious);
   return (
     (ALPHANUMERIC.test(character) || SYMBOL.test(character)) &&

@@ -7081,7 +7081,7 @@
   "820d2f52218914ef": "Ajoutées au prompt de nommage. Le modèle renvoie le nom de branche complet ; aucun préfixe ni suffixe n’est ajouté.",
   "41126a14bd7ce52b": "Réinitialiser les instructions de nommage des branches à la valeur par défaut",
   "011a880d28ad813b": "Mixte. Saisissez des instructions à appliquer à toutes les cibles sélectionnées.",
-  "a8edab62f7a0e5dc": "Utilise julius/ suivi de l’ID du ticket et d’une courte description.",
+  "71e72f3d1739979e": "Utilise you/ suivi de l’ID du ticket et d’une courte description.",
   "35c482e288f87f27": "aucun cookie",
   "08e1362ecbb815d7": "{count, plural, one {{formatted} cookie} other {{formatted} cookies}}",
   "800c4f374a9ad325": "Ce profil n’est plus disponible. Choisissez où importer ces cookies.",

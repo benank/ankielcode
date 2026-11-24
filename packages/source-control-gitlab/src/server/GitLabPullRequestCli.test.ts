@@ -137,7 +137,7 @@ function graphqlListPage(
             sourceBranch: "feat/page",
             targetBranch: "main",
             approved: true,
-            approvedBy: { nodes: [{ username: "julius" }] },
+            approvedBy: { nodes: [{ username: "alex" }] },
           })),
         },
       },
@@ -1607,7 +1607,7 @@ layer("GitLabPullRequestCli.layer", (it) => {
                     {
                       id: 2,
                       body: "done",
-                      author: { username: "julius" },
+                      author: { username: "alex" },
                       created_at: "2026-07-01T01:00:00Z",
                     },
                   ],
@@ -1913,7 +1913,7 @@ layer("GitLabPullRequestCli.layer", (it) => {
   it.effect("removes the reader's own award from a later page, and stops at an empty page", () =>
     Effect.gen(function* () {
       const others = Array.from({ length: 100 }, (_, index) =>
-        index === 0 ? null : { id: index, name: "thumbsup", user: { username: "julius" } },
+        index === 0 ? null : { id: index, name: "thumbsup", user: { username: "alex" } },
       );
       const page = (awards: ReadonlyArray<unknown>) =>
         Effect.succeed(output(JSON.stringify(awards)));

@@ -34,7 +34,7 @@ The device argument can be omitted when exactly one device is booted or connecte
 compares this checkout's Expo fingerprint and the installed binary with its last install record,
 and reuses a matching client. Otherwise it installs the build for that fingerprint from
 `~/.cache/ankielcode/native-clients/artifacts`, then the shared task cache, and builds only when
-neither has it. A build runs in the `Mobile Dev Client` workflow (Blacksmith runners with warm
+neither has it. A build runs in the `Mobile Dev Client` workflow (CI runners with warm
 Gradle and ccache state, and a macOS runner for iOS) when `gh` may dispatch workflows on
 `benank/ankielcode` and HEAD is pushed; the helper waits for the client in the shared cache.
 Otherwise, or when HEAD lacks your native edits or `AC_NATIVE_CLIENT_BUILD=local` is set, it builds

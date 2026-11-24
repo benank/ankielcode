@@ -7080,7 +7080,7 @@
   "820d2f52218914ef": "Se añaden al prompt de nombres. El modelo devuelve el nombre completo de la rama; no se añade prefijo ni sufijo.",
   "41126a14bd7ce52b": "Restablecer las instrucciones de nomenclatura de ramas al valor predeterminado",
   "011a880d28ad813b": "Mixto. Introduce instrucciones para aplicarlas a todos los destinos seleccionados.",
-  "a8edab62f7a0e5dc": "Usa julius/ seguido del ID de la issue y una descripción breve.",
+  "71e72f3d1739979e": "Usa you/ seguido del ID de la issue y una descripción breve.",
   "35c482e288f87f27": "sin cookies",
   "08e1362ecbb815d7": "{count, plural, one {{formatted} cookie} other {{formatted} cookies}}",
   "800c4f374a9ad325": "Ese perfil ya no está disponible. Elige dónde importar estas cookies.",

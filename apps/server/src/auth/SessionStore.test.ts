@@ -638,7 +638,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("SessionStore.lay
         subject: "one-time-token",
         scopes: ["orchestration:read"],
         client: {
-          label: "Julius iPhone",
+          label: "Alex iPhone",
           deviceType: "mobile",
           os: "iOS",
           browser: "Safari",
@@ -661,7 +661,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("SessionStore.lay
         true,
       );
       expect(beforeRevoke.find((entry) => entry.sessionId === client.sessionId)?.client.label).toBe(
-        "Julius iPhone",
+        "Alex iPhone",
       );
       expect(
         beforeRevoke.find((entry) => entry.sessionId === administrative.sessionId)?.client

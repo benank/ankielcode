@@ -7080,7 +7080,7 @@
   "820d2f52218914ef": "Wird an den Benennungs-Prompt angehängt. Das Modell gibt den vollständigen Branch-Namen zurück; kein Präfix oder Suffix wird ergänzt.",
   "41126a14bd7ce52b": "Anweisungen zur Branch-Benennung auf Standard zurücksetzen",
   "011a880d28ad813b": "Gemischt. Gib Anweisungen ein, die für alle ausgewählten Ziele gelten.",
-  "a8edab62f7a0e5dc": "Verwende julius/ gefolgt von der Issue-ID und einer kurzen Beschreibung.",
+  "71e72f3d1739979e": "Verwende you/ gefolgt von der Issue-ID und einer kurzen Beschreibung.",
   "35c482e288f87f27": "keine Cookies",
   "08e1362ecbb815d7": "{count, plural, one {{formatted} Cookie} other {{formatted} Cookies}}",
   "800c4f374a9ad325": "Dieses Profil ist nicht mehr verfügbar. Wähle, wohin diese Cookies importiert werden sollen.",

@@ -7086,7 +7086,7 @@
   "820d2f52218914ef": "Läggs till i namngivningsprompten. Modellen returnerar hela grennamnet; inget prefix eller suffix läggs till.",
   "41126a14bd7ce52b": "Återställ instruktioner för namngivning av grenar till standard",
   "011a880d28ad813b": "Blandat. Ange instruktioner som ska gälla för alla valda mål.",
-  "a8edab62f7a0e5dc": "Använd julius/ följt av ärende-ID:t och en kort beskrivning.",
+  "71e72f3d1739979e": "Använd you/ följt av ärende-ID:t och en kort beskrivning.",
   "35c482e288f87f27": "inga cookies",
   "08e1362ecbb815d7": "{count, plural, one {{formatted} cookie} other {{formatted} cookies}}",
   "800c4f374a9ad325": "Den profilen är inte längre tillgänglig. Välj var de här cookies ska importeras.",

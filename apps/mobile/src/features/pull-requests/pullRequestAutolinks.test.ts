@@ -10,8 +10,8 @@ const github = changeRequestReferenceAutolinker({
 
 describe("nativePullRequestMarkdown", () => {
   it("links the host's references in prose", () => {
-    expect(nativePullRequestMarkdown("Closes #123, see @julius", github, false).markdown).toBe(
-      "Closes [#123](https://github.com/team/repo/issues/123), see [@julius](https://github.com/julius)",
+    expect(nativePullRequestMarkdown("Closes #123, see @alex", github, false).markdown).toBe(
+      "Closes [#123](https://github.com/team/repo/issues/123), see [@alex](https://github.com/alex)",
     );
   });
 

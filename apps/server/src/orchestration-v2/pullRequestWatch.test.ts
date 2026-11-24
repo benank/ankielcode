@@ -1341,11 +1341,11 @@ describe("pullRequestWatchEndMessage", () => {
   it("says how the pull request ended, with the merge commit and merger the host reports", () => {
     const merged = end({
       mergeCommitSha,
-      mergedBy: { login: "juliusmarminge", name: null, avatarUrl: null },
+      mergedBy: { login: "alexmarminge", name: null, avatarUrl: null },
     });
     assert.equal(
       merged.text,
-      `Pull request #7 (${url}) was merged into main by juliusmarminge as 3b2f958, so Ankiel Code stopped watching it.`,
+      `Pull request #7 (${url}) was merged into main by alexmarminge as 3b2f958, so Ankiel Code stopped watching it.`,
     );
     assert.deepEqual(merged.notification, {
       source: { kind: "monitor" },

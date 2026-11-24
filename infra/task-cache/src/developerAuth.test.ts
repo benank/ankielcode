@@ -5,7 +5,7 @@ import { developerIdentity } from "./developerAuth.ts";
 
 const token = "fixture-token-012345678901234567890123456789";
 const keys = JSON.stringify({
-  julius: "210eb3d2c67a7207923e1999751300a87a2dd22839b258b80c3d805a6fe64984",
+  alex: "210eb3d2c67a7207923e1999751300a87a2dd22839b258b80c3d805a6fe64984",
 });
 const request = (credentials: string) =>
   new Request("https://cache.example/projects/ankielcode/store", {
@@ -16,11 +16,11 @@ it.effect(
   "accepts the registered developer and rejects wrong, revoked, or malformed credentials",
   () =>
     Effect.gen(function* () {
-      expect(yield* developerIdentity(request(`julius:${token}`), keys)).toBe("julius");
-      expect(yield* developerIdentity(request(`theo:${token}`), keys)).toBeNull();
-      expect(yield* developerIdentity(request(`julius:${token}wrong`), keys)).toBeNull();
-      expect(yield* developerIdentity(request(`julius:${token}`), "{}")).toBeNull();
-      expect(yield* developerIdentity(request(`julius:${token}`), undefined)).toBeNull();
+      expect(yield* developerIdentity(request(`alex:${token}`), keys)).toBe("alex");
+      expect(yield* developerIdentity(request(`sam:${token}`), keys)).toBeNull();
+      expect(yield* developerIdentity(request(`alex:${token}wrong`), keys)).toBeNull();
+      expect(yield* developerIdentity(request(`alex:${token}`), "{}")).toBeNull();
+      expect(yield* developerIdentity(request(`alex:${token}`), undefined)).toBeNull();
       expect(yield* developerIdentity(request("malformed"), keys)).toBeNull();
       expect(yield* developerIdentity(request(`constructor:${token}`), keys)).toBeNull();
     }),

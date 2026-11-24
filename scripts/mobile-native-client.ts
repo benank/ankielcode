@@ -854,12 +854,12 @@ const remoteBuildTimeoutMs = 25 * 60_000;
 const remoteBuildJoinMs = 30 * 60_000;
 
 /**
- * Build the client for HEAD in the `mobile-dev-client.yml` workflow (Blacksmith runners with warm
+ * Build the client for HEAD in the `mobile-dev-client.yml` workflow (CI runners with warm
  * Gradle and ccache state) and download it from the shared cache. False means "build here
  * instead": no `gh`, no permission to dispatch, HEAD not on GitHub, native edits that HEAD does
  * not have (the workflow rejects a fingerprint it does not compute), or a failed run.
  */
-const buildOnBlacksmith = Effect.fn("nativeClient.buildOnBlacksmith")(
+const buildInCi = Effect.fn("nativeClient.buildInCi")(
   function* (
     remote: RemoteCache,
     platform: NativePlatform,
@@ -946,7 +946,7 @@ const buildOnBlacksmith = Effect.fn("nativeClient.buildOnBlacksmith")(
       if (!dispatched) return false;
     }
     yield* Console.error(
-      `${joined ? "A Blacksmith build of" : "Building"} ${key} ${joined ? "is already running" : "on Blacksmith"}; waiting for it in the shared cache...`,
+      `${joined ? "A CI build of" : "Building"} ${key} ${joined ? "is already running" : "in CI"}; waiting for it in the shared cache...`,
     );
     const since = joined ? started - remoteBuildJoinMs : started - 60_000;
     const fetched = download(remote, platform, key, directory).pipe(
@@ -959,19 +959,19 @@ const buildOnBlacksmith = Effect.fn("nativeClient.buildOnBlacksmith")(
       if (now === "failed" || (now === "succeeded" && !(yield* fetched))) {
         yield* Console.error(
           now === "failed"
-            ? "The Blacksmith build failed (or HEAD lacks this checkout's native edits); building here."
-            : "The Blacksmith run finished without sharing this client; building here.",
+            ? "The CI build failed (or HEAD lacks this checkout's native edits); building here."
+            : "The CI run finished without sharing this client; building here.",
         );
         return false;
       }
     }
-    yield* Console.error("The Blacksmith build did not finish in time; building here.");
+    yield* Console.error("The CI build did not finish in time; building here.");
     return false;
   },
   Effect.orElseSucceed(() => false),
 );
 
-/** Local artifact, then the shared cache, then a Blacksmith build when this user can start one, then a build here that is shared back when credentials allow. */
+/** Local artifact, then the shared cache, then a CI build when this user can start one, then a build here that is shared back when credentials allow. */
 export const resolveArtifact = Effect.fn("nativeClient.resolveArtifact")(function* (
   home: string,
   platform: NativePlatform,
@@ -1005,7 +1005,7 @@ export const resolveArtifact = Effect.fn("nativeClient.resolveArtifact")(functio
       return { ...artifact, source: "remote" as const, buildMs: yield* readBuildMs(directory) };
     }
   }
-  if (remote && (yield* buildOnBlacksmith(remote, platform, abi, fingerprint, key, directory))) {
+  if (remote && (yield* buildInCi(remote, platform, abi, fingerprint, key, directory))) {
     yield* prune(path.dirname(directory), fingerprint);
     return { ...artifact, source: "remote" as const, buildMs: yield* readBuildMs(directory) };
   }
@@ -1018,7 +1018,7 @@ export const resolveArtifact = Effect.fn("nativeClient.resolveArtifact")(functio
   yield* writeBuildMs(directory, (yield* Clock.currentTimeMillis) - started);
   yield* prune(path.dirname(directory), fingerprint);
   if (remote && (yield* HostProcess.Environment).AC_NATIVE_CLIENT_CACHE !== "read") {
-    // The Blacksmith workflow exists to share the client: there a failed upload fails the run.
+    // The CI workflow exists to share the client: there a failed upload fails the run.
     const required = (yield* HostProcess.Environment).AC_NATIVE_CLIENT_SHARE === "required";
     yield* upload(remote, platform, key, directory).pipe(
       Effect.catch((error) =>

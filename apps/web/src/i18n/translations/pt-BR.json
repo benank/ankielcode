@@ -7080,7 +7080,7 @@
   "820d2f52218914ef": "Adicionadas ao prompt de nomeação. O modelo retorna o nome completo do branch; nenhum prefixo ou sufixo é adicionado.",
   "41126a14bd7ce52b": "Redefinir as instruções de nomenclatura de branches para o padrão",
   "011a880d28ad813b": "Misto. Digite instruções para aplicar a todos os destinos selecionados.",
-  "a8edab62f7a0e5dc": "Use julius/ seguido do ID da issue e de uma descrição curta.",
+  "71e72f3d1739979e": "Use you/ seguido do ID da issue e de uma descrição curta.",
   "35c482e288f87f27": "nenhum cookie",
   "08e1362ecbb815d7": "{count, plural, one {{formatted} cookie} other {{formatted} cookies}}",
   "800c4f374a9ad325": "Esse perfil não está mais disponível. Escolha para onde importar estes cookies.",

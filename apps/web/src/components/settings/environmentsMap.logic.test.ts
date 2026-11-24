@@ -946,8 +946,8 @@ describe("layoutFleetGraph", () => {
     // Nine routes and eight links leave a card the size of one with a single route.
     expect(cards.map((card) => card.height)).toEqual(names.map(() => plain.height));
     expect(plain.height).toBeLessThanOrEqual(64);
-    const long = layoutFleetGraph(build([environment("Julius's MacBook Pro")]));
-    const wrapped = long.nodes.get(node("Julius's MacBook Pro"))!.height;
+    const long = layoutFleetGraph(build([environment("Alex's MacBook Pro")]));
+    const wrapped = long.nodes.get(node("Alex's MacBook Pro"))!.height;
     expect(wrapped).toBeGreaterThan(plain.height);
     expect(wrapped).toBeLessThanOrEqual(72);
     for (const [index, name] of names.entries()) {
@@ -1133,13 +1133,13 @@ describe("layoutFleetGraph", () => {
       environment(
         "nucbox-1",
         [
-          link("Julius's MacBook Pro", { access: "full-access" }),
+          link("Alex's MacBook Pro", { access: "full-access" }),
           ...vms(7, "fs", { access: "full-access" }),
           ...vms(37, "gs", { access: "full-access", status: "unreachable" }),
         ],
         { routes: routes("lan", "tailnet", "tailnet", "vpn"), activeRouteId: "lan-0" },
       ),
-      environment("Julius's MacBook Pro"),
+      environment("Alex's MacBook Pro"),
     ]);
     const stacks = fleetStacks(graph, new Set());
     expect(stacks.map((stack) => [stack.memberIds.length, stack.reachable])).toEqual([[44, 7]]);

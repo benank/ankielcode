@@ -159,7 +159,7 @@ export function BranchNamingSettings() {
               placeholder={
                 instructionsMixed
                   ? gt("Mixed. Enter instructions to apply to all selected targets.")
-                  : gt("Use julius/ followed by the issue ID and a short description.")
+                  : gt("Use you/ followed by the issue ID and a short description.")
               }
               onBlur={(event) => {
                 const value = event.target.value.trim();

@@ -18,8 +18,8 @@ const user = (id: string, displayName: string) => ({
   email: `${displayName}@acme.test`,
   avatarUrl: null,
 });
-const JULIUS = user("usr_julius", "julius");
-const THEO = user("usr_theo", "theo");
+const ALEX = user("usr_alex", "alex");
+const THEO = user("usr_theo", "sam");
 
 const state = (name: string, type: string, position = 0) => ({
   id: `st_${name.toLowerCase().replaceAll(" ", "-")}`,
@@ -55,7 +55,7 @@ const issue = (
       ],
     },
   },
-  creator: JULIUS,
+  creator: ALEX,
   botActor: null,
   assignee: THEO,
   labels: { nodes: [{ id: "lbl_bug", name: "Bug", color: "#f00" }] },
@@ -234,7 +234,7 @@ describe("LinearIssueTracker", () => {
     Effect.gen(function* () {
       const { tracker, requests } = fakeLinear({
         AnkielViewer: () => ({
-          viewer: JULIUS,
+          viewer: ALEX,
           organization: { urlKey: "acme" },
           teams: { nodes: [] },
         }),
@@ -243,9 +243,9 @@ describe("LinearIssueTracker", () => {
             team: { key: { eq: "ENG" } },
             state: { type: { nin: ["completed", "canceled", "duplicate"] } },
             // "Assigned to me" survives an assignee filter: both must hold.
-            assignee: { displayName: { eq: "julius" } },
+            assignee: { displayName: { eq: "alex" } },
             and: [
-              { assignee: { displayName: { eq: "theo" } } },
+              { assignee: { displayName: { eq: "sam" } } },
               { labels: { some: { name: { eq: "Bug" } } } },
             ],
           });
@@ -272,9 +272,9 @@ describe("LinearIssueTracker", () => {
         ...target,
         state: "open",
         involvement: "assigned",
-        viewer: "julius",
+        viewer: "alex",
         labels: ["Bug"],
-        assignee: "theo",
+        assignee: "sam",
         sort: "created",
         limit: 50,
       });
@@ -287,8 +287,8 @@ describe("LinearIssueTracker", () => {
       expect(page.items.map((item) => item.commentCount)).toEqual([0, 0]);
       expect(page.items[0]).toMatchObject({
         closedAt: "2026-07-03T00:00:00.000Z",
-        author: { login: "julius", name: "julius" },
-        assignees: [{ login: "theo", name: "theo" }],
+        author: { login: "alex", name: "alex" },
+        assignees: [{ login: "sam", name: "sam" }],
         labels: [{ name: "Bug", color: "#f00" }],
       });
       // The stored key goes in as-is, not as a bearer token.
@@ -327,7 +327,7 @@ describe("LinearIssueTracker", () => {
       const deleted: Array<unknown> = [];
       const { tracker } = fakeLinear({
         AnkielViewer: () => ({
-          viewer: JULIUS,
+          viewer: ALEX,
           organization: { urlKey: "acme" },
           teams: { nodes: [] },
         }),
@@ -339,7 +339,7 @@ describe("LinearIssueTracker", () => {
         AnkielCommentReactions: (variables) => ({
           comment: {
             issue: { id: variables.id === "cmt_own" ? "iss_ENG-1" : "iss_OPS-9" },
-            reactions: [{ id: "r1", emoji: "+1", user: JULIUS }],
+            reactions: [{ id: "r1", emoji: "+1", user: ALEX }],
           },
         }),
         AnkielReactionCreate: (variables) => {
@@ -382,7 +382,7 @@ describe("LinearIssueTracker", () => {
                   url: "https://linear.app/acme/issue/ENG-7#comment-cmt_1",
                   user: THEO,
                   botActor: null,
-                  reactions: after === "reacted" ? [{ id: "r1", emoji: "+1", user: JULIUS }] : [],
+                  reactions: after === "reacted" ? [{ id: "r1", emoji: "+1", user: ALEX }] : [],
                 },
               ],
               pageInfo: { hasNextPage: false, endCursor: null },
@@ -390,7 +390,7 @@ describe("LinearIssueTracker", () => {
           },
         }),
         AnkielViewer: () => ({
-          viewer: JULIUS,
+          viewer: ALEX,
           organization: { urlKey: "acme" },
           teams: { nodes: [] },
         }),
@@ -413,7 +413,7 @@ describe("LinearIssueTracker", () => {
     Effect.gen(function* () {
       const { tracker } = fakeLinear({
         AnkielViewer: () => ({
-          viewer: JULIUS,
+          viewer: ALEX,
           organization: { urlKey: "acme" },
           teams: { nodes: [] },
         }),
@@ -428,14 +428,14 @@ describe("LinearIssueTracker", () => {
                   url: "https://linear.app/acme/issue/ENG-7#comment-cmt_1",
                   user: THEO,
                   botActor: null,
-                  reactions: [{ id: "r1", emoji: "+1", user: JULIUS }],
+                  reactions: [{ id: "r1", emoji: "+1", user: ALEX }],
                 },
               ],
               pageInfo: { hasNextPage: true, endCursor: "cmt_cur" },
             },
             reactions: [
               { id: "r2", emoji: "🚀", user: THEO },
-              { id: "r3", emoji: "rocket", user: JULIUS },
+              { id: "r3", emoji: "rocket", user: ALEX },
               { id: "r4", emoji: "🤷", user: THEO },
             ],
             attachments: {
@@ -460,7 +460,7 @@ describe("LinearIssueTracker", () => {
                   fromState: state("Todo", "unstarted"),
                   toState: state("Done", "completed"),
                   fromAssignee: null,
-                  toAssignee: JULIUS,
+                  toAssignee: ALEX,
                   addedLabels: [{ id: "lbl_bug", name: "Bug", color: "#f00" }],
                   removedLabels: null,
                   fromTitle: null,
@@ -473,7 +473,7 @@ describe("LinearIssueTracker", () => {
       });
       const api = yield* tracker;
       const detail = yield* api.getIssue({ ...target, key: "eng-7" });
-      expect(detail.viewer).toBe("julius");
+      expect(detail.viewer).toBe("alex");
       expect(detail.body).toBe("body");
       expect((yield* api.probeCredential("token")).workspace).toBe("acme");
       // The team's own workflow, in Linear's order, with the category each state falls in.
@@ -489,12 +489,12 @@ describe("LinearIssueTracker", () => {
       ]);
       // Grouped per emoji, the viewer left out of the names; an emoji outside the vocabulary is dropped.
       expect(detail.reactions).toEqual([
-        { content: "rocket", count: 2, actors: ["theo"], viewerHasReacted: true },
+        { content: "rocket", count: 2, actors: ["sam"], viewerHasReacted: true },
       ]);
       expect(detail.events.map((event) => [event.kind, event.detail])).toEqual([
         ["closed", "Done"],
         ["labeled", "Bug"],
-        ["assigned", "julius"],
+        ["assigned", "alex"],
       ]);
       expect(detail.events[0]?.actor).toEqual({
         isBot: true,

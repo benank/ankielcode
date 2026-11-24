@@ -63,9 +63,9 @@ describe("insertPullRequestCompletion", () => {
     (suffix) => {
       const text = `thanks @ju${suffix}`;
       const trigger = detectPullRequestComposerTrigger(text, "thanks @ju".length, GITLAB)!;
-      expect(insertPullRequestCompletion(text, trigger, "@julius")).toEqual({
-        text: `thanks @julius ${suffix}`,
-        cursor: "thanks @julius ".length,
+      expect(insertPullRequestCompletion(text, trigger, "@alex")).toEqual({
+        text: `thanks @alex ${suffix}`,
+        cursor: "thanks @alex ".length,
       });
     },
   );
@@ -96,7 +96,7 @@ describe("narrowPullRequestMentions", () => {
     const users = [
       { login: "TonybynMp4", name: null },
       { login: "16g", name: "Tom" },
-      { login: "theo", name: "Theo" },
+      { login: "sam", name: "Sam" },
     ];
     expect(narrowPullRequestMentions(users, "to", 5).map((u) => u.login)).toEqual([
       "TonybynMp4",

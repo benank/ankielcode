@@ -51,15 +51,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("PairingGrantStor
   it.effect("accepts lowercase one-time tokens exactly once", () =>
     Effect.gen(function* () {
       const bootstrapCredentials = yield* PairingGrantStore.PairingGrantStore;
-      const issued = yield* bootstrapCredentials.issueOneTimeToken({ label: "Julius iPhone" });
+      const issued = yield* bootstrapCredentials.issueOneTimeToken({ label: "Alex iPhone" });
       const first = yield* bootstrapCredentials.consume(issued.credential.toLowerCase());
       const second = yield* Effect.flip(bootstrapCredentials.consume(issued.credential));
 
       expect(first.method).toBe("one-time-token");
       expect(first.scopes).toEqual(AuthStandardClientScopes);
       expect(first.subject).toBe("one-time-token");
-      expect(first.label).toBe("Julius iPhone");
-      expect(issued.label).toBe("Julius iPhone");
+      expect(first.label).toBe("Alex iPhone");
+      expect(issued.label).toBe("Alex iPhone");
       expect(second._tag).toBe("UnknownBootstrapCredentialError");
       expect(second.message).toContain("Unknown bootstrap credential");
     }).pipe(

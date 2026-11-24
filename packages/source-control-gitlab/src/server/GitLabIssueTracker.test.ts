@@ -18,14 +18,14 @@ const ISSUE = {
   created_at: "2026-07-01T00:00:00Z",
   updated_at: "2026-07-03T00:00:00Z",
   closed_at: "2026-07-03T00:00:00Z",
-  assignees: [{ id: 2, username: "theo", name: null }],
+  assignees: [{ id: 2, username: "sam", name: null }],
   labels: ["bug", " "],
   user_notes_count: 3,
 };
 
 /** Every endpoint the detail read touches, answered by the path `glab api` is given. */
 function answer(path: string): string {
-  if (path === "user") return encode({ username: "julius" });
+  if (path === "user") return encode({ username: "alex" });
   if (path === "projects/acme%2Fweb/issues?iids[]=42&with_labels_details=true&per_page=1") {
     return encode([
       {
@@ -42,27 +42,27 @@ function answer(path: string): string {
       {
         id: 7,
         body: "Repro attached.",
-        author: { username: "julius" },
+        author: { username: "alex" },
         created_at: "2026-07-02T00:00:00Z",
       },
       {
         id: 8,
         body: "closed",
-        author: { username: "theo" },
+        author: { username: "sam" },
         created_at: "2026-07-03T00:00:00Z",
         system: true,
       },
       {
         id: 9,
         body: "added ~7 label",
-        author: { username: "theo" },
+        author: { username: "sam" },
         created_at: "2026-07-03T00:00:00Z",
         system: true,
       },
       {
         id: 10,
         body: "mentioned in merge request api!51",
-        author: { username: "theo" },
+        author: { username: "sam" },
         created_at: "2026-07-04T00:00:00Z",
         system: true,
       },
@@ -74,7 +74,7 @@ function answer(path: string): string {
         id: 3,
         action: "add",
         created_at: "2026-07-01T01:00:00Z",
-        user: { username: "theo" },
+        user: { username: "sam" },
         label: { name: "bug" },
       },
     ]);
@@ -110,12 +110,12 @@ function answer(path: string): string {
     ]);
   }
   if (path.startsWith("projects/acme%2Fweb/issues/42/award_emoji")) {
-    return encode([{ id: 11, name: "eyes", user: { username: "theo" } }]);
+    return encode([{ id: 11, name: "eyes", user: { username: "sam" } }]);
   }
   if (path === "graphql") {
     return encode({
       data: {
-        currentUser: { username: "julius" },
+        currentUser: { username: "alex" },
         project: {
           mergeRequest: {
             notes: {
@@ -125,8 +125,8 @@ function answer(path: string): string {
                   id: "gid://gitlab/Note/7",
                   awardEmoji: {
                     nodes: [
-                      { name: "thumbsup", user: { username: "julius" } },
-                      { name: "thumbsup", user: { username: "theo" } },
+                      { name: "thumbsup", user: { username: "alex" } },
+                      { name: "thumbsup", user: { username: "sam" } },
                     ],
                   },
                 },
@@ -191,22 +191,22 @@ describe("GitLabIssueTracker", () => {
           { category: "closed", name: "Closed" },
         ],
         author: { login: "octocat", name: "Octo Cat" },
-        assignees: [{ login: "theo" }],
+        assignees: [{ login: "sam" }],
         labels: [{ name: "bug", color: "#E24329", description: "Something is broken" }],
         commentCount: 3,
-        viewer: "julius",
+        viewer: "alex",
         viewerPermissions: { setState: true, edit: true, labels: true, assignees: true },
         commentsCursor: null,
-        reactions: [{ content: "eyes", count: 1, actors: ["theo"], viewerHasReacted: false }],
+        reactions: [{ content: "eyes", count: 1, actors: ["sam"], viewerHasReacted: false }],
       });
       expect(issue.comments).toEqual([
         {
           id: "7",
-          author: { login: "julius", name: null, avatarUrl: null },
+          author: { login: "alex", name: null, avatarUrl: null },
           body: "Repro attached.",
           createdAt: "2026-07-02T00:00:00Z",
           url: null,
-          reactions: [{ content: "thumbs-up", count: 2, actors: ["theo"], viewerHasReacted: true }],
+          reactions: [{ content: "thumbs-up", count: 2, actors: ["sam"], viewerHasReacted: true }],
         },
       ]);
       // System notes become events; label notes are dropped in favour of the label events.
@@ -255,7 +255,7 @@ describe("GitLabIssueTracker", () => {
       const issue = yield* api.getIssue(target);
       expect(issue.comments.map((comment) => [comment.id, comment.reactions])).toEqual([["7", []]]);
       expect(issue.reactions).toEqual([
-        { content: "eyes", count: 1, actors: ["theo"], viewerHasReacted: false },
+        { content: "eyes", count: 1, actors: ["sam"], viewerHasReacted: false },
       ]);
       const later = yield* api.getComments({ ...target, cursor: "2:after-100" });
       expect(later.comments.map((comment) => comment.reactions)).toEqual([[]]);
@@ -267,7 +267,7 @@ describe("GitLabIssueTracker", () => {
       const firstPage = Array.from({ length: 100 }, (_, index) => ({
         id: index + 1000,
         body: "Discussion",
-        author: { username: "julius" },
+        author: { username: "alex" },
         created_at: "2026-07-02T00:00:00Z",
       }));
       const api = yield* tracker((args) => {
@@ -281,7 +281,7 @@ describe("GitLabIssueTracker", () => {
                 id: 1100,
                 body: "closed",
                 system: true,
-                author: { username: "theo" },
+                author: { username: "sam" },
                 created_at: "2026-07-03T00:00:00Z",
               },
             ]);
@@ -318,7 +318,7 @@ describe("GitLabIssueTracker", () => {
                     id: 300,
                     body: "closed",
                     system: true,
-                    author: { username: "theo" },
+                    author: { username: "sam" },
                     created_at: "2026-07-03T00:00:00Z",
                   },
                 ]);
@@ -327,7 +327,7 @@ describe("GitLabIssueTracker", () => {
             {
               id: 1,
               body: "Hi",
-              author: { username: "julius" },
+              author: { username: "alex" },
               created_at: "2026-07-02T00:00:00Z",
             },
           ]);
@@ -358,13 +358,13 @@ describe("GitLabIssueTracker", () => {
         scope: "acme/web",
         state: "open",
         involvement: "assigned",
-        viewer: "julius",
+        viewer: "alex",
         sort: "updated",
         limit: 1,
         cursor: "3",
       });
       expect(paths[0]).toBe(
-        "projects/acme%2Fweb/issues?state=opened&assignee_username=julius&order_by=updated_at&sort=desc&with_labels_details=true&per_page=1&page=3",
+        "projects/acme%2Fweb/issues?state=opened&assignee_username=alex&order_by=updated_at&sort=desc&with_labels_details=true&per_page=1&page=3",
       );
       // A named assignee takes the one parameter GitLab reads, so "assigned to me" drops rows here.
       const both = yield* api.listIssues({
@@ -373,14 +373,14 @@ describe("GitLabIssueTracker", () => {
         scope: "acme/web",
         state: "open",
         involvement: "assigned",
-        viewer: "julius",
+        viewer: "alex",
         labels: ["bug", "needs triage"],
-        assignee: "theo",
+        assignee: "sam",
         sort: "created",
         limit: 1,
       });
       expect(paths[1]).toBe(
-        "projects/acme%2Fweb/issues?state=opened&labels=bug%2Cneeds%20triage&assignee_username=theo&order_by=created_at&sort=desc&with_labels_details=true&per_page=1&page=1",
+        "projects/acme%2Fweb/issues?state=opened&labels=bug%2Cneeds%20triage&assignee_username=sam&order_by=created_at&sort=desc&with_labels_details=true&per_page=1&page=1",
       );
       expect(both.items).toEqual([]);
       expect(page.items[0]?.key).toBe("42");
@@ -396,12 +396,12 @@ describe("GitLabIssueTracker", () => {
       const api = yield* tracker((args) => {
         const path = args[1]!;
         calls.push(args.includes("DELETE") ? `DELETE ${path}` : path);
-        if (path === "user") return encode({ username: "julius" });
+        if (path === "user") return encode({ username: "alex" });
         if (path.endsWith("page=1")) {
-          return encode([{ id: 1, name: "thumbsup", user: { username: "theo" } }]);
+          return encode([{ id: 1, name: "thumbsup", user: { username: "sam" } }]);
         }
         if (path.endsWith("page=2") && path.includes("/notes/7/")) {
-          return encode([{ id: 9, name: "thumbsup", user: { username: "julius" } }]);
+          return encode([{ id: 9, name: "thumbsup", user: { username: "alex" } }]);
         }
         return "[]";
       });
@@ -427,14 +427,14 @@ describe("GitLabIssueTracker", () => {
         const path = args[1]!;
         calls.push(path);
         if (input.stdin !== undefined) bodies.push(input.stdin);
-        if (path === "users?username=theo") return encode([{ id: 2, username: "theo" }]);
+        if (path === "users?username=sam") return encode([{ id: 2, username: "sam" }]);
         if (path.startsWith("users?username=")) return "[]";
         return "{}";
       });
       const target = { cwd: "/w", host: "gitlab.com", scope: "acme/web", key: "42" };
       // The issue's own assignee comes back by login; a newly picked one by id.
-      yield* api.update!({ ...target, assignees: ["theo", "7"] });
-      expect(calls).toEqual(["users?username=theo", "projects/acme%2Fweb/issues/42"]);
+      yield* api.update!({ ...target, assignees: ["sam", "7"] });
+      expect(calls).toEqual(["users?username=sam", "projects/acme%2Fweb/issues/42"]);
       expect(JSON.parse(bodies.at(-1)!)).toEqual({ assignee_ids: [2, 7] });
       const error = yield* Effect.flip(api.update!({ ...target, assignees: ["nobody"] }));
       expect(error.reason).toBe("failed");

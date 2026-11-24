@@ -24,8 +24,8 @@ function stubPromptBridge() {
         listener({
           requestId,
           destination,
-          username: "julius",
-          prompt: `julius@${destination}'s password:`,
+          username: "alex",
+          prompt: `alex@${destination}'s password:`,
           expiresAt: "2999-01-01T00:00:00.000Z",
         });
       }
@@ -47,12 +47,12 @@ it("drops a prompt the desktop ended, whether it is on screen or still waiting",
   bridge.prompt("ssh-1", "first-host");
   bridge.prompt("ssh-2", "second-host");
   bridge.prompt("ssh-3", "third-host");
-  await expect.element(screen.getByText("julius@first-host")).toBeVisible();
+  await expect.element(screen.getByText("alex@first-host")).toBeVisible();
 
   // ssh-2 ended while it waited behind ssh-1, and ssh-1 ended on screen.
   bridge.settle("ssh-2");
   bridge.settle("ssh-1");
-  await expect.element(screen.getByText("julius@third-host")).toBeVisible();
+  await expect.element(screen.getByText("alex@third-host")).toBeVisible();
 
   bridge.settle("ssh-3");
   await expect.element(screen.getByText("SSH verification required")).not.toBeInTheDocument();

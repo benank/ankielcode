@@ -1,8 +1,5 @@
 import { adopt } from "alchemy/AdoptPolicy";
 import * as Alchemy from "alchemy";
-import * as Axiom from "@alchemy.run/axiom";
-import * as Layer from "effect/Layer";
-import { Observability } from "./src/observability.ts";
 import * as Cloudflare from "@alchemy.run/cloudflare";
 import * as Effect from "effect/Effect";
 import * as Secrets from "alchemy/Secrets";
@@ -12,13 +9,12 @@ import * as Worker from "./src/worker.ts";
 export default Alchemy.Stack(
   "AnkielTaskCache",
   {
-    providers: Axiom.providers().pipe(Layer.provideMerge(Cloudflare.providers())),
+    providers: Cloudflare.providers(),
     state: Cloudflare.state(),
     secrets: [Secrets.DotEnv(), Secrets.ProcessEnv(), WriterSecrets],
   },
   Effect.gen(function* () {
     const worker = yield* Worker.Worker;
-    yield* Observability;
     return {
       url: worker.url,
       workerName: worker.workerName,

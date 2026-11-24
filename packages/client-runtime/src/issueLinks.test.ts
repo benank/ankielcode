@@ -101,7 +101,7 @@ describe("resolveIssueLinkTarget", () => {
           scopeNoun: "team",
           credential: { label: "Personal API key", helpUrl: null },
           connected: true,
-          account: "julius",
+          account: "alex",
           detail: null,
           workspace: "acme",
           scopes: [],

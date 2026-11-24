@@ -812,7 +812,7 @@ describe("optional activity reads", () => {
   it.effect("flags comments by bot authors as bots, in the conversation and in threads", () =>
     Effect.gen(function* () {
       const bot = { login: "project_1_bot_abc", name: "Review bot", avatarUrl: null };
-      const human = { login: "julius", name: null, avatarUrl: null };
+      const human = { login: "alex", name: null, avatarUrl: null };
       const provider = yield* make.pipe(
         Effect.provide(
           Layer.mock(GitLabPullRequestCli.GitLabPullRequestCli)({
@@ -921,7 +921,7 @@ describe("review decisions", () => {
     host: "gitlab.com",
     state: "open" as const,
     involvement: "all" as const,
-    viewer: "julius",
+    viewer: "alex",
     limit: 2,
   };
 

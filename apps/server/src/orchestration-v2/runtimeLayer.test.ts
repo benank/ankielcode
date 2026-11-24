@@ -5049,7 +5049,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
                   state: "merged" as const,
                   mergedAt: "2026-10-02T12:00:00.000Z",
                   mergeCommitSha: "3b2f958603a51d8c42c4ede02eee7b8cb310b2d9",
-                  mergedBy: { login: "juliusmarminge", name: null, avatarUrl: null },
+                  mergedBy: { login: "alexmarminge", name: null, avatarUrl: null },
                 }),
               activity: () =>
                 Effect.succeed({
@@ -5075,7 +5075,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         wakes.map((message) => message.notification?.summary),
         ["#15: merged, stopped watching"],
       );
-      assert.include(wakes[0]!.text, "merged into main by juliusmarminge as 3b2f958");
+      assert.include(wakes[0]!.text, "merged into main by alexmarminge as 3b2f958");
     }),
   );
 
