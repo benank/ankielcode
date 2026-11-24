@@ -27,7 +27,6 @@ import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import { HttpClient } from "effect/http";
 import * as AcpErrors from "effect-acp/errors";
 
 import * as ProviderHost from "@ankielcode/provider-core/server/ProviderHost";
@@ -48,6 +47,7 @@ import {
   prepareAntigravityProfile,
   resolveAntigravityInstanceDirectories,
   type AntigravityAuthConfig,
+  withoutAntigravityOverrides,
 } from "../antigravityAuthSupport.ts";
 import {
   antigravityModelOptions,
@@ -115,7 +115,6 @@ export type AntigravityDriverEnv =
   | Digest.Digest
   | SecureRandom.SecureRandom
   | FileSystem.FileSystem
-  | HttpClient.HttpClient
   | IdAllocator.IdAllocatorV2
   | McpProviderSessions.McpProviderSessions
   | ModelCatalog.ModelCatalog
@@ -143,7 +142,6 @@ export const AntigravityDriver: ProviderDriver<
     const digest = yield* Digest.Digest;
     const random = yield* SecureRandom.SecureRandom;
     const fileSystem = yield* FileSystem.FileSystem;
-    const httpClient = yield* HttpClient.HttpClient;
     const path = yield* Path.Path;
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const host = yield* ProviderHost.ProviderHost;
@@ -577,14 +575,12 @@ export const AntigravityDriver: ProviderDriver<
     });
 
     const usage = yield* makeAntigravityUsageProbe({
-      profileDirectory,
       authMethod: auth.authMethod,
-    }).pipe(
-      Effect.provideService(FileSystem.FileSystem, fileSystem),
-      Effect.provideService(Path.Path, path),
-      Effect.provideService(Digest.Digest, digest),
-      Effect.provideService(HttpClient.HttpClient, httpClient),
-    );
+      environment: {
+        ...withoutAntigravityOverrides(processEnvironment),
+        AGY_CLI_DISABLE_AUTO_UPDATE: "1",
+      },
+    }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
     const provider = yield* makeAntigravityProvider(settings, {
       environment: processEnvironment,
       stampIdentity: classifyModels,

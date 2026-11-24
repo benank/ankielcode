@@ -1,0 +1,7 @@
+blocked=$(git diff --cached --name-only --diff-filter=ACMR | grep -v '^\.repos/' | grep -E '(^|/)\.wrangler/|(^|/)\.mf/|(^|/)\.dev\.vars(\.|$)|(^|/)wrangler\.local\.' | grep -vE '(^|/)\.dev\.vars\.example$' || true)
+if [ -n "$blocked" ]; then
+  echo "Refusing to commit local Cloudflare/Wrangler state or secrets:" >&2
+  echo "$blocked" >&2
+  exit 1
+fi
+vp staged
