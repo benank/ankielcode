@@ -1,4 +1,4 @@
-import { DesktopShellEnvironmentSnapshot, ShellEnvironmentPatch } from "@t3tools/contracts";
+import { DesktopShellEnvironmentSnapshot, ShellEnvironmentPatch } from "@ankielcode/contracts";
 import {
   applyShellEnvironment,
   buildEnvironmentCaptureCommand,
@@ -7,7 +7,7 @@ import {
   readUserLoginShell,
   setWindowsPath,
   windowsEnvironmentValueCommand,
-} from "@t3tools/shared/shell";
+} from "@ankielcode/shared/shell";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -97,7 +97,7 @@ export class DesktopShellEnvironment extends Context.Service<
     readonly discoveryFinished: Effect.Effect<boolean>;
     readonly updates: Stream.Stream<DesktopShellEnvironmentSnapshot>;
   }
->()("@t3tools/desktop/shell/DesktopShellEnvironment") {}
+>()("@ankielcode/desktop/shell/DesktopShellEnvironment") {}
 
 const LOGIN_SHELL_ENV_NAMES = [
   "PATH",
@@ -122,8 +122,8 @@ const LOGIN_SHELL_ENV_NAMES = [
   "SSL_CERT_FILE",
   "SSL_CERT_DIR",
   "NODE_EXTRA_CA_CERTS",
-  "T3CODE_FEATURE_FLAGS",
-  "T3CODE_RELEASE_BASE_URL",
+  "AC_FEATURE_FLAGS",
+  "AC_RELEASE_BASE_URL",
   "__MISE_DIFF",
   "JAVA_HOME",
   "PNPM_HOME",
@@ -215,8 +215,8 @@ const knownWindowsCliDirs = (env: NodeJS.ProcessEnv): ReadonlyArray<string> => [
   ),
 ];
 
-const startMarker = (name: string) => `__T3CODE_ENV_${name}_START__`;
-const endMarker = (name: string) => `__T3CODE_ENV_${name}_END__`;
+const startMarker = (name: string) => `__AC_ENV_${name}_START__`;
+const endMarker = (name: string) => `__AC_ENV_${name}_END__`;
 
 const executableName = (command: string): string => command.split(/[\\/]/u).at(-1) ?? command;
 
@@ -552,8 +552,8 @@ const installPosixEnvironment = Effect.fn("desktop.shellEnvironment.installPosix
       "NODE_EXTRA_CA_CERTS",
       "JAVA_HOME",
       "PNPM_HOME",
-      "T3CODE_FEATURE_FLAGS",
-      "T3CODE_RELEASE_BASE_URL",
+      "AC_FEATURE_FLAGS",
+      "AC_RELEASE_BASE_URL",
     ] as const) {
       if (!config.env[name] && shellEnvironment[name]) {
         config.env[name] = shellEnvironment[name];
@@ -659,7 +659,7 @@ const CACHED_ENV_NAMES = [
   "SSL_CERT_DIR",
   "NODE_EXTRA_CA_CERTS",
   // The server reads its flags once at start, before discovery can finish.
-  "T3CODE_FEATURE_FLAGS",
+  "AC_FEATURE_FLAGS",
 ] as const;
 
 /** @public */
@@ -679,7 +679,7 @@ export const make = Effect.gen(function* () {
     const kept = target.PATH.split(":").filter(
       (entry) =>
         !(appDir && (entry === appDir || entry.startsWith(`${appDir}/`))) &&
-        !/^\/tmp\/\.mount_T3-[^/]+(?:\/|$)/u.test(entry),
+        !/^\/tmp\/\.mount_Ankiel-[^/]+(?:\/|$)/u.test(entry),
     );
     if (kept.length > 0) target.PATH = kept.join(":");
     else delete target.PATH;

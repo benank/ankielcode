@@ -1,4 +1,4 @@
-import { EnvironmentHttpApi } from "@t3tools/contracts";
+import { EnvironmentHttpApi } from "@ankielcode/contracts";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -16,7 +16,7 @@ import * as ScheduledTaskService from "./ScheduledTaskService.ts";
 export const WEBHOOK_MAX_BODY_BYTES = 1024 * 1024;
 
 // Senders and monitors can read this outcome header.
-const WEBHOOK_OUTCOME_HEADER = "x-t3-hook-outcome";
+const WEBHOOK_OUTCOME_HEADER = "x-ankiel-hook-outcome";
 
 const json = (
   status: number,

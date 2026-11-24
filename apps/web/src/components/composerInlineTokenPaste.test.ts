@@ -1,10 +1,14 @@
-import { threadChipCopyTarget } from "@t3tools/client-runtime/thread-reference";
-import { type ComposerContextClipboardFragment, EnvironmentId, ThreadId } from "@t3tools/contracts";
+import { threadChipCopyTarget } from "@ankielcode/client-runtime/thread-reference";
+import {
+  type ComposerContextClipboardFragment,
+  EnvironmentId,
+  ThreadId,
+} from "@ankielcode/contracts";
 import {
   COMPOSER_CONTEXT_CLIPBOARD_MIME,
   encodeComposerContextFragment,
-} from "@t3tools/shared/composerContextClipboard";
-import { threadContextRecord } from "@t3tools/shared/composerContextReferences";
+} from "@ankielcode/shared/composerContextClipboard";
+import { threadContextRecord } from "@ankielcode/shared/composerContextReferences";
 import { describe, expect, it } from "vite-plus/test";
 
 import { importPastedComposerText } from "./composerInlineTokenPaste";
@@ -17,7 +21,7 @@ const clipboard = (data: Record<string, string>) => ({
   getData: (type: string) => data[type] ?? "",
 });
 const chip = (title: string) =>
-  `[${title}](t3-context://v1/thread/${threadContextRecord(thread, title).contextId})`;
+  `[${title}](ankiel-context://v1/thread/${threadContextRecord(thread, title).contextId})`;
 
 /** Imports every record it is offered, as the composer does for a thread its agent can read. */
 const importAll =
@@ -42,16 +46,16 @@ describe("importPastedComposerText", () => {
     expect(imported.map((fragment) => fragment.records)).toEqual([target.fragment!.records]);
   });
 
-  it("makes a chip of a v2 link pasted without T3's clipboard format", () => {
+  it("makes a chip of a v2 link pasted without Ankiel's clipboard format", () => {
     const text = importPastedComposerText(
-      clipboard({ "text/plain": "[Login](t3-thread://v2/env-1/thread-1)" }),
+      clipboard({ "text/plain": "[Login](ankiel-thread://v2/env-1/thread-1)" }),
       importAll([]),
     );
     expect(text).toBe(chip("Login"));
   });
 
   it("keeps the link when the composer cannot take the thread", () => {
-    const pasted = "https://app.t3.codes/threads/env-1/thread-1";
+    const pasted = "https://app.code.ankiel.com/threads/env-1/thread-1";
     expect(importPastedComposerText(clipboard({ "text/plain": pasted }), () => new Map())).toBe(
       pasted,
     );

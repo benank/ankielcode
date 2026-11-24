@@ -1,8 +1,8 @@
-import { isCompactionCommandMessage } from "@t3tools/contracts";
+import { isCompactionCommandMessage } from "@ankielcode/contracts";
 import { LIVE_ACTIVITY_ROW_ID, type ThreadFeedEntry } from "../../lib/threadActivity";
 import { scopedThreadKey } from "../../lib/scopedEntities";
-import { threadHasCaughtUpTo } from "@t3tools/client-runtime/state/threads";
-import { resolveUserMessageGrouping } from "@t3tools/client-runtime/user-message";
+import { threadHasCaughtUpTo } from "@ankielcode/client-runtime/state/threads";
+import { resolveUserMessageGrouping } from "@ankielcode/client-runtime/user-message";
 import { msg } from "gt-react-native";
 
 import { m, type MessageResolver } from "../../i18n/messages";

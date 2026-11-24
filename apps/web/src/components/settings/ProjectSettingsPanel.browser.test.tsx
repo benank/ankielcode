@@ -2,7 +2,7 @@ import { RegistryContext } from "@effect/atom-react";
 import type {
   DeleteProjectInput,
   UpdateProjectInput,
-} from "@t3tools/client-runtime/state/projects";
+} from "@ankielcode/client-runtime/state/projects";
 import {
   AuthOrchestrationOperateScope,
   AuthSettingsWriteScope,
@@ -12,9 +12,9 @@ import {
   ProviderInstanceId,
   type AuthEnvironmentScope,
   type AuthSessionState,
-} from "@t3tools/contracts";
-import { DEFAULT_CLIENT_SETTINGS } from "@t3tools/contracts/settings";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@t3tools/shared/keybindings";
+} from "@ankielcode/contracts";
+import { DEFAULT_CLIENT_SETTINGS } from "@ankielcode/contracts/settings";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@ankielcode/shared/keybindings";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -55,7 +55,7 @@ const state = vi.hoisted(() => ({
 }));
 
 // Session grants come from the server; each test drives them through these atoms.
-vi.mock(import("@t3tools/client-runtime/state/session"), async (original) => {
+vi.mock(import("@ankielcode/client-runtime/state/session"), async (original) => {
   const actual = await original();
   return {
     ...actual,
@@ -132,7 +132,7 @@ vi.mock(import("../files/projectFilesQueryState"), async (original) => ({
   getProjectFileQueryAtom: () => missingProjectFile,
 }));
 
-import { scopeProjectRef } from "@t3tools/client-runtime/environment";
+import { scopeProjectRef } from "@ankielcode/client-runtime/environment";
 import { DraftId, useComposerDraftStore } from "../../composerDraftStore";
 import { appAtomRegistry } from "../../rpc/atomRegistry";
 import { assetEnvironment } from "../../state/assets";
@@ -164,7 +164,7 @@ const session = (scopes: ReadonlyArray<AuthEnvironmentScope>): AuthSessionState 
     policy: "remote-reachable",
     bootstrapMethods: ["one-time-token"],
     sessionMethods: ["bearer-access-token"],
-    sessionCookieName: "t3_session",
+    sessionCookieName: "ankiel_session",
   },
 });
 const writable = () => AsyncResult.success(session([AuthOrchestrationOperateScope]));
@@ -520,7 +520,7 @@ describe("project identity reset", () => {
     ...project,
     isScratch: true,
     title: "Notes",
-    workspaceRoot: "/t3/scratch",
+    workspaceRoot: "/ac/scratch",
     projectIcon: { kind: "emoji", emoji: "📝" },
   });
 

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": ["ankielhighlights"],
+  "ios": {
+    "iosModuleName": "AnkielHighlightsNative"
+  },
+  "android": {
+    "androidNamespace": ["ankielhighlights"],
+    "androidCxxLibName": "ankielhighlights"
+  },
+  "autolinking": {
+    "AnkielHighlights": {
+      "all": {
+        "language": "c++",
+        "implementationClassName": "HybridAnkielHighlights"
+      }
+    }
+  },
+  "ignorePaths": ["node_modules", "Vendor"]
+}

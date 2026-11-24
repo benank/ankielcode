@@ -1,7 +1,7 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@ankielcode/shared/nodeSqliteClient";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -25,11 +25,11 @@ import { engineTag, type WorkflowDefinition } from "./workflow.ts";
 import * as Workflows from "./Workflows.ts";
 
 /** Waits to be let go. */
-const hold = `T3.workflow("hold", { version: 1, payload: Schema.Struct({}), returns: Schema.String }, () =>
-  Effect.map(T3.wait("go", { returns: Schema.String }), (said) => Option.getOrElse(said, () => "nobody")),
+const hold = `Ankiel.workflow("hold", { version: 1, payload: Schema.Struct({}), returns: Schema.String }, () =>
+  Effect.map(Ankiel.wait("go", { returns: Schema.String }), (said) => Option.getOrElse(said, () => "nobody")),
 );
 `;
-const greet = (says: string) => `const { workflow } = T3;
+const greet = (says: string) => `const { workflow } = Ankiel;
 workflow("greet", { version: 1, payload: Schema.Struct({}), returns: Schema.String }, () =>
   Effect.succeed(${JSON.stringify(says)}),
 );
@@ -46,7 +46,7 @@ const setup = Effect.fn("setup")(function* (
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const home = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3-workflow-defs-" });
+  const home = yield* fileSystem.makeTempDirectoryScoped({ prefix: "ankiel-workflow-defs-" });
   const directory = path.join(home, "workflows");
   const at = (name: string) => path.join(directory, name);
   yield* fileSystem.makeDirectory(directory);
@@ -86,7 +86,7 @@ it.effect(
         yield* workflows.waitFor(held.runId, (run) => run.status === "waiting");
 
         // A file that does not parse is not written, and says where it breaks.
-        const broken = yield* definitions.save("greet.ts", "T3.workflow(\n  'x',\n];\n");
+        const broken = yield* definitions.save("greet.ts", "Ankiel.workflow(\n  'x',\n];\n");
         assert.isFalse(broken.changed);
         assert.deepStrictEqual(
           broken.problems.map((problem) => [problem.file, problem.line]),
@@ -112,22 +112,22 @@ it.effect(
         // Nor one with an option nothing reads, or a time a schedule cannot fire at.
         const misspelt = yield* definitions.save(
           "misspelt.ts",
-          'T3.workflow("misspelt", { version: 1, payload: Schema.Struct({}), retries: 2 }, () => Effect.void);\n',
+          'Ankiel.workflow("misspelt", { version: 1, payload: Schema.Struct({}), retries: 2 }, () => Effect.void);\n',
         );
         assert.include(misspelt.problems[0]?.message ?? "", "does not take `retries`");
         const late = yield* definitions.save(
           "late.ts",
-          'T3.workflow("late", { version: 1, payload: T3.Tick, triggers: [T3.daily("9am")] }, () => Effect.void);\n',
+          'Ankiel.workflow("late", { version: 1, payload: Ankiel.Tick, triggers: [Ankiel.daily("9am")] }, () => Effect.void);\n',
         );
         assert.include(late.problems[0]?.message ?? "", "24-hour time");
         const banana = yield* definitions.save(
           "banana.ts",
-          'T3.workflow("banana", { version: 1, payload: T3.Tick, triggers: [T3.every("banana")] }, () => Effect.void);\n',
+          'Ankiel.workflow("banana", { version: 1, payload: Ankiel.Tick, triggers: [Ankiel.every("banana")] }, () => Effect.void);\n',
         );
         assert.include(banana.problems[0]?.message ?? "", 'Write one such as "5 minutes"');
         const twoHooks = yield* definitions.save(
           "hooks.ts",
-          'T3.workflow("hooks", { version: 1, payload: T3.WebhookRequest, triggers: [T3.webhook("in"), T3.webhook("in")] }, () => Effect.void);\n',
+          'Ankiel.workflow("hooks", { version: 1, payload: Ankiel.WebhookRequest, triggers: [Ankiel.webhook("in"), Ankiel.webhook("in")] }, () => Effect.void);\n',
         );
         assert.include(twoHooks.problems[0]?.message ?? "", 'two hooks named "in"');
         assert.include((yield* definitions.remove("hold.ts")).problems[0]?.message ?? "", "hold@1");
@@ -150,7 +150,7 @@ it.effect(
         );
         // Only that file is held back: another file's change still runs, and the held one says why.
         const other =
-          'T3.workflow("other", { version: 1, payload: Schema.Struct({}) }, () => Effect.void);\n';
+          'Ankiel.workflow("other", { version: 1, payload: Schema.Struct({}) }, () => Effect.void);\n';
         // A file the folder's naming leaves out says so, instead of never running without a word.
         yield* fileSystem.writeFileString(at("my flow.ts"), other);
         assert.deepStrictEqual(yield* definitions.save("other.ts", other), {
@@ -196,7 +196,7 @@ it.effect(
             Stream.filter((snapshot) => (snapshot.definition?.problem != null) === wanted),
             Stream.runHead,
           );
-        yield* fileSystem.writeFileString(at("greet.ts"), "T3.workflow(");
+        yield* fileSystem.writeFileString(at("greet.ts"), "Ankiel.workflow(");
         yield* problem(true);
         const read = yield* definitions.read;
         assert.deepStrictEqual(
@@ -302,7 +302,7 @@ it.effect(
         // A definition that passes the checks but takes the engine down at start changes nothing.
         yield* fileSystem.writeFileString(
           at("broken.ts"),
-          'T3.workflow("broken", { version: 1, payload: Schema.Struct({}) }, () => Effect.void);\n',
+          'Ankiel.workflow("broken", { version: 1, payload: Schema.Struct({}) }, () => Effect.void);\n',
         );
         const fellBack = yield* definitions.save("greet.ts", greet("hello"));
         assert.isTrue(fellBack.changed);
@@ -340,12 +340,12 @@ it.effect("a file given up on registers nothing into the file that loads after i
     const { at, fileSystem } = yield* setup();
     yield* fileSystem.writeFileString(
       at("slow.ts"),
-      'await new Promise((resolve) => { globalThis.t3TestResume = resolve; });\nT3.workflow("slow", { version: 1, payload: Schema.Struct({}) }, () => Effect.void);\n',
+      'await new Promise((resolve) => { globalThis.ankielTestResume = resolve; });\nAnkiel.workflow("slow", { version: 1, payload: Schema.Struct({}) }, () => Effect.void);\n',
     );
     // The second file goes on loading until the first one's top level has run to its end.
     yield* fileSystem.writeFileString(
       at("next.ts"),
-      `${greet("hi")}globalThis.t3TestResume();\nawait new Promise((resolve) => setImmediate(resolve));\n`,
+      `${greet("hi")}globalThis.ankielTestResume();\nawait new Promise((resolve) => setImmediate(resolve));\n`,
     );
     yield* WorkflowRuntime.loadDefinitions(at("slow.ts"), 0, 50).pipe(Effect.flip);
     const loaded = yield* WorkflowRuntime.loadDefinitions(at("next.ts"));
@@ -449,8 +449,8 @@ it.effect(
       });
       yield* fileSystem.writeFileString(
         at("helper.ts"),
-        `T3.workflow("helper", { version: 1, payload: Schema.Struct({}), returns: Schema.String }, () =>
-  Effect.map(T3.agent("work", { brief: "Do it.", project: "p" }), (done) => done.value),
+        `Ankiel.workflow("helper", { version: 1, payload: Schema.Struct({}), returns: Schema.String }, () =>
+  Effect.map(Ankiel.agent("work", { brief: "Do it.", project: "p" }), (done) => done.value),
 );
 `,
       );
@@ -502,9 +502,9 @@ it.effect(
       // Its top level counts the times it was loaded.
       yield* fileSystem.writeFileString(
         at("counted.ts"),
-        "globalThis.t3GatedLoads = (globalThis.t3GatedLoads ?? 0) + 1;\nexport default [];\n",
+        "globalThis.ankielGatedLoads = (globalThis.ankielGatedLoads ?? 0) + 1;\nexport default [];\n",
       );
-      const loads = () => (globalThis as { t3GatedLoads?: number }).t3GatedLoads ?? 0;
+      const loads = () => (globalThis as { ankielGatedLoads?: number }).ankielGatedLoads ?? 0;
       yield* Effect.gen(function* () {
         const { turn, context } = yield* WorkflowRuntime.gate(made, directory);
         const workflows = Context.get(context, Workflows.Workflows);

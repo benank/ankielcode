@@ -3,7 +3,7 @@ import {
   EnvironmentId,
   ORCHESTRATION_PROTOCOL_VERSION,
   type ExecutionEnvironmentDescriptor,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -53,7 +53,7 @@ function recordedFetch(responses: ReadonlyArray<RecordedResponse>, descriptor?: 
   let responseIndex = 0;
   const fetchFn = ((input, init) => {
     calls.push([input, init ?? {}]);
-    if (descriptor !== undefined && String(input).endsWith("/.well-known/t3/environment")) {
+    if (descriptor !== undefined && String(input).endsWith("/.well-known/ac/environment")) {
       return Promise.resolve(Response.json(descriptor));
     }
     const response = responses[responseIndex++];
@@ -112,7 +112,7 @@ const makeHarness = Effect.fn("TestRemoteAuthorization.makeHarness")(function* (
           ClientCapabilities.ClientPresentation,
           ClientCapabilities.ClientPresentation.of({
             metadata: {
-              label: "T3 Code Test",
+              label: "Ankiel Code Test",
               deviceType: "mobile",
               os: "test",
             },
@@ -198,7 +198,7 @@ describe("RemoteEnvironmentAuthorization", () => {
         success: { socketUrl: expect.stringContaining("wsTicket=cold-ticket") },
       });
       expect(harness.fetch.calls.map(([url]) => new URL(String(url)).pathname)).toEqual([
-        "/.well-known/t3/environment",
+        "/.well-known/ac/environment",
         "/api/auth/websocket-ticket/rpc",
       ]);
     }),
@@ -365,11 +365,11 @@ describe("RemoteEnvironmentAuthorization", () => {
       expect(harness.fetch.calls.map(([url]) => new URL(String(url)).pathname)).toEqual([
         "/api/auth/websocket-ticket/rpc",
         ...Array.from({ length: 4 }, () => [
-          "/.well-known/t3/environment",
+          "/.well-known/ac/environment",
           "/api/auth/websocket-ticket/rpc",
         ]).flat(),
         "/api/auth/websocket-ticket/rpc",
-        "/.well-known/t3/environment",
+        "/.well-known/ac/environment",
         "/api/auth/websocket-ticket/rpc",
       ]);
     }),
@@ -433,7 +433,7 @@ describe("RemoteEnvironmentAuthorization", () => {
       expect(first.socketUrl).toContain("wsTicket=first-ticket");
       expect(second.socketUrl).toContain("wsTicket=second-ticket");
       expect(
-        harness.fetch.calls.filter(([url]) => String(url).endsWith("/.well-known/t3/environment")),
+        harness.fetch.calls.filter(([url]) => String(url).endsWith("/.well-known/ac/environment")),
       ).toHaveLength(2);
       expect(
         harness.fetch.calls.filter(([url]) =>

@@ -1,6 +1,6 @@
-import { type EnvironmentConnectionPhase } from "@t3tools/client-runtime/connection";
-import type { MarkedText } from "@t3tools/client-runtime/errors";
-import { EnvironmentId, ThreadId, type ServerConfig } from "@t3tools/contracts";
+import { type EnvironmentConnectionPhase } from "@ankielcode/client-runtime/connection";
+import type { MarkedText } from "@ankielcode/client-runtime/errors";
+import { EnvironmentId, ThreadId, type ServerConfig } from "@ankielcode/contracts";
 
 export interface EnvironmentRuntimeState {
   readonly connectionState: EnvironmentConnectionPhase;

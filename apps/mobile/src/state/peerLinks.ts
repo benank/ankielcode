@@ -3,9 +3,9 @@ import {
   linkableMachines,
   linkedEnvironmentNames,
   offersLinkedEnvironments,
-} from "@t3tools/client-runtime/link-request";
-import { createPeerLinkEnvironmentAtoms } from "@t3tools/client-runtime/state/peerLinks";
-import type { EnvironmentId } from "@t3tools/contracts";
+} from "@ankielcode/client-runtime/link-request";
+import { createPeerLinkEnvironmentAtoms } from "@ankielcode/client-runtime/state/peerLinks";
+import type { EnvironmentId } from "@ankielcode/contracts";
 import { useContext, useEffect, useEffectEvent, useMemo } from "react";
 
 import { connectionAtomRuntime } from "../connection/runtime";
@@ -43,7 +43,7 @@ export function useLinkedEnvironments(
   const refreshLacking = useEffectEvent(() => {
     if (queried !== null) peerLinkEnvironment.refreshNamesLacking(registry, queried, missing);
   });
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- links made outside this app are not pushed, so meeting an unknown machine asks the server again
+  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- links made outside this app are not pushed, so meeting an unknown machine asks the server again
   useEffect(() => {
     if (refreshKey !== "") refreshLacking();
   }, [refreshKey]);

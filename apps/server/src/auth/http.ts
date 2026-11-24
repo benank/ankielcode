@@ -19,10 +19,10 @@ import {
   EnvironmentAuthenticatedAuth,
   EnvironmentAuthenticatedPrincipal,
   mcpClientScopes,
-} from "@t3tools/contracts";
-import type { AuthEnvironmentScope, DpopFailureReason } from "@t3tools/contracts";
-import { parseOAuthScope } from "@t3tools/shared/oauthScope";
-import { causeErrorTag } from "@t3tools/shared/observability";
+} from "@ankielcode/contracts";
+import type { AuthEnvironmentScope, DpopFailureReason } from "@ankielcode/contracts";
+import { parseOAuthScope } from "@ankielcode/shared/oauthScope";
+import { causeErrorTag } from "@ankielcode/shared/observability";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";

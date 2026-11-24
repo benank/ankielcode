@@ -7,9 +7,9 @@ import {
   issuePicksFor,
   issueWriteAfterPicks,
   noIssuePicks,
-} from "@t3tools/client-runtime/issue-selection";
-import { isSelected, toggleSelection } from "@t3tools/client-runtime/pull-request-selection";
-import type { IssueAssigneeCandidate } from "@t3tools/contracts";
+} from "@ankielcode/client-runtime/issue-selection";
+import { isSelected, toggleSelection } from "@ankielcode/client-runtime/pull-request-selection";
+import type { IssueAssigneeCandidate } from "@ankielcode/contracts";
 import { msg, useGT } from "gt-react-native";
 import { useEffect, useState } from "react";
 
@@ -51,7 +51,7 @@ export function IssueAssigneesScreen({ route }: StaticScreenProps<IssueParams>) 
   const candidates = (result.data?.assignees ?? []).filter((candidate) =>
     `${candidate.login} ${candidate.name ?? ""}`.toLowerCase().includes(needle),
   );
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- picks are sent when the sheet leaves the navigation stack, however it is dismissed
+  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- picks are sent when the sheet leaves the navigation stack, however it is dismissed
   useEffect(
     () =>
       navigation.addListener("beforeRemove", () => {

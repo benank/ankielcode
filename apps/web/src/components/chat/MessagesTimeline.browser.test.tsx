@@ -1,4 +1,4 @@
-import { injectHtmlRenderBootstrap } from "@t3tools/shared/htmlRender";
+import { injectHtmlRenderBootstrap } from "@ankielcode/shared/htmlRender";
 import { HtmlRenderDocument } from "../files/BrowserDocumentFrame";
 import { AudioPreview } from "../files/AudioPreview";
 import { cdp, page, userEvent } from "vite-plus/test/browser";
@@ -16,7 +16,7 @@ import {
   ScheduledTaskId,
   ThreadId,
   type OrchestrationV2Subagent,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import { type LegendListRef } from "@legendapp/list/react";
 import {
   createRef,
@@ -46,8 +46,8 @@ import { ViewedImagesTimelineRow } from "./TimelineWorkEntryRow";
 import { THOUGHT_PREVIEW_MAX_LENGTH, thoughtPreviewMarkdown } from "./TimelineWorkEntryRow.logic";
 import { wordsHast } from "~/markdown/wordsHast";
 import { TimelineRowCtx } from "./timelineRowContext";
-import { searchableMessageSegments } from "@t3tools/shared/threadFindText";
-import { countThreadSearchOccurrences } from "@t3tools/shared/threadSearch";
+import { searchableMessageSegments } from "@ankielcode/shared/threadFindText";
+import { countThreadSearchOccurrences } from "@ankielcode/shared/threadSearch";
 import { collectThreadFindRanges } from "./threadFindHighlights";
 import { toastManager } from "../ui/toast";
 import type { CitedHistory } from "./citationProcedure";
@@ -56,8 +56,8 @@ import { rememberTimelinePosition } from "./timelineScrollAnchoring";
 import {
   COMPOSER_CONTEXT_CLIPBOARD_MIME,
   decodeComposerContextFragment,
-} from "@t3tools/shared/composerContextClipboard";
-import { collectComposerContextReferences } from "@t3tools/shared/composerContextReferences";
+} from "@ankielcode/shared/composerContextClipboard";
+import { collectComposerContextReferences } from "@ankielcode/shared/composerContextReferences";
 
 const environmentQuery = vi.hoisted(() => ({
   error: "Pull request not found" as string | null,
@@ -968,11 +968,11 @@ describe("MessagesTimeline messages", () => {
 
   it("renders unsafe user HTML as inert source text", async () => {
     const source =
-      '<script>globalThis.__t3Xss = 1</script><img src="x" onerror="globalThis.__t3Xss = 2">';
+      '<script>globalThis.__ankielXss = 1</script><img src="x" onerror="globalThis.__ankielXss = 2">';
     await using screen = await renderTimeline([message(source)]);
     expect(screen.text()).toContain(source);
     expect(screen.container.querySelector("script, img")).toBeNull();
-    expect((globalThis as { __t3Xss?: number }).__t3Xss).toBeUndefined();
+    expect((globalThis as { __ankielXss?: number }).__ankielXss).toBeUndefined();
   });
 
   it("shows the spaces typed at the start of user lines, where find also matches them", async () => {
@@ -1022,11 +1022,11 @@ describe("MessagesTimeline messages", () => {
     await using screen = await renderTimeline([
       message(
         [
-          '<details onclick="globalThis.__t3Xss = 1">',
+          '<details onclick="globalThis.__ankielXss = 1">',
           "<summary>Safe details</summary>",
-          "<script>globalThis.__t3Xss = 2</script>",
-          '<img src="x" onerror="globalThis.__t3Xss = 3">',
-          '<a href="javascript:globalThis.__t3Xss = 4">Unsafe link</a>',
+          "<script>globalThis.__ankielXss = 2</script>",
+          '<img src="x" onerror="globalThis.__ankielXss = 3">',
+          '<a href="javascript:globalThis.__ankielXss = 4">Unsafe link</a>',
           "</details>",
         ].join(""),
         { role: "assistant" },
@@ -1039,7 +1039,7 @@ describe("MessagesTimeline messages", () => {
     expect(screen.container.querySelector("script, [onclick], [onerror]")).toBeNull();
     expect(screen.container.innerHTML).not.toContain("javascript:");
     await click(screen.button("Safe details"));
-    expect((globalThis as { __t3Xss?: number }).__t3Xss).toBeUndefined();
+    expect((globalThis as { __ankielXss?: number }).__ankielXss).toBeUndefined();
   });
 
   const revealModes = ["inline", "at-end", "delayed", "grouped-delayed", "grouped-end"];
@@ -1631,7 +1631,7 @@ describe("MessagesTimeline agent messages", () => {
     expect(screen.buttons("Open thread")).toHaveLength(0);
   });
 
-  it("leaves messages sent by T3 Code as full bubbles", async () => {
+  it("leaves messages sent by Ankiel Code as full bubbles", async () => {
     setup();
     await using screen = await renderTimeline([
       message(AGENT_MESSAGE, { createdBy: "agent", creationSource: "server" }),
@@ -2061,7 +2061,7 @@ describe("MessagesTimeline thread find", () => {
 
     await screen.rerender(element(0, 2));
     await vi.waitFor(() => {
-      const [match] = CSS.highlights.get("t3-thread-find-active") ?? [];
+      const [match] = CSS.highlights.get("ankiel-thread-find-active") ?? [];
       if (!(match instanceof Range)) throw new Error("Missing active match range");
       expect(match.startContainer.parentElement?.closest("td")).toBe(viewport.querySelector("td"));
       expect(match.getBoundingClientRect().left).toBeGreaterThanOrEqual(clip.left - 1);
@@ -2105,7 +2105,7 @@ describe("MessagesTimeline thread find", () => {
       />,
     );
     await vi.waitFor(() => {
-      const [match] = CSS.highlights.get("t3-thread-find-active") ?? [];
+      const [match] = CSS.highlights.get("ankiel-thread-find-active") ?? [];
       if (!(match instanceof Range)) throw new Error("Missing active match range");
       const bounds = match.getBoundingClientRect();
       const clip = outerViewport.getBoundingClientRect();

@@ -1,5 +1,5 @@
-import type { PreparedConnection } from "@t3tools/client-runtime/connection";
-import { PRIMARY_LOCAL_ENVIRONMENT_ID, type EnvironmentId } from "@t3tools/contracts";
+import type { PreparedConnection } from "@ankielcode/client-runtime/connection";
+import { PRIMARY_LOCAL_ENVIRONMENT_ID, type EnvironmentId } from "@ankielcode/contracts";
 
 import { desktopLocalBackendId, isDesktopLocalConnectionTarget } from "~/connection/desktopLocal";
 import { isLoopbackHostname } from "~/environments/primary/target";

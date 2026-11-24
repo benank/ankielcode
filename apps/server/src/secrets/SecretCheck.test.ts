@@ -9,13 +9,13 @@ import {
   type SecretReference,
   SettingsSecretValue,
   type ServerProvider,
-} from "@t3tools/contracts";
-import type { AnyProviderDriver, ProviderInstance } from "@t3tools/provider-core/server/driver";
-import { makeManualOnlyProviderMaintenanceCapabilities } from "@t3tools/provider-core/server/maintenanceResolver";
-import * as ProviderLatestVersions from "@t3tools/provider-core/server/ProviderLatestVersions";
-import * as SecretResolver from "@t3tools/secret-provider-core/server/SecretResolver";
-import { defineSecretProviderDriver } from "@t3tools/secret-provider-core/server/driver";
-import { defineSecretProvider } from "@t3tools/secret-provider-core/shared/definition";
+} from "@ankielcode/contracts";
+import type { AnyProviderDriver, ProviderInstance } from "@ankielcode/provider-core/server/driver";
+import { makeManualOnlyProviderMaintenanceCapabilities } from "@ankielcode/provider-core/server/maintenanceResolver";
+import * as ProviderLatestVersions from "@ankielcode/provider-core/server/ProviderLatestVersions";
+import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
+import { defineSecretProviderDriver } from "@ankielcode/secret-provider-core/server/driver";
+import { defineSecretProvider } from "@ankielcode/secret-provider-core/shared/definition";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -188,7 +188,7 @@ const setup = Effect.fn("SecretCheckTest.setup")(function* (
 });
 
 const layerTest = Layer.mergeAll(
-  ServerConfig.layerTest(process.cwd(), { prefix: "t3-secret-check-" }),
+  ServerConfig.layerTest(process.cwd(), { prefix: "ankiel-secret-check-" }),
   ModelManifest.layerTest,
   ProviderLatestVersions.layer,
   Layer.succeed(

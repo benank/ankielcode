@@ -45,11 +45,11 @@ vi.mock("../features/cloud/dpop", async () => ({
   layer: (await import("effect/Layer")).empty,
   loadOrCreateProofKey: () => undefined,
 }));
-vi.mock("@t3tools/client-runtime/dpop", async () => {
+vi.mock("@ankielcode/client-runtime/dpop", async () => {
   const Layer = await import("effect/Layer");
   return { layerSigner: () => Layer.empty };
 });
-vi.mock("@t3tools/client-runtime/rpc", async () => {
+vi.mock("@ankielcode/client-runtime/rpc", async () => {
   const Layer = await import("effect/Layer");
   return { layerRemoteHttpClient: () => Layer.empty };
 });

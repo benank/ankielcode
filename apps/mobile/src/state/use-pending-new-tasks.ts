@@ -1,10 +1,10 @@
 import { useAtomValue } from "@effect/atom-react";
-import { AuthOrchestrationOperateScope } from "@t3tools/contracts";
+import { AuthOrchestrationOperateScope } from "@ankielcode/contracts";
 import { Atom } from "effect/reactivity";
 import { useMessages } from "gt-react-native";
 import { useMemo } from "react";
-import { threadKey } from "@t3tools/client-runtime/state/entities";
-import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
+import { threadKey } from "@ankielcode/client-runtime/state/entities";
+import type { EnvironmentThreadShell } from "@ankielcode/client-runtime/state/shell";
 import {
   buildPendingNewTasks,
   isQueuedCreationSending,

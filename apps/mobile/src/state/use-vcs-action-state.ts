@@ -1,11 +1,11 @@
 import { useAtomValue } from "@effect/atom-react";
-import { secondTick } from "@t3tools/client-runtime/clock";
+import { secondTick } from "@ankielcode/client-runtime/clock";
 import {
   vcsActionLabelText,
   type VcsActionState,
   type VcsActionTarget,
-} from "@t3tools/client-runtime/state/vcs";
-import type { ScopedThreadRef } from "@t3tools/contracts";
+} from "@ankielcode/client-runtime/state/vcs";
+import type { ScopedThreadRef } from "@ankielcode/contracts";
 import { Atom } from "effect/reactivity";
 import * as Haptics from "expo-haptics";
 import { msg, useMessages } from "gt-react-native";

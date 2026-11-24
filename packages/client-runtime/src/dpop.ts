@@ -2,7 +2,7 @@
 // non-extractable WebCrypto key, mobile signs with the platform's P-256 through a native module.
 import { msg } from "gt-i18n";
 import { MarkedText, markedTextEnglish, translatableMessage } from "./errors/translatable.ts";
-import { normalizeDpopHtu, type DpopPublicJwk } from "@t3tools/shared/dpopCommon";
+import { normalizeDpopHtu, type DpopPublicJwk } from "@ankielcode/shared/dpopCommon";
 import * as Cache from "effect/Cache";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -57,7 +57,7 @@ export class DpopSigner extends Context.Service<
     readonly thumbprint: Effect.Effect<string, DpopKeyLoadError>;
     readonly createProof: (input: DpopProofInput) => Effect.Effect<string, DpopProofCreationError>;
   }
->()("@t3tools/client-runtime/dpop/DpopSigner") {}
+>()("@ankielcode/client-runtime/dpop/DpopSigner") {}
 
 export class DpopProofError extends Schema.TaggedError<DpopProofError>()("DpopProofError", {
   message: Schema.String,

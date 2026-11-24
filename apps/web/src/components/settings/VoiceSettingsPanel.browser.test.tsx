@@ -2,12 +2,12 @@ import {
   BearerConnectionTarget,
   PrimaryConnectionTarget,
   type PreparedConnection,
-} from "@t3tools/client-runtime/connection";
+} from "@ankielcode/client-runtime/connection";
 import {
   EnvironmentId,
   type EnvironmentSpeechModel,
   type EnvironmentSpeechStatus,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import { expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser";
 import { act, render } from "../../../test/render";
@@ -32,7 +32,7 @@ vi.mock(import("../../state/session"), { spy: true });
 // The real connection runtime builds the desktop and storage platform layers, which a browser test has no use for.
 vi.mock("../../connection/runtime", async () => {
   const [rpc, { Atom }] = await Promise.all([
-    import("@t3tools/client-runtime/rpc"),
+    import("@ankielcode/client-runtime/rpc"),
     import("effect/reactivity"),
   ]);
   return {

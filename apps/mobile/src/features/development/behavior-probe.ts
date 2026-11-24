@@ -9,7 +9,7 @@ interface Fiber {
 }
 interface DevToolsHook {
   onCommitFiberRoot?: (id: unknown, root: { current: Fiber }, ...rest: unknown[]) => unknown;
-  __t3BehaviorProbe?: true;
+  __ankielBehaviorProbe?: true;
 }
 interface ListState {
   readonly scroll: number;
@@ -41,8 +41,8 @@ function installCommitHook() {
     setTimeout(installCommitHook, 50);
     return;
   }
-  if (hook.__t3BehaviorProbe) return;
-  hook.__t3BehaviorProbe = true;
+  if (hook.__ankielBehaviorProbe) return;
+  hook.__ankielBehaviorProbe = true;
   const original = hook.onCommitFiberRoot.bind(hook);
   hook.onCommitFiberRoot = (id, next, ...rest) => {
     roots.add(next);
@@ -237,12 +237,12 @@ function jsFrame(time: number) {
 
 function uiFramesStart() {
   "worklet";
-  const ui = globalThis as { __t3UiFrames?: number[]; __t3UiFramesOn?: boolean };
-  ui.__t3UiFrames = [];
-  ui.__t3UiFramesOn = true;
+  const ui = globalThis as { __ankielUiFrames?: number[]; __ankielUiFramesOn?: boolean };
+  ui.__ankielUiFrames = [];
+  ui.__ankielUiFramesOn = true;
   const tick = (time: number) => {
-    if (!ui.__t3UiFramesOn) return;
-    ui.__t3UiFrames!.push(time);
+    if (!ui.__ankielUiFramesOn) return;
+    ui.__ankielUiFrames!.push(time);
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
@@ -250,9 +250,9 @@ function uiFramesStart() {
 
 function uiFramesStop() {
   "worklet";
-  const ui = globalThis as { __t3UiFrames?: number[]; __t3UiFramesOn?: boolean };
-  ui.__t3UiFramesOn = false;
-  return ui.__t3UiFrames ?? [];
+  const ui = globalThis as { __ankielUiFrames?: number[]; __ankielUiFramesOn?: boolean };
+  ui.__ankielUiFramesOn = false;
+  return ui.__ankielUiFrames ?? [];
 }
 
 let samples: Array<Record<string, unknown>> = [];
@@ -274,7 +274,7 @@ function visibleFeed(feeds: ReadonlyArray<Feed>) {
 installCommitHook();
 
 Object.assign(globalThis, {
-  __t3Behavior: {
+  __ankielBehavior: {
     open(url: string) {
       const { Linking } = require("react-native") as typeof import("react-native");
       void Linking.openURL(url);
@@ -289,7 +289,7 @@ Object.assign(globalThis, {
     state: () => JSON.stringify(snapshot()),
     /** Removes these saved environments (and their cached threads) through the app's own command. */
     async forgetEnvironments(ids: ReadonlyArray<string>) {
-      const { runAtomCommand } = require("@t3tools/client-runtime/state/runtime") as {
+      const { runAtomCommand } = require("@ankielcode/client-runtime/state/runtime") as {
         runAtomCommand: (
           registry: unknown,
           command: unknown,

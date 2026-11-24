@@ -1,5 +1,5 @@
-import { EnvironmentId, ProjectId, ThreadId } from "@t3tools/contracts";
-import { scopeProjectRef, scopeThreadRef } from "@t3tools/client-runtime/environment";
+import { EnvironmentId, ProjectId, ThreadId } from "@ankielcode/contracts";
+import { scopeProjectRef, scopeThreadRef } from "@ankielcode/client-runtime/environment";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import {

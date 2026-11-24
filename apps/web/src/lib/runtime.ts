@@ -3,8 +3,8 @@ import type * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Socket from "effect/socket/Socket";
 
-import { layerRemoteHttpClient } from "@t3tools/client-runtime/rpc";
-import { layerSigner } from "@t3tools/client-runtime/dpop";
+import { layerRemoteHttpClient } from "@ankielcode/client-runtime/rpc";
+import { layerSigner } from "@ankielcode/client-runtime/dpop";
 import * as PrimaryEnvironmentHttpClient from "../environments/primary/httpClient";
 import * as PrimaryEnvironmentHttpLayer from "../environments/primary/httpLayer";
 

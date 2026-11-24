@@ -31,7 +31,7 @@ it.effect("includes successful blob downloads in exported R2 usage", () =>
       const cache = yield* Cache.Cache;
       return yield* cache.handle(
         new Request(
-          "https://cache.example/projects/t3code/blob/12345678-1234-1234-1234-123456789abc",
+          "https://cache.example/projects/ankielcode/blob/12345678-1234-1234-1234-123456789abc",
           {
             headers: {
               authorization: `Basic ${btoa("julius:fixture-token-012345678901234567890123456789")}`,
@@ -72,7 +72,7 @@ it.effect("returns 503 immediately when authenticated requests fill all read per
       const request = () =>
         cache.handle(
           new Request(
-            "https://cache.example/projects/t3code/blob/12345678-1234-1234-1234-123456789abc",
+            "https://cache.example/projects/ankielcode/blob/12345678-1234-1234-1234-123456789abc",
             {
               headers: {
                 authorization: `Basic ${btoa("julius:fixture-token-012345678901234567890123456789")}`,
@@ -135,7 +135,7 @@ it.effect("aborts the upstream deadline before disposing it on interruption", ()
       const fiber = yield* cache
         .handle(
           new Request(
-            "https://cache.example/projects/t3code/blob/12345678-1234-1234-1234-123456789abc",
+            "https://cache.example/projects/ankielcode/blob/12345678-1234-1234-1234-123456789abc",
             {
               headers: {
                 authorization: `Basic ${btoa("julius:fixture-token-012345678901234567890123456789")}`,
@@ -163,7 +163,7 @@ it.effect("does not charge authenticated budgets for anonymous or malformed requ
     for (const operation of ["fetch", "store", "blob/12345678-1234-1234-1234-123456789abc"]) {
       for (const method of ["GET", "POST"]) {
         yield* cache.handle(
-          new Request(`https://cache.example/projects/t3code/${operation}`, { method }),
+          new Request(`https://cache.example/projects/ankielcode/${operation}`, { method }),
           { waitUntil: () => {} },
         );
       }
@@ -174,12 +174,12 @@ it.effect("does not charge authenticated budgets for anonymous or malformed requ
     };
     yield* cache.handle(
       new Request(
-        "https://cache.example/projects/t3code/blob/12345678-1234-1234-1234-123456789abc",
+        "https://cache.example/projects/ankielcode/blob/12345678-1234-1234-1234-123456789abc",
         { headers },
       ),
       { waitUntil: () => {} },
     );
-    expect(limit.mock.calls).toEqual([[{ key: "t3code:blob" }]]);
+    expect(limit.mock.calls).toEqual([[{ key: "ankielcode:blob" }]]);
   }).pipe(
     Effect.provide(
       Cache.layer.pipe(
@@ -204,8 +204,9 @@ it.effect("keeps artifacts private and limits CI reader credentials to reads", (
   Effect.gen(function* () {
     const cache = yield* Cache.Cache;
     const context = { waitUntil: () => {} };
-    const blob = "https://cache.example/projects/t3code/blob/12345678-1234-1234-1234-123456789abc";
-    for (const url of [blob, "https://cache.example/projects/t3code/fetch"]) {
+    const blob =
+      "https://cache.example/projects/ankielcode/blob/12345678-1234-1234-1234-123456789abc";
+    for (const url of [blob, "https://cache.example/projects/ankielcode/fetch"]) {
       const method = url === blob ? "GET" : "POST";
       expect((yield* cache.handle(new Request(url, { method }), context)).status).toBe(401);
       expect(
@@ -224,7 +225,7 @@ it.effect("keeps artifacts private and limits CI reader credentials to reads", (
     expect((yield* cache.handle(new Request(blob, { headers }), context)).status).toBe(200);
     expect(
       (yield* cache.handle(
-        new Request("https://cache.example/projects/t3code/store", { method: "POST", headers }),
+        new Request("https://cache.example/projects/ankielcode/store", { method: "POST", headers }),
         context,
       )).status,
     ).toBe(403);
@@ -254,7 +255,7 @@ it.effect("rejects anonymous and invalid Basic requests before admission", () =>
     for (const operation of ["store", "fetch"]) {
       for (const authorization of [undefined, `Basic ${btoa("attacker:invalid")}`]) {
         const response = yield* cache.handle(
-          new Request(`https://cache.example/projects/t3code/${operation}`, {
+          new Request(`https://cache.example/projects/ankielcode/${operation}`, {
             method: "POST",
             headers: authorization ? { authorization } : {},
           }),

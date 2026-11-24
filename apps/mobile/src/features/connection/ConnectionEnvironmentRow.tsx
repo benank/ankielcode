@@ -1,11 +1,11 @@
-import { errorDisplayMessage } from "@t3tools/client-runtime/errors";
+import { errorDisplayMessage } from "@ankielcode/client-runtime/errors";
 import { msg, T, useGT, useMessages } from "gt-react-native";
 import * as Dialog from "../../components/ui/Dialog";
 import { ConnectionTraceId } from "./ConnectionTraceId";
 import { SymbolView } from "../../components/ui/AppSymbol";
-import { hasSavedBearerRoute, hostFreezeNotice } from "@t3tools/client-runtime/connection";
-import type { AtomCommandResult } from "@t3tools/client-runtime/state/runtime";
-import { type EnvironmentId, resolveEnvironmentMachineKind } from "@t3tools/contracts";
+import { hasSavedBearerRoute, hostFreezeNotice } from "@ankielcode/client-runtime/connection";
+import type { AtomCommandResult } from "@ankielcode/client-runtime/state/runtime";
+import { type EnvironmentId, resolveEnvironmentMachineKind } from "@ankielcode/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
@@ -138,7 +138,7 @@ export function ConnectionEnvironmentRow(props: {
               tintColorClassName="accent-foreground-muted"
             />
             <Text
-              className="min-w-0 flex-shrink text-base font-t3-bold leading-snug text-foreground"
+              className="min-w-0 flex-shrink text-base font-ankiel-bold leading-snug text-foreground"
               numberOfLines={1}
             >
               {props.environment.environmentLabel}
@@ -289,7 +289,7 @@ export function ConnectionEnvironmentRow(props: {
                   tintColorClassName="accent-primary-foreground"
                   type="monochrome"
                 />
-                <Text className="text-xs font-t3-bold tracking-[0.8px] uppercase text-primary-foreground">
+                <Text className="text-xs font-ankiel-bold tracking-[0.8px] uppercase text-primary-foreground">
                   <T>Save</T>
                 </Text>
               </Pressable>

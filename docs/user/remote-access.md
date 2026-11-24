@@ -1,6 +1,6 @@
 # Remote access
 
-Connect a phone, browser, or another desktop app to T3 Code running on a different
+Connect a phone, browser, or another desktop app to Ankiel Code running on a different
 machine. That machine must stay running and reachable while you work.
 
 ## Set up a host
@@ -8,21 +8,21 @@ machine. That machine must stay running and reachable while you work.
 For a command-line host, run:
 
 ```bash
-t3 up
+ac up
 ```
 
 It asks whether other devices on your local network may reach the machine, then
-runs T3 Code as a [background service](./background-service.md). Run `t3 up`
-again to change your choice, and `t3 status` to see it.
+runs Ankiel Code as a [background service](./background-service.md). Run `ac up`
+again to change your choice, and `ac status` to see it.
 
 Instead of the background service, you can keep the desktop app running with
 its local environment enabled. Closing the desktop app's last window stops its
 local server.
 
-`t3 up` asks nothing when you name a choice: `--lan` or `--no-lan`. Choices you
+`ac up` asks nothing when you name a choice: `--lan` or `--no-lan`. Choices you
 do not name keep their settings, and `--yes` takes the defaults. Without a
 terminal, a needed restart runs without asking, and stops running agent turns.
-`t3 status --json` prints the settings. `t3 up --help` lists every flag with
+`ac status --json` prints the settings. `ac up --help` lists every flag with
 examples.
 
 ## Pair over a LAN or private network
@@ -33,20 +33,20 @@ On a desktop host, open **Settings → Sharing & access**, enable **Network acce
 then create a pairing link using an address the other device can reach. Changing
 network access restarts the desktop app. You can turn it off in the same place.
 
-For a command-line host, choose the local network in `t3 up`, or run:
+For a command-line host, choose the local network in `ac up`, or run:
 
 ```bash
-t3 up --lan
+ac up --lan
 ```
 
-For a server in a terminal, run `t3 serve --lan`. Either way, T3 Code then
+For a server in a terminal, run `ac serve --lan`. Either way, Ankiel Code then
 accepts connections from your local network and tailnet, so a pairing code is
 all that keeps other devices on them out.
 
 If a server is already running, generate a fresh link without restarting it:
 
 ```bash
-t3 pair
+ac pair
 ```
 
 Scan the QR code on your phone or paste the pairing URL into **Add environment**
@@ -54,7 +54,7 @@ in the receiving app. Connection settings are under **Settings → Environments*
 on web and desktop and **Settings → Environments** on mobile. A loopback address
 such as `127.0.0.1` reaches only the device opening the link.
 
-On a computer with the desktop app, you can open the printed `t3code://pair`
+On a computer with the desktop app, you can open the printed `ankielcode://pair`
 app link instead. The desktop app asks you to confirm the server address, then
 adds it.
 
@@ -83,21 +83,21 @@ that machine does not have yet; add that address with **Add route** instead.
 Pairing again over an address the machine already has still works. A new route
 is placed by speed, in that order, and you can reorder routes at any time.
 
-While connected through a paired address, T3 Code also learns the
+While connected through a paired address, Ankiel Code also learns the
 machine's current LAN and Tailscale addresses and adds them as routes, so
 pairing once over a VPN is enough to use the LAN at home. When the
 machine's LAN address changes, for example after it joins another Wi-Fi network,
 the learned route follows it. The machine must allow network access for its LAN
 address to be learned: **Network access** in the desktop app, or the
-[local network](./background-service.md#local-network-access) choice in `t3 up`.
+[local network](./background-service.md#local-network-access) choice in `ac up`.
 You can reorder a learned route, but not remove it; it
 goes away with the route it was learned through, or when the machine stops
 reporting that address.
 
-T3 Code connects over the first route that answers. Away from home, a LAN
+Ankiel Code connects over the first route that answers. Away from home, a LAN
 address that does not answer is checked briefly and skipped. It is only tried
 again, after the other routes, if none of them connect. While connected over a
-later route, T3 Code checks the earlier ones when your network changes, when you
+later route, Ankiel Code checks the earlier ones when your network changes, when you
 return to the app, and every minute, and moves back as soon as one works. A
 route whose machine refused this device's sign-in is marked **Sign-in
 refused**; pair that address again with **Add route** to use it.
@@ -138,21 +138,21 @@ HTTPS** in **Settings → Sharing & access**. Turn it off there to remove that r
 
 Your tailnet needs MagicDNS and HTTPS certificates enabled; see
 [Tailscale's HTTPS setup](https://tailscale.com/docs/how-to/set-up-https-certificates).
-On Linux, T3 Code also needs permission to manage Tailscale; see
+On Linux, Ankiel Code also needs permission to manage Tailscale; see
 [operator permission](https://tailscale.com/docs/reference/troubleshooting/linux/linux-operator-permission)
-for non-root users. If any of these is missing, T3 Code still starts but can't
+for non-root users. If any of these is missing, Ankiel Code still starts but can't
 add the HTTPS route.
 
 To start a command-line server with Tailscale HTTPS:
 
 ```bash
-t3 serve --tailscale-serve
+ac serve --tailscale-serve
 ```
 
 For an already-running server:
 
 ```bash
-t3 pair --tailscale
+ac pair --tailscale
 ```
 
 The pairing link uses an address such as `https://machine.tailnet.ts.net/`.
@@ -164,11 +164,11 @@ tailscale serve --https=443 --set-path=/ off
 ```
 
 If that port is already in use, choose another with
-`--tailscale-serve-port`. See `t3 pair --help` for other pairing options.
+`--tailscale-serve-port`. See `ac pair --help` for other pairing options.
 
 ### Hosted web app
 
-[app.t3.codes](https://app.t3.codes) needs an HTTPS endpoint. It connects directly
+[app.code.ankiel.com](https://app.code.ankiel.com) needs an HTTPS endpoint. It connects directly
 to your server; a hosted pairing link does not make an unreachable backend
 reachable or convert HTTP to HTTPS. Opening a hosted pairing link shows the
 server address and asks you to confirm before adding it.
@@ -180,13 +180,13 @@ scheme uses HTTP, so include `https://` when your server uses HTTPS.
 ## Desktop-managed SSH
 
 In the desktop app, open **Settings → Environments → Add environment**, choose
-**SSH**, and enter a host or SSH alias such as `user@example.com`. T3 Code starts
+**SSH**, and enter a host or SSH alias such as `user@example.com`. Ankiel Code starts
 or reuses a server there and opens the port forward for you. Projects, provider
 credentials, and agent work stay on the remote machine.
 
 The remote host must be Linux or an Apple Silicon Mac with `curl` or `wget`,
 `tar`, `sha256sum` or `shasum`, and [provider setup](./install.md#providers).
-The first launch downloads T3 Code's server to `~/.t3/runtime` on the host, so
+The first launch downloads Ankiel Code's server to `~/.ac/runtime` on the host, so
 it takes longer than later ones.
 Provider CLIs must be on the `PATH` of a non-interactive login shell there;
 check with:
@@ -195,7 +195,7 @@ check with:
 ssh user@example.com 'sh -lc "command -v claude codex"'
 ```
 
-T3 Code cannot answer a second sign-in prompt such as a Duo code. On macOS and
+Ankiel Code cannot answer a second sign-in prompt such as a Duo code. On macOS and
 Linux it can reuse a connection you signed in to in a terminal instead: turn on
 connection sharing for the host in `~/.ssh/config`, run `ssh <alias>`, then
 connect. When that connection closes, sign in again in a terminal and retry.
@@ -208,13 +208,13 @@ Host <alias>
 ```
 
 If SSH reconnecting fails after an app update, retry the launch once. Removing
-the connection stops a server that T3 Code launched; a server that was already
+the connection stops a server that Ankiel Code launched; a server that was already
 running is left alone.
 
 Each desktop app keeps one session on the host for its SSH connection and reuses
 it when it reconnects. Revoke sessions you no longer use in **Settings →
-Sharing & access** on the host, or on a headless host with `t3 auth session list` and
-`t3 auth session revoke <id>`. A desktop that can still sign in over SSH pairs
+Sharing & access** on the host, or on a headless host with `ac auth session list` and
+`ac auth session revoke <id>`. A desktop that can still sign in over SSH pairs
 again on its next connect.
 
 For Antigravity's Google callback on a remote host, see
@@ -274,7 +274,7 @@ anyone who can use the host's browser tabs can still view its `localhost` pages
 there. An administrator can also turn it off with a
 [managed policy](./managed-policy.md#other-capabilities).
 
-The first tab downloads a headless Chrome, about 120 MB, into the T3 home. It
+The first tab downloads a headless Chrome, about 120 MB, into the Ankiel home. It
 is the same browser [HTML renders](html-renders.md) use, so a host downloads it
 only once. Some Linux hosts need [setup](#browser-host-setup) before it can
 start.
@@ -296,13 +296,13 @@ apps.
 ### Local servers
 
 The browser lists ports held by processes your terminals and agents started.
-T3 Code reads which process holds each port and never connects to it, so a
+Ankiel Code reads which process holds each port and never connects to it, so a
 listed port opens as `http://localhost:<port>` and might not be a web page. For
 an HTTPS server or a specific path, set the **Preview URL** on the project
-script that starts it; T3 Code checks that address and opens it as written.
+script that starts it; Ankiel Code checks that address and opens it as written.
 
-To stop listing ports, set `T3CODE_PORT_DISCOVERY=0` in the environment that
-starts the T3 Code server, such as
+To stop listing ports, set `AC_PORT_DISCOVERY=0` in the environment that
+starts the Ankiel Code server, such as
 [`service.env`](./background-service.md#configure-the-service-environment) for
 the background service, and restart it. Script preview URLs still appear.
 
@@ -315,12 +315,12 @@ the server says so at startup, and browser tabs and HTML previews show the
 command to run on the host:
 
 ```sh
-sudo t3 browser setup
+sudo ac browser setup
 ```
 
 The server shows the exact line for how you started it, and keeps your `PATH`
-when you started it with `npx` and Node is installed only for your user. Where `t3` is not on your `PATH`, such as with only the
-desktop app installed, it names the full path of the app's own `t3` instead. It allows Chrome's sandbox with an AppArmor profile and installs
+when you started it with `npx` and Node is installed only for your user. Where `ac` is not on your `PATH`, such as with only the
+desktop app installed, it names the full path of the app's own `ac` instead. It allows Chrome's sandbox with an AppArmor profile and installs
 any missing libraries and system fonts with apt; pages that load without text
 can mean the host has no fonts. It is safe to run again, and each run reloads
 the AppArmor profile: run it again if the browser reports a blocked sandbox on a
@@ -328,25 +328,25 @@ host restored from an image or snapshot, where the profile can be on disk
 without being loaded. Without `sudo`, it only reports what it would change.
 
 The browser runs in Chrome's sandbox by default. Chrome cannot start that sandbox
-as root. If your T3 server runs as root, run it as a nonroot user to keep
-sandboxing enabled. `t3 browser setup` does not fix this root restriction.
+as root. If your Ankiel server runs as root, run it as a nonroot user to keep
+sandboxing enabled. `ac browser setup` does not fix this root restriction.
 
 If you need to run as root, or cannot enable the sandbox on your host, set
-`T3CODE_SERVER_BROWSER_SANDBOX=0` in the **T3 server's environment** and restart
+`AC_SERVER_BROWSER_SANDBOX=0` in the **Ankiel server's environment** and restart
 the server. This disables Chrome's sandbox. For a manual launch:
 
 ```sh
-T3CODE_SERVER_BROWSER_SANDBOX=0 t3 serve
+AC_SERVER_BROWSER_SANDBOX=0 ac serve
 ```
 
-For a systemd service, add `Environment=T3CODE_SERVER_BROWSER_SANDBOX=0` under
+For a systemd service, add `Environment=AC_SERVER_BROWSER_SANDBOX=0` under
 `[Service]` in its configuration, run `sudo systemctl daemon-reload`, then restart
-your T3 service. Setting the variable in an agent's terminal does not change the
-environment of an already running T3 server.
+your Ankiel service. Setting the variable in an agent's terminal does not change the
+environment of an already running Ankiel server.
 
 ## Connect an outside agent
 
-Claude Code, Codex, ChatGPT and other agents T3 Code did not start can drive
+Claude Code, Codex, ChatGPT and other agents Ankiel Code did not start can drive
 threads on an environment through its MCP server. See
 [outside agents](./outside-agents.md) for setup.
 
@@ -360,7 +360,7 @@ Linked environments is a beta. Turn it on for both machines in **Settings →
 Labs**; on mobile, **Settings → Labs** lists each connected machine. On a
 headless server, open its address in a browser and pair to reach its **Settings
 → Labs**, or add `"linkedEnvironmentsEnabled": true` to `settings.json` in its
-`userdata` directory, such as `~/.t3/userdata/settings.json`; a running server
+`userdata` directory, such as `~/.ac/userdata/settings.json`; a running server
 picks it up. While it is
 off on either machine, agents start nothing over a link between them. A task
 already running on the other machine still finishes, and if that machine has it
@@ -373,7 +373,7 @@ app has an address for that machine and is connected to it with a session that
 manages access there, it makes the pairing code itself; otherwise paste one
 from that machine's **Settings → Sharing & access**. An address you type always
 needs a pasted code. From a terminal, use
-`t3 environment link <address> --pairing-code <code> --access <mode>`.
+`ac environment link <address> --pairing-code <code> --access <mode>`.
 
 To link many machines at once, choose **Link several…** (it appears once this
 app has two other machines saved). Tick the machines, pick one access level for
@@ -384,8 +384,8 @@ reports its own result, and the ones that failed stay ticked so you can try
 only those again. Machines already linked are left as they are.
 
 For machines no app is connected to, put one `<address> <pairing-code>` per
-line in a file (make each code with `t3 pair` on that machine) and run
-`t3 environment link --from <file> --access <mode>`, or `--from -` to read
+line in a file (make each code with `ac pair` on that machine) and run
+`ac environment link --from <file> --access <mode>`, or `--from -` to read
 standard input. It prints a result per line, leaves machines already linked as
 they are, and exits non-zero if any line failed, so the same file can be run
 again with fresh codes for the failures.
@@ -406,10 +406,10 @@ an address you trust: the code is sent there.
 - The link shows up in that machine's **Settings → Sharing & access** like any
   outside agent, and can be revoked there. **Forget** on this machine also ends
   it there when that machine confirms it. If it can't, such as when it is
-  offline or on an older T3 Code, Forget says so; revoke it in that machine's
+  offline or on an older Ankiel Code, Forget says so; revoke it in that machine's
   Sharing & access.
 - A link stays valid while agents use it. One unused for 30 days expires, as
-  does one to a machine on an older T3 Code after 30 days; link again with a
+  does one to a machine on an older Ankiel Code after 30 days; link again with a
   new pairing code.
 
 On web and desktop, **Settings → Environments** opens as a map of your machines:
@@ -493,7 +493,7 @@ any other thread on web and desktop, and a shorter read-only list on mobile.
 - If this app is already connected to that machine, the thread opens there as
   usual instead.
 - You need permission to read threads on the machine you are connected to, and
-  Linked environments must be on there. Both machines need a version of T3 Code
+  Linked environments must be on there. Both machines need a version of Ankiel Code
   that has this view.
 
 ## Manage or revoke access
@@ -501,7 +501,7 @@ any other thread on web and desktop, and a shorter read-only list on mobile.
 On the host, **Settings → Sharing & access** lets authorized administrators create
 pairing links and revoke client sessions. Revoking an unused link prevents new
 pairings; revoke a device's session to remove its existing access. Command-line
-management is available through `t3 auth --help`.
+management is available through `ac auth --help`.
 
 When the app connects to more than one environment, choose one at the top of the
 page. A desktop app with **Local environment** off can manage a background
@@ -513,11 +513,11 @@ expires.
 To choose a token's permissions, pass `--scope` once for each scope you want:
 
 ```sh
-t3 pair --scope orchestration:read --scope filesystem:read
+ac pair --scope orchestration:read --scope filesystem:read
 ```
 
 The selected scopes replace the default permissions. The same option works with
-`t3 auth pairing create` and `t3 auth session issue`; each command's
+`ac auth pairing create` and `ac auth session issue`; each command's
 `--help` lists the available scopes. Without `--scope`, pairing tokens and issued
 bearer sessions get the standard client permissions, including managing access.
 A terminal or a full-access agent on the host can reach those as well, so a
@@ -572,10 +572,10 @@ screenshots, logs, or bug reports.
 
 If a computer should only drive work running elsewhere, turn off its local environment. In the
 desktop app, open **Settings → Environments** and switch off **Local
-environment**. T3 Code restarts without a local server: no local agents or terminals run, WSL
+environment**. Ankiel Code restarts without a local server: no local agents or terminals run, WSL
 backends stay off, and other devices can no longer connect to this computer. Your projects,
 history, and saved connections are kept, and you keep working through pairing or SSH.
-If a [background service](./background-service.md) on this computer uses the same T3 home, the
+If a [background service](./background-service.md) on this computer uses the same Ankiel home, the
 app still treats it as this computer: **Open in** and file reveal for its projects run here,
 whichever connection you reach it through.
 

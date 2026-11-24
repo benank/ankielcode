@@ -2,16 +2,16 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 
-import { T3_HOME } from "../e2e.config.ts";
-import { runPromise, test, WEB } from "./t3.ts";
+import { AC_HOME } from "../e2e.config.ts";
+import { runPromise, test, WEB } from "./ac.ts";
 
 test(
   "Appearance follows edits after restoring a symlinked theme tree",
   WEB,
-  async ({ t3, app, screen }) => {
-    await t3.project("symlinked-theme-tree");
-    const fixture = `${T3_HOME}/symlinked-theme-tree`;
-    const themes = `${T3_HOME}/userdata/themes`;
+  async ({ ac, app, screen }) => {
+    await ac.project("symlinked-theme-tree");
+    const fixture = `${AC_HOME}/symlinked-theme-tree`;
+    const themes = `${AC_HOME}/userdata/themes`;
     const file = "restore-theme-tree.json";
     const active = `${fixture}/active`;
     const restored = `${fixture}/restored`;
@@ -41,7 +41,7 @@ test(
     );
 
     try {
-      await t3.open("/settings/appearance");
+      await ac.open("/settings/appearance");
       await theme("Original Tree Palette").waitFor();
       await runPromise(
         Effect.gen(function* () {

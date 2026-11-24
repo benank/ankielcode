@@ -1,5 +1,5 @@
 import { T } from "gt-react-native";
-import type { EnvironmentId } from "@t3tools/contracts";
+import type { EnvironmentId } from "@ankielcode/contracts";
 import type { ComponentProps } from "react";
 import { View } from "react-native";
 
@@ -40,7 +40,7 @@ export function LocalEnvironmentList({
           <T>No environments connected yet.</T>
           {"\n"}
           <T>
-            Tap <Text className="font-t3-bold text-foreground">+</Text> to add one.
+            Tap <Text className="font-ankiel-bold text-foreground">+</Text> to add one.
           </T>
         </Text>
       </View>

@@ -7,7 +7,7 @@ import {
   type ManagedPolicyDocument,
   ScheduledTaskUpsertInput,
   SecretRequestError,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";

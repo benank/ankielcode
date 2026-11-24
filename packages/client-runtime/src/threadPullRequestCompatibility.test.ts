@@ -1,5 +1,5 @@
-import type { ExecutionEnvironmentCapabilities } from "@t3tools/contracts";
-import { ThreadId } from "@t3tools/contracts";
+import type { ExecutionEnvironmentCapabilities } from "@ankielcode/contracts";
+import { ThreadId } from "@ankielcode/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import {
   canStartThreadPullRequestWatch,

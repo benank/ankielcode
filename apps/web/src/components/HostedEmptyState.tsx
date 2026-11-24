@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { APP_DISPLAY_NAME, DESKTOP_DOWNLOAD_URL } from "~/branding";
 import { isElectron } from "../env";
 import { isLocalEnvironmentDisabled } from "../localEnvironment";
-import { InstallT3Commands } from "./InstallT3Commands";
+import { InstallAnkielCommands } from "./InstallAnkielCommands";
 import { Button } from "./ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "./ui/empty";
 import { SidebarInset } from "./ui/sidebar";
@@ -35,7 +35,7 @@ export function HostedEmptyState() {
               {localEnvironmentOff ? (
                 <T>Turn it back on, or connect a different computer.</T>
               ) : (
-                <T>Your agents run on your computer. Start T3 Code there first.</T>
+                <T>Your agents run on your computer. Start Ankiel Code there first.</T>
               )}
             </EmptyDescription>
           </EmptyHeader>
@@ -60,7 +60,7 @@ function PairingSteps() {
   return (
     <>
       <SetupStep number={1}>
-        <RunOnComputer command="t3 pair" />
+        <RunOnComputer command="ac pair" />
       </SetupStep>
       <SetupStep number={2}>
         <Button render={<Link to="/settings/connections" />} size="sm">
@@ -92,7 +92,7 @@ function RunOnComputer({ command }: { readonly command: string }) {
       <p>
         <T>Run on your computer:</T>
       </p>
-      <InstallT3Commands command={command} className="mt-2" />
+      <InstallAnkielCommands command={command} className="mt-2" />
       <a
         className="mt-2 inline-block text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
         href={DESKTOP_DOWNLOAD_URL}

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vite-plus/test";
-import { EnvironmentId, MessageId, ThreadId } from "@t3tools/contracts";
-import { serializeAssistantCitation } from "@t3tools/shared/assistantCitations";
+import { EnvironmentId, MessageId, ThreadId } from "@ankielcode/contracts";
+import { serializeAssistantCitation } from "@ankielcode/shared/assistantCitations";
 import {
   ATTACHMENT_ONLY_BOOTSTRAP_PROMPT,
   formatComposerContextReference,
   toComposerContextId,
-} from "@t3tools/shared/composerContextReferences";
+} from "@ankielcode/shared/composerContextReferences";
 
 import { deriveTimelineMinimapItems, resolveTimelineMinimapPreview } from "./timelineMinimapItems";
 
@@ -46,7 +46,7 @@ describe("resolveTimelineMinimapPreview", () => {
       rowIndex: 0,
       userText: null,
       assistantText:
-        "Started <t3-thread://v2/env-1/thread-1> and [Fix CI](t3-thread://v2/env-1/t2).",
+        "Started <ankiel-thread://v2/env-1/thread-1> and [Fix CI](ankiel-thread://v2/env-1/t2).",
     });
     expect(preview?.assistantText).toBe("Started a thread and Fix CI.");
   });

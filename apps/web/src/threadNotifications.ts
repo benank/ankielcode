@@ -1,5 +1,5 @@
-import type { EnvironmentId, ThreadId } from "@t3tools/contracts";
-import type { ClientSettings } from "@t3tools/contracts/settings";
+import type { EnvironmentId, ThreadId } from "@ankielcode/contracts";
+import type { ClientSettings } from "@ankielcode/contracts/settings";
 import { msg } from "gt-react";
 
 import completionUrl from "./assets/notification-completion.mp3";

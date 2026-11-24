@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { VoiceInputController, VoiceTranscriptionError } from "@t3tools/client-runtime/voice-input";
+import {
+  VoiceInputController,
+  VoiceTranscriptionError,
+} from "@ankielcode/client-runtime/voice-input";
 import { resetVoiceInputGlobalsForTests } from "../../../../packages/client-runtime/src/voice-input/controller";
 
 const mocks = vi.hoisted(() => ({

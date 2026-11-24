@@ -29,7 +29,7 @@ import {
   ServerSettingsError,
   ThreadId,
   TurnItemId,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Exit from "effect/Exit";
@@ -52,8 +52,8 @@ import * as ServerSettings from "../serverSettings.ts";
 import * as CheckpointService from "./CheckpointService.ts";
 import type { PendingOrchestrationEffectV2 } from "./EffectOutbox.ts";
 import * as EventSink from "./EventSink.ts";
-import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@ankielcode/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@ankielcode/provider-core/server/ProviderAdapter";
 import * as ProjectionStore from "./ProjectionStore.ts";
 import * as ProviderCommitBatch from "./ProviderCommitBatch.ts";
 import * as ProviderEventIngestor from "./ProviderEventIngestor.ts";
@@ -3583,7 +3583,7 @@ it.effect("fails the run when a released session's interrupt exits interrupted",
               new ProviderAdapter.ProviderAdapterEventStreamError({
                 driver,
                 providerSessionId: ProviderSessionId.make(`session:${key}`),
-                raisedByT3: true,
+                raisedByAnkiel: true,
                 cause: "Provider sign-in changed.",
               }),
             ),
@@ -3628,13 +3628,13 @@ it.effect("keeps a running root command open when a write fails under a live pro
 
 it.effect.each([
   { ended: true },
-  // T3 ending the stream proves no dead runtime; Stop settles the work it releases.
-  { ended: false, raisedByT3: true },
+  // Ankiel ending the stream proves no dead runtime; Stop settles the work it releases.
+  { ended: false, raisedByAnkiel: true },
   // A Stop that already settled the subagent keeps its result.
   { ended: false, stopped: true },
 ] as const)(
   "ends a subagent that outlived its root when the provider stream fails (%o)",
-  ({ ended, raisedByT3, stopped }) =>
+  ({ ended, raisedByAnkiel, stopped }) =>
     Effect.gen(function* () {
       const providerInstanceId = ProviderInstanceId.make("codex");
       const { finalEvents } = yield* captureRootRunTermination({
@@ -3673,7 +3673,7 @@ it.effect.each([
                   providerSessionId: ProviderSessionId.make(
                     "session:stream-error-outlived-subagent",
                   ),
-                  ...(raisedByT3 === undefined ? {} : { raisedByT3 }),
+                  ...(raisedByAnkiel === undefined ? {} : { raisedByAnkiel }),
                   cause: "provider process exited",
                 }),
               ),

@@ -1,5 +1,5 @@
 {
-  "name": "@t3tools/client-runtime",
+  "name": "@ankielcode/client-runtime",
   "private": true,
   "type": "module",
   "exports": {
@@ -199,9 +199,9 @@
       "types": "./src/voice-input/index.ts",
       "default": "./src/voice-input/index.ts"
     },
-    "./t3ToolSummary": {
-      "types": "./src/t3ToolSummary.ts",
-      "default": "./src/t3ToolSummary.ts"
+    "./ankielToolSummary": {
+      "types": "./src/ankielToolSummary.ts",
+      "default": "./src/ankielToolSummary.ts"
     },
     "./state/auth": {
       "types": "./src/state/auth.ts",
@@ -662,22 +662,22 @@
     "bench": "vp test bench"
   },
   "dependencies": {
+    "@ankielcode/contracts": "workspace:*",
+    "@ankielcode/issue-tracker-linear": "workspace:*",
+    "@ankielcode/provider-acp-registry": "workspace:*",
+    "@ankielcode/provider-core": "workspace:*",
+    "@ankielcode/provider-cursor": "workspace:*",
+    "@ankielcode/provider-fx": "workspace:*",
+    "@ankielcode/provider-grok": "workspace:*",
+    "@ankielcode/provider-kiro": "workspace:*",
+    "@ankielcode/provider-muse": "workspace:*",
+    "@ankielcode/provider-opencode": "workspace:*",
+    "@ankielcode/provider-pi": "workspace:*",
+    "@ankielcode/secret-provider-definitions": "workspace:*",
+    "@ankielcode/shared": "workspace:*",
+    "@ankielcode/source-control-core": "workspace:*",
+    "@ankielcode/source-control-definitions": "workspace:*",
     "@pierre/diffs": "catalog:",
-    "@t3tools/contracts": "workspace:*",
-    "@t3tools/issue-tracker-linear": "workspace:*",
-    "@t3tools/provider-acp-registry": "workspace:*",
-    "@t3tools/provider-core": "workspace:*",
-    "@t3tools/provider-cursor": "workspace:*",
-    "@t3tools/provider-fx": "workspace:*",
-    "@t3tools/provider-grok": "workspace:*",
-    "@t3tools/provider-kiro": "workspace:*",
-    "@t3tools/provider-muse": "workspace:*",
-    "@t3tools/provider-opencode": "workspace:*",
-    "@t3tools/provider-pi": "workspace:*",
-    "@t3tools/secret-provider-definitions": "workspace:*",
-    "@t3tools/shared": "workspace:*",
-    "@t3tools/source-control-core": "workspace:*",
-    "@t3tools/source-control-definitions": "workspace:*",
     "effect": "catalog:",
     "gt-i18n": "1.0.40",
     "jszip": "3.10.1",

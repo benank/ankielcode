@@ -1,4 +1,4 @@
-import { EnvironmentId, type ServerConfig, ThreadId, TurnItemId } from "@t3tools/contracts";
+import { EnvironmentId, type ServerConfig, ThreadId, TurnItemId } from "@ankielcode/contracts";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -283,7 +283,7 @@ describe("linkRequestTarget", () => {
     machine: "server",
     connected: true,
     linked: false,
-    urls: ["http://10.0.0.2:3773", "https://box.t3connect.example/"],
+    urls: ["http://10.0.0.2:3773", "https://box.ankielconnect.example/"],
   } as const;
 
   it("takes a machine from an address the agent gave only where this app already reaches it", () => {
@@ -297,12 +297,12 @@ describe("linkRequestTarget", () => {
     expect(linkRequestTarget(unfamiliar, [box], box.environmentId)).toEqual({ kind: "address" });
     expect(linkRequestTargetName(unfamiliar)).toBe("https://other.example");
     // A username in the address must not pass for the host the code goes to.
-    expect(linkRequestTargetName({ url: "https://box.t3connect.example@other.example/x" })).toBe(
-      "https://other.example",
-    );
+    expect(
+      linkRequestTargetName({ url: "https://box.ankielconnect.example@other.example/x" }),
+    ).toBe("https://other.example");
     // A known address in another spelling is the box, linked at its own addresses only.
     expect(
-      linkRequestTarget({ url: "https://BOX.t3connect.example:443/mcp" }, [box], null),
+      linkRequestTarget({ url: "https://BOX.ankielconnect.example:443/mcp" }, [box], null),
     ).toEqual({
       kind: "machine",
       environmentId: box.environmentId,
@@ -310,13 +310,13 @@ describe("linkRequestTarget", () => {
       urls: box.urls,
       linked: false,
     });
-    expect(linkRequestTarget({ url: "http://box.t3connect.example" }, [box], null)).toEqual({
+    expect(linkRequestTarget({ url: "http://box.ankielconnect.example" }, [box], null)).toEqual({
       kind: "address",
     });
     expect(linkRequestTarget({ url: "not a url" }, [box], null)).toEqual({ kind: "address" });
-    expect(linkRequestTarget({ url: "blob:https://box.t3connect.example/1" }, [box], null)).toEqual(
-      { kind: "address" },
-    );
+    expect(
+      linkRequestTarget({ url: "blob:https://box.ankielconnect.example/1" }, [box], null),
+    ).toEqual({ kind: "address" });
     // A private address two machines share names neither.
     const mini = { ...box, environmentId: EnvironmentId.make("environment-mini") };
     expect(linkRequestTarget({ url: "http://10.0.0.2:3773" }, [box, mini], null)).toEqual({

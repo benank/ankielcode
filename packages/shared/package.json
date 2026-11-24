@@ -1,5 +1,5 @@
 {
-  "name": "@t3tools/shared",
+  "name": "@ankielcode/shared",
   "private": true,
   "type": "module",
   "exports": {
@@ -191,9 +191,9 @@
       "types": "./src/projectSettings.ts",
       "import": "./src/projectSettings.ts"
     },
-    "./t3ProjectFile": {
-      "types": "./src/t3ProjectFile.ts",
-      "import": "./src/t3ProjectFile.ts"
+    "./ankielProjectFile": {
+      "types": "./src/ankielProjectFile.ts",
+      "import": "./src/ankielProjectFile.ts"
     },
     "./orchestrationTiming": {
       "types": "./src/orchestrationTiming.ts",
@@ -435,13 +435,13 @@
       "types": "./src/orchestrationV2Timeline.ts",
       "import": "./src/orchestrationV2Timeline.ts"
     },
-    "./t3McpToolPresentation": {
-      "types": "./src/t3McpToolPresentation.ts",
-      "import": "./src/t3McpToolPresentation.ts"
+    "./ankielMcpToolPresentation": {
+      "types": "./src/ankielMcpToolPresentation.ts",
+      "import": "./src/ankielMcpToolPresentation.ts"
     },
-    "./t3McpToolPresentationCopy": {
-      "types": "./src/t3McpToolPresentationCopy.ts",
-      "import": "./src/t3McpToolPresentationCopy.ts"
+    "./ankielMcpToolPresentationCopy": {
+      "types": "./src/ankielMcpToolPresentationCopy.ts",
+      "import": "./src/ankielMcpToolPresentationCopy.ts"
     },
     "./Array": {
       "types": "./src/Array.ts",
@@ -661,9 +661,9 @@
     "test": "vp test run --config ../../vite.config.ts --dir ."
   },
   "dependencies": {
+    "@ankielcode/contracts": "workspace:*",
     "@noble/curves": "catalog:",
     "@noble/hashes": "catalog:",
-    "@t3tools/contracts": "workspace:*",
     "effect": "catalog:",
     "ffi-rs": "1.3.2",
     "get-east-asian-width": "^1.6.0",

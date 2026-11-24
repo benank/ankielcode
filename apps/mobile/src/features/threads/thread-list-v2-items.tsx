@@ -19,21 +19,21 @@ import type { ThreadMoveDestination } from "./threadOrder";
 import type {
   EnvironmentProject,
   EnvironmentThreadShell,
-} from "@t3tools/client-runtime/state/shell";
-import type { EnvironmentThreadSearchMatch } from "@t3tools/client-runtime/state/thread-search";
+} from "@ankielcode/client-runtime/state/shell";
+import type { EnvironmentThreadSearchMatch } from "@ankielcode/client-runtime/state/thread-search";
 import {
   formatWorkingDurationLabel,
   resolveThreadWorkingStartedAt,
-} from "@t3tools/client-runtime/state/models";
+} from "@ankielcode/client-runtime/state/models";
 import {
   AuthOrchestrationOperateScope,
   type EnvironmentId,
   type EnvironmentMachineKind,
-} from "@t3tools/contracts";
-import { toServerClock } from "@t3tools/client-runtime/clock";
-import type { SnoozePresetSetting } from "@t3tools/contracts/settings";
-import { canSnooze } from "@t3tools/client-runtime/state/thread-settled";
-import { threadChipCopyTarget } from "@t3tools/client-runtime/thread-reference";
+} from "@ankielcode/contracts";
+import { toServerClock } from "@ankielcode/client-runtime/clock";
+import type { SnoozePresetSetting } from "@ankielcode/contracts/settings";
+import { canSnooze } from "@ankielcode/client-runtime/state/thread-settled";
+import { threadChipCopyTarget } from "@ankielcode/client-runtime/thread-reference";
 import type { MenuAction } from "@react-native-menu/menu";
 import { msg, T, useGT, useMessages } from "gt-react-native";
 import { memo, useCallback, useMemo, useState, type ComponentProps } from "react";
@@ -246,7 +246,7 @@ function ThreadListV2Section(props: {
     <>
       <Text
         className={cn(
-          "text-xs font-t3-medium",
+          "text-xs font-ankiel-medium",
           sidebarPane
             ? "text-drawer-foreground-muted"
             : snoozed
@@ -416,8 +416,8 @@ export const ThreadListV2ShowMoreRow = memo(function ThreadListV2ShowMoreRow(pro
       <Text
         className={
           props.pane === "sidebar"
-            ? "text-xs font-t3-medium text-drawer-foreground-muted"
-            : "text-xs font-t3-medium text-foreground-muted"
+            ? "text-xs font-ankiel-medium text-drawer-foreground-muted"
+            : "text-xs font-ankiel-medium text-foreground-muted"
         }
       >
         {label}
@@ -548,7 +548,7 @@ export const ThreadListV2PendingRow = memo(function ThreadListV2PendingRow(props
         ) : null}
         <Text
           className={cn(
-            "flex-1 text-base font-t3-medium",
+            "flex-1 text-base font-ankiel-medium",
             selected
               ? selectedThreadRowColors.foregroundClassName
               : rowAppearance.foregroundClassName,
@@ -582,7 +582,7 @@ export const ThreadListV2PendingRow = memo(function ThreadListV2PendingRow(props
             />
             <Text
               className={cn(
-                "text-xs font-t3-bold",
+                "text-xs font-ankiel-bold",
                 selected
                   ? selectedThreadRowColors.foregroundClassName
                   : "text-adaptive-amber-700-300",
@@ -1364,7 +1364,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         <Text
           className={cn(
             "flex-1 text-base",
-            !recede && "font-t3-medium",
+            !recede && "font-ankiel-medium",
             selected
               ? selectedThreadRowColors.foregroundClassName
               : rowAppearance.foregroundClassName,
@@ -1414,7 +1414,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
               />
               <Text
                 className={cn(
-                  "text-xs font-t3-bold",
+                  "text-xs font-ankiel-bold",
                   selected
                     ? selectedThreadRowColors.foregroundClassName
                     : "text-warning-foreground",
@@ -1438,7 +1438,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
               />
               <Text
                 className={cn(
-                  "text-xs font-t3-bold",
+                  "text-xs font-ankiel-bold",
                   selected ? selectedThreadRowColors.foregroundClassName : statusLabel.className,
                 )}
               >

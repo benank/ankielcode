@@ -1,10 +1,13 @@
-import { resolveFilesystemReadAccess } from "@t3tools/client-runtime/state/filesystem";
-import { isScratchProject } from "@t3tools/client-runtime/state/projects";
-import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
-import type { ProjectReadFileResult } from "@t3tools/contracts";
-import { DEFAULT_SERVER_SETTINGS, T3_PROJECT_FILE_NAME } from "@t3tools/contracts";
-import { resolveNewThreadEnvMode, resolveProjectSettings } from "@t3tools/shared/projectSettings";
-import { parseT3ProjectFile } from "@t3tools/shared/t3ProjectFile";
+import { resolveFilesystemReadAccess } from "@ankielcode/client-runtime/state/filesystem";
+import { isScratchProject } from "@ankielcode/client-runtime/state/projects";
+import type { EnvironmentProject } from "@ankielcode/client-runtime/state/shell";
+import type { ProjectReadFileResult } from "@ankielcode/contracts";
+import { DEFAULT_SERVER_SETTINGS, AC_PROJECT_FILE_NAME } from "@ankielcode/contracts";
+import {
+  resolveNewThreadEnvMode,
+  resolveProjectSettings,
+} from "@ankielcode/shared/projectSettings";
+import { parseAnkielProjectFile } from "@ankielcode/shared/ankielProjectFile";
 
 import { m } from "../../i18n/messages";
 import { useEnvironmentServerConfig } from "../../state/entities";
@@ -15,7 +18,7 @@ import { useEnvironmentQuery } from "../../state/query";
 import { environmentSession } from "../../state/session";
 
 /**
- * A project's new-task defaults: server settings merged with its t3.json. The
+ * A project's new-task defaults: server settings merged with its ac.json. The
  * new-task flow and the home pending-drafts list both read the default
  * workspace mode here, so a draft that never picked one shows what it sends.
  * Every read is a shared per-environment or per-project atom.
@@ -39,28 +42,30 @@ export function useNewTaskProjectDefaults(project: EnvironmentProject | null) {
     m,
   );
   const fileAccessPending = hasWorkspace && fileAccess.isPending;
-  const t3ProjectFileQuery = useEnvironmentQuery(
+  const ankielProjectFileQuery = useEnvironmentQuery(
     fileAccess.canReadFiles && hasWorkspace
       ? projectEnvironment.readFile({
           environmentId: project.environmentId,
           input: {
             cwd: project.workspaceRoot,
-            relativePath: T3_PROJECT_FILE_NAME,
+            relativePath: AC_PROJECT_FILE_NAME,
             allowMissing: true,
           },
         })
       : null,
   );
-  const t3ProjectFileData = t3ProjectFileQuery.data as ProjectReadFileResult | null;
-  const t3ProjectFile =
-    t3ProjectFileData === null || t3ProjectFileData.exists === false || t3ProjectFileData.truncated
+  const ankielProjectFileData = ankielProjectFileQuery.data as ProjectReadFileResult | null;
+  const ankielProjectFile =
+    ankielProjectFileData === null ||
+    ankielProjectFileData.exists === false ||
+    ankielProjectFileData.truncated
       ? null
-      : parseT3ProjectFile(t3ProjectFileData.contents);
+      : parseAnkielProjectFile(ankielProjectFileData.contents);
   const projectSettings = resolveProjectSettings(
     serverConfig?.settings ?? DEFAULT_SERVER_SETTINGS,
     project?.id ?? null,
     project,
-    t3ProjectFile,
+    ankielProjectFile,
   );
   const projectHasThreads = useProjectHasThreads(project);
   const defaultWorkspaceMode = isScratch
@@ -71,10 +76,10 @@ export function useNewTaskProjectDefaults(project: EnvironmentProject | null) {
         newProjectsRoot: serverConfig?.newProjectsRoot,
         projectHasThreads,
       });
-  // While t3.json loads, the environment default is provisional; t3.json may replace it.
+  // While ac.json loads, the environment default is provisional; ac.json may replace it.
   const defaultWorkspaceModeSettled =
     projectSettings.sources.defaultThreadEnvMode !== "environment" ||
-    (!t3ProjectFileQuery.isPending && !fileAccessPending);
+    (!ankielProjectFileQuery.isPending && !fileAccessPending);
   return {
     serverConfig,
     isScratch,

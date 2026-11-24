@@ -2,10 +2,10 @@ import {
   backgroundWorkHoldsCompletion,
   isPullRequestWatchTask,
   turnItemUpdateCanEndBackgroundWork,
-} from "@t3tools/shared/orchestrationV2PendingBackgroundWork";
-import { resolveProjectScripts, settleProjectScript } from "@t3tools/shared/projectScripts";
-import { resolveProjectSettings } from "@t3tools/shared/projectSettings";
-import { visibleThreadPullRequests } from "@t3tools/shared/threadPullRequests";
+} from "@ankielcode/shared/orchestrationV2PendingBackgroundWork";
+import { resolveProjectScripts, settleProjectScript } from "@ankielcode/shared/projectScripts";
+import { resolveProjectSettings } from "@ankielcode/shared/projectSettings";
+import { visibleThreadPullRequests } from "@ankielcode/shared/threadPullRequests";
 import {
   CommandId,
   isDelegatedAppThread,
@@ -13,8 +13,8 @@ import {
   type ThreadId,
   type OrchestrationV2DomainEvent,
   type OrchestrationV2ThreadShell,
-} from "@t3tools/contracts";
-import { makeDrainableWorker } from "@t3tools/shared/DrainableWorker";
+} from "@ankielcode/contracts";
+import { makeDrainableWorker } from "@ankielcode/shared/DrainableWorker";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
@@ -279,9 +279,11 @@ export class ThreadSettlementServiceV2 extends Context.Service<
     readonly start: () => Effect.Effect<void, never, Scope.Scope>;
     readonly drain: Effect.Effect<void>;
   }
->()("t3/orchestration-v2/ThreadSettlementService/ThreadSettlementServiceV2") {}
+>()("@ankielcode/cli/orchestration-v2/ThreadSettlementService/ThreadSettlementServiceV2") {}
 
-function autoSettlementConfigured(settings: import("@t3tools/contracts").ServerSettings): boolean {
+function autoSettlementConfigured(
+  settings: import("@ankielcode/contracts").ServerSettings,
+): boolean {
   if (settings.sidebarAutoSettleOnMerge || settings.sidebarAutoSettleAfterDays !== null) {
     return true;
   }
@@ -294,7 +296,7 @@ function autoSettlementConfigured(settings: import("@t3tools/contracts").ServerS
 
 /** @internal Exported for tests. */
 export function autoSettlementSettingsKey(
-  settings: import("@t3tools/contracts").ServerSettings,
+  settings: import("@ankielcode/contracts").ServerSettings,
 ): string {
   return JSON.stringify([
     settings.sidebarAutoSettleOnMerge,

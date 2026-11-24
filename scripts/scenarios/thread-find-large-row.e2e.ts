@@ -1,11 +1,11 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./t3.ts";
+import { test, WEB } from "./ac.ts";
 
-test("Find highlights a row with 200,000 matches", WEB, async ({ t3, app, screen, browser }) => {
-  const project = await t3.project("find-proof");
-  await t3.thread({ project, title: "Large row proof", messages: ["go"] });
-  await t3.open();
+test("Find highlights a row with 200,000 matches", WEB, async ({ ac, app, screen, browser }) => {
+  const project = await ac.project("find-proof");
+  await ac.thread({ project, title: "Large row proof", messages: ["go"] });
+  await ac.open();
   const thread = screen.getByRole("button", /^Large row proof,/);
   await expect(thread).toBeVisible({ timeout: 120_000 });
   await thread.tap();
@@ -28,8 +28,8 @@ test("Find highlights a row with 200,000 matches", WEB, async ({ t3, app, screen
     await expect
       .poll(() =>
         browser.evaluate<number>(
-          `(CSS.highlights.get("t3-thread-find")?.size ?? 0) +
-         (CSS.highlights.get("t3-thread-find-active")?.size ?? 0)`,
+          `(CSS.highlights.get("ankiel-thread-find")?.size ?? 0) +
+         (CSS.highlights.get("ankiel-thread-find-active")?.size ?? 0)`,
         ),
       )
       .toBe(200_000);

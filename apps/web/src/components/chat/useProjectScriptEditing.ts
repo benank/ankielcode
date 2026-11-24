@@ -1,22 +1,22 @@
 import { msg } from "gt-react";
-import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
+import { thrownErrorMessage } from "@ankielcode/client-runtime/errors";
 import { m } from "~/i18n/messages";
 import type {
   KeybindingCommand,
   ProjectId,
   ProjectScript,
   EnvironmentId,
-} from "@t3tools/contracts";
-import { AuthSettingsWriteScope, EnvironmentAuthorizationError } from "@t3tools/contracts";
-import type { UnifiedSettings } from "@t3tools/contracts/settings";
+} from "@ankielcode/contracts";
+import { AuthSettingsWriteScope, EnvironmentAuthorizationError } from "@ankielcode/contracts";
+import type { UnifiedSettings } from "@ankielcode/contracts/settings";
 import {
   isAtomCommandInterrupted,
   mapAtomCommandResult,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@t3tools/client-runtime/state/runtime";
-import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
-import { resolveProjectScripts } from "@t3tools/shared/projectScripts";
+} from "@ankielcode/client-runtime/state/runtime";
+import type { EnvironmentProject } from "@ankielcode/client-runtime/state/shell";
+import { resolveProjectScripts } from "@ankielcode/shared/projectScripts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { useStableCallback } from "../../hooks/useStableCallback";

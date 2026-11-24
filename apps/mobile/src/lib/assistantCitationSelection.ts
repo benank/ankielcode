@@ -1,9 +1,9 @@
-import { markdownMathRanges } from "@t3tools/shared/markdownMath";
-import { createAssistantTextSelector } from "@t3tools/shared/assistantCitations";
+import { markdownMathRanges } from "@ankielcode/shared/markdownMath";
+import { createAssistantTextSelector } from "@ankielcode/shared/assistantCitations";
 import {
   splitCodexArtifactTemplateMarkdown,
   renderCodexInlineDirectivesAsMarkdown,
-} from "@t3tools/shared/codexMarkdownDirectives";
+} from "@ankielcode/shared/codexMarkdownDirectives";
 import { splitMarkdownDetails } from "./markdownDetails";
 import {
   markdownReferenceDefinitions,
@@ -42,7 +42,7 @@ function renderedText(node: MarkdownNode, restoreMath: (value: string) => string
 
 function citationText(markdown: string): string {
   const formulas = markdownMathRanges(markdown);
-  let marker = "\ue000t3math";
+  let marker = "\ue000ankielmath";
   while (markdown.includes(marker)) marker += "_";
   const tokens = formulas.map((_, index) => `${marker}${index}\ue001`);
   let cursor = 0;

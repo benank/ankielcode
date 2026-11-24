@@ -1,4 +1,4 @@
-import { errorDisplayMessage } from "@t3tools/client-runtime/errors";
+import { errorDisplayMessage } from "@ankielcode/client-runtime/errors";
 import {
   foldSearchQuery,
   PALETTE_SECONDARY_LIMIT,
@@ -9,8 +9,8 @@ import {
   type SearchMatchHint,
   type SearchRange,
   type ThreadSearchSubject,
-} from "@t3tools/shared/paletteSearch";
-import { threadSearchSubject } from "@t3tools/client-runtime/state/thread-search";
+} from "@ankielcode/shared/paletteSearch";
+import { threadSearchSubject } from "@ankielcode/client-runtime/state/thread-search";
 import type { CommandPaletteLinkedThreads } from "../commandPaletteBus";
 import {
   addProjectRemoteSourceLabel,
@@ -18,7 +18,7 @@ import {
   buildAddProjectRemoteSourceReadiness,
   type AddProjectRemoteSource,
   type AddProjectRemoteSourceReadiness,
-} from "@t3tools/client-runtime/operations/projects";
+} from "@ankielcode/client-runtime/operations/projects";
 import {
   type ScopedThreadRef,
   type EnvironmentId,
@@ -29,9 +29,9 @@ import {
   type SourceControlDiscoveryResult,
   type SourceControlRepositoryInfo,
   THREAD_JUMP_KEYBINDING_COMMANDS,
-} from "@t3tools/contracts";
-import { filterFilesystemBrowseEntries } from "@t3tools/client-runtime/state/filesystem";
-import { isShownUnderParent } from "@t3tools/client-runtime/state/threads";
+} from "@ankielcode/contracts";
+import { filterFilesystemBrowseEntries } from "@ankielcode/client-runtime/state/filesystem";
+import { isShownUnderParent } from "@ankielcode/client-runtime/state/threads";
 import { type ReactNode } from "react";
 import { msg } from "gt-react";
 import { m, type MessageResolver } from "../i18n/messages";
@@ -700,7 +700,7 @@ export function filterCommandPaletteGroups(
       ];
 }
 
-/** Every option inside a submenu as one row, e.g. "New thread in t3code" or "Change theme: Dracula". */
+/** Every option inside a submenu as one row, e.g. "New thread in ankielcode" or "Change theme: Dracula". */
 export function buildNestedSearchItems(
   items: ReadonlyArray<CommandPaletteActionItem | CommandPaletteSubmenuItem>,
   query: string,

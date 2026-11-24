@@ -1,5 +1,5 @@
 {
-  "name": "@t3tools/evals",
+  "name": "@ankielcode/evals",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,10 +16,10 @@
     "test": "vp test run --config ../vite.config.ts --dir ."
   },
   "dependencies": {
+    "@ankielcode/contracts": "workspace:*",
+    "@ankielcode/provider-core": "workspace:*",
+    "@ankielcode/shared": "workspace:*",
     "@effect/platform-node": "catalog:",
-    "@t3tools/contracts": "workspace:*",
-    "@t3tools/provider-core": "workspace:*",
-    "@t3tools/shared": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

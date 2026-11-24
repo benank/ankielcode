@@ -9,9 +9,9 @@ import type {
   Todo as OpenCodeTodo,
   ToolPart,
 } from "@opencode-ai/sdk/v2";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { getModelSelectionStringOptionValue } from "@t3tools/shared/model";
-import { causeErrorTag } from "@t3tools/shared/observability";
+import * as HostProcess from "@ankielcode/shared/HostProcess";
+import { getModelSelectionStringOptionValue } from "@ankielcode/shared/model";
+import { causeErrorTag } from "@ankielcode/shared/observability";
 import {
   defaultInstanceIdForDriver,
   type ModelSelection,
@@ -37,7 +37,7 @@ import {
   type RuntimeRequestId,
   type ThreadId,
   settingsSecretLiteral,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import { OpenCodeSettings } from "../settings.ts";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
@@ -55,35 +55,35 @@ import * as Semaphore from "effect/Semaphore";
 import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 
-import { brokenVersionDetail } from "@t3tools/provider-core/server/compatibility";
-import * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
-import { mcpToolPresentation } from "@t3tools/provider-core/server/mcpToolPresentation";
-import * as McpProviderSessions from "@t3tools/provider-core/server/McpProviderSessions";
-import * as ProviderEventLoggers from "@t3tools/provider-core/server/ProviderEventLoggers";
+import { brokenVersionDetail } from "@ankielcode/provider-core/server/compatibility";
+import * as ProviderHost from "@ankielcode/provider-core/server/ProviderHost";
+import { mcpToolPresentation } from "@ankielcode/provider-core/server/mcpToolPresentation";
+import * as McpProviderSessions from "@ankielcode/provider-core/server/McpProviderSessions";
+import * as ProviderEventLoggers from "@ankielcode/provider-core/server/ProviderEventLoggers";
 import {
   structuralProtocolMethod,
   summarizeNativeProtocolPayload,
-} from "@t3tools/provider-core/server/nativeProtocolLogging";
-import { mergeProviderInstanceEnvironment } from "@t3tools/provider-core/server/instanceEnvironment";
-import { t3OrchestrationSystemPrompt } from "@t3tools/provider-core/server/orchestrationInstructions";
-import { buildRuntimeInstructions } from "@t3tools/provider-core/server/runtimeInstructions";
+} from "@ankielcode/provider-core/server/nativeProtocolLogging";
+import { mergeProviderInstanceEnvironment } from "@ankielcode/provider-core/server/instanceEnvironment";
+import { ankielOrchestrationSystemPrompt } from "@ankielcode/provider-core/server/orchestrationInstructions";
+import { buildRuntimeInstructions } from "@ankielcode/provider-core/server/runtimeInstructions";
 import * as OpenCodeRuntime from "./OpenCodeRuntime.ts";
 import { readableProviderErrorMessage } from "./providerErrorMessage.ts";
-import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
-import * as ProviderContinuationRequests from "@t3tools/provider-core/server/ProviderContinuationRequests";
-import { makeProviderFailure } from "@t3tools/provider-core/server/failure";
-import { turnScopedSelectionTransition } from "@t3tools/provider-core/server/selectionTransition";
-import { providerMessageTextWithAttachmentPaths } from "@t3tools/provider-core/server/attachmentPrompt";
-import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+import * as IdAllocator from "@ankielcode/provider-core/server/IdAllocator";
+import * as ProviderContinuationRequests from "@ankielcode/provider-core/server/ProviderContinuationRequests";
+import { makeProviderFailure } from "@ankielcode/provider-core/server/failure";
+import { turnScopedSelectionTransition } from "@ankielcode/provider-core/server/selectionTransition";
+import { providerMessageTextWithAttachmentPaths } from "@ankielcode/provider-core/server/attachmentPrompt";
+import * as ProviderAdapter from "@ankielcode/provider-core/server/ProviderAdapter";
 import {
   ProviderAdapterDriverCreateError,
   type ProviderAdapterDriver,
   type ProviderAdapterDriverCreateInput,
-} from "@t3tools/provider-core/server/adapterDriver";
+} from "@ankielcode/provider-core/server/adapterDriver";
 import {
   makeSubagentChildThread,
   subagentThreadTitle,
-} from "@t3tools/provider-core/server/subagentProjection";
+} from "@ankielcode/provider-core/server/subagentProjection";
 import { openCodeCommandFailed, openCodeToolOutput, openCodeToolTurnItem } from "./toolItems.ts";
 
 export const OPENCODE_PROVIDER = ProviderDriverKind.make("opencode");
@@ -407,7 +407,7 @@ interface OpenCodeSubagentContext {
   launch: ToolPart | null;
 }
 
-/** Root work OpenCode began with no T3 turn, such as a background task's result; held until a run admits it. */
+/** Root work OpenCode began with no Ankiel turn, such as a background task's result; held until a run admits it. */
 interface OpenCodeWake {
   readonly events: Array<OpenCodeEvent>;
   // A user message alone can be a late update; only a busy root is work worth a run.
@@ -1091,15 +1091,15 @@ export const makeOpenCodeAdapterV2 = Effect.fn("makeOpenCodeAdapterV2")(function
         });
 
         const mcpSession = yield* mcpSessions.read(input.threadId);
-        const hasT3Mcp = mcpSession !== undefined && !connection.external;
-        const orchestrationSystemPrompt = t3OrchestrationSystemPrompt(
-          hasT3Mcp,
+        const hasAnkielMcp = mcpSession !== undefined && !connection.external;
+        const orchestrationSystemPrompt = ankielOrchestrationSystemPrompt(
+          hasAnkielMcp,
           mcpSession?.capabilities?.has("device") === true,
         );
-        if (hasT3Mcp) {
+        if (hasAnkielMcp) {
           yield* OpenCodeRuntime.runOpenCodeSdk("mcp.add", () =>
             client.mcp.add({
-              name: "t3-code",
+              name: "ankiel-code",
               config: {
                 type: "remote",
                 url: mcpSession.endpoint,
@@ -2899,7 +2899,7 @@ export const makeOpenCodeAdapterV2 = Effect.fn("makeOpenCodeAdapterV2")(function
             onRunEndedWithoutStarting: () => stopWake(state, wake),
           });
 
-        // Callers hold eventPermit. A root user message with no T3 turn starts a wake; its work stays
+        // Callers hold eventPermit. A root user message with no Ankiel turn starts a wake; its work stays
         // held, with that of children no turn has claimed yet, until startTurn takes it.
         const acceptEvent = Effect.fnUntraced(function* (event: OpenCodeEvent) {
           const sessionId = sessionWorkEventSessionId(event);

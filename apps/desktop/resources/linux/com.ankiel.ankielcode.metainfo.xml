@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.ankiel.ankielcode</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Ankiel Code</name>
+  <summary>Desktop GUI for coding agents</summary>
+  <developer id="com.ankiel">
+    <name>Ankiel Inc.</name>
+  </developer>
+  <description>
+    <p>
+      Ankiel Code is an open-source desktop app for coding agents. Work with your
+      existing agent subscriptions, review code changes, and run commands in
+      your projects.
+    </p>
+    <p>
+      Connect from desktop, web, or mobile to continue working remotely.
+    </p>
+  </description>
+  <launchable type="desktop-id">ankielcode.desktop</launchable>
+  <icon type="stock">ankielcode</icon>
+  <provides>
+    <binary>ankielcode</binary>
+  </provides>
+  <categories>
+    <category>Development</category>
+  </categories>
+  <url type="homepage">https://code.ankiel.com</url>
+  <url type="bugtracker">https://github.com/benank/ankielcode/issues</url>
+  <url type="vcs-browser">https://github.com/benank/ankielcode</url>
+</component>

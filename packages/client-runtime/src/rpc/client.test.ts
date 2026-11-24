@@ -4,7 +4,7 @@ import {
   type ServerLifecycleStreamEvent,
   type ServerSelfUpdateProgressEvent,
   WS_METHODS,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";

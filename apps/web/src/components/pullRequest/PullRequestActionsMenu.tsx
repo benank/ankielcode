@@ -3,9 +3,9 @@ import {
   canEditPullRequestMaintainerEdits,
   maintainerEditsChoiceInForce,
   type MaintainerEditsChoice,
-} from "@t3tools/client-runtime/pull-request-editing";
-import type { ChangeRequestTerminology } from "@t3tools/client-runtime/source-control-clients";
-import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
+} from "@ankielcode/client-runtime/pull-request-editing";
+import type { ChangeRequestTerminology } from "@ankielcode/client-runtime/source-control-clients";
+import { squashAtomCommandFailure } from "@ankielcode/client-runtime/state/runtime";
 import type {
   EnvironmentId,
   PullRequestAction,
@@ -13,7 +13,7 @@ import type {
   PullRequestMergeMethod,
   PullRequestRef,
   ScopedThreadRef,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import {
   ArrowUpRightIcon,
   BookOpenIcon,

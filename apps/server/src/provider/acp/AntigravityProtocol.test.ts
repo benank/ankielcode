@@ -19,8 +19,8 @@ import {
 import {
   mergeToolCallState,
   parseSessionUpdateEvent,
-} from "@t3tools/provider-acp/server/runtimeModel";
-import { acpToolCallDiffPatch } from "@t3tools/provider-acp/server/adapter";
+} from "@ankielcode/provider-acp/server/runtimeModel";
+import { acpToolCallDiffPatch } from "@ankielcode/provider-acp/server/adapter";
 
 const isSessionNotification = Schema.is(AcpWireSchema.SessionNotification);
 
@@ -667,7 +667,7 @@ describe("Antigravity served reads", () => {
       },
     }).update;
 
-  it("credits a read T3 served before the agent announced it", () => {
+  it("credits a read Ankiel served before the agent announced it", () => {
     const reads = makeAntigravityReadRepair();
     reads.attempted("/repo/a.ts", true);
     const announced = reads.repair({
@@ -733,15 +733,15 @@ describe("Antigravity served reads", () => {
     });
   });
 
-  it("drops agy's toolSummary from T3 MCP call arguments only", () => {
-    const t3Call = normalizeAntigravityToolCall(
+  it("drops agy's toolSummary from Ankiel MCP call arguments only", () => {
+    const ankielCall = normalizeAntigravityToolCall(
       parseToolUpdate(
         normalizeAntigravitySessionUpdate({
           sessionId: "session-1",
           update: {
             sessionUpdate: "tool_call",
-            toolCallId: "call_t3_send",
-            title: "Run mcp_t3-code_send_to_user",
+            toolCallId: "call_ankiel_send",
+            title: "Run mcp_ankiel-code_send_to_user",
             kind: "other",
             status: "in_progress",
             rawInput: { message: "Hello", toolSummary: "Send greeting" },
@@ -749,7 +749,7 @@ describe("Antigravity served reads", () => {
         }),
       ).toolCall,
     );
-    expect(t3Call.data.rawInput).toEqual({ message: "Hello" });
+    expect(ankielCall.data.rawInput).toEqual({ message: "Hello" });
 
     const foreignCall = normalizeAntigravityToolCall(
       parseToolUpdate({

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ankiel App Testing"
+  short_description: "Test web and desktop in Ankiel's Browser panel"
+  default_prompt: "Use $test-ankiel-app to verify the affected web or desktop flow through Ankiel's Browser panel."

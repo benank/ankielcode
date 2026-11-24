@@ -1,4 +1,7 @@
-import type { ProviderDriverKind, ServerProviderCompatibilityAdvisory } from "@t3tools/contracts";
+import type {
+  ProviderDriverKind,
+  ServerProviderCompatibilityAdvisory,
+} from "@ankielcode/contracts";
 import * as Effect from "effect/Effect";
 
 /** Rates a detected provider version against the host's compatibility policy. */
@@ -19,5 +22,5 @@ export function brokenVersionDetail(input: {
   if (input.advisory?.status !== "broken") return undefined;
   const target =
     input.advisory.recommendedVersion ?? input.advisory.recommendedRange ?? "a newer version";
-  return `${input.name} ${input.version} does not work with this T3 Code release. ${input.action ?? `Update ${input.name}`} to ${target}, then retry.`;
+  return `${input.name} ${input.version} does not work with this Ankiel Code release. ${input.action ?? `Update ${input.name}`} to ${target}, then retry.`;
 }

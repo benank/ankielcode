@@ -190,7 +190,7 @@ export const Organization = Schema.Struct({
 export interface Organization extends Schema.Struct.Type<typeof Organization.fields> {}
 
 /** A team is the primary organizational unit in Linear. Issues belong to teams, and each team has its own workflow states, cycles, labels, and settings. Teams can be public (visible to all workspace members), private (visible only to team members), or restricted (visible only within an enclosing private-team boundary). Teams can also have sub-teams that inherit settings from their parent. */
-export const T3ViewerTeamsNodesTeam = Schema.Struct({
+export const AnkielViewerTeamsNodesTeam = Schema.Struct({
   /** The unique identifier of the entity. */
   id: Shared.ID,
   /** The team's unique key, used as a prefix in issue identifiers (e.g., 'ENG' in 'ENG-123') and in URLs. */
@@ -198,15 +198,15 @@ export const T3ViewerTeamsNodesTeam = Schema.Struct({
   /** The team's name. */
   name: Schema.String
 })
-export interface T3ViewerTeamsNodesTeam extends Schema.Struct.Type<typeof T3ViewerTeamsNodesTeam.fields> {}
+export interface AnkielViewerTeamsNodesTeam extends Schema.Struct.Type<typeof AnkielViewerTeamsNodesTeam.fields> {}
 
-export const T3ViewerTeamsTeamConnection = Schema.Struct({
-  nodes: Schema.Array(T3ViewerTeamsNodesTeam)
+export const AnkielViewerTeamsTeamConnection = Schema.Struct({
+  nodes: Schema.Array(AnkielViewerTeamsNodesTeam)
 })
-export interface T3ViewerTeamsTeamConnection extends Schema.Struct.Type<typeof T3ViewerTeamsTeamConnection.fields> {}
+export interface AnkielViewerTeamsTeamConnection extends Schema.Struct.Type<typeof AnkielViewerTeamsTeamConnection.fields> {}
 
-/** `query T3Viewer` */
-export const T3Viewer = GraphQL.query("T3Viewer", {
+/** `query AnkielViewer` */
+export const AnkielViewer = GraphQL.query("AnkielViewer", {
   document: {
     variables: [],
     selections: [
@@ -224,12 +224,12 @@ export const T3Viewer = GraphQL.query("T3Viewer", {
     /** The authenticated user's workspace. */
     organization: Organization,
     /** All teams whose issues the user can access. This includes public teams and private teams the user is a member of. This may differ from `administrableTeams`, which returns teams whose settings the user can change but whose issues they don't necessarily have access to. */
-    teams: T3ViewerTeamsTeamConnection
+    teams: AnkielViewerTeamsTeamConnection
   })
 })
-export declare namespace T3Viewer {
-  export type Variables = typeof T3Viewer.variables.Type
-  export type Result = typeof T3Viewer.result.Type
+export declare namespace AnkielViewer {
+  export type Variables = typeof AnkielViewer.variables.Type
+  export type Result = typeof AnkielViewer.result.Type
 }
 
 export const IssueConnection = Schema.Struct({
@@ -238,8 +238,8 @@ export const IssueConnection = Schema.Struct({
 })
 export interface IssueConnection extends Schema.Struct.Type<typeof IssueConnection.fields> {}
 
-/** `query T3Issues` */
-export const T3Issues = GraphQL.query("T3Issues", {
+/** `query AnkielIssues` */
+export const AnkielIssues = GraphQL.query("AnkielIssues", {
   document: {
     variables: [
       { name: "first", body: "Int!" },
@@ -270,9 +270,9 @@ export const T3Issues = GraphQL.query("T3Issues", {
     issues: IssueConnection
   })
 })
-export declare namespace T3Issues {
-  export type Variables = typeof T3Issues.variables.Type
-  export type Result = typeof T3Issues.result.Type
+export declare namespace AnkielIssues {
+  export type Variables = typeof AnkielIssues.variables.Type
+  export type Result = typeof AnkielIssues.result.Type
 }
 
 export const TeamStatesWorkflowStateConnection = Schema.Struct({
@@ -348,7 +348,7 @@ export const IssueHistoryConnection = Schema.Struct({
 export interface IssueHistoryConnection extends Schema.Struct.Type<typeof IssueHistoryConnection.fields> {}
 
 /** An issue is the core work item in Linear. Issues belong to a team, have a workflow status, can be assigned to users, carry a priority level, and can be organized into projects and cycles. Issues support sub-issues (parent-child hierarchy up to 10 levels deep), labels, due dates, estimates, and SLA tracking. They can also be linked to other issues via relations, attached to releases, and tracked through their full history of changes. */
-export const T3IssueIssueIssue = Schema.Struct({
+export const AnkielIssueIssueIssue = Schema.Struct({
   /** The unique identifier of the entity. */
   id: Shared.ID,
   /** Issue's human readable identifier (e.g. ENG-123). */
@@ -393,10 +393,10 @@ export const T3IssueIssueIssue = Schema.Struct({
   /** History entries associated with the issue. */
   history: IssueHistoryConnection
 })
-export interface T3IssueIssueIssue extends Schema.Struct.Type<typeof T3IssueIssueIssue.fields> {}
+export interface AnkielIssueIssueIssue extends Schema.Struct.Type<typeof AnkielIssueIssueIssue.fields> {}
 
-/** `query T3Issue` */
-export const T3Issue = GraphQL.query("T3Issue", {
+/** `query AnkielIssue` */
+export const AnkielIssue = GraphQL.query("AnkielIssue", {
   document: {
     variables: [
       { name: "id", body: "String!" },
@@ -422,23 +422,23 @@ export const T3Issue = GraphQL.query("T3Issue", {
   },
   result: Schema.Struct({
     /** One specific issue, looked up by its unique identifier. */
-    issue: T3IssueIssueIssue
+    issue: AnkielIssueIssueIssue
   })
 })
-export declare namespace T3Issue {
-  export type Variables = typeof T3Issue.variables.Type
-  export type Result = typeof T3Issue.result.Type
+export declare namespace AnkielIssue {
+  export type Variables = typeof AnkielIssue.variables.Type
+  export type Result = typeof AnkielIssue.result.Type
 }
 
 /** An issue is the core work item in Linear. Issues belong to a team, have a workflow status, can be assigned to users, carry a priority level, and can be organized into projects and cycles. Issues support sub-issues (parent-child hierarchy up to 10 levels deep), labels, due dates, estimates, and SLA tracking. They can also be linked to other issues via relations, attached to releases, and tracked through their full history of changes. */
-export const T3CommentsIssueIssue = Schema.Struct({
+export const AnkielCommentsIssueIssue = Schema.Struct({
   /** Comments associated with the issue, including inline comments on the issue's description. */
   comments: CommentConnection
 })
-export interface T3CommentsIssueIssue extends Schema.Struct.Type<typeof T3CommentsIssueIssue.fields> {}
+export interface AnkielCommentsIssueIssue extends Schema.Struct.Type<typeof AnkielCommentsIssueIssue.fields> {}
 
-/** `query T3Comments` */
-export const T3Comments = GraphQL.query("T3Comments", {
+/** `query AnkielComments` */
+export const AnkielComments = GraphQL.query("AnkielComments", {
   document: {
     variables: [
       { name: "id", body: "String!" },
@@ -463,12 +463,12 @@ export const T3Comments = GraphQL.query("T3Comments", {
   },
   result: Schema.Struct({
     /** One specific issue, looked up by its unique identifier. */
-    issue: T3CommentsIssueIssue
+    issue: AnkielCommentsIssueIssue
   })
 })
-export declare namespace T3Comments {
-  export type Variables = typeof T3Comments.variables.Type
-  export type Result = typeof T3Comments.result.Type
+export declare namespace AnkielComments {
+  export type Variables = typeof AnkielComments.variables.Type
+  export type Result = typeof AnkielComments.result.Type
 }
 
 export const NodesStatesWorkflowStateConnection = Schema.Struct({
@@ -514,7 +514,7 @@ export const TemplateConnection = Schema.Struct({
 export interface TemplateConnection extends Schema.Struct.Type<typeof TemplateConnection.fields> {}
 
 /** A team is the primary organizational unit in Linear. Issues belong to teams, and each team has its own workflow states, cycles, labels, and settings. Teams can be public (visible to all workspace members), private (visible only to team members), or restricted (visible only within an enclosing private-team boundary). Teams can also have sub-teams that inherit settings from their parent. */
-export const T3TeamTeamsNodesTeam = Schema.Struct({
+export const AnkielTeamTeamsNodesTeam = Schema.Struct({
   /** The unique identifier of the entity. */
   id: Shared.ID,
   /** The team's unique key, used as a prefix in issue identifiers (e.g., 'ENG' in 'ENG-123') and in URLs. */
@@ -530,15 +530,15 @@ export const T3TeamTeamsNodesTeam = Schema.Struct({
   /** Templates associated with the team. */
   templates: TemplateConnection
 })
-export interface T3TeamTeamsNodesTeam extends Schema.Struct.Type<typeof T3TeamTeamsNodesTeam.fields> {}
+export interface AnkielTeamTeamsNodesTeam extends Schema.Struct.Type<typeof AnkielTeamTeamsNodesTeam.fields> {}
 
-export const T3TeamTeamsTeamConnection = Schema.Struct({
-  nodes: Schema.Array(T3TeamTeamsNodesTeam)
+export const AnkielTeamTeamsTeamConnection = Schema.Struct({
+  nodes: Schema.Array(AnkielTeamTeamsNodesTeam)
 })
-export interface T3TeamTeamsTeamConnection extends Schema.Struct.Type<typeof T3TeamTeamsTeamConnection.fields> {}
+export interface AnkielTeamTeamsTeamConnection extends Schema.Struct.Type<typeof AnkielTeamTeamsTeamConnection.fields> {}
 
-/** `query T3Team` */
-export const T3Team = GraphQL.query("T3Team", {
+/** `query AnkielTeam` */
+export const AnkielTeam = GraphQL.query("AnkielTeam", {
   document: {
     variables: [
       { name: "key", body: "String!" }
@@ -560,14 +560,14 @@ export const T3Team = GraphQL.query("T3Team", {
   },
   result: Schema.Struct({
     /** All teams whose issues the user can access. This includes public teams and private teams the user is a member of. This may differ from `administrableTeams`, which returns teams whose settings the user can change but whose issues they don't necessarily have access to. */
-    teams: T3TeamTeamsTeamConnection,
+    teams: AnkielTeamTeamsTeamConnection,
     /** All issue labels. Returns a paginated list of labels visible to the authenticated user, including both workspace-level and team-scoped labels. */
     issueLabels: NodesLabelsIssueLabelConnection
   })
 })
-export declare namespace T3Team {
-  export type Variables = typeof T3Team.variables.Type
-  export type Result = typeof T3Team.result.Type
+export declare namespace AnkielTeam {
+  export type Variables = typeof AnkielTeam.variables.Type
+  export type Result = typeof AnkielTeam.result.Type
 }
 
 /** An issue is the core work item in Linear. Issues belong to a team, have a workflow status, can be assigned to users, carry a priority level, and can be organized into projects and cycles. Issues support sub-issues (parent-child hierarchy up to 10 levels deep), labels, due dates, estimates, and SLA tracking. They can also be linked to other issues via relations, attached to releases, and tracked through their full history of changes. */
@@ -588,8 +588,8 @@ export const IssueCreateIssuePayload = Schema.Struct({
 })
 export interface IssueCreateIssuePayload extends Schema.Struct.Type<typeof IssueCreateIssuePayload.fields> {}
 
-/** `mutation T3IssueCreate` */
-export const T3IssueCreate = GraphQL.mutation("T3IssueCreate", {
+/** `mutation AnkielIssueCreate` */
+export const AnkielIssueCreate = GraphQL.mutation("AnkielIssueCreate", {
   document: {
     variables: [
       { name: "input", body: "IssueCreateInput!" }
@@ -607,9 +607,9 @@ export const T3IssueCreate = GraphQL.mutation("T3IssueCreate", {
     issueCreate: IssueCreateIssuePayload
   })
 })
-export declare namespace T3IssueCreate {
-  export type Variables = typeof T3IssueCreate.variables.Type
-  export type Result = typeof T3IssueCreate.result.Type
+export declare namespace AnkielIssueCreate {
+  export type Variables = typeof AnkielIssueCreate.variables.Type
+  export type Result = typeof AnkielIssueCreate.result.Type
 }
 
 /** The result of an issue mutation, containing the created or updated issue and a success indicator. */
@@ -619,8 +619,8 @@ export const IssueUpdateIssuePayload = Schema.Struct({
 })
 export interface IssueUpdateIssuePayload extends Schema.Struct.Type<typeof IssueUpdateIssuePayload.fields> {}
 
-/** `mutation T3IssueUpdate` */
-export const T3IssueUpdate = GraphQL.mutation("T3IssueUpdate", {
+/** `mutation AnkielIssueUpdate` */
+export const AnkielIssueUpdate = GraphQL.mutation("AnkielIssueUpdate", {
   document: {
     variables: [
       { name: "id", body: "String!" },
@@ -640,9 +640,9 @@ export const T3IssueUpdate = GraphQL.mutation("T3IssueUpdate", {
     issueUpdate: IssueUpdateIssuePayload
   })
 })
-export declare namespace T3IssueUpdate {
-  export type Variables = typeof T3IssueUpdate.variables.Type
-  export type Result = typeof T3IssueUpdate.result.Type
+export declare namespace AnkielIssueUpdate {
+  export type Variables = typeof AnkielIssueUpdate.variables.Type
+  export type Result = typeof AnkielIssueUpdate.result.Type
 }
 
 /** The result of a comment mutation. */
@@ -652,8 +652,8 @@ export const CommentPayload = Schema.Struct({
 })
 export interface CommentPayload extends Schema.Struct.Type<typeof CommentPayload.fields> {}
 
-/** `mutation T3CommentCreate` */
-export const T3CommentCreate = GraphQL.mutation("T3CommentCreate", {
+/** `mutation AnkielCommentCreate` */
+export const AnkielCommentCreate = GraphQL.mutation("AnkielCommentCreate", {
   document: {
     variables: [
       { name: "input", body: "CommentCreateInput!" }
@@ -671,9 +671,9 @@ export const T3CommentCreate = GraphQL.mutation("T3CommentCreate", {
     commentCreate: CommentPayload
   })
 })
-export declare namespace T3CommentCreate {
-  export type Variables = typeof T3CommentCreate.variables.Type
-  export type Result = typeof T3CommentCreate.result.Type
+export declare namespace AnkielCommentCreate {
+  export type Variables = typeof AnkielCommentCreate.variables.Type
+  export type Result = typeof AnkielCommentCreate.result.Type
 }
 
 /** The result of a reaction mutation. */
@@ -683,8 +683,8 @@ export const ReactionPayload = Schema.Struct({
 })
 export interface ReactionPayload extends Schema.Struct.Type<typeof ReactionPayload.fields> {}
 
-/** `mutation T3ReactionCreate` */
-export const T3ReactionCreate = GraphQL.mutation("T3ReactionCreate", {
+/** `mutation AnkielReactionCreate` */
+export const AnkielReactionCreate = GraphQL.mutation("AnkielReactionCreate", {
   document: {
     variables: [
       { name: "input", body: "ReactionCreateInput!" }
@@ -702,9 +702,9 @@ export const T3ReactionCreate = GraphQL.mutation("T3ReactionCreate", {
     reactionCreate: ReactionPayload
   })
 })
-export declare namespace T3ReactionCreate {
-  export type Variables = typeof T3ReactionCreate.variables.Type
-  export type Result = typeof T3ReactionCreate.result.Type
+export declare namespace AnkielReactionCreate {
+  export type Variables = typeof AnkielReactionCreate.variables.Type
+  export type Result = typeof AnkielReactionCreate.result.Type
 }
 
 /** A generic payload return from entity deletion mutations. */
@@ -714,8 +714,8 @@ export const DeletePayload = Schema.Struct({
 })
 export interface DeletePayload extends Schema.Struct.Type<typeof DeletePayload.fields> {}
 
-/** `mutation T3ReactionDelete` */
-export const T3ReactionDelete = GraphQL.mutation("T3ReactionDelete", {
+/** `mutation AnkielReactionDelete` */
+export const AnkielReactionDelete = GraphQL.mutation("AnkielReactionDelete", {
   document: {
     variables: [
       { name: "id", body: "String!" }
@@ -733,20 +733,20 @@ export const T3ReactionDelete = GraphQL.mutation("T3ReactionDelete", {
     reactionDelete: DeletePayload
   })
 })
-export declare namespace T3ReactionDelete {
-  export type Variables = typeof T3ReactionDelete.variables.Type
-  export type Result = typeof T3ReactionDelete.result.Type
+export declare namespace AnkielReactionDelete {
+  export type Variables = typeof AnkielReactionDelete.variables.Type
+  export type Result = typeof AnkielReactionDelete.result.Type
 }
 
 /** An issue is the core work item in Linear. Issues belong to a team, have a workflow status, can be assigned to users, carry a priority level, and can be organized into projects and cycles. Issues support sub-issues (parent-child hierarchy up to 10 levels deep), labels, due dates, estimates, and SLA tracking. They can also be linked to other issues via relations, attached to releases, and tracked through their full history of changes. */
-export const T3IssueReactionsIssueIssue = Schema.Struct({
+export const AnkielIssueReactionsIssueIssue = Schema.Struct({
   /** Reactions associated with the issue. */
   reactions: Schema.Array(LinearReaction)
 })
-export interface T3IssueReactionsIssueIssue extends Schema.Struct.Type<typeof T3IssueReactionsIssueIssue.fields> {}
+export interface AnkielIssueReactionsIssueIssue extends Schema.Struct.Type<typeof AnkielIssueReactionsIssueIssue.fields> {}
 
-/** `query T3IssueReactions` */
-export const T3IssueReactions = GraphQL.query("T3IssueReactions", {
+/** `query AnkielIssueReactions` */
+export const AnkielIssueReactions = GraphQL.query("AnkielIssueReactions", {
   document: {
     variables: [
       { name: "id", body: "String!" }
@@ -764,12 +764,12 @@ export const T3IssueReactions = GraphQL.query("T3IssueReactions", {
   },
   result: Schema.Struct({
     /** One specific issue, looked up by its unique identifier. */
-    issue: T3IssueReactionsIssueIssue
+    issue: AnkielIssueReactionsIssueIssue
   })
 })
-export declare namespace T3IssueReactions {
-  export type Variables = typeof T3IssueReactions.variables.Type
-  export type Result = typeof T3IssueReactions.result.Type
+export declare namespace AnkielIssueReactions {
+  export type Variables = typeof AnkielIssueReactions.variables.Type
+  export type Result = typeof AnkielIssueReactions.result.Type
 }
 
 /** An issue is the core work item in Linear. Issues belong to a team, have a workflow status, can be assigned to users, carry a priority level, and can be organized into projects and cycles. Issues support sub-issues (parent-child hierarchy up to 10 levels deep), labels, due dates, estimates, and SLA tracking. They can also be linked to other issues via relations, attached to releases, and tracked through their full history of changes. */
@@ -788,8 +788,8 @@ export const Comment = Schema.Struct({
 })
 export interface Comment extends Schema.Struct.Type<typeof Comment.fields> {}
 
-/** `query T3CommentReactions` */
-export const T3CommentReactions = GraphQL.query("T3CommentReactions", {
+/** `query AnkielCommentReactions` */
+export const AnkielCommentReactions = GraphQL.query("AnkielCommentReactions", {
   document: {
     variables: [
       { name: "id", body: "String!" }
@@ -810,10 +810,10 @@ export const T3CommentReactions = GraphQL.query("T3CommentReactions", {
     comment: Comment
   })
 })
-export declare namespace T3CommentReactions {
-  export type Variables = typeof T3CommentReactions.variables.Type
-  export type Result = typeof T3CommentReactions.result.Type
+export declare namespace AnkielCommentReactions {
+  export type Variables = typeof AnkielCommentReactions.variables.Type
+  export type Result = typeof AnkielCommentReactions.result.Type
 }
 
 /** Every operation in LinearApi.graphql. */
-export const LinearApiGraphQLGroup = GraphQLGroup.make(T3Viewer, T3Issues, T3Issue, T3Comments, T3Team, T3IssueCreate, T3IssueUpdate, T3CommentCreate, T3ReactionCreate, T3ReactionDelete, T3IssueReactions, T3CommentReactions)
+export const LinearApiGraphQLGroup = GraphQLGroup.make(AnkielViewer, AnkielIssues, AnkielIssue, AnkielComments, AnkielTeam, AnkielIssueCreate, AnkielIssueUpdate, AnkielCommentCreate, AnkielReactionCreate, AnkielReactionDelete, AnkielIssueReactions, AnkielCommentReactions)

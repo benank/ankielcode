@@ -22,11 +22,11 @@ execution model.
 ## Peer links
 
 A [peer link](../../apps/server/src/peer/PeerLinks.ts) lets one environment's agents work in another
-by signing in to the target's `/mcp` as an ordinary OAuth client (`t3code-peer-link`). The receiving
+by signing in to the target's `/mcp` as an ordinary OAuth client (`ankielcode-peer-link`). The receiving
 side lists and revokes it in Sharing & access like any other session, and owns its expiry/renewal.
 
 - **Mode ceilings always narrow.** Forwarded calls carry the calling agent's modes in
-  `T3-Mode-Limit`, which the receiving `/mcp` can only intersect downward with the link's approved
+  `Ankiel-Mode-Limit`, which the receiving `/mcp` can only intersect downward with the link's approved
   access.
 - **Non-full-access links are fenced by `linkOrigin`.** Threads launched by a peer link (and their
   derived forks, subagents, and spawned threads) carry an immutable `linkOrigin` stamp enforced in

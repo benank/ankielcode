@@ -2,9 +2,9 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as ManagedRuntime from "effect/ManagedRuntime";
 
-import { layerRemoteHttpClient } from "@t3tools/client-runtime/rpc";
+import { layerRemoteHttpClient } from "@ankielcode/client-runtime/rpc";
 
-import * as DpopProof from "@t3tools/client-runtime/dpop";
+import * as DpopProof from "@ankielcode/client-runtime/dpop";
 
 import * as Dpop from "../features/cloud/dpop";
 import * as NativeWebSocket from "../native/nativeWebSocket";

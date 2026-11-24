@@ -2,7 +2,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import { type ProjectTrackedFolder, ThreadId } from "@t3tools/contracts";
+import { type ProjectTrackedFolder, ThreadId } from "@ankielcode/contracts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -27,7 +27,9 @@ const layerFor = (state: TaskFoldersTestState) =>
   layerTaskFoldersWithGit(state).pipe(
     Layer.provideMerge(
       GitVcsDriver.layer.pipe(
-        Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix: "t3-task-folders-" })),
+        Layer.provideMerge(
+          ServerConfig.layerTest(process.cwd(), { prefix: "ankiel-task-folders-" }),
+        ),
         Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)),
       ),
     ),
@@ -38,7 +40,7 @@ const fixture = Effect.gen(function* () {
   const path = yield* Path.Path;
   const git = yield* GitVcsDriver.GitVcsDriver;
   const tmp = yield* fileSystem.realPath(
-    yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3-task-folders-" }),
+    yield* fileSystem.makeTempDirectoryScoped({ prefix: "ankiel-task-folders-" }),
   );
   const run = (cwd: string, ...args: ReadonlyArray<string>) =>
     git
@@ -459,15 +461,15 @@ it.live("adopts the checkouts a project's own layout command makes, and runs its
       const web = yield* repository("shop/web");
       // The project checks `api` out itself, copies its build cache and leaves `web` out.
       yield* fileSystem.writeFileString(
-        path.join(shop, "t3.json"),
+        path.join(shop, "ac.json"),
         JSON.stringify({
           worktreeLayout: {
             // A plain project's folder is no worktree, even when the command leaves a `.git` there.
             create:
-              'mkdir -p "$T3_WORKTREE_PROJECT_PATH/cache" && git init -q "$T3_WORKTREE_PROJECT_PATH" && printf %s "$T3_WORKTREE_REPOSITORIES" > "$T3_WORKTREE_PROJECT_PATH/chosen" && git -C "$T3_PROJECT_ROOT/api" worktree add -q -b "$T3_WORKTREE_BRANCH" "$T3_WORKTREE_PROJECT_PATH/api" "$T3_WORKTREE_BASE"',
+              'mkdir -p "$AC_WORKTREE_PROJECT_PATH/cache" && git init -q "$AC_WORKTREE_PROJECT_PATH" && printf %s "$AC_WORKTREE_REPOSITORIES" > "$AC_WORKTREE_PROJECT_PATH/chosen" && git -C "$AC_PROJECT_ROOT/api" worktree add -q -b "$AC_WORKTREE_BRANCH" "$AC_WORKTREE_PROJECT_PATH/api" "$AC_WORKTREE_BASE"',
             // Cleanup never deletes files that exist only here, so the teardown clears its own.
             remove:
-              'touch "$T3_PROJECT_ROOT/torn-down" && rm -rf "$T3_WORKTREE_PROJECT_PATH/cache" "$T3_WORKTREE_PROJECT_PATH/chosen" "$T3_WORKTREE_PROJECT_PATH/.git"',
+              'touch "$AC_PROJECT_ROOT/torn-down" && rm -rf "$AC_WORKTREE_PROJECT_PATH/cache" "$AC_WORKTREE_PROJECT_PATH/chosen" "$AC_WORKTREE_PROJECT_PATH/.git"',
           },
         }),
       );
@@ -515,10 +517,10 @@ it.live("leaves a project's layout commands out for a request that may not run t
       const api = yield* repository("shop/api");
       const ran = path.join(tmp, "ran");
       yield* fileSystem.writeFileString(
-        path.join(shop, "t3.json"),
+        path.join(shop, "ac.json"),
         JSON.stringify({
           worktreeLayout: {
-            create: `echo create >> "${ran}" && mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git -C "$T3_PROJECT_ROOT/api" worktree add -q -b "$T3_WORKTREE_BRANCH" "$T3_WORKTREE_PROJECT_PATH/api"`,
+            create: `echo create >> "${ran}" && mkdir -p "$AC_WORKTREE_PROJECT_PATH" && git -C "$AC_PROJECT_ROOT/api" worktree add -q -b "$AC_WORKTREE_BRANCH" "$AC_WORKTREE_PROJECT_PATH/api"`,
             remove: `echo remove >> "${ran}"`,
           },
         }),
@@ -579,7 +581,7 @@ it.live(
         const taskFolders = yield* TaskFolders.TaskFolders;
         const attempt = Effect.fnUntraced(function* (command: string) {
           yield* fileSystem.writeFileString(
-            path.join(shop, "t3.json"),
+            path.join(shop, "ac.json"),
             JSON.stringify({ worktreeLayout: { create: command } }),
           );
           const plan = yield* taskFolders.plan({ projectId, repositories: [{ path: api }] });
@@ -595,26 +597,26 @@ it.live(
         });
 
         yield* attempt(
-          'mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git -C "$T3_PROJECT_ROOT/api" worktree add -q -b "$T3_WORKTREE_BRANCH" "$T3_WORKTREE_PROJECT_PATH/api" && exit 1',
+          'mkdir -p "$AC_WORKTREE_PROJECT_PATH" && git -C "$AC_PROJECT_ROOT/api" worktree add -q -b "$AC_WORKTREE_BRANCH" "$AC_WORKTREE_PROJECT_PATH/api" && exit 1',
         );
         assert.equal(yield* worktreeCount(api), 1);
 
         // A clone has no worktree registration to remove, and no thread branch to rename.
         const refused = yield* attempt(
-          'mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git clone -q "$T3_PROJECT_ROOT/api" "$T3_WORKTREE_PROJECT_PATH/api"',
+          'mkdir -p "$AC_WORKTREE_PROJECT_PATH" && git clone -q "$AC_PROJECT_ROOT/api" "$AC_WORKTREE_PROJECT_PATH/api"',
         );
         assert.include(refused.detail, "is not a Git worktree of");
 
         // The refused checkout's folder is deleted, so its registration must go too.
         const wrongBranch = yield* attempt(
-          'mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git -C "$T3_PROJECT_ROOT/api" worktree add -q -b other "$T3_WORKTREE_PROJECT_PATH/api"',
+          'mkdir -p "$AC_WORKTREE_PROJECT_PATH" && git -C "$AC_PROJECT_ROOT/api" worktree add -q -b other "$AC_WORKTREE_PROJECT_PATH/api"',
         );
         assert.include(wrongBranch.detail, "is not on the branch feature");
         assert.equal(yield* worktreeCount(api), 1);
 
         // A branch that was there before the command checked it out outlives the rollback.
         yield* attempt(
-          'mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git -C "$T3_PROJECT_ROOT/web" worktree add -q "$T3_WORKTREE_PROJECT_PATH/web" "$T3_WORKTREE_BRANCH" && exit 1',
+          'mkdir -p "$AC_WORKTREE_PROJECT_PATH" && git -C "$AC_PROJECT_ROOT/web" worktree add -q "$AC_WORKTREE_PROJECT_PATH/web" "$AC_WORKTREE_BRANCH" && exit 1',
         );
         assert.equal(yield* worktreeCount(web), 1);
         assert.deepEqual((yield* run(web, "branch", "--format=%(refname:short)")).split("\n"), [
@@ -636,11 +638,11 @@ it.live.each([{ linked: false }, { linked: true }])(
         const mono = path.join(tmp, "mono");
         if (linked) yield* run(origin, "worktree", "add", "-q", "-b", "dev", mono);
         yield* fileSystem.writeFileString(
-          path.join(mono, "t3.json"),
+          path.join(mono, "ac.json"),
           JSON.stringify({
             worktreeLayout: {
               create:
-                '(git worktree add -q "$T3_WORKTREE_PROJECT_PATH" "$T3_WORKTREE_BRANCH" 2>/dev/null || git worktree add -q -b "$T3_WORKTREE_BRANCH" "$T3_WORKTREE_PROJECT_PATH") && touch "$T3_WORKTREE_PROJECT_PATH/prepared"',
+                '(git worktree add -q "$AC_WORKTREE_PROJECT_PATH" "$AC_WORKTREE_BRANCH" 2>/dev/null || git worktree add -q -b "$AC_WORKTREE_BRANCH" "$AC_WORKTREE_PROJECT_PATH") && touch "$AC_WORKTREE_PROJECT_PATH/prepared"',
             },
           }),
         );
@@ -1012,7 +1014,7 @@ it.live("restores a recorded repository the project stopped tracking as its work
 
       yield* fileSystem.remove(root, { recursive: true });
       yield* fileSystem.writeFileString(
-        path.join(shop, "t3.json"),
+        path.join(shop, "ac.json"),
         JSON.stringify({ ignoreRepositories: ["web"] }),
       );
       yield* (yield* TaskFolders.TaskFolders).restore({
@@ -1031,7 +1033,7 @@ it.live("restores a recorded repository the project stopped tracking as its work
         assert.isFalse(yield* isLink(worktree));
         assert.equal(yield* run(worktree, "symbolic-ref", "--short", "HEAD"), "feature");
       }
-      assert.isTrue(yield* isLink(path.join(root, "t3.json")));
+      assert.isTrue(yield* isLink(path.join(root, "ac.json")));
     }),
   ),
 );
@@ -1048,7 +1050,7 @@ it.live("resumes once an excluded dependency's worktree is replaced by a clone",
       yield* fileSystem.remove(clone, { recursive: true });
       yield* run(taskFolder.projectPath, "clone", "-q", "--local", dependency, clone);
       yield* fileSystem.writeFileString(
-        path.join(project, "t3.json"),
+        path.join(project, "ac.json"),
         JSON.stringify({ ignoreRepositories: ["deps"] }),
       );
       const taskFolders = yield* TaskFolders.TaskFolders;

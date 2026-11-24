@@ -1,0 +1,9 @@
+{
+  "name": "@ankielcode/mobile-highlights-native",
+  "version": "0.0.0",
+  "private": true,
+  "types": "./src/AnkielHighlights.nitro.ts",
+  "peerDependencies": {
+    "react-native-nitro-modules": "*"
+  }
+}

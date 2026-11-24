@@ -1,0 +1,20 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["AnkielNativeControlsModule", "AnkielKeyboardCommandsModule"],
+    "appDelegateSubscribers": [
+      "AnkielWorkspaceOrientationSubscriber",
+      "AnkielMenuDismissTouchGateSubscriber",
+      "AnkielBackgroundGraceSubscriber"
+    ]
+  },
+  "android": {
+    "modules": [
+      "expo.modules.ankielnativecontrols.AnkielNativeControlsModule",
+      "expo.modules.ankielnativecontrols.AnkielWorkspaceNavigationModule",
+      "expo.modules.ankielnativecontrols.AnkielKeyboardCommandsModule",
+      "expo.modules.ankielnativecontrols.AnkielFoldPostureModule",
+      "expo.modules.ankielnativecontrols.AnkielSecretInputModule"
+    ]
+  }
+}

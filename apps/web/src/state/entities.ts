@@ -8,18 +8,18 @@ import type {
   EnvironmentThreadStructure,
   ThreadStructure,
   ThreadStructureVisibleTurnItem,
-} from "@t3tools/client-runtime/state/shell";
+} from "@ankielcode/client-runtime/state/shell";
 import {
   EMPTY_THREAD_HISTORY_META,
   type EnvironmentThreadStatus,
   type ThreadHistoryMeta,
-} from "@t3tools/client-runtime/state/threads";
+} from "@ankielcode/client-runtime/state/threads";
 import {
   arrayElementsEqual,
   parseThreadKey,
   threadKey,
-} from "@t3tools/client-runtime/state/entities";
-import type { ScopedProjectRef, ScopedThreadRef } from "@t3tools/contracts";
+} from "@ankielcode/client-runtime/state/entities";
+import type { ScopedProjectRef, ScopedThreadRef } from "@ankielcode/contracts";
 import type {
   EnvironmentId,
   OrchestrationV2ProjectedTurnItem,
@@ -28,8 +28,8 @@ import type {
   NodeId,
   ThreadId,
   TurnItemId,
-} from "@t3tools/contracts";
-import type { ThreadCheckpointSummary } from "@t3tools/client-runtime/state/thread-checkpoints";
+} from "@ankielcode/contracts";
+import type { ThreadCheckpointSummary } from "@ankielcode/client-runtime/state/thread-checkpoints";
 import { Atom } from "effect/reactivity";
 import { appAtomRegistry } from "../rpc/atomRegistry";
 import { environmentProjects } from "./projects";
@@ -554,7 +554,7 @@ export function readResponseSubagents(
           }),
         )
         ?.title.trim() ||
-      // oxlint-disable-next-line t3code/no-untranslated-copy -- subagent title stored in the reply record sent to the agent
+      // oxlint-disable-next-line ankielcode/no-untranslated-copy -- subagent title stored in the reply record sent to the agent
       "Agent",
   }));
 }

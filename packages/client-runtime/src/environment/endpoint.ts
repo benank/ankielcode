@@ -1,6 +1,6 @@
-import { extractRelayBasePath } from "@t3tools/shared/remote";
+import { extractRelayBasePath } from "@ankielcode/shared/remote";
 
-export * from "@t3tools/shared/advertisedEndpoint";
+export * from "@ankielcode/shared/advertisedEndpoint";
 
 export const environmentEndpointUrl = (httpBaseUrl: string, pathname: string): string => {
   const url = new URL(httpBaseUrl);

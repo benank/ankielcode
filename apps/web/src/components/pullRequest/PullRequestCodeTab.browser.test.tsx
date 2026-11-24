@@ -6,14 +6,14 @@ import {
   SourceControlProviderKind,
   type PullRequestDetailView,
   type PullRequestDiffResult,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import { expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
 
 import "~/index.css";
 import { __setClientSettingsForTests } from "../../hooks/useSettings";
 import { setAppearanceMode } from "../../hooks/useTheme";
-import { DEFAULT_CLIENT_SETTINGS } from "@t3tools/contracts/settings";
+import { DEFAULT_CLIENT_SETTINGS } from "@ankielcode/contracts/settings";
 
 const { diffAtom, testFileDiffAtom, pagedDiffAtom } = await vi.hoisted(async () => {
   const { AsyncResult, Atom } = await import("effect/reactivity");
@@ -192,7 +192,7 @@ const detail: PullRequestDetailView = {
 };
 
 function setup({ paged }: { paged: boolean }) {
-  window.localStorage.removeItem("t3code.diffHideTestFiles");
+  window.localStorage.removeItem("ankielcode.diffHideTestFiles");
   __setClientSettingsForTests(DEFAULT_CLIENT_SETTINGS);
   mocks.paged = paged;
   mocks.shortPages = false;
@@ -343,7 +343,7 @@ it("pages forward to a file asked for that is not loaded yet, then scrolls to it
   __setClientSettingsForTests({ ...DEFAULT_CLIENT_SETTINGS, diffFilesCollapsed: true });
   using _preferences = {
     [Symbol.dispose]() {
-      window.localStorage.removeItem("t3code.diffHideTestFiles");
+      window.localStorage.removeItem("ankielcode.diffHideTestFiles");
       __setClientSettingsForTests(DEFAULT_CLIENT_SETTINGS);
     },
   };
@@ -372,7 +372,7 @@ it("keeps a linked test file expanded when a refresh changes the rest of the dif
   __setClientSettingsForTests({ ...DEFAULT_CLIENT_SETTINGS, diffFilesCollapsed: true });
   using _preferences = {
     [Symbol.dispose]() {
-      window.localStorage.removeItem("t3code.diffHideTestFiles");
+      window.localStorage.removeItem("ankielcode.diffHideTestFiles");
       __setClientSettingsForTests(DEFAULT_CLIENT_SETTINGS);
     },
   };
@@ -449,8 +449,8 @@ async function renderShortPages(stack: AsyncDisposableStack) {
   mocks.shortPages = true;
   __setClientSettingsForTests({ ...DEFAULT_CLIENT_SETTINGS, diffFilesCollapsed: false });
   stack.defer(() => {
-    window.localStorage.removeItem("t3code.diffHideTestFiles");
-    window.localStorage.removeItem("t3code.pullRequestFileTreeOpen");
+    window.localStorage.removeItem("ankielcode.diffHideTestFiles");
+    window.localStorage.removeItem("ankielcode.pullRequestFileTreeOpen");
     __setClientSettingsForTests(DEFAULT_CLIENT_SETTINGS);
   });
   stack.use(

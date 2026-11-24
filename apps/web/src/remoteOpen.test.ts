@@ -4,8 +4,8 @@ import {
   PrimaryConnectionTarget,
   SshConnectionProfile,
   SshConnectionTarget,
-} from "@t3tools/client-runtime/connection";
-import { buildRemoteOpenUrl, EnvironmentId } from "@t3tools/contracts";
+} from "@ankielcode/client-runtime/connection";
+import { buildRemoteOpenUrl, EnvironmentId } from "@ankielcode/contracts";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -79,7 +79,7 @@ describe("resolveRemoteOpenState", () => {
     ).toEqual({ mode: "local-exec" });
   });
 
-  it("keeps exec behavior for the environment that owns the desktop's T3 home", () => {
+  it("keeps exec behavior for the environment that owns the desktop's Ankiel home", () => {
     // With Local environment off, a background service on this machine can own the
     // desktop's home and still be reached as a saved remote.
     expect(

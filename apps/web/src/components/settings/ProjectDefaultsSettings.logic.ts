@@ -1,5 +1,5 @@
-import type { ModelSelection, ProjectId, ServerProvider } from "@t3tools/contracts";
-import type { UnifiedSettings } from "@t3tools/contracts/settings";
+import type { ModelSelection, ProjectId, ServerProvider } from "@ankielcode/contracts";
+import type { UnifiedSettings } from "@ankielcode/contracts/settings";
 import { msg } from "gt-react";
 
 import { resolveEffectiveDefaultModelSelection } from "../../modelSelection";

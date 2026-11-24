@@ -1,5 +1,11 @@
 import { assert, it } from "@effect/vitest";
-import { CheckpointScopeId, CommandId, GitCommandError, RunId, ThreadId } from "@t3tools/contracts";
+import {
+  CheckpointScopeId,
+  CommandId,
+  GitCommandError,
+  RunId,
+  ThreadId,
+} from "@ankielcode/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";

@@ -5,13 +5,13 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Scope from "effect/Scope";
 
-import { codexAuthDeliveryUrl, readCodexAuthHandoff } from "@t3tools/shared/codexAuthHandoff";
+import { codexAuthDeliveryUrl, readCodexAuthHandoff } from "@ankielcode/shared/codexAuthHandoff";
 import { receiveCodexAuthCallback, CodexAuthCallbackError } from "./CodexAuthCallback.ts";
 import * as ElectronShell from "../electron/ElectronShell.ts";
-import { providerAuthReturnUrl } from "@t3tools/shared/providerAuthReturnUrl";
-import { promptLinkAppPath } from "@t3tools/shared/promptLinks";
-import { readPairingAppLink } from "@t3tools/shared/remote";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import { providerAuthReturnUrl } from "@ankielcode/shared/providerAuthReturnUrl";
+import { promptLinkAppPath } from "@ankielcode/shared/promptLinks";
+import { readPairingAppLink } from "@ankielcode/shared/remote";
+import * as HostProcess from "@ankielcode/shared/HostProcess";
 import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as ElectronProtocol from "../electron/ElectronProtocol.ts";
 import * as ElectronWindow from "../electron/ElectronWindow.ts";
@@ -31,7 +31,7 @@ export class DesktopStartupLinks extends Context.Service<
       | Scope.Scope
     >;
   }
->()("@t3tools/desktop/app/DesktopStartupLinks") {}
+>()("@ankielcode/desktop/app/DesktopStartupLinks") {}
 
 /** @public */
 export const make = Effect.gen(function* () {

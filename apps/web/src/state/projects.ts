@@ -1,13 +1,13 @@
-import { createEnvironmentProjectAtoms } from "@t3tools/client-runtime/state/projects";
-import { createProjectEnvironmentAtoms } from "@t3tools/client-runtime/state/projects";
-import { createEnvironmentRpcQueryAtomFamily } from "@t3tools/client-runtime/state/runtime";
-import { WS_METHODS } from "@t3tools/contracts";
+import { createEnvironmentProjectAtoms } from "@ankielcode/client-runtime/state/projects";
+import { createProjectEnvironmentAtoms } from "@ankielcode/client-runtime/state/projects";
+import { createEnvironmentRpcQueryAtomFamily } from "@ankielcode/client-runtime/state/runtime";
+import { WS_METHODS } from "@ankielcode/contracts";
 
 import { environmentCatalog } from "../connection/catalog";
 import { connectionAtomRuntime } from "../connection/runtime";
 import { environmentShell, environmentSnapshotAtom, expectsPrimaryEnvironment } from "./shell";
-import { parseScopedProjectKey } from "@t3tools/client-runtime/environment";
-import { AVAILABLE_CONNECTION_STATE } from "@t3tools/client-runtime/connection";
+import { parseScopedProjectKey } from "@ankielcode/client-runtime/environment";
+import { AVAILABLE_CONNECTION_STATE } from "@ankielcode/client-runtime/connection";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { serverEnvironment } from "./server";
 

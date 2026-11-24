@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { vi } from "vite-plus/test";
 
-import { ProviderInstanceId, type ProviderOptionSelection } from "@t3tools/contracts";
-import { getProviderOptionDescriptors } from "@t3tools/shared/model";
+import { ProviderInstanceId, type ProviderOptionSelection } from "@ankielcode/contracts";
+import { getProviderOptionDescriptors } from "@ankielcode/shared/model";
 
 import type { ModelOption } from "../../lib/modelOptions";
 import { appAtomRegistry } from "../../state/atom-registry";

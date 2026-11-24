@@ -1,19 +1,19 @@
 import { useAtomValue } from "@effect/atom-react";
-import { scopeThreadRef } from "@t3tools/client-runtime/environment";
+import { scopeThreadRef } from "@ankielcode/client-runtime/environment";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@t3tools/client-runtime/state/runtime";
+} from "@ankielcode/client-runtime/state/runtime";
 import {
   EnvironmentId,
   ThreadId,
   type WorkflowQuestion,
   type WorkflowRun,
   type WorkflowRunReference,
-} from "@t3tools/contracts";
-import { formatModelSlugName } from "@t3tools/shared/model";
-import { formatDuration } from "@t3tools/shared/orchestrationTiming";
+} from "@ankielcode/contracts";
+import { formatModelSlugName } from "@ankielcode/shared/model";
+import { formatDuration } from "@ankielcode/shared/orchestrationTiming";
 import { msg, T, useGT, useMessages, Var } from "gt-react";
 import {
   ArrowLeftIcon,
@@ -26,7 +26,7 @@ import {
   MoonIcon,
   SquareIcon,
 } from "lucide-react";
-import { secondTick } from "@t3tools/client-runtime/clock";
+import { secondTick } from "@ankielcode/client-runtime/clock";
 import {
   createContext,
   useContext,
@@ -72,7 +72,7 @@ import {
   type WorkflowQuickSteps,
   type WorkflowRunNode,
   type WorkflowRunTone,
-} from "@t3tools/client-runtime/workflows";
+} from "@ankielcode/client-runtime/workflows";
 import type { WorkflowPaneTab } from "./workflowPane.logic";
 import { WorkflowReferenceChip } from "./WorkflowReferences";
 

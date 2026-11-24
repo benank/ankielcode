@@ -1,0 +1,10 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["AnkielTerminalModule"],
+    "podspecPath": "AnkielTerminalNative.podspec"
+  },
+  "android": {
+    "modules": ["expo.modules.ankielterminal.AnkielTerminalModule"]
+  }
+}

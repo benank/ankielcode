@@ -1,4 +1,4 @@
-import { EnvironmentId, ForwardCompatibleArray } from "@t3tools/contracts";
+import { EnvironmentId, ForwardCompatibleArray } from "@ankielcode/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -20,7 +20,7 @@ export type StoredConnectionCredential = typeof StoredConnectionCredential.Type;
 const ConnectionCatalogDocumentStruct = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   // Entries a client no longer understands, such as targets and profiles saved by the removed
-  // T3 Connect, are dropped on read so the direct, Tailscale and SSH routes still load.
+  // Ankiel Connect, are dropped on read so the direct, Tailscale and SSH routes still load.
   targets: ForwardCompatibleArray(PersistedConnectionTarget),
   profiles: ForwardCompatibleArray(ConnectionProfile),
   credentials: Schema.Array(StoredConnectionCredential),

@@ -5,11 +5,11 @@ import {
   ThreadId,
   type DiscoveredLocalServer,
   type PreviewStopLocalServerInput,
-} from "@t3tools/contracts";
-import { signalProcessGroup } from "@t3tools/provider-core/server/processGroup";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { windowsSystem32Path } from "@t3tools/shared/windowsSystem";
-import { isLoopbackHost, LSOF_LOCAL_HOST_TOKENS } from "@t3tools/shared/preview";
+} from "@ankielcode/contracts";
+import { signalProcessGroup } from "@ankielcode/provider-core/server/processGroup";
+import * as HostProcess from "@ankielcode/shared/HostProcess";
+import { windowsSystem32Path } from "@ankielcode/shared/windowsSystem";
+import { isLoopbackHost, LSOF_LOCAL_HOST_TOKENS } from "@ankielcode/shared/preview";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -71,13 +71,13 @@ export class PortDiscovery extends Context.Service<
       input: PreviewStopLocalServerInput,
     ) => Effect.Effect<void, PreviewStopLocalServerError>;
   }
->()("t3/preview/PortScanner/PortDiscovery") {}
+>()("@ankielcode/cli/preview/PortScanner/PortDiscovery") {}
 
 /**
  * Agents launch with this set to their thread, and every job they start inherits it, so a
  * server stays attributed after its launching shell exits or the agent settles.
  */
-export const AGENT_THREAD_ENV = "T3CODE_THREAD_ID";
+export const AGENT_THREAD_ENV = "AC_THREAD_ID";
 
 export interface AgentCommandStopWatcher {
   /** The variable the CLI sets on each command it starts, naming that command. */
@@ -88,7 +88,7 @@ export interface AgentCommandStopWatcher {
 }
 
 /** `0` turns off listener discovery; configured preview URLs are still probed. */
-const PORT_DISCOVERY_ENV = "T3CODE_PORT_DISCOVERY";
+const PORT_DISCOVERY_ENV = "AC_PORT_DISCOVERY";
 
 const POLL_INTERVAL = Duration.seconds(3);
 const LSOF_TIMEOUT_MS = 5_000;

@@ -23,7 +23,7 @@ describe("projectIconOptions", () => {
   it("allows monograms of at most two characters", () => {
     for (const [text, valid] of [
       ["T", true],
-      ["T3", true],
+      ["AK", true],
       ["E\u0301E\u0301", true],
       ["ABC", false],
     ] as const) {

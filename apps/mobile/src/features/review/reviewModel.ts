@@ -1,9 +1,9 @@
 import { parsePatchFiles } from "@pierre/diffs/utils/parsePatchFiles";
 import type { ChangeTypes, FileDiffMetadata } from "@pierre/diffs/types";
-import type { ThreadCheckpointSummary } from "@t3tools/client-runtime/state/thread-checkpoints";
-import { turnChanges, turnHasChanges } from "@t3tools/client-runtime/state/thread-repositories";
-import type { ReviewDiffPreviewSource } from "@t3tools/contracts";
-import { quoteGitPatchPath } from "@t3tools/shared/gitPatchPath";
+import type { ThreadCheckpointSummary } from "@ankielcode/client-runtime/state/thread-checkpoints";
+import { turnChanges, turnHasChanges } from "@ankielcode/client-runtime/state/thread-repositories";
+import type { ReviewDiffPreviewSource } from "@ankielcode/contracts";
+import { quoteGitPatchPath } from "@ankielcode/shared/gitPatchPath";
 import * as Arr from "effect/Array";
 import { pipe } from "effect/Function";
 import * as Order from "effect/Order";

@@ -33,19 +33,19 @@ import {
   type ThreadId,
   isRuntimeModeAbove,
   type TurnTokenUsage,
-} from "@t3tools/contracts";
-import { AgentScope, AgentScopeThreadId } from "@t3tools/shared/AgentScope";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { HTML_RENDER_TOOL_NAME } from "@t3tools/shared/htmlRender";
-import { modelSelectionsEqual } from "@t3tools/shared/model";
-import { type SelfInvocation, selfInvocationArgs } from "@t3tools/shared/nodeRuntime";
-import { resolveT3McpToolId } from "@t3tools/shared/t3McpToolPresentation";
+} from "@ankielcode/contracts";
+import { AgentScope, AgentScopeThreadId } from "@ankielcode/shared/AgentScope";
+import * as HostProcess from "@ankielcode/shared/HostProcess";
+import { HTML_RENDER_TOOL_NAME } from "@ankielcode/shared/htmlRender";
+import { modelSelectionsEqual } from "@ankielcode/shared/model";
+import { type SelfInvocation, selfInvocationArgs } from "@ankielcode/shared/nodeRuntime";
+import { resolveAnkielMcpToolId } from "@ankielcode/shared/ankielMcpToolPresentation";
 import {
   compactDynamicToolOutput,
-  compactT3McpToolOutput,
+  compactAnkielMcpToolOutput,
   htmlRenderFromToolItem,
   mcpToolResultOutput,
-} from "@t3tools/shared/toolOutput";
+} from "@ankielcode/shared/toolOutput";
 import { FILE_HEADERS_ONLY, formatPatch, structuredPatch } from "diff";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
@@ -72,13 +72,13 @@ import * as EffectAcpErrors from "effect-acp/errors";
 import type * as EffectAcpProtocol from "effect-acp/protocol";
 import type * as EffectAcpSchema from "effect-acp/compat";
 
-import { formatReadToolLabel, formatSearchToolLabel } from "@t3tools/shared/toolActivity";
-import { isWorkspaceImagePreviewPath } from "@t3tools/shared/mediaPreview";
-import * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
+import { formatReadToolLabel, formatSearchToolLabel } from "@ankielcode/shared/toolActivity";
+import { isWorkspaceImagePreviewPath } from "@ankielcode/shared/mediaPreview";
+import * as ProviderHost from "@ankielcode/provider-core/server/ProviderHost";
 import { makeAcpMcpOverAcpBridge, type AcpMcpOverAcpBridge } from "./mcpOverAcpBridge.ts";
-import { mcpToolPresentation } from "@t3tools/provider-core/server/mcpToolPresentation";
-import * as McpProviderSessions from "@t3tools/provider-core/server/McpProviderSessions";
-import * as McpProviderSession from "@t3tools/provider-core/server/mcpSession";
+import { mcpToolPresentation } from "@ankielcode/provider-core/server/mcpToolPresentation";
+import * as McpProviderSessions from "@ankielcode/provider-core/server/McpProviderSessions";
+import * as McpProviderSession from "@ankielcode/provider-core/server/mcpSession";
 import {
   applyAcpAgentTerminalUpdate,
   MAX_AGENT_TERMINAL_OUTPUT_CHARS,
@@ -118,32 +118,32 @@ import {
 } from "./sessionConfig.ts";
 import * as AcpSessionRuntime from "./AcpSessionRuntime.ts";
 import {
-  t3AcpPromptWithInstructions,
-  type T3AcpInstructionState,
-} from "@t3tools/provider-core/server/orchestrationInstructions";
-import { buildRuntimeInstructions } from "@t3tools/provider-core/server/runtimeInstructions";
-import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
-import type * as ProviderContinuationRequests from "@t3tools/provider-core/server/ProviderContinuationRequests";
+  ankielAcpPromptWithInstructions,
+  type AnkielAcpInstructionState,
+} from "@ankielcode/provider-core/server/orchestrationInstructions";
+import { buildRuntimeInstructions } from "@ankielcode/provider-core/server/runtimeInstructions";
+import * as IdAllocator from "@ankielcode/provider-core/server/IdAllocator";
+import type * as ProviderContinuationRequests from "@ankielcode/provider-core/server/ProviderContinuationRequests";
 import {
   type BackgroundWork,
   type BackgroundWorkReport,
   backgroundWorkNotification,
-} from "@t3tools/provider-core/server/notification";
+} from "@ankielcode/provider-core/server/notification";
 import {
   makeProviderFailure,
   makeProviderRetryTurnItem,
-} from "@t3tools/provider-core/server/failure";
-import { acpSelectionTransition } from "@t3tools/provider-core/server/selectionTransition";
+} from "@ankielcode/provider-core/server/failure";
+import { acpSelectionTransition } from "@ankielcode/provider-core/server/selectionTransition";
 import {
   isProviderNativeImageAttachment,
   providerMessageTextWithAttachmentPaths,
-} from "@t3tools/provider-core/server/attachmentPrompt";
+} from "@ankielcode/provider-core/server/attachmentPrompt";
 import {
   makeSubagentChildThread,
   makeSubagentConversationArtifacts,
   subagentThreadTitle,
-} from "@t3tools/provider-core/server/subagentProjection";
-import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+} from "@ankielcode/provider-core/server/subagentProjection";
+import * as ProviderAdapter from "@ankielcode/provider-core/server/ProviderAdapter";
 
 export const ACP_PROTOCOL = "acp.ndjson-jsonrpc" as const;
 
@@ -446,7 +446,7 @@ export interface AcpAdapterV2Flavor {
   >;
   readonly requiresSignIn?: (cause: unknown) => boolean;
   /**
-   * Runs before attachment paths, T3 instructions and native slash-command detection,
+   * Runs before attachment paths, Ankiel instructions and native slash-command detection,
    * so a rewrite can turn the user's text into a native command.
    */
   readonly rewriteUserText?: (
@@ -460,7 +460,7 @@ export interface AcpAdapterV2Flavor {
     EffectAcpSchema.InitializeRequest["clientCapabilities"]
   >["_meta"];
   readonly mcpOverHttp?: boolean;
-  /** The agent has no tool search of its own, so T3 lists optional tools on demand. */
+  /** The agent has no tool search of its own, so Ankiel lists optional tools on demand. */
   readonly deferMcpTools?: boolean;
   readonly normalizeSessionUpdate?: (
     notification: EffectAcpSchema.SessionNotification,
@@ -562,7 +562,7 @@ export interface AcpAdapterV2Flavor {
         ) => EffectAcpSchema.RequestPermissionResponse | undefined;
       }
     | undefined;
-  /** Grok Auto asks only about classifier refusals; T3 policy must not auto-approve them. */
+  /** Grok Auto asks only about classifier refusals; Ankiel policy must not auto-approve them. */
   readonly permissionDisposition?: (
     policy: ProviderAdapter.ProviderAdapterV2RuntimePolicy,
     request: EffectAcpSchema.RequestPermissionRequest,
@@ -570,7 +570,7 @@ export interface AcpAdapterV2Flavor {
   readonly approvalOptions?: (
     request: EffectAcpSchema.RequestPermissionRequest,
   ) => ReadonlyArray<ProviderApprovalOption>;
-  /** Options T3 may answer with; the rest (e.g. Devin's bypass-permissions plan exit) are never sent. */
+  /** Options Ankiel may answer with; the rest (e.g. Devin's bypass-permissions plan exit) are never sent. */
   readonly answerablePermissionOptions?: (
     request: EffectAcpSchema.RequestPermissionRequest,
   ) => ReadonlyArray<EffectAcpSchema.PermissionOption>;
@@ -750,7 +750,7 @@ export interface AcpAdapterV2Flavor {
    */
   readonly supportsImagePrompts?: boolean;
   /**
-   * True when this session's native system prompt carries T3's PR-linking instructions, so
+   * True when this session's native system prompt carries Ankiel's PR-linking instructions, so
    * turns omit them. Must use the same negotiated check that sent them on session setup.
    */
   readonly sessionCarriesPullRequestLinking?: (
@@ -1067,11 +1067,11 @@ const ACP_MCP_CALL_LAUNCHER = [
   "@echo off",
   "setlocal EnableExtensions DisableDelayedExpansion",
   'set "ELECTRON_RUN_AS_NODE=1"',
-  "if not defined T3_ACP_MCP_ENTRYPOINT goto packaged",
-  '"%T3_ACP_MCP_NODE%" "%T3_ACP_MCP_ENTRYPOINT%" acp-mcp-call %*',
+  "if not defined AC_ACP_MCP_ENTRYPOINT goto packaged",
+  '"%AC_ACP_MCP_NODE%" "%AC_ACP_MCP_ENTRYPOINT%" acp-mcp-call %*',
   "exit /b %errorlevel%",
   ":packaged",
-  '"%T3_ACP_MCP_NODE%" acp-mcp-call %*',
+  '"%AC_ACP_MCP_NODE%" acp-mcp-call %*',
   "",
 ].join("\r\n");
 
@@ -1107,23 +1107,23 @@ function acpMcpContext(
   return {
     servers: [
       {
-        name: "t3-code",
+        name: "ankiel-code",
         command: self.command,
         args: [...selfInvocationArgs(self, ["acp-mcp-bridge"])],
         env: [
           { name: "ELECTRON_RUN_AS_NODE", value: "1" },
-          { name: "T3_ACP_MCP_ENDPOINT", value: session.endpoint },
-          { name: "T3_ACP_MCP_AUTHORIZATION", value: session.authorizationHeader },
+          { name: "AC_ACP_MCP_ENDPOINT", value: session.endpoint },
+          { name: "AC_ACP_MCP_AUTHORIZATION", value: session.authorizationHeader },
         ],
       },
     ],
-    acpServers: [{ type: "acp", name: "t3-code", serverId: "t3-code" }],
+    acpServers: [{ type: "acp", name: "ankiel-code", serverId: "ankiel-code" }],
     httpServers:
       mcpOverHttp === true
         ? [
             {
               type: "http",
-              name: "t3-code",
+              name: "ankiel-code",
               url: session.endpoint,
               headers: [
                 { name: "Authorization", value: session.authorizationHeader },
@@ -1138,15 +1138,15 @@ function acpMcpContext(
     authorization: session.authorizationHeader,
     processEnvironment: {
       // The thread id every process the agent starts inherits, so a tool run
-      // from its shell can find its T3 thread. Claude and Codex sessions set
+      // from its shell can find its Ankiel thread. Claude and Codex sessions set
       // the same variable (PortScanner.AGENT_THREAD_ENV; a string literal here
       // because this package cannot reach apps/server).
-      T3CODE_THREAD_ID: session.threadId,
-      T3_ACP_MCP_ENDPOINT: session.endpoint,
-      T3_ACP_MCP_AUTHORIZATION: session.authorizationHeader,
-      T3_ACP_MCP_NODE: self.command,
-      ...(self.entrypoint === undefined ? {} : { T3_ACP_MCP_ENTRYPOINT: self.entrypoint }),
-      ...(callLauncher === undefined ? {} : { T3_ACP_MCP_CALL: callLauncher }),
+      AC_THREAD_ID: session.threadId,
+      AC_ACP_MCP_ENDPOINT: session.endpoint,
+      AC_ACP_MCP_AUTHORIZATION: session.authorizationHeader,
+      AC_ACP_MCP_NODE: self.command,
+      ...(self.entrypoint === undefined ? {} : { AC_ACP_MCP_ENTRYPOINT: self.entrypoint }),
+      ...(callLauncher === undefined ? {} : { AC_ACP_MCP_CALL: callLauncher }),
     },
   };
 }
@@ -1727,7 +1727,7 @@ interface ActiveAcpTurn {
   contextUsage: ThreadTokenUsageSnapshot | null;
   nativeMetadata: OrchestrationV2ProviderThreadNativeMetadata | null;
   readonly tools: Map<string, AcpToolCallState & { readonly backgroundCommandTaskId?: string }>;
-  /** Confirmed T3 MCP tool outputs keyed by `${toolCallId}\0${tool}\0${inputHash}`. */
+  /** Confirmed Ankiel MCP tool outputs keyed by `${toolCallId}\0${tool}\0${inputHash}`. */
   readonly claimedToolResults: Map<string, unknown>;
   /** `${toolCallId}\0${tool}\0${inputHash}` keys that already drained a recorded MCP result. */
   readonly drainedToolResultKeys: Set<string>;
@@ -2394,14 +2394,16 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
         const configuredRuntimeMode = yield* Ref.make<
           ProviderAdapter.ProviderAdapterV2RuntimePolicy["runtimeMode"] | null
         >(null);
-        const promptInstructionStates = yield* Ref.make(new Map<string, T3AcpInstructionState>());
+        const promptInstructionStates = yield* Ref.make(
+          new Map<string, AnkielAcpInstructionState>(),
+        );
         const promptRuntimeInstructions = yield* Ref.make(new Map<string, string>());
         const deliveredAppContext = yield* Ref.make(new Map<string, ReadonlyMap<string, string>>());
         // Unique markers keep delayed prompt completions from clearing later compactions.
         const compactionMarkers = yield* Ref.make(new Map<string, symbol>());
         // ACP may patch a completed compaction again; each compaction id marks its session once.
         const completedCompactionIds = yield* Ref.make(new Set<string>());
-        // The next prompt in a compacted session resends T3's instructions and runtime notes.
+        // The next prompt in a compacted session resends Ankiel's instructions and runtime notes.
         // Only root sessions get prompts, so a marker on a child session is never read.
         const markSessionCompacted = Effect.fn("AcpAdapterV2.markSessionCompacted")(function* (
           sessionId: string,
@@ -2945,7 +2947,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
               elicitation: { form: {}, ...(flavor.onUrlElicitation ? { url: {} } : {}) },
               ...(flavor.clientCapabilitiesMeta ? { _meta: flavor.clientCapabilitiesMeta } : {}),
             },
-            clientInfo: { name: "t3-code", version: "0.0.0" },
+            clientInfo: { name: "ankiel-code", version: "0.0.0" },
             onTermination: (error) =>
               Effect.sync(() => agentRequests.clear()).pipe(Effect.andThen(onTermination(error))),
             ...(promptInactivityTimeoutMillis === undefined
@@ -4823,18 +4825,18 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
             const input =
               mcpIdentity.input ?? unknownRecord(rawInputRecord?.arguments) ?? rawInputRecord ?? {};
             let output = rawOutput === undefined ? undefined : acpMcpToolCallOutput(rawOutput);
-            const resolvedT3Tool = resolveT3McpToolId(toolName);
-            const isHtmlRender = resolvedT3Tool === HTML_RENDER_TOOL_NAME;
+            const resolvedAnkielTool = resolveAnkielMcpToolId(toolName);
+            const isHtmlRender = resolvedAnkielTool === HTML_RENDER_TOOL_NAME;
             const isError =
               compactDynamicToolOutput(output)?.isError === true ||
               compactDynamicToolOutput(rawOutputRecord?.result)?.isError === true;
             const callInputKey =
-              resolvedT3Tool !== null && !isHtmlRender
-                ? `${toolCall.toolCallId}\0${resolvedT3Tool}\0${McpProviderSessions.hashToolInput(input)}`
+              resolvedAnkielTool !== null && !isHtmlRender
+                ? `${toolCall.toolCallId}\0${resolvedAnkielTool}\0${McpProviderSessions.hashToolInput(input)}`
                 : undefined;
             if (
               status === "completed" &&
-              resolvedT3Tool !== null &&
+              resolvedAnkielTool !== null &&
               callInputKey !== undefined &&
               isError
             ) {
@@ -4858,10 +4860,10 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
               context.claimedToolResults.set(callInputKey, output);
             }
             if (
-              resolvedT3Tool !== null &&
+              resolvedAnkielTool !== null &&
               (status === "failed" || (status === "completed" && isError))
             ) {
-              // A failed call may have completed on T3's MCP server before the provider lost its result.
+              // A failed call may have completed on Ankiel's MCP server before the provider lost its result.
               if (isHtmlRender) {
                 if (previous?.status !== "failed" && previous?.status !== "completed") {
                   yield* mcpSessions.takeHtmlRender(
@@ -4871,7 +4873,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
                   );
                 }
               } else if (callInputKey !== undefined) {
-                const reportedError = compactT3McpToolOutput(resolvedT3Tool, output);
+                const reportedError = compactAnkielMcpToolOutput(resolvedAnkielTool, output);
                 context.blockedInputRecoveryKeys.add(callInputKey);
                 // Only drain when the failed call reported an explicit output to match;
                 // a bare failure without output must not consume a sibling's cached record.
@@ -4881,7 +4883,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
                 ) {
                   const drained = yield* mcpSessions.takeToolResult(
                     context.input.threadId,
-                    resolvedT3Tool,
+                    resolvedAnkielTool,
                     input,
                     reportedError,
                   );
@@ -4912,11 +4914,11 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
             }
             if (
               status === "completed" &&
-              resolvedT3Tool !== null &&
+              resolvedAnkielTool !== null &&
               callInputKey !== undefined &&
               !isError
             ) {
-              const reportedOutput = compactT3McpToolOutput(resolvedT3Tool, output);
+              const reportedOutput = compactAnkielMcpToolOutput(resolvedAnkielTool, output);
               // ACP runtimes may omit or summarize MCP results, including across repeated or
               // interleaved in_progress updates. Claims are keyed by (callId, tool, inputHash).
               const claimedOutput = context.claimedToolResults.get(callInputKey);
@@ -4925,7 +4927,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
                 if (!context.drainedToolResultKeys.has(callInputKey)) {
                   const drained = yield* mcpSessions.takeToolResult(
                     context.input.threadId,
-                    resolvedT3Tool,
+                    resolvedAnkielTool,
                     input,
                     reportedOutput,
                   );
@@ -4944,7 +4946,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
                   context.attemptedInputRecoveryKeys.add(callInputKey);
                   recoveredOutput = yield* mcpSessions.takeToolResult(
                     context.input.threadId,
-                    resolvedT3Tool,
+                    resolvedAnkielTool,
                     input,
                     undefined,
                   );
@@ -6835,7 +6837,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
           const waiting = turnAttached;
           turnAttached = yield* Deferred.make<boolean>();
           yield* Deferred.succeed(waiting, false);
-          // session/cancel does not end the agent's MCP calls; T3 runs them, so it stops them.
+          // session/cancel does not end the agent's MCP calls; Ankiel runs them, so it stops them.
           if (options.stopMcpCalls && runtimeMcpBridge !== undefined) {
             yield* runtimeMcpBridge.stopCalls;
           }
@@ -7340,8 +7342,8 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
               Effect.fail(
                 EffectAcpErrors.AcpRequestError.internalError(
                   disposition === "ask"
-                    ? `The active T3 runtime policy requires approval for ${operation}. Request permission with session/request_permission before retrying.`
-                    : `The active T3 runtime policy does not allow ${operation}.`,
+                    ? `The active Ankiel runtime policy requires approval for ${operation}. Request permission with session/request_permission before retrying.`
+                    : `The active Ankiel runtime policy does not allow ${operation}.`,
                 ),
               ),
             ),
@@ -9134,7 +9136,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
                 recorded?.failure ??
                   makeProviderFailure({
                     class: "provider_error",
-                    message: `${flavor.runtimeHarness ?? driver} sent nothing for ${minutes} ${minutes === 1 ? "minute" : "minutes"}, so T3 Code stopped the turn and restarted the agent. Send a message to continue.`,
+                    message: `${flavor.runtimeHarness ?? driver} sent nothing for ${minutes} ${minutes === 1 ? "minute" : "minutes"}, so Ankiel Code stopped the turn and restarted the agent. Send a message to continue.`,
                   }),
                 recorded === undefined
                   ? undefined
@@ -9255,9 +9257,9 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
           const mcpSession = yield* mcpSessions.read(turnInput.threadId);
           const instructionState = {
             interactionMode: turnInput.runtimePolicy.interactionMode,
-            hasT3Mcp: mcpSession !== undefined,
+            hasAnkielMcp: mcpSession !== undefined,
             hasDeviceTools: mcpSession?.capabilities?.has("device") === true,
-          } satisfies T3AcpInstructionState;
+          } satisfies AnkielAcpInstructionState;
           const userText =
             flavor.rewriteUserText === undefined
               ? turnInput.message.text
@@ -9290,7 +9292,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
             deliveredContext,
             isNativeSlashCommand,
           );
-          const text = t3AcpPromptWithInstructions({
+          const text = ankielAcpPromptWithInstructions({
             prompt: messageText,
             state: instructionState,
             ...(previousInstructionState === undefined || compactionMarker !== undefined
@@ -9352,7 +9354,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
           yield* Ref.set(activeSessionSetup, null);
           yield* Ref.set(activeSelection, null);
           yield* Ref.set(activeInteractionMode, null);
-          // A failed prompt may have been dropped, so the fresh runtime sends T3's notes again.
+          // A failed prompt may have been dropped, so the fresh runtime sends Ankiel's notes again.
           yield* Ref.set(promptInstructionStates, new Map());
           yield* Ref.set(promptRuntimeInstructions, new Map());
           yield* Ref.set(deliveredAppContext, new Map());

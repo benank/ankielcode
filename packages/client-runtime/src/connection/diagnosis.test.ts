@@ -1,4 +1,4 @@
-import { EnvironmentAuthInvalidError } from "@t3tools/contracts";
+import { EnvironmentAuthInvalidError } from "@ankielcode/contracts";
 import { describe, expect, it } from "@effect/vitest";
 
 import { presentConnectionDiagnosis } from "./diagnosis.ts";
@@ -33,9 +33,9 @@ const results = (state: SupervisorConnectionState) =>
   diagnose(state)?.hops.map((hop) => `${hop.hop}:${hop.result}`);
 
 describe("presentConnectionDiagnosis", () => {
-  it("blames T3 Code on the host when it does not answer", () => {
+  it("blames Ankiel Code on the host when it does not answer", () => {
     const state = backoff(unreachable());
-    expect(diagnose(state)?.headline).toBe("T3 Code on Mac mini did not answer");
+    expect(diagnose(state)?.headline).toBe("Ankiel Code on Mac mini did not answer");
     expect(results(state)).toEqual(["device:ok", "server:failed"]);
   });
 
@@ -57,7 +57,7 @@ describe("presentConnectionDiagnosis", () => {
     expect(diagnose(backoff(failure))?.headline).toBe("This device's clock is off");
   });
 
-  it("tells a host that refused this device's login to sign in again, not to start T3 Code", () => {
+  it("tells a host that refused this device's login to sign in again, not to start Ankiel Code", () => {
     const failure = mapRemoteEnvironmentError(
       new EnvironmentAuthInvalidError({
         code: "auth_invalid",
@@ -66,7 +66,7 @@ describe("presentConnectionDiagnosis", () => {
       }),
     );
     const steps = diagnose(backoff(failure))?.steps.join(" ");
-    expect(steps).not.toContain("Make sure T3 Code is running");
+    expect(steps).not.toContain("Make sure Ankiel Code is running");
     expect(steps).toMatch(/pair|sign in/i);
   });
 

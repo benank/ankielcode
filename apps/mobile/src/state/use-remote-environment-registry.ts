@@ -1,11 +1,11 @@
 import * as Dialog from "../components/ui/Dialog";
-import { errorDisplayMessage } from "@t3tools/client-runtime/errors";
+import { errorDisplayMessage } from "@ankielcode/client-runtime/errors";
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentId } from "@t3tools/contracts";
+import type { EnvironmentId } from "@ankielcode/contracts";
 import * as Cause from "effect/Cause";
 import { msg } from "gt-react-native";
 import { AsyncResult, Atom } from "effect/reactivity";
-import { runAtomCommand } from "@t3tools/client-runtime/state/runtime";
+import { runAtomCommand } from "@ankielcode/client-runtime/state/runtime";
 
 import { m } from "../i18n/messages";
 import { useConnectionController } from "../features/connection/useConnectionController";

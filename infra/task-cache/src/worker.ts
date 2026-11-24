@@ -94,7 +94,7 @@ export const layer = Worker.make(
       Cloudflare.Workers.CronEventSourceLive,
       Layer.unwrap(
         Effect.map(Observability, ({ traces, token }) =>
-          Axiom.Telemetry({ serviceName: "t3-task-cache", traces, token }),
+          Axiom.Telemetry({ serviceName: "ankiel-task-cache", traces, token }),
         ),
       ),
     ]),

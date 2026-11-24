@@ -1,8 +1,8 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import * as NetService from "@t3tools/shared/Net";
+import * as HostProcess from "@ankielcode/shared/HostProcess";
+import * as NetService from "@ankielcode/shared/Net";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -47,8 +47,8 @@ const SERVICE = {
   supported: true,
   installed: true,
   current: true,
-  unitPath: "/home/me/.config/systemd/user/t3code.service",
-  logPath: "/home/me/.t3/userdata/logs/boot-service.log",
+  unitPath: "/home/me/.config/systemd/user/ankielcode.service",
+  logPath: "/home/me/.ac/userdata/logs/boot-service.log",
 } as const;
 
 // Prompts run only when both streams are terminals.
@@ -86,7 +86,7 @@ const answering = (text: string) =>
     display: () => Effect.void,
   });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))("t3 up", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))("ac up", (it) => {
   afterEach(() => vi.restoreAllMocks());
 
   it.effect.each<{
@@ -112,21 +112,21 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
     {
       label: "nothing changed",
       installed: true,
-      env: "T3CODE_LAN=false\n",
+      env: "AC_LAN=false\n",
       args: ["--no-lan"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "AC_LAN=false\n",
     },
     {
       label: "the local network opens",
-      prints: ["Run `t3 pair --base-dir <baseDir>`."],
+      prints: ["Run `ac pair --base-dir <baseDir>`."],
       installed: true,
-      env: "T3CODE_LAN=false\n",
+      env: "AC_LAN=false\n",
       args: ["--lan"],
       installs: 0,
       restarts: 1,
-      envAfter: "T3CODE_LAN=true\n",
+      envAfter: "AC_LAN=true\n",
     },
     {
       label: "a new service starts with its settings",
@@ -135,32 +135,32 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       args: ["--lan"],
       installs: 1,
       restarts: 0,
-      envAfter: "T3CODE_LAN=true\n",
+      envAfter: "AC_LAN=true\n",
     },
     {
       label: "a route turns off with no service to run",
-      prints: ["Run `t3 --base-dir <baseDir>` to use T3 Code here."],
+      prints: ["Run `ac --base-dir <baseDir>` to use Ankiel Code here."],
       installed: false,
-      env: "T3CODE_LAN=true\n",
+      env: "AC_LAN=true\n",
       args: ["--no-lan"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "AC_LAN=false\n",
     },
     {
       label: "a stopped newer service starts as it is",
       installed: true,
       status: { current: false, installedVersion: "999.0.0", problems: ["service-stopped"] },
-      env: "T3CODE_LAN=false\n",
+      env: "AC_LAN=false\n",
       args: ["--yes"],
       installs: 0,
       restarts: 1,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "AC_LAN=false\n",
     },
     {
       label: "a failed update keeps service.env matching the old service",
       // The old service still runs, so no foreground server is offered.
-      prints: ["Fix that, then run `t3 up --base-dir <baseDir>` again."],
+      prints: ["Fix that, then run `ac up --base-dir <baseDir>` again."],
       installed: true,
       status: { current: false },
       installFails: true,
@@ -174,42 +174,42 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       label: "a failed restart puts service.env back and restarts on it",
       installed: true,
       restartFails: true,
-      env: "T3CODE_LAN=false\n",
+      env: "AC_LAN=false\n",
       args: ["--lan"],
       installs: 0,
       restarts: 2,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "AC_LAN=false\n",
     },
     {
       label: "declining an update changes nothing",
       installed: true,
       status: { current: false },
       answer: "n",
-      env: "T3CODE_LAN=false\n",
+      env: "AC_LAN=false\n",
       args: ["--lan"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "AC_LAN=false\n",
     },
     {
       label: "a service for another home is refused without a restart",
       installed: true,
-      status: { current: false, otherBaseDir: "/srv/t3 home" },
+      status: { current: false, otherBaseDir: "/srv/ac home" },
       fails: true,
       answer: "y",
-      env: "T3CODE_LAN=false\n",
+      env: "AC_LAN=false\n",
       args: ["--lan"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "AC_LAN=false\n",
     },
     {
       label: "another home's service supplies no local network default",
       installed: true,
-      status: { current: false, otherBaseDir: "/srv/t3 home" },
+      status: { current: false, otherBaseDir: "/srv/ac home" },
       reportStatus: true,
       json: {
-        service: { otherBaseDir: "/srv/t3 home" },
+        service: { otherBaseDir: "/srv/ac home" },
         lan: { enabled: false, inheritedDefault: false },
       },
       env: "",
@@ -223,8 +223,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       installed: true,
       reportStatus: true,
       prints: [
-        "Turn it off: `t3 up --base-dir <baseDir> --no-lan`.",
-        "Change access: `t3 up --base-dir <baseDir>`.",
+        "Turn it off: `ac up --base-dir <baseDir> --no-lan`.",
+        "Change access: `ac up --base-dir <baseDir>`.",
       ],
       env: "",
       args: [],
@@ -236,13 +236,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       label: "a host override gets no --no-lan hint it would ignore",
       installed: true,
       reportStatus: true,
-      prints: ["overridden · T3CODE_HOST=0.0.0.0"],
+      prints: ["overridden · AC_HOST=0.0.0.0"],
       omits: "--no-lan",
-      env: "T3CODE_HOST=0.0.0.0\n",
+      env: "AC_HOST=0.0.0.0\n",
       args: [],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_HOST=0.0.0.0\n",
+      envAfter: "AC_HOST=0.0.0.0\n",
     },
     {
       label: "no service manager still records the choice",
@@ -252,7 +252,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       args: ["--lan"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=true\n",
+      envAfter: "AC_LAN=true\n",
     },
     {
       label: "the old default is kept",
@@ -261,12 +261,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       args: ["--yes"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=true\n",
+      envAfter: "AC_LAN=true\n",
     },
   ])("keeps service changes and access settings consistent: $label", (input) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "t3-up-test-" });
+      const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-up-test-" });
       yield* fs.writeFileString(`${baseDir}/service.env`, input.env);
       let installs = 0;
       let restarts = 0;
@@ -304,7 +304,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
                   : Effect.sync(() => {
                       installs++;
                       return {
-                        program: ["t3"],
+                        program: ["ac"],
                         baseDir,
                         unitPath: status.unitPath,
                         logPath: status.logPath,
@@ -357,23 +357,23 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
 });
 
 it("rewrites only the named service.env keys and keeps the user's lines", () => {
-  const before = ["# my settings", "T3CODE_PORT=4000", "export T3CODE_LAN=0", "T3CODE_LAN=1", ""];
-  expect(upsertServiceEnv(before.join("\n"), { T3CODE_LAN: "true", T3CODE_HOST: undefined })).toBe(
-    ["# my settings", "T3CODE_PORT=4000", "T3CODE_LAN=true", ""].join("\n"),
+  const before = ["# my settings", "AC_PORT=4000", "export AC_LAN=0", "AC_LAN=1", ""];
+  expect(upsertServiceEnv(before.join("\n"), { AC_LAN: "true", AC_HOST: undefined })).toBe(
+    ["# my settings", "AC_PORT=4000", "AC_LAN=true", ""].join("\n"),
   );
-  expect(upsertServiceEnv("", { T3CODE_LAN: "false" })).toBe("T3CODE_LAN=false\n");
+  expect(upsertServiceEnv("", { AC_LAN: "false" })).toBe("AC_LAN=false\n");
   expect(
-    upsertServiceEnv('T3CODE_LAN="a\nb"\nCUSTOM="x\nT3CODE_LAN=y"\nT3CODE_LAN=true\n', {
-      T3CODE_LAN: "false",
+    upsertServiceEnv('AC_LAN="a\nb"\nCUSTOM="x\nAC_LAN=y"\nAC_LAN=true\n', {
+      AC_LAN: "false",
     }),
-  ).toBe('T3CODE_LAN=false\nCUSTOM="x\nT3CODE_LAN=y"\n');
+  ).toBe('AC_LAN=false\nCUSTOM="x\nAC_LAN=y"\n');
   expect(
-    upsertServiceEnv('T3CODE_LAN=\u00a0"unused\nCUSTOM=keep\nEND="\nT3CODE_LAN=true\n', {
-      T3CODE_LAN: "false",
+    upsertServiceEnv('AC_LAN=\u00a0"unused\nCUSTOM=keep\nEND="\nAC_LAN=true\n', {
+      AC_LAN: "false",
     }),
-  ).toBe('T3CODE_LAN=false\nCUSTOM=keep\nEND="\n');
+  ).toBe('AC_LAN=false\nCUSTOM=keep\nEND="\n');
   const long = `CUSTOM="${"\n".repeat(130_000)}"\n`;
-  expect(upsertServiceEnv(`${long}T3CODE_LAN=true\n`, { T3CODE_LAN: "false" })).toBe(
-    `${long}T3CODE_LAN=false\n`,
+  expect(upsertServiceEnv(`${long}AC_LAN=true\n`, { AC_LAN: "false" })).toBe(
+    `${long}AC_LAN=false\n`,
   );
 });

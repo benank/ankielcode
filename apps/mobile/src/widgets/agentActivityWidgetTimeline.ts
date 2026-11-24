@@ -73,7 +73,7 @@ export function agentActivityWidgetTimeline(
   if (!source.aggregate) {
     const props: AgentActivityProps = {
       text: agentActivityText(0, resolve),
-      title: "T3 Code",
+      title: "Ankiel Code",
       subtitle: resolve(msg("No active agents")),
       activeCount: 0,
       updatedAt,

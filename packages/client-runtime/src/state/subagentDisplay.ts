@@ -4,9 +4,9 @@ import type {
   OrchestrationV2ThreadShell,
   OrchestrationProjectShell,
   ServerProvider,
-} from "@t3tools/contracts";
-import { formatModelSlugName, resolveSelectableModel } from "@t3tools/shared/model";
-import { fileDisplayName } from "@t3tools/shared/path";
+} from "@ankielcode/contracts";
+import { formatModelSlugName, resolveSelectableModel } from "@ankielcode/shared/model";
+import { fileDisplayName } from "@ankielcode/shared/path";
 import { resolveModelShortName } from "../providerClients.ts";
 import { isTerminalSubagentStatus } from "./subagentRuntime.ts";
 import { mFallback, msg } from "gt-i18n";

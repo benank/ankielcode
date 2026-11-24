@@ -13,8 +13,8 @@ const env = {
   VP_REMOTE_CACHE: "read-write",
   VP_REMOTE_CACHE_URL: undefined,
 };
-const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "t3-cache-probe-"));
-const name = `t3-cache-probe-${NodeCrypto.randomUUID()}`;
+const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "ankiel-cache-probe-"));
+const name = `ankiel-cache-probe-${NodeCrypto.randomUUID()}`;
 
 async function run(directory: string, home = NodeOS.homedir()) {
   return new Promise<string>((resolve, reject) => {
@@ -83,7 +83,7 @@ try {
     await NodeFSP.writeFile(NodePath.join(cwd, "input.txt"), "version-a");
   }
   console.log("First checkout:\n" + (await run("a")));
-  const readerFile = NodePath.join(NodeOS.homedir(), ".config/t3-task-cache/ci-reader.json");
+  const readerFile = NodePath.join(NodeOS.homedir(), ".config/ankiel-task-cache/ci-reader.json");
   let reader;
   try {
     reader = JSON.parse(await NodeFSP.readFile(readerFile, "utf8"));
@@ -91,16 +91,16 @@ try {
     if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") throw error;
     const credentials = JSON.parse(
       await NodeFSP.readFile(
-        NodePath.join(NodeOS.homedir(), ".config/t3-task-cache/credentials.json"),
+        NodePath.join(NodeOS.homedir(), ".config/ankiel-task-cache/credentials.json"),
         "utf8",
       ),
     );
     reader = credentials[endpoint];
   }
   const otherHome = NodePath.join(root, "other-developer");
-  await NodeFSP.mkdir(NodePath.join(otherHome, ".config/t3-task-cache"), { recursive: true });
+  await NodeFSP.mkdir(NodePath.join(otherHome, ".config/ankiel-task-cache"), { recursive: true });
   await NodeFSP.writeFile(
-    NodePath.join(otherHome, ".config/t3-task-cache/credentials.json"),
+    NodePath.join(otherHome, ".config/ankiel-task-cache/credentials.json"),
     JSON.stringify({
       [endpoint]: reader,
     }),

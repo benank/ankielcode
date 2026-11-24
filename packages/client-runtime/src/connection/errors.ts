@@ -1,4 +1,4 @@
-import type { DpopFailureReason, EnvironmentId } from "@t3tools/contracts";
+import type { DpopFailureReason, EnvironmentId } from "@ankielcode/contracts";
 import { msg } from "gt-i18n";
 import type { RemoteEnvironmentAuthError } from "../authorization/remote.ts";
 import { detailFromError, type MarkedText, translatableDetail } from "../errors/translatable.ts";
@@ -46,7 +46,7 @@ export function environmentMismatchError(input: {
     reason: "configuration",
     ...translatableDetail(
       msg(
-        "This address now runs a different T3 Code install ({actual}, not {expected}). Remove this connection and add it again.",
+        "This address now runs a different Ankiel Code install ({actual}, not {expected}). Remove this connection and add it again.",
         { actual: input.actual, expected: input.expected },
       ),
     ),

@@ -11,17 +11,17 @@ import {
   type LinkRequestItem,
   linkRequestTarget,
   rankMachinesByHint,
-} from "@t3tools/client-runtime/link-request";
+} from "@ankielcode/client-runtime/link-request";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@t3tools/client-runtime/state/runtime";
+} from "@ankielcode/client-runtime/state/runtime";
 import {
   AuthAccessWriteScope,
   type AuthMcpClientAccess,
   type EnvironmentId,
   type OrchestrationV2ProjectedTurnItem,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import { msg, T, useGT, useMessages, Var } from "gt-react-native";
@@ -136,7 +136,7 @@ function PendingLinkRequest(props: {
   return (
     <View className="mb-3 gap-3 rounded-[20px] border border-border bg-card-alt p-4">
       <View className="gap-1">
-        <Text className="font-t3-bold text-base text-foreground">
+        <Text className="font-ankiel-bold text-base text-foreground">
           {item.url === undefined
             ? gt("Link a machine to this environment")
             : gt("Link {target} to this environment", { target: linkDestination(item.url) })}
@@ -331,7 +331,7 @@ function LinkRequestSheet(props: {
             accessibilityRole="alert"
             className="gap-1 rounded-xl border border-warning-border bg-warning p-3"
           >
-            <Text className="font-t3-bold text-sm text-warning-foreground">
+            <Text className="font-ankiel-bold text-sm text-warning-foreground">
               <T>Check this address</T>
             </Text>
             <Text className="font-sans text-xs leading-snug text-warning-foreground">

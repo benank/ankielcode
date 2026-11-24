@@ -5,26 +5,29 @@ import * as NodeDns from "node:dns";
 import * as NodeOS from "node:os";
 import * as NodeSea from "node:sea";
 
-export const Platform = Context.Reference<NodeJS.Platform>("@t3tools/shared/HostProcess/Platform", {
-  defaultValue: () => process.platform,
-});
+export const Platform = Context.Reference<NodeJS.Platform>(
+  "@ankielcode/shared/HostProcess/Platform",
+  {
+    defaultValue: () => process.platform,
+  },
+);
 
 export const Architecture = Context.Reference<NodeJS.Architecture>(
-  "@t3tools/shared/HostProcess/Architecture",
+  "@ankielcode/shared/HostProcess/Architecture",
   {
     defaultValue: () => process.arch,
   },
 );
 
 export const KernelRelease = Context.Reference<string>(
-  "@t3tools/shared/HostProcess/KernelRelease",
+  "@ankielcode/shared/HostProcess/KernelRelease",
   {
     defaultValue: () => NodeOS.release(),
   },
 );
 
 export const LinuxLibc = Context.Reference<"gnu" | "musl">(
-  "@t3tools/shared/HostProcess/LinuxLibc",
+  "@ankielcode/shared/HostProcess/LinuxLibc",
   {
     defaultValue: () => {
       try {
@@ -39,63 +42,69 @@ export const LinuxLibc = Context.Reference<"gnu" | "musl">(
   },
 );
 
-export const Hostname = Context.Reference<string>("@t3tools/shared/HostProcess/Hostname", {
+export const Hostname = Context.Reference<string>("@ankielcode/shared/HostProcess/Hostname", {
   defaultValue: () => NodeOS.hostname(),
 });
 
-export const Username = Context.Reference<string | null>("@t3tools/shared/HostProcess/Username", {
-  defaultValue: () => {
-    try {
-      return NodeOS.userInfo().username.trim() || null;
-    } catch {
-      return null;
-    }
+export const Username = Context.Reference<string | null>(
+  "@ankielcode/shared/HostProcess/Username",
+  {
+    defaultValue: () => {
+      try {
+        return NodeOS.userInfo().username.trim() || null;
+      } catch {
+        return null;
+      }
+    },
   },
-});
+);
 
 export const HomeDirectory = Context.Reference<string>(
-  "@t3tools/shared/HostProcess/HomeDirectory",
+  "@ankielcode/shared/HostProcess/HomeDirectory",
   {
     defaultValue: () => NodeOS.homedir(),
   },
 );
 
 export const Environment = Context.Reference<NodeJS.ProcessEnv>(
-  "@t3tools/shared/HostProcess/Environment",
+  "@ankielcode/shared/HostProcess/Environment",
   {
     defaultValue: () => process.env,
   },
 );
 
 export const WorkingDirectory = Context.Reference<string>(
-  "@t3tools/shared/HostProcess/WorkingDirectory",
+  "@ankielcode/shared/HostProcess/WorkingDirectory",
   {
     defaultValue: () => process.cwd(),
   },
 );
 
 export const ExecutablePath = Context.Reference<string>(
-  "@t3tools/shared/HostProcess/ExecutablePath",
+  "@ankielcode/shared/HostProcess/ExecutablePath",
   {
     defaultValue: () => process.execPath,
   },
 );
 
 export const Arguments = Context.Reference<ReadonlyArray<string>>(
-  "@t3tools/shared/HostProcess/Arguments",
+  "@ankielcode/shared/HostProcess/Arguments",
   {
     defaultValue: () => process.argv,
   },
 );
 
 /** Original shell command spelling; argv[0] and execPath instead identify the resolved binary. */
-export const InvokedAs = Context.Reference<string>("@t3tools/shared/HostProcess/InvokedAs", {
+export const InvokedAs = Context.Reference<string>("@ankielcode/shared/HostProcess/InvokedAs", {
   defaultValue: () => process.argv0,
 });
 
-export const IsExecutable = Context.Reference<boolean>("@t3tools/shared/HostProcess/IsExecutable", {
-  defaultValue: () => NodeSea.isSea(),
-});
+export const IsExecutable = Context.Reference<boolean>(
+  "@ankielcode/shared/HostProcess/IsExecutable",
+  {
+    defaultValue: () => NodeSea.isSea(),
+  },
+);
 
 export class HostnameLookupError extends Schema.TaggedError<HostnameLookupError>()(
   "HostnameLookupError",
@@ -108,7 +117,7 @@ export class HostnameLookupError extends Schema.TaggedError<HostnameLookupError>
 
 /** Includes hostname-resolved addresses absent from interfaces, such as Debian's 127.0.1.1 used by Firefox locks. */
 export const Addresses = Context.Reference<Effect.Effect<ReadonlySet<string>>>(
-  "@t3tools/shared/HostProcess/Addresses",
+  "@ankielcode/shared/HostProcess/Addresses",
   {
     // The enclosing operation owns the span for this inline handler.
     defaultValue: Effect.fnUntraced(function* () {
@@ -128,8 +137,11 @@ export const Addresses = Context.Reference<Effect.Effect<ReadonlySet<string>>>(
   },
 );
 
-export const UserId = Context.Reference<number | undefined>("@t3tools/shared/HostProcess/UserId", {
-  defaultValue: () => process.getuid?.(),
-});
+export const UserId = Context.Reference<number | undefined>(
+  "@ankielcode/shared/HostProcess/UserId",
+  {
+    defaultValue: () => process.getuid?.(),
+  },
+);
 
 export const isWindows = Effect.map(Platform, (platform) => platform === "win32");

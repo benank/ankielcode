@@ -1,5 +1,5 @@
-import { EnvironmentId } from "@t3tools/contracts";
-import type { ServerUpdateState } from "@t3tools/client-runtime/state/server";
+import { EnvironmentId } from "@ankielcode/contracts";
+import type { ServerUpdateState } from "@ankielcode/client-runtime/state/server";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const branding = vi.hoisted(() => ({ APP_VERSION: "0.0.34" }));
@@ -17,30 +17,30 @@ import {
 } from "./versionSkew";
 
 const MISMATCH_HINT =
-  "Version mismatch. Try syncing the client and server to the same T3 Code version.";
+  "Version mismatch. Try syncing the client and server to the same Ankiel Code version.";
 
 describe("versionSkew", () => {
   it("updates only the proven install and safely quotes its paths", () => {
     expect(manualServerUpdateCommand("0.0.45", { kind: "npm-global", prefix: "/opt/node" })).toBe(
-      "npm install --global --prefix '/opt/node' t3@0.0.45",
+      "npm install --global --prefix '/opt/node' @ankielcode/cli@0.0.45",
     );
     expect(
       manualServerUpdateCommand("0.0.45", { kind: "npm-global", prefix: "/opt/maria's node" }),
-    ).toBe("npm install --global --prefix '/opt/maria'\\''s node' t3@0.0.45");
+    ).toBe("npm install --global --prefix '/opt/maria'\\''s node' @ankielcode/cli@0.0.45");
     expect(
       manualServerUpdateCommand("0.0.45", {
-        kind: "t3-launcher",
-        launcher: "t3",
-        baseDir: "/home/u/.t3",
+        kind: "ankiel-launcher",
+        launcher: "ac",
+        baseDir: "/home/u/.ac",
       }),
-    ).toBe("'t3' update --base-dir '/home/u/.t3' 0.0.45");
+    ).toBe("'ac' update --base-dir '/home/u/.ac' 0.0.45");
     expect(
       manualServerUpdateCommand("0.0.45", {
-        kind: "t3-launcher",
-        launcher: "/opt/maria's bin/t3",
-        baseDir: "/data/t3 home",
+        kind: "ankiel-launcher",
+        launcher: "/opt/maria's bin/ac",
+        baseDir: "/data/ac home",
       }),
-    ).toBe("'/opt/maria'\\''s bin/t3' update --base-dir '/data/t3 home' 0.0.45");
+    ).toBe("'/opt/maria'\\''s bin/ac' update --base-dir '/data/ac home' 0.0.45");
   });
   beforeEach(() => {
     branding.APP_VERSION = "0.0.34";

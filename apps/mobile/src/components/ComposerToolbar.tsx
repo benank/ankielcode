@@ -99,7 +99,9 @@ export function ComposerInlineControl(props: {
           >
             <Text
               className={cn(
-                props.size === "large" ? "text-base font-t3-medium" : "text-sm font-t3-medium",
+                props.size === "large"
+                  ? "text-base font-ankiel-medium"
+                  : "text-sm font-ankiel-medium",
                 props.tone === "warning"
                   ? "text-warning-foreground"
                   : props.emphasized || props.selected
@@ -428,7 +430,7 @@ export function ComposerToolbarButton(props: {
       {props.label ? (
         <Text
           className={cn(
-            "shrink text-center text-sm font-t3-bold",
+            "shrink text-center text-sm font-ankiel-bold",
             variant === "primary"
               ? props.disabled
                 ? "text-foreground-muted"

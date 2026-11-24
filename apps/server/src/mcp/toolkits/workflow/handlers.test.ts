@@ -1,6 +1,6 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect, it } from "@effect/vitest";
-import { EnvironmentId } from "@t3tools/contracts";
+import { EnvironmentId } from "@ankielcode/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";
@@ -12,7 +12,7 @@ import * as McpToolAccessTestkit from "../../McpToolAccess.testkit.ts";
 import * as WorkflowHandlers from "./handlers.ts";
 import { WorkflowToolkit } from "./tools.ts";
 
-const fullAccess = { sessionId: "session-1", label: "t3 CLI", access: "full-access" } as const;
+const fullAccess = { sessionId: "session-1", label: "ac CLI", access: "full-access" } as const;
 const supervised = { sessionId: "session-2", label: "Bot", access: "approval-required" } as const;
 
 const handlersWith = (
@@ -45,7 +45,7 @@ it.effect("start passes an explicit null payload through and defaults an omitted
       const toolkit = yield* WorkflowToolkit;
       for (const input of [{ input: null }, {}]) {
         yield* toolkit
-          .handle("t3_workflow", {
+          .handle("ankiel_workflow", {
             action: "start",
             workflow: "echo",
             idempotencyKey: "trial",
@@ -82,7 +82,7 @@ it.effect("signal refuses a run destination mixed with a channel destination", (
         ],
         (address) =>
           toolkit
-            .handle("t3_workflow", { action: "signal", value: { choice: "yes" }, ...address })
+            .handle("ankiel_workflow", { action: "signal", value: { choice: "yes" }, ...address })
             .pipe(
               Stream.unwrap,
               Stream.runCollect,
@@ -112,7 +112,7 @@ const emptyRun = { run: undefined, steps: [], references: [] } as never;
 const call = (input: Record<string, unknown>) =>
   Effect.gen(function* () {
     const toolkit = yield* WorkflowToolkit;
-    return yield* toolkit.handle("t3_workflow", input as never).pipe(
+    return yield* toolkit.handle("ankiel_workflow", input as never).pipe(
       Stream.unwrap,
       Stream.runCollect,
       Effect.map((parts) => parts.at(-1)?.result),

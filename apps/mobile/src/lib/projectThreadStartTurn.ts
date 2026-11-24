@@ -8,12 +8,12 @@ import {
   type ProjectId,
   type ProviderInteractionMode,
   type RuntimeMode,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import {
   deriveThreadTitleSeed,
   threadTitleTextFromPrompt,
-} from "@t3tools/client-runtime/operations";
-import { splitsSurrogatePair } from "@t3tools/shared/assistantCitations";
+} from "@ankielcode/client-runtime/operations";
+import { splitsSurrogatePair } from "@ankielcode/shared/assistantCitations";
 import { msg } from "gt-react-native";
 
 import { m } from "../i18n/messages";

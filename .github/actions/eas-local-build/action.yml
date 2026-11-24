@@ -30,7 +30,7 @@ runs:
       env:
         CACHE_NAME: ${{ inputs.environment == 'production' && 'store' || 'preview' }}
       run: |
-        cache="$HOME/.cache/t3-android-$CACHE_NAME"
+        cache="$HOME/.cache/ankiel-android-$CACHE_NAME"
         {
           echo "GRADLE_USER_HOME=$cache/gradle"
           echo "CCACHE_DIR=$cache/ccache"
@@ -52,7 +52,7 @@ runs:
       uses: useblacksmith/stickydisk@3f6be1451e3cad893b778bc93495c80452a5da26 # v1.7.2
       with:
         key: ${{ github.repository }}-android-${{ inputs.environment == 'production' && 'store' || 'preview' }}-build
-        path: ~/.cache/t3-android-${{ inputs.environment == 'production' && 'store' || 'preview' }}
+        path: ~/.cache/ankiel-android-${{ inputs.environment == 'production' && 'store' || 'preview' }}
 
     - name: Configure Gradle and ccache
       if: inputs.platform == 'android' && inputs.cache == 'true'
@@ -106,7 +106,7 @@ runs:
     # scripts: some download native assets that the build's fingerprint check hashes.
     - name: Install mobile dependencies
       shell: bash
-      run: pnpm install --frozen-lockfile --prefer-offline --filter=@t3tools/mobile...
+      run: pnpm install --frozen-lockfile --prefer-offline --filter=@ankielcode/mobile...
 
     - name: Setup Java
       if: inputs.platform == 'android'
@@ -149,12 +149,12 @@ runs:
         import { appendFileSync, readFileSync } from "node:fs";
         import { parseEnv } from "node:util";
         const env = parseEnv(readFileSync(".env.local", "utf8"));
-        const googleServicesFile = env.T3CODE_ANDROID_GOOGLE_SERVICES_FILE;
+        const googleServicesFile = env.AC_ANDROID_GOOGLE_SERVICES_FILE;
         if (!googleServicesFile && process.env.PLATFORM === "android") {
-          throw new Error(`T3CODE_ANDROID_GOOGLE_SERVICES_FILE is missing from the ${process.env.ENVIRONMENT} environment`);
+          throw new Error(`AC_ANDROID_GOOGLE_SERVICES_FILE is missing from the ${process.env.ENVIRONMENT} environment`);
         }
         if (googleServicesFile) {
-          appendFileSync(process.env.GITHUB_ENV, `T3CODE_ANDROID_GOOGLE_SERVICES_FILE=${googleServicesFile}\n`);
+          appendFileSync(process.env.GITHUB_ENV, `AC_ANDROID_GOOGLE_SERVICES_FILE=${googleServicesFile}\n`);
         }
         NODE
 

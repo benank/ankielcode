@@ -1,26 +1,26 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./t3.ts";
+import { test, WEB } from "./ac.ts";
 
 const FILE = "handoff.txt";
 
 test(
   "A bare citation leaves the file unresolved when other projects contain several matches",
   WEB,
-  async ({ t3, app, browser, screen }) => {
-    const project = await t3.project("planning");
-    await t3.project("reports", { "notes/HANDOFF.txt": "Report handoff" });
-    await t3.project("support", {
+  async ({ ac, app, browser, screen }) => {
+    const project = await ac.project("planning");
+    await ac.project("reports", { "notes/HANDOFF.txt": "Report handoff" });
+    await ac.project("support", {
       "current/Handoff.txt": "Current support handoff",
       "archive/HANDOFF.txt": "Archived support handoff",
     });
-    const thread = await t3.thread({
+    const thread = await ac.thread({
       project,
       title: "Find the handoff",
       messages: [`See :codex-file-citation{path="${FILE}" line_range_start="1"}`],
     });
 
-    await t3.open(thread);
+    await ac.open(thread);
     await screen.getByRole("button", /^Agent See/).tap();
     await screen.getByRole("link", /^handoff\.txt/).tap();
 

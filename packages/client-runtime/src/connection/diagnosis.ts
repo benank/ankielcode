@@ -64,7 +64,7 @@ function headline(
     case "offline":
       return resolve(msg("This device is offline"));
     case "outdated":
-      return resolve(msg("{host} runs an older T3 Code", { host }));
+      return resolve(msg("{host} runs an older Ankiel Code", { host }));
     case "clock_skew":
       return resolve(msg("This device's clock is off"));
     case null:
@@ -75,8 +75,8 @@ function headline(
       return resolve(msg("This device could not prepare the connection"));
     case "server":
       return failure?.reason === "authentication" || failure?.reason === "permission"
-        ? resolve(msg("T3 Code on {host} did not accept this device", { host }))
-        : resolve(msg("T3 Code on {host} did not answer", { host }));
+        ? resolve(msg("Ankiel Code on {host} did not accept this device", { host }))
+        : resolve(msg("Ankiel Code on {host} did not answer", { host }));
   }
 }
 
@@ -88,9 +88,11 @@ function steps(
 ): string[] {
   switch (located.cause) {
     case "offline":
-      return [resolve(msg("Connect this device to the internet. T3 Code reconnects on its own."))];
+      return [
+        resolve(msg("Connect this device to the internet. Ankiel Code reconnects on its own.")),
+      ];
     case "outdated":
-      return [resolve(msg("Update T3 Code on {host}.", { host }))];
+      return [resolve(msg("Update Ankiel Code on {host}.", { host }))];
     case "clock_skew":
       return [
         resolve(
@@ -105,7 +107,7 @@ function steps(
   switch (located.hop) {
     case "device":
       return [
-        resolve(msg("Restart T3 Code on this device.")),
+        resolve(msg("Restart Ankiel Code on this device.")),
         resolve(
           msg("If it keeps failing, remove {host} from this device and add it again.", { host }),
         ),
@@ -121,7 +123,7 @@ function steps(
             ),
           ]
         : [
-            resolve(msg("Make sure T3 Code is running on {host}.", { host })),
+            resolve(msg("Make sure Ankiel Code is running on {host}.", { host })),
             resolve(msg("Retry. If it keeps failing, copy the diagnostics.")),
           ];
   }
@@ -134,7 +136,7 @@ function hopLabel(hop: ConnectionHop, host: string, resolve: MFunctionType): str
     case "device":
       return resolve(msg("This device"));
     case "server":
-      return resolve(msg("T3 Code on {host}", { host }));
+      return resolve(msg("Ankiel Code on {host}", { host }));
   }
 }
 
@@ -199,7 +201,7 @@ const HOP_MARK = { ok: "ok", failed: "FAILED", unchecked: "not checked" } as con
 /** One plain-text block for bug reports. */
 export function connectionDiagnosisText(hostLabel: string, diagnosis: ConnectionDiagnosis): string {
   return [
-    `T3 Code connection to ${hostLabel}: ${diagnosis.headline}`,
+    `Ankiel Code connection to ${hostLabel}: ${diagnosis.headline}`,
     "",
     ...diagnosis.hops.map((hop) => `${hop.label}: ${HOP_MARK[hop.result]}`),
     "",

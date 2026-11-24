@@ -1,6 +1,6 @@
-import { SourceControlProviderKind } from "@t3tools/contracts";
+import { SourceControlProviderKind } from "@ankielcode/contracts";
 import { describe, expect, it } from "vite-plus/test";
-import { EnvironmentId, ProjectId } from "@t3tools/contracts";
+import { EnvironmentId, ProjectId } from "@ankielcode/contracts";
 
 import {
   findExistingAddProject,
@@ -38,10 +38,10 @@ describe("add project shared logic", () => {
 
   it("asks for a repository name when GitHub input is only an owner path", () => {
     const github = SourceControlProviderKind.make("github");
-    expect(githubIncompleteOwnerRepositoryMessage(github, "pingdotgg/")).toBe(
+    expect(githubIncompleteOwnerRepositoryMessage(github, "benank/")).toBe(
       "Enter the full owner/repository name.",
     );
-    expect(githubIncompleteOwnerRepositoryMessage(github, "  pingdotgg//  ")).toBe(
+    expect(githubIncompleteOwnerRepositoryMessage(github, "  benank//  ")).toBe(
       "Enter the full owner/repository name.",
     );
     expect(githubIncompleteOwnerRepositoryMessage(github, "mona-cat_octo/")).toBe(
@@ -49,11 +49,11 @@ describe("add project shared logic", () => {
     );
 
     for (const input of [
-      "pingdotgg/t3code",
+      "benank/ankielcode",
       "mona-cat_octo/repo",
-      "pingdotgg",
-      "https://github.com/pingdotgg/t3code.git",
-      "git@github.com:pingdotgg/t3code.git",
+      "benank",
+      "https://github.com/benank/ankielcode.git",
+      "git@github.com:benank/ankielcode.git",
     ]) {
       expect(githubIncompleteOwnerRepositoryMessage(github, input)).toBeNull();
     }
@@ -70,8 +70,8 @@ describe("add project shared logic", () => {
     expect(normalizePastedCloneUrl("imputnet/helium")).toBe(
       "https://github.com/imputnet/helium.git",
     );
-    expect(normalizePastedCloneUrl("  pingdotgg/t3code  ")).toBe(
-      "https://github.com/pingdotgg/t3code.git",
+    expect(normalizePastedCloneUrl("  benank/ankielcode  ")).toBe(
+      "https://github.com/benank/ankielcode.git",
     );
   });
 
@@ -97,12 +97,12 @@ describe("add project shared logic", () => {
 
   it("clones the repository when given a page URL copied from the browser", () => {
     for (const [pageUrl, pageRoute, repository] of [
-      ["https://github.com/pingdotgg/t3code/tree/main", "/tree/", "t3code"],
+      ["https://github.com/benank/ankielcode/tree/main", "/tree/", "ankielcode"],
       ["https://gitlab.com/gitlab-org/gitlab-runner/-/tree/main", "/-/", "gitlab-runner"],
-      ["https://git.cafe/pingdotgg/t3code/tree/main", "/tree/", "t3code"],
+      ["https://git.cafe/benank/ankielcode/tree/main", "/tree/", "ankielcode"],
       ["https://gitlab.example.test/g/p/-/blob/main/src/branch/x", "/-/", "p"],
       ["https://code.company.test/g/p/-/tree/main", "/-/", "p"],
-      ["https://github.com/pingdotgg/t3code/tree/release.git", "/tree/", "t3code"],
+      ["https://github.com/benank/ankielcode/tree/release.git", "/tree/", "ankielcode"],
     ] as const) {
       const cloneUrl = normalizePastedCloneUrl(pageUrl);
       expect(cloneUrl).not.toContain(pageRoute);

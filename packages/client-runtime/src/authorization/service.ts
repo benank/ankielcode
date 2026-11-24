@@ -5,8 +5,8 @@ import {
   type ClientConnectionMethod,
   EnvironmentId,
   type ExecutionEnvironmentDescriptor,
-} from "@t3tools/contracts";
-import * as KeyedLock from "@t3tools/shared/KeyedLock";
+} from "@ankielcode/contracts";
+import * as KeyedLock from "@ankielcode/shared/KeyedLock";
 import {
   exchangeRemoteDpopAccessToken,
   resolveRemoteDpopWebSocketConnectionUrl,
@@ -94,7 +94,7 @@ export class RemoteEnvironmentAuthorization extends Context.Service<
       readonly directConnection: DirectDpopConnection;
     }) => Effect.Effect<void, ConnectionAttemptError>;
   }
->()("@t3tools/client-runtime/authorization/service/RemoteEnvironmentAuthorization") {}
+>()("@ankielcode/client-runtime/authorization/service/RemoteEnvironmentAuthorization") {}
 
 const CHECKED_DESCRIPTOR_TTL_NANOS = 5_000_000_000n;
 // A loopback or LAN host answers well inside this, so a dead one frees its attempt sooner.

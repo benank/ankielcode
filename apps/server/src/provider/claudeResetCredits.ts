@@ -2,8 +2,8 @@ import type {
   ProviderConsumeResetCreditOutcome,
   ServerProviderResetCreditOption,
   ServerProviderResetCredits,
-} from "@t3tools/contracts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+} from "@ankielcode/contracts";
+import * as HostProcess from "@ankielcode/shared/HostProcess";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

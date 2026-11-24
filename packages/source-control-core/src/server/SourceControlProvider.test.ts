@@ -15,13 +15,13 @@ it("removes URL credentials, query parameters, and fragments from error transpor
 });
 
 it.each([
-  ["git@github.com:T3Tools/t3code.git", "T3Tools/t3code"],
-  ["github.com:T3Tools/t3code.git", "T3Tools/t3code"],
-  ["gitlab.com:T3Tools/platform/t3code", "T3Tools/platform/t3code"],
-  ["https://github.com/T3Tools/t3code.git", "T3Tools/t3code"],
-  ["https://github.com/T3Tools/t3code.git?view=compact", "T3Tools/t3code"],
-  ["https://github.com/T3Tools/t3code.git#section", "T3Tools/t3code"],
-  ["C:/repos/t3code", null],
+  ["git@github.com:benank/ankielcode.git", "benank/ankielcode"],
+  ["github.com:benank/ankielcode.git", "benank/ankielcode"],
+  ["gitlab.com:Ankiel/platform/ankielcode", "Ankiel/platform/ankielcode"],
+  ["https://github.com/benank/ankielcode.git", "benank/ankielcode"],
+  ["https://github.com/benank/ankielcode.git?view=compact", "benank/ankielcode"],
+  ["https://github.com/benank/ankielcode.git#section", "benank/ankielcode"],
+  ["C:/repos/ankielcode", null],
 ])("reads the repository path of %s", (remoteUrl, expected) => {
   assert.strictEqual(repositoryPathFromRemoteUrl(remoteUrl), expected);
 });

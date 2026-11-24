@@ -1,4 +1,4 @@
-import type { OrchestrationV2HistoricalMessage } from "@t3tools/contracts";
+import type { OrchestrationV2HistoricalMessage } from "@ankielcode/contracts";
 import {
   ChatAttachment,
   CheckpointId,
@@ -35,7 +35,7 @@ import {
   RunId,
   ThreadId,
   TurnItemId,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import * as Context from "effect/Context";
 import * as Schema from "effect/Schema";
 import type * as Effect from "effect/Effect";
@@ -69,7 +69,7 @@ export const ProviderAdapterV2RuntimePolicy = Schema.Struct({
   sandboxPolicy: Schema.optional(Schema.Unknown),
   /**
    * The administrator's ceiling, when a managed policy sets one. `runtimeMode` is already under
-   * it; adapters use it to refuse native mode choices a user makes beside T3 Code's own.
+   * it; adapters use it to refuse native mode choices a user makes beside Ankiel Code's own.
    */
   maxRuntimeMode: Schema.optional(RuntimeMode),
   workspace: Schema.optional(ProviderAdapterV2RuntimeWorkspace),
@@ -496,10 +496,10 @@ export class ProviderAdapterEventStreamError extends Schema.TaggedError<Provider
   {
     driver: ProviderDriverKind,
     providerSessionId: ProviderSessionId,
-    /** Set when T3 closed the session because this thread detached from it, not the provider. */
+    /** Set when Ankiel closed the session because this thread detached from it, not the provider. */
     detachedThreadId: Schema.optional(ThreadId),
-    /** Set when T3 raised this itself; unset when the adapter reported its runtime failing. */
-    raisedByT3: Schema.optional(Schema.Boolean),
+    /** Set when Ankiel raised this itself; unset when the adapter reported its runtime failing. */
+    raisedByAnkiel: Schema.optional(Schema.Boolean),
     cause: Schema.optional(Schema.Defect()),
   },
 ) {
@@ -898,4 +898,4 @@ export class ProviderAdapterV2 extends Context.Service<
       input: ProviderAdapterV2OpenSessionInput,
     ) => Effect.Effect<ProviderAdapterV2SessionRuntime, ProviderAdapterV2Error, Scope.Scope>;
   }
->()("@t3tools/provider-core/server/ProviderAdapter/ProviderAdapterV2") {}
+>()("@ankielcode/provider-core/server/ProviderAdapter/ProviderAdapterV2") {}

@@ -4,12 +4,12 @@ import {
   ThreadId,
   type ScopedThreadRef,
   type ThreadPullRequestLink,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { expect, it, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser";
 
-const SCRATCH_ROOT = "/home/user/.t3/scratch";
+const SCRATCH_ROOT = "/home/user/.ac/scratch";
 
 const state = vi.hoisted(() => ({
   workspaceRoot: "",
@@ -96,9 +96,9 @@ const container = { width: 1200, height: 800 };
 const placement = { x: 908, y: 0, right: 12, width: 280, height: 400 } as const;
 const linkedPullRequest: ThreadPullRequestLink = {
   host: "github.com",
-  repository: "pingdotgg/t3code",
+  repository: "benank/ankielcode",
   number: 27513,
-  url: "https://github.com/pingdotgg/t3code/pull/27513",
+  url: "https://github.com/benank/ankielcode/pull/27513",
   source: "manual",
   linkedAt: "2026-10-30T00:00:00.000Z",
   snapshot: null,

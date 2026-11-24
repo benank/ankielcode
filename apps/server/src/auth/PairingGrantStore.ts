@@ -8,11 +8,11 @@ import {
   PAIRING_CODE_LENGTH,
   parseMcpApprovalCode,
   type ServerAuthBootstrapMethod,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import {
   DESKTOP_BOOTSTRAP_TOKEN_WINDOW_MS,
   isValidDesktopBootstrapToken,
-} from "@t3tools/shared/desktopBootstrapToken";
+} from "@ankielcode/shared/desktopBootstrapToken";
 import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
@@ -256,7 +256,7 @@ export class PairingGrantStore extends Context.Service<
       },
     ) => Effect.Effect<BootstrapGrant, BootstrapCredentialError>;
   }
->()("t3/auth/PairingGrantStore") {}
+>()("@ankielcode/cli/auth/PairingGrantStore") {}
 
 interface StoredBootstrapGrant extends BootstrapGrant {
   readonly remainingUses: number | "unbounded";

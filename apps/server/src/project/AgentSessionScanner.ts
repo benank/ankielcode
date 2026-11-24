@@ -14,7 +14,7 @@ import {
   type AgentSessionProjectGit,
   type AgentSessionScanResult,
   type ProviderInstanceConfig,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -29,20 +29,20 @@ import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 
-import { splitsSurrogatePair } from "@t3tools/shared/assistantCitations";
-import { isBareGitConfig, parseOriginUrlFromGitConfig } from "@t3tools/shared/git";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { normalizeProjectPathForComparison } from "@t3tools/shared/path";
-import { repositoryPathFromRemoteUrl } from "@t3tools/source-control-core/server/SourceControlProvider";
+import { splitsSurrogatePair } from "@ankielcode/shared/assistantCitations";
+import { isBareGitConfig, parseOriginUrlFromGitConfig } from "@ankielcode/shared/git";
+import * as HostProcess from "@ankielcode/shared/HostProcess";
+import { normalizeProjectPathForComparison } from "@ankielcode/shared/path";
+import { repositoryPathFromRemoteUrl } from "@ankielcode/source-control-core/server/SourceControlProvider";
 
 import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
 import * as ProjectStore from "../orchestration-v2/ProjectStore.ts";
 import * as ProviderSessionRuntime from "../persistence/ProviderSessionRuntime.ts";
 import { resolveCodexHomeLayout } from "../provider/Drivers/CodexHomeLayout.ts";
-import { mergeProviderInstanceEnvironment } from "@t3tools/provider-core/server/instanceEnvironment";
-import { expandHomePath } from "@t3tools/provider-core/server/pathExpansion";
-import { piHome, resolvePiSessionsDir } from "@t3tools/provider-pi/server/usage";
+import { mergeProviderInstanceEnvironment } from "@ankielcode/provider-core/server/instanceEnvironment";
+import { expandHomePath } from "@ankielcode/provider-core/server/pathExpansion";
+import { piHome, resolvePiSessionsDir } from "@ankielcode/provider-pi/server/usage";
 import * as ServerSettings from "../serverSettings.ts";
 import { sourceControlDefinitions } from "../sourceControl/sourceControlDefinitions.ts";
 import {
@@ -251,7 +251,7 @@ export class AgentSessionScanner extends Context.Service<
       completedSources?: ReadonlyArray<AgentSessionImportSource>,
     ) => Stream.Stream<AgentSessionRecentThread, AgentSessionScanError>;
   }
->()("t3/project/AgentSessionScanner") {}
+>()("@ankielcode/cli/project/AgentSessionScanner") {}
 
 type AgentSessionSource = AgentSessionProjectCandidate["sources"][number];
 
@@ -830,7 +830,7 @@ function normalizeForWorktreeMatch(value: string, caseFold: boolean): string {
   return caseFold ? normalized.toLowerCase() : normalized;
 }
 
-function isT3ManagedWorktree(
+function isAnkielManagedWorktree(
   candidatePath: string,
   worktreesDir: string,
   caseFold: boolean,
@@ -838,7 +838,7 @@ function isT3ManagedWorktree(
   const normalized = normalizeForWorktreeMatch(candidatePath, caseFold);
   return (
     normalized.startsWith(normalizeForWorktreeMatch(worktreesDir, caseFold)) ||
-    normalized.includes("/.t3/worktrees/")
+    normalized.includes("/.ac/worktrees/")
   );
 }
 
@@ -921,16 +921,16 @@ export const make = Effect.gen(function* () {
   const serverSettings = yield* ServerSettings.ServerSettingsService;
   const projectStore = yield* ProjectStore.ProjectStoreV2;
   const runtimes = yield* ProviderSessionRuntime.ProviderSessionRuntimeRepository;
-  const configuredT3Dirs = {
+  const configuredAnkielDirs = {
     baseDir: path.resolve(serverConfig.baseDir),
     worktreesDir: path.resolve(serverConfig.worktreesDir),
   };
-  // Resolved candidates are compared with T3's folders as resolved too, so a symlinked base still matches.
+  // Resolved candidates are compared with Ankiel's folders as resolved too, so a symlinked base still matches.
   const realPathOf = (directory: string) =>
     fileSystem.realPath(directory).pipe(Effect.orElseSucceed(() => directory));
-  const realT3Dirs = {
-    baseDir: yield* realPathOf(configuredT3Dirs.baseDir),
-    worktreesDir: yield* realPathOf(configuredT3Dirs.worktreesDir),
+  const realAnkielDirs = {
+    baseDir: yield* realPathOf(configuredAnkielDirs.baseDir),
+    worktreesDir: yield* realPathOf(configuredAnkielDirs.worktreesDir),
   };
   const platform = yield* HostProcess.Platform;
   const isWindows = platform === "win32";
@@ -955,12 +955,12 @@ export const make = Effect.gen(function* () {
         normalizeForWorktreeMatch(ancestor, foldWorktreeCase),
       ),
     );
-  const isT3OwnedPath = (candidatePath: string, t3Dirs = configuredT3Dirs) =>
+  const isAnkielOwnedPath = (candidatePath: string, ankielDirs = configuredAnkielDirs) =>
     normalizeForWorktreeMatch(candidatePath, foldWorktreeCase).startsWith(
-      normalizeForWorktreeMatch(t3Dirs.baseDir, foldWorktreeCase),
-    ) || isT3ManagedWorktree(candidatePath, t3Dirs.worktreesDir, foldWorktreeCase);
-  const isExcludedProjectPath = (candidatePath: string, t3Dirs = configuredT3Dirs) =>
-    isScratchPath(candidatePath) || isT3OwnedPath(candidatePath, t3Dirs);
+      normalizeForWorktreeMatch(ankielDirs.baseDir, foldWorktreeCase),
+    ) || isAnkielManagedWorktree(candidatePath, ankielDirs.worktreesDir, foldWorktreeCase);
+  const isExcludedProjectPath = (candidatePath: string, ankielDirs = configuredAnkielDirs) =>
+    isScratchPath(candidatePath) || isAnkielOwnedPath(candidatePath, ankielDirs);
 
   const listDirectory = (directory: string) =>
     fileSystem.readDirectory(directory).pipe(Effect.orElseSucceed((): ReadonlyArray<string> => []));
@@ -1021,7 +1021,7 @@ export const make = Effect.gen(function* () {
       .realPath(directory)
       .pipe(Effect.orElseSucceed(() => directory));
     // Symlinks can disguise excluded worktree paths; re-check their targets.
-    return isExcludedProjectPath(realPath, realT3Dirs) ? Option.none() : stats;
+    return isExcludedProjectPath(realPath, realAnkielDirs) ? Option.none() : stats;
   });
 
   // Paths whose own read outlived the deadline, mapped to when they may be read
@@ -1625,16 +1625,16 @@ export const make = Effect.gen(function* () {
     }).pipe(Effect.orElseSucceed((): ReadonlyMap<string, ReadonlyArray<string>> => new Map()));
   });
 
-  // Only chats left in a scratch folder, such as Codex's, take their project's root; T3's own stay excluded.
+  // Only chats left in a scratch folder, such as Codex's, take their project's root; Ankiel's own stay excluded.
   const projectCwd = Effect.fnUntraced(function* (
     cwd: string,
     projectRoots: ReadonlyArray<string> | undefined,
   ) {
     if (projectRoots === undefined) return cwd;
     const resolved = path.resolve(expandHomePath(cwd.trim(), homeDir));
-    if (!isScratchPath(resolved) || isT3OwnedPath(resolved)) return cwd;
+    if (!isScratchPath(resolved) || isAnkielOwnedPath(resolved)) return cwd;
     const realCwd = yield* realPathOf(resolved);
-    return isT3OwnedPath(realCwd, realT3Dirs) ? cwd : projectRoots[0]!;
+    return isAnkielOwnedPath(realCwd, realAnkielDirs) ? cwd : projectRoots[0]!;
   });
 
   const discoverCodexTranscripts = Effect.fn("AgentSessionScanner.discoverCodexTranscripts")(
@@ -2113,7 +2113,7 @@ export const make = Effect.gen(function* () {
   ) {
     const root = path.resolve(expandHomePath(workspaceRoot, homeDir));
     const realRoot = yield* fileSystem.realPath(root).pipe(Effect.orElseSucceed(() => root));
-    if (isExcludedProjectPath(root) || isExcludedProjectPath(realRoot, realT3Dirs)) {
+    if (isExcludedProjectPath(root) || isExcludedProjectPath(realRoot, realAnkielDirs)) {
       return Stream.empty;
     }
     const rootIdentity = yield* directoryIdentity(root);

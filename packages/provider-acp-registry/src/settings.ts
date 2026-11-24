@@ -1,4 +1,8 @@
-import { CustomModelSetting, TrimmedString, makeProviderSettingsSchema } from "@t3tools/contracts";
+import {
+  CustomModelSetting,
+  TrimmedString,
+  makeProviderSettingsSchema,
+} from "@ankielcode/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 

@@ -1,9 +1,9 @@
 // @effect-diagnostics globalDate:off -- Tests exercise local calendar snooze boundaries.
 import * as DateTime from "effect/DateTime";
-import { RunId, RuntimeRequestId } from "@t3tools/contracts";
-import { ThreadId } from "@t3tools/contracts";
-import { TurnId } from "@t3tools/contracts";
-import type { SnoozePresetSetting } from "@t3tools/contracts/settings";
+import { RunId, RuntimeRequestId } from "@ankielcode/contracts";
+import { ThreadId } from "@ankielcode/contracts";
+import { TurnId } from "@ankielcode/contracts";
+import type { SnoozePresetSetting } from "@ankielcode/contracts/settings";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

@@ -1,14 +1,14 @@
-import type { OrchestrationV2TurnItem } from "@t3tools/contracts";
-import { HTML_RENDER_TOOL_NAME } from "@t3tools/shared/htmlRender";
-import { resolveT3McpToolId } from "@t3tools/shared/t3McpToolPresentation";
-import { formatReadToolLabel, formatSearchToolLabel } from "@t3tools/shared/toolActivity";
+import type { OrchestrationV2TurnItem } from "@ankielcode/contracts";
+import { HTML_RENDER_TOOL_NAME } from "@ankielcode/shared/htmlRender";
+import { resolveAnkielMcpToolId } from "@ankielcode/shared/ankielMcpToolPresentation";
+import { formatReadToolLabel, formatSearchToolLabel } from "@ankielcode/shared/toolActivity";
 import {
   MAX_TOOL_OUTPUT_IMAGES,
   readToolOutputImage,
   SEND_TO_USER_TOOL_NAME,
   sentMessageFromToolItem,
   type ToolOutputImage,
-} from "@t3tools/shared/toolOutput";
+} from "@ankielcode/shared/toolOutput";
 
 export function openCodeToolOutput(
   output: string | undefined,
@@ -39,7 +39,8 @@ type ToolItemBase = Omit<
 function openCodeToolProjectionKind(
   toolName: string,
 ): "command_execution" | "file_change" | "file_search" | "web_search" | "dynamic_tool" {
-  if (toolName.startsWith("mcp__") || resolveT3McpToolId(toolName) !== null) return "dynamic_tool";
+  if (toolName.startsWith("mcp__") || resolveAnkielMcpToolId(toolName) !== null)
+    return "dynamic_tool";
   const normalized = toolName.toLowerCase();
   if (normalized === "todowrite") {
     return "dynamic_tool";

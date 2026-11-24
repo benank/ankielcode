@@ -9,7 +9,7 @@ import * as GitHubRest from "./GitHubRest.ts";
 describe("starred", () => {
   it.effect("checks and stars only a valid repository, true only on 204", () => {
     const paths: Array<string> = [];
-    const starred = new Set(["user/starred/pingdotgg/t3code"]);
+    const starred = new Set(["user/starred/benank/ankielcode"]);
     const api = Layer.mock(GitHubRest.GitHubRest)({
       rest: (input) => {
         paths.push(`${input.method ?? "GET"} ${input.path}`);
@@ -32,19 +32,19 @@ describe("starred", () => {
     return Effect.gen(function* () {
       const isStarred = yield* makeIsRepositoryStarred;
       const star = yield* makeStarRepository;
-      assert.isTrue(yield* isStarred("github.com", "pingdotgg/t3code"));
-      assert.isFalse(yield* isStarred("github.com", "pingdotgg/uploadthing"));
-      assert.isFalse(yield* isStarred("github.com", "pingdotgg/t3code/../../user"));
+      assert.isTrue(yield* isStarred("github.com", "benank/ankielcode"));
+      assert.isFalse(yield* isStarred("github.com", "benank/uploadthing"));
+      assert.isFalse(yield* isStarred("github.com", "benank/ankielcode/../../user"));
       assert.isFalse(yield* isStarred("github.com", "../repos"));
-      assert.isTrue(yield* star("github.com", "pingdotgg/t3code"));
-      assert.isFalse(yield* star("github.com", "pingdotgg/uploadthing"));
-      assert.isFalse(yield* star("github.com", "pingdotgg/t3code/../../user"));
+      assert.isTrue(yield* star("github.com", "benank/ankielcode"));
+      assert.isFalse(yield* star("github.com", "benank/uploadthing"));
+      assert.isFalse(yield* star("github.com", "benank/ankielcode/../../user"));
       assert.isFalse(yield* star("github.com", "../repos"));
       assert.deepStrictEqual(paths, [
-        "GET user/starred/pingdotgg/t3code",
-        "GET user/starred/pingdotgg/uploadthing",
-        "PUT user/starred/pingdotgg/t3code",
-        "PUT user/starred/pingdotgg/uploadthing",
+        "GET user/starred/benank/ankielcode",
+        "GET user/starred/benank/uploadthing",
+        "PUT user/starred/benank/ankielcode",
+        "PUT user/starred/benank/uploadthing",
       ]);
     }).pipe(Effect.provide(api));
   });

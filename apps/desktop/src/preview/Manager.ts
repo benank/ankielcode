@@ -5,7 +5,7 @@ import {
   DesktopPreviewAnnotationVoiceEventSchema,
   DesktopPreviewRecordingInputSchema,
   DESKTOP_PREVIEW_RECORDING_CAPTURE_TRIGGER,
-} from "@t3tools/contracts";
+} from "@ankielcode/contracts";
 import type {
   DesktopPreviewAnnotationTheme,
   DesktopPreviewAnnotationVoiceConfig,
@@ -25,10 +25,10 @@ import type {
   DesktopPreviewTabDefaults,
   PreviewForwardedShortcut,
   PreviewAutomationLoadError,
-} from "@t3tools/contracts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { matchesKeybindingShortcut } from "@t3tools/shared/keybindings";
-import { normalizePreviewUrl } from "@t3tools/shared/preview";
+} from "@ankielcode/contracts";
+import * as HostProcess from "@ankielcode/shared/HostProcess";
+import { matchesKeybindingShortcut } from "@ankielcode/shared/keybindings";
+import { normalizePreviewUrl } from "@ankielcode/shared/preview";
 import {
   BrowserWindow,
   ClipboardItem,
@@ -2796,7 +2796,7 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
               });
             const world = (yield* send("Page.createIsolatedWorld", {
               frameId,
-              worldName: "t3-preview-still-image",
+              worldName: "ankiel-preview-still-image",
             })) as { executionContextId?: number } | undefined;
             if (typeof world?.executionContextId !== "number")
               return yield* new PreviewOperationError({
@@ -4053,7 +4053,7 @@ export class PreviewManager extends Context.Service<
       listener: RecordingInputListener,
     ) => Effect.Effect<void, never, Scope.Scope>;
   }
->()("@t3tools/desktop/preview/Manager/PreviewManager") {}
+>()("@ankielcode/desktop/preview/Manager/PreviewManager") {}
 
 /** @public */
 export const make = Effect.gen(function* PreviewManagerMake() {

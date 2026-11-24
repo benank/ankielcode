@@ -1,18 +1,18 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./t3.ts";
+import { test, WEB } from "./ac.ts";
 
 test(
   "Find in thread matches the displayed line range of a file link",
   WEB,
-  async ({ t3, app, screen, browser }) => {
-    const project = await t3.project("demo", { "src/notes.ts": "// Notes\n".repeat(64) });
-    const thread = await t3.thread({
+  async ({ ac, app, screen, browser }) => {
+    const project = await ac.project("demo", { "src/notes.ts": "// Notes\n".repeat(64) });
+    const thread = await ac.thread({
       project,
       title: "File review",
       messages: ["See [src/notes.ts](src/notes.ts#L42-L64)"],
     });
-    await t3.open(thread);
+    await ac.open(thread);
     await screen.getByRole("button", /^Agent See/).tap();
     await browser
       .locator("[data-user-message-body]")

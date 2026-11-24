@@ -6,7 +6,7 @@
  */
 import * as NodeModule from "node:module";
 
-import { ManagedPolicyDocument, type ManagedPolicySummary } from "@t3tools/contracts";
+import { ManagedPolicyDocument, type ManagedPolicySummary } from "@ankielcode/contracts";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -16,16 +16,16 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@ankielcode/shared/HostProcess";
 import {
   ManagedPolicyFileError,
   managedPolicyPath,
   layerWindowsRegistry,
   readManagedPolicy,
   readManagedPolicyFile,
-} from "@t3tools/shared/managedPolicyFile";
+} from "@ankielcode/shared/managedPolicyFile";
 
-import { telemetryChannel } from "../config.ts";
+import { releaseChannel } from "../config.ts";
 import * as ManagedProviders from "./managedProviders.ts";
 import * as ManagedSettings from "./managedSettings.ts";
 
@@ -40,13 +40,13 @@ export class ManagedPolicy extends Context.Service<
     /** What clients are told; absent when no policy applies. */
     readonly summary: ManagedPolicySummary | undefined;
   }
->()("t3/policy/ManagedPolicy") {}
+>()("@ankielcode/cli/policy/ManagedPolicy") {}
 
 type LimitsSummary = NonNullable<ManagedPolicySummary["limits"]>;
 
 const encodeDocumentJson = Schema.encodeEffect(Schema.fromJsonString(ManagedPolicyDocument));
 
-/** What `t3 policy show` compares to tell whether a running server loaded the installed policy. */
+/** What `ac policy show` compares to tell whether a running server loaded the installed policy. */
 export const loadedPolicy = Effect.fn("ManagedPolicy.loadedPolicy")(function* (
   policy: Pick<ManagedPolicy["Service"], "path" | "document">,
 ) {
@@ -173,8 +173,8 @@ const make = Effect.gen(function* () {
   // Source builds may read a policy from elsewhere so it can be tried without root. Release
   // builds never do: any override a user can set is a way around the policy.
   const devPath =
-    telemetryChannel === "dev"
-      ? yield* Config.option(Config.String("T3CODE_DEV_MANAGED_POLICY_PATH")).pipe(
+    releaseChannel === "dev"
+      ? yield* Config.option(Config.String("AC_DEV_MANAGED_POLICY_PATH")).pipe(
           Effect.orElseSucceed(() => Option.none<string>()),
         )
       : Option.none<string>();

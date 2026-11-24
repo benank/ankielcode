@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@t3tools/contracts";
+import { EnvironmentId } from "@ankielcode/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Schema from "effect/Schema";
 import * as Effect from "effect/Effect";
@@ -236,7 +236,7 @@ describe("ConnectionCatalogDocument", () => {
     expect(decoded.disabledEnvironmentIds).toEqual([]);
   });
 
-  it("drops saved T3 Connect routes and profiles but keeps the direct ones", () => {
+  it("drops saved Ankiel Connect routes and profiles but keeps the direct ones", () => {
     const decoded = decodeCatalogDocument({
       schemaVersion: 1,
       targets: [
@@ -271,7 +271,7 @@ describe("ConnectionCatalogDocument", () => {
           httpBaseUrl: "https://tunnel.example.test",
           wsBaseUrl: "wss://tunnel.example.test",
           learned: true,
-          authorization: "t3-connect",
+          authorization: "ankiel-connect",
         },
       ],
       credentials: [{ connectionId: "bearer-1", credential: BEARER_CREDENTIAL }],

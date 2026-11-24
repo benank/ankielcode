@@ -1,4 +1,4 @@
-import { EnvironmentId, type ExecutionEnvironmentDescriptor } from "@t3tools/contracts";
+import { EnvironmentId, type ExecutionEnvironmentDescriptor } from "@ankielcode/contracts";
 import * as Schema from "effect/Schema";
 
 import { MarkedText } from "../errors/translatable.ts";
@@ -65,7 +65,7 @@ export const ConnectionBlockedReason = Schema.Literals([
 ]);
 export type ConnectionBlockedReason = typeof ConnectionBlockedReason.Type;
 
-/** A part of the path to an environment: this device, or T3 Code on the host. */
+/** A part of the path to an environment: this device, or Ankiel Code on the host. */
 export const ConnectionHop = Schema.Literals(["device", "server"]);
 export type ConnectionHop = typeof ConnectionHop.Type;
 

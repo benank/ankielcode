@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["AnkielComposerEditorModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.ankielcomposereditor.AnkielComposerEditorModule"]
+  }
+}

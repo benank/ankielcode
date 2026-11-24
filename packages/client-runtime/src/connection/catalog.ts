@@ -1,4 +1,4 @@
-import { DesktopSshEnvironmentTargetSchema, EnvironmentId } from "@t3tools/contracts";
+import { DesktopSshEnvironmentTargetSchema, EnvironmentId } from "@ankielcode/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -22,7 +22,7 @@ export class BearerConnectionProfile extends Schema.TaggedClass<BearerConnection
     httpBaseUrl: Schema.String,
     wsBaseUrl: Schema.String,
     learned: Schema.optionalKey(Schema.Literal(true)),
-    // A profile saved by the removed T3 Connect carries `authorization: "t3-connect"`, which this
+    // A profile saved by the removed Ankiel Connect carries `authorization: "ankiel-connect"`, which this
     // schema refuses so the catalog drops it on read.
     authorization: Schema.optionalKey(Schema.Never),
     /**

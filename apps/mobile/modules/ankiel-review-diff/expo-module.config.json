@@ -1,0 +1,10 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["AnkielReviewDiffModule"],
+    "podspecPath": "AnkielReviewDiffNative.podspec"
+  },
+  "android": {
+    "modules": ["expo.modules.ankielreviewdiff.AnkielReviewDiffModule"]
+  }
+}

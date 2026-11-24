@@ -1,6 +1,6 @@
-import type { OrchestrationV2ProviderFailure } from "@t3tools/contracts";
-import { makeProviderFailure } from "@t3tools/provider-core/server/failure";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import type { OrchestrationV2ProviderFailure } from "@ankielcode/contracts";
+import { makeProviderFailure } from "@ankielcode/provider-core/server/failure";
+import * as HostProcess from "@ankielcode/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";

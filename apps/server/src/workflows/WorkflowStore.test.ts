@@ -1,5 +1,5 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@ankielcode/shared/nodeSqliteClient";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -19,7 +19,9 @@ const withStore = <A, E>(
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const directory = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3-workflow-store-" });
+    const directory = yield* fileSystem.makeTempDirectoryScoped({
+      prefix: "ankiel-workflow-store-",
+    });
     const database = NodeSqliteClient.layer({ filename: path.join(directory, "state.sqlite") });
     const migrated = Layer.effectDiscard(WorkflowsMigration);
     return yield* Effect.provide(

@@ -1,5 +1,5 @@
 {
-  "name": "@t3tools/desktop",
+  "name": "@ankielcode/desktop",
   "version": "0.1.11",
   "private": true,
   "type": "module",
@@ -11,14 +11,14 @@
     "i18n:generate": "node scripts/i18n-generate.mjs"
   },
   "dependencies": {
+    "@ankielcode/client-runtime": "workspace:*",
+    "@ankielcode/contracts": "workspace:*",
+    "@ankielcode/shared": "workspace:*",
+    "@ankielcode/ssh": "workspace:*",
+    "@ankielcode/tailscale": "workspace:*",
     "@crowecawcaw/xa11y": "0.15.4",
     "@effect/platform-node": "catalog:",
     "@napi-rs/keyring": "^1.3.0",
-    "@t3tools/client-runtime": "workspace:*",
-    "@t3tools/contracts": "workspace:*",
-    "@t3tools/shared": "workspace:*",
-    "@t3tools/ssh": "workspace:*",
-    "@t3tools/tailscale": "workspace:*",
     "dbus-next": "0.10.2",
     "effect": "catalog:",
     "electron": "44.10.1",
@@ -41,5 +41,5 @@
     "tailwindcss": "^4.0.0",
     "vite-plus": "catalog:"
   },
-  "productName": "T3 Code (Beta)"
+  "productName": "Ankiel Code (Beta)"
 }

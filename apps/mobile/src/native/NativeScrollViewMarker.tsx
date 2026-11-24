@@ -14,10 +14,10 @@ export const NativeScrollEdgeEffectsContext = createContext<ScrollEdgeEffects>(u
 function resolveScrollEdgeBleed() {
   try {
     const module = requireOptionalNativeModule<{
-      readonly ViewPrototypes?: { readonly T3NativeControls_ScrollEdgeBleed?: unknown };
-    }>("T3NativeControls");
-    if (!module?.ViewPrototypes?.T3NativeControls_ScrollEdgeBleed) return null;
-    return requireNativeView<ViewProps>("T3NativeControls", "ScrollEdgeBleed");
+      readonly ViewPrototypes?: { readonly AnkielNativeControls_ScrollEdgeBleed?: unknown };
+    }>("AnkielNativeControls");
+    if (!module?.ViewPrototypes?.AnkielNativeControls_ScrollEdgeBleed) return null;
+    return requireNativeView<ViewProps>("AnkielNativeControls", "ScrollEdgeBleed");
   } catch {
     return null;
   }
