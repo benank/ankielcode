@@ -46,6 +46,7 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 import { IsoDateTime, NonNegativeInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
+import { RelayTunnelConfigureInput, RelayTunnelError, RelayTunnelStatus } from "./relayTunnel.ts";
 import { SecretSourceCheckResult } from "./settingsSecretValue.ts";
 import { SecretReference } from "./secretReference.ts";
 import {
@@ -583,6 +584,9 @@ export const WS_METHODS = {
   serverGetStorageCleanupReport: "server.getStorageCleanupReport",
   serverGetDatabaseStorage: "server.getDatabaseStorage",
   serverReclaimDatabaseSpace: "server.reclaimDatabaseSpace",
+  serverGetRelayStatus: "server.getRelayStatus",
+  serverConfigureRelay: "server.configureRelay",
+  serverDisconnectRelay: "server.disconnectRelay",
   peerLinksList: "peerLinks.list",
   peerLinksNames: "peerLinks.names",
   peerLinksLink: "peerLinks.link",
@@ -747,6 +751,24 @@ const WsServerGetConfigRpc = Rpc.make(WS_METHODS.serverGetConfig, {
   payload: Schema.Struct({}),
   success: ServerConfig,
   error: Schema.Union([KeybindingsConfigError, ServerSettingsError, EnvironmentAuthorizationError]),
+});
+
+const WsServerGetRelayStatusRpc = Rpc.make(WS_METHODS.serverGetRelayStatus, {
+  payload: Schema.Struct({}),
+  success: RelayTunnelStatus,
+  error: Schema.Union([RelayTunnelError, EnvironmentAuthorizationError]),
+});
+
+const WsServerConfigureRelayRpc = Rpc.make(WS_METHODS.serverConfigureRelay, {
+  payload: RelayTunnelConfigureInput,
+  success: RelayTunnelStatus,
+  error: Schema.Union([RelayTunnelError, EnvironmentAuthorizationError]),
+});
+
+const WsServerDisconnectRelayRpc = Rpc.make(WS_METHODS.serverDisconnectRelay, {
+  payload: Schema.Struct({}),
+  success: RelayTunnelStatus,
+  error: Schema.Union([RelayTunnelError, EnvironmentAuthorizationError]),
 });
 
 export const WsServerRefreshProvidersRpc = Rpc.make(WS_METHODS.serverRefreshProviders, {
@@ -2646,6 +2668,9 @@ export const WsRpcGroup = RpcGroup.make(
   WsDeviceActionRpc,
   WsSubscribeDeviceStateRpc,
   WsSubscribeServerConfigRpc,
+  WsServerGetRelayStatusRpc,
+  WsServerConfigureRelayRpc,
+  WsServerDisconnectRelayRpc,
   WsSubscribeServerLifecycleRpc,
   WsSubscribeAuthAccessRpc,
   WsSubscribeResourceTelemetryRpc,

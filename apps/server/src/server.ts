@@ -157,7 +157,7 @@ import * as EventLoopMonitor from "./observability/EventLoopMonitor.ts";
 import * as ServerEnvironment from "./environment/ServerEnvironment.ts";
 import * as DirectEndpoints from "./environment/DirectEndpoints.ts";
 import * as RemoteOpenTargets from "./environment/RemoteOpenTargets.ts";
-import { makeRelayTunnelLayer } from "./relay/RelayTunnelClient.ts";
+import { makeRelayTunnelServiceLayer } from "./relay/RelayTunnelService.ts";
 import * as AuthHttp from "./auth/http.ts";
 import * as ReplayMarkers from "./auth/replayMarkers.ts";
 import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
@@ -1060,10 +1060,14 @@ const layerMakeServer = Layer.unwrap(
       ).pipe(Effect.asVoid),
     }).pipe(Layer.provideMerge(layerRuntimeDependencies), Layer.provide(layerLauncher));
 
-    const layerRoutes = HttpRouter.serve(layerMakeRoutes.pipe(Layer.provide(layerLauncher)), {
-      disableLogger: !config.logWebSocketEvents,
-      routerConfig: HTTP_ROUTER_CONFIG,
-    }).pipe(
+    const layerRelayTunnel = makeRelayTunnelServiceLayer(awaitActivation);
+    const layerRoutes = HttpRouter.serve(
+      layerMakeRoutes.pipe(Layer.provide(layerLauncher), Layer.provide(layerRelayTunnel)),
+      {
+        disableLogger: !config.logWebSocketEvents,
+        routerConfig: HTTP_ROUTER_CONFIG,
+      },
+    ).pipe(
       withUntracedRequests,
       withRootRequestSpans,
       Layer.tap(() => Deferred.succeed(routesReady, undefined).pipe(Effect.orDie)),
@@ -1074,7 +1078,6 @@ const layerMakeServer = Layer.unwrap(
       layerDesktopReadySignal,
       layerRuntimeState.pipe(Layer.provide(layerLauncher)),
       layerTailscaleServe,
-      makeRelayTunnelLayer(awaitActivation),
       HeapSnapshot.layer,
     );
 

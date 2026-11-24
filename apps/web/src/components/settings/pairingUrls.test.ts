@@ -21,4 +21,17 @@ describe("settings pairing URL helpers", () => {
       "https://preview.code.ankiel.com/pair?host=https%3A%2F%2Fhost.tailnet.example.ts.net%3A3773#token=PAIRCODE",
     );
   });
+
+  it("preserves /h/<hostId>/ relay base paths in desktop and hosted pairing URLs", () => {
+    vi.stubEnv("VITE_HOSTED_APP_URL", "https://app.code.ankiel.com");
+    const hostId = "abcdefghijklmnopqrstuvwxyz".replace(/[0189]/g, "a");
+    const relayBase = `https://ankiel-relay.example.workers.dev/h/${hostId}`;
+
+    expect(resolveDesktopPairingUrl(relayBase, "PAIRCODE")).toBe(
+      `https://ankiel-relay.example.workers.dev/h/${hostId}/pair#token=PAIRCODE`,
+    );
+    expect(resolveHostedPairingUrl(relayBase, "PAIRCODE")).toBe(
+      `https://app.code.ankiel.com/pair?host=${encodeURIComponent(relayBase)}#token=PAIRCODE`,
+    );
+  });
 });

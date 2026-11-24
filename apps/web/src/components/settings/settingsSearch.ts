@@ -1370,6 +1370,13 @@ export const SETTINGS_SEARCH_ITEMS = [
     localBackendManagementOnly: true,
   },
   {
+    id: "remote-relay",
+    title: msg("Remote relay"),
+    to: "/settings/access",
+    targetId: "connections-environment",
+    searchTerms: [msg("cloudflare relay tunnel worker mobile qr remote access setup string")],
+  },
+  {
     id: "wsl-backend",
     title: msg("WSL backend"),
     to: "/settings/access",

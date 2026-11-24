@@ -1,9 +1,10 @@
 import { buildHostedPairingUrl } from "../../hostedPairing";
-import { setPairingTokenOnUrl } from "@ankielcode/shared/remote";
+import { extractRelayBasePath, setPairingTokenOnUrl } from "@ankielcode/shared/remote";
 
 export function resolveDesktopPairingUrl(endpointUrl: string, credential: string): string {
   const url = new URL(endpointUrl);
-  url.pathname = "/pair";
+  const basePath = extractRelayBasePath(url.pathname);
+  url.pathname = basePath === "/" ? "/pair" : `${basePath}pair`;
   return setPairingTokenOnUrl(url, credential).toString();
 }
 

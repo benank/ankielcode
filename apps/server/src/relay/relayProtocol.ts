@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:off - Relay setup files live alongside stateDir.
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 
@@ -334,10 +335,21 @@ function readStoredRelaySecret(stateDir: string): string | undefined {
   }
 }
 
-export function resolveRelaySetupFromEnvOrFile(
+export function removeRelaySetupFromStateDir(stateDir: string): void {
+  const configPath = NodePath.join(stateDir, "relay.json");
+  const secretPath = NodePath.join(stateDir, "secrets", RELAY_SECRET_FILENAME);
+  if (NodeFS.existsSync(configPath)) {
+    NodeFS.rmSync(configPath, { force: true });
+  }
+  if (NodeFS.existsSync(secretPath)) {
+    NodeFS.rmSync(secretPath, { force: true });
+  }
+}
+
+export function resolveRelaySetupSourceFromEnvOrFile(
   stateDir: string,
   env: NodeJS.ProcessEnv = process.env,
-): RelaySetupConfig | null {
+): { readonly config: RelaySetupConfig; readonly source: "env" | "file" } | null {
   const envMode = env.ANKIEL_RELAY_ROUTING_MODE?.trim().toLowerCase();
   const routingMode: RelayRoutingMode | undefined =
     envMode === "path" || envMode === "subdomain" ? envMode : undefined;
@@ -345,18 +357,24 @@ export function resolveRelaySetupFromEnvOrFile(
 
   const envSetup = env.ANKIEL_RELAY_SETUP?.trim();
   if (envSetup) {
-    return parseRelaySetupString(envSetup, {
-      ...(envSecret ? { secret: envSecret } : {}),
-      ...(routingMode ? { routingMode } : {}),
-    });
+    return {
+      config: parseRelaySetupString(envSetup, {
+        ...(envSecret ? { secret: envSecret } : {}),
+        ...(routingMode ? { routingMode } : {}),
+      }),
+      source: "env",
+    };
   }
 
   const envUrl = env.ANKIEL_RELAY_URL?.trim();
   if (envUrl) {
-    return parseRelaySetupString(envUrl, {
-      ...(envSecret ? { secret: envSecret } : {}),
-      ...(routingMode ? { routingMode } : {}),
-    });
+    return {
+      config: parseRelaySetupString(envUrl, {
+        ...(envSecret ? { secret: envSecret } : {}),
+        ...(routingMode ? { routingMode } : {}),
+      }),
+      source: "env",
+    };
   }
 
   const configPath = NodePath.join(stateDir, "relay.json");
@@ -374,11 +392,21 @@ export function resolveRelaySetupFromEnvOrFile(
       storedSecret ?? (typeof raw.secret === "string" ? raw.secret.trim() : undefined);
     const fileMode =
       raw.routingMode === "path" || raw.routingMode === "subdomain" ? raw.routingMode : undefined;
-    return parseRelaySetupString(rawTarget, {
-      ...(fileSecret ? { secret: fileSecret } : {}),
-      ...(fileMode ? { routingMode: fileMode } : {}),
-    });
+    return {
+      config: parseRelaySetupString(rawTarget, {
+        ...(fileSecret ? { secret: fileSecret } : {}),
+        ...(fileMode ? { routingMode: fileMode } : {}),
+      }),
+      source: "file",
+    };
   } catch {
     return null;
   }
+}
+
+export function resolveRelaySetupFromEnvOrFile(
+  stateDir: string,
+  env: NodeJS.ProcessEnv = process.env,
+): RelaySetupConfig | null {
+  return resolveRelaySetupSourceFromEnvOrFile(stateDir, env)?.config ?? null;
 }

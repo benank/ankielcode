@@ -1,4 +1,4 @@
-// @effect-diagnostics nodeBuiltinImport:off - Local HTTP reverse-proxy dispatch uses node:http directly.
+// @effect-diagnostics nodeBuiltinImport:off globalRandom:off globalTimers:off - Local HTTP/WS reverse-proxy and reconnect loop use Node timers and node:http directly.
 import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodeFSP from "node:fs/promises";
@@ -6,15 +6,11 @@ import * as NodeHttp from "node:http";
 import * as NodePath from "node:path";
 
 import * as NodeWS from "@effect/platform-node/NodeWS";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import { HttpServer } from "effect/http";
 
 const WebSocket = NodeWS.WebSocket;
 type WebSocketInstance = InstanceType<typeof NodeWS.WebSocket>;
 type RawData = Buffer | ArrayBuffer | Buffer[];
 
-import * as ServerConfig from "../config.ts";
 import {
   BINARY_FRAME_HTTP_REQ_BODY,
   BINARY_FRAME_HTTP_RES_BODY,
@@ -28,7 +24,6 @@ import {
   encodeBinaryFrame,
   publicRelayForwardedPrefix,
   publicRelayHostHeader,
-  resolveRelaySetupFromEnvOrFile,
   signRelaySecret,
   type HeaderEntries,
   type RelaySetupConfig,
@@ -70,14 +65,14 @@ export function resolveTrustedRelayForwardedPrefix(
 export interface RelayHostIdentity {
   readonly hostId: string;
   readonly publicKeyBase64Url: string;
-  readonly privateKey: CryptoKey;
+  readonly privateKey: NodeCrypto.webcrypto.CryptoKey;
 }
 
 interface StoredRelayHostIdentity {
   readonly version: 1;
   readonly hostId: string;
   readonly publicKeyBase64Url: string;
-  readonly privateKeyJwk: JsonWebKey;
+  readonly privateKeyJwk: NodeCrypto.webcrypto.JsonWebKey;
 }
 
 export async function loadOrCreateRelayHostIdentity(
@@ -98,7 +93,7 @@ export async function loadOrCreateRelayHostIdentity(
   const keyPair = (await crypto.subtle.generateKey("Ed25519", true, [
     "sign",
     "verify",
-  ])) as CryptoKeyPair;
+  ])) as NodeCrypto.webcrypto.CryptoKeyPair;
   const rawPub = new Uint8Array(await crypto.subtle.exportKey("raw", keyPair.publicKey));
   const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
   const hostId = await deriveHostId(rawPub);
@@ -152,6 +147,7 @@ export interface RelayTunnelClientOptions {
 export interface RelayTunnelHandle {
   readonly hostId: string;
   readonly publicBaseUrl: string;
+  readonly isConnected: () => boolean;
   readonly waitUntilReady: (timeoutMs?: number) => Promise<void>;
   readonly stop: () => Promise<void>;
 }
@@ -378,7 +374,9 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
 
     let msg: RelayToHostMessage;
     try {
-      msg = JSON.parse(rawDataToUint8Array(data).toString("utf8")) as RelayToHostMessage;
+      msg = JSON.parse(
+        Buffer.from(rawDataToUint8Array(data)).toString("utf8"),
+      ) as RelayToHostMessage;
     } catch {
       return;
     }
@@ -500,6 +498,7 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
   return {
     hostId: identity.hostId,
     publicBaseUrl,
+    isConnected: () => isReady,
     waitUntilReady: (timeoutMs = 10_000) => {
       if (isReady) return Promise.resolve();
       return new Promise<void>((resolve, reject) => {
@@ -543,68 +542,3 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
     },
   };
 }
-
-/**
- * Effect Layer that connects the local server to a configured self-hosted Cloudflare Relay
- * (`ANKIEL_RELAY_SETUP`, `ANKIEL_RELAY_URL`, or `<stateDir>/relay.json`) once HTTP listening starts.
- */
-export const makeRelayTunnelLayer = (awaitActivation: Effect.Effect<void>) =>
-  Layer.effectDiscard(
-    Effect.acquireRelease(
-      Effect.gen(function* () {
-        const config = yield* ServerConfig.ServerConfig;
-        const setup = resolveRelaySetupFromEnvOrFile(config.stateDir);
-        if (!setup) {
-          return null;
-        }
-        yield* awaitActivation;
-        const server = yield* HttpServer.HttpServer;
-        const address = server.address;
-        if (typeof address === "string" || !("port" in address)) {
-          return null;
-        }
-        const localPort = address.port;
-        const rawHost =
-          "address" in address && typeof address.address === "string"
-            ? address.address
-            : "127.0.0.1";
-        const localHost =
-          rawHost === "0.0.0.0" || rawHost === "::" || rawHost === "" ? "127.0.0.1" : rawHost;
-        const legacyIdentityPath = NodePath.join(config.stateDir, "relay-host-identity.json");
-        const secretsIdentityPath = NodePath.join(
-          config.stateDir,
-          "secrets",
-          "relay-host-identity.json",
-        );
-        const identityPath = NodeFS.existsSync(legacyIdentityPath)
-          ? legacyIdentityPath
-          : secretsIdentityPath;
-        const identity = yield* Effect.promise(() => loadOrCreateRelayHostIdentity(identityPath));
-        const handle = startRelayTunnelClient({
-          setup,
-          identity,
-          localHost,
-          localPort,
-          onReady: (publicBaseUrl) => {
-            void Effect.runPromise(
-              Effect.logInfo("Cloudflare relay tunnel connected", {
-                hostId: identity.hostId,
-                publicBaseUrl,
-                routingMode: setup.routingMode,
-              }),
-            );
-          },
-          onError: (message, cause) => {
-            void Effect.runPromise(Effect.logWarning(message, { cause }));
-          },
-        });
-        yield* Effect.logInfo("Cloudflare relay tunnel starting", {
-          hostId: identity.hostId,
-          relayOrigin: setup.relayOrigin,
-          publicBaseUrl: handle.publicBaseUrl,
-        });
-        return handle;
-      }),
-      (handle) => (handle ? Effect.promise(() => handle.stop()) : Effect.void),
-    ),
-  );

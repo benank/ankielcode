@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:off cryptoRandomUUID:off globalFetch:off - Test spins up real Node HTTP/WS servers.
 import * as NodeWS from "@effect/platform-node/NodeWS";
 import * as NodeFS from "node:fs";
 import * as NodeHttp from "node:http";
@@ -12,7 +13,9 @@ import {
   buildPublicRelayBaseUrl,
   formatRelaySetupString,
   parseRelaySetupString,
+  removeRelaySetupFromStateDir,
   resolveRelaySetupFromEnvOrFile,
+  resolveRelaySetupSourceFromEnvOrFile,
   saveRelaySetupToStateDir,
 } from "./relayProtocol.ts";
 import {
@@ -121,6 +124,32 @@ describe("relayProtocol", () => {
       secret: "top-secret-value",
       routingMode: "subdomain",
     });
+
+    expect(resolveRelaySetupSourceFromEnvOrFile(dir, {})).toEqual({
+      source: "file",
+      config: {
+        relayOrigin: "https://relay.ankiel.com",
+        secret: "top-secret-value",
+        routingMode: "subdomain",
+      },
+    });
+    expect(
+      resolveRelaySetupSourceFromEnvOrFile(dir, {
+        ANKIEL_RELAY_SETUP: "ankiel-relay://override.workers.dev#env-secret",
+      }),
+    ).toEqual({
+      source: "env",
+      config: {
+        relayOrigin: "https://override.workers.dev",
+        secret: "env-secret",
+        routingMode: "path",
+      },
+    });
+
+    removeRelaySetupFromStateDir(dir);
+    expect(NodeFS.existsSync(saved.configPath)).toBe(false);
+    expect(NodeFS.existsSync(saved.secretPath!)).toBe(false);
+    expect(resolveRelaySetupSourceFromEnvOrFile(dir, {})).toBeNull();
   });
 
   it("persists and reloads the same Ed25519 host identity", async () => {

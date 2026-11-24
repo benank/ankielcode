@@ -264,6 +264,9 @@ const RPC_AGGREGATES = {
   [WS_METHODS.subscribeDeviceState]: "device",
   [WS_METHODS.subscribeServerConfig]: "server",
   [WS_METHODS.subscribeServerLifecycle]: "server",
+  [WS_METHODS.serverGetRelayStatus]: "server",
+  [WS_METHODS.serverConfigureRelay]: "server",
+  [WS_METHODS.serverDisconnectRelay]: "server",
   [WS_METHODS.subscribeAuthAccess]: "auth",
 } as const satisfies Readonly<Record<WsRpcMethod, string>>;
 

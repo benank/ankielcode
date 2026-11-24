@@ -3,7 +3,11 @@ import * as DateTime from "effect/DateTime";
 import { msg } from "gt-react";
 
 import { resolveDesktopPairingUrl, resolveHostedPairingUrl } from "./pairingUrls";
-import { getPairingTokenFromUrl, setPairingTokenOnUrl } from "@ankielcode/shared/remote";
+import {
+  extractRelayBasePath,
+  getPairingTokenFromUrl,
+  setPairingTokenOnUrl,
+} from "@ankielcode/shared/remote";
 import { readHostedPairingRequest } from "../../hostedPairing";
 import { m, type MessageResolver } from "../../i18n/messages";
 import {
@@ -24,6 +28,7 @@ import {
   type DesktopUpdateState,
   type DesktopWslState,
   type EnvironmentId,
+  type RelayTunnelStatus,
   type ServerAuthPolicy,
   type ServerDirectEndpoint,
 } from "@ankielcode/contracts";
@@ -256,7 +261,10 @@ export function parsePairingUrlFields(
       /^[a-zA-Z][a-zA-Z\d+.-]*:\/\//u.test(trimmed) || trimmed.startsWith("//")
         ? trimmed
         : `https://${trimmed}`;
-    const url = new URL(urlLikeInput, window.location.origin);
+    const url = new URL(
+      urlLikeInput,
+      typeof window !== "undefined" ? window.location.origin : "http://localhost",
+    );
     const hostedPairingRequest = readHostedPairingRequest(url);
     if (hostedPairingRequest) {
       return {
@@ -267,8 +275,9 @@ export function parsePairingUrlFields(
 
     const pairingCode = getPairingTokenFromUrl(url);
     if (!pairingCode) return null;
+    const basePath = extractRelayBasePath(url.pathname);
     return {
-      host: url.origin,
+      host: basePath === "/" ? url.origin : `${url.origin}${basePath.slice(0, -1)}`,
       pairingCode,
     };
   } catch {
@@ -413,6 +422,38 @@ export function isTailscaleHttpsEndpoint(endpoint: AdvertisedEndpoint): boolean 
   return endpoint.id.startsWith("tailscale-magicdns:");
 }
 
+export function relayStatusToAdvertisedEndpoint(
+  status: RelayTunnelStatus | null,
+  resolve: MessageResolver = m,
+): AdvertisedEndpoint | null {
+  if (!status || !status.connected || !status.publicBaseUrl || !status.hostId) {
+    return null;
+  }
+  const httpBaseUrl = status.publicBaseUrl.replace(/\/+$/u, "");
+  const wsBaseUrl = httpBaseUrl.replace(/^http/iu, "ws");
+  const isHttps = httpBaseUrl.startsWith("https://");
+  const label = resolve(msg("Cloudflare Relay"));
+  return {
+    id: `cloudflare-relay:${status.hostId}`,
+    label,
+    provider: {
+      id: "cloudflare-relay",
+      label,
+      kind: "tunnel",
+      isAddon: false,
+    },
+    httpBaseUrl,
+    wsBaseUrl,
+    reachability: "public",
+    compatibility: {
+      hostedHttpsApp: isHttps ? "compatible" : "mixed-content-blocked",
+      desktopApp: "compatible",
+    },
+    source: "server",
+    status: "available",
+  };
+}
+
 export function endpointDefaultPreferenceKey(endpoint: AdvertisedEndpoint): string {
   if (endpoint.id.startsWith("desktop-loopback:")) {
     return "desktop-core:loopback:http";
@@ -425,6 +466,9 @@ export function endpointDefaultPreferenceKey(endpoint: AdvertisedEndpoint): stri
   }
   if (isTailscaleHttpsEndpoint(endpoint)) {
     return "tailscale:magicdns:https";
+  }
+  if (endpoint.id.startsWith("cloudflare-relay:")) {
+    return "cloudflare-relay:public:https";
   }
 
   let scheme = "unknown";
@@ -452,11 +496,16 @@ export function resolveCurrentOriginPairingUrl(
   credential: string,
   currentHref: string = window.location.href,
 ): string | null {
-  const url = new URL("/pair", currentHref);
+  const currentUrl = new URL(currentHref);
   // The packaged desktop window loads from ankielcode://app, which no other device can open.
-  if ((url.protocol !== "http:" && url.protocol !== "https:") || isLoopbackHostname(url.hostname)) {
+  if (
+    (currentUrl.protocol !== "http:" && currentUrl.protocol !== "https:") ||
+    isLoopbackHostname(currentUrl.hostname)
+  ) {
     return null;
   }
+  const basePath = extractRelayBasePath(currentUrl.pathname);
+  const url = new URL(basePath === "/" ? "/pair" : `${basePath}pair`, currentUrl.origin);
   return setPairingTokenOnUrl(url, credential).toString();
 }
 

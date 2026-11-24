@@ -575,6 +575,10 @@
       "types": "./src/state/mcpApps.ts",
       "default": "./src/state/mcpApps.ts"
     },
+    "./state/relayTunnel": {
+      "types": "./src/state/relayTunnel.ts",
+      "default": "./src/state/relayTunnel.ts"
+    },
     "./source-control-clients": {
       "types": "./src/sourceControlClients.ts",
       "default": "./src/sourceControlClients.ts"

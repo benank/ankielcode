@@ -91,6 +91,7 @@ import {
   supportsDesktopAppUpdate,
 } from "~/versionSkew";
 import { authEnvironment } from "~/state/auth";
+import { relayTunnelEnvironment } from "~/state/relayTunnel";
 import { environmentCatalog } from "~/connection/catalog";
 import {
   readEnvironmentScope,
@@ -131,7 +132,9 @@ import {
   isServerNetworkAccessible,
   isTailscaleHttpsEndpoint,
   endpointDefaultPreferenceKey,
+  relayStatusToAdvertisedEndpoint,
 } from "./ConnectionsSettings.logic";
+import { RemoteRelaySettingsRow } from "./RemoteRelaySettingsRow";
 import {
   AdvertisedEndpointListRow,
   AuthorizedClientsHeaderAction,
@@ -424,6 +427,15 @@ function ConnectionsSettingsContent({
       ? authEnvironment.accessChanges({
           environmentId: accessEnvironmentId,
           input: null,
+        })
+      : null,
+    m,
+  );
+  const relayTunnelStatus = useEnvironmentQuery(
+    showsAccess && canReadAccess && accessEnvironmentId !== null
+      ? relayTunnelEnvironment.status({
+          environmentId: accessEnvironmentId,
+          input: {},
         })
       : null,
     m,
@@ -763,22 +775,25 @@ function ConnectionsSettingsContent({
 
   const updateAccessSettings = useUpdateEnvironmentSettings(accessEnvironmentId);
   const tailscaleHttpsEndpoint = desktopAdvertisedEndpoints.find(isTailscaleHttpsEndpoint) ?? null;
+  const relayAdvertisedEndpoint = relayStatusToAdvertisedEndpoint(relayTunnelStatus.data, m);
+  const extraTunnelEndpoints = [
+    ...(tailscaleHttpsEndpoint ? [tailscaleHttpsEndpoint] : []),
+    ...(relayAdvertisedEndpoint ? [relayAdvertisedEndpoint] : []),
+  ];
   const visibleDesktopNetworkAdvertisedEndpoints = isLocalBackendNetworkAccessible
     ? desktopAdvertisedEndpoints.filter((endpoint) => !isTailscaleHttpsEndpoint(endpoint))
     : [];
-  const visibleDesktopAdvertisedEndpoints = tailscaleHttpsEndpoint
-    ? [...visibleDesktopNetworkAdvertisedEndpoints, tailscaleHttpsEndpoint]
-    : visibleDesktopNetworkAdvertisedEndpoints;
+  const visibleDesktopAdvertisedEndpoints = [
+    ...visibleDesktopNetworkAdvertisedEndpoints,
+    ...extraTunnelEndpoints,
+  ];
   const defaultDesktopNetworkAdvertisedEndpoint = selectPairingEndpoint(
     visibleDesktopNetworkAdvertisedEndpoints,
     defaultAdvertisedEndpointKey,
   );
   const defaultDesktopAdvertisedEndpoint =
     defaultDesktopNetworkAdvertisedEndpoint ??
-    selectPairingEndpoint(
-      tailscaleHttpsEndpoint ? [tailscaleHttpsEndpoint] : [],
-      defaultAdvertisedEndpointKey,
-    );
+    selectPairingEndpoint(extraTunnelEndpoints, defaultAdvertisedEndpointKey);
   const defaultDesktopAdvertisedEndpointKey = defaultDesktopAdvertisedEndpoint
     ? endpointDefaultPreferenceKey(defaultDesktopAdvertisedEndpoint)
     : null;
@@ -1318,6 +1333,16 @@ function ConnectionsSettingsContent({
               </>
             ) : canManageLocalBackend ? (
               renderDisabledNetworkAccessRow()
+            ) : null}
+            {canReadAccess && accessEnvironmentId !== null ? (
+              <RemoteRelaySettingsRow
+                title={searchableSetting("remote-relay").title}
+                environmentId={accessEnvironmentId}
+                status={relayTunnelStatus.data}
+                isLoading={relayTunnelStatus.isPending && relayTunnelStatus.data === null}
+                queryError={relayTunnelStatus.error}
+                canWriteAccess={canWriteAccess}
+              />
             ) : null}
             {accessServerConfig?.environment.capabilities.previewTunnelSetting ? (
               <SettingsRow

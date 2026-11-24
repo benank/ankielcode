@@ -4,6 +4,8 @@ import {
   applyWslEnableSelection,
   isServerNetworkAccessible,
   parseManualDesktopSshTarget,
+  parsePairingUrlFields,
+  relayStatusToAdvertisedEndpoint,
   resolveAccessEnvironmentId,
   resolveCurrentOriginPairingUrl,
   resolveTailscaleServeBaseUrl,
@@ -60,9 +62,66 @@ describe("resolveCurrentOriginPairingUrl", () => {
     ["http://127.0.0.1:3774/settings", null],
     ["http://localhost:5173/", null],
     ["https://host.example.ts.net/settings", "https://host.example.ts.net/pair#token=abc"],
+    [
+      "https://relay.example.workers.dev/h/aaaaaaaaaaaaaaaaaaaaaaaaaa/settings",
+      "https://relay.example.workers.dev/h/aaaaaaaaaaaaaaaaaaaaaaaaaa/pair#token=abc",
+    ],
     ["http://192.168.1.20:3773/", "http://192.168.1.20:3773/pair#token=abc"],
   ])("from %s", (href, expected) => {
     expect(resolveCurrentOriginPairingUrl("abc", href)).toBe(expected);
+  });
+});
+
+describe("relay pairing helpers", () => {
+  it("preserves /h/<hostId> when parsing direct relay pairing URLs", () => {
+    const hostId = "aaaaaaaaaaaaaaaaaaaaaaaaaa";
+    expect(
+      parsePairingUrlFields(`https://relay.example.workers.dev/h/${hostId}/pair#token=PAIRCODE`),
+    ).toEqual({
+      host: `https://relay.example.workers.dev/h/${hostId}`,
+      pairingCode: "PAIRCODE",
+    });
+  });
+
+  it("converts connected relay tunnel status into a QR-shareable advertised endpoint", () => {
+    const hostId = "aaaaaaaaaaaaaaaaaaaaaaaaaa";
+    expect(
+      relayStatusToAdvertisedEndpoint({
+        configured: true,
+        connected: false,
+        relayOrigin: "https://relay.ankiel.com",
+        routingMode: "subdomain",
+        hostId,
+        publicBaseUrl: `https://${hostId}.relay.ankiel.com/`,
+        hasSecret: true,
+        source: "file",
+        lastError: null,
+      }),
+    ).toBeNull();
+
+    expect(
+      relayStatusToAdvertisedEndpoint({
+        configured: true,
+        connected: true,
+        relayOrigin: "https://relay.ankiel.com",
+        routingMode: "subdomain",
+        hostId,
+        publicBaseUrl: `https://${hostId}.relay.ankiel.com/`,
+        hasSecret: true,
+        source: "file",
+        lastError: null,
+      }),
+    ).toMatchObject({
+      id: `cloudflare-relay:${hostId}`,
+      httpBaseUrl: `https://${hostId}.relay.ankiel.com`,
+      wsBaseUrl: `wss://${hostId}.relay.ankiel.com`,
+      reachability: "public",
+      status: "available",
+      compatibility: {
+        hostedHttpsApp: "compatible",
+        desktopApp: "compatible",
+      },
+    });
   });
 });
 

@@ -82,6 +82,7 @@ import {
   ProjectMutationError,
   ProviderUploadFeedbackError,
   ProviderSetupError,
+  RelayTunnelError,
   type ServerConfig as ClientServerConfig,
   type ServerConfigStreamEvent,
   type ServerLifecycleStreamEvent,
@@ -237,6 +238,7 @@ import * as RepositoryIdentityResolver from "./project/RepositoryIdentityResolve
 import * as WorktreeSetupTracker from "./project/WorktreeSetupTracker.ts";
 import * as ServerEnvironment from "./environment/ServerEnvironment.ts";
 import * as DirectEndpoints from "./environment/DirectEndpoints.ts";
+import * as RelayTunnelService from "./relay/RelayTunnelService.ts";
 import * as RemoteOpenTargets from "./environment/RemoteOpenTargets.ts";
 import * as DefectReporter from "./observability/DefectReporter.ts";
 import * as EventLoopMonitor from "./observability/EventLoopMonitor.ts";
@@ -1442,6 +1444,7 @@ export const layerWsRpc = (
       const externalLauncher = yield* ExternalLauncher.ExternalLauncher;
       const remoteOpenTargets = yield* RemoteOpenTargets.RemoteOpenTargets;
       const directEndpoints = yield* DirectEndpoints.DirectEndpoints;
+      const relayTunnel = yield* Effect.serviceOption(RelayTunnelService.RelayTunnelService);
       const gitWorkflow = yield* GitWorkflowService.GitWorkflowService;
       const review = yield* ReviewService.ReviewService;
       const vcsProvisioning = yield* VcsProvisioningService.VcsProvisioningService;
@@ -2647,6 +2650,42 @@ export const layerWsRpc = (
         [WS_METHODS.serverGetStorageCleanupReport]: () => storageCleanup.reports,
         [WS_METHODS.serverGetDatabaseStorage]: () => databaseStorage.status,
         [WS_METHODS.serverReclaimDatabaseSpace]: () => databaseStorage.requestReclaim,
+        [WS_METHODS.serverGetRelayStatus]: () =>
+          Option.match(relayTunnel, {
+            onNone: () =>
+              Effect.succeed({
+                configured: false,
+                connected: false,
+                relayOrigin: null,
+                routingMode: null,
+                hostId: null,
+                publicBaseUrl: null,
+                hasSecret: false,
+                source: "none" as const,
+                lastError: null,
+              }),
+            onSome: (service) => service.getStatus,
+          }),
+        [WS_METHODS.serverConfigureRelay]: (input) =>
+          Option.match(relayTunnel, {
+            onNone: () =>
+              Effect.fail(
+                new RelayTunnelError({
+                  message: "Relay tunnel service is unavailable.",
+                }),
+              ),
+            onSome: (service) => service.configure(input),
+          }),
+        [WS_METHODS.serverDisconnectRelay]: () =>
+          Option.match(relayTunnel, {
+            onNone: () =>
+              Effect.fail(
+                new RelayTunnelError({
+                  message: "Relay tunnel service is unavailable.",
+                }),
+              ),
+            onSome: (service) => service.disconnect,
+          }),
         [WS_METHODS.peerLinksList]: (_input) =>
           peerLinks.list.pipe(Effect.map((links) => ({ links }))),
         [WS_METHODS.peerLinksNames]: (_input) =>
