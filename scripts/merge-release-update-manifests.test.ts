@@ -80,4 +80,32 @@ it.layer(NodeServices.layer)("merge release update manifests", (it) => {
       assert.include(String(exit), `Incomplete ${platform} updater manifests`);
     }),
   );
+
+  it.effect(
+    "normalizes single-architecture macOS arm64 + Windows x64 when allowSingleArch is set",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const releaseAssetsDir = yield* fs.makeTempDirectoryScoped({
+          prefix: "merge-release-update-manifests-single-arch-",
+        });
+        yield* fs.writeFileString(
+          path.join(releaseAssetsDir, "latest-mac.yml"),
+          manifest("Ankiel-Code-1.2.3-arm64.zip"),
+        );
+        yield* fs.writeFileString(
+          path.join(releaseAssetsDir, "latest-win-x64.yml"),
+          manifest("Ankiel-Code-1.2.3-x64.exe"),
+        );
+
+        yield* mergeReleaseUpdateManifestFiles(releaseAssetsDir, { allowSingleArch: true });
+
+        const mac = yield* fs.readFileString(path.join(releaseAssetsDir, "latest-mac.yml"));
+        const win = yield* fs.readFileString(path.join(releaseAssetsDir, "latest.yml"));
+        assert.include(mac, "Ankiel-Code-1.2.3-arm64.zip");
+        assert.include(win, "Ankiel-Code-1.2.3-x64.exe");
+        assert.isFalse(yield* fs.exists(path.join(releaseAssetsDir, "latest-win-x64.yml")));
+      }),
+  );
 });
