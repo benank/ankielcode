@@ -202,8 +202,12 @@ function registerMacLauncherBundle(appBundlePath) {
 
 // Bundle-internal paths are macOS paths whatever host builds them.
 function resolveMacLauncherIconPaths(runtimeDir, development = isDevelopment) {
+  const sourceIconPath =
+    development && NodeFS.existsSync(developmentMacIconPngPath)
+      ? developmentMacIconPngPath
+      : productionMacIconPngPath;
   return {
-    sourceIconPath: development ? developmentMacIconPngPath : productionMacIconPngPath,
+    sourceIconPath,
     generatedIconPath: NodePath.posix.join(
       runtimeDir,
       development ? "icon-dev.icns" : "icon-prod.icns",
