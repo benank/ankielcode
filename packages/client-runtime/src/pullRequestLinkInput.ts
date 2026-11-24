@@ -1,5 +1,4 @@
 import type { RepositoryIdentity } from "@ankielcode/contracts";
-import { canonicalizeGitCafePullRequestUrl } from "@ankielcode/source-control-definitions/registry";
 
 import { sourceControlClients, type ChangeRequestTerminology } from "./sourceControlClients.ts";
 import { mFallback, msg } from "gt-i18n";
@@ -103,7 +102,7 @@ export function resolveLinkPullRequestInput(
         host: url.host,
         repository: url.repository,
         number: url.number,
-        url: canonicalizeGitCafePullRequestUrl(parsed),
+        url: parsed,
       },
     };
   }

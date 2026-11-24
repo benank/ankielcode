@@ -12,14 +12,7 @@
     "typecheck": "effect-tsgo tsrs --noEmit"
   },
   "dependencies": {
-    "@ankielcode/source-control-azure-devops": "workspace:*",
-    "@ankielcode/source-control-bitbucket": "workspace:*",
     "@ankielcode/source-control-core": "workspace:*",
-    "@ankielcode/source-control-cursor-origin": "workspace:*",
-    "@ankielcode/source-control-forgejo": "workspace:*",
-    "@ankielcode/source-control-gitcafe": "workspace:*",
-    "@ankielcode/source-control-github": "workspace:*",
-    "@ankielcode/source-control-gitlab": "workspace:*",
-    "@ankielcode/source-control-tanstack-source": "workspace:*"
+    "@ankielcode/source-control-github": "workspace:*"
   }
 }

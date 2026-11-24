@@ -512,7 +512,7 @@ export function defineSourceControl<const Definition extends SourceControlDefini
   return definition;
 }
 
-export function isChangeRequestAuthorityOfProject(
+function isChangeRequestAuthorityOfProject(
   identity: ChangeRequestProjectIdentity,
   link: ChangeRequestLink | CommitLink,
 ): boolean {

@@ -1,27 +1,7 @@
-import * as AzureDevOpsDriver from "@ankielcode/source-control-azure-devops/server/driver";
-import * as BitbucketDriver from "@ankielcode/source-control-bitbucket/server/driver";
-import * as CursorOriginDriver from "@ankielcode/source-control-cursor-origin/server/driver";
 import { builtInSourceControlDefinitions } from "@ankielcode/source-control-definitions/registry";
-import * as ForgejoDriver from "@ankielcode/source-control-forgejo/server/driver";
-import * as GitCafeDriver from "@ankielcode/source-control-gitcafe/server/driver";
 import * as GitHubDriver from "@ankielcode/source-control-github/server/driver";
-import * as GitLabDriver from "@ankielcode/source-control-gitlab/server/driver";
-import * as TanStackSourceDriver from "@ankielcode/source-control-tanstack-source/server/driver";
 
-/**
- * In the shared registry's order, which is the order hosts are listed and probed in. Feature
- * flags leave some out; see `builtInDrivers.ts`.
- */
-export const BUILT_IN_SOURCE_CONTROL_DRIVER_LIST = [
-  GitHubDriver.driver,
-  CursorOriginDriver.driver,
-  GitLabDriver.driver,
-  GitCafeDriver.driver,
-  TanStackSourceDriver.driver,
-  ForgejoDriver.driver,
-  BitbucketDriver.driver,
-  AzureDevOpsDriver.driver,
-];
+export const BUILT_IN_SOURCE_CONTROL_DRIVER_LIST = [GitHubDriver.driver];
 
 export const sourceControlDefinitions = builtInSourceControlDefinitions;
 
