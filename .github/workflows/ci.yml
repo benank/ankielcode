@@ -39,6 +39,16 @@ jobs:
             exit 1
           fi
 
+      - name: Reject committed Cloudflare/Wrangler state and secrets
+        run: |
+          files="$(git ls-files | grep -v '^\.repos/' \
+            | grep -E '(^|/)\.wrangler/|(^|/)\.mf/|(^|/)\.dev\.vars(\.|$)|(^|/)wrangler\.local\.' \
+            | grep -vE '(^|/)\.dev\.vars\.example$' || true)"
+          if test -n "$files"; then
+            printf 'Local Cloudflare/Wrangler state or secrets must not be committed:\n%s\n' "$files" >&2
+            exit 1
+          fi
+
       - name: Setup Vite+
         uses: ./.github/actions/setup-ci-deps
         with:
