@@ -2754,7 +2754,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       executableName: "ankielcode",
       icon: "icons",
       category: "Development",
-      synopsis: "Desktop GUI for coding agents",
+      synopsis: "All your agents in one spot.",
       maintainer: "Ankiel <hello@code.ankiel.com>",
       protocols: [
         {
@@ -3767,7 +3767,7 @@ const buildDesktopArtifactUnlocked = Effect.fn("buildDesktopArtifactUnlocked")(f
     private: true,
     packageManager: rootPackageJson.packageManager,
     description:
-      "Ankiel Code is an open-source desktop app for coding agents. Work with your existing agent subscriptions, review code changes, and run commands in your projects. Connect from desktop, web, or mobile to continue working remotely.",
+      "Use Claude Code, Codex, and every other coding harness in a single interface. Free and open source with self hosted sync for your phone.",
     license: "MIT",
     homepage: "https://code.ankiel.com",
     author: "Ankiel",

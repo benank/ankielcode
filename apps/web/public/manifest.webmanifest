@@ -2,6 +2,7 @@
   "id": "/",
   "name": "Ankiel Code",
   "short_name": "Ankiel Code",
+  "description": "Use Claude Code, Codex, and every other coding harness in a single interface. Free and open source with self hosted sync for your phone.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

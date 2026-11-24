@@ -6,16 +6,16 @@
 
 <h1 align="center">Ankiel Code</h1>
 
-<p align="center">A minimal, self-hosted GUI for coding agents.</p>
+<p align="center">All your agents in one spot.</p>
 
 <p align="center">
-  <a href="https://code.ankiel.com/download"><strong>Download</strong></a> ·
+  <a href="https://code.ankiel.com"><strong>Download</strong></a> ·
   <a href="https://app.code.ankiel.com">Web</a> ·
   <a href="./docs/README.md">Docs</a> ·
   <a href="https://github.com/benank/ankielcode/issues">Issues</a>
 </p>
 
-Ankiel Code runs the coding agents on your machine and gives them one fast interface. Start a thread at your desk, then approve the next step from your phone. You run the server, so your threads, code, and credentials stay on hardware you control.
+Use Claude Code, Codex, and every other coding harness in a single interface. Free and open source with self hosted sync for your phone. You run the server, so your threads, code, and credentials stay on hardware you control.
 
 It works with Claude Code, Codex, Cursor, OpenCode, Grok Build, Antigravity, Kiro, Pi, Muse Code, fx, and any [ACP](./docs/user/providers-acp.md) agent. If an agent is set up on your computer, Ankiel Code can control it.
 
@@ -36,7 +36,7 @@ Ankiel Code is forked from [T3 Code](https://github.com/pingdotgg/t3code) (MIT).
 
 ### Desktop app
 
-[Download Ankiel Code](https://code.ankiel.com/download) for macOS, Windows, or Linux, or take a build from [Releases](https://github.com/benank/ankielcode/releases).
+[Download Ankiel Code](https://code.ankiel.com) for macOS or Windows, or take a build from [Releases](https://github.com/benank/ankielcode/releases).
 
 ### Command line
 
