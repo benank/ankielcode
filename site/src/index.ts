@@ -1,4 +1,3 @@
-import { FAVICON_SVG, renderLandingPage } from "./page.ts";
 import { fetchLatestRelease, releasesPageUrl, type ReleaseSummary } from "./releases.ts";
 
 export interface Env {
@@ -18,6 +17,8 @@ function redirect(location: string, status: 302 | 301 = 302): Response {
     headers: {
       Location: location,
       "Cache-Control": "public, max-age=120",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
     },
   });
 }
@@ -77,15 +78,6 @@ export async function handleRequest(
     return Response.json({ ok: true, repo });
   }
 
-  if (pathname === "/favicon.svg") {
-    return new Response(FAVICON_SVG, {
-      headers: {
-        "Content-Type": "image/svg+xml; charset=utf-8",
-        "Cache-Control": "public, max-age=86400",
-      },
-    });
-  }
-
   if (pathname === "/releases") {
     return redirect(releasesPageUrl(repo));
   }
@@ -104,6 +96,7 @@ export async function handleRequest(
           headers: {
             "Cache-Control": "public, max-age=60",
             "Access-Control-Allow-Origin": "*",
+            "X-Content-Type-Options": "nosniff",
           },
         },
       );
@@ -112,6 +105,7 @@ export async function handleRequest(
       headers: {
         "Cache-Control": "public, max-age=300",
         "Access-Control-Allow-Origin": "*",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   }
@@ -124,21 +118,6 @@ export async function handleRequest(
     });
     const target = resolveDownloadTarget(pathname, release);
     return redirect(target ?? release?.releaseUrl ?? releasesPageUrl(repo));
-  }
-
-  if (pathname === "/") {
-    const release = await fetchLatestRelease({
-      repo,
-      fetcher: options.fetcher,
-      githubToken: env.GITHUB_TOKEN,
-    });
-    const html = renderLandingPage(repo, release);
-    return new Response(request.method === "HEAD" ? null : html, {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=120, stale-while-revalidate=300",
-      },
-    });
   }
 
   return new Response("Not Found", { status: 404 });

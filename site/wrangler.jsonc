@@ -6,6 +6,9 @@
   "observability": {
     "enabled": true,
   },
+  "assets": {
+    "directory": "./public",
+  },
   "routes": [
     {
       "pattern": "code.ankiel.com",

@@ -1,0 +1,14 @@
+# Ankiel Code
+
+All your agents in one spot.
+
+Use Claude Code, Codex, and every other coding harness in a single interface. Free and open source with self hosted sync for your phone.
+
+## Links
+
+- Website: https://code.ankiel.com/
+- Download for macOS: https://code.ankiel.com/download/mac
+- Download for Windows: https://code.ankiel.com/download/win
+- GitHub: https://github.com/benank/ankielcode
+- Latest release metadata (JSON): https://code.ankiel.com/api/latest
+- Ankiel: https://ankiel.com/

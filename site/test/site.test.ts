@@ -1,11 +1,17 @@
 import * as NodeAssert from "node:assert/strict";
+import * as NodeFS from "node:fs";
+import * as NodePath from "node:path";
 import * as NodeTest from "node:test";
+import * as NodeURL from "node:url";
 
 import { handleRequest } from "../src/index.ts";
 import { extractReleaseSummary, type GitHubReleasePayload } from "../src/releases.ts";
 
 const { describe, it } = NodeTest;
 const assert = NodeAssert;
+
+const SITE_DIR = NodePath.resolve(NodePath.dirname(NodeURL.fileURLToPath(import.meta.url)), "..");
+const PUBLIC_DIR = NodePath.join(SITE_DIR, "public");
 
 const SAMPLE_RELEASE: GitHubReleasePayload = {
   tag_name: "v0.2.0",
@@ -109,31 +115,42 @@ describe("extractReleaseSummary", () => {
   });
 });
 
+describe("static site & SEO assets", () => {
+  it("ships static HTML, OG preview, icons, robots, sitemap, llms.txt, and headers", () => {
+    for (const file of [
+      "index.html",
+      "og.png",
+      "favicon.svg",
+      "apple-touch-icon.png",
+      "robots.txt",
+      "sitemap.xml",
+      "llms.txt",
+      "_headers",
+    ]) {
+      const fullPath = NodePath.join(PUBLIC_DIR, file);
+      assert.ok(NodeFS.existsSync(fullPath), `Expected static asset ${file} to exist`);
+      assert.ok(
+        NodeFS.statSync(fullPath).size > 0,
+        `Expected static asset ${file} to be non-empty`,
+      );
+    }
+
+    const html = NodeFS.readFileSync(NodePath.join(PUBLIC_DIR, "index.html"), "utf8");
+    assert.match(html, /<link rel="canonical" href="https:\/\/code\.ankiel\.com\/" \/>/);
+    assert.match(html, /property="og:image" content="https:\/\/code\.ankiel\.com\/og\.png"/);
+    assert.match(html, /name="twitter:card" content="summary_large_image"/);
+    assert.match(html, /application\/ld\+json/);
+    assert.match(html, /All your agents<br\s*\/>in one spot\./);
+    assert.match(html, />Download for macOS<\/a>/);
+    assert.match(html, />Download for Windows<\/a>/);
+    assert.match(html, />GitHub<\/a>/);
+    assert.doesNotMatch(html, /Ankiel\s*\|/i);
+    assert.doesNotMatch(html, /SHA256SUMS/i);
+  });
+});
+
 describe("code.ankiel.com Worker routes", () => {
   const env = { GITHUB_REPO: "benank/ankielcode" };
-
-  it("serves the landing page with release version and download links", async () => {
-    const res = await handleRequest(new Request("https://code.ankiel.com/"), env, {
-      fetcher: mockFetcher(SAMPLE_RELEASE),
-    });
-    assert.equal(res.status, 200);
-    assert.match(res.headers.get("content-type") ?? "", /text\/html/);
-    const html = await res.text();
-    assert.match(html, /v0\.2\.0/);
-    assert.match(html, /href="\/download\/mac"/);
-    assert.match(html, /href="\/download\/win"/);
-    assert.match(html, /href="\/download\/checksums"/);
-  });
-
-  it("renders a graceful landing page before any release exists", async () => {
-    const res = await handleRequest(new Request("https://code.ankiel.com/"), env, {
-      fetcher: mockFetcher(null, 404),
-    });
-    assert.equal(res.status, 200);
-    const html = await res.text();
-    assert.match(html, /First release coming soon/);
-    assert.match(html, /https:\/\/github\.com\/benank\/ankielcode\/releases/);
-  });
 
   it("redirects /download/mac and /download/win directly to GitHub release artifacts", async () => {
     const macRes = await handleRequest(new Request("https://code.ankiel.com/download/mac"), env, {
@@ -201,13 +218,9 @@ describe("code.ankiel.com Worker routes", () => {
     assert.match(body.downloads.winX64Exe, /x64\.exe$/);
   });
 
-  it("serves /health, /favicon.svg, /releases, 404, and 405", async () => {
+  it("serves /health, /releases, 404, and 405", async () => {
     const health = await handleRequest(new Request("https://code.ankiel.com/health"), env);
     assert.equal(health.status, 200);
-
-    const icon = await handleRequest(new Request("https://code.ankiel.com/favicon.svg"), env);
-    assert.equal(icon.status, 200);
-    assert.match(icon.headers.get("content-type") ?? "", /image\/svg\+xml/);
 
     const releases = await handleRequest(new Request("https://code.ankiel.com/releases"), env);
     assert.equal(releases.status, 302);
@@ -217,7 +230,7 @@ describe("code.ankiel.com Worker routes", () => {
     assert.equal(notFound.status, 404);
 
     const methodNotAllowed = await handleRequest(
-      new Request("https://code.ankiel.com/", { method: "POST" }),
+      new Request("https://code.ankiel.com/download/mac", { method: "POST" }),
       env,
     );
     assert.equal(methodNotAllowed.status, 405);
