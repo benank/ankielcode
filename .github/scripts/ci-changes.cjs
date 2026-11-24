@@ -35,8 +35,6 @@ const RUST = /^native\/(resource-monitor|kde-snap-shot|hyprland-snap-shot)\//;
 
 // These tests read other packages without declaring dependencies.
 const TEST_ONLY_DEPS = {
-  // Evals import the server's source to test its real model-facing text.
-  "@ankielcode/evals": ["@ankielcode/cli"],
   "@ankielcode/provider-pi": ["@ankielcode/client-runtime"],
   "@ankielcode/scripts": [
     "@ankielcode/desktop",

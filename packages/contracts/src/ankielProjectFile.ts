@@ -7,7 +7,7 @@ import type { ProjectScopedServerSettingKey, ServerSettings } from "./settings.t
 
 export const ANKIEL_PROJECT_FILE_NAME = "ankiel.json";
 
-export const ANKIEL_PROJECT_FILE_SCHEMA_URL = "https://code.ankiel.com/schema/ankiel.json";
+const ANKIEL_PROJECT_FILE_SCHEMA_URL = "https://code.ankiel.com/schema/ankiel.json";
 
 const ANKIEL_PROJECT_FILE_PATH_MAX_LENGTH = 512;
 const ANKIEL_PROJECT_FILE_COMMAND_MAX_LENGTH = 4096;

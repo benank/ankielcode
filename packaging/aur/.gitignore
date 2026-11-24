@@ -1,9 +1,0 @@
-src/
-pkg/
-*.AppImage
-*.pkg.tar.zst
-.SRCINFO
-ankielcode-bin-*.png
-ankielcode-bin-*-LICENSE
-ankielcode-nightly-bin-*.png
-ankielcode-nightly-bin-*-LICENSE

@@ -21,7 +21,6 @@ const workspaceFiles = [
   "apps/mobile/modules/ankiel-source-text/package.json",
   "apps/mobile/modules/ankiel-review-diff/package.json",
   "apps/mobile/modules/ankiel-terminal/package.json",
-  "apps/marketing/package.json",
   "oxlint-plugin-ankielcode/package.json",
   "packages/client-runtime/package.json",
   "packages/contracts/package.json",
