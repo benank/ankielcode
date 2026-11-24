@@ -85,6 +85,7 @@ import {
   RelayTunnelError,
   type ServerConfig as ClientServerConfig,
   type ServerConfigStreamEvent,
+  type ServerDirectEndpoint,
   type ServerLifecycleStreamEvent,
   type ServerProvider,
   serverProviderDeltas,
