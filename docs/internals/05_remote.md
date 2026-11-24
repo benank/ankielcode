@@ -1,8 +1,8 @@
 # Remote architecture
 
-Each connection joins a client to one environment over HTTP and WebSocket. Direct access, Tailscale, and
-SSH change how the client reaches the server; they do not introduce a different
-execution model.
+Each connection joins a client to one environment over HTTP and WebSocket. Same-network (LAN)
+access and the self-hosted Cloudflare Relay change how the client reaches the server; they do not
+introduce a different execution model.
 
 ## Identity is independent of the route
 
@@ -14,8 +14,9 @@ execution model.
   sweep that recovery state as temp cleanup.
 - **Routes are untrusted hints.** Only the connecting client can prove reachability. Never fall back
   to loopback when a shareable endpoint is unavailable (loopback names the client's own machine).
-  Verify a direct or learned route answers as the expected environment before sending credentials,
-  and never let a token paired over HTTPS downgrade to plain HTTP.
+  Verify a direct or learned route answers as the expected environment before sending credentials.
+  A saved environment can hold both a Cloudflare Relay HTTPS route and a learned same-network LAN
+  route, switching between them transparently as the client moves on and off the host's network.
 - Pull request routing trust covers the saved route set: adding or changing a route revokes trust;
   reordering does not.
 
@@ -67,9 +68,10 @@ through `/api/preview/tunnel` on the environment's own origin:
 
 ## Access and process ownership are separate
 
-- Tailscale supplies an endpoint for normal pairing; auth remains the environment's responsibility.
-- [SSH cleanup](../../packages/ssh/src/tunnel.ts) stops a remote server only if the launcher started
-  it; a server discovered already running must survive client disconnect.
+- The self-hosted [Cloudflare Relay](../../relay/SETUP_CLOUDFLARE.md) supplies a public HTTPS
+  endpoint (either wildcard subdomain or `/h/<hostId>/` path-prefix) via an outbound host tunnel
+  authenticated with Ed25519 + `RELAY_SECRET` HMAC; client auth remains the environment's
+  responsibility.
 - Remote servers outlive client releases. Clients negotiate features via advertised capabilities
   rather than assuming version parity. Process replacement uses the
   [update protocol](./07_server-updates.md).

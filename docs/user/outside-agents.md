@@ -38,15 +38,15 @@ The copied URL uses the route this device is connected over, so an agent on
 the same device can reach it.
 
 - **An agent on your own computers** can use `localhost` on the host, or
-  any `https` address, such as
-  [Tailscale HTTPS](./remote-access.md#tailscale-https). Signing in sends the
+  any `https` address, such as your
+  [Cloudflare Relay](./remote-access.md#cloudflare-relay). Signing in sends the
   agent's credentials to the environment, and agents only do that over `https`
-  or to `localhost`. A plain-`http` LAN or Tailscale address, like
-  `http://100.x.y.z:3773`, lets an agent find the environment but not finish
+  or to `localhost`. A plain-`http` LAN address, like
+  `http://192.168.x.y:3773`, lets an agent find the environment but not finish
   signing in.
 - **A hosted agent**, such as ChatGPT or a bot running in the cloud, must reach
-  the environment from the internet, so it needs a public `https` address. A
-  Tailscale address only works from your own tailnet.
+  the environment from the internet, so it needs a public `https` address such
+  as your Cloudflare Relay URL.
 
 ## Approve a sign-in
 

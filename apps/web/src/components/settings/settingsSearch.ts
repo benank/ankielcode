@@ -1361,15 +1361,6 @@ export const SETTINGS_SEARCH_ITEMS = [
     localBackendManagementOnly: true,
   },
   {
-    id: "tailscale-https",
-    title: msg("Tailscale HTTPS"),
-    to: "/settings/access",
-    targetId: "connections-environment",
-    searchTerms: [msg("serve magicdns endpoint remote secure network")],
-    desktopOnly: true,
-    localBackendManagementOnly: true,
-  },
-  {
     id: "remote-relay",
     title: msg("Remote relay"),
     to: "/settings/access",

@@ -10,6 +10,8 @@ import {
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Stream from "effect/Stream";
+import * as SubscriptionRef from "effect/SubscriptionRef";
 import { HttpServer } from "effect/http";
 
 import * as ServerConfig from "../config.ts";
@@ -29,6 +31,7 @@ import {
 
 export interface RelayTunnelServiceShape {
   readonly getStatus: Effect.Effect<RelayTunnelStatus>;
+  readonly statusChanges: Stream.Stream<RelayTunnelStatus>;
   readonly configure: (
     input: RelayTunnelConfigureInput,
   ) => Effect.Effect<RelayTunnelStatus, RelayTunnelError>;
@@ -100,6 +103,10 @@ export const makeRelayTunnelServiceLayer = (awaitActivation: Effect.Effect<void>
         handle: null,
         lastError: null,
       };
+      const statusRef = yield* SubscriptionRef.make<RelayTunnelStatus>(buildStatus(state));
+      const publishStatus = () => {
+        void runPromise(SubscriptionRef.set(statusRef, buildStatus(state)));
+      };
 
       const resolveLocalEndpoint = (): { readonly host: string; readonly port: number } | null => {
         const address = server.address;
@@ -141,6 +148,7 @@ export const makeRelayTunnelServiceLayer = (awaitActivation: Effect.Effect<void>
           localPort: endpoint.port,
           onReady: (publicBaseUrl) => {
             state.lastError = null;
+            publishStatus();
             void runPromise(
               Effect.logInfo("Cloudflare relay tunnel connected", {
                 hostId: identity.hostId,
@@ -149,8 +157,12 @@ export const makeRelayTunnelServiceLayer = (awaitActivation: Effect.Effect<void>
               }),
             );
           },
+          onClose: () => {
+            publishStatus();
+          },
           onError: (message, cause) => {
             state.lastError = message;
+            publishStatus();
             void runPromise(Effect.logWarning(message, { cause }));
           },
         });
@@ -209,7 +221,9 @@ export const makeRelayTunnelServiceLayer = (awaitActivation: Effect.Effect<void>
             }),
         });
         yield* Effect.promise(() => startWithSetup(parsed, "file", true));
-        return buildStatus(state);
+        const nextStatus = buildStatus(state);
+        yield* SubscriptionRef.set(statusRef, nextStatus);
+        return nextStatus;
       });
 
       const disconnect = Effect.fn("RelayTunnelService.disconnect")(function* () {
@@ -231,11 +245,14 @@ export const makeRelayTunnelServiceLayer = (awaitActivation: Effect.Effect<void>
         state.setup = null;
         state.source = "none";
         state.lastError = null;
-        return buildStatus(state);
+        const nextStatus = buildStatus(state);
+        yield* SubscriptionRef.set(statusRef, nextStatus);
+        return nextStatus;
       });
 
       return RelayTunnelService.of({
         getStatus: getStatus(),
+        statusChanges: SubscriptionRef.changes(statusRef),
         configure,
         disconnect: disconnect(),
       });

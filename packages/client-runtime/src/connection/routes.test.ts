@@ -293,19 +293,21 @@ describe("learned routes", () => {
     ).toBeNull();
   });
 
-  it("keeps a token paired over HTTPS off plain HTTP addresses outside the tailnet", () => {
+  it("learns same-network LAN routes over an HTTPS-paired token while blocking plain HTTP public routes", () => {
     const entry = entryWithRoutes(lanOnly, [PUBLIC, SSH]);
     const routes = mergeLearnedRoutes({
       entry,
       activeRoute: PUBLIC,
       reported: [
         { kind: "lan", httpBaseUrl: "http://192.168.1.10:3773/" },
+        { kind: "public", httpBaseUrl: "http://desk.example.com:3773/" },
         { kind: "tailnet", httpBaseUrl: "http://100.101.102.103:3773/" },
         { kind: "tailnet", httpBaseUrl: "https://desk.tail1234.ts.net/" },
       ],
       allowInsecure: true,
     });
     expect(ids(routes)).toEqual([
+      `learned:${ENVIRONMENT_ID}:http://192.168.1.10:3773@public`,
       `learned:${ENVIRONMENT_ID}:http://100.101.102.103:3773@public`,
       `learned:${ENVIRONMENT_ID}:https://desk.tail1234.ts.net@public`,
       "public",
@@ -313,20 +315,82 @@ describe("learned routes", () => {
     ]);
   });
 
-  it("drops a stale plain HTTP route borrowing an HTTPS-paired token", () => {
-    const lanOrigin = "http://10.0.0.42:3773";
-    const stale = learned(`learned:${ENVIRONMENT_ID}:${lanOrigin}@public`, `${lanOrigin}/`);
+  it("drops a stale plain HTTP public route borrowing an HTTPS-paired token", () => {
+    const publicHttpOrigin = "http://desk.example.com:3773";
+    const stale = learned(
+      `learned:${ENVIRONMENT_ID}:${publicHttpOrigin}@public`,
+      `${publicHttpOrigin}/`,
+    );
     const entry = entryWithRoutes(lanOnly, [stale, PUBLIC, SSH]);
     expect(sendsTokenInClear([stale, PUBLIC, SSH], stale)).toBe(true);
     expect(ids(usableRoutes(entry))).toEqual(["public", "ssh-desk"]);
     const routes = mergeLearnedRoutes({
       entry,
       activeRoute: PUBLIC,
-      reported: [{ kind: "lan", httpBaseUrl: `${lanOrigin}/` }],
+      reported: [{ kind: "public", httpBaseUrl: `${publicHttpOrigin}/` }],
       allowInsecure: true,
     });
-    // The stale route is gone, and the plain HTTP address is not learned again over the HTTPS token.
     expect(ids(routes)).toEqual(["public", "ssh-desk"]);
+  });
+
+  it("preserves /h/<hostId>/ path-prefix Cloudflare Relay URLs when learned over LAN", () => {
+    const hostId = "abcdefghijklmnopqrstuvwxyz";
+    const relayUrl = `https://ankiel-relay.me.workers.dev/h/${hostId}/`;
+    const routes = mergeLearnedRoutes({
+      entry: lanOnly,
+      activeRoute: LAN,
+      reported: [{ kind: "relay", httpBaseUrl: relayUrl }],
+      allowInsecure: true,
+    })!;
+    expect(ids(routes)).toEqual([
+      "lan",
+      `learned:${ENVIRONMENT_ID}:https://ankiel-relay.me.workers.dev/h/${hostId}@lan`,
+    ]);
+    const relayRoute = routes[1]!;
+    expect(connectionRouteKind(relayRoute)).toBe("relay");
+    expect(connectionRouteLabel(relayRoute)).toBe("Cloudflare Relay");
+    expect(profileOf(relayRoute)).toMatchObject({
+      learned: true,
+      network: "relay",
+      httpBaseUrl: relayUrl,
+      wsBaseUrl: `wss://ankiel-relay.me.workers.dev/h/${hostId}/`,
+    });
+  });
+
+  it("learns LAN ahead of a Cloudflare Relay route and lets the relay credential use LAN", () => {
+    const hostId = "abcdefghijklmnopqrstuvwxyz";
+    const relayRoute: ConnectionRoute = {
+      target: new BearerConnectionTarget({
+        environmentId: ENVIRONMENT_ID,
+        label: "Desk",
+        connectionId: "relay",
+      }),
+      profile: Option.some(
+        new BearerConnectionProfile({
+          connectionId: "relay",
+          environmentId: ENVIRONMENT_ID,
+          label: "Desk",
+          httpBaseUrl: `https://ankiel-relay.me.workers.dev/h/${hostId}/`,
+          wsBaseUrl: `wss://ankiel-relay.me.workers.dev/h/${hostId}/`,
+          network: "relay",
+        }),
+      ),
+    };
+    const entry = entryWithRoutes(lanOnly, [relayRoute]);
+    const routes = mergeLearnedRoutes({
+      entry,
+      activeRoute: relayRoute,
+      reported: [
+        { kind: "lan", httpBaseUrl: "http://192.168.1.10:3773/" },
+        { kind: "relay", httpBaseUrl: `https://ankiel-relay.me.workers.dev/h/${hostId}/` },
+      ],
+      allowInsecure: true,
+    })!;
+    expect(ids(routes)).toEqual([
+      `learned:${ENVIRONMENT_ID}:http://192.168.1.10:3773@relay`,
+      "relay",
+    ]);
+    expect(ids(usableRoutes(entryWithRoutes(entry, routes)))).toEqual(ids(routes));
   });
 
   it("keeps plain HTTP routes that don't borrow the active HTTPS-paired token", () => {

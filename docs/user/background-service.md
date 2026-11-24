@@ -44,13 +44,12 @@ under Ankiel home. Pass `--yes` from a script.
 
 ## Local network access
 
-A new service answers only on this machine. Other devices reach it once you choose the local network in `ankiel up` (or run
+A new service answers only on this machine. Other devices on the same network reach it once you choose the local network in `ankiel up` (or run
 `ankiel up --lan`, which sets `ANKIEL_LAN=true` in `service.env`). It then listens on
-your local network and Tailscale addresses, so the desktop and mobile apps on
+your local network so the desktop and mobile apps on
 the same network connect directly. It still does not answer on public addresses.
 Anyone on the same network can reach the port, so a pairing code is all that
-keeps them out. The hosted web app at app.code.ankiel.com cannot reach it over plain
-HTTP, because browsers block plain HTTP from an HTTPS page.
+keeps them out. For away-from-home access and [app.code.ankiel.com](https://app.code.ankiel.com) (which requires HTTPS), connect a [Cloudflare Relay](./remote-access.md#cloudflare-relay).
 
 A service installed before `ANKIEL_LAN` existed keeps listening on the local
 network. `ankiel status` says so, and `ankiel up --no-lan` turns it off. Any

@@ -10,7 +10,7 @@ Here is the short list of things to protect as the product changes.
 
 ### 1. Own your data
 
-Ankiel Code is self-hosted. Threads, code, and credentials stay on machines the user controls. There is no telemetry, no account, and no hosted backend the product depends on. Anything optional that talks to a service the user runs themselves (their own Cloudflare account, their own Tailscale) is fine; anything that sends data to a service the maintainer runs is not.
+Ankiel Code is self-hosted. Threads, code, and credentials stay on machines the user controls. There is no telemetry, no account, and no hosted backend the product depends on. Anything optional that talks to a service the user runs themselves (their own Cloudflare account) is fine; anything that sends data to a service the maintainer runs is not.
 
 ### 2. Open at the core
 
@@ -22,7 +22,7 @@ Lots of apps get bogged down by bad tech decisions and "slop". Keep Ankiel Code 
 
 ### 4. Remote ready
 
-The architecture of Ankiel Code's websocket layer (`ankiel`) enables the remote features. They are core to the product. Whether users are connecting directly over their local network, using Tailscale, or over SSH, new features need to work in every connection mode.
+The architecture of Ankiel Code's websocket layer (`ankiel`) enables the remote features. They are core to the product. Whether users are connecting directly over their local network or through their self-hosted Cloudflare Relay, new features need to work in every connection mode.
 
 ### 5. Multi-surface
 
@@ -65,7 +65,7 @@ The most common defect in this repo is a change that works on the path you teste
 - **Agents.** Capabilities a user triggers should be service methods reachable by MCP tools and scheduled tasks, not inline handler code.
 - **Contracts.** Wire changes go in `packages/contracts` so server, web, mobile, and desktop follow.
 - **Reverse states.** Every way in needs a way out and a way to see it (snooze/unsnooze, close/reopen). A one-way door is a bug.
-- **Connection modes.** Local and remote (LAN, Tailscale, SSH); multi-device and multi-environment.
+- **Connection modes.** Local and remote (same-network LAN and Cloudflare Relay); multi-device and multi-environment.
 - **Languages.** Translate user-facing copy in `apps/{web,mobile}/src/i18n/translations` (`vp run i18n:generate` / `vp run i18n:check`) and `apps/marketing/src/i18n`. See [14_i18n.md](docs/internals/14_i18n.md).
 - **Docs.** Check whether the change makes existing guidance inaccurate. Follow [Documentation](#documentation).
 

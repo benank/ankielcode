@@ -118,7 +118,7 @@ Replace `<client-version>` with the version shown in the notice. The command
 asks before restarting the background service; if you decline, run
 `ankiel service restart` when you are ready. For a server you started by hand,
 stop it and start it again afterwards with your usual options such as `--host`
-or `--tailscale-serve`.
+or `--lan`.
 
 If you decline the restart for a background service installed by an older
 release, the service can stay down after a crash or reboot until you run

@@ -141,6 +141,7 @@ export interface RelayTunnelClientOptions {
   readonly localHost: string;
   readonly localPort: number;
   readonly onReady?: (publicBaseUrl: string) => void;
+  readonly onClose?: () => void;
   readonly onError?: (message: string, cause?: unknown) => void;
 }
 
@@ -480,9 +481,13 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
         clearInterval(pingTimer);
         pingTimer = null;
       }
+      const wasReady = isReady;
       isReady = false;
       if (activeRelay?.internalToken === internalToken) {
         activeRelay = null;
+      }
+      if (wasReady) {
+        options.onClose?.();
       }
       cleanupLocalStreams();
       scheduleReconnect();

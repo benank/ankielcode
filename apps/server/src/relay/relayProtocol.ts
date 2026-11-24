@@ -410,3 +410,39 @@ export function resolveRelaySetupFromEnvOrFile(
 ): RelaySetupConfig | null {
   return resolveRelaySetupSourceFromEnvOrFile(stateDir, env)?.config ?? null;
 }
+
+function readStoredRelayHostId(stateDir: string): string | null {
+  for (const candidate of [
+    NodePath.join(stateDir, "relay-host-identity.json"),
+    NodePath.join(stateDir, "secrets", "relay-host-identity.json"),
+  ]) {
+    if (!NodeFS.existsSync(candidate)) continue;
+    try {
+      const raw = JSON.parse(NodeFS.readFileSync(candidate, "utf8")) as Record<string, unknown>;
+      if (typeof raw.hostId === "string" && raw.hostId.trim().length > 0) {
+        return raw.hostId.trim();
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+export function resolveStoredRelayPublicUrl(
+  stateDir: string,
+  env: NodeJS.ProcessEnv = process.env,
+): {
+  readonly relayOrigin: string;
+  readonly publicBaseUrl: string | null;
+  readonly source: "env" | "file";
+} | null {
+  const resolved = resolveRelaySetupSourceFromEnvOrFile(stateDir, env);
+  if (!resolved) return null;
+  const hostId = readStoredRelayHostId(stateDir);
+  return {
+    relayOrigin: resolved.config.relayOrigin,
+    publicBaseUrl: hostId ? buildPublicRelayBaseUrl(resolved.config, hostId) : null,
+    source: resolved.source,
+  };
+}

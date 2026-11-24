@@ -196,6 +196,8 @@ function routeKindLabel(kind: ConnectionRouteKind, gt: GT): string {
       return gt("This device");
     case "lan":
       return "LAN";
+    case "relay":
+      return gt("Cloudflare Relay");
     case "tailnet":
       return "Tailscale";
     case "vpn":

@@ -25,93 +25,81 @@ terminal, a needed restart runs without asking, and stops running agent turns.
 `ankiel status --json` prints the settings. `ankiel up --help` lists every flag with
 examples.
 
-## Pair over a LAN or private network
+## Cloudflare Relay
 
-Use direct pairing when the other device can reach the host's network address.
+Connect from anywhere — on cellular, away from home, or from [app.code.ankiel.com](https://app.code.ankiel.com) — through a self-hosted relay running on your own Cloudflare account. There is no Ankiel account or hosted backend: your traffic only passes through your own Cloudflare Worker.
 
-On a desktop host, open **Settings → Sharing & access**, enable **Network access**,
-then create a pairing link using an address the other device can reach. Changing
-network access restarts the desktop app. You can turn it off in the same place.
+### 1. Deploy your relay
 
-For a command-line host, choose the local network in `ankiel up`, or run:
+In the `relay/` directory of the Ankiel Code repository, run:
+
+```bash
+cd relay
+npm install
+npm run setup
+```
+
+The setup script logs into Cloudflare with `wrangler`, deploys the Worker and Durable Object (eligible on Cloudflare's Workers Free plan), generates a 256-bit `RELAY_SECRET`, and copies a setup string to your clipboard in the form:
+
+```text
+ankiel-relay://<your-relay-host>#<secret>
+```
+
+It works with a free `*.workers.dev` URL (path-prefix routing at `https://<worker>/h/<hostId>/`) or your own wildcard custom domain (`https://<hostId>.<domain>/`). See [Self-Hosting Ankiel Relay on Cloudflare](../../relay/SETUP_CLOUDFLARE.md) for automated GitHub Actions deploys and custom domain details.
+
+### 2. Connect your host to the relay
+
+- **Desktop app:** Open **Settings → Sharing & access → Remote relay**, click **Connect**, and paste your `ankiel-relay://<host>#<secret>` setup string.
+- **Command-line or background service:** Pass `ANKIEL_RELAY_SETUP="ankiel-relay://<host>#<secret>"` in the server environment (for a background service, add it to [`service.env`](./background-service.md#configure-the-service-environment) and run `ankiel service restart`).
+
+You can reuse the same setup string on every computer you want to reach; each computer derives its own persistent host ID automatically.
+
+### 3. Pair your phone or another device
+
+In **Settings → Sharing & access**, choose the **Cloudflare Relay** endpoint and generate a pairing link or QR code.
+
+Scan the QR code on your phone or paste the pairing URL into **Add environment** in **Settings → Environments** on web, desktop, or mobile. On a computer with the desktop app, you can also open the `ankielcode://pair` app link.
+
+Pairing authorizes that device for future connections. Use a fresh one-time link for each new device; you do not need the original token to reconnect. A device stays signed in while you keep using it, until you revoke it in **Settings → Sharing & access** on the host. One unused for 30 days, or paired with a host older than this release, has to pair again. Links created in Settings can only be copied from the client that created them while its Sharing & access page stays open. If you leave or reload that page, create another link to share.
+
+## Same-network (LAN) access
+
+When your phone, browser, or another computer is on the same Wi-Fi or local network as the host, Ankiel Code can connect directly over your LAN for lower latency without sending traffic through Cloudflare.
+
+- **Desktop app:** Open **Settings → Sharing & access** and enable **Network access**. Changing network access restarts the desktop app. You can turn it off in the same place.
+- **Command-line host:** Choose local network access in `ankiel up`, or run:
 
 ```bash
 ankiel up --lan
 ```
 
-For a server in a terminal, run `ankiel serve --lan`. Either way, Ankiel Code then
-accepts connections from your local network and tailnet, so a pairing code is
-all that keeps other devices on them out.
+- **Server in a terminal:** Run `ankiel serve --lan`.
 
-If a server is already running, generate a fresh link without restarting it:
+If a server is already running, generate a fresh pairing link without restarting it:
 
 ```bash
 ankiel pair
 ```
 
-Scan the QR code on your phone or paste the pairing URL into **Add environment**
-in the receiving app. Connection settings are under **Settings → Environments**
-on web and desktop and **Settings → Environments** on mobile. A loopback address
-such as `127.0.0.1` reaches only the device opening the link.
+When network access is enabled, Ankiel Code accepts connections from your local network, so a pairing code is what keeps other devices on that network out. A loopback address such as `127.0.0.1` reaches only the device opening the link.
 
-On a computer with the desktop app, you can open the printed `ankielcode://pair`
-app link instead. The desktop app asks you to confirm the server address, then
-adds it.
+If your HTTPS endpoint uses a certificate from your own certificate authority, install that CA on Android as a **CA certificate** in its security settings; the Android app then trusts it.
 
-If your HTTPS endpoint uses a certificate from your own certificate authority,
-install that CA on Android as a **CA certificate** in its security settings; the
-Android app then trusts it.
+### Automatic switching between LAN and Cloudflare Relay
 
-Pairing authorizes that device for future connections. Use a fresh one-time link
-for each new device; you do not need the original token to reconnect. A device
-stays signed in while you keep using it, until you revoke it in **Settings →
-Sharing & access** on the host. One unused for 30 days, or paired with a host
-older than this release, has to pair again. Links
-created in Settings can only be copied from the client that created them while
-its Sharing & access page stays open. If you leave or reload that page, create
-another link to share.
+A machine can have both a **same-network (LAN)** route and a **Cloudflare Relay** route. You only need to pair once:
 
-### Reach one machine several ways
+- While connected to a host, Ankiel Code learns the host's available routes (its current LAN address when network access is on, and its Cloudflare Relay URL when the relay is connected).
+- When the host's LAN address changes — for example after joining another Wi-Fi network — the learned route follows it.
+- On the same network, Ankiel Code prefers the direct LAN route. Away from home, a LAN address that does not answer is checked briefly and skipped, and Ankiel Code seamlessly uses the Cloudflare Relay instead.
+- While connected over the Cloudflare Relay, Ankiel Code checks the LAN route when your network changes, when you return to the app, and periodically in the background, moving back to LAN as soon as it answers.
+- Sessions and thread sync stay intact across route switches so you can move between home Wi-Fi and cellular without losing your place.
 
-A machine can have more than one route: LAN, Tailscale, another VPN, a public
-URL, or SSH. Tailscale shares its `100.64.0.0/10` address range with
-other VPNs such as Cloudflare WARP, so an address in that range shows as VPN
-unless the machine confirms it is on Tailscale. To add a route, choose **Add
-route** in the machine's route list.
-A pairing link for a saved machine is refused when it comes from an address
-that machine does not have yet; add that address with **Add route** instead.
-Pairing again over an address the machine already has still works. A new route
-is placed by speed, in that order, and you can reorder routes at any time.
+A pairing link for a saved machine is refused when it comes from an address that machine does not have yet; add that address with **Add route** instead. Pairing again over an address the machine already has still works. A route whose machine refused this device's sign-in is marked **Sign-in refused**; pair that address again with **Add route** to use it.
 
-While connected through a paired address, Ankiel Code also learns the
-machine's current LAN and Tailscale addresses and adds them as routes, so
-pairing once over a VPN is enough to use the LAN at home. When the
-machine's LAN address changes, for example after it joins another Wi-Fi network,
-the learned route follows it. The machine must allow network access for its LAN
-address to be learned: **Network access** in the desktop app, or the
-[local network](./background-service.md#local-network-access) choice in `ankiel up`.
-You can reorder a learned route, but not remove it; it
-goes away with the route it was learned through, or when the machine stops
-reporting that address.
+On web and desktop, select the route count under the machine's name in **Settings → Environments** to see its routes, drag to reorder them, or remove a saved route. On mobile, open the machine under **Settings → Environments** and choose **Edit**. Learned routes cannot be removed individually; they go away when the host stops reporting that address or when the paired route they were learned through is removed.
 
-Ankiel Code connects over the first route that answers. Away from home, a LAN
-address that does not answer is checked briefly and skipped. It is only tried
-again, after the other routes, if none of them connect. While connected over a
-later route, Ankiel Code checks the earlier ones when your network changes, when you
-return to the app, and every minute, and moves back as soon as one works. A
-route whose machine refused this device's sign-in is marked **Sign-in
-refused**; pair that address again with **Add route** to use it.
-
-On web and desktop, select the route count under the machine's name in
-**Settings → Environments** to see its routes. Drag a route to change the order,
-or remove it. On mobile, open the machine under **Settings → Environments** and
-choose **Edit**.
-
-Open **Permissions** next to **Routes** in web or desktop, or **Your permissions**
-in the mobile route details, to see what your current connection can do on that
-environment. For a remote environment, this is in its route details. Permissions
-shown there apply only to the route marked **In use**; other routes are not
-checked. Each route has its own session and may grant different permissions.
+Open **Permissions** next to **Routes** in web or desktop, or **Your permissions** in the mobile route details, to see what your current connection can do on that environment. Permissions shown there apply only to the route marked **In use**; other routes are not checked.
 
 ### Balance new threads across machines
 
@@ -131,94 +119,16 @@ on that machine. Existing threads stay where they started. If resource checks ar
 unavailable or all eligible machines are full, choose a machine manually to continue.
 Mobile keeps its manual environment selection.
 
-### Tailscale HTTPS
-
-Join both devices to the same tailnet. In the desktop app, enable **Tailscale
-HTTPS** in **Settings → Sharing & access**. Turn it off there to remove that route.
-
-Your tailnet needs MagicDNS and HTTPS certificates enabled; see
-[Tailscale's HTTPS setup](https://tailscale.com/docs/how-to/set-up-https-certificates).
-On Linux, Ankiel Code also needs permission to manage Tailscale; see
-[operator permission](https://tailscale.com/docs/reference/troubleshooting/linux/linux-operator-permission)
-for non-root users. If any of these is missing, Ankiel Code still starts but can't
-add the HTTPS route.
-
-To start a command-line server with Tailscale HTTPS:
-
-```bash
-ankiel serve --tailscale-serve
-```
-
-For an already-running server:
-
-```bash
-ankiel pair --tailscale
-```
-
-The pairing link uses an address such as `https://machine.tailnet.ts.net/`.
-The mapping created by `pair --tailscale` persists across restarts. Remove its
-default-port mapping with:
-
-```bash
-tailscale serve --https=443 --set-path=/ off
-```
-
-If that port is already in use, choose another with
-`--tailscale-serve-port`. See `ankiel pair --help` for other pairing options.
-
 ### Hosted web app
 
-[app.code.ankiel.com](https://app.code.ankiel.com) needs an HTTPS endpoint. It connects directly
-to your server; a hosted pairing link does not make an unreachable backend
-reachable or convert HTTP to HTTPS. Opening a hosted pairing link shows the
-server address and asks you to confirm before adding it.
+[app.code.ankiel.com](https://app.code.ankiel.com) needs an HTTPS endpoint, such as your
+Cloudflare Relay. It connects directly to your server; a hosted pairing link does not
+make an unreachable backend reachable or convert HTTP to HTTPS. Opening a hosted pairing
+link shows the server address and asks you to confirm before adding it.
 
 For a plain HTTP LAN endpoint, use the direct pairing URL in a browser that can
-open it, or pair from the desktop app. On mobile, an IP address entered without a
+open it, or pair from the desktop or mobile app. On mobile, an IP address entered without a
 scheme uses HTTP, so include `https://` when your server uses HTTPS.
-
-## Desktop-managed SSH
-
-In the desktop app, open **Settings → Environments → Add environment**, choose
-**SSH**, and enter a host or SSH alias such as `user@example.com`. Ankiel Code starts
-or reuses a server there and opens the port forward for you. Projects, provider
-credentials, and agent work stay on the remote machine.
-
-The remote host must be Linux or an Apple Silicon Mac with `curl` or `wget`,
-`tar`, `sha256sum` or `shasum`, and [provider setup](./install.md#providers).
-The first launch downloads Ankiel Code's server to `~/.ankiel/runtime` on the host, so
-it takes longer than later ones.
-Provider CLIs must be on the `PATH` of a non-interactive login shell there;
-check with:
-
-```bash
-ssh user@example.com 'sh -lc "command -v claude codex"'
-```
-
-Ankiel Code cannot answer a second sign-in prompt such as a Duo code. On macOS and
-Linux it can reuse a connection you signed in to in a terminal instead: turn on
-connection sharing for the host in `~/.ssh/config`, run `ssh <alias>`, then
-connect. When that connection closes, sign in again in a terminal and retry.
-
-```sshconfig
-Host <alias>
-  ControlMaster auto
-  ControlPath ~/.ssh/cm-%C
-  ControlPersist 8h
-```
-
-If SSH reconnecting fails after an app update, retry the launch once. Removing
-the connection stops a server that Ankiel Code launched; a server that was already
-running is left alone.
-
-Each desktop app keeps one session on the host for its SSH connection and reuses
-it when it reconnects. Revoke sessions you no longer use in **Settings →
-Sharing & access** on the host, or on a headless host with `ankiel auth session list` and
-`ankiel auth session revoke <id>`. A desktop that can still sign in over SSH pairs
-again on its next connect.
-
-For Antigravity's Google callback on a remote host, see
-[remote sign-in](./providers-antigravity.md#sign-in-from-a-remote-device).
 
 ## Browser on a remote environment
 
@@ -574,7 +484,7 @@ If a computer should only drive work running elsewhere, turn off its local envir
 desktop app, open **Settings → Environments** and switch off **Local
 environment**. Ankiel Code restarts without a local server: no local agents or terminals run, WSL
 backends stay off, and other devices can no longer connect to this computer. Your projects,
-history, and saved connections are kept, and you keep working through pairing or SSH.
+history, and saved connections are kept, and you keep working through your saved remote connections.
 If a [background service](./background-service.md) on this computer uses the same Ankiel home, the
 app still treats it as this computer: **Open in** and file reveal for its projects run here,
 whichever connection you reach it through.

@@ -4,6 +4,7 @@ import {
   isSharedAddressSpaceHost,
   isTailnetHost,
 } from "@ankielcode/shared/hostClassification";
+import { extractRelayBasePath } from "@ankielcode/shared/remote";
 import type { DesktopSshEnvironmentTarget } from "@ankielcode/contracts";
 import * as Option from "effect/Option";
 
@@ -16,7 +17,14 @@ import { BearerConnectionTarget, type ConnectionTarget } from "./model.ts";
 import { mFallback, msg } from "gt-i18n";
 import type { MFunctionType } from "gt-i18n/types";
 
-export type ConnectionRouteKind = "loopback" | "lan" | "tailnet" | "vpn" | "public" | "ssh";
+export type ConnectionRouteKind =
+  | "loopback"
+  | "lan"
+  | "relay"
+  | "tailnet"
+  | "vpn"
+  | "public"
+  | "ssh";
 
 export function connectionRouteId(target: ConnectionTarget): string {
   switch (target._tag) {
@@ -85,11 +93,23 @@ export function connectionRouteKind(route: ConnectionRoute): ConnectionRouteKind
       return "ssh";
     case "PrimaryConnectionTarget":
     case "BearerConnectionTarget": {
-      const hostname = routeHostname(route);
-      if (hostname === null) return "public";
+      const httpBaseUrl = routeHttpBaseUrl(route);
+      if (httpBaseUrl === null) return "public";
       const profile = Option.getOrNull(route.profile);
+      if (profile?._tag === "BearerConnectionProfile" && profile.network === "relay") {
+        return "relay";
+      }
+      let parsed: URL;
+      try {
+        parsed = new URL(httpBaseUrl);
+      } catch {
+        return "public";
+      }
+      if (extractRelayBasePath(parsed.pathname) !== "/") {
+        return "relay";
+      }
       return directAddressKind(
-        hostname,
+        parsed.hostname,
         profile?._tag === "BearerConnectionProfile" && profile.network === "tailscale",
       );
     }
@@ -120,6 +140,7 @@ export function isNearbyAddress(httpBaseUrl: string): boolean {
 const ROUTE_KIND_RANK: Record<ConnectionRouteKind, number> = {
   loopback: 0,
   lan: 1,
+  relay: 2,
   tailnet: 2,
   vpn: 2,
   public: 3,
@@ -181,6 +202,8 @@ export function connectionRouteLabel(route: ConnectionRoute): string {
       return msg("This device");
     case "lan":
       return "LAN";
+    case "relay":
+      return msg("Cloudflare Relay");
     case "tailnet":
       // Tailscale Serve answers over HTTPS on the machine's name; the same machine's
       // plain address is another route, so the two are told apart.
@@ -208,6 +231,8 @@ export function connectionRouteLabelText(
   switch (connectionRouteKind(route)) {
     case "loopback":
       return resolve(msg("This device"));
+    case "relay":
+      return resolve(msg("Cloudflare Relay"));
     case "public":
       return routeHostname(route) ?? resolve(msg("Remote link"));
     default:
@@ -227,6 +252,19 @@ export function connectionRouteAddress(route: ConnectionRoute): string | null {
 export const hasSavedBearerRoute = (entry: ConnectionCatalogEntry) =>
   connectionRoutes(entry).some((r) => !isLearned(r) && r.target._tag === "BearerConnectionTarget");
 
+type RouteNetworkHint = "tailscale" | "relay" | undefined;
+
+function reportedRouteKey(url: URL): string {
+  const basePath = extractRelayBasePath(url.pathname);
+  return `${url.origin}${basePath === "/" ? "" : basePath.slice(0, -1)}`;
+}
+
+function reportedNetworkHint(endpoint: ReportedEndpoint): RouteNetworkHint {
+  if (endpoint.kind === "tailnet") return "tailscale";
+  if (endpoint.kind === "relay") return "relay";
+  return undefined;
+}
+
 export function mergeLearnedRoutes(input: {
   readonly entry: ConnectionCatalogEntry;
   readonly activeRoute: ConnectionRoute;
@@ -241,8 +279,7 @@ export function mergeLearnedRoutes(input: {
     return null;
   }
   const sharedCredential = credentialConnectionId(active.connectionId);
-  const reported = new Map<string, URL>();
-  const tailscaleOrigins = new Set<string>();
+  const reported = new Map<string, { readonly url: URL; readonly network: RouteNetworkHint }>();
   for (const endpoint of input.reported) {
     let url: URL;
     try {
@@ -254,8 +291,8 @@ export function mergeLearnedRoutes(input: {
     if (url.protocol === "http:" && !input.allowInsecure) continue;
     // A loopback address names whichever device opens it, never the server.
     if (isLocalLoopbackHost(url.hostname)) continue;
-    reported.set(url.origin, url);
-    if (endpoint.kind === "tailnet") tailscaleOrigins.add(url.origin);
+    const key = reportedRouteKey(url);
+    reported.set(key, { url, network: reportedNetworkHint(endpoint) });
   }
   const normalized = (url: string) => url.replace(/\/+$/, "");
   const known = new Set(
@@ -266,34 +303,31 @@ export function mergeLearnedRoutes(input: {
   );
   const kept = saved.flatMap((route): ReadonlyArray<ConnectionRoute> => {
     const url = routeHttpBaseUrl(route);
+    const key = url === null ? null : normalized(url);
+    const matched = key === null ? undefined : reported.get(key);
     if (!isLearned(route)) {
-      return [
-        url === null || !reported.has(normalized(url))
-          ? route
-          : withNetwork(route, tailscaleOrigins.has(normalized(url))),
-      ];
+      return [matched === undefined ? route : withNetwork(route, matched.network)];
     }
-    if (url === null || !reported.has(normalized(url)) || known.has(normalized(url))) return [];
-    if (sendsTokenInClear(saved, route, tailscaleOrigins.has(normalized(url)))) return [];
-    known.add(normalized(url));
-    return [withNetwork(route, tailscaleOrigins.has(normalized(url)))];
+    if (key === null || matched === undefined || known.has(key)) return [];
+    if (sendsTokenInClear(saved, route, matched.network)) return [];
+    known.add(key);
+    return [withNetwork(route, matched.network)];
   });
   let next: ReadonlyArray<ConnectionRoute> = kept;
-  for (const url of reported.values()) {
-    if (known.has(url.origin)) continue;
+  for (const [key, { url, network }] of reported.entries()) {
+    if (known.has(key)) continue;
+    const addressKind = directAddressKind(url.hostname, network === "tailscale");
     if (
       url.protocol === "http:" &&
-      !tailscaleOrigins.has(url.origin) &&
+      addressKind !== "lan" &&
+      addressKind !== "tailnet" &&
       !tokenAllowsPlainHttp(saved, sharedCredential)
     ) {
       continue;
     }
-    const httpBaseUrl = `${url.origin}/`;
-    const connectionId = learnedConnectionId(
-      entry.target.environmentId,
-      url.origin,
-      sharedCredential,
-    );
+    const basePath = extractRelayBasePath(url.pathname);
+    const httpBaseUrl = `${url.origin}${basePath}`;
+    const connectionId = learnedConnectionId(entry.target.environmentId, key, sharedCredential);
     next = insertRoute(next, {
       target: new BearerConnectionTarget({
         environmentId: entry.target.environmentId,
@@ -306,9 +340,9 @@ export function mergeLearnedRoutes(input: {
           environmentId: entry.target.environmentId,
           label: entry.target.label,
           httpBaseUrl,
-          wsBaseUrl: `${url.protocol === "https:" ? "wss:" : "ws:"}//${url.host}/`,
+          wsBaseUrl: `${url.protocol === "https:" ? "wss:" : "ws:"}//${url.host}${basePath}`,
           learned: true,
-          ...(tailscaleOrigins.has(url.origin) ? { network: "tailscale" as const } : {}),
+          ...(network === undefined ? {} : { network }),
         }),
       ),
     });
@@ -323,9 +357,9 @@ export function mergeLearnedRoutes(input: {
   return signature(saved) === signature(next) ? null : next;
 }
 
-// A paired token goes to a plain HTTP address outside the tailnet only when
-// it was paired that way, so a token paired over HTTPS, loopback, or the
-// tailnet keeps to the transports it was issued for.
+// A paired token goes to a plain HTTP public/VPN address only when it was
+// paired over plain HTTP. Verified same-network LAN routes are allowed so
+// devices paired over Cloudflare Relay seamlessly switch to LAN at home.
 function tokenAllowsPlainHttp(
   routes: ReadonlyArray<ConnectionRoute>,
   credentialId: string,
@@ -341,19 +375,26 @@ function tokenAllowsPlainHttp(
 
 /**
  * Whether connecting over `route` would send a paired token over plain HTTP
- * that it wasn't paired over. Checked against the token the route borrows,
- * so a route learned before this rule existed is refused too.
+ * outside the local network or tailnet when it wasn't paired that way.
  */
 export function sendsTokenInClear(
   routes: ReadonlyArray<ConnectionRoute>,
   route: ConnectionRoute,
-  tailscale?: boolean,
+  network?: RouteNetworkHint,
 ): boolean {
   const profile = Option.getOrNull(route.profile);
   if (profile?._tag !== "BearerConnectionProfile") {
     return false;
   }
-  if ((tailscale ?? profile.network === "tailscale") || !profile.httpBaseUrl.startsWith("http:")) {
+  if (!profile.httpBaseUrl.startsWith("http:")) {
+    return false;
+  }
+  const resolvedNetwork = network ?? profile.network;
+  if (resolvedNetwork === "tailscale") {
+    return false;
+  }
+  const hostname = routeHostname(route);
+  if (hostname !== null && directAddressKind(hostname) === "lan") {
     return false;
   }
   const credentialId = credentialConnectionId(connectionRouteId(route.target));
@@ -373,10 +414,10 @@ export interface ReportedEndpoint {
   readonly kind?: string;
 }
 
-function withNetwork(route: ConnectionRoute, tailscale: boolean): ConnectionRoute {
+function withNetwork(route: ConnectionRoute, network: RouteNetworkHint): ConnectionRoute {
   const profile = Option.getOrNull(route.profile);
   if (profile?._tag !== "BearerConnectionProfile") return route;
-  if ((profile.network === "tailscale") === tailscale) return route;
+  if (profile.network === network) return route;
   return {
     target: route.target,
     profile: Option.some(
@@ -387,7 +428,7 @@ function withNetwork(route: ConnectionRoute, tailscale: boolean): ConnectionRout
         httpBaseUrl: profile.httpBaseUrl,
         wsBaseUrl: profile.wsBaseUrl,
         ...(profile.learned === undefined ? {} : { learned: profile.learned }),
-        ...(tailscale ? { network: "tailscale" as const } : {}),
+        ...(network === undefined ? {} : { network }),
       }),
     ),
   };

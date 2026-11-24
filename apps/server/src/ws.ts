@@ -340,6 +340,7 @@ export const withLateConfigDiscovery = <E, R>(
   launcher: EditorDiscovery,
   remoteOpenTargets: RemoteOpenTargets.RemoteOpenTargets["Service"],
   directEndpoints: Pick<DirectEndpoints.DirectEndpoints["Service"], "resolve">,
+  directEndpointChanges: Stream.Stream<ReadonlyArray<ServerDirectEndpoint>> = Stream.empty,
 ) => {
   const lateEditorConfig = Stream.fromEffect(launcher.resolveAvailableEditors()).pipe(
     Stream.filter(
@@ -367,10 +368,10 @@ export const withLateConfigDiscovery = <E, R>(
     Stream.map((targets) => ({ type: "remoteOpenTargetsResolved" as const, targets })),
   );
 
-  const lateDirectEndpoints = Stream.fromEffect(directEndpoints.resolve()).pipe(
-    Stream.catchCause(() => Stream.empty),
-    Stream.map((endpoints) => ({ type: "directEndpointsResolved" as const, endpoints })),
-  );
+  const lateDirectEndpoints = Stream.merge(
+    Stream.fromEffect(directEndpoints.resolve()).pipe(Stream.catchCause(() => Stream.empty)),
+    directEndpointChanges.pipe(Stream.catchCause(() => Stream.empty)),
+  ).pipe(Stream.map((endpoints) => ({ type: "directEndpointsResolved" as const, endpoints })));
 
   return Stream.merge(
     liveUpdates,
@@ -3507,6 +3508,19 @@ export const layerWsRpc = (
                 remoteResult?._tag === "Success"
                   ? { ...config, remoteOpenTargets: remoteResult.value }
                   : config;
+              const relayEndpointChanges = Option.match(relayTunnel, {
+                onNone: () => Stream.empty,
+                onSome: (service) =>
+                  service.statusChanges.pipe(
+                    Stream.changesWith(
+                      (previous, next) =>
+                        previous.connected === next.connected &&
+                        previous.publicBaseUrl === next.publicBaseUrl,
+                    ),
+                    Stream.drop(1),
+                    Stream.mapEffect(() => directEndpoints.resolveAvailable()),
+                  ),
+              });
               const updates = withLateConfigDiscovery(
                 initialConfig,
                 liveUpdates,
@@ -3515,6 +3529,7 @@ export const layerWsRpc = (
                   resolveTargets: () => Fiber.join(remoteTargets),
                 },
                 { resolve: () => Fiber.join(directResult) },
+                relayEndpointChanges,
               );
               return Stream.concat(
                 rpcInitialItems([

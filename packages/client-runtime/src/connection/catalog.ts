@@ -26,10 +26,10 @@ export class BearerConnectionProfile extends Schema.TaggedClass<BearerConnection
     // schema refuses so the catalog drops it on read.
     authorization: Schema.optionalKey(Schema.Never),
     /**
-     * "tailscale" on a learned route the server found on its Tailscale
-     * interface. A bare 100.64.0.0/10 address could belong to any VPN.
+     * Network hint from the host's reported endpoints: "tailscale" for a Tailscale
+     * interface, or "relay" for a self-hosted Cloudflare Relay tunnel.
      */
-    network: Schema.optionalKey(Schema.Literal("tailscale")),
+    network: Schema.optionalKey(Schema.Literals(["tailscale", "relay"])),
   },
 ) {}
 

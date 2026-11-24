@@ -34,6 +34,7 @@ import * as EnvironmentAuth from "../auth/EnvironmentAuth.ts";
 import * as ServerConfig from "../config.ts";
 import * as ManagedLimits from "../policy/managedLimits.ts";
 import * as ManagedPolicy from "../policy/ManagedPolicy.ts";
+import { resolveStoredRelayPublicUrl } from "../relay/relayProtocol.ts";
 import { resolveBaseDir } from "../os-jank.ts";
 import {
   type PersistedServerRuntimeState,
@@ -561,6 +562,7 @@ export const pairCommand = Command.make("pair", {
         });
       }
 
+      const config = yield* makePairServerConfig({ target, logLevel });
       const notes: Array<string> = [];
       let pairingBaseUrl: string;
       if (flags.tailscale) {
@@ -579,24 +581,32 @@ export const pairCommand = Command.make("pair", {
         pairingBaseUrl = resolved.baseUrl;
         notes.push(...resolved.notes);
       } else {
-        pairingBaseUrl = resolveDirectPairingBaseUrl(target.state, yield* HostProcess.Platform);
-        if (isLoopbackHost(new URL(pairingBaseUrl).hostname)) {
+        const storedRelay =
+          target.variant === "dev" ? null : resolveStoredRelayPublicUrl(config.stateDir);
+        if (storedRelay?.publicBaseUrl) {
+          pairingBaseUrl = storedRelay.publicBaseUrl;
           notes.push(
-            "This URL is only reachable from this machine. To reach it from your other devices, run `ankiel up`, or re-run with --tailscale.",
+            "Pairing over Cloudflare Relay. Devices on the same Wi-Fi will also switch to LAN automatically when local network access is enabled.",
           );
-        } else if (target.state.privateNetworkOnly) {
-          notes.push(
-            "This URL works only from this machine's local network. From elsewhere, re-run with --tailscale.",
-          );
-        }
-        if (target.variant === "dev" && target.state.devUrl === undefined) {
-          notes.push(
-            "This dev server did not record its web URL; restart it so pairing can go through the web origin.",
-          );
+        } else {
+          pairingBaseUrl = resolveDirectPairingBaseUrl(target.state, yield* HostProcess.Platform);
+          if (isLoopbackHost(new URL(pairingBaseUrl).hostname)) {
+            notes.push(
+              "This URL is only reachable from this machine. Enable local network access with `ankiel up --lan` or connect a Cloudflare Relay in Settings → Sharing & access.",
+            );
+          } else if (target.state.privateNetworkOnly) {
+            notes.push(
+              "This URL works only on your local network. For access from anywhere, connect a Cloudflare Relay in Settings → Sharing & access.",
+            );
+          }
+          if (target.variant === "dev" && target.state.devUrl === undefined) {
+            notes.push(
+              "This dev server did not record its web URL; restart it so pairing can go through the web origin.",
+            );
+          }
         }
       }
 
-      const config = yield* makePairServerConfig({ target, logLevel });
       const issued = yield* mintPairingLink({
         config,
         scopes: flags.scopes,

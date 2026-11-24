@@ -33,7 +33,6 @@ import { isLocalEnvironmentDisabled } from "../../localEnvironment";
 import {
   applyWslEnableSelection,
   isWslSettingsRowVisible,
-  missingTailscaleEndpointDescription,
   resolveLocalVersionStatusLabel,
   resolveTailscaleServeBaseUrl,
 } from "./ConnectionsSettings.logic";
@@ -774,26 +773,22 @@ function ConnectionsSettingsContent({
   };
 
   const updateAccessSettings = useUpdateEnvironmentSettings(accessEnvironmentId);
-  const tailscaleHttpsEndpoint = desktopAdvertisedEndpoints.find(isTailscaleHttpsEndpoint) ?? null;
   const relayAdvertisedEndpoint = relayStatusToAdvertisedEndpoint(relayTunnelStatus.data, m);
-  const extraTunnelEndpoints = [
-    ...(tailscaleHttpsEndpoint ? [tailscaleHttpsEndpoint] : []),
-    ...(relayAdvertisedEndpoint ? [relayAdvertisedEndpoint] : []),
-  ];
+  const extraTunnelEndpoints = relayAdvertisedEndpoint ? [relayAdvertisedEndpoint] : [];
   const visibleDesktopNetworkAdvertisedEndpoints = isLocalBackendNetworkAccessible
     ? desktopAdvertisedEndpoints.filter((endpoint) => !isTailscaleHttpsEndpoint(endpoint))
     : [];
   const visibleDesktopAdvertisedEndpoints = [
-    ...visibleDesktopNetworkAdvertisedEndpoints,
     ...extraTunnelEndpoints,
+    ...visibleDesktopNetworkAdvertisedEndpoints,
   ];
   const defaultDesktopNetworkAdvertisedEndpoint = selectPairingEndpoint(
     visibleDesktopNetworkAdvertisedEndpoints,
     defaultAdvertisedEndpointKey,
   );
   const defaultDesktopAdvertisedEndpoint =
-    defaultDesktopNetworkAdvertisedEndpoint ??
-    selectPairingEndpoint(extraTunnelEndpoints, defaultAdvertisedEndpointKey);
+    selectPairingEndpoint(visibleDesktopAdvertisedEndpoints, defaultAdvertisedEndpointKey) ??
+    defaultDesktopNetworkAdvertisedEndpoint;
   const defaultDesktopAdvertisedEndpointKey = defaultDesktopAdvertisedEndpoint
     ? endpointDefaultPreferenceKey(defaultDesktopAdvertisedEndpoint)
     : null;
@@ -1079,35 +1074,6 @@ function ConnectionsSettingsContent({
     );
   };
 
-  const renderTailscaleRow = () => (
-    <SettingsRow
-      title={searchableSetting("tailscale-https").title}
-      description={
-        tailscaleHttpsEndpoint
-          ? tailscaleHttpsEndpoint.status === "available"
-            ? tailscaleHttpsEndpoint.httpBaseUrl
-            : gt("Use Tailscale Serve to expose this backend through a MagicDNS HTTPS URL.")
-          : missingTailscaleEndpointDescription(desktopServerExposureState, m)
-      }
-      control={
-        tailscaleHttpsEndpoint ? (
-          <Switch
-            checked={tailscaleHttpsEndpoint.status === "available"}
-            disabled={isUpdatingTailscaleServe}
-            onCheckedChange={(checked) => {
-              if (checked) {
-                handleStartTailscaleServeSetup(tailscaleHttpsEndpoint);
-                return;
-              }
-              handleStartTailscaleServeDisable(tailscaleHttpsEndpoint);
-            }}
-            aria-label={gt("Enable Tailscale HTTPS")}
-          />
-        ) : null
-      }
-      managed={tailscaleHttpsEndpoint?.status === "available" ? undefined : remoteClientsDenial}
-    />
-  );
   const newestPairingLink = desktopPairingLinks.find(
     (pairingLink) => pairingLink.id === newestPairingLinkId,
   );
@@ -1328,7 +1294,6 @@ function ConnectionsSettingsContent({
               <>
                 {renderNetworkAccessRow()}
                 {renderEndpointRows()}
-                {renderTailscaleRow()}
                 {renderWslRow()}
               </>
             ) : canManageLocalBackend ? (
@@ -1447,7 +1412,7 @@ function ConnectionsSettingsContent({
                         "Let your other devices connect to Ankiel Code over the network. Pair devices to give them access. Ankiel Code will restart.",
                       )
                     : gt(
-                        "Devices connected over your local network will disconnect. Existing tunnels, such as Tailscale HTTPS, keep working. Ankiel Code will restart.",
+                        "Devices connected over your local network will disconnect. Your Cloudflare Relay keeps working. Ankiel Code will restart.",
                       )}
                 </AlertDialogDescription>
               </AlertDialogHeader>

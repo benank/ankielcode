@@ -468,6 +468,7 @@
   "7eabeed193759388": "L’ordre des routes doit lister chaque route enregistrée une seule fois.",
   "18de69e3b6ac3891": "Le profil de connexion {connectionId} n’est pas une connexion bearer.",
   "0a84ce2f4fb90d82": "Le profil de connexion {connectionId} n’est pas une connexion SSH.",
+  "6fbf7fe0a90de32c": "Cloudflare Relay",
   "468d32c6b30df608": "Tailscale HTTPS",
   "4d022ee84149d47f": "Lien distant",
   "0b367ce72b45a911": "La connexion à {host} a échoué de manière inattendue.",

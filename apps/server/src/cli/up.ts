@@ -17,6 +17,7 @@ import { compareExactServiceVersions } from "../cloud/serviceProtocol.ts";
 import * as ServerConfig from "../config.ts";
 import * as ManagedLimits from "../policy/managedLimits.ts";
 import * as ManagedPolicy from "../policy/ManagedPolicy.ts";
+import { resolveStoredRelayPublicUrl } from "../relay/relayProtocol.ts";
 import { projectLocationFlags, resolveCliAuthConfig } from "./config.ts";
 import { resolveHostCliCommand } from "./invocation.ts";
 import * as CliService from "./service.ts";
@@ -30,10 +31,15 @@ interface Setup {
   /** An installed service with no ANKIEL_LAN or ANKIEL_HOST keeps the old default: on. */
   readonly lanFromOldDefault: boolean;
   readonly host: string | undefined;
+  readonly relay: {
+    readonly relayOrigin: string;
+    readonly publicBaseUrl: string | null;
+    readonly source: "env" | "file";
+  } | null;
 }
 
 const readSetup = Effect.fn("cli.up.read_setup")(function* () {
-  const { baseDir } = yield* ServerConfig.ServerConfig;
+  const { baseDir, stateDir } = yield* ServerConfig.ServerConfig;
   const service = yield* (yield* BootService.BootService).status;
   const { entries } = yield* CliService.readServiceEnv(baseDir);
   // Parsed as the server parses it.
@@ -42,11 +48,13 @@ const readSetup = Effect.fn("cli.up.read_setup")(function* () {
     .parse(ConfigProvider.fromEnv({ env: entries }));
   // Another home's service doesn't read this home's service.env.
   const servesThisHome = service.installed && service.otherBaseDir === undefined;
+  const relay = resolveStoredRelayPublicUrl(stateDir, { ...process.env, ...entries });
   return {
     service,
     lan: Option.getOrElse(lan, () => servesThisHome),
     lanFromOldDefault: Option.isNone(lan) && servesThisHome && entries.ANKIEL_HOST === undefined,
     host: entries.ANKIEL_HOST,
+    relay,
   } satisfies Setup;
 });
 
@@ -108,10 +116,16 @@ const formatSetup = (setup: Setup, hints: Hints) => {
             ? "on · pairing code only"
             : "off",
     ],
+    [
+      "Cloudflare",
+      setup.relay
+        ? `configured · ${setup.relay.publicBaseUrl ?? setup.relay.relayOrigin}`
+        : "not configured",
+    ],
   ];
   const notes = [
     ...(setup.host === undefined && setup.lan
-      ? ["Anyone on your LAN or tailnet can reach the port. A pairing code is the only lock."]
+      ? ["Anyone on your local network can reach the port. A pairing code is the only lock."]
       : []),
     ...(setup.lanFromOldDefault
       ? [`Older installs keep LAN access on. Turn it off: \`${hints.upNoLan}\`.`]
@@ -335,7 +349,7 @@ export const upCommand = Command.make("up", {
   ...projectLocationFlags,
   lan: Flag.Boolean("lan").pipe(
     Flag.withDescription(
-      "Allow LAN and tailnet connections. Anyone there can reach the port; a pairing code is the only lock. Turn off with --no-lan.",
+      "Allow local network connections. Anyone on the same network can reach the port; a pairing code is the only lock. Turn off with --no-lan.",
     ),
     Flag.optional,
   ),
@@ -374,6 +388,12 @@ const setupJson = (setup: Setup) =>
         enabled: setup.lan,
         inheritedDefault: setup.lanFromOldDefault,
         hostOverride: setup.host ?? null,
+      },
+      relay: {
+        configured: setup.relay !== null,
+        relayOrigin: setup.relay?.relayOrigin ?? null,
+        publicBaseUrl: setup.relay?.publicBaseUrl ?? null,
+        source: setup.relay?.source ?? null,
       },
     },
     null,

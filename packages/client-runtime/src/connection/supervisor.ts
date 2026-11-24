@@ -602,7 +602,9 @@ export const make = Effect.fn("EnvironmentSupervisor.make")(function* (
       case "RetryRequested":
         return QUICK_CONNECTION_PROBE_TIMEOUT;
       case "NetworkChanged":
-        return next.network === "offline" ? QUICK_CONNECTION_PROBE_TIMEOUT : undefined;
+        return next.network === "offline" || answersQuickly(routeKind)
+          ? QUICK_CONNECTION_PROBE_TIMEOUT
+          : undefined;
       case "Wakeup":
         if (next.reason === "application-active") {
           return CONNECTION_PROBE_TIMEOUT;
