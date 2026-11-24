@@ -34,7 +34,7 @@ Check that the case builds with `--dry-run --case <id>`. Then run it on the text
 
 ## Device manager cases
 
-`cases/device-manager.ndjson` ports nine mechanisms from the [device-routing investigation described in #25661](https://github.com/benank/ankielcode/pull/25661) and adds seven cases from t3dotgg’s 2026-10-26 fleet device investigation. All prompts, files, hosts and prior turns are authored Acme data; the fleet cases cite finding ids without carrying source transcripts or identifiers.
+`cases/device-manager.ndjson` ports nine mechanisms from the device-routing investigation described in upstream #25661 and adds seven cases from an upstream T3 Code fleet device investigation (2026-10-26). All prompts, files, hosts and prior turns are authored Acme data; the fleet cases cite finding ids without carrying source transcripts or identifiers.
 
 | Case           | Kind    | What it checks                                                                                                                                                                                         |
 | -------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -343,7 +343,7 @@ Errored samples are left out.
 
 `cli-merge-at-head-moved`, a control where the head moved past the reviewed commit, was added after these runs. On GPT-6.1 Sol both arms passed it 3/3: neither merged.
 
-**With the fixes.** "tools+fixes" (Sonnet, earlier git.cafe world) applied [#39899](https://github.com/benank/ankielcode/pull/39899), [#39901](https://github.com/benank/ankielcode/pull/39901), [#39903](https://github.com/benank/ankielcode/pull/39903) and [#39906](https://github.com/benank/ankielcode/pull/39906). It passed 42/42 with 2.5 model calls and 83 ktokens per sample, against 2.8 and 90 for "tools" on the same cases.
+**With the fixes.** "tools+fixes" (Sonnet, earlier git.cafe world) applied #39899, #39901, #39903 and #39906. It passed 42/42 with 2.5 model calls and 83 ktokens per sample, against 2.8 and 90 for "tools" on the same cases.
 
 Limits: the shell is simulated, so a CLI's output is the simulator's reading of the world and of the error texts the cases copy from real sessions. Polling never really waits, so these runs measure what polling decides, not the wall-clock time it takes. The simulator also sees the whole world, and early runs leaked it into invented files, such as an AGENTS.md naming `cafe` or a Forgejo API on git.cafe. The git.cafe worlds now rule both out. Read failing and passing transcripts before you trust a new case.
 

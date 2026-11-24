@@ -14,6 +14,8 @@ Exporting requires Icon Composer 2 or newer on macOS. The script selects the new
 
 ## macOS exports
 
+The three tracked `*-macos-1024.png` files are currently approximations: the universal icon resized to 824×824 at 100/100 with a drop shadow, because `ictool` cannot export the `macOS pre-Tahoe` preset here. Re-export them natively from Icon Composer as described below.
+
 Icon Composer's command-line exporter does not expose the `macOS pre-Tahoe` preset. A plain command-line `macOS` export is full bleed and is not suitable for the desktop app, so the export script intentionally leaves the tracked macOS PNGs unchanged and prints a reminder after every run.
 
 After changing an Icon Composer project, open it in Icon Composer and export the macOS PNG with exactly these settings:
@@ -63,5 +65,6 @@ is instead rendered from the same Icon Composer SVG sources by `vp run icons:exp
 - `apps/mobile/assets/android-splash-icon-*.png`: the two layers composed into one 288dp image, so
   the splash mask reproduces the launcher icon's framing.
 
-Rerun the export after changing a layer SVG. `android-icon-mark.png` remains a flat silhouette for
-Android's monochrome themed icon.
+Rerun the export after changing a layer SVG. `android-icon-mark.png` (the flat silhouette for
+Android's monochrome themed icon) and `android-notification-icon.png` are not output of the export
+script: they are hand-made white glyph silhouettes, so redraw them by hand when the mark changes.

@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
+process.env.AC_EAS_PROJECT_ID = "00000000-0000-4000-8000-000000000000";
 const { main, mergeState, readState, render } = require("./mobile-preview-comment.cjs");
 
 const fingerprint = "c31608b37a8a2dca35ccee39cfd2ec7305042629";
@@ -93,7 +94,7 @@ test("publishing consolidates platform comments and preserves unrelated comments
       {
         id: 4,
         user: { login: "github-actions[bot]" },
-        body: "<!-- continuous-deploy-fingerprint-projectId:d763fcb8-d37c-41ea-a773-b54a0ab4a454 -->\nOld Expo preview",
+        body: "<!-- continuous-deploy-fingerprint-projectId:00000000-0000-4000-8000-000000000000 -->\nOld Expo preview",
       },
     ],
     [

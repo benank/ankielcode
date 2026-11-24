@@ -71,18 +71,9 @@ update it with `git pull` and a rebuild.
 
 ## Desktop app
 
-Download a release from [GitHub Releases](https://github.com/benank/ankielcode/releases),
-or use a package manager:
-
-| Platform           | Install                                                          |
-| ------------------ | ---------------------------------------------------------------- |
-| Windows            | `winget install Ankiel.AnkielCode`                               |
-| Windows (Scoop)    | `scoop install extras/ankielcode`                                |
-| macOS              | `brew install --cask ankiel-code`                                |
-| Debian, Ubuntu     | `sudo apt install ./Ankiel-Code-*.deb`                           |
-| Arch Linux         | `yay -S ankielcode-bin`                                          |
-| Arch Linux nightly | `yay -S ankielcode-nightly-bin`                                  |
-| Nix                | `nix profile add github:NixOS/nixpkgs/nixos-unstable#ankielcode` |
+Download a release from [GitHub Releases](https://github.com/benank/ankielcode/releases)
+or [code.ankiel.com/download](https://code.ankiel.com/download). On Debian and Ubuntu,
+install the `.deb` with `sudo apt install ./Ankiel-Code-*.deb`.
 
 ### Linux
 
@@ -102,32 +93,6 @@ chmod +x ./Ankiel-Code.AppImage
 The `.deb` updates itself like the other desktop builds. It asks for your
 password to install each update. If your desktop has no password prompt, the
 update fails. Download the new `.deb` and install it the same way.
-
-The AUR packages support x86_64 and ARM64.
-Update AUR installs with your AUR helper, such as `yay -Syu`, instead of the
-in-app updater.
-
-### Nix (nixpkgs)
-
-Ankiel Code is maintained in [nixpkgs](https://github.com/NixOS/nixpkgs/tree/nixos-unstable/pkgs/by-name/ac/ankielcode).
-The command above installs from `nixos-unstable` and requires Nix 2.30 or later with
-`nix-command` and `flakes` enabled. Launch the desktop app with `ankielcode-desktop`;
-the package also includes the `ac` command.
-
-On NixOS, you can instead add the package to your system configuration, using
-a nixpkgs revision that includes `ankielcode`:
-
-```nix
-environment.systemPackages = [ pkgs.ankielcode ];
-```
-
-Apply the change with `sudo nixos-rebuild switch`. For Home Manager, add
-`pkgs.ankielcode` to `home.packages` and run `home-manager switch`.
-
-Update a profile installation with `nix profile upgrade ankielcode`. For NixOS or
-Home Manager, update your configuration's nixpkgs input or channel and rebuild.
-Nix manages both the desktop app and the bundled
-`ac` command; use Nix to update them instead of the in-app updater or `ac update`.
 
 ### The `ac` command
 
@@ -169,18 +134,9 @@ folder paths, so in the web app use **Add project** instead.
 
 ## Mobile app
 
-Install Ankiel Code from the
-[App Store](https://apps.apple.com/us/app/ankiel-code-remote-claude-more/id6787819824) or
-[Google Play](https://play.google.com/store/apps/details?id=com.ankiel.ankielcode).
-The phone connects to a server on another machine. Follow
-[remote access](./remote-access.md) to link it with a pairing URL or QR code.
-
-Store links and QR codes are also available in **Settings → About → Mobile app**
-on web and desktop. The store apps work with both stable and Nightly servers. Test builds are optional:
-
-- **iPhone and iPad:** TestFlight is invite-only.
-- **Android:** download an APK from the
-  [Android beta releases](https://github.com/benank/ankielcode/releases?q=android-beta-).
+There are no App Store or Google Play listings yet. Build the app from source with the
+steps in [apps/mobile/README.md](../../apps/mobile/README.md), or install a build you
+produced yourself.
 
 If the app crashes during launch, open Settings → Diagnostics on the next launch
 that succeeds. It lists startup crashes from the last 7 days with the error and

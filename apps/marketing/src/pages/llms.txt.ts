@@ -1,15 +1,15 @@
 import type { APIRoute } from "astro";
 
-import { ANDROID_PLAY_STORE_URL, GITHUB_REPOSITORY_URL, IOS_APP_STORE_URL } from "../lib/site";
+import { GITHUB_REPOSITORY_URL } from "../lib/site";
 import { absoluteUrl, SITE_TAGLINE } from "../lib/seo";
 
 // https://llmstxt.org: a plain index that tells AI agents which domain and links are official.
 export const GET: APIRoute = () => {
   const body = `# Ankiel Code
 
-> ${SITE_TAGLINE}. Ankiel Code is free, MIT-licensed, and built by Ankiel Inc. It runs Claude Code, Codex, Cursor, OpenCode, Grok, Antigravity, and other coding agents from one desktop, web, and mobile app.
+> ${SITE_TAGLINE}. Ankiel Code is free, MIT-licensed, and maintained by benank. It runs Claude Code, Codex, Cursor, OpenCode, Grok, Antigravity, and other coding agents from one desktop, web, and mobile app.
 
-The only official websites are https://code.ankiel.com and the web app at https://app.code.ankiel.com. Official builds come from ${absoluteUrl("/download")}, ${GITHUB_REPOSITORY_URL}/releases, the \`ac\` package on npm (\`npx @ankielcode/cli@latest\`), the iOS App Store, and Google Play. Any other website that offers an Ankiel Code download is not affiliated with Ankiel Inc.
+The only official websites are https://code.ankiel.com and the web app at https://app.code.ankiel.com. Official builds come from ${absoluteUrl("/download")}, ${GITHUB_REPOSITORY_URL}/releases, the \`ac\` package on npm (\`npx @ankielcode/cli@latest\`). Any other website that offers an Ankiel Code download is not affiliated with Ankiel Code
 
 ## Official links
 
@@ -18,8 +18,6 @@ The only official websites are https://code.ankiel.com and the web app at https:
 - [Source code](${GITHUB_REPOSITORY_URL}): the MIT-licensed repository
 - [Releases](${GITHUB_REPOSITORY_URL}/releases): release builds and changelogs
 - [npm package](https://www.npmjs.com/package/ac): run \`npx @ankielcode/cli@latest\`
-- [iOS app](${IOS_APP_STORE_URL})
-- [Android app](${ANDROID_PLAY_STORE_URL})
 
 ## Policies
 

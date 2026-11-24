@@ -15,11 +15,16 @@ concurrency:
   group: mobile-android-apk
   cancel-in-progress: false
 
+env:
+  AC_EAS_PROJECT_ID: ${{ vars.AC_EAS_PROJECT_ID }}
+  AC_EAS_OWNER: ${{ vars.AC_EAS_OWNER }}
+  AC_APPLE_TEAM_ID: ${{ vars.AC_APPLE_TEAM_ID }}
+
 jobs:
   mirror:
     name: Mirror beta APK
     if: github.repository == 'benank/ankielcode'
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write

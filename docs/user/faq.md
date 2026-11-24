@@ -25,29 +25,27 @@ Yes.
 
 ## How much does Ankiel Code cost?
 
-Nothing. There's no way to pay us to use Ankiel Code. You bring your own sub. The source code is free and open source (MIT). You still pay your provider like you already do. Connecting your devices to each other is free too, over your local network, Tailscale, or SSH. [Install](./install.md)
+Nothing. There's no way to pay for Ankiel Code. You bring your own sub. The source code is free and open source (MIT). You still pay your provider like you already do. Connecting your devices to each other is free too, over your local network, Tailscale, or SSH. [Install](./install.md)
 
 ## Can I fork or redistribute Ankiel Code?
 
-Yes, for the source code. The [MIT License](../../LICENSE) applies only to the source code, not to the Ankiel Code name, wordmark, logos, or branding. If you publish a fork or custom build, you must replace Ankiel Code's branding with your own and make it unmistakably clear that your project is unofficial and not affiliated with Ankiel, Inc. Using the Ankiel Code name, wordmark, logo, or branding without being explicitly clear that your project is unofficial, or indicating that an unofficial project is an official version of Ankiel Code, is unlawful and will be pursued to the full extent of the law. See [TRADEMARK.md](../../TRADEMARK.md).
+Yes, for the source code. The [MIT License](../../LICENSE) applies only to the source code, not to the Ankiel Code name, wordmark, logos, or branding. If you publish a fork or custom build, give it your own name and logo and say plainly that it is unofficial. See [TRADEMARK.md](../../TRADEMARK.md).
 
 ## Why is my Claude 5-hour limit draining so fast?
 
-It shouldn't anymore. Ankiel Code drives Claude through Anthropic's Agent SDK, and Anthropic's 5h meter used to charge Agent SDK usage about 1.7x more than using Claude Code directly. Weekly limits were never affected. Since v0.1.7, Claude in Ankiel Code drains your 5h limit at the same rate as Claude Code. Still seeing it? [Update Ankiel Code](./updating.md) on the machine that runs your agents. [My post on it](https://x.com/theo/status/2114166439813017873) · [Tracking issue](https://github.com/benank/ankielcode/issues/24649)
+It shouldn't anymore. Ankiel Code drives Claude through Anthropic's Agent SDK, and Anthropic's 5h meter used to charge Agent SDK usage about 1.7x more than using Claude Code directly. Weekly limits were never affected. Since v0.1.7, Claude in Ankiel Code drains your 5h limit at the same rate as Claude Code. Still seeing it? [Update Ankiel Code](./updating.md) on the machine that runs your agents.
 
 ## How do I use Ankiel Code remotely?
 
-Your agents run wherever Ankiel Code runs: your desktop, a server, a VPS. You connect to it from anywhere. I do this constantly. Less than 5% of my prompts run on my laptop. Run `ac up` on that machine and you get really good remote support. LAN pairing, Tailscale, and SSH all work, and [app.code.ankiel.com](https://app.code.ankiel.com) is the web client. [Remote access](./remote-access.md)
+Your agents run wherever Ankiel Code runs: your desktop, a server, a VPS. You connect to it from anywhere. Run `ac up` on that machine and you get really good remote support. LAN pairing, Tailscale, and SSH all work, and [app.code.ankiel.com](https://app.code.ankiel.com) is the web client. [Remote access](./remote-access.md)
 
 ## How do I use Ankiel Code on my phone?
 
-Get the [iOS](https://apps.apple.com/us/app/ankiel-code-remote-claude-more/id6787819824) or [Android](https://play.google.com/store/apps/details?id=com.ankiel.ankielcode) app, then connect it to your computer with a pairing link or QR code. The phone is a remote. Your computer does the work and needs to stay on. [Mobile setup](./install.md#mobile-app) · [Remote access](./remote-access.md)
+Build the mobile app from source (it is not in the app stores yet), then connect it to your computer with a pairing link or QR code. The phone is a remote. Your computer does the work and needs to stay on. [Mobile setup](./install.md#mobile-app) · [Remote access](./remote-access.md)
 
 ## Will I get banned for using my subscription?
 
-No. We work with all of the labs and Ankiel Code is within the TOS of Claude Code, Codex, and Google Antigravity. We worked directly with [SpaceXAI](https://x.com/SpaceXSI/status/2070195830192320600) to collaborate on the Grok Build and Cursor integrations. Everything else uses official ACP bindings.
-
-If it works in Ankiel Code, you can trust it is safe.
+Ankiel Code drives the official CLIs and SDKs for Claude Code, Codex, and Google Antigravity, and uses official ACP bindings for the rest. Check each provider's current terms for your plan.
 
 ## Can I add a bunch of accounts for one provider?
 

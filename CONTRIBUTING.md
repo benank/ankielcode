@@ -1,11 +1,9 @@
 # Contributing
 
-Ankiel Code is a project built by and for the community of agentic devs pushing the absolute limits of
-modern AI tools.
+Ankiel Code is a self-hosted GUI for coding agents, forked from [T3 Code](https://github.com/pingdotgg/t3code)
+and maintained by [benank](https://github.com/benank).
 
-That said, it is also ours.
-
-Ankiel Code is built and maintained by a small team with a clear vision. We are explicitly NOT INTERESTED
+Ankiel Code is built and maintained by one person with a clear vision. We are explicitly NOT INTERESTED
 in new feature addition PRs from people outside of said team, with a small
 [exception for vouched contributors](#vouched-features).
 
@@ -140,7 +138,7 @@ the old one.
 
 ## Forks and branding
 
-If you want changes outside our scope, you are welcome to fork the MIT-licensed source code. That license covers the source code only, not the **Ankiel Code** name, wordmark, logos, or branding. Any fork or derivative project must use its own branding and make it unmistakably clear that it is unofficial and not affiliated with Ankiel, Inc. Using our name, wordmark, logo, or branding without making it unmistakably clear that your project is unofficial, or indicating that an unofficial project is an official version of Ankiel Code, is unlawful and will be pursued to the full extent of the law. Truthful, plain-text attribution is fine; see [TRADEMARK.md](./TRADEMARK.md).
+If you want changes outside our scope, you are welcome to fork the MIT-licensed source code. That license covers the source code only, not the **Ankiel Code** name or logo. A public fork should use its own name and logo and say plainly that it is unofficial. Truthful, plain-text attribution is fine; see [TRADEMARK.md](./TRADEMARK.md).
 
 ## Setup
 

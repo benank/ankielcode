@@ -33,7 +33,7 @@
 ## Working on Ankiel Code
 
 Start with the [development runbook](./operations/00_development.md),
-[contribution policy](../CONTRIBUTING.md), and [trademark policy](../TRADEMARK.md).
+and [contribution policy](../CONTRIBUTING.md).
 
 Internal docs preserve architectural decisions, trust boundaries, conventions, and cross-cutting
 traps that the source alone does not explain. Most code changes do not need an internal

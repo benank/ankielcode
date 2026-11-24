@@ -59,3 +59,4 @@ node_modules/
 wrangler.local.*
 
 /packages/ssh/.ssh-launcher-test-*/
+.task-cache.json

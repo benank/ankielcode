@@ -1,12 +1,14 @@
 import { DEFAULT_HOSTED_APP_URL } from "@ankielcode/shared/hostedApp";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 
-import appleAppSiteAssociation from "../web/public/.well-known/apple-app-site-association.json";
-import assetLinks from "../web/public/.well-known/assetlinks.json";
-
 // Keep config parsing independent of local env files and build credentials.
 vi.mock("../../scripts/lib/public-config.ts", () => ({
-  loadRepoEnv: () => ({ APP_VARIANT: process.env.APP_VARIANT }),
+  loadRepoEnv: () =>
+    Object.fromEntries(
+      ["APP_VARIANT", "AC_EAS_PROJECT_ID", "AC_EAS_OWNER", "AC_APPLE_TEAM_ID"].flatMap((key) =>
+        process.env[key] === undefined ? [] : [[key, process.env[key]]],
+      ),
+    ),
 }));
 
 afterEach(() => {
@@ -34,14 +36,32 @@ it.each([
   const config = await loadConfig(value);
   expect(config.ios?.bundleIdentifier).toBe(identifier);
   expect(config.android?.package).toBe(identifier);
-  // Copied thread links open this app only while app.code.ankiel.com lists it.
   const host = new URL(DEFAULT_HOSTED_APP_URL).host;
   expect(config.ios?.associatedDomains).toContain(`applinks:${host}`);
-  expect(appleAppSiteAssociation.applinks.details[0]?.appIDs).toContain(
-    `${config.ios?.appleTeamId}.${identifier}`,
-  );
   expect(config.android?.intentFilters?.[0]?.data).toEqual([
     { scheme: "https", host, pathPrefix: "/threads/" },
   ]);
-  expect(assetLinks.map((link) => link.target.package_name)).toContain(identifier);
+});
+
+it("carries no Expo or Apple account identifiers unless the environment sets them", async () => {
+  const config = await loadConfig(undefined);
+  expect(config.owner).toBeUndefined();
+  expect(config.extra?.eas).toBeUndefined();
+  expect(config.ios?.appleTeamId).toBeUndefined();
+  expect(config.updates?.enabled).toBe(false);
+  expect(config.updates?.url).toBeUndefined();
+});
+
+it("derives updates and account identifiers from the environment", async () => {
+  vi.stubEnv("AC_EAS_PROJECT_ID", "00000000-0000-4000-8000-000000000000");
+  vi.stubEnv("AC_EAS_OWNER", "example-owner");
+  vi.stubEnv("AC_APPLE_TEAM_ID", "TEAM123456");
+  const config = await loadConfig(undefined);
+  expect(config.owner).toBe("example-owner");
+  expect(config.extra?.eas).toEqual({ projectId: "00000000-0000-4000-8000-000000000000" });
+  expect(config.ios?.appleTeamId).toBe("TEAM123456");
+  expect(config.updates).toMatchObject({
+    enabled: true,
+    url: "https://u.expo.dev/00000000-0000-4000-8000-000000000000",
+  });
 });

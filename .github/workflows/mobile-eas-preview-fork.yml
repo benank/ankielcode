@@ -1,7 +1,7 @@
 name: Mobile EAS Preview (Fork)
 
 # EAS previews for fork PRs. This runs the PR's code with an Expo token: the
-# app config and plugins run on this runner; both clients build on Blacksmith
+# app config and plugins run on this runner; both clients build on GitHub-hosted runners
 # with preview signing credentials. The label is the maintainer's sign-off
 # that they reviewed that code, so it covers exactly the commit it was applied
 # to: this pins that commit and consumes the label before running anything. A
@@ -16,13 +16,18 @@ on:
 permissions:
   contents: read
 
+env:
+  AC_EAS_PROJECT_ID: ${{ vars.AC_EAS_PROJECT_ID }}
+  AC_EAS_OWNER: ${{ vars.AC_EAS_OWNER }}
+  AC_APPLE_TEAM_ID: ${{ vars.AC_APPLE_TEAM_ID }}
+
 jobs:
   preview:
     name: EAS Preview
     if: >-
       github.event.pull_request.head.repo.full_name != github.repository &&
       github.event.label.name == '🚀 Mobile Continuous Deployment'
-    runs-on: blacksmith-8vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     concurrency:
       group: mobile-eas-preview-fork-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -180,7 +185,7 @@ jobs:
           if [ -z "$link" ]; then
             link="$(eas build:list --platform ios --build-profile preview:dev --runtime-version "$hash" --status finished --limit 5 --json --non-interactive \
               | sed -n '/^\[/,$p' \
-              | jq -r --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '[.[] | select((.expirationDate // "9999") > $now)][0] | select(. != null) | "https://expo.dev/accounts/pingdotgg/projects/ankiel-code/builds/\(.id)"')"
+              | jq -r --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '[.[] | select((.expirationDate // "9999") > $now)][0] | select(. != null) | "https://expo.dev/accounts/\(env.AC_EAS_OWNER)/projects/ankiel-code/builds/\(.id)"')"
           fi
           echo "link=$link" >> "$GITHUB_OUTPUT"
           if [ -z "$link" ]; then echo "build=true" >> "$GITHUB_OUTPUT"; fi
@@ -216,7 +221,7 @@ jobs:
           else
             link="$(eas build:list --platform android --build-profile preview:dev --runtime-version "$hash" --status finished --limit 5 --json --non-interactive \
               | sed -n '/^\[/,$p' \
-              | jq -r --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '[.[] | select((.expirationDate // "9999") > $now)][0] | select(. != null) | "https://expo.dev/accounts/pingdotgg/projects/ankiel-code/builds/\(.id)"')"
+              | jq -r --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '[.[] | select((.expirationDate // "9999") > $now)][0] | select(. != null) | "https://expo.dev/accounts/\(env.AC_EAS_OWNER)/projects/ankiel-code/builds/\(.id)"')"
           fi
           echo "link=$link" >> "$GITHUB_OUTPUT"
           if [ -z "$link" ]; then echo "build=true" >> "$GITHUB_OUTPUT"; fi
@@ -240,7 +245,7 @@ jobs:
     name: Android preview client
     needs: preview
     if: needs.preview.outputs.build == 'true'
-    runs-on: blacksmith-32vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
       contents: read
@@ -303,7 +308,7 @@ jobs:
     name: iOS preview client
     needs: preview
     if: needs.preview.outputs.ios_build == 'true'
-    runs-on: blacksmith-12vcpu-macos-27
+    runs-on: macos-latest
     timeout-minutes: 60
     permissions:
       contents: read
@@ -364,7 +369,7 @@ jobs:
     name: Mobile preview comment
     needs: [preview, android-build, ios-build]
     if: always() && !cancelled() && needs.preview.result == 'success'
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     concurrency:
       group: mobile-preview-comment-${{ github.event.pull_request.number }}
       cancel-in-progress: false

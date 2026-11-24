@@ -1,4 +1,5 @@
-const PROJECT_ID = "d763fcb8-d37c-41ea-a773-b54a0ab4a454";
+// The Expo project id comes from the repository variable AC_EAS_PROJECT_ID; there is no default.
+const PROJECT_ID = process.env.AC_EAS_PROJECT_ID ?? "";
 const APP_SCHEME = "ankiel-code";
 
 function readState(body) {

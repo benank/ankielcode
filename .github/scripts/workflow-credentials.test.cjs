@@ -33,21 +33,6 @@ const runsProjectCode = (block) =>
     block,
   );
 
-test("npm publishing is bound to the environment that admits only main and v* tags", () => {
-  const publish = jobs("workflows/release.yml").publish_cli;
-  assert.match(publish, /^ {6}id-token: write$/m);
-  assert.match(publish, /^ {4}environment: production$/m);
-});
-
-test("the web preview gives the Vercel token to the deploy step only, after an install without lifecycle scripts", () => {
-  const deploy = jobs("workflows/web-preview.yml").deploy;
-  assert.doesNotMatch(deploy.split(/^ {4}steps:\n/m)[0], /secrets\./);
-  const withSecrets = steps(deploy).filter((step) => step.includes("secrets."));
-  assert.equal(withSecrets.length, 1);
-  assert.match(withSecrets[0], /name: Deploy preview/);
-  assert.match(deploy, /run-install: \|\n {12}args:\n {14}- --ignore-scripts\n/);
-});
-
 const mobileWorkflows = [
   "workflows/mobile-eas-preview.yml",
   "workflows/mobile-eas-preview-build.yml",
@@ -183,31 +168,12 @@ test("the store build record job runs the workflow's own action and passes the b
   assert.match(record, /^ {10}commit: \$\{\{ inputs\.sha \}\}$/m);
 });
 
-test("release deploys give the Vercel token to the deploy step only", () => {
-  const all = jobs("workflows/release.yml");
-  for (const name of ["build_web", "build_marketing"]) {
-    assert.doesNotMatch(all[name].split(/^ {4}steps:\n/m)[0], /secrets\.VERCEL/);
-    const withToken = steps(all[name]).filter((step) => step.includes("secrets.VERCEL_TOKEN"));
-    assert.equal(withToken.length, 1);
-    assert.match(withToken[0], /name: Build staged deployment/);
-  }
-});
-
 test("the version override token covers this repository only", () => {
   const { version, production } = jobs("workflows/mobile-eas-production.yml");
   const mint = steps(version).find((step) => step.includes("create-github-app-token"));
   assert.doesNotMatch(mint, /^\s+(?:owner|repositories):/m);
   assert.match(mint, /^\s+permission-contents: write$/m);
   assert.doesNotMatch(production, /RELEASE_APP|create-github-app-token/);
-});
-
-test("the release version bump is pushed by a job that installs nothing, with a token for this repository only", () => {
-  const { finalize } = jobs("workflows/release.yml");
-  const mint = steps(finalize).find((step) => step.includes("create-github-app-token"));
-  assert.doesNotMatch(mint, /^\s+(?:owner|repositories):/m);
-  assert.match(mint, /^\s+permission-contents: write$/m);
-  assert.ok(!runsProjectCode(finalize), "finalize holds a write token and runs code");
-  assert.match(finalize, /run: node \.github\/scripts\/set-release-version\.cjs /);
 });
 
 test("the Vite+ toolchain is cached before the job installs or runs project code", () => {

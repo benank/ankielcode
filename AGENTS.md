@@ -1,40 +1,44 @@
 # Ankiel Code
 
-Ankiel Code is a minimal GUI for coding agents. A Node WebSocket server wraps provider CLIs and agents (Codex, Claude Code, Cursor, Grok, OpenCode, Antigravity, Kiro, Pi, Muse Code, fx) and serves web, desktop, and mobile clients.
+Ankiel Code is a minimal, self-hosted GUI for coding agents. A Node WebSocket server wraps provider CLIs and agents (Codex, Claude Code, Cursor, Grok, OpenCode, Antigravity, Kiro, Pi, Muse Code, fx) and serves web, desktop, and mobile clients.
 
-You can think of Ankiel Code as an open source "bring-your-own-subscription" alternative to apps like Claude Desktop, Codex App, Cursor Glass and Conductor.
+You can think of Ankiel Code as an open source "bring-your-own-subscription" alternative to apps like Claude Desktop, Codex App, Cursor Glass and Conductor. It is a fork of T3 Code (MIT), and it is run by one person who wants to own the whole stack.
 
-## What makes Ankiel Code special?
+## What matters most
 
-We have over 500,000 users who love Ankiel Code. It's important we maintain the things they love as we continue to iterate on the product. Here's a brief list of the things we can never compromise on.
+Here is the short list of things to protect as the product changes.
 
-### 1. Open at the core
+### 1. Own your data
 
-Ankiel Code is truly open. We share our roadmap, we share how we think about things, and of course we share all our code. A large number of our users run forks (our MIT license covers source code only, not Ankiel Code's trademarks or branding; see [TRADEMARK.md](TRADEMARK.md)). We work in the open, and should strive to stay that way.
+Ankiel Code is self-hosted. Threads, code, and credentials stay on machines the user controls. There is no telemetry, no account, and no hosted backend the product depends on. Anything optional that talks to a service the user runs themselves (their own Cloudflare account, their own Tailscale) is fine; anything that sends data to a service the maintainer runs is not.
 
-### 2. Performance without compromise
+### 2. Open at the core
 
-Lots of apps have gotten bogged down with bad tech decisions and "slop". We have not, and we're proud of the performance of Ankiel Code. We regularly audit for performance regressions, often caused by sending too much data over websockets, css animations causing gpu spikes, lists being hard to render, and more. Make sure all changes are considerate of performance impact.
+All the code is open and MIT licensed (our license covers source code only, not the Ankiel Code name or branding; see [TRADEMARK.md](TRADEMARK.md)). Anyone should be able to fork it and run it without asking.
 
-### 3. Remote ready
+### 3. Performance without compromise
 
-The architecture of Ankiel Code's websocket layer (`ac`) enables a lot of awesome remote features. These have become core to the product. Whether users are connecting directly over their local network, using Tailscale, or over SSH, we need to make sure new features are properly supported.
+Lots of apps get bogged down by bad tech decisions and "slop". Keep Ankiel Code fast. Regressions usually come from sending too much data over websockets, css animations causing gpu spikes, lists being hard to render, and more. Make sure all changes are considerate of performance impact.
 
-### 4. Multi-surface
+### 4. Remote ready
+
+The architecture of Ankiel Code's websocket layer (`ac`) enables the remote features. They are core to the product. Whether users are connecting directly over their local network, using Tailscale, or over SSH, new features need to work in every connection mode.
+
+### 5. Multi-surface
 
 Ankiel Code has 3 key app surfaces: **web**, **desktop**, and **mobile**.
 
-**Web** is kind of two surfaces, as we have the public facing "app.code.ankiel.com" as well as locally hosting the web app through the `ac` command. Both need to be supported by all new features where reasonable.
+**Web** is kind of two surfaces: the hosted static client at "app.code.ankiel.com" and the web app served locally by the `ac` command. Both need to be supported by all new features where reasonable.
 
 **Desktop** is the main surface most users install first. It's a full Electron app that bundles the server runner as well. The desktop app can also be used as the host server, allowing remote connections from app.code.ankiel.com or the mobile app.
 
-**Mobile** is a React Native app for both iOS and Android, available on the App Store and Google Play. The mobile app allows for connecting to any Ankiel Code server to control work remotely.
+**Mobile** is a React Native app for iOS and Android. The mobile app allows for connecting to any Ankiel Code server to control work remotely.
 
-## A note from Theo
+## How to work here
 
 I like ambitious ideas, simple systems, and software that feels obvious. Do not preserve complexity just because it already exists. Do not introduce machinery because it looks architecturally impressive. Understand the real constraint, then fight for the smallest model that makes the correct behavior unsurprising.
 
-Channel both "measure twice, cut once" and "yagni". Fight scope creep. Try to honor the dev's intent in both a minimal and realistic fashion.
+Measure twice, cut once, and don't build what isn't needed yet. Fight scope creep. Honor the developer's intent in a minimal and realistic way.
 
 The rest of this document is meant to help you navigate the codebase and make changes effectively. Think of these instructions less as "hard rules", more as "good defaults". The developer's preferences should be able to override anything here.
 
@@ -42,7 +46,7 @@ Of note: Most Ankiel Code contributions will come from Ankiel Code itself, often
 
 ## Terminology
 
-- **you** = the agent reading this file. **we / us / maintainers** = Theo, Julius, and the people building Ankiel Code. **user** = person driving coding agents in Ankiel Code. **agent** = coding agent running inside Ankiel Code.
+- **you** = the agent reading this file. **I / the maintainer** = benank, the owner of this repo. **user** = person driving coding agents in Ankiel Code. **agent** = coding agent running inside Ankiel Code.
 - Domain terms (environment, project, thread, turn, provider, checkpoint, etc.): [00_glossary.md](docs/internals/00_glossary.md).
 
 ## The three ways to hurt yourself
@@ -61,7 +65,7 @@ The most common defect in this repo is a change that works on the path you teste
 - **Agents.** Capabilities a user triggers should be service methods reachable by MCP tools and scheduled tasks, not inline handler code.
 - **Contracts.** Wire changes go in `packages/contracts` so server, web, mobile, and desktop follow.
 - **Reverse states.** Every way in needs a way out and a way to see it (snooze/unsnooze, close/reopen). A one-way door is a bug.
-- **Connection modes.** Local, remote, and tunnel; multi-device and multi-environment.
+- **Connection modes.** Local and remote (LAN, Tailscale, SSH); multi-device and multi-environment.
 - **Languages.** Translate user-facing copy in `apps/{web,mobile}/src/i18n/translations` (`vp run i18n:generate` / `vp run i18n:check`) and `apps/marketing/src/i18n`. See [14_i18n.md](docs/internals/14_i18n.md).
 - **Docs.** Check whether the change makes existing guidance inaccurate. Follow [Documentation](#documentation).
 
@@ -90,7 +94,7 @@ See [00_development.md](docs/operations/00_development.md) for setup, ports, see
 
 - **Commit and push straight to `main` by default.** When a piece of work is done, commit it on `main` and `git push origin main` without asking. Do not create branches or PRs unless the developer asks for one.
 - Never commit secrets, or files that another in-progress session or agent owns.
-- `origin` is not always GitHub. Check `git remote get-url origin` before your first forge command and use that forge's CLI and skill. See [Forge mirror](docs/operations/00_development.md#forge-mirror-optional).
+- `origin` is GitHub (`github.com/benank/ankielcode`); use `gh`.
 - Conventional commit titles, plain language: `fix(web): new threads no longer spike CPU`.
 - Body: the problem in a sentence or two, then how you fixed it. End with the model and harness that did the work.
 
