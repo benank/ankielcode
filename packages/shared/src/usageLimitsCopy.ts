@@ -83,9 +83,10 @@ export function limitsNotice(
 export function collectLimitNotices(
   presentations: LimitPresentations,
   resolve: MFunctionType = mFallback,
+  showEnvironmentLabel = presentations.size > 1,
 ): readonly string[] {
   const label = (environmentLabel: string, subject: string) =>
-    presentations.size > 1 ? `${environmentLabel} · ${subject}` : subject;
+    showEnvironmentLabel ? `${environmentLabel} · ${subject}` : subject;
   const notices = new Set<string>();
   // A failed hub read needs no notice when another report already shows the account's row.
   const failedAccounts = unshownFailedHubAccounts(presentations);
