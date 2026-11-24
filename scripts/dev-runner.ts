@@ -67,8 +67,8 @@ function sharedBackendTargetHost(host: string | undefined): string {
   return "127.0.0.1";
 }
 
-export const DEFAULT_AC_HOME = Effect.map(Effect.service(Path.Path), (path) =>
-  path.join(NodeOS.homedir(), ".ac"),
+export const DEFAULT_ANKIEL_HOME = Effect.map(Effect.service(Path.Path), (path) =>
+  path.join(NodeOS.homedir(), ".ankiel"),
 );
 
 const MODE_ARGS = {
@@ -96,7 +96,7 @@ const BUILT_DEV_ARGS = [
 ] as const;
 
 type DevMode = keyof typeof MODE_ARGS;
-// Only backend ports honor --host/AC_HOST; web ports stay loopback.
+// Only backend ports honor --host/ANKIEL_HOST; web ports stay loopback.
 type PortAvailabilityCheck<R = never> = (
   port: number,
   role?: "server" | "web",
@@ -123,7 +123,7 @@ export class DevRunnerConfigurationError extends Schema.TaggedError<DevRunnerCon
 export class DevRunnerInvalidPortOffsetError extends Schema.TaggedError<DevRunnerInvalidPortOffsetError>()(
   "DevRunnerInvalidPortOffsetError",
   {
-    configKey: Schema.Literal("AC_PORT_OFFSET"),
+    configKey: Schema.Literal("ANKIEL_PORT_OFFSET"),
     portOffset: Schema.Number,
     minimum: Schema.Number,
   },
@@ -219,8 +219,8 @@ const optionalIntegerConfig = (name: string): Config.Config<number | undefined> 
     Config.map((value) => Option.getOrUndefined(value)),
   );
 const OffsetConfig = Config.all({
-  portOffset: optionalIntegerConfig("AC_PORT_OFFSET"),
-  devInstance: optionalStringConfig("AC_DEV_INSTANCE"),
+  portOffset: optionalIntegerConfig("ANKIEL_PORT_OFFSET"),
+  devInstance: optionalStringConfig("ANKIEL_DEV_INSTANCE"),
 });
 
 export function resolveOffset(config: {
@@ -235,7 +235,7 @@ export function resolveOffset(config: {
     if (config.portOffset < 0) {
       return Effect.fail(
         new DevRunnerInvalidPortOffsetError({
-          configKey: "AC_PORT_OFFSET",
+          configKey: "ANKIEL_PORT_OFFSET",
           portOffset: config.portOffset,
           minimum: 0,
         }),
@@ -243,7 +243,7 @@ export function resolveOffset(config: {
     }
     return Effect.succeed({
       offset: config.portOffset,
-      source: `AC_PORT_OFFSET=${config.portOffset}`,
+      source: `ANKIEL_PORT_OFFSET=${config.portOffset}`,
     });
   }
 
@@ -252,12 +252,12 @@ export function resolveOffset(config: {
     if (/^\d+$/.test(seed)) {
       return Effect.succeed({
         offset: Number(seed),
-        source: `numeric AC_DEV_INSTANCE=${seed}`,
+        source: `numeric ANKIEL_DEV_INSTANCE=${seed}`,
       });
     }
 
     const offset = ((Hash.string(seed) >>> 0) % MAX_HASH_OFFSET) + 1;
-    return Effect.succeed({ offset, source: `hashed AC_DEV_INSTANCE=${seed}` });
+    return Effect.succeed({ offset, source: `hashed ANKIEL_DEV_INSTANCE=${seed}` });
   }
 
   const worktreePath = config.worktreePath?.trim();
@@ -285,7 +285,7 @@ const resolveBaseDir = Effect.fn("dev-runner.resolveBaseDir")(function* (
     return path.resolve(configured);
   }
 
-  return yield* DEFAULT_AC_HOME;
+  return yield* DEFAULT_ANKIEL_HOME;
 });
 
 interface CreateDevRunnerEnvInput {
@@ -330,22 +330,22 @@ export const createDevRunnerEnv = Effect.fn("dev-runner.createDevRunnerEnv")(fun
   };
 
   const path = yield* Path.Path;
-  // The server stores an explicit home's state in userdata, which for ~/.ac is the live
-  // install. Left implicit, dev state goes to ~/.ac/dev.
-  const isLiveHome = resolvedBaseDir === path.join(yield* HostProcess.HomeDirectory, ".ac");
+  // The server stores an explicit home's state in userdata, which for ~/.ankiel is the live
+  // install. Left implicit, dev state goes to ~/.ankiel/dev.
+  const isLiveHome = resolvedBaseDir === path.join(yield* HostProcess.HomeDirectory, ".ankiel");
   if (configuredBaseDir !== undefined && !isLiveHome) {
-    output.AC_HOME = resolvedBaseDir;
+    output.ANKIEL_HOME = resolvedBaseDir;
   } else {
-    delete output.AC_HOME;
+    delete output.ANKIEL_HOME;
   }
 
   // Managed Ankiel service shells leak launcher variables that make dev servers fail version checks.
   // Dev-runner servers are never launcher-managed (serviceLauncherClient.ts resolveStartup).
-  delete output.AC_SERVICE_LAUNCHER_CONTEXT;
-  delete output.AC_BOOT_SERVICE_UNIT;
+  delete output.ANKIEL_SERVICE_LAUNCHER_CONTEXT;
+  delete output.ANKIEL_BOOT_SERVICE_UNIT;
 
   if (!isDesktopMode) {
-    output.AC_PORT = String(serverPort);
+    output.ANKIEL_PORT = String(serverPort);
     // An inherited HOST pins Vite's HMR socket via explicitHost in apps/web/vite.config.ts.
     // Only desktop mode should set it.
     delete output.HOST;
@@ -359,61 +359,61 @@ export const createDevRunnerEnv = Effect.fn("dev-runner.createDevRunnerEnv")(fun
       // which merges `.env`/`.env.local` *under* this env, so a developer
       // with either URL in their `.env` would get it back and silently lose
       // single-origin mode.
-      output.AC_SINGLE_ORIGIN_DEV = "1";
+      output.ANKIEL_SINGLE_ORIGIN_DEV = "1";
     } else {
       output.VITE_HTTP_URL = `http://localhost:${serverPort}`;
       output.VITE_WS_URL = `ws://localhost:${serverPort}`;
-      delete output.AC_SINGLE_ORIGIN_DEV;
+      delete output.ANKIEL_SINGLE_ORIGIN_DEV;
     }
   } else {
-    output.AC_PORT = String(serverPort);
+    output.ANKIEL_PORT = String(serverPort);
     output.VITE_HTTP_URL = `http://${DESKTOP_DEV_LOOPBACK_HOST}:${serverPort}`;
     output.VITE_WS_URL = `ws://${DESKTOP_DEV_LOOPBACK_HOST}:${serverPort}`;
     // Desktop pins the renderer to loopback on purpose; an ambient marker
     // must not make Vite drop those URLs.
-    delete output.AC_SINGLE_ORIGIN_DEV;
-    delete output.AC_MODE;
-    delete output.AC_NO_BROWSER;
-    delete output.AC_DEV_AUTH_TOKEN;
+    delete output.ANKIEL_SINGLE_ORIGIN_DEV;
+    delete output.ANKIEL_MODE;
+    delete output.ANKIEL_NO_BROWSER;
+    delete output.ANKIEL_DEV_AUTH_TOKEN;
   }
 
   // Agent shells inherit the parent Ankiel server's bind settings; only --host widens the dev server.
-  delete output.AC_LAN;
+  delete output.ANKIEL_LAN;
   if (!isDesktopMode && host !== undefined) {
-    output.AC_HOST = host;
+    output.ANKIEL_HOST = host;
   } else {
-    delete output.AC_HOST;
+    delete output.ANKIEL_HOST;
   }
 
   if (!isDesktopMode) {
-    output.AC_NO_BROWSER = browser === true ? "0" : "1";
+    output.ANKIEL_NO_BROWSER = browser === true ? "0" : "1";
   }
 
   if (autoBootstrapProjectFromCwd !== undefined) {
-    output.AC_AUTO_BOOTSTRAP_PROJECT_FROM_CWD = autoBootstrapProjectFromCwd ? "1" : "0";
+    output.ANKIEL_AUTO_BOOTSTRAP_PROJECT_FROM_CWD = autoBootstrapProjectFromCwd ? "1" : "0";
   } else {
-    delete output.AC_AUTO_BOOTSTRAP_PROJECT_FROM_CWD;
+    delete output.ANKIEL_AUTO_BOOTSTRAP_PROJECT_FROM_CWD;
   }
 
   if (logWebSocketEvents !== undefined) {
-    output.AC_LOG_WS_EVENTS = logWebSocketEvents ? "1" : "0";
+    output.ANKIEL_LOG_WS_EVENTS = logWebSocketEvents ? "1" : "0";
   } else {
-    delete output.AC_LOG_WS_EVENTS;
+    delete output.ANKIEL_LOG_WS_EVENTS;
   }
 
   if (mode === "dev") {
-    output.AC_MODE = "web";
-    delete output.AC_DESKTOP_WS_URL;
+    output.ANKIEL_MODE = "web";
+    delete output.ANKIEL_DESKTOP_WS_URL;
   }
 
   if (mode === "dev:server" || mode === "dev:web") {
-    output.AC_MODE = "web";
-    delete output.AC_DESKTOP_WS_URL;
+    output.ANKIEL_MODE = "web";
+    delete output.ANKIEL_DESKTOP_WS_URL;
   }
 
   if (isDesktopMode) {
     output.HOST = DESKTOP_DEV_LOOPBACK_HOST;
-    delete output.AC_DESKTOP_WS_URL;
+    delete output.ANKIEL_DESKTOP_WS_URL;
   }
 
   return output;
@@ -639,7 +639,12 @@ const prepareFirstStart = Effect.fn("dev-runner.prepareFirstStart")(function* (i
         );
       }
     }
-    const source = path.join(yield* HostProcess.HomeDirectory, ".ac", "userdata", "statev2.sqlite");
+    const source = path.join(
+      yield* HostProcess.HomeDirectory,
+      ".ankiel",
+      "userdata",
+      "statev2.sqlite",
+    );
     // A V1 state.sqlite counts as data too: the server imports it only while
     // statev2.sqlite is missing, so seeding would hide it.
     if (
@@ -655,7 +660,7 @@ const prepareFirstStart = Effect.fn("dev-runner.prepareFirstStart")(function* (i
           );
         } else {
           yield* Effect.logInfo(
-            `[dev-runner] seeding ${input.worktreeHome} from ${source} (read-only). --no-seed or AC_DEV_SEED=0 skips this.`,
+            `[dev-runner] seeding ${input.worktreeHome} from ${source} (read-only). --no-seed or ANKIEL_DEV_SEED=0 skips this.`,
           );
           yield* runRepoScript(
             "apps/server/scripts/migrate-dev-db.ts",
@@ -737,7 +742,7 @@ export const runDevRunnerWithInput = Effect.fn("dev-runner.runDevRunnerWithInput
     Effect.mapError(
       (cause) =>
         new DevRunnerConfigurationError({
-          configKeys: ["AC_PORT_OFFSET", "AC_DEV_INSTANCE"],
+          configKeys: ["ANKIEL_PORT_OFFSET", "ANKIEL_DEV_INSTANCE"],
           cause,
         }),
     ),
@@ -773,8 +778,8 @@ export const runDevRunnerWithInput = Effect.fn("dev-runner.runDevRunnerWithInput
 
   const hostEnvironment = yield* HostProcess.Environment;
   // A dev server started inside a worktree defaults to that worktree's own
-  // (gitignored) `.ac` — see @ankielcode/shared/devHome for why this must
-  // outrank an ambient AC_HOME. `--home-dir` still wins.
+  // (gitignored) `.ankiel` — see @ankielcode/shared/devHome for why this must
+  // outrank an ambient ANKIEL_HOME. `--home-dir` still wins.
   const worktreeHome = yield* resolveWorktreeAnkielHome(yield* HostProcess.WorkingDirectory);
   // Trim before choosing: `--home-dir ""` is not a selection, and treating it
   // as one would skip the worktree default and land on the shared home —
@@ -782,7 +787,7 @@ export const runDevRunnerWithInput = Effect.fn("dev-runner.runDevRunnerWithInput
   const resolvedAnkielHome =
     (input.ankielHome?.trim() || undefined) ??
     worktreeHome ??
-    (hostEnvironment.AC_HOME?.trim() || undefined);
+    (hostEnvironment.ANKIEL_HOME?.trim() || undefined);
   const env = yield* createDevRunnerEnv({
     mode: input.mode,
     baseEnv: hostEnvironment,
@@ -801,10 +806,10 @@ export const runDevRunnerWithInput = Effect.fn("dev-runner.runDevRunnerWithInput
     serverOffset !== offset || webOffset !== offset
       ? ` selectedOffset(server=${serverOffset},web=${webOffset})`
       : "";
-  const baseDir = env.AC_HOME ?? (yield* DEFAULT_AC_HOME);
+  const baseDir = env.ANKIEL_HOME ?? (yield* DEFAULT_ANKIEL_HOME);
 
   yield* Effect.logInfo(
-    `[dev-runner] mode=${input.mode} source=${source}${selectionSuffix} serverPort=${String(env.AC_PORT)} webPort=${String(env.PORT)} baseDir=${baseDir}`,
+    `[dev-runner] mode=${input.mode} source=${source}${selectionSuffix} serverPort=${String(env.ANKIEL_PORT)} webPort=${String(env.PORT)} baseDir=${baseDir}`,
   );
 
   // Before the share block: --dry-run only resolves and prints. Sharing would
@@ -837,7 +842,7 @@ export const runDevRunnerWithInput = Effect.fn("dev-runner.runDevRunnerWithInput
           ...(input.built
             ? {
                 localTarget: {
-                  port: Number(env.AC_PORT),
+                  port: Number(env.ANKIEL_PORT),
                   host: sharedBackendTargetHost(input.host),
                 },
               }
@@ -871,7 +876,10 @@ export const runDevRunnerWithInput = Effect.fn("dev-runner.runDevRunnerWithInput
         // The app is reached from the tailnet origin. Vite already allows
         // *.ts.net hosts; the backend needs the origin for credentialed
         // requests that bypass the proxy (desktop renderer, direct calls).
-        env.AC_DEV_ALLOWED_ORIGINS = [env.AC_DEV_ALLOWED_ORIGINS, new URL(shared.url).origin]
+        env.ANKIEL_DEV_ALLOWED_ORIGINS = [
+          env.ANKIEL_DEV_ALLOWED_ORIGINS,
+          new URL(shared.url).origin,
+        ]
           .filter((entry) => entry && entry.length > 0)
           .join(",");
         if (input.devUrl === undefined) {
@@ -879,13 +887,13 @@ export const runDevRunnerWithInput = Effect.fn("dev-runner.runDevRunnerWithInput
         }
         if (input.built) {
           built = true;
-          env.AC_BUILT_DEV = "1";
-        } else if (env.AC_BUNDLED_DEV === undefined) {
+          env.ANKIEL_BUILT_DEV = "1";
+        } else if (env.ANKIEL_BUNDLED_DEV === undefined) {
           // A shared origin serves a remote browser, where unbundled dev's
           // per-module requests each pay a tailnet round trip — a cold module
           // graph takes minutes to first paint. Bundled dev collapses that to a
           // few chunk requests.
-          env.AC_BUNDLED_DEV = "1";
+          env.ANKIEL_BUNDLED_DEV = "1";
         }
         yield* Effect.logInfo(`[dev-runner] shared on tailnet: ${shared.url}`);
       } else if (input.built) {
@@ -967,7 +975,7 @@ const devRunnerCli = Command.make("dev-runner", {
   ),
   ankielHome: Flag.String("home-dir").pipe(
     Flag.withDescription(
-      "Explicit Ankiel Code data directory; runtime state is stored under userdata (equivalent to AC_HOME). Inside a git worktree this defaults to that worktree's own .ac so dev state stays off the shared home.",
+      "Explicit Ankiel Code data directory; runtime state is stored under userdata (equivalent to ANKIEL_HOME). Inside a git worktree this defaults to that worktree's own .ankiel so dev state stays off the shared home.",
     ),
     Flag.optional,
     Flag.map(Option.getOrUndefined),
@@ -978,18 +986,18 @@ const devRunnerCli = Command.make("dev-runner", {
   ),
   autoBootstrapProjectFromCwd: Flag.Boolean("auto-bootstrap-project-from-cwd").pipe(
     Flag.withDescription(
-      "Auto-bootstrap toggle (equivalent to AC_AUTO_BOOTSTRAP_PROJECT_FROM_CWD).",
+      "Auto-bootstrap toggle (equivalent to ANKIEL_AUTO_BOOTSTRAP_PROJECT_FROM_CWD).",
     ),
-    Flag.withFallbackConfig(optionalBooleanConfig("AC_AUTO_BOOTSTRAP_PROJECT_FROM_CWD")),
+    Flag.withFallbackConfig(optionalBooleanConfig("ANKIEL_AUTO_BOOTSTRAP_PROJECT_FROM_CWD")),
   ),
   logWebSocketEvents: Flag.Boolean("log-websocket-events").pipe(
-    Flag.withDescription("WebSocket event logging toggle (equivalent to AC_LOG_WS_EVENTS)."),
+    Flag.withDescription("WebSocket event logging toggle (equivalent to ANKIEL_LOG_WS_EVENTS)."),
     Flag.withAlias("log-ws-events"),
-    Flag.withFallbackConfig(optionalBooleanConfig("AC_LOG_WS_EVENTS")),
+    Flag.withFallbackConfig(optionalBooleanConfig("ANKIEL_LOG_WS_EVENTS")),
   ),
   host: Flag.String("host").pipe(
     Flag.withDescription(
-      "Server host/interface override (forwards to AC_HOST). Ambient AC_HOST is ignored: agent shells inherit it from the Ankiel server that spawned them.",
+      "Server host/interface override (forwards to ANKIEL_HOST). Ambient ANKIEL_HOST is ignored: agent shells inherit it from the Ankiel server that spawned them.",
     ),
     Flag.optional,
     Flag.map(Option.getOrUndefined),
@@ -997,7 +1005,7 @@ const devRunnerCli = Command.make("dev-runner", {
   port: Flag.Int("port").pipe(
     Flag.withSchema(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 65535 }))),
     Flag.withDescription(
-      "Server port override (forwards to AC_PORT). Ambient AC_PORT is ignored: agent shells inherit it from the Ankiel server that spawned them.",
+      "Server port override (forwards to ANKIEL_PORT). Ambient ANKIEL_PORT is ignored: agent shells inherit it from the Ankiel server that spawned them.",
     ),
     Flag.optional,
     Flag.map(Option.getOrUndefined),
@@ -1022,9 +1030,9 @@ const devRunnerCli = Command.make("dev-runner", {
   ),
   seed: Flag.Boolean("seed").pipe(
     Flag.withDescription(
-      "Seed an empty worktree database from ~/.ac on first start (read-only, via migrate-dev-db) if the source is at most 500 MiB. On by default; --no-seed or AC_DEV_SEED=0 skips it.",
+      "Seed an empty worktree database from ~/.ankiel on first start (read-only, via migrate-dev-db) if the source is at most 500 MiB. On by default; --no-seed or ANKIEL_DEV_SEED=0 skips it.",
     ),
-    Flag.withFallbackConfig(optionalBooleanConfig("AC_DEV_SEED")),
+    Flag.withFallbackConfig(optionalBooleanConfig("ANKIEL_DEV_SEED")),
   ),
   built: Flag.Boolean("built").pipe(
     Flag.withDescription(
@@ -1035,10 +1043,10 @@ const devRunnerCli = Command.make("dev-runner", {
   memoryLimitGb: Flag.Int("memory-limit-gb").pipe(
     Flag.withSchema(NonNegativeInt),
     Flag.withDescription(
-      "Stop the dev server when it and its child processes use more than this many GiB of RAM plus swap (equivalent to AC_DEV_MEMORY_LIMIT_GB). Defaults to half of RAM, at most 16. 0 turns it off. Linux only.",
+      "Stop the dev server when it and its child processes use more than this many GiB of RAM plus swap (equivalent to ANKIEL_DEV_MEMORY_LIMIT_GB). Defaults to half of RAM, at most 16. 0 turns it off. Linux only.",
     ),
     Flag.withFallbackConfig(
-      Config.schema(NonNegativeInt, "AC_DEV_MEMORY_LIMIT_GB").pipe(
+      Config.schema(NonNegativeInt, "ANKIEL_DEV_MEMORY_LIMIT_GB").pipe(
         Config.option,
         Config.map(Option.getOrUndefined),
       ),

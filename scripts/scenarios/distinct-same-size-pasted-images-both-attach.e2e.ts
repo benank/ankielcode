@@ -1,7 +1,7 @@
 import { expect } from "e2e";
 import type { Browser } from "@e2e-dev/web";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 // Two 1x1 PNGs, one red and one blue, that encode to the same number of bytes.
 const RED_PIXEL =
@@ -25,10 +25,10 @@ const pastePng = (browser: Browser, base64: string) =>
 test(
   "Two different pasted images with the same name, type and size both attach",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Screenshots", messages: ["first"] });
-    await ac.open(thread);
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Screenshots", messages: ["first"] });
+    await ankiel.open(thread);
     await expect(screen.getByText("first fixture turn complete", { exact: false })).toBeVisible();
 
     const composer = screen.getByRole("textbox");

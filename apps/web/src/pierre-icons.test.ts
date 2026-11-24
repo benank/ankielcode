@@ -4,7 +4,7 @@ import {
   hasSpecificPierreIconForFileName,
   resolvePierreIconForEntry,
   syntheticFileNameForLanguageId,
-  AC_PIERRE_ICONS,
+  ANKIEL_PIERRE_ICONS,
 } from "./pierre-icons";
 
 describe("Pierre file icons", () => {
@@ -57,12 +57,12 @@ describe("Pierre file icons", () => {
   it("ships every custom icon referenced by the extended resolver", () => {
     const customIconNames = new Set(
       [
-        ...Object.values(AC_PIERRE_ICONS.byFileName),
-        ...Object.values(AC_PIERRE_ICONS.byFileExtension),
-      ].filter((name) => name.startsWith("ac-")),
+        ...Object.values(ANKIEL_PIERRE_ICONS.byFileName),
+        ...Object.values(ANKIEL_PIERRE_ICONS.byFileExtension),
+      ].filter((name) => name.startsWith("ankiel-")),
     );
     for (const iconName of customIconNames) {
-      assert.include(AC_PIERRE_ICONS.spriteSheet, `id="${iconName}"`);
+      assert.include(ANKIEL_PIERRE_ICONS.spriteSheet, `id="${iconName}"`);
     }
   });
 

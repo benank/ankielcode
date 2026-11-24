@@ -1,6 +1,6 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 // The thread CLI takes at most 120,000 characters per message: 3,000 lines of ten "the".
 const SEEDED_MATCHES = 30_000;
@@ -33,14 +33,14 @@ const paint = `(() => {
 test(
   "Find paints only matches near the viewport of a message with 30,000 matches",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    const project = await ac.project("find-paint");
-    const thread = await ac.thread({
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("find-paint");
+    const thread = await ankiel.thread({
       project,
       title: "Paint bound proof",
       messages: [LONG_MESSAGE],
     });
-    await ac.open(thread);
+    await ankiel.open(thread);
     await expect(screen.getByText("first fixture turn complete", { exact: false })).toBeVisible({
       timeout: 120_000,
     });

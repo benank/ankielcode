@@ -763,7 +763,7 @@ export const probeTailscaleHttpsEndpoint = Effect.fn("tailscale.probeTailscaleHt
   }) {
     const client = yield* HttpClient.HttpClient;
     const descriptor = yield* Effect.gen(function* () {
-      const url = new URL("/.well-known/ac/environment", input.baseUrl);
+      const url = new URL("/.well-known/ankiel/environment", input.baseUrl);
       const response = yield* client
         .execute(HttpClientRequest.get(url.toString()))
         .pipe(Effect.flatMap(HttpClientResponse.filterStatusOk));

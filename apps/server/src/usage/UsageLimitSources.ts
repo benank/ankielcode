@@ -286,7 +286,7 @@ export class UsageLimitResetFallback extends Context.Reference<{
     endpoint: string,
     model: string | null,
   ) => Effect.Effect<string | null>;
-}>("ac/usage/UsageLimitResetFallback", {
+}>("ankiel/usage/UsageLimitResetFallback", {
   defaultValue: () => ({ resetAt: () => Effect.succeed(null) }),
 }) {}
 

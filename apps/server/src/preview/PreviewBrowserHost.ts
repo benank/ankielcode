@@ -12,14 +12,14 @@ export const NO_SANDBOX_SIGNATURE = "No usable sandbox";
 const ROOT_SANDBOX_SIGNATURE = "Running as root without --no-sandbox";
 
 export const sandboxDisabled = (env: Readonly<Record<string, string | undefined>>) =>
-  env.AC_SERVER_BROWSER_SANDBOX === "0";
+  env.ANKIEL_SERVER_BROWSER_SANDBOX === "0";
 
 /** Set on Ubuntu 23.10+: unprivileged user namespaces need an AppArmor profile. */
 const USERNS_RESTRICTION = "/proc/sys/kernel/apparmor_restrict_unprivileged_userns";
 export const APPARMOR_PROFILE_PATH = "/etc/apparmor.d/ankiel-chrome-headless-shell";
 
 /** Match Ubuntu's Chrome profile; unconfined adds nothing beyond userns. */
-export const APPARMOR_PROFILE = `# Written by \`ac browser setup\`: lets Ankiel Code's headless browser use Chrome's sandbox.
+export const APPARMOR_PROFILE = `# Written by \`ankiel browser setup\`: lets Ankiel Code's headless browser use Chrome's sandbox.
 abi <abi/4.0>,
 include <tunables/global>
 
@@ -75,7 +75,7 @@ export class PreviewBrowserRootError extends Schema.TaggedError<PreviewBrowserRo
   {},
 ) {
   override get message(): string {
-    return "Ankiel server is running as root; Chrome's sandbox cannot start. Run Ankiel as a nonroot user. Otherwise set `AC_SERVER_BROWSER_SANDBOX=0` in the Ankiel server's environment and restart the server; this disables Chrome's sandbox. Manual: `AC_SERVER_BROWSER_SANDBOX=0 ac serve`. Systemd: add `Environment=AC_SERVER_BROWSER_SANDBOX=0` under `[Service]`, reload systemd, then restart the service. `ac browser setup` cannot fix root sandboxing.";
+    return "Ankiel server is running as root; Chrome's sandbox cannot start. Run Ankiel as a nonroot user. Otherwise set `ANKIEL_SERVER_BROWSER_SANDBOX=0` in the Ankiel server's environment and restart the server; this disables Chrome's sandbox. Manual: `ANKIEL_SERVER_BROWSER_SANDBOX=0 ankiel serve`. Systemd: add `Environment=ANKIEL_SERVER_BROWSER_SANDBOX=0` under `[Service]`, reload systemd, then restart the service. `ankiel browser setup` cannot fix root sandboxing.";
   }
 }
 

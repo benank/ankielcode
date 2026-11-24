@@ -29,8 +29,8 @@ describe("environmentBootstrap", () => {
     vi.stubEnv("VITE_HTTP_URL", "https://remote.example.com");
     vi.stubEnv("VITE_WS_URL", "wss://remote.example.com");
 
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/ac/environment")).toBe(
-      "https://remote.example.com/.well-known/ac/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/ankiel/environment")).toBe(
+      "https://remote.example.com/.well-known/ankiel/environment",
     );
   });
 
@@ -73,8 +73,8 @@ describe("environmentBootstrap", () => {
       },
     });
 
-    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/ac/environment")).toBe(
-      "http://127.0.0.1:5733/.well-known/ac/environment",
+    expect(resolvePrimaryEnvironmentHttpUrl("/.well-known/ankiel/environment")).toBe(
+      "http://127.0.0.1:5733/.well-known/ankiel/environment",
     );
   });
 });

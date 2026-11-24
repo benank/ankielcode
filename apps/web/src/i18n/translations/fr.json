@@ -2032,19 +2032,19 @@
   "bc8ab792af1d656f": "Exécutez sur votre ordinateur :",
   "0ba14e4e920cfa00": "Ou téléchargez l’app desktop",
   "0e79b7a6508a6286": "Puis",
-  "cfca7a55a9a2fcb4": [
+  "754c728de3ca9fc8": [
     "Ignorez l’installation si vous avez déjà ",
     {
       "t": "code",
       "i": 1,
-      "c": "ac"
+      "c": "ankiel"
     },
     ". Si",
     " ",
     {
       "t": "code",
       "i": 2,
-      "c": "ac"
+      "c": "ankiel"
     },
     " est introuvable après l’installation, ajoutez à votre PATH le dossier indiqué par l’installateur."
   ],
@@ -2102,7 +2102,7 @@
   "a1190e56375f2032": "{action} ({shortcut})",
   "f16b6d8ef68bab61": "Échec de l’import de « {name} ».",
   "924d4b8e011c9127": "Échec de l’import de l’action.",
-  "8fe93cb6ae78f13b": "Importer",
+  "663619054e7debf1": "Importer",
   "06690d4ce0d19c30": "Modifier {name}",
   "ecb748ae62a9a0b8": "Ajouter un script de projet",
   "56cbda4e9747cfb0": "Ajouter une action",
@@ -2281,8 +2281,8 @@
   "b25472ef70df9b5d": "Tout mettre à jour",
   "febf4ec3cdcdf372": "Commande de mise à jour copiée",
   "bee440d0da53841c": "Commande de relance copiée",
-  "2666cce5f69c24ed": "Exécutez `{command}` sur {serverLabel}, puis redémarrez ac avec vos options habituelles.",
-  "32b77370c697d05b": "Arrêtez ac sur {serverLabel}, puis relancez-le avec `{command}` en utilisant la même sous-commande et les mêmes options. Cela ne met pas à jour une commande ac installée.",
+  "27b357927d8ae8f7": "Exécutez `{command}` sur {serverLabel}, puis redémarrez ankiel avec vos options habituelles.",
+  "77d92e0d0f731207": "Arrêtez ankiel sur {serverLabel}, puis relancez-le avec `{command}` en utilisant la même sous-commande et les mêmes options. Cela ne met pas à jour une commande ankiel installée.",
   "3cb4fcae1546e2eb": "Impossible de copier la commande de mise à jour",
   "7d3b6d270fbb8f0d": "Mettre à jour l’app desktop Ankiel Code qui fait tourner {serverLabel} ? Elle va se fermer et se relancer sur cette machine.",
   "a1581c125ff5ba06": "Copier la commande de mise à jour",
@@ -2872,8 +2872,8 @@
   "62450481c00d2ef3": "L’environnement du brouillon n’est pas disponible pour nettoyer la transcription.",
   "0674544195fcdc39": "La transcription d’origine a été ajoutée.",
   "c64cb58d9cecbcd2": "Échec du nettoyage de la transcription",
-  "3c225a761345892c": "La commande ac n’est pas disponible.",
-  "ac1aeb69de4e7553": "Échec du chargement de l’état de la commande ac.",
+  "4be0869469f66905": "La commande ankiel n’est pas disponible.",
+  "ee3dff7537814cd9": "Échec du chargement de l’état de la commande ankiel.",
   "1bf6910332426e62": "L’accès réseau de l’app desktop n’est pas disponible.",
   "453d2f1825d6e763": "Échec du chargement de l’état d’exposition du serveur desktop.",
   "2f388f3d76869c03": "Échec du chargement des points de terminaison desktop annoncés.",
@@ -2996,13 +2996,13 @@
   ],
   "c54cc9c75db9dc58": "N’approuvez qu’une connexion que vous venez de lancer.",
   "e9f4b93c4ec30453": "Code de connexion",
-  "06d1f161c2647a14": [
+  "93d753032e15f1be": [
     "Obtenez-en un via Utiliser Ankiel Code dans une autre app (MCP), Paramètres → Partage et accès, ou",
     " ",
     {
       "t": "code",
       "i": 1,
-      "c": "ac auth pairing create"
+      "c": "ankiel auth pairing create"
     },
     " sur cette machine."
   ],
@@ -5656,7 +5656,7 @@
     "dans ce terminal."
   ],
   "9d9b9624c7bd95df": "Autres dossiers",
-  "ef6d61884d758c44": [
+  "815c9238c306cf79": [
     "Ajouté à ",
     {
       "i": 1,
@@ -5668,16 +5668,16 @@
     {
       "t": "code",
       "i": 2,
-      "c": "ac"
+      "c": "ankiel"
     },
     "."
   ],
-  "453f17e849c366c5": [
+  "fecdf5662c541c0c": [
     "Utilisez ",
     {
       "t": "code",
       "i": 1,
-      "c": "ac"
+      "c": "ankiel"
     },
     " depuis n’importe quel terminal. Ajoute une ligne à",
     " ",
@@ -6805,7 +6805,7 @@
   "8a333daf9b7fd03f": "Se connecter à {environment}",
   "7662025844bf543f": "Ajouter un environnement",
   "65b1d784a5e84254": "Appairez à nouveau cette machine via une autre adresse, comme son nom Tailscale. Elle rejoint les routes existantes au lieu d’ajouter une deuxième machine.",
-  "8f9173010f8d17f8": "Créez un code d’appairage sur {environment}, dans ses Paramètres → Partage et accès ou avec `ac auth pairing create`, puis saisissez-le ici.",
+  "724f4d9d8dcc9ce5": "Créez un code d’appairage sur {environment}, dans ses Paramètres → Partage et accès ou avec `ankiel auth pairing create`, puis saisissez-le ici.",
   "1bea4864d46d70d0": "Appairez un autre environnement à ce client.",
   "9b24ef052b321e57": "Saisissez un hôte de backend et un code d’appairage.",
   "3e20f17f71edf0ad": "Utiliser la configuration SSH locale, l’agent et les tunnels pour le backend.",
@@ -7074,7 +7074,7 @@
   "f818040c75078d53": "Réinitialiser le nommage des branches à la valeur par défaut",
   "2c82cf0bf586ddd8": "Nommage des branches de worktree",
   "bff8a0d14cb10f17": "Préfixe de branche",
-  "b9d115ba3a4fb3f0": "Par exemple, ac ou ac/ donne ac/add-search. Laissez vide pour ne pas utiliser de préfixe.",
+  "d7b25fa67fcec9d3": "Par exemple, ankiel ou ankiel/ donne ankiel/add-search. Laissez vide pour ne pas utiliser de préfixe.",
   "fc32aa5738bccb9a": "Réinitialiser le préfixe des branches à la valeur par défaut",
   "452b86cb8c4e0432": "Aucun préfixe",
   "abcdead6f7529103": "Instructions de nommage des branches",
@@ -7254,17 +7254,17 @@
       "v": "v"
     }
   ],
-  "88fe42475ca28b85": "Impossible d’installer ac",
-  "ee1821abe6f9cacd": "Impossible de supprimer ac",
-  "650adf0aac086a1e": "Impossible d’ajouter ac au PATH",
-  "dfc065762962b0fb": "Un autre ac situé à {path} passe en premier dans un nouveau terminal. Supprimez-le pour utiliser celui de Ankiel Code.",
-  "a04640d6d7b4985b": "Exécutez la CLI de Ankiel Code sous le nom `ac` depuis n’importe quel terminal.",
+  "09fb032045f225e3": "Impossible d’installer ankiel",
+  "c87078772952f947": "Impossible de supprimer ankiel",
+  "97df5936dd8184a8": "Impossible d’ajouter ankiel au PATH",
+  "558bf79029d80921": "Un autre ankiel situé à {path} passe en premier dans un nouveau terminal. Supprimez-le pour utiliser celui de Ankiel Code.",
+  "fe8f07a2d7ddb9ff": "Exécutez la CLI de Ankiel Code sous le nom `ankiel` depuis n’importe quel terminal.",
   "4f6e93011ef2da6f": "Installé dans {path}. Ouvrez un nouveau terminal pour l’utiliser.",
   "371ca438cf467125": "Installé dans {path} et ajouté au PATH dans {file}. Ouvrez un nouveau terminal pour l’utiliser.",
   "fd3eece9d1a7ea38": "Installé dans {path}, qui n’est pas encore dans votre PATH.",
-  "c9a13a14cda6b1d5": "Installé dans {path}, qui n’est pas encore dans votre PATH. Ajoutez son dossier à votre PATH pour exécuter `ac`.",
-  "d322b55c8423f1d3": "Supprimer",
-  "320c8328108c83b0": "Installer",
+  "437c6ac2716a2710": "Installé dans {path}, qui n’est pas encore dans votre PATH. Ajoutez son dossier à votre PATH pour exécuter `ankiel`.",
+  "78e60242724c5fcd": "Supprimer",
+  "eced2267f057fcf5": "Installer",
   "9a284b5893dc04a2": "Modèle OpenRouter",
   "c8361c16c47d5fb5": "Rechercher des modèles de transcription",
   "d72eccdd92d4f989": "Impossible d’enregistrer cette modification. Vérifiez votre connexion et réessayez.",
@@ -8300,7 +8300,7 @@
   "ca4e4015b89ed9a8": "Impossible d’associer {target} en retour à {source}",
   "64ac3d1579ca9f5b": "Associer {source} à {target}",
   "5f2e20c62a4fece3": "{via} est lié à {target} en accès complet et récupère donc le code d’appairage. Aucun code à coller.",
-  "54878cf5402fee39": "Depuis Partage et accès sur cette machine, ou ac pair",
+  "d3c539a54eaabb89": "Depuis Partage et accès sur cette machine, ou ankiel pair",
   "1e3fee7084791773": "Associer aussi {target} en retour à {source}",
   "ea34a190b0bd804c": "Les agents de {target} pourront alors aussi travailler sur {source}.",
   "974f8c65e8b5f492": "Oublier {label} ? Les agents d’ici cessent d’y travailler, et leur session sur {label} prend fin aussi s’il répond.",
@@ -8410,10 +8410,10 @@
   "74a80f881d59c64d": "Commandes exécutées dans le checkout de ce projet ou dans son worktree, avec des raccourcis facultatifs.",
   "b021ef2874c6c24b": "Actions différentes selon les checkouts",
   "1e0bbb3a6c4afd6c": "Réduisez la sélection ci-dessus à un seul checkout pour modifier sa liste. Ajouter une action ici l’ajoute à chaque checkout sélectionné.",
-  "04cf90f46cdb2bf6": "ac.json n’est pas valide",
-  "2dc7d38655f56dfa": "Un fichier ac.json existe dans ce checkout mais son analyse échoue, donc toutes les actions et icônes qu’il déclare sont ignorées. Vérifiez la syntaxe JSON et les valeurs des icônes.",
+  "cadea0b16f1c04d2": "ankiel.json n’est pas valide",
+  "85855bc77b8ebe02": "Un fichier ankiel.json existe dans ce checkout mais son analyse échoue, donc toutes les actions et icônes qu’il déclare sont ignorées. Vérifiez la syntaxe JSON et les valeurs des icônes.",
   "df4cf566c6d08a4b": "Importer des scripts",
-  "70b41dde44c7c955": "Importer depuis ac.json",
+  "8e7ff6b1cbf59e0d": "Importer depuis ankiel.json",
   "84f1752d64c3152e": "Ajoute les actions déclarées par ce checkout sans les modifier d’abord.",
   "3b893da0373ab50e": "Ajouter une action",
   "5afea423d829496e": "Ce fournisseur n’est pas disponible dans cet environnement.",
@@ -8430,7 +8430,7 @@
   "2f65da0a2375c66a": "Automatique (mixte)",
   "369304844a14a649": "Aucun fournisseur disponible",
   "846ba52561c0e6bb": "Où démarrent les nouveaux fils de ce projet.",
-  "6fd04e26194b539c": "Où démarrent les nouveaux fils. Les projets et leur ac.json peuvent le remplacer.",
+  "775d9d472acb4fad": "Où démarrent les nouveaux fils. Les projets et leur ankiel.json peuvent le remplacer.",
   "8ab693ae67cd5e86": "Réinitialiser l’espace de travail par défaut à la valeur par défaut",
   "d1d1342ccb83a14b": "Espace de travail par défaut",
   "a22721e847136f21": "Indisponible",
@@ -8461,7 +8461,7 @@
   "9290d5de050e5302": "Méthode de fusion par défaut des pull requests",
   "3619911bbdb05fc1": "Dernière sélection",
   "87717de46afcdaed": "Comment les nouveaux worktrees de ce projet remplissent les sous-modules git.",
-  "5013be9ba55604f5": "Comment les nouveaux worktrees remplissent les sous-modules git. Les projets et leur ac.json peuvent le remplacer.",
+  "3b0a2459278e58c2": "Comment les nouveaux worktrees remplissent les sous-modules git. Les projets et leur ankiel.json peuvent le remplacer.",
   "74a80f6d7962be21": "Réinitialiser les sous-modules des worktrees à la valeur par défaut",
   "1c97d5a78ca1fdb6": "Sous-modules des worktrees",
   "2c2b437431e4cd1d": "Aucun fournisseur disponible",
@@ -9019,7 +9019,7 @@
   "cdacfb87d557007b": "Impossible de copier l’URL MCP dans le presse-papiers.",
   "a9f514109c355d42": "Impossible de copier l’ID de trace",
   "7ae6db00431a85fe": "URL MCP copiée",
-  "8abc042f1dd922f4": "Ajoutez-la à un agent, par ex. claude mcp add --transport http ac {url}",
+  "5b81d23fe4f0cb25": "Ajoutez-la à un agent, par ex. claude mcp add --transport http ankiel {url}",
   "69f1a5115bd716c8": "Impossible de copier l’URL MCP",
   "4112c1a7b3c1d029": "Redémarrage",
   "543ef9fcaf8aa96f": "Éteint",
@@ -11046,7 +11046,7 @@
   "dfd5b72fe7308d9e": "Enregistré sur cet appareil. Sélectionnez Tous les projets pour le modifier.",
   "091be13f50490708": "Varie selon les environnements sélectionnés",
   "06e9973f7537ed51": "Remplacé pour ce projet",
-  "85162f366d6f4e9c": "Hérité du ac.json du dépôt",
+  "a5eaf5910f1c9ada": "Hérité du ankiel.json du dépôt",
   "539b097411fd1307": "Hérité de l’environnement",
   "6340f81c024cfe12": "Hérité de {environment}",
   "49a60879f4348f46": "Défini sur l’environnement",
@@ -11170,7 +11170,7 @@
   "00469926c7027e2d": "équilibré performances économie batterie avancé git fetch fournisseur état actualisation hôte énergie surveillance inactif politique",
   "54e33e572cc71746": "espace de travail par défaut mode brouillon local worktree",
   "b2ece956b72c4a48": "Sous-modules",
-  "f8a7b2411ce9243b": "git sous-module init récursif premier niveau aucun worktree ac.json",
+  "a1582d42fd15c3d7": "git sous-module init récursif premier niveau aucun worktree ankiel.json",
   "88553740587a9beb": "Partir du remote",
   "4a172e139167badc": "nouveaux worktrees démarrer remote origin dernière branche récupérée locale",
   "30aac12099fcaf53": "Dossier de départ d’Ajouter un projet",
@@ -11184,7 +11184,7 @@
   "0c5fc3b5e41e1956": "titres de fils générés prompt style personnalisé nommage renommer régénérer",
   "a83570bcb45d8fa1": "à propos rechercher des mises à jour télécharger installer mettre à niveau version",
   "d65bdf6748801734": "canal de publication stable latest nightly préversion",
-  "0583168f77c0d564": "Commande ac",
+  "b6001b03d11515f3": "Commande ankiel",
   "46dd4dc08c1e552f": "cli terminal shell chemin installer ligne de commande",
   "86479042bae0e2db": "App mobile",
   "dc2a999ca67ccf31": "téléphone tablette iPhone iPad iOS Android App Store Google Play QR",
@@ -11241,7 +11241,7 @@
   "4c241258fdc87942": "pull request pr revue guidée guide visite bêta expérimental",
   "39e4c844a9d56a1d": "pull request pr revue guidée guide résumé mainteneur",
   "f27f2e85e05f664c": "pull request pr revue guidée guide préférences goût prompt personnalisé",
-  "f64aa58a2824bc01": "commandes scripts configuration exécuter serveur de dev extraction worktree ac.json importer",
+  "539d7ddd20619d83": "commandes scripts configuration exécuter serveur de dev extraction worktree ankiel.json importer",
   "756e41fd7e0b044c": "dossiers suivis multi dépôt espace de travail code-workspace réanalyser ajouter dossier",
   "c349ea1db3f9e9f1": "Icône de l’environnement",
   "18bd7981d6c50994": "machine glyphe barre latérale mac mini studio portable bureau serveur cloud vm",

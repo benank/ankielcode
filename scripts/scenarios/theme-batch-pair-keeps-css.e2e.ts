@@ -1,13 +1,13 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "Importing light and dark theme files together keeps their shared custom CSS",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    await ac.project("demo");
-    await ac.open("/settings/appearance");
+  async ({ ankiel, app, screen, browser }) => {
+    await ankiel.project("demo");
+    await ankiel.open("/settings/appearance");
     await screen.getByRole("button", "Add theme", { exact: true }).tap();
     const dialog = screen.getByRole("dialog", "Add a theme");
     await browser.evaluate(() => {

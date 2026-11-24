@@ -60,7 +60,7 @@ export const runDefaultServerCommand = Effect.fn("server.runDefaultServerCommand
     if (!explicitPath && (!(yield* fs.exists(cwd)) || (yield* fs.stat(cwd)).type !== "Directory")) {
       return yield* new CliError.UserError({
         cause: cwd,
-        userMessage: `Unknown command ${yield* encodeCommand(cwd)}. Use "ac --help" for commands or an explicit path such as "ac ./my-project" for a new directory.`,
+        userMessage: `Unknown command ${yield* encodeCommand(cwd)}. Use "ankiel --help" for commands or an explicit path such as "ankiel ./my-project" for a new directory.`,
       });
     }
   }
@@ -68,7 +68,7 @@ export const runDefaultServerCommand = Effect.fn("server.runDefaultServerCommand
 });
 
 export const startCommand = Command.make("start", { ...sharedServerCommandFlags }).pipe(
-  Command.withDescription("Same as `ac`."),
+  Command.withDescription("Same as `ankiel`."),
   Command.unlisted,
   Command.withHandler((flags) => runServerCommand(flags, { rejectRunningServer: true })),
 );
@@ -79,7 +79,7 @@ const { autoBootstrapProjectFromCwd: _, ...serveCommandFlags } = sharedServerCom
 export const serveCommand = Command.make("serve", serveCommandFlags).pipe(
   Command.withShortDescription("Run Ankiel Code in this terminal, with no browser."),
   Command.withDescription(
-    "Run Ankiel Code in this terminal without opening a browser, and print pairing details. The background service runs this. To set up access from your other devices, run `ac up`.",
+    "Run Ankiel Code in this terminal without opening a browser, and print pairing details. The background service runs this. To set up access from your other devices, run `ankiel up`.",
   ),
   Command.withHandler((flags) =>
     runServerCommand(

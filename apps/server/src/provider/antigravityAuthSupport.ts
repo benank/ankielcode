@@ -29,7 +29,7 @@ import {
 
 export const ANTIGRAVITY_AUTH_STDOUT_PREFIX =
   "Open the following link to authenticate the ACP server: ";
-export const ANTIGRAVITY_AUTH_BROWSER_MARKER = "__AC_ANTIGRAVITY_AUTH_URL__";
+export const ANTIGRAVITY_AUTH_BROWSER_MARKER = "__ANKIEL_ANTIGRAVITY_AUTH_URL__";
 export const ANTIGRAVITY_SIGN_IN_REQUIRED_MESSAGE =
   "Sign in to Antigravity in Settings before you continue.";
 
@@ -347,7 +347,7 @@ const copyAntigravityUserConfigFiles = Effect.fn("copyAntigravityUserConfigFiles
   }): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const manifestPath = path.join(input.profileDirectory, ".ac-rule-copies.json");
+    const manifestPath = path.join(input.profileDirectory, ".ankiel-rule-copies.json");
     const readOptional = (file: string) =>
       fs.readFileString(file).pipe(Effect.orElseSucceed((): string | undefined => undefined));
     const manifestText = yield* readOptional(manifestPath);

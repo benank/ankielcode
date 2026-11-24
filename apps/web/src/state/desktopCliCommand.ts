@@ -15,7 +15,7 @@ class DesktopCliCommandUnavailableError extends Schema.TaggedError<DesktopCliCom
   {},
 ) {
   override get message(): string {
-    return m(msg("The ac command is unavailable."));
+    return m(msg("The ankiel command is unavailable."));
   }
 }
 
@@ -24,7 +24,7 @@ class DesktopCliCommandLoadError extends Schema.TaggedError<DesktopCliCommandLoa
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return m(msg("Failed to load the ac command state."));
+    return m(msg("Failed to load the ankiel command state."));
   }
 }
 

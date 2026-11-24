@@ -4,10 +4,10 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
-const EDITOR_ARGS = `${AC_HOME}/editor-args.txt`;
+const EDITOR_ARGS = `${ANKIEL_HOME}/editor-args.txt`;
 
 /** The file's lines, or none while it does not exist. */
 const readLines = (file: string) =>
@@ -42,7 +42,7 @@ const LINKS = [
 test(
   "Ctrl+click on a terminal file URI opens the exact file it names, even one ending like a position",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     await removeEditorArgs();
     const files: Record<string, string> = {
       "build:2026/keep.txt": "keep\n",
@@ -56,9 +56,9 @@ test(
       files[`print-${index}.sh`] =
         `for i in $(seq 1 100); do ${link.print}; done; touch printed-${index}\n`;
     }
-    const project = await ac.project("demo", files);
-    const thread = await ac.thread({ project, title: "List", messages: ["List it"] });
-    await ac.open(thread);
+    const project = await ankiel.project("demo", files);
+    const thread = await ankiel.thread({ project, title: "List", messages: ["List it"] });
+    await ankiel.open(thread);
 
     await screen.getByRole("button", "Toggle terminal drawer").tap();
     const input = screen.getByRole("textbox", "Terminal input");

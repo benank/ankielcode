@@ -1758,13 +1758,13 @@ it.effect("a missing thread worktree gets its project's skills in the cwd snapsh
     yield* fileSystem.makeDirectory(path.dirname(skillPath), { recursive: true });
     yield* fileSystem.writeFileString(skillPath, "---\nname: finalize\n---\n");
     // Removed with `git worktree remove`; only the next turn start recreates it.
-    const worktreePath = path.join(serverConfig.worktreesDir, "proj", "ac-6f94fb95");
+    const worktreePath = path.join(serverConfig.worktreesDir, "proj", "ankiel-6f94fb95");
     const thread = {
       id: ThreadId.make("thread:worktree"),
       projectId,
       archivedAt: null,
       worktreePath,
-      branch: "ac/reply-ok",
+      branch: "ankiel/reply-ok",
     } as unknown as OrchestrationV2ThreadShell;
     const project = {
       id: projectId,
@@ -2411,11 +2411,11 @@ it.effect.each([
       `;
       const identity = isRepository
         ? ({
-            canonicalKey: "github.com/ac/idle",
+            canonicalKey: "github.com/ankiel/idle",
             locator: {
               source: "git-remote",
               remoteName: "origin",
-              remoteUrl: "git@github.com:ac/idle",
+              remoteUrl: "git@github.com:ankiel/idle",
             },
           } as const)
         : null;

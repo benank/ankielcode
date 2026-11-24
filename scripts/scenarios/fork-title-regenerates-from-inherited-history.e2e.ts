@@ -1,16 +1,16 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 // Scenarios title with a Codex command that always fails, so reaching it is the fixed behavior;
 // the bug refused first with "This thread has no messages to title yet."
 test(
   "Regenerate title on a fresh fork reaches the title model with the inherited history",
   WEB,
-  async ({ ac, app, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Earlier work", messages: ["first"] });
-    await ac.open(thread);
+  async ({ ankiel, app, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Earlier work", messages: ["first"] });
+    await ankiel.open(thread);
 
     await expect(screen.getByText("first fixture turn complete", { exact: false })).toBeVisible();
     await screen.getByRole("button", "Fork from this response").first().tap();

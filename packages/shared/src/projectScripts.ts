@@ -41,10 +41,10 @@ export function projectScriptRuntimeEnv(
   input: ProjectScriptRuntimeEnvInput,
 ): Record<string, string> {
   const env: Record<string, string> = {
-    AC_PROJECT_ROOT: input.project.cwd,
+    ANKIEL_PROJECT_ROOT: input.project.cwd,
   };
   if (input.worktreePath) {
-    env.AC_WORKTREE_PATH = input.worktreePath;
+    env.ANKIEL_WORKTREE_PATH = input.worktreePath;
   }
   if (input.extraEnv) {
     return { ...env, ...input.extraEnv };

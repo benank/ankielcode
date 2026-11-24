@@ -111,7 +111,7 @@ const writesPerSelection = (
                 command: process.execPath,
                 args: [agentPath],
                 cwd: runtimeInput.cwd,
-                env: { ...agentEnvironment, AC_ACP_REQUEST_LOG_PATH: requestLogPath },
+                env: { ...agentEnvironment, ANKIEL_ACP_REQUEST_LOG_PATH: requestLogPath },
               },
               authMethodId: "cached_token",
             }),
@@ -219,7 +219,7 @@ describe("Grok reasoning effort", () => {
 
   it.live("protocol 1 carries the selected effort on session/set_model", () =>
     Effect.gen(function* () {
-      assert.deepEqual(yield* writesPerSelection(selections, { AC_GROK_MOCK_PROTOCOL: "1" }), [
+      assert.deepEqual(yield* writesPerSelection(selections, { ANKIEL_GROK_MOCK_PROTOCOL: "1" }), [
         ["set_model grok-4.6 effort=low"],
         ["set_model grok-4.6 effort=high"],
         [],
@@ -232,7 +232,7 @@ describe("Grok reasoning effort", () => {
 
   it.live("newer protocols write the session's own reasoning_effort option", () =>
     Effect.gen(function* () {
-      assert.deepEqual(yield* writesPerSelection(selections, { AC_GROK_MOCK_PROTOCOL: "2" }), [
+      assert.deepEqual(yield* writesPerSelection(selections, { ANKIEL_GROK_MOCK_PROTOCOL: "2" }), [
         ["set_config_option reasoning_effort=low"],
         ["set_config_option reasoning_effort=high"],
         [],
@@ -248,15 +248,15 @@ describe("Grok reasoning effort", () => {
       const refused = [select("grok-4.6-fast", "low")];
       assert.deepEqual(
         yield* writesPerSelection(refused, {
-          AC_GROK_MOCK_PROTOCOL: "1",
-          AC_GROK_MOCK_REJECT_EFFORT: "low",
+          ANKIEL_GROK_MOCK_PROTOCOL: "1",
+          ANKIEL_GROK_MOCK_REJECT_EFFORT: "low",
         }),
         [["set_model grok-4.6-fast effort=low", "set_model grok-4.6-fast"]],
       );
       assert.deepEqual(
         yield* writesPerSelection(refused, {
-          AC_GROK_MOCK_PROTOCOL: "2",
-          AC_GROK_MOCK_REJECT_EFFORT: "low",
+          ANKIEL_GROK_MOCK_PROTOCOL: "2",
+          ANKIEL_GROK_MOCK_REJECT_EFFORT: "low",
         }),
         [["set_config_option model=grok-4.6-fast", "set_config_option reasoning_effort=low"]],
       );

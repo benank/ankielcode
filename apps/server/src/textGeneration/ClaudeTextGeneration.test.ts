@@ -81,25 +81,26 @@ function withFakeClaudeEnv<A, E, R>(
     const pathDelimiter = (yield* HostProcess.isWindows) ? ";" : ":";
     const hostEnv = yield* HostProcess.Environment;
     const fakeClaudeEnv: Record<string, string | undefined> = {
-      AC_FAKE_CLAUDE_OUTPUT: input.output,
-      AC_FAKE_CLAUDE_REJECTS_NO_SESSION_PERSISTENCE: input.rejectsNoSessionPersistence
+      ANKIEL_FAKE_CLAUDE_OUTPUT: input.output,
+      ANKIEL_FAKE_CLAUDE_REJECTS_NO_SESSION_PERSISTENCE: input.rejectsNoSessionPersistence
         ? "1"
         : undefined,
-      AC_FAKE_CLAUDE_EXIT_CODE: input.exitCode === undefined ? undefined : String(input.exitCode),
-      AC_FAKE_CLAUDE_STDERR: input.stderr,
-      AC_FAKE_CLAUDE_EXPECTED_TOOLS: input.expectedTools,
-      AC_FAKE_CLAUDE_ARGS_MUST_CONTAIN: input.argsMustContain,
-      AC_FAKE_CLAUDE_ARGS_MUST_NOT_CONTAIN: input.argsMustNotContain,
-      AC_FAKE_CLAUDE_STDIN_MUST_CONTAIN: input.stdinMustContain,
-      AC_FAKE_CLAUDE_IMAGE_REJECTION: input.imageRejection,
-      AC_FAKE_CLAUDE_IMAGE_ATTEMPT_LOG: input.imageAttemptLog,
-      AC_FAKE_CLAUDE_CWD_MUST_NOT_BE: input.cwdMustNotBe,
-      AC_FAKE_CLAUDE_SETTINGS_LOG: input.settingsLog,
-      AC_FAKE_CLAUDE_CONFIG_DIR_MUST_BE: input.configDirMustBe,
+      ANKIEL_FAKE_CLAUDE_EXIT_CODE:
+        input.exitCode === undefined ? undefined : String(input.exitCode),
+      ANKIEL_FAKE_CLAUDE_STDERR: input.stderr,
+      ANKIEL_FAKE_CLAUDE_EXPECTED_TOOLS: input.expectedTools,
+      ANKIEL_FAKE_CLAUDE_ARGS_MUST_CONTAIN: input.argsMustContain,
+      ANKIEL_FAKE_CLAUDE_ARGS_MUST_NOT_CONTAIN: input.argsMustNotContain,
+      ANKIEL_FAKE_CLAUDE_STDIN_MUST_CONTAIN: input.stdinMustContain,
+      ANKIEL_FAKE_CLAUDE_IMAGE_REJECTION: input.imageRejection,
+      ANKIEL_FAKE_CLAUDE_IMAGE_ATTEMPT_LOG: input.imageAttemptLog,
+      ANKIEL_FAKE_CLAUDE_CWD_MUST_NOT_BE: input.cwdMustNotBe,
+      ANKIEL_FAKE_CLAUDE_SETTINGS_LOG: input.settingsLog,
+      ANKIEL_FAKE_CLAUDE_CONFIG_DIR_MUST_BE: input.configDirMustBe,
     };
     const environment: NodeJS.ProcessEnv = {
       ...Object.fromEntries(
-        Object.entries(hostEnv).filter(([name]) => !name.startsWith("AC_FAKE_CLAUDE_")),
+        Object.entries(hostEnv).filter(([name]) => !name.startsWith("ANKIEL_FAKE_CLAUDE_")),
       ),
       ...Object.fromEntries(
         Object.entries(fakeClaudeEnv).filter(([, value]) => value !== undefined),

@@ -15,11 +15,11 @@ import {
   resolveLauncherPath,
 } from "../cloud/pinnedRuntime.ts";
 
-const PINNED_RUNTIME_ENTRY = /^(.*)\/runtime\/versions\/[^/]+\/ac$/;
+const PINNED_RUNTIME_ENTRY = /^(.*)\/runtime\/versions\/[^/]+\/ankiel$/;
 
 export type CliRunner = "npx" | "pnpm dlx" | "bunx";
 
-/** Detection is best-effort; callers must fail closed to a plain `ac` command. */
+/** Detection is best-effort; callers must fail closed to a plain `ankiel` command. */
 export function detectCliRunner(entryPath: string): CliRunner | null {
   const path = entryPath.replaceAll("\\", "/");
   if (path.includes("/_npx/")) {
@@ -41,16 +41,16 @@ export function detectCliRunner(entryPath: string): CliRunner | null {
 const InstallManifest = Schema.Struct({
   name: Schema.String,
   version: Schema.String,
-  bin: Schema.optionalKey(Schema.Struct({ ac: Schema.String })),
+  bin: Schema.optionalKey(Schema.Struct({ ankiel: Schema.String })),
 });
 const decodeInstallManifest = Schema.decodeUnknownEffect(Schema.fromJsonString(InstallManifest));
 
 /**
- * `AC_NPM_LAUNCHER_PATH` is inherited by child shells, so accept it only for this package
- * version to avoid claiming another `ac` invocation is the npm install.
+ * `ANKIEL_NPM_LAUNCHER_PATH` is inherited by child shells, so accept it only for this package
+ * version to avoid claiming another `ankiel` invocation is the npm install.
  */
 export const resolveEntryPath = Effect.gen(function* () {
-  const npmLauncher = (yield* HostProcess.Environment).AC_NPM_LAUNCHER_PATH?.trim();
+  const npmLauncher = (yield* HostProcess.Environment).ANKIEL_NPM_LAUNCHER_PATH?.trim();
   if (npmLauncher) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -91,7 +91,7 @@ export const resolveServerInstallation = Effect.gen(function* () {
     const target = Option.isSome(link)
       ? path.resolve(path.dirname(launcher), link.value)
       : yield* readPosixLauncherTarget(launcher);
-    // Keep the home as the launcher spells it; `ac update` only repoints launchers into that spelling.
+    // Keep the home as the launcher spells it; `ankiel update` only repoints launchers into that spelling.
     const linked = target === undefined ? null : PINNED_RUNTIME_ENTRY.exec(target);
     if (!linked || (yield* fs.realPath(linked[1] || "/")) !== (runtime[1] || "/")) return null;
     return {
@@ -100,9 +100,8 @@ export const resolveServerInstallation = Effect.gen(function* () {
       baseDir: linked[1] || "/",
     } satisfies ServerInstallation;
   }
-  const match = /^(.*)\/lib\/node_modules\/@ankielcode\/cli\/(?:dist\/bin\.mjs|bin\/ac\.mjs)$/.exec(
-    entry,
-  );
+  const match =
+    /^(.*)\/lib\/node_modules\/@ankielcode\/cli\/(?:dist\/bin\.mjs|bin\/ankiel\.mjs)$/.exec(entry);
   if (!match) {
     const runner = detectCliRunner(entry);
     return runner === null
@@ -123,8 +122,8 @@ export const resolveServerInstallation = Effect.gen(function* () {
     .readFileString(path.join(packageRoot, "package.json"))
     .pipe(Effect.flatMap(decodeInstallManifest));
   if (manifest.name !== "@ankielcode/cli" || !manifest.bin) return null;
-  const bin = yield* fs.realPath(path.join(packageRoot, manifest.bin.ac));
-  const globalBin = yield* fs.realPath(path.join(prefix, "bin/ac"));
+  const bin = yield* fs.realPath(path.join(packageRoot, manifest.bin.ankiel));
+  const globalBin = yield* fs.realPath(path.join(prefix, "bin/ankiel"));
   if (globalBin !== bin || bin !== entry) return null;
   return { kind: "npm-global", prefix } satisfies ServerInstallation;
 }).pipe(Effect.orElseSucceed(() => null));
@@ -142,7 +141,7 @@ function formatCliCommand(input: {
 }): string {
   const runner = detectCliRunner(input.entryPath);
   if (runner === null) {
-    return `ac ${input.subcommand}`;
+    return `ankiel ${input.subcommand}`;
   }
   return `${runner} ${suggestedPackageSpec(input.version)} ${input.subcommand}`;
 }
@@ -168,7 +167,7 @@ export const hostShellWord = (platform: NodeJS.Platform, value: string) =>
 /** Script installs have no single launcher; desktop shims and standalone binaries do. */
 const resolveInstallLauncher = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const shim = (yield* HostProcess.Environment).AC_CLI_PATH?.trim();
+  const shim = (yield* HostProcess.Environment).ANKIEL_CLI_PATH?.trim();
   if (shim && (yield* fs.exists(shim).pipe(Effect.orElseSucceed(() => false)))) {
     return Option.some(shim);
   }
@@ -178,7 +177,7 @@ const resolveInstallLauncher = Effect.gen(function* () {
 });
 
 /**
- * Uses this install's `ac` on PATH, the originating runner, or its absolute launcher path.
+ * Uses this install's `ankiel` on PATH, the originating runner, or its absolute launcher path.
  * Arguments are quoted for POSIX shells or PowerShell on Windows.
  */
 export const resolveHostCliCommand = Effect.fn("invocation.resolveHostCliCommand")(function* (
@@ -187,16 +186,16 @@ export const resolveHostCliCommand = Effect.fn("invocation.resolveHostCliCommand
 ) {
   const platform = yield* HostProcess.Platform;
   const withArgs = (prefix: string) =>
-    // An empty subcommand names the root `ac` command.
+    // An empty subcommand names the root `ankiel` command.
     [prefix.trimEnd(), ...args.map((arg) => hostShellWord(platform, arg))].join(" ");
   const command = yield* resolveCliCommand(subcommand);
-  if (command !== `ac ${subcommand}`) return { command: withArgs(command), launcher: false };
-  const onPath = yield* resolveCommandPath("ac");
+  if (command !== `ankiel ${subcommand}`) return { command: withArgs(command), launcher: false };
+  const onPath = yield* resolveCommandPath("ankiel");
   if (onPath !== null) {
-    const shim = (yield* HostProcess.Environment).AC_CLI_PATH?.trim();
+    const shim = (yield* HostProcess.Environment).ANKIEL_CLI_PATH?.trim();
     const fs = yield* FileSystem.FileSystem;
     const real = (file: string) => fs.realPath(file).pipe(Effect.orElseSucceed(() => null));
-    // Windows `ac.cmd` shims are text files that never realpath to the executable they run.
+    // Windows `ankiel.cmd` shims are text files that never realpath to the executable they run.
     const own = shim
       ? yield* real(shim)
       : platform !== "win32" && (yield* HostProcess.IsExecutable)
@@ -209,7 +208,7 @@ export const resolveHostCliCommand = Effect.fn("invocation.resolveHostCliCommand
     if (own === null || own === (yield* real(onPath))) {
       const path = yield* Path.Path;
       const searchPath = (yield* HostProcess.Environment).PATH ?? "";
-      // With an empty or relative PATH entry, plain `ac` depends on the directory it runs from.
+      // With an empty or relative PATH entry, plain `ankiel` depends on the directory it runs from.
       const cwdDependent =
         platform !== "win32" &&
         searchPath.length > 0 &&
@@ -240,7 +239,7 @@ export const resolveHostCliHint = (
 
 /**
  * `sudo` resets PATH on most distributions, which drops a user-installed Node
- * (nvm, fnm, a tarball) and with it `npx` or a global `ac`, so the command
+ * (nvm, fnm, a tarball) and with it `npx` or a global `ankiel`, so the command
  * carries PATH through unless Node is on root's PATH too. An absolute launcher
  * needs neither.
  */

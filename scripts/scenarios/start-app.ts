@@ -43,9 +43,9 @@ const REAL_PROVIDERS = [
 export const SCENARIO_LINEAR_PORT = 13_997;
 
 export const SCENARIO_MACHINE_ENV = {
-  AC_ENVIRONMENT_LABEL: "Scenario",
-  AC_ENVIRONMENT_MACHINE_KIND: "laptop",
-  AC_LINEAR_API_URL: `http://127.0.0.1:${SCENARIO_LINEAR_PORT}/graphql`,
+  ANKIEL_ENVIRONMENT_LABEL: "Scenario",
+  ANKIEL_ENVIRONMENT_MACHINE_KIND: "laptop",
+  ANKIEL_LINEAR_API_URL: `http://127.0.0.1:${SCENARIO_LINEAR_PORT}/graphql`,
 };
 
 const encodeSettings = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
@@ -129,7 +129,7 @@ const startApp = Effect.fn("startApp")(function* (input: {
   const env = {
     ...hostEnvironment,
     PATH: `${path.join(input.home, "bin")}:${hostEnvironment.PATH ?? ""}`,
-    AC_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
+    ANKIEL_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
     ...SCENARIO_MACHINE_ENV,
   };
   const devRunner = (mode: string, args: ReadonlyArray<string>) => [
@@ -154,15 +154,15 @@ const startApp = Effect.fn("startApp")(function* (input: {
       mode: 0o600,
     });
     const ports = ["--port", serverPort, "--dev-url", origin];
-    const webEnv = { ...env, AC_PORT_OFFSET: String(Number(webPort) - BASE_WEB_PORT) };
+    const webEnv = { ...env, ANKIEL_PORT_OFFSET: String(Number(webPort) - BASE_WEB_PORT) };
     const server = yield* start({
       cwd: checkout,
       command: node,
       args: devRunner("dev:server", ports),
       env: {
         ...webEnv,
-        AC_DEV_ALLOWED_ORIGINS: origin,
-        AC_DEV_AUTH_TOKEN: credential,
+        ANKIEL_DEV_ALLOWED_ORIGINS: origin,
+        ANKIEL_DEV_AUTH_TOKEN: credential,
       },
       onLine: (line) => (line.includes("pairingUrl:") ? Effect.void : Console.log(line)),
     });

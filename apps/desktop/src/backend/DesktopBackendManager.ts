@@ -50,7 +50,7 @@ export const BACKEND_QUIT_STOP_TIMEOUT = Duration.sum(
   Duration.seconds(2),
 );
 const DEFAULT_BACKEND_OUTPUT_DRAIN_TIMEOUT = Duration.seconds(5);
-const BACKEND_READINESS_PATH = "/.well-known/ac/environment";
+const BACKEND_READINESS_PATH = "/.well-known/ankiel/environment";
 // Three restarts without readiness is about 2 s of backoff: past a blip, early enough to help.
 const STARTUP_FAILURE_RESTART_ATTEMPTS = 3;
 const STARTUP_FAILURE_OUTPUT_CHARS = 4_000;
@@ -81,7 +81,7 @@ export interface BackendReadinessProbe {
 export interface DesktopBackendStartConfig extends BackendProcessContext {
   readonly args: ReadonlyArray<string>;
   readonly env: Record<string, string | undefined>;
-  /** False passes env verbatim, preventing the Windows AC_HOME from leaking into WSL. */
+  /** False passes env verbatim, preventing the Windows ANKIEL_HOME from leaking into WSL. */
   readonly extendEnv: boolean;
   readonly bootstrap: DesktopBackendBootstrapValue;
   readonly bootstrapDelivery: DesktopBackendBootstrapDelivery;

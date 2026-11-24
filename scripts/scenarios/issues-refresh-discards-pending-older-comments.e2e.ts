@@ -2,13 +2,13 @@
 import type { IssueComment, IssueCommentsPage, IssueDetail, IssueRef } from "@ankielcode/contracts";
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "A page requested before refreshing an issue does not restore old comments",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    await ac.project("demo");
+  async ({ ankiel, app, browser, screen }) => {
+    await ankiel.project("demo");
     await browser.addInitScript(() => {
       const pendingPage = new Promise<void>((resolve) => {
         Object.assign(window, { releaseOldIssuePage: () => resolve() });
@@ -127,7 +127,7 @@ test(
       };
     });
 
-    await ac.open("/issues?selectedProjectId=demo&tracker=github&scope=example/demo&key=42");
+    await ankiel.open("/issues?selectedProjectId=demo&tracker=github&scope=example/demo&key=42");
     const loadOlder = screen.getByRole("button", "Load older comments", { exact: true });
     // The issues route compiles on first open, which can outlast the 30 s action timeout.
     await loadOlder.waitFor({ timeout: 60_000 });

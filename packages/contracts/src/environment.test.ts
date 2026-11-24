@@ -19,7 +19,7 @@ describe("ExecutionEnvironmentDescriptor", () => {
     for (const installation of [
       { kind: "npx" },
       { kind: "npm-global", prefix: "/opt/node" },
-      { kind: "ankiel-launcher", launcher: "/opt/bin/ac", baseDir: "/data/ac" },
+      { kind: "ankiel-launcher", launcher: "/opt/bin/ankiel", baseDir: "/data/ankiel" },
     ]) {
       expect(
         decodeDescriptor({
@@ -28,7 +28,11 @@ describe("ExecutionEnvironmentDescriptor", () => {
         }).capabilities.serverInstallation,
       ).toEqual(installation);
     }
-    const spaced = { kind: "ankiel-launcher", launcher: "/opt/bin/ac ", baseDir: " /data/ac " };
+    const spaced = {
+      kind: "ankiel-launcher",
+      launcher: "/opt/bin/ankiel ",
+      baseDir: " /data/ankiel ",
+    };
     expect(
       decodeDescriptor({
         ...descriptor,
@@ -38,7 +42,7 @@ describe("ExecutionEnvironmentDescriptor", () => {
     for (const installation of [
       { kind: "future-manager" },
       { kind: "npm-global" },
-      { kind: "ankiel-launcher", launcher: "ac" },
+      { kind: "ankiel-launcher", launcher: "ankiel" },
     ]) {
       expect(
         decodeDescriptor({

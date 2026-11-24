@@ -57,7 +57,7 @@ const startMetro = Effect.fn("run.startMetro")(function* (host: string, out: str
             CI: "1",
             // Lazily fetched chunks sometimes arrive broken on pool emulators and throw SyntaxErrors.
             EXPO_NO_METRO_LAZY: "1",
-            EXPO_PUBLIC_AC_BEHAVIOR_PROBE: "1",
+            EXPO_PUBLIC_ANKIEL_BEHAVIOR_PROBE: "1",
             REACT_NATIVE_PACKAGER_HOSTNAME: host,
           },
         },

@@ -222,7 +222,7 @@ const layerDesktopEnvironmentFor = (platform: NodeJS.Platform) =>
       Layer.mergeAll(
         NodeServices.layer,
         DesktopConfig.layerTest({
-          AC_PORT: "3773",
+          ANKIEL_PORT: "3773",
           VITE_DEV_SERVER_URL: "http://127.0.0.1:5733",
         }),
       ),

@@ -222,7 +222,7 @@ mod tests {
             address: "0x123456789abcdef".into(),
             pid,
             title: title.into(),
-            class: "ac".into(),
+            class: "ankiel".into(),
             at: [-1920, 20],
             size: [1000, 800],
             mapped: true,
@@ -263,7 +263,7 @@ mod tests {
             next_event(&mut events, deadline).unwrap_err().to_string(),
             "Ankiel Code did not become visible."
         );
-        hyprland.write_all(b"openwindow>>1,1,ac,Ankiel Code\n").unwrap();
+        hyprland.write_all(b"openwindow>>1,1,ankiel,Ankiel Code\n").unwrap();
         assert!(next_event(&mut events, deadline).is_ok());
         drop(hyprland);
         assert_eq!(

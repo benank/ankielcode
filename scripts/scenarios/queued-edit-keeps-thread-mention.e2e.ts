@@ -4,8 +4,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 const SettingsJson = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
 const decodeSettings = Schema.decodeEffect(SettingsJson);
@@ -13,7 +13,7 @@ const encodeSettings = Schema.encodeEffect(SettingsJson);
 
 const threadRuntimeSettings = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const settingsPath = (yield* Path.Path).join(AC_HOME, "userdata/settings.json");
+  const settingsPath = (yield* Path.Path).join(ANKIEL_HOME, "userdata/settings.json");
   const original = yield* fs.readFileString(settingsPath);
   const settings = yield* decodeSettings(original);
   return {
@@ -28,22 +28,22 @@ const threadRuntimeSettings = Effect.gen(function* () {
 test(
   "An unsaved queued edit keeps its thread mention when the queued run starts",
   WEB,
-  async ({ ac, app, screen }) => {
+  async ({ ankiel, app, screen }) => {
     const settings = await runPromise(threadRuntimeSettings);
     try {
       // Supervised mode makes the approval recording wait for an answer, which holds its turn open.
       await runPromise(settings.supervise);
-      const project = await ac.project("demo");
-      await ac.thread({ project, title: "Release notes", messages: ["Draft the notes"] });
-      const thread = await ac.thread({
+      const project = await ankiel.project("demo");
+      await ankiel.thread({ project, title: "Release notes", messages: ["Draft the notes"] });
+      const thread = await ankiel.thread({
         project,
         title: "Waiting work",
         messages: ["Change the file"],
         model: "approval",
       });
-      const { cli } = makeState(AC_HOME);
+      const { cli } = makeState(ANKIEL_HOME);
       await runPromise(cli(["thread", "send", thread.threadId, "Queued message"]));
-      await ac.open(thread);
+      await ankiel.open(thread);
 
       await screen.getByRole("button", "Edit queued message").tap();
       const composer = screen.getByRole("textbox");

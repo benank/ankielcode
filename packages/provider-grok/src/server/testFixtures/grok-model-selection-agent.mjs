@@ -1,13 +1,13 @@
 // Grok's model and effort wire contract (grok 1.0.41): per-model efforts on `models`, a
 // `thought_level` option `reasoning_effort`, and `config_option_update` after set_model.
-// AC_GROK_MOCK_PROTOCOL picks the protocol (default 1); AC_GROK_MOCK_REJECT_EFFORT names
+// ANKIEL_GROK_MOCK_PROTOCOL picks the protocol (default 1); ANKIEL_GROK_MOCK_REJECT_EFFORT names
 // an advertised effort Grok refuses.
 import * as NodeFS from "node:fs";
 import * as NodeReadline from "node:readline";
 
 const sessionId = "grok-model-selection-session";
-const protocolVersion = Number(process.env.AC_GROK_MOCK_PROTOCOL ?? "1");
-const rejectedEffort = process.env.AC_GROK_MOCK_REJECT_EFFORT;
+const protocolVersion = Number(process.env.ANKIEL_GROK_MOCK_PROTOCOL ?? "1");
+const rejectedEffort = process.env.ANKIEL_GROK_MOCK_REJECT_EFFORT;
 const models = {
   "grok-4.6": { efforts: ["xhigh", "high", "medium", "low"], defaultEffort: "xhigh" },
   "grok-4.6-fast": { efforts: ["high", "low"], defaultEffort: "high" },
@@ -49,8 +49,8 @@ const switchTo = (modelId, effort) => {
 
 for await (const line of NodeReadline.createInterface({ input: process.stdin })) {
   const request = JSON.parse(line);
-  if (process.env.AC_ACP_REQUEST_LOG_PATH) {
-    NodeFS.appendFileSync(process.env.AC_ACP_REQUEST_LOG_PATH, `${line}\n`);
+  if (process.env.ANKIEL_ACP_REQUEST_LOG_PATH) {
+    NodeFS.appendFileSync(process.env.ANKIEL_ACP_REQUEST_LOG_PATH, `${line}\n`);
   }
   if (request.id === undefined) continue;
   const fail = (message) =>

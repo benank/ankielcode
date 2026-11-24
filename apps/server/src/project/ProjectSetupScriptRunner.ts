@@ -135,7 +135,7 @@ export class ProjectSetupScriptRunner extends Context.Service<
 
 /** @public */
 // Random per-run tokens prevent script output from spoofing completion.
-const COMPLETION_SENTINEL_PREFIX = "__AC_SETUP_DONE__";
+const COMPLETION_SENTINEL_PREFIX = "__ANKIEL_SETUP_DONE__";
 const OUTPUT_LINE_MAX_LENGTH = 400;
 const PARTIAL_LINE_MAX_LENGTH = 4_096;
 
@@ -246,8 +246,8 @@ function wrapCommandForCompletion(
       // Nu resolves imports before running cd; source a file rooted in the worktree.
       return [
         "$env.LAST_EXIT_CODE = 0",
-        "let __ankielf = try { mktemp --tmpdir-path $env.AC_WORKTREE_PATH --suffix .nu .ac-setup-XXXXXXXX } catch {|e| print -e $e.msg; null }",
-        `if $__ankielf == null { $env.LAST_EXIT_CODE = 1 } else { try { [$"rm --permanent ($__ankielf | to nuon)" "${escaped}"] | str join (char newline) | save --force --raw $__ankielf; ^$nu.current-exe --login --commands $"cd $env.AC_WORKTREE_PATH; source ($__ankielf | to nuon)" } catch {|e| if $e != null and $e.exit_code? == null { print -e $e.msg }; if $env.LAST_EXIT_CODE == 0 { $env.LAST_EXIT_CODE = 1 } } }`,
+        "let __ankielf = try { mktemp --tmpdir-path $env.ANKIEL_WORKTREE_PATH --suffix .nu .ankiel-setup-XXXXXXXX } catch {|e| print -e $e.msg; null }",
+        `if $__ankielf == null { $env.LAST_EXIT_CODE = 1 } else { try { [$"rm --permanent ($__ankielf | to nuon)" "${escaped}"] | str join (char newline) | save --force --raw $__ankielf; ^$nu.current-exe --login --commands $"cd $env.ANKIEL_WORKTREE_PATH; source ($__ankielf | to nuon)" } catch {|e| if $e != null and $e.exit_code? == null { print -e $e.msg }; if $env.LAST_EXIT_CODE == 0 { $env.LAST_EXIT_CODE = 1 } } }`,
         "let __ankielc = $env.LAST_EXIT_CODE",
         "try { if $__ankielf != null and ($__ankielf | path exists) { rm --permanent $__ankielf } } catch {|e| print -e $e.msg }",
         `print $"\\n${sentinel}($__ankielc)"`,
@@ -529,7 +529,7 @@ export const make = Effect.gen(function* () {
       // Before client attachment, truecolor probes wait for terminal replies nobody can send.
       COLORTERM: "",
       // Project scripts keep the default shell; the preference is for interactive terminals only.
-      AC_TERMINAL_SHELL: "",
+      ANKIEL_TERMINAL_SHELL: "",
     };
     const observe = input.observeCompletion;
     const completionToken = observe ? (yield* random.uuidV4()).replaceAll("-", "") : null;

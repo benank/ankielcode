@@ -1,7 +1,7 @@
 /**
  * Records a Kiro ACP replay transcript through the real orchestrator and
  * KiroAdapterV2, teeing only the protocol logger. Run from apps/server, signed in
- * with `kiro-cli login`, with `kiro-cli` on PATH (or AC_KIRO_BIN):
+ * with `kiro-cli login`, with `kiro-cli` on PATH (or ANKIEL_KIRO_BIN):
  *   node scripts/record-kiro-acp-replay-fixture.ts --scenario simple
  */
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -214,7 +214,8 @@ function wireToEntries(wire: ReadonlyArray<WireMessage>): {
   return { entries, droppedFrames };
 }
 
-const AC_INSTRUCTIONS_BODY = /<ankiel_code_instructions>\n[\s\S]*?\n<\/ankiel_code_instructions>/u;
+const ANKIEL_INSTRUCTIONS_BODY =
+  /<ankiel_code_instructions>\n[\s\S]*?\n<\/ankiel_code_instructions>/u;
 // A turn on another model sends its own runtime info, which the filter below
 // keeps; its model stays pinned and the linking guidance does not.
 const PULL_REQUEST_LINKING_BODY = /<pull_request_linking>\n[\s\S]*?\n<\/pull_request_linking>/u;
@@ -257,7 +258,7 @@ function normalizeOutboundFrame(frame: Record<string, unknown>, runtimeInstructi
                   ...part,
                   text: part.text
                     .replace(
-                      AC_INSTRUCTIONS_BODY,
+                      ANKIEL_INSTRUCTIONS_BODY,
                       "<ankiel_code_instructions>\n<any>\n</ankiel_code_instructions>",
                     )
                     .replace(
@@ -406,11 +407,11 @@ function normalizeEntries(input: {
 
 const KIRO_RECORDING_SETTINGS = Schema.decodeSync(KiroSettings)({
   enabled: true,
-  binaryPath: process.env.AC_KIRO_BIN ?? "kiro-cli",
+  binaryPath: process.env.ANKIEL_KIRO_BIN ?? "kiro-cli",
 });
 
 const RecorderEnv = Config.all({
-  AC_KIRO_VERSION: Config.String("AC_KIRO_VERSION").pipe(
+  ANKIEL_KIRO_VERSION: Config.String("ANKIEL_KIRO_VERSION").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
@@ -556,7 +557,7 @@ const recordScenario = Effect.fn("recordKiroScenario")(function* (fixtureName: s
     scenario: fixtureName,
     metadata: {
       generatedBy: "live-kiro-recorder",
-      kiroVersion: recorderEnv.AC_KIRO_VERSION ?? "unknown",
+      kiroVersion: recorderEnv.ANKIEL_KIRO_VERSION ?? "unknown",
       normalization:
         "Session ids are fixed sess_ UUIDs and other UUIDs (message and request ids) are numbered in first-seen order, the workspace is <workspace>, HOME is /home/kiro-replay and the recording user is kiro-replay. Ankiel-owned prompt text, MCP servers and initialize params other than clientCapabilities and _meta are <any>. Kiro's log directory, user-scoped commands and agents, and the _kiro/* broadcasts Ankiel ignores (governance, steering documents, powers, tools, hooks, MCP status, session roster, memory sync) are removed. Timestamps are kept as recorded.",
       droppedFrames,

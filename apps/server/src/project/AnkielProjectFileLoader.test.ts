@@ -23,7 +23,7 @@ const makeTempDir = Effect.gen(function* () {
 const writeProjectFile = Effect.fn("writeProjectFile")(function* (cwd: string, contents: string) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  yield* fileSystem.writeFileString(path.join(cwd, "ac.json"), contents).pipe(Effect.orDie);
+  yield* fileSystem.writeFileString(path.join(cwd, "ankiel.json"), contents).pipe(Effect.orDie);
 });
 
 it.layer(layerTest)("AnkielProjectFileLoader", (it) => {

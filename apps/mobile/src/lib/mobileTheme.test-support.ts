@@ -7,10 +7,10 @@ import {
   type MobileThemeVariables,
 } from "./mobileTheme";
 
-import { AC_CHAT_THEME } from "@ankielcode/shared/themePalettes";
+import { ANKIEL_CHAT_THEME } from "@ankielcode/shared/themePalettes";
 
 const MOBILE_THEME_VARIABLE_NAMES = Object.keys(
-  createMobileThemeVariables(AC_CHAT_THEME.colors, "light"),
+  createMobileThemeVariables(ANKIEL_CHAT_THEME.colors, "light"),
 ) as ReadonlyArray<MobileThemeVariable>;
 
 export function readDefaultMobileThemeVariables(

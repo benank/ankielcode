@@ -5,16 +5,16 @@ import {
   holdImageCompression,
   pasteWideScreenshot,
 } from "./image-compression-hold.ts";
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "Enter while a pasted image compresses sends the message with the image once it finishes",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     await holdImageCompression(browser);
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Screenshot work", messages: ["first"] });
-    await ac.open(thread);
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Screenshot work", messages: ["first"] });
+    await ankiel.open(thread);
     await expect(screen.getByText("first fixture turn complete", { exact: false })).toBeVisible();
 
     const composer = screen.getByRole("textbox");

@@ -3,8 +3,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 const decodeSettings = Schema.decodeSync(
   Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown)),
@@ -13,10 +13,10 @@ const decodeSettings = Schema.decodeSync(
 test(
   "Cleanup removes expired rotated logs even with a dangling symlink in the log directory",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    await ac.project("rotated-log-cleanup");
-    const settingsPath = `${AC_HOME}/userdata/settings.json`;
-    const logFixture = `${AC_HOME}/userdata/logs/00-cleanup-fixture`;
+  async ({ ankiel, app, browser, screen }) => {
+    await ankiel.project("rotated-log-cleanup");
+    const settingsPath = `${ANKIEL_HOME}/userdata/settings.json`;
+    const logFixture = `${ANKIEL_HOME}/userdata/logs/00-cleanup-fixture`;
     const expiredLog = `${logFixture}/server.log.1`;
     const original = await runPromise(
       Effect.flatMap(FileSystem.FileSystem, (fs) => fs.readFileString(settingsPath)),
@@ -31,7 +31,7 @@ test(
           ),
         ),
       );
-      await ac.open("/settings/maintenance");
+      await ankiel.open("/settings/maintenance");
       await screen.getByLabel("Delete old rotated logs in days").waitFor();
 
       const deleteNow = screen.getByRole("button", "Delete now", { exact: true });

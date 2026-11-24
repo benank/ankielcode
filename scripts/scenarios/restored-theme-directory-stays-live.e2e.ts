@@ -2,17 +2,17 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 test(
   "Appearance reflects new edits after the environment theme directory is restored",
   WEB,
-  async ({ ac, app, screen }) => {
-    await ac.project("theme-directory");
-    const themes = `${AC_HOME}/userdata/themes`;
-    const previous = `${AC_HOME}/themes-before-restore`;
-    const restored = `${AC_HOME}/themes-to-restore`;
+  async ({ ankiel, app, screen }) => {
+    await ankiel.project("theme-directory");
+    const themes = `${ANKIEL_HOME}/userdata/themes`;
+    const previous = `${ANKIEL_HOME}/themes-before-restore`;
+    const restored = `${ANKIEL_HOME}/themes-to-restore`;
     const file = "restore-fixture.json";
     const contents = (name: string) =>
       JSON.stringify({
@@ -30,7 +30,7 @@ test(
       }),
     );
     try {
-      await ac.open("/settings/appearance");
+      await ankiel.open("/settings/appearance");
       await screen.getByRole("button", "Use Original Palette theme", { exact: true }).waitFor();
       await runPromise(
         Effect.gen(function* () {

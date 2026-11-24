@@ -4,25 +4,25 @@ project(ankielhighlights LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(AC_HIGHLIGHTS_ROOT "${CMAKE_SOURCE_DIR}/..")
+set(ANKIEL_HIGHLIGHTS_ROOT "${CMAKE_SOURCE_DIR}/..")
 
 add_library(
   ankielhighlights SHARED
   src/main/cpp/cpp-adapter.cpp
-  "${AC_HIGHLIGHTS_ROOT}/cpp/HybridAnkielHighlights.cpp"
-  "${AC_HIGHLIGHTS_ROOT}/cpp/Utf16ToUtf8.cpp"
-  "${AC_HIGHLIGHTS_ROOT}/cpp/ankiel_highlights.c"
-  "${AC_HIGHLIGHTS_ROOT}/Vendor/highlights/highlights.c"
-  "${AC_HIGHLIGHTS_ROOT}/Vendor/wasm2c/wasm-rt-impl.c"
-  "${AC_HIGHLIGHTS_ROOT}/Vendor/wasm2c/wasm-rt-mem-impl.c"
+  "${ANKIEL_HIGHLIGHTS_ROOT}/cpp/HybridAnkielHighlights.cpp"
+  "${ANKIEL_HIGHLIGHTS_ROOT}/cpp/Utf16ToUtf8.cpp"
+  "${ANKIEL_HIGHLIGHTS_ROOT}/cpp/ankiel_highlights.c"
+  "${ANKIEL_HIGHLIGHTS_ROOT}/Vendor/highlights/highlights.c"
+  "${ANKIEL_HIGHLIGHTS_ROOT}/Vendor/wasm2c/wasm-rt-impl.c"
+  "${ANKIEL_HIGHLIGHTS_ROOT}/Vendor/wasm2c/wasm-rt-mem-impl.c"
 )
 
 include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/ankielhighlights+autolinking.cmake)
 
 target_include_directories(
   ankielhighlights
-  PRIVATE "${AC_HIGHLIGHTS_ROOT}/cpp" "${AC_HIGHLIGHTS_ROOT}/Vendor"
-          "${AC_HIGHLIGHTS_ROOT}/Vendor/highlights" "${AC_HIGHLIGHTS_ROOT}/Vendor/wasm2c"
+  PRIVATE "${ANKIEL_HIGHLIGHTS_ROOT}/cpp" "${ANKIEL_HIGHLIGHTS_ROOT}/Vendor"
+          "${ANKIEL_HIGHLIGHTS_ROOT}/Vendor/highlights" "${ANKIEL_HIGHLIGHTS_ROOT}/Vendor/wasm2c"
 )
 
 # Plain malloc memory with explicit bounds checks: no guard-page signal

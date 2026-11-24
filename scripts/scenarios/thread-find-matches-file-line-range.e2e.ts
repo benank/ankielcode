@@ -1,18 +1,18 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "Find in thread matches the displayed line range of a file link",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    const project = await ac.project("demo", { "src/notes.ts": "// Notes\n".repeat(64) });
-    const thread = await ac.thread({
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("demo", { "src/notes.ts": "// Notes\n".repeat(64) });
+    const thread = await ankiel.thread({
       project,
       title: "File review",
       messages: ["See [src/notes.ts](src/notes.ts#L42-L64)"],
     });
-    await ac.open(thread);
+    await ankiel.open(thread);
     await screen.getByRole("button", /^Agent See/).tap();
     await browser
       .locator("[data-user-message-body]")

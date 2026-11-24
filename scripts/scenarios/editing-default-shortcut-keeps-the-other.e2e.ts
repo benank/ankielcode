@@ -2,15 +2,15 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 test(
   "Editing one inherited shortcut keeps the other shortcut for the same command",
   WEB,
-  async ({ ac, app, screen }) => {
-    await ac.project("inherited-shortcuts");
-    const keybindingsPath = `${AC_HOME}/userdata/keybindings.json`;
+  async ({ ankiel, app, screen }) => {
+    await ankiel.project("inherited-shortcuts");
+    const keybindingsPath = `${ANKIEL_HOME}/userdata/keybindings.json`;
     const original = await runPromise(
       Effect.flatMap(FileSystem.FileSystem, (fs) => fs.readFileString(keybindingsPath)),
     );
@@ -24,7 +24,7 @@ test(
           ),
         ),
       );
-      await ac.open("/settings/keybindings");
+      await ankiel.open("/settings/keybindings");
       const search = screen.getByLabel("Search keybindings");
       await search.fill("Command Palette");
       await screen

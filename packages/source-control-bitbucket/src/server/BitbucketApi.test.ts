@@ -150,9 +150,9 @@ function makeLayer(input: {
       ConfigProvider.layer(
         ConfigProvider.fromEnv({
           env: input.env ?? {
-            AC_BITBUCKET_API_BASE_URL: "https://api.test.local/2.0",
-            AC_BITBUCKET_EMAIL: "user@example.com",
-            AC_BITBUCKET_API_TOKEN: "token",
+            ANKIEL_BITBUCKET_API_BASE_URL: "https://api.test.local/2.0",
+            ANKIEL_BITBUCKET_EMAIL: "user@example.com",
+            ANKIEL_BITBUCKET_API_TOKEN: "token",
           },
         }),
       ),
@@ -514,8 +514,8 @@ it.effect("sends a self-hosted Bitbucket remote nowhere unless an API base url i
       remoteUrl,
     };
     const cloudEnv = {
-      AC_BITBUCKET_EMAIL: "user@example.com",
-      AC_BITBUCKET_API_TOKEN: "t",
+      ANKIEL_BITBUCKET_EMAIL: "user@example.com",
+      ANKIEL_BITBUCKET_API_TOKEN: "t",
     };
     const response = (request: HttpClientRequest.HttpClientRequest) =>
       Response.json(request.url.endsWith("/branching-model") ? {} : repositoryJson);
@@ -769,7 +769,7 @@ it.effect("never puts a saved token that is unsafe for an HTTP header on the wir
 it.effect("reports saved credentials as configured when Bitbucket cannot confirm them", () => {
   const { execute, layer } = makeLayer({
     response: () => new Response(null, { status: 401 }),
-    env: { AC_BITBUCKET_API_BASE_URL: "https://api.test.local/2.0" },
+    env: { ANKIEL_BITBUCKET_API_BASE_URL: "https://api.test.local/2.0" },
   });
 
   return Effect.gen(function* () {

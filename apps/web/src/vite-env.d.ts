@@ -8,7 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_HOSTED_APP_URL: string;
   readonly VITE_HOSTED_APP_CHANNEL: string;
   readonly VITE_RELEASE_CHANNEL: string;
-  readonly AC_DESKTOP_UPDATE_REPOSITORY: string;
+  readonly ANKIEL_DESKTOP_UPDATE_REPOSITORY: string;
   readonly APP_VERSION: string;
 }
 

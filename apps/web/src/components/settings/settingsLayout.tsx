@@ -491,8 +491,8 @@ export function SettingsRow({
     ? { state: "mixed", summary: gt("Mixed across selected environments") }
     : source === "project"
       ? { state: "overridden", summary: gt("Overridden for this project") }
-      : source === "ac.json"
-        ? { state: "inherited", summary: gt("Inherited from the repository's ac.json") }
+      : source === "ankiel.json"
+        ? { state: "inherited", summary: gt("Inherited from the repository's ankiel.json") }
         : source === "environment" && scopedKeys.length > 0
           ? {
               state: "inherited",

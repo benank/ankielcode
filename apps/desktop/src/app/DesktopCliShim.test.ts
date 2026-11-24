@@ -27,7 +27,7 @@ const writeExecutable = (path: string, content: string) => {
 };
 
 const writeShim = (root: string, target: CliShimTarget) => {
-  const shim = NodePath.join(root, "bin", "ac");
+  const shim = NodePath.join(root, "bin", "ankiel");
   writeExecutable(shim, renderCliShim({ target, shimPath: shim, ankielHome: `${root}/home` }));
   return shim;
 };
@@ -39,7 +39,7 @@ const run = (shim: string, args: ReadonlyArray<string>, env: NodeJS.ProcessEnv =
   });
 
 const REPORTER =
-  '#!/bin/sh\necho "node=$ELECTRON_RUN_AS_NODE cli=$AC_CLI_PATH home=$AC_HOME appimage=$APPIMAGE"\nprintf "%s\\n" "$@"\nexit 3\n';
+  '#!/bin/sh\necho "node=$ELECTRON_RUN_AS_NODE cli=$ANKIEL_CLI_PATH home=$ANKIEL_HOME appimage=$APPIMAGE"\nprintf "%s\\n" "$@"\nexit 3\n';
 
 const fakeAppImage = (canMount = true, app = REPORTER) => {
   const root = tempRoot();
@@ -177,8 +177,11 @@ describe("renderCliShim", () => {
       entry: "/bin.mjs",
     });
     expect(run(shim, []).stdout).toContain(`home=${root}/home`);
-    expect(run(shim, [], { AC_HOME: "/elsewhere" }).stdout).toContain("home=/elsewhere");
-    const relative = NodeChildProcess.spawnSync("./bin/ac", [], { cwd: root, encoding: "utf8" });
+    expect(run(shim, [], { ANKIEL_HOME: "/elsewhere" }).stdout).toContain("home=/elsewhere");
+    const relative = NodeChildProcess.spawnSync("./bin/ankiel", [], {
+      cwd: root,
+      encoding: "utf8",
+    });
     expect(relative.stdout).toContain(`cli=${shim}`);
   });
 
@@ -203,8 +206,8 @@ describe("renderCliShim", () => {
     const executable = "C:\\Apps\\R&whoami&X 100%\\!CHANNEL!\\Ankiel Code.exe";
     const script = renderCliShim({
       target: { kind: "windows", executable, entry: "C:\\Apps\\server.asar\\bin.mjs" },
-      shimPath: "C:\\Users\\José\\.ac\\bin\\ac.cmd",
-      ankielHome: "C:\\Users\\José\\.ac",
+      shimPath: "C:\\Users\\José\\.ankiel\\bin\\ankiel.cmd",
+      ankielHome: "C:\\Users\\José\\.ankiel",
     });
     const lines = script.split("\r\n");
     expect(lines).toContain("setlocal EnableExtensions DisableDelayedExpansion");
@@ -216,6 +219,6 @@ describe("renderCliShim", () => {
       (line) => line.includes("whoami") && !/"[^"]*whoami[^"]*"/.test(line),
     );
     expect(bare).toEqual([]);
-    expect(lines).toContain('set "AC_CLI_PATH=C:\\Users\\José\\.ac\\bin\\ac.cmd"');
+    expect(lines).toContain('set "ANKIEL_CLI_PATH=C:\\Users\\José\\.ankiel\\bin\\ankiel.cmd"');
   });
 });

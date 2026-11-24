@@ -1,6 +1,6 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 const themeJson = (css?: string) =>
   JSON.stringify({
@@ -18,9 +18,9 @@ const NYX_CSS =
 test(
   "Keep both on a theme import conflict keeps the imported theme's CSS",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    await ac.project("demo");
-    await ac.open("/settings/appearance");
+  async ({ ankiel, app, screen, browser }) => {
+    await ankiel.project("demo");
+    await ankiel.open("/settings/appearance");
 
     const importTheme = async (json: string) => {
       await screen.getByRole("button", "Add theme", { exact: true }).tap();

@@ -8,14 +8,14 @@ the desktop app, a browser, or the mobile app.
 ## Roll out a policy
 
 1. Write the policy as JSON, starting from the [example](#write-a-policy).
-2. Run `ac policy check policy.json`. It prints what the policy will do, or what is wrong with it.
+2. Run `ankiel policy check policy.json`. It prints what the policy will do, or what is wrong with it.
 3. Deploy the policy to each machine with your device management tool, in
    [one of the supported places](#where-the-policy-goes).
 4. Restart Ankiel Code on the machine. The server reads the policy only when it starts.
-5. Run `ac policy show` on the machine to
+5. Run `ankiel policy show` on the machine to
    [check what the server loaded](#check-what-the-server-loaded).
 
-The desktop app includes the `ac` command; see [The `ac` command](./install.md#the-ankiel-command).
+The desktop app includes the `ankiel` command; see [The `ankiel` command](./install.md#the-ankiel-command).
 
 ## Write a policy
 
@@ -23,7 +23,7 @@ The desktop app includes the `ac` command; see [The `ac` command](./install.md#t
 {
   "schemaVersion": 1,
   "organization": "Example Corp",
-  "supportUrl": "https://it.example.com/ac",
+  "supportUrl": "https://it.example.com/ankiel",
   "settings": {
     "defaultRuntimeMode": { "value": "approval-required", "locked": false },
     "enableAgentBrowserAccess": { "value": false, "locked": true }
@@ -62,12 +62,12 @@ administrators.
 `organization`, `supportUrl`, `settings`, `limits`); JSON objects become dictionaries and lists
 become arrays. To make the payload from a policy file you checked, run
 `plutil -convert xml1 -o com.ankiel.ankielcode.plist policy.json` and upload the result, or run
-`ac policy templates <directory> --policy policy.json` to write a complete
+`ankiel policy templates <directory> --policy policy.json` to write a complete
 `macos/ankielcode.mobileconfig`. Install it as
 a device profile, since Ankiel Code ignores user profiles, and deploy only one profile for this domain.
 A profile cannot hold `null`, so use a policy file if a setting's value must be `null`.
 
-**Windows Group Policy.** Run `ac policy templates <directory>` and copy
+**Windows Group Policy.** Run `ankiel policy templates <directory>` and copy
 `windows/ankielcode.admx` and `windows/en-US/ankielcode.adml` into your `PolicyDefinitions` folder or
 central store, or import them into Intune. The policies appear under Computer Configuration >
 Administrative Templates > Ankiel Code. Set **Organization** whenever you set any other Ankiel Code policy.
@@ -91,7 +91,7 @@ Set-ItemProperty -Path HKLM:\SOFTWARE\Policies\Ankiel\AnkielCode -Name Policy -V
 
 ## Check what the server loaded
 
-Run `ac policy show` as the user who runs Ankiel Code. It prints the installed policy and its
+Run `ankiel policy show` as the user who runs Ankiel Code. It prints the installed policy and its
 fingerprint, then says whether the running server loaded that policy or an older one. The server
 reads the policy only when it starts, so "Restart Ankiel Code to apply the installed policy" means it
 still enforces the old one. In Settings, users see that your organization manages the environment,
@@ -100,7 +100,7 @@ and each locked control shows **Managed by**.
 ## Change or remove a policy
 
 After you deploy, change, or remove a policy, restart the Ankiel Code server on the machine: quit and
-reopen the desktop app, or run `ac service restart` for the
+reopen the desktop app, or run `ankiel service restart` for the
 [background service](./background-service.md). Reconnecting a phone or browser does not reload the
 policy.
 
@@ -116,7 +116,7 @@ policy it cannot read or parse, a setting it does not know, a value of the wrong
 version does not support, or a machine with both a native policy and a file. The error names where
 the policy came from and what is wrong.
 
-`ac policy check` catches the same problems in a JSON file. For a profile or registry value, check
+`ankiel policy check` catches the same problems in a JSON file. For a profile or registry value, check
 the JSON before you convert it. For the Group Policy template, check a complete policy file that
 holds the same settings, then paste its `settings` and `limits.providers.instances` objects into the
 two JSON policies. A policy written for a newer version can use keys an older one
@@ -125,7 +125,7 @@ cannot enforce, so upgrade Ankiel Code before you deploy a policy that uses them
 ## Settings
 
 Each key under `settings` is a setting's path in the server's `settings.json`, such as
-`storageCleanup.logsAfterDays`. Run `ac policy settings` to list every path a policy can manage,
+`storageCleanup.logsAfterDays`. Run `ankiel policy settings` to list every path a policy can manage,
 with its default.
 
 - `"locked": false` sets a default. It applies wherever the user has not chosen a value of their
@@ -224,13 +224,13 @@ desktop app, keep `desktop` in the list, or the app cannot start.
 Without `remote`, the server listens only on a loopback address, creates no pairing links, and
 signs out devices that paired earlier. It does not start with a host other than a loopback
 address or `localhost`. A [background service](./background-service.md) installed before
-`AC_LAN` existed keeps private-network access, so without `remote` it refuses to start.
-Run `ac up --no-lan` when its `service.env` sets no `AC_HOST`, or set
-`AC_HOST=127.0.0.1` in `service.env`, then run `ac service restart`. The desktop app starts
+`ANKIEL_LAN` existed keeps private-network access, so without `remote` it refuses to start.
+Run `ankiel up --no-lan` when its `service.env` sets no `ANKIEL_HOST`, or set
+`ANKIEL_HOST=127.0.0.1` in `service.env`, then run `ankiel service restart`. The desktop app starts
 with network access and Tailscale Serve off, whatever the user chose.
 
 When it starts, the server also turns off each Tailscale Serve route, HTTPS or TCP, that forwards
-to it, such as one `ac pair --tailscale` set up, and leaves other routes alone. It does not start
+to it, such as one `ankiel pair --tailscale` set up, and leaves other routes alone. It does not start
 while such a route stays on, or while Tailscale's answer cannot be read; the error names the
 command that turns the route off. A route whose target is a name, such as `localhost` or another
 machine on the same port, also stops it, since a name can resolve to this server; change the route
@@ -258,7 +258,7 @@ so restart Ankiel Code after that.
 `claudeAgent` (Claude), `cursor` (Cursor), `grok` (Grok), `opencode` (OpenCode), `antigravity`
 (Antigravity), `fx` (fx), `kiro` (Kiro), `pi` (Pi), `muse` (Muse Code), and `acpRegistry` (ACP
 Registry).
-`ac policy check` rejects an ID this version does not know. Threads on other providers stay,
+`ankiel policy check` rejects an ID this version does not know. Threads on other providers stay,
 marked unavailable, and users can still turn those providers off.
 
 `providers.instances` sets fields on every instance of a provider, such as an environment variable
@@ -274,12 +274,12 @@ starts the binary you set.
 
 - `mode`: `auto` keeps the normal update flow. `off` stops Ankiel Code from checking for updates, for
   machines that get Ankiel Code through device management.
-- `feedUrl`: Ankiel Code updates from your own mirror instead of GitHub: the desktop app, `ac update`,
+- `feedUrl`: Ankiel Code updates from your own mirror instead of GitHub: the desktop app, `ankiel update`,
   and updates started from another device. Publish only the versions you have approved, laid out
   as on a GitHub release. The release's update files (`latest.yml`, `latest-mac.yml`,
   `latest-linux.yml`, `latest-linux-arm64.yml`, and their `nightly` versions if you allow nightly)
-  and the desktop installers they list go at the URL's root. The release's `ac-*` archives and
-  `SHA256SUMS` go under `v<version>/`. A `ac` run through `npx` comes from npm, so pin it with your
+  and the desktop installers they list go at the URL's root. The release's `ankiel-*` archives and
+  `SHA256SUMS` go under `v<version>/`. A `ankiel` run through `npx` comes from npm, so pin it with your
   package tooling.
 - `allowNightly: false`: the nightly channel is unavailable.
 

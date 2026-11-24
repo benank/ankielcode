@@ -1,5 +1,5 @@
 import { HTML_RENDER_DEFAULT_FONTS, htmlRenderTheme } from "@ankielcode/shared/htmlRender";
-import { AC_CODE_DARK_THEME_COLORS } from "@ankielcode/shared/themePalettes";
+import { ANKIEL_CODE_DARK_THEME_COLORS } from "@ankielcode/shared/themePalettes";
 import { expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
 
@@ -9,7 +9,7 @@ import { act, render } from "../../../test/render";
 vi.mock(import("~/hooks/useHtmlRenderTheme"), async (original) => ({
   ...(await original()),
   useHtmlRenderTheme: () =>
-    htmlRenderTheme(AC_CODE_DARK_THEME_COLORS, "dark", HTML_RENDER_DEFAULT_FONTS),
+    htmlRenderTheme(ANKIEL_CODE_DARK_THEME_COLORS, "dark", HTML_RENDER_DEFAULT_FONTS),
 }));
 
 import { HtmlRenderDialog } from "./HtmlRenderDialog";

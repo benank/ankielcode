@@ -37,7 +37,7 @@ it.live("loads the CLI with its cache settings only when the command needs it", 
           {
             env: {
               XDG_CACHE_HOME: `${root}/cache`,
-              AC_HOME: `${root}/home`,
+              ANKIEL_HOME: `${root}/home`,
               NODE_COMPILE_CACHE: undefined,
               NODE_DISABLE_COMPILE_CACHE: undefined,
               APPIMAGE: "",
@@ -61,22 +61,22 @@ it.live("loads the CLI with its cache settings only when the command needs it", 
     expect(normal.stderr.replaceAll("\\", "/")).toContain(
       `CACHE=${root}/cache/ankielcode/compile-cache`.replaceAll("\\", "/"),
     );
-    const launcher = yield* run({ AC_HOME: "" }, ["__service-launcher"]);
+    const launcher = yield* run({ ANKIEL_HOME: "" }, ["__service-launcher"]);
     expect(launcher.exitCode).toBe(1);
-    expect(launcher.stderr).toContain("[service-launcher] AC_HOME is required");
+    expect(launcher.stderr).toContain("[service-launcher] ANKIEL_HOME is required");
     expect(launcher.stderr).not.toMatch(/LOADED_CLI_MAIN|CACHE=/);
-    const launcherHelp = yield* run({ AC_HOME: "" }, ["__service-launcher", "--help"]);
+    const launcherHelp = yield* run({ ANKIEL_HOME: "" }, ["__service-launcher", "--help"]);
     expect(launcherHelp.exitCode).toBe(0);
     expect(launcherHelp.stderr).toContain("LOADED_CLI_MAIN");
-    expect(launcherHelp.stdout).toContain("ac __service-launcher [flags]");
-    const launcherFlags = yield* run({ AC_HOME: "" }, [
+    expect(launcherHelp.stdout).toContain("ankiel __service-launcher [flags]");
+    const launcherFlags = yield* run({ ANKIEL_HOME: "" }, [
       "__service-launcher",
       "--log-level",
       "debug",
     ]);
     expect(launcherFlags.exitCode).toBe(1);
     expect(launcherFlags.stderr).toContain("LOADED_CLI_MAIN");
-    expect(launcherFlags.stderr).toContain("[service-launcher] AC_HOME is required");
+    expect(launcherFlags.stderr).toContain("[service-launcher] ANKIEL_HOME is required");
     const cacheDir = `${root}/cache/ankielcode/compile-cache`;
     yield* fs.makeDirectory(`${cacheDir}/v24.0.0-x64-legacy-1000`, { recursive: true });
     yield* fs.writeFileString(`${cacheDir}/v24.0.0-x64-legacy-1000/0123abcd`, "stale");

@@ -18,7 +18,7 @@ function needsConsoleStdin(input: {
   return (
     input.platform === "win32" &&
     // Set only by the launcher (DesktopCliShim), never for the desktop backend.
-    input.env.AC_DESKTOP_CLI_LAUNCHER === "1" &&
+    input.env.ANKIEL_DESKTOP_CLI_LAUNCHER === "1" &&
     input.stdinMissing &&
     input.stdoutIsConsole
   );
@@ -40,8 +40,8 @@ export function attachConsoleStdin(): number | undefined {
     stdinMissing: isMissingInput(0),
     stdoutIsConsole: NodeTty.isatty(1),
   });
-  // The launcher marker must not propagate to child shells or ac processes.
-  delete process.env.AC_DESKTOP_CLI_LAUNCHER;
+  // The launcher marker must not propagate to child shells or ankiel processes.
+  delete process.env.ANKIEL_DESKTOP_CLI_LAUNCHER;
   if (!needed) return undefined;
   let fd: number;
   try {

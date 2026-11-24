@@ -147,7 +147,7 @@ const detectLinuxMachineKind = Effect.fn("detectLinuxMachineKind")(function* () 
 // Overrides detection, e.g. for staged demos on a VM that should read as a laptop.
 const machineKindOverride = Config.schema(
   EnvironmentMachineKind,
-  "AC_ENVIRONMENT_MACHINE_KIND",
+  "ANKIEL_ENVIRONMENT_MACHINE_KIND",
 ).pipe(Config.option);
 
 export const detectServerEnvironmentMachineKind = Effect.fn("detectServerEnvironmentMachineKind")(

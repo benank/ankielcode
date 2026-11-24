@@ -221,7 +221,7 @@ class LinuxCaptureConnection {
       body: [PORTAL],
     });
     const sender = decodeString(owner.body[0]);
-    const token = `ac_${NodeCrypto.randomUUID().replaceAll("-", "")}`;
+    const token = `ankiel_${NodeCrypto.randomUUID().replaceAll("-", "")}`;
     const namespace = `${PORTAL_PATH}/request/${this.uniqueName.slice(1).replaceAll(".", "_")}/`;
     let handle = namespace + token;
     let completed = false;

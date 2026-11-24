@@ -41,7 +41,7 @@ const withTempHome = <A, E>(
           runningUnderArm64Translation: false,
         }).pipe(
           Layer.provide(
-            Layer.mergeAll(NodeServices.layer, DesktopConfig.layerTest({ AC_HOME: home })),
+            Layer.mergeAll(NodeServices.layer, DesktopConfig.layerTest({ ANKIEL_HOME: home })),
           ),
         ),
       ),

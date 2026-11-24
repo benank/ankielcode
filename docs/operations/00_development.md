@@ -28,10 +28,10 @@ Open the pairing URL printed by the dev runner (the bare origin does not authent
 
 - `vp run dev` (server + web), `vp run dev:desktop` (Electron), `vp run dev:server`, `vp run dev:web`. See [apps/mobile/README.md](../../apps/mobile/README.md) for mobile.
 - Pass flags directly after the task name (e.g. `vp run dev --home-dir /tmp/ankielcode-dev`, `--browser`).
-- **State and ports:** Linked worktrees default to `<worktree>/.ac/userdata` (outranking `AC_HOME`) and seed on first start from a read-only snapshot of `~/.ac/userdata/statev2.sqlite` when it is at most 500 MiB (`--no-seed` or `AC_DEV_SEED=0` skips; `vp run migrate-dev-db` refreshes manually). Plain clones and the main checkout default to `~/.ac/dev`. Never point a dev server at `~/.ac/userdata`. Read actual ports from `[dev-runner]` output (`AC_PORT_OFFSET` / `AC_DEV_INSTANCE` override).
+- **State and ports:** Linked worktrees default to `<worktree>/.ankiel/userdata` (outranking `ANKIEL_HOME`) and seed on first start from a read-only snapshot of `~/.ankiel/userdata/statev2.sqlite` when it is at most 500 MiB (`--no-seed` or `ANKIEL_DEV_SEED=0` skips; `vp run migrate-dev-db` refreshes manually). Plain clones and the main checkout default to `~/.ankiel/dev`. Never point a dev server at `~/.ankiel/userdata`. Read actual ports from `[dev-runner]` output (`ANKIEL_PORT_OFFSET` / `ANKIEL_DEV_INSTANCE` override).
 - **Resource monitor:** First start builds `native/resource-monitor` via Cargo when missing; without Rust, dev starts without process telemetry.
 - **Sharing:** `vp run dev --share` exposes the web port over Tailscale and prints a pairing URL. Add `--built` to serve `apps/web/dist` via `vp build --watch` (no HMR, faster over slow links). Never set `VITE_HTTP_URL` or `VITE_WS_URL` in dev—Vite proxies `/api` and `/ws` single-origin.
-- **Startup profiling:** `vp run profile:startup` captures the first 20 s of Node processes under `.ac/startup-profiles/<timestamp>`.
+- **Startup profiling:** `vp run profile:startup` captures the first 20 s of Node processes under `.ankiel/startup-profiles/<timestamp>`.
 
 ### Replay provider
 
@@ -39,11 +39,11 @@ Open the pairing URL printed by the dev runner (the bare origin does not authent
 
 ### Reusable dev credential
 
-Only use this on a hostname where you trust every service (browsers share cookies across ports on the same hostname). Generate one secret once and put it in the main checkout's gitignored `.env` (which `ac.json` links into worktrees):
+Only use this on a hostname where you trust every service (browsers share cookies across ports on the same hostname). Generate one secret once and put it in the main checkout's gitignored `.env` (which `ankiel.json` links into worktrees):
 
 ```sh
 openssl rand -hex 32
-# Add to .env: AC_DEV_AUTH_TOKEN=<value>
+# Add to .env: ANKIEL_DEV_AUTH_TOKEN=<value>
 ```
 
 Restart `vp run dev --share` and open its printed pairing URL once per browser profile. Never commit or publish the token or startup URLs. Desktop and non-dev servers ignore it; see [environment auth](../internals/04_environment-auth.md#reusable-dev-credential).

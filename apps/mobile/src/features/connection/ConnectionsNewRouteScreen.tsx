@@ -272,7 +272,7 @@ function PairingForm({
               {pairingConnectionError ??
                 (linked
                   ? gt(
-                      "Create a pairing code on {environment}, in its Settings → Sharing & access or with `ac auth pairing create`, and enter it here.",
+                      "Create a pairing code on {environment}, in its Settings → Sharing & access or with `ankiel auth pairing create`, and enter it here.",
                       { environment: linked.label },
                     )
                   : gt(
@@ -376,7 +376,7 @@ function PairingScanCard(props: {
         </View>
         <Text className={cn("text-center text-sm", light ? "text-black/70" : "text-white/80")}>
           {gt("Scan the code from {command} or desktop Connections settings", {
-            command: "ac pair",
+            command: "ankiel pair",
           })}
         </Text>
       </View>

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://code.ankiel.com/schema/ac.json",
+  "$schema": "https://code.ankiel.com/schema/ankiel.json",
   "iconPath": "assets/dev/blueprint-web-apple-touch-180.png",
   "scripts": [
     {

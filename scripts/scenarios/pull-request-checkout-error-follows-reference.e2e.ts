@@ -2,13 +2,13 @@
 import type { GitResolvePullRequestResult } from "@ankielcode/contracts";
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "A failed local checkout does not show its error on another pull request",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    await ac.project("demo");
+  async ({ ankiel, app, browser, screen }) => {
+    await ankiel.project("demo");
     await browser.setViewport({ width: 1280, height: 800 });
     await browser.addInitScript(() => {
       const send = WebSocket.prototype.send;
@@ -65,7 +65,7 @@ test(
       };
     });
 
-    await ac.open("/");
+    await ankiel.open("/");
     await browser
       .locator('[data-slot="combobox-trigger"][aria-label^="Branch:"]:visible')
       .first()

@@ -4,27 +4,27 @@
 #   irm https://code.ankiel.com/install.ps1 | iex
 #
 # Environment:
-#   AC_CHANNEL           release train to follow: stable, nightly, or preview
+#   ANKIEL_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
-#   AC_VERSION           exact version to install (overrides AC_CHANNEL)
-#   AC_HOME              Ankiel home directory (default: ~\.ac)
-#   AC_INSTALL_BIN_DIR   where ac.exe is linked (default: ~\.local\bin)
-#   AC_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
+#   ANKIEL_VERSION           exact version to install (overrides ANKIEL_CHANNEL)
+#   ANKIEL_HOME              Ankiel home directory (default: ~\.ankiel)
+#   ANKIEL_INSTALL_BIN_DIR   where ankiel.exe is linked (default: ~\.local\bin)
+#   ANKIEL_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
-# The archive is unpacked into $AC_HOME\runtime\versions\<version>, the
-# same layout `ac service install` uses, so the service reuses this download.
+# The archive is unpacked into $ANKIEL_HOME\runtime\versions\<version>, the
+# same layout `ankiel service install` uses, so the service reuses this download.
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $repo = "benank/ankielcode"
-$baseUrl = if ($env:AC_RELEASE_BASE_URL) { $env:AC_RELEASE_BASE_URL.TrimEnd("/") } else { "https://github.com/$repo/releases/download" }
-$ankielHome = if ($env:AC_HOME) { $env:AC_HOME } else { Join-Path $HOME ".ac" }
-$binDir = if ($env:AC_INSTALL_BIN_DIR) { $env:AC_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }
+$baseUrl = if ($env:ANKIEL_RELEASE_BASE_URL) { $env:ANKIEL_RELEASE_BASE_URL.TrimEnd("/") } else { "https://github.com/$repo/releases/download" }
+$ankielHome = if ($env:ANKIEL_HOME) { $env:ANKIEL_HOME } else { Join-Path $HOME ".ankiel" }
+$binDir = if ($env:ANKIEL_INSTALL_BIN_DIR) { $env:ANKIEL_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }
 # Absolute, so PATH never gets a folder that changes with the working directory.
 $binDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($binDir)
 
 function Fail([string] $message) {
-  Write-Error "ac install: $message"
+  Write-Error "ankiel install: $message"
   exit 1
 }
 
@@ -144,14 +144,14 @@ $arch = switch ($rawArch) {
   default { Fail "unsupported architecture $rawArch" }
 }
 
-$channel = if ($env:AC_CHANNEL) { $env:AC_CHANNEL } else { "stable" }
-$version = $env:AC_VERSION
+$channel = if ($env:ANKIEL_CHANNEL) { $env:ANKIEL_CHANNEL } else { "stable" }
+$version = $env:ANKIEL_VERSION
 if (-not $version) {
   $tagPattern = switch ($channel) {
     "stable" { '^v\d+\.\d+\.\d+$' }
     "nightly" { '^v\d+\.\d+\.\d+-nightly\.\d+\.\d+$' }
     "preview" { '^v\d+\.\d+\.\d+-preview\.\d+\.\d+$' }
-    default { Fail "AC_CHANNEL must be stable, nightly, or preview" }
+    default { Fail "ANKIEL_CHANNEL must be stable, nightly, or preview" }
   }
   if ($channel -eq "stable") {
     # release.yml marks only plain stable releases latest. This is a github.com
@@ -166,17 +166,17 @@ if (-not $version) {
       if (-not $releases) { break }
     }
   }
-  if (-not $tag) { Fail "could not find a $channel release; set AC_VERSION" }
+  if (-not $tag) { Fail "could not find a $channel release; set ANKIEL_VERSION" }
   $version = $tag.Substring(1)
 }
 if ($version -match '-preview\.') {
-  Write-Warning "ac $version is a preview build. Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, and are never offered as updates. Set AC_CHANNEL=stable (the default) for a supported build."
-  if ($channel -ne "preview" -and -not $env:AC_VERSION) {
+  Write-Warning "ankiel $version is a preview build. Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, and are never offered as updates. Set ANKIEL_CHANNEL=stable (the default) for a supported build."
+  if ($channel -ne "preview" -and -not $env:ANKIEL_VERSION) {
     Fail "refusing a preview build that was not explicitly requested"
   }
 }
 
-$stem = "ac-$version-win32-$arch"
+$stem = "ankiel-$version-win32-$arch"
 $archive = "$stem.zip"
 $versionsDir = Join-Path $ankielHome "runtime\versions"
 $targetDir = Join-Path $versionsDir $version
@@ -197,7 +197,7 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
     } catch {
       $status = $_.Exception.Response.StatusCode.value__
       if ($status -eq 404) {
-        Fail "ac $version has no release archive for win32-$arch; releases before the self-contained CLI can only be installed with 'npm install -g @ankielcode/cli@$version'"
+        Fail "ankiel $version has no release archive for win32-$arch; releases before the self-contained CLI can only be installed with 'npm install -g @ankielcode/cli@$version'"
       }
       throw
     }
@@ -221,7 +221,7 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
     Get-ChildItem (Join-Path $staging $stem) | Move-Item -Destination $staging
     Remove-Item (Join-Path $staging $stem), (Join-Path $staging $archive), (Join-Path $staging "SHA256SUMS") -Recurse -Force
 
-    & (Join-Path $staging "ac.exe") --version | Out-Null
+    & (Join-Path $staging "ankiel.exe") --version | Out-Null
     if ($LASTEXITCODE -ne 0) { Fail "the downloaded executable does not run" }
     Set-Content -Path (Join-Path $staging ".install-complete") -Value $version -NoNewline
 
@@ -233,29 +233,29 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
   }
 }
 
-Step "Setting up the ac command..."
+Step "Setting up the ankiel command..."
 New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-$shim = Join-Path $binDir "ac.cmd"
-# Replace only a shim that runs a version in this home; never the desktop app's or another ac.
+$shim = Join-Path $binDir "ankiel.cmd"
+# Replace only a shim that runs a version in this home; never the desktop app's or another ankiel.
 if (Test-Path -LiteralPath $shim) {
   $existingTarget = ""
   # The shim is UTF-8 without a BOM; Windows PowerShell 5.1 reads files as ANSI by default.
-  # Only a shim exactly as written here counts; a user's wrapper that also runs ac.exe does not.
+  # Only a shim exactly as written here counts; a user's wrapper that also runs ankiel.exe does not.
   $existing = [System.IO.File]::ReadAllText($shim, [System.Text.Encoding]::UTF8)
   if ($existing -match '^@echo off\r?\n"([^"]+)" %\*\s*$') { $existingTarget = $Matches[1] }
   # Full paths, so a target like versions\..\other cannot pass as ours.
   $ownedPrefix = [System.IO.Path]::GetFullPath($versionsDir).TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
   if ($existingTarget) { $existingTarget = [System.IO.Path]::GetFullPath($existingTarget) }
-  # Exactly <version>\ac.exe, never another program inside a version.
+  # Exactly <version>\ankiel.exe, never another program inside a version.
   $owned = $existingTarget.StartsWith($ownedPrefix, [System.StringComparison]::OrdinalIgnoreCase) -and
-    ($existingTarget.Substring($ownedPrefix.Length) -match '^[^\\/]+\\ac\.exe$')
+    ($existingTarget.Substring($ownedPrefix.Length) -match '^[^\\/]+\\ankiel\.exe$')
   if (-not $owned) {
-    Fail "another ac is already at $shim. Remove it and run this again, or run $(Join-Path $targetDir 'ac.exe') directly."
+    Fail "another ankiel is already at $shim. Remove it and run this again, or run $(Join-Path $targetDir 'ankiel.exe') directly."
   }
 }
 # UTF-8 without a BOM: cmd.exe reads the shim as-is, and ASCII would corrupt
 # non-ASCII characters in the user's home path.
-[System.IO.File]::WriteAllText($shim, "@echo off`r`n`"$(Join-Path $targetDir 'ac.exe')`" %*", (New-Object System.Text.UTF8Encoding $false))
+[System.IO.File]::WriteAllText($shim, "@echo off`r`n`"$(Join-Path $targetDir 'ankiel.exe')`" %*", (New-Object System.Text.UTF8Encoding $false))
 # Pruning keeps what this shim points at; a background service cannot see $binDir otherwise.
 $launchers = Join-Path $ankielHome "runtime\launchers"
 $shimPath = (Resolve-Path -LiteralPath $shim).Path
@@ -270,16 +270,16 @@ if ($binDir.Contains(";")) {
 } else {
   # Either side may end in a separator. Trim only here: a drive root keeps its `\` for Join-Path.
   $added = ($env:PATH -split ";" | ForEach-Object { $_.TrimEnd('\', '/') }) -notcontains $binDir.TrimEnd('\', '/')
-  # `irm | iex` runs in the user's own session, so ac works in this window right away.
-  # Last, so it never shadows another ac.
+  # `irm | iex` runs in the user's own session, so ankiel works in this window right away.
+  # Last, so it never shadows another ankiel.
   if ($added) { $env:Path = "$env:Path;$binDir" }
-  # An ac earlier on PATH runs instead, so name this one in full.
-  $first = Get-Command ac -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+  # An ankiel earlier on PATH runs instead, so name this one in full.
+  $first = Get-Command ankiel -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
   if ($first -and [System.IO.Path]::GetFullPath($first.Source) -ne [System.IO.Path]::GetFullPath($shimPath)) {
-    Write-Host "  Another ac at $($first.Source) runs first, so run ${bold}& '$($shim.Replace("'", "''"))'$reset to use this one.`n"
+    Write-Host "  Another ankiel at $($first.Source) runs first, so run ${bold}& '$($shim.Replace("'", "''"))'$reset to use this one.`n"
   } elseif ($added) {
-    Write-Host "  Run ${bold}ac$reset to get started. For new windows, add $binDir to your PATH.`n"
+    Write-Host "  Run ${bold}ankiel$reset to get started. For new windows, add $binDir to your PATH.`n"
   } else {
-    Write-Host "  Run ${bold}ac$reset to use Ankiel Code here, or ${bold}ac up$reset to use it from your other devices.`n"
+    Write-Host "  Run ${bold}ankiel$reset to use Ankiel Code here, or ${bold}ankiel up$reset to use it from your other devices.`n"
   }
 }

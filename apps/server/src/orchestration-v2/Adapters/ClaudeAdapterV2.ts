@@ -222,8 +222,8 @@ import {
 } from "../../provider/claudeUsageLimits.ts";
 import type { ManagedServerProvider } from "@ankielcode/provider-core/server/snapshot";
 import {
-  AC_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH,
-  AC_CODE_ORCHESTRATION_INSTRUCTIONS,
+  ANKIEL_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH,
+  ANKIEL_CODE_ORCHESTRATION_INSTRUCTIONS,
 } from "@ankielcode/provider-core/server/orchestrationInstructions";
 import { buildRuntimeInstructions } from "@ankielcode/provider-core/server/runtimeInstructions";
 import {
@@ -2515,7 +2515,7 @@ const subagentDeviceInstructions: HookCallback = () =>
   Promise.resolve({
     hookSpecificOutput: {
       hookEventName: "SubagentStart",
-      additionalContext: AC_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH,
+      additionalContext: ANKIEL_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH,
     },
   });
 
@@ -2699,11 +2699,11 @@ export function makeClaudeQueryOptions(input: {
         }) +
           (input.mcpServers === undefined
             ? ""
-            : AC_CODE_ORCHESTRATION_INSTRUCTIONS +
+            : ANKIEL_CODE_ORCHESTRATION_INSTRUCTIONS +
               CLAUDE_BACKGROUND_WAIT_INSTRUCTIONS +
               CLAUDE_SEND_TO_USER_INSTRUCTIONS +
               (deviceInstructions
-                ? `\n${AC_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH}\n`
+                ? `\n${ANKIEL_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH}\n`
                 : "")),
         ...launchAppendSystemPrompt,
       ].join("\n\n"),
@@ -2815,10 +2815,10 @@ export const readClaudeLaunchArgSettings = Effect.fn("ClaudeAdapterV2.readLaunch
   },
 );
 
-export const CLAUDE_AC_MCP_TOOL_WILDCARD = "mcp__ankiel-code__*";
+export const CLAUDE_ANKIEL_MCP_TOOL_WILDCARD = "mcp__ankiel-code__*";
 
 // Keep in sync with OrchestratorToolkit Tool.Readonly annotations; ClaudeAdapterV2.test.ts checks this.
-export const CLAUDE_READ_ONLY_AC_MCP_ALLOWED_TOOLS: ReadonlyArray<string> = [
+export const CLAUDE_READ_ONLY_ANKIEL_MCP_ALLOWED_TOOLS: ReadonlyArray<string> = [
   "mcp__ankiel-code__orchestrator_capabilities",
   "mcp__ankiel-code__list_scheduled_tasks",
   "mcp__ankiel-code__ankiel_background_wait",
@@ -2840,7 +2840,7 @@ export const CLAUDE_READ_ONLY_AC_MCP_ALLOWED_TOOLS: ReadonlyArray<string> = [
 ];
 
 // request_secret can wait an hour; exceed Claude's default 60 s timeout.
-export const CLAUDE_AC_MCP_TOOL_TIMEOUT_MS = 65 * 60 * 1_000;
+export const CLAUDE_ANKIEL_MCP_TOOL_TIMEOUT_MS = 65 * 60 * 1_000;
 
 // allowedTools pre-approves calls; tools controls availability. Pre-approve Ankiel tools for headless modes,
 // limited to annotated read-only tools in read-only sandboxes.
@@ -2858,8 +2858,8 @@ export function claudeMcpQueryOverrides(input: {
     return input.allowedTools === undefined ? {} : { allowedTools: input.allowedTools };
   }
   const mcpAllowedTools = input.readOnlySandbox
-    ? CLAUDE_READ_ONLY_AC_MCP_ALLOWED_TOOLS
-    : [CLAUDE_AC_MCP_TOOL_WILDCARD];
+    ? CLAUDE_READ_ONLY_ANKIEL_MCP_ALLOWED_TOOLS
+    : [CLAUDE_ANKIEL_MCP_TOOL_WILDCARD];
   return {
     allowedTools: Array.from(new Set([...(input.allowedTools ?? []), ...mcpAllowedTools])),
     mcpServers: {
@@ -2869,7 +2869,7 @@ export function claudeMcpQueryOverrides(input: {
         headers: {
           Authorization: session.authorizationHeader,
         },
-        timeout: CLAUDE_AC_MCP_TOOL_TIMEOUT_MS,
+        timeout: CLAUDE_ANKIEL_MCP_TOOL_TIMEOUT_MS,
       },
     },
   };

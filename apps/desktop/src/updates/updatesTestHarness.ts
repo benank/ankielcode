@@ -194,9 +194,9 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
       Layer.mergeAll(
         NodeServices.layer,
         DesktopConfig.layerTest({
-          AC_HOME: `/tmp/ankiel-desktop-updates-test-${process.pid}`,
-          AC_DESKTOP_MOCK_UPDATES: "true",
-          AC_DESKTOP_MOCK_UPDATE_SERVER_PORT: "4141",
+          ANKIEL_HOME: `/tmp/ankiel-desktop-updates-test-${process.pid}`,
+          ANKIEL_DESKTOP_MOCK_UPDATES: "true",
+          ANKIEL_DESKTOP_MOCK_UPDATE_SERVER_PORT: "4141",
           ...options.env,
         }),
       ),
@@ -303,9 +303,9 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
     Layer.provideMerge(layerSettings),
     Layer.provideMerge(
       DesktopConfig.layerTest({
-        AC_HOME: `/tmp/ankiel-desktop-updates-test-${process.pid}`,
-        AC_DESKTOP_MOCK_UPDATES: "true",
-        AC_DESKTOP_MOCK_UPDATE_SERVER_PORT: "4141",
+        ANKIEL_HOME: `/tmp/ankiel-desktop-updates-test-${process.pid}`,
+        ANKIEL_DESKTOP_MOCK_UPDATES: "true",
+        ANKIEL_DESKTOP_MOCK_UPDATE_SERVER_PORT: "4141",
         ...options.env,
       }),
     ),

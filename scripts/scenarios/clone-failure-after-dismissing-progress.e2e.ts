@@ -8,15 +8,15 @@ import * as Effect from "effect/Effect";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Stream from "effect/Stream";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { rpcClient, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { rpcClient, runPromise, test, WEB } from "./ankiel.ts";
 
 test(
   "Dismissing clone progress leaves the later failure notification visible",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Other work", messages: ["Start"] });
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Other work", messages: ["Start"] });
     const gitRequest = Promise.withResolvers<NodeHttp.ServerResponse>();
     const remote = NodeHttp.createServer((_request, response) => {
       gitRequest.resolve(response);
@@ -36,12 +36,12 @@ test(
       );
       const name = "pending-clone";
       const origin = app.baseUrl ?? "";
-      await ac.open(thread);
+      await ankiel.open(thread);
       await screen.getByText("Start", { exact: true }).waitFor();
 
       await runPromise(
         Effect.gen(function* () {
-          const client = yield* rpcClient(AC_HOME, origin);
+          const client = yield* rpcClient(ANKIEL_HOME, origin);
           const createdAt = DateTime.formatIso(yield* DateTime.now);
           yield* client["projectClone.start"]({
             projectId,
@@ -74,7 +74,7 @@ test(
       response.writeHead(404).end();
       await runPromise(
         Effect.gen(function* () {
-          const client = yield* rpcClient(AC_HOME, origin);
+          const client = yield* rpcClient(ANKIEL_HOME, origin);
           yield* client.subscribeProjectClones({}).pipe(
             Stream.filter((clones) =>
               clones.some((clone) => clone.projectId === projectId && clone.phase === "failed"),
@@ -96,7 +96,7 @@ test(
       remote.once("request", (_request, response) => retryRequest.resolve(response));
       const retry = await runPromise(
         Effect.gen(function* () {
-          const client = yield* rpcClient(AC_HOME, origin);
+          const client = yield* rpcClient(ANKIEL_HOME, origin);
           return yield* client["projectClone.retry"]({ projectId });
         }).pipe(Effect.scoped),
       );

@@ -4,7 +4,7 @@ import { cn } from "~/lib/utils";
 import { CommandBlock } from "./CommandBlock";
 
 /**
- * Setup steps for another computer: install `ac`, then run `command`. Both installers are shown
+ * Setup steps for another computer: install `ankiel`, then run `command`. Both installers are shown
  * because the browser showing this is often not the computer being set up.
  */
 export function InstallAnkielCommands({
@@ -26,9 +26,9 @@ export function InstallAnkielCommands({
       <CommandBlock command={command} />
       <p className="text-xs text-muted-foreground">
         <T>
-          Skip the install if you already have <code className="font-mono">ac</code>. If{" "}
-          <code className="font-mono">ac</code> is not found after installing, add the folder the
-          installer names to your PATH.
+          Skip the install if you already have <code className="font-mono">ankiel</code>. If{" "}
+          <code className="font-mono">ankiel</code> is not found after installing, add the folder
+          the installer names to your PATH.
         </T>
       </p>
     </div>

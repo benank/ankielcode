@@ -47,7 +47,7 @@ const TEST_ONLY_DEPS = {
   ],
 };
 // The server bundles the web build without importing it.
-const BUILD_ONLY_DEPS = { ac: ["@ankielcode/web"] };
+const BUILD_ONLY_DEPS = { ankiel: ["@ankielcode/web"] };
 
 const MOBILE_NATIVE =
   /^apps\/mobile\/.*\.(swift|kt|kts)$|^apps\/mobile\/(\.swiftlint\.yml|detekt\.yml|\.editorconfig|Brewfile)$|^scripts\/mobile-native-static-check\.ts$|^package\.json$|^\.github\/workflows\/ci\.yml$|^\.github\/scripts\/ci-changes\.cjs$|^\.github\/actions\/ci-changes\//;

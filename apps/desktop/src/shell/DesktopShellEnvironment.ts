@@ -122,8 +122,8 @@ const LOGIN_SHELL_ENV_NAMES = [
   "SSL_CERT_FILE",
   "SSL_CERT_DIR",
   "NODE_EXTRA_CA_CERTS",
-  "AC_FEATURE_FLAGS",
-  "AC_RELEASE_BASE_URL",
+  "ANKIEL_FEATURE_FLAGS",
+  "ANKIEL_RELEASE_BASE_URL",
   "__MISE_DIFF",
   "JAVA_HOME",
   "PNPM_HOME",
@@ -215,8 +215,8 @@ const knownWindowsCliDirs = (env: NodeJS.ProcessEnv): ReadonlyArray<string> => [
   ),
 ];
 
-const startMarker = (name: string) => `__AC_ENV_${name}_START__`;
-const endMarker = (name: string) => `__AC_ENV_${name}_END__`;
+const startMarker = (name: string) => `__ANKIEL_ENV_${name}_START__`;
+const endMarker = (name: string) => `__ANKIEL_ENV_${name}_END__`;
 
 const executableName = (command: string): string => command.split(/[\\/]/u).at(-1) ?? command;
 
@@ -552,8 +552,8 @@ const installPosixEnvironment = Effect.fn("desktop.shellEnvironment.installPosix
       "NODE_EXTRA_CA_CERTS",
       "JAVA_HOME",
       "PNPM_HOME",
-      "AC_FEATURE_FLAGS",
-      "AC_RELEASE_BASE_URL",
+      "ANKIEL_FEATURE_FLAGS",
+      "ANKIEL_RELEASE_BASE_URL",
     ] as const) {
       if (!config.env[name] && shellEnvironment[name]) {
         config.env[name] = shellEnvironment[name];
@@ -659,7 +659,7 @@ const CACHED_ENV_NAMES = [
   "SSL_CERT_DIR",
   "NODE_EXTRA_CA_CERTS",
   // The server reads its flags once at start, before discovery can finish.
-  "AC_FEATURE_FLAGS",
+  "ANKIEL_FEATURE_FLAGS",
 ] as const;
 
 /** @public */

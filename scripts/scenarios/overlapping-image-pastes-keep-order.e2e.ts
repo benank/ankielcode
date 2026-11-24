@@ -6,7 +6,7 @@ import {
   finishNextImageCompression,
   holdImageCompression,
 } from "./image-compression-hold.ts";
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 /** Copies a PNG over the 2000 px limit, so pasting it compresses; noise keeps it large. */
 const copyWidePng = (browser: Browser, noise: boolean) =>
@@ -30,11 +30,11 @@ const copyWidePng = (browser: Browser, noise: boolean) =>
 test(
   "An image pasted while an earlier pasted image prepares lands after it before a space in the prompt",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     await holdImageCompression(browser);
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Screenshots", messages: ["first"] });
-    await ac.open(thread);
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Screenshots", messages: ["first"] });
+    await ankiel.open(thread);
     await expect(screen.getByText("first fixture turn complete", { exact: false })).toBeVisible();
 
     const composer = screen.getByRole("textbox");

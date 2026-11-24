@@ -3,9 +3,9 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
-import { AC_HOME } from "../e2e.config.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
 import { run } from "./shell.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 // Stand in for the Azure CLI upstream. The real tracker builds WIQL and decodes its rows.
 const azureCli = String.raw`#!/usr/bin/env node
@@ -77,18 +77,18 @@ console.log(JSON.stringify(output));
 test(
   "Refreshing Closed issues picks up a new Azure DevOps finished state",
   WEB,
-  async ({ ac, app, screen }) => {
-    const workspace = await ac.project("demo");
+  async ({ ankiel, app, screen }) => {
+    const workspace = await ankiel.project("demo");
     const { repository, changed } = await runPromise(
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const fs = yield* FileSystem.FileSystem;
-        const shim = path.join(AC_HOME, "bin", "az");
+        const shim = path.join(ANKIEL_HOME, "bin", "az");
         yield* fs.writeFileString(shim, azureCli);
         yield* fs.chmod(shim, 0o755);
         return {
-          repository: path.join(AC_HOME, "release"),
-          changed: path.join(AC_HOME, "bin", "workflow-changed"),
+          repository: path.join(ANKIEL_HOME, "release"),
+          changed: path.join(ANKIEL_HOME, "bin", "workflow-changed"),
         };
       }),
     );
@@ -102,10 +102,10 @@ test(
         },
       ),
     );
-    const primary = makeState(AC_HOME);
+    const primary = makeState(ANKIEL_HOME);
     await runPromise(primary.cli(["project", "add", repository, "--title", "Release"]));
     try {
-      await ac.open("/issues?status=closed");
+      await ankiel.open("/issues?status=closed");
       // The initial Closed list warms the workflow cache.
       await screen.getByText("Release notes drafted", { exact: true }).waitFor({ timeout: 60_000 });
       await runPromise(

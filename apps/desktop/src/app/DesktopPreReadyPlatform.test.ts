@@ -79,7 +79,7 @@ describe("DesktopPreReadyPlatform", () => {
   });
 
   it.effect("persists Linux scaling synchronously across relaunches and settings rewrites", () => {
-    vi.stubEnv("AC_HOME", "/isolated");
+    vi.stubEnv("ANKIEL_HOME", "/isolated");
     vi.stubEnv("VITE_DEV_SERVER_URL", "");
     const settingsPath = "/isolated/userdata/desktop-settings.json";
     const files = new Map([[settingsPath, "{}"]]);
@@ -242,7 +242,7 @@ describe("DesktopPreReadyPlatform", () => {
               DesktopConfig.layerTest({
                 XDG_DATA_HOME: "/xdg",
                 APPIMAGE: "/Applications/current.AppImage",
-                AC_DESKTOP_LAUNCHER_PATH: " /opt/Ankiel Code/ankielcode ",
+                ANKIEL_DESKTOP_LAUNCHER_PATH: " /opt/Ankiel Code/ankielcode ",
               }),
             ),
           ),

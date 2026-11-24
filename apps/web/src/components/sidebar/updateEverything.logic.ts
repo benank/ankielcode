@@ -404,7 +404,7 @@ export function collectChannelSwitchTargets(
       skip(
         resolve(
           msg("run `{command}` there", {
-            command: `ac update --channel ${release.channel === "nightly" ? "nightly" : "stable"} --allow-downgrade`,
+            command: `ankiel update --channel ${release.channel === "nightly" ? "nightly" : "stable"} --allow-downgrade`,
           }),
         ),
       );

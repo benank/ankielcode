@@ -12,7 +12,7 @@ import * as McpToolAccessTestkit from "../../McpToolAccess.testkit.ts";
 import * as WorkflowHandlers from "./handlers.ts";
 import { WorkflowToolkit } from "./tools.ts";
 
-const fullAccess = { sessionId: "session-1", label: "ac CLI", access: "full-access" } as const;
+const fullAccess = { sessionId: "session-1", label: "ankiel CLI", access: "full-access" } as const;
 const supervised = { sessionId: "session-2", label: "Bot", access: "approval-required" } as const;
 
 const handlersWith = (

@@ -31,7 +31,7 @@ const event = { threadId, terminalId, sequence: 1, createdAt: "2026-01-01T00:00:
 const openSnapshot = (history: string): TerminalSessionSnapshot => ({
   threadId,
   terminalId,
-  cwd: "/repo/.ac/worktrees/feature",
+  cwd: "/repo/.ankiel/worktrees/feature",
   worktreePath: null,
   status: "running",
   pid: 123,
@@ -107,7 +107,7 @@ const makeHarness = Effect.fn(function* (options: {
   );
   const start = runner.runForThread({
     threadId,
-    worktreePath: "/repo/.ac/worktrees/feature",
+    worktreePath: "/repo/.ankiel/worktrees/feature",
     observeCompletion: { onOutputLine: (line) => Queue.offer(outputLines, line) },
     project: {
       id: ProjectId.make("project-1"),
@@ -147,7 +147,7 @@ describe("ProjectSetupScriptRunner", () => {
   it.effect("keeps setup scripts independent of the interactive shell preference", () =>
     Effect.gen(function* () {
       const { opens } = yield* setup();
-      expect(opens[0]?.env?.AC_TERMINAL_SHELL).toBe("");
+      expect(opens[0]?.env?.ANKIEL_TERMINAL_SHELL).toBe("");
     }),
   );
 
@@ -173,13 +173,13 @@ describe("ProjectSetupScriptRunner", () => {
       expect(yield* Queue.size(writes)).toBe(0);
       yield* emit({ ...event, type: "output", data: "> \x1b[?2004h" });
       const written = yield* Queue.take(writes);
-      const sentinel = written.match(/__AC_SETUP_DONE___[0-9a-f]{32}:/)?.[0];
+      const sentinel = written.match(/__ANKIEL_SETUP_DONE___[0-9a-f]{32}:/)?.[0];
       expect(sentinel).toBeDefined();
       expect(written).toBe(
         ` ${[
           "$env.LAST_EXIT_CODE = 0",
-          "let __ankielf = try { mktemp --tmpdir-path $env.AC_WORKTREE_PATH --suffix .nu .ac-setup-XXXXXXXX } catch {|e| print -e $e.msg; null }",
-          `if $__ankielf == null { $env.LAST_EXIT_CODE = 1 } else { try { [$"rm --permanent ($__ankielf | to nuon)" "${escaped}"] | str join (char newline) | save --force --raw $__ankielf; ^$nu.current-exe --login --commands $"cd $env.AC_WORKTREE_PATH; source ($__ankielf | to nuon)" } catch {|e| if $e != null and $e.exit_code? == null { print -e $e.msg }; if $env.LAST_EXIT_CODE == 0 { $env.LAST_EXIT_CODE = 1 } } }`,
+          "let __ankielf = try { mktemp --tmpdir-path $env.ANKIEL_WORKTREE_PATH --suffix .nu .ankiel-setup-XXXXXXXX } catch {|e| print -e $e.msg; null }",
+          `if $__ankielf == null { $env.LAST_EXIT_CODE = 1 } else { try { [$"rm --permanent ($__ankielf | to nuon)" "${escaped}"] | str join (char newline) | save --force --raw $__ankielf; ^$nu.current-exe --login --commands $"cd $env.ANKIEL_WORKTREE_PATH; source ($__ankielf | to nuon)" } catch {|e| if $e != null and $e.exit_code? == null { print -e $e.msg }; if $env.LAST_EXIT_CODE == 0 { $env.LAST_EXIT_CODE = 1 } } }`,
           "let __ankielc = $env.LAST_EXIT_CODE",
           "try { if $__ankielf != null and ($__ankielf | path exists) { rm --permanent $__ankielf } } catch {|e| print -e $e.msg }",
           `print $"\\n${sentinel}($__ankielc)"`,
@@ -206,7 +206,7 @@ describe("ProjectSetupScriptRunner", () => {
       yield* emit({ ...event, type: "output", data: "\r\n% \x1b[?2004h" });
       const command = yield* Queue.take(writes);
       expect(command).toContain("vp i");
-      const sentinel = command.match(/__AC_SETUP_DONE___[a-f0-9]+:/)?.[0];
+      const sentinel = command.match(/__ANKIEL_SETUP_DONE___[a-f0-9]+:/)?.[0];
       expect(sentinel).toBeDefined();
       yield* emit({ ...event, type: "output", data: `${sentinel}0\r\n% ` });
       expect(yield* completion).toMatchObject({ exitCode: 0 });

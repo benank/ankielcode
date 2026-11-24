@@ -1,23 +1,23 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "A bare citation leaves the file unresolved when the thread project has ambiguous matches",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("support", {
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("support", {
       "current/Handoff.txt": "Current support handoff",
       "archive/HANDOFF.txt": "Archived support handoff",
     });
-    await ac.project("reports", { "notes/HANDOFF.txt": "Report handoff" });
-    const thread = await ac.thread({
+    await ankiel.project("reports", { "notes/HANDOFF.txt": "Report handoff" });
+    const thread = await ankiel.thread({
       project,
       title: "Find the handoff",
       messages: ['See :codex-file-citation{path="handoff.txt" line_range_start="1"}'],
     });
 
-    await ac.open(thread);
+    await ankiel.open(thread);
     await screen.getByRole("button", /^Agent See/).tap();
     await screen.getByRole("link", /^handoff\.txt/).tap();
 

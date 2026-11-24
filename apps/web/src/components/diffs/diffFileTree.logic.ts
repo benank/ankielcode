@@ -7,7 +7,7 @@ import type {
 } from "@pierre/trees";
 
 import { resolveFileDiffPath } from "~/lib/diffRendering";
-import { basenameOfPath, resolvePierreIconForEntry, AC_PIERRE_ICONS } from "~/pierre-icons";
+import { basenameOfPath, resolvePierreIconForEntry, ANKIEL_PIERRE_ICONS } from "~/pierre-icons";
 
 export interface DiffFileTreeEntry {
   readonly path: string;
@@ -50,7 +50,7 @@ export function diffFileTreeModel(paths: ReadonlyArray<string>) {
   const occupiedNames = new Set(paths.flatMap((path) => path.toLowerCase().split("/")));
   const selectionByModelPath = new Map<string, string>();
   const modelBySelectionPath = new Map<string, string>();
-  const byFileName: FileTreeIconConfig["byFileName"] = { ...AC_PIERRE_ICONS.byFileName };
+  const byFileName: FileTreeIconConfig["byFileName"] = { ...ANKIEL_PIERRE_ICONS.byFileName };
   const modelPaths = paths.map((path) => {
     if (!directories.has(`${path}/`)) return path;
     let modelPath = path;
@@ -68,7 +68,10 @@ export function diffFileTreeModel(paths: ReadonlyArray<string>) {
     paths: modelBySelectionPath.size === 0 ? paths : modelPaths,
     selectionPath: (modelPath: string) => selectionByModelPath.get(modelPath) ?? modelPath,
     modelPath: (path: string) => modelBySelectionPath.get(path) ?? path,
-    icons: modelBySelectionPath.size === 0 ? AC_PIERRE_ICONS : { ...AC_PIERRE_ICONS, byFileName },
+    icons:
+      modelBySelectionPath.size === 0
+        ? ANKIEL_PIERRE_ICONS
+        : { ...ANKIEL_PIERRE_ICONS, byFileName },
   };
 }
 

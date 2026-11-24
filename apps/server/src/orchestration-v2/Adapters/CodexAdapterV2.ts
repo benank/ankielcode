@@ -1674,11 +1674,11 @@ export const CODEX_THREAD_CONFIG = {
 } as const;
 
 // request_secret can wait an hour; keep Codex's MCP timeout above that.
-const CODEX_AC_MCP_TOOL_TIMEOUT_SEC = 65 * 60;
+const CODEX_ANKIEL_MCP_TOOL_TIMEOUT_SEC = 65 * 60;
 // Holds Ankiel tools Codex must call directly, never from Code Mode. Calls arrive as
 // `ankiel-code-direct.<tool>`; ankielMcpToolPresentation.ts must keep resolving that form.
-const CODEX_AC_DIRECT_MCP_SERVER = "ankiel-code-direct";
-const CODEX_DIRECT_ONLY_AC_TOOLS = ["ankiel_thread_wait", "delegate_task"];
+const CODEX_ANKIEL_DIRECT_MCP_SERVER = "ankiel-code-direct";
+const CODEX_DIRECT_ONLY_ANKIEL_TOOLS = ["ankiel_thread_wait", "delegate_task"];
 
 /** Names of the stdio MCP servers in a `config/read` config, the ones Codex starts per thread. */
 function codexStdioMcpServerNames(mcpServers: unknown): ReadonlyArray<string> {
@@ -1712,7 +1712,7 @@ function codexThreadRuntimeParams(input: {
       ? undefined
       : {
           url: mcpSession.endpoint,
-          tool_timeout_sec: CODEX_AC_MCP_TOOL_TIMEOUT_SEC,
+          tool_timeout_sec: CODEX_ANKIEL_MCP_TOOL_TIMEOUT_SEC,
           http_headers: { Authorization: mcpSession.authorizationHeader },
         };
   return {
@@ -1739,13 +1739,13 @@ function codexThreadRuntimeParams(input: {
             // Override only Ankiel's servers so launch-argument MCP servers survive.
             "mcp_servers.ankiel-code": {
               ...ankielServer,
-              disabled_tools: CODEX_DIRECT_ONLY_AC_TOOLS,
+              disabled_tools: CODEX_DIRECT_ONLY_ANKIEL_TOOLS,
             },
             // Code Mode runs a blocking wait or delegate wait as a nested call, and the model
             // keeps polling it. A second, direct-only registration makes it a plain tool call.
-            [`mcp_servers.${CODEX_AC_DIRECT_MCP_SERVER}`]: {
+            [`mcp_servers.${CODEX_ANKIEL_DIRECT_MCP_SERVER}`]: {
               ...ankielServer,
-              enabled_tools: CODEX_DIRECT_ONLY_AC_TOOLS,
+              enabled_tools: CODEX_DIRECT_ONLY_ANKIEL_TOOLS,
               omit_tools_from: ["code_mode", "deferred"],
             },
           }),
@@ -1998,7 +1998,7 @@ export const layerAppServerClientFactory: Layer.Layer<
               }),
           ),
         );
-        // Its shells carry each thread's AC_THREAD_ID, so port discovery reads listeners' threads.
+        // Its shells carry each thread's ANKIEL_THREAD_ID, so port discovery reads listeners' threads.
         yield* Effect.acquireRelease(Effect.sync(portDiscovery.trackAgent), (release) =>
           Effect.sync(release),
         );

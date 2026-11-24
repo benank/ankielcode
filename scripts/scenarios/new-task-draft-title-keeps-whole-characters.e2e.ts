@@ -9,11 +9,11 @@ const PROMPT = `${KEPT}😀 and the rest of the prompt`;
 test(
   "An unsent new-task draft's row title ends without a broken character",
   IOS,
-  async ({ ac, app, screen, device }) => {
-    await ac.project("demo");
+  async ({ ankiel, app, screen, device }) => {
+    await ankiel.project("demo");
     // A local simulator keeps the last run's drafts.
     await app.clearState().catch(() => {});
-    await ac.open();
+    await ankiel.open();
 
     await screen.getByRole("button", "New chat").tap({ timeout: 120_000 });
     const composer = screen.getByRole("textbox", "Ask anything");

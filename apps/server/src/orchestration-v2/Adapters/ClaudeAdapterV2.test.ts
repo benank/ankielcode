@@ -90,7 +90,7 @@ import { attachmentRelativePath } from "../../attachmentStore.ts";
 import { WorkflowAgentTranscriptReadObserver } from "../workflowAgentTranscript.ts";
 import * as ServerConfig from "../../config.ts";
 import * as McpProviderSession from "@ankielcode/provider-core/server/mcpSession";
-import { AC_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH } from "@ankielcode/provider-core/server/orchestrationInstructions";
+import { ANKIEL_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH } from "@ankielcode/provider-core/server/orchestrationInstructions";
 import * as McpProviderSessions from "@ankielcode/provider-core/server/McpProviderSessions";
 import { PreviewControlsToolkit } from "../../mcp/toolkits/previewControls/tools.ts";
 import { HtmlToolkit } from "../../mcp/toolkits/html/tools.ts";
@@ -719,14 +719,14 @@ describe("ClaudeAdapterV2 runtime query policy", () => {
 });
 
 describe("ClaudeAdapterV2 MCP query overrides", () => {
-  const AC_MCP_SERVERS = {
+  const ANKIEL_MCP_SERVERS = {
     "ankiel-code": {
       type: "http",
       url: "http://127.0.0.1:43123/mcp",
       headers: {
         Authorization: "Bearer secret-claude-token",
       },
-      timeout: ClaudeAdapterV2.CLAUDE_AC_MCP_TOOL_TIMEOUT_MS,
+      timeout: ClaudeAdapterV2.CLAUDE_ANKIEL_MCP_TOOL_TIMEOUT_MS,
     },
   } as const;
 
@@ -755,11 +755,13 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     assert.deepEqual(overrides, {
       allowedTools: [
         ...ClaudeAdapterV2.CLAUDE_READ_ONLY_ALLOWED_TOOLS,
-        ...ClaudeAdapterV2.CLAUDE_READ_ONLY_AC_MCP_ALLOWED_TOOLS,
+        ...ClaudeAdapterV2.CLAUDE_READ_ONLY_ANKIEL_MCP_ALLOWED_TOOLS,
       ],
-      mcpServers: AC_MCP_SERVERS,
+      mcpServers: ANKIEL_MCP_SERVERS,
     });
-    assert.isFalse(overrides.allowedTools?.includes(ClaudeAdapterV2.CLAUDE_AC_MCP_TOOL_WILDCARD));
+    assert.isFalse(
+      overrides.allowedTools?.includes(ClaudeAdapterV2.CLAUDE_ANKIEL_MCP_TOOL_WILDCARD),
+    );
   });
 
   it("invalidates live-query reuse when MCP credentials rotate or tracked folders change", () => {
@@ -825,7 +827,7 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     // regression: #32022 Claude Plan mode asks before every non-read-only MCP call
     assert.include(readOnlyToolNames, "mcp__ankiel-code__ankiel_background_wait");
     assert.deepEqual(
-      [...ClaudeAdapterV2.CLAUDE_READ_ONLY_AC_MCP_ALLOWED_TOOLS].sort(),
+      [...ClaudeAdapterV2.CLAUDE_READ_ONLY_ANKIEL_MCP_ALLOWED_TOOLS].sort(),
       readOnlyToolNames,
     );
   });
@@ -835,7 +837,10 @@ describe("ClaudeAdapterV2 SDK warnings", () => {
   it("drops only the SDK's canUseTool shadowing warning while opening a query", async () => {
     using emitWarning = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
     for (const options of [
-      { permissionMode: "default", allowedTools: [ClaudeAdapterV2.CLAUDE_AC_MCP_TOOL_WILDCARD] },
+      {
+        permissionMode: "default",
+        allowedTools: [ClaudeAdapterV2.CLAUDE_ANKIEL_MCP_TOOL_WILDCARD],
+      },
       { permissionMode: "bypassPermissions", allowDangerouslySkipPermissions: true },
     ] satisfies ReadonlyArray<ClaudeSdk.Options>) {
       const query = ClaudeAdapterV2.withoutClaudeCanUseToolShadowedWarning(() =>
@@ -891,7 +896,7 @@ describe("ClaudeAdapterV2 native protocol logging", () => {
           headers: {
             Authorization: "Bearer secret-claude-token",
           },
-          timeout: ClaudeAdapterV2.CLAUDE_AC_MCP_TOOL_TIMEOUT_MS,
+          timeout: ClaudeAdapterV2.CLAUDE_ANKIEL_MCP_TOOL_TIMEOUT_MS,
         },
       },
     });
@@ -959,7 +964,7 @@ describe("ClaudeAdapterV2 Ankiel tool instructions", () => {
 
   it("gives a session with device access the device block and the ToolSearch line to load it", () => {
     const text = append({ mcp: true, deviceToolsAvailable: true });
-    assert.include(text, AC_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH);
+    assert.include(text, ANKIEL_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH);
     assert.include(text, "Use `delegate_task`");
   });
 
@@ -993,7 +998,7 @@ describe("ClaudeAdapterV2 Ankiel tool instructions", () => {
       {
         hookSpecificOutput: {
           hookEventName: "SubagentStart",
-          additionalContext: AC_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH,
+          additionalContext: ANKIEL_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH,
         },
       },
     ]);
@@ -1184,7 +1189,7 @@ describe("ClaudeAdapterV2 session permissions", () => {
 
   it("adds a whole-tool session rule when Claude offers no suggestion", () => {
     const result = ClaudeAdapterV2.permissionResultFromDecision({
-      toolName: "mcp__ac__custom_tool",
+      toolName: "mcp__ankiel__custom_tool",
       decision: "acceptForSession",
       toolInput: {},
       toolUseID: "tool-2",
@@ -1197,7 +1202,7 @@ describe("ClaudeAdapterV2 session permissions", () => {
     assert.deepEqual(result.updatedPermissions, [
       {
         type: "addRules",
-        rules: [{ toolName: "mcp__ac__custom_tool" }],
+        rules: [{ toolName: "mcp__ankiel__custom_tool" }],
         behavior: "allow",
         destination: "session",
       },

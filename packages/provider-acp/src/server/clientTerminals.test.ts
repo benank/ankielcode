@@ -106,32 +106,32 @@ describe("AcpClientTerminals", () => {
           sessionId === "unknown"
             ? undefined
             : {
-                AC_ACP_MCP_AUTHORIZATION: sessionId === "session-a" ? "token-a" : "token-b",
-                AC_THREAD_ID: sessionId,
+                ANKIEL_ACP_MCP_AUTHORIZATION: sessionId === "session-a" ? "token-a" : "token-b",
+                ANKIEL_THREAD_ID: sessionId,
               },
       });
       yield* Effect.addFinalizer(() => terminals.disposeAll);
-      inheritedEnvironment.AC_TEST_INHERITED = "refreshed";
+      inheritedEnvironment.ANKIEL_TEST_INHERITED = "refreshed";
 
       for (const [sessionId, expected] of [
-        ["session-a", "token-a||session-a|refreshed|AC_TEST_OVERRIDE=request"],
-        ["session-b", "token-b||session-b|refreshed|AC_TEST_OVERRIDE=request"],
-        ["unknown", "|||refreshed|AC_TEST_OVERRIDE=inherited"],
+        ["session-a", "token-a||session-a|refreshed|ANKIEL_TEST_OVERRIDE=request"],
+        ["session-b", "token-b||session-b|refreshed|ANKIEL_TEST_OVERRIDE=request"],
+        ["unknown", "|||refreshed|ANKIEL_TEST_OVERRIDE=inherited"],
       ] as const) {
         const created = yield* terminals.create({
           sessionId,
           command: process.execPath,
           args: [
             "-e",
-            "const env = process.env; process.stdout.write([env.AC_ACP_MCP_AUTHORIZATION ?? '', env.ac_Acp_Mcp_Endpoint ?? '', env.AC_THREAD_ID ?? '', env.AC_TEST_INHERITED, ...Object.keys(env).filter((name) => name.toUpperCase() === 'AC_TEST_OVERRIDE').map((name) => name + '=' + env[name])].join('|'))",
+            "const env = process.env; process.stdout.write([env.ANKIEL_ACP_MCP_AUTHORIZATION ?? '', env.ankiel_Acp_Mcp_Endpoint ?? '', env.ANKIEL_THREAD_ID ?? '', env.ANKIEL_TEST_INHERITED, ...Object.keys(env).filter((name) => name.toUpperCase() === 'ANKIEL_TEST_OVERRIDE').map((name) => name + '=' + env[name])].join('|'))",
           ],
           ...(sessionId === "unknown"
             ? {}
             : {
                 env: [
-                  { name: "AC_TEST_OVERRIDE", value: "first" },
-                  { name: "ac_Test_Override", value: "second" },
-                  { name: "AC_TEST_OVERRIDE", value: "request" },
+                  { name: "ANKIEL_TEST_OVERRIDE", value: "first" },
+                  { name: "ankiel_Test_Override", value: "second" },
+                  { name: "ANKIEL_TEST_OVERRIDE", value: "request" },
                 ],
               }),
         });
@@ -142,11 +142,11 @@ describe("AcpClientTerminals", () => {
     }).pipe(
       Effect.provideService(HostProcess.Environment, {
         ...process.env,
-        AC_ACP_MCP_AUTHORIZATION: "launching-thread-token",
-        ac_Acp_Mcp_Endpoint: "launching-thread-endpoint",
-        AC_THREAD_ID: "launching-thread",
-        AC_TEST_INHERITED: "kept",
-        AC_TEST_OVERRIDE: "inherited",
+        ANKIEL_ACP_MCP_AUTHORIZATION: "launching-thread-token",
+        ankiel_Acp_Mcp_Endpoint: "launching-thread-endpoint",
+        ANKIEL_THREAD_ID: "launching-thread",
+        ANKIEL_TEST_INHERITED: "kept",
+        ANKIEL_TEST_OVERRIDE: "inherited",
       }),
       // Exercise Windows' case-insensitive variable names on every OS.
       Effect.provideService(HostProcess.Platform, "win32"),
@@ -159,12 +159,12 @@ describe("AcpClientTerminals", () => {
       const terminals = yield* makeAcpClientTerminals({
         defaultCwd: process.cwd(),
         shellCommands: true,
-        environmentForSession: () => ({ AC_ACP_MCP_NODE: "mailbox-probe" }),
+        environmentForSession: () => ({ ANKIEL_ACP_MCP_NODE: "mailbox-probe" }),
       });
       yield* Effect.addFinalizer(() => terminals.disposeAll);
       const terminal = yield* terminals.create({
         sessionId: "devin",
-        command: 'printf "%s\\n" "$AC_ACP_MCP_NODE" | tr a-z A-Z',
+        command: 'printf "%s\\n" "$ANKIEL_ACP_MCP_NODE" | tr a-z A-Z',
       });
       const exit = yield* terminals.waitForExit({ sessionId: "devin", ...terminal });
       const output = yield* terminals.output({ sessionId: "devin", ...terminal });

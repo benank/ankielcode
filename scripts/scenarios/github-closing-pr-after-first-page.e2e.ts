@@ -9,14 +9,14 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 
-import { APP_DIR, AC_HOME } from "../e2e.config.ts";
+import { APP_DIR, ANKIEL_HOME } from "../e2e.config.ts";
 import { run, ScenarioError } from "./shell.ts";
 import { prepareHome, start } from "./start-app.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 const HOST = "github.scenario.invalid";
 const SCOPE = "scenario/demo";
-const HOME = `${AC_HOME}-github-issue-links`;
+const HOME = `${ANKIEL_HOME}-github-issue-links`;
 
 // Install only on the isolated server. The real GitHub adapter still builds and decodes requests.
 const upstream = String.raw`
@@ -132,7 +132,7 @@ function startFixtureServer(webOrigin: string) {
           HOME,
           GH_HOST: HOST,
           GH_ENTERPRISE_TOKEN: "scenario-only-token",
-          AC_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
+          ANKIEL_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
         },
         onLine: (line) => {
           const value = /^Token:\s*(\S+)/.exec(line)?.[1];
@@ -157,8 +157,8 @@ function startFixtureServer(webOrigin: string) {
 test(
   "A closing pull request remains visible after its timeline reference ages out",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const workspace = await ac.project("Release");
+  async ({ ankiel, app, browser, screen }) => {
+    const workspace = await ankiel.project("Release");
     const server = startFixtureServer(app.baseUrl ?? "");
     try {
       const { origin, token } = await server.ready;
@@ -175,7 +175,7 @@ test(
       const projectId = /Added project (\S+) /.exec(added.stdout)?.[1];
       if (!projectId) throw new Error("The fixture project was not added.");
       const { environmentId } = await runPromise(
-        HttpClient.get(`${origin}/.well-known/ac/environment`).pipe(
+        HttpClient.get(`${origin}/.well-known/ankiel/environment`).pipe(
           Effect.flatMap(HttpClientResponse.filterStatusOk),
           Effect.flatMap(
             HttpClientResponse.schemaBodyJson(Schema.Struct({ environmentId: Schema.String })),
@@ -192,7 +192,7 @@ test(
         selectedProjectId: projectId,
       });
 
-      await ac.open("/settings/connections");
+      await ankiel.open("/settings/connections");
       await screen.getByRole("button", "Add environment").tap();
       const dialog = screen.getByRole("dialog");
       await dialog.getByPlaceholder("backend.example.com").fill(origin);

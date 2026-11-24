@@ -382,12 +382,12 @@ const REMOTE_NODE_ENV_SCRIPT = `prepend_path_if_dir() {
 }
 
 remote_node_satisfies_engine() {
-  AC_NODE_ENGINE_RANGE=@@AC_NODE_ENGINE_RANGE@@
-  if [ -z "$AC_NODE_ENGINE_RANGE" ]; then
+  ANKIEL_NODE_ENGINE_RANGE=@@ANKIEL_NODE_ENGINE_RANGE@@
+  if [ -z "$ANKIEL_NODE_ENGINE_RANGE" ]; then
     return 0
   fi
-  node - "$AC_NODE_ENGINE_RANGE" <<'NODE'
-@@AC_NODE_ENGINE_CHECK_SCRIPT@@
+  node - "$ANKIEL_NODE_ENGINE_RANGE" <<'NODE'
+@@ANKIEL_NODE_ENGINE_CHECK_SCRIPT@@
 NODE
 }
 
@@ -454,9 +454,9 @@ ensure_remote_node_path() {
   fi
 
   if ! command -v node >/dev/null 2>&1 && [ -d "$NVM_DIR/versions/node" ]; then
-    for AC_NODE_BIN in "$NVM_DIR"/versions/node/*/bin; do
-      if [ -x "$AC_NODE_BIN/node" ]; then
-        PATH="$AC_NODE_BIN:$PATH"
+    for ANKIEL_NODE_BIN in "$NVM_DIR"/versions/node/*/bin; do
+      if [ -x "$ANKIEL_NODE_BIN/node" ]; then
+        PATH="$ANKIEL_NODE_BIN:$PATH"
         export PATH
       fi
     done
@@ -468,9 +468,9 @@ ensure_remote_node_path() {
 
 const REMOTE_RUNNER_SCRIPT = `#!/bin/sh
 set -eu
-@@AC_NODE_ENV_SCRIPT@@
-AC_NODE_SCRIPT_PATH=@@AC_NODE_SCRIPT_PATH@@
-if [ -n "$AC_NODE_SCRIPT_PATH" ]; then
+@@ANKIEL_NODE_ENV_SCRIPT@@
+ANKIEL_NODE_SCRIPT_PATH=@@ANKIEL_NODE_SCRIPT_PATH@@
+if [ -n "$ANKIEL_NODE_SCRIPT_PATH" ]; then
   # Dev mode: a source checkout on the remote. This is the only path that
   # needs Node, so Node discovery runs here and nowhere else.
   ensure_remote_node_path || true
@@ -478,114 +478,114 @@ if [ -n "$AC_NODE_SCRIPT_PATH" ]; then
     printf 'Remote host is missing node on PATH. Install Node or configure a supported version manager for non-interactive shells.\\n' >&2
     exit 1
   fi
-  exec node "$AC_NODE_SCRIPT_PATH" "$@"
+  exec node "$ANKIEL_NODE_SCRIPT_PATH" "$@"
 fi
-AC_ARCHIVE_VERSION=@@AC_ARCHIVE_VERSION@@
-if [ -z "$AC_ARCHIVE_VERSION" ]; then
-  printf 'No ac release version was provided for the remote runtime.\\n' >&2
+ANKIEL_ARCHIVE_VERSION=@@ANKIEL_ARCHIVE_VERSION@@
+if [ -z "$ANKIEL_ARCHIVE_VERSION" ]; then
+  printf 'No ankiel release version was provided for the remote runtime.\\n' >&2
   exit 1
 fi
-AC_SYSTEM_EXECUTABLE="$(command -v ac 2>/dev/null || true)"
-if [ -n "$AC_SYSTEM_EXECUTABLE" ] && AC_SYSTEM_VERSION="$("$AC_SYSTEM_EXECUTABLE" --version 2>/dev/null)" && [ "$AC_SYSTEM_VERSION" = "ac v$AC_ARCHIVE_VERSION" ]; then
+ANKIEL_SYSTEM_EXECUTABLE="$(command -v ankiel 2>/dev/null || true)"
+if [ -n "$ANKIEL_SYSTEM_EXECUTABLE" ] && ANKIEL_SYSTEM_VERSION="$("$ANKIEL_SYSTEM_EXECUTABLE" --version 2>/dev/null)" && [ "$ANKIEL_SYSTEM_VERSION" = "ankiel v$ANKIEL_ARCHIVE_VERSION" ]; then
   # A matching host-provided runtime supports platforms such as musl Linux,
   # where the portable release archive cannot run.
-  exec "$AC_SYSTEM_EXECUTABLE" "$@"
+  exec "$ANKIEL_SYSTEM_EXECUTABLE" "$@"
 fi
 # Self-contained release archive: no Node, npm, or compiler on the remote.
-# Unpacked into the pinned-runtime layout so \`ac service install\` reuses it.
-AC_RELEASE_BASE_URL=@@AC_RELEASE_BASE_URL@@
-AC_RUNTIME_DIR="$HOME/.ac/runtime/versions/$AC_ARCHIVE_VERSION"
+# Unpacked into the pinned-runtime layout so \`ankiel service install\` reuses it.
+ANKIEL_RELEASE_BASE_URL=@@ANKIEL_RELEASE_BASE_URL@@
+ANKIEL_RUNTIME_DIR="$HOME/.ankiel/runtime/versions/$ANKIEL_ARCHIVE_VERSION"
 ankiel_runtime_ready() {
-  [ -x "$AC_RUNTIME_DIR/ac" ] && [ "$(cat "$AC_RUNTIME_DIR/.install-complete" 2>/dev/null)" = "$AC_ARCHIVE_VERSION" ]
+  [ -x "$ANKIEL_RUNTIME_DIR/ankiel" ] && [ "$(cat "$ANKIEL_RUNTIME_DIR/.install-complete" 2>/dev/null)" = "$ANKIEL_ARCHIVE_VERSION" ]
 }
 if ! ankiel_runtime_ready; then
-  mkdir -p "$HOME/.ac/runtime/versions"
-  AC_LOCK="$HOME/.ac/runtime/versions/.$AC_ARCHIVE_VERSION.install.lock"
+  mkdir -p "$HOME/.ankiel/runtime/versions"
+  ANKIEL_LOCK="$HOME/.ankiel/runtime/versions/.$ANKIEL_ARCHIVE_VERSION.install.lock"
   # uutils mkdir can report success on EEXIST, so use shell noclobber.
   # An empty lock gets a short grace period for its owner to publish a PID.
-  AC_LOCK_WAITED=0
-  AC_LOCK_UNOWNED=0
-  while ! (set -C; printf '%s\\n' "$$" > "$AC_LOCK") 2>/dev/null; do
-    AC_LOCK_OWNER="$(cat "$AC_LOCK" 2>/dev/null || true)"
-    if [ -n "$AC_LOCK_OWNER" ]; then
-      AC_LOCK_UNOWNED=0
-      if ! kill -0 "$AC_LOCK_OWNER" 2>/dev/null; then
-        rm -rf "$AC_LOCK"
+  ANKIEL_LOCK_WAITED=0
+  ANKIEL_LOCK_UNOWNED=0
+  while ! (set -C; printf '%s\\n' "$$" > "$ANKIEL_LOCK") 2>/dev/null; do
+    ANKIEL_LOCK_OWNER="$(cat "$ANKIEL_LOCK" 2>/dev/null || true)"
+    if [ -n "$ANKIEL_LOCK_OWNER" ]; then
+      ANKIEL_LOCK_UNOWNED=0
+      if ! kill -0 "$ANKIEL_LOCK_OWNER" 2>/dev/null; then
+        rm -rf "$ANKIEL_LOCK"
         continue
       fi
     else
-      AC_LOCK_UNOWNED=$((AC_LOCK_UNOWNED + 1))
-      if [ "$AC_LOCK_UNOWNED" -ge 5 ]; then
-        rm -rf "$AC_LOCK"
+      ANKIEL_LOCK_UNOWNED=$((ANKIEL_LOCK_UNOWNED + 1))
+      if [ "$ANKIEL_LOCK_UNOWNED" -ge 5 ]; then
+        rm -rf "$ANKIEL_LOCK"
         continue
       fi
     fi
-    if [ "$AC_LOCK_WAITED" -ge @@AC_ARCHIVE_LOCK_WAIT_SECONDS@@ ]; then
-      printf 'Another ac %s installation has held %s for too long.\\n' "$AC_ARCHIVE_VERSION" "$AC_LOCK" >&2
+    if [ "$ANKIEL_LOCK_WAITED" -ge @@ANKIEL_ARCHIVE_LOCK_WAIT_SECONDS@@ ]; then
+      printf 'Another ankiel %s installation has held %s for too long.\\n' "$ANKIEL_ARCHIVE_VERSION" "$ANKIEL_LOCK" >&2
       exit 1
     fi
     sleep 1
-    AC_LOCK_WAITED=$((AC_LOCK_WAITED + 1))
+    ANKIEL_LOCK_WAITED=$((ANKIEL_LOCK_WAITED + 1))
   done
-  trap 'rm -rf "$AC_LOCK"' EXIT
+  trap 'rm -rf "$ANKIEL_LOCK"' EXIT
 fi
 if ! ankiel_runtime_ready; then
   # Keep aligned with CLI_ARCHIVE_PLATFORM_KEYS in packages/shared/src/cliRelease.ts.
   case "$(uname -s) $(uname -m)" in
-    "Darwin arm64") AC_PLATFORM_KEY="darwin-arm64" ;;
-    "Linux arm64" | "Linux aarch64") AC_PLATFORM_KEY="linux-arm64" ;;
-    "Linux x86_64" | "Linux amd64") AC_PLATFORM_KEY="linux-x64" ;;
-    *) printf 'Remote host %s has no ac release archive.\\n' "$(uname -s) $(uname -m)" >&2; exit 1 ;;
+    "Darwin arm64") ANKIEL_PLATFORM_KEY="darwin-arm64" ;;
+    "Linux arm64" | "Linux aarch64") ANKIEL_PLATFORM_KEY="linux-arm64" ;;
+    "Linux x86_64" | "Linux amd64") ANKIEL_PLATFORM_KEY="linux-x64" ;;
+    *) printf 'Remote host %s has no ankiel release archive.\\n' "$(uname -s) $(uname -m)" >&2; exit 1 ;;
   esac
-  AC_ARCHIVE="ac-$AC_ARCHIVE_VERSION-$AC_PLATFORM_KEY.tar.gz"
+  ANKIEL_ARCHIVE="ankiel-$ANKIEL_ARCHIVE_VERSION-$ANKIEL_PLATFORM_KEY.tar.gz"
   if ! command -v tar >/dev/null 2>&1; then
-    printf 'Remote host needs tar to unpack %s. Install tar on it and try again.\\n' "$AC_ARCHIVE" >&2
+    printf 'Remote host needs tar to unpack %s. Install tar on it and try again.\\n' "$ANKIEL_ARCHIVE" >&2
     exit 1
   fi
-  AC_STAGING="$(mktemp -d "$HOME/.ac/runtime/versions/.staging-XXXXXX")"
-  trap 'rm -rf "$AC_STAGING" "$AC_LOCK"' EXIT
+  ANKIEL_STAGING="$(mktemp -d "$HOME/.ankiel/runtime/versions/.staging-XXXXXX")"
+  trap 'rm -rf "$ANKIEL_STAGING" "$ANKIEL_LOCK"' EXIT
   ankiel_fetch() {
     if command -v curl >/dev/null 2>&1; then curl -fsSL --connect-timeout 30 --max-time "$3" "$1" -o "$2"
     elif command -v wget >/dev/null 2>&1; then wget -q --timeout=30 --tries=1 "$1" -O "$2"
-    else printf 'Remote host needs curl or wget to download %s.\\n' "$AC_ARCHIVE" >&2; exit 1
+    else printf 'Remote host needs curl or wget to download %s.\\n' "$ANKIEL_ARCHIVE" >&2; exit 1
     fi || {
-      printf 'Could not download ac %s from %s. If this host cannot reach it, install ac %s on it with https://code.ankiel.com/install.sh (AC_VERSION=%s; AC_RELEASE_BASE_URL selects a mirror).\\n' "$AC_ARCHIVE_VERSION" "$1" "$AC_ARCHIVE_VERSION" "$AC_ARCHIVE_VERSION" >&2
+      printf 'Could not download ankiel %s from %s. If this host cannot reach it, install ankiel %s on it with https://code.ankiel.com/install.sh (ANKIEL_VERSION=%s; ANKIEL_RELEASE_BASE_URL selects a mirror).\\n' "$ANKIEL_ARCHIVE_VERSION" "$1" "$ANKIEL_ARCHIVE_VERSION" "$ANKIEL_ARCHIVE_VERSION" >&2
       exit 1
     }
   }
-  ankiel_fetch "$AC_RELEASE_BASE_URL/v$AC_ARCHIVE_VERSION/SHA256SUMS" "$AC_STAGING/SHA256SUMS" @@AC_ARCHIVE_CHECKSUMS_SECONDS@@
-  ankiel_fetch "$AC_RELEASE_BASE_URL/v$AC_ARCHIVE_VERSION/$AC_ARCHIVE" "$AC_STAGING/$AC_ARCHIVE" @@AC_ARCHIVE_DOWNLOAD_SECONDS@@
-  AC_EXPECTED="$(grep " \\*\\{0,1\\}$AC_ARCHIVE$" "$AC_STAGING/SHA256SUMS" | cut -d' ' -f1)"
+  ankiel_fetch "$ANKIEL_RELEASE_BASE_URL/v$ANKIEL_ARCHIVE_VERSION/SHA256SUMS" "$ANKIEL_STAGING/SHA256SUMS" @@ANKIEL_ARCHIVE_CHECKSUMS_SECONDS@@
+  ankiel_fetch "$ANKIEL_RELEASE_BASE_URL/v$ANKIEL_ARCHIVE_VERSION/$ANKIEL_ARCHIVE" "$ANKIEL_STAGING/$ANKIEL_ARCHIVE" @@ANKIEL_ARCHIVE_DOWNLOAD_SECONDS@@
+  ANKIEL_EXPECTED="$(grep " \\*\\{0,1\\}$ANKIEL_ARCHIVE$" "$ANKIEL_STAGING/SHA256SUMS" | cut -d' ' -f1)"
   if command -v sha256sum >/dev/null 2>&1; then
-    AC_ACTUAL="$(sha256sum < "$AC_STAGING/$AC_ARCHIVE" | cut -d' ' -f1)"
+    ANKIEL_ACTUAL="$(sha256sum < "$ANKIEL_STAGING/$ANKIEL_ARCHIVE" | cut -d' ' -f1)"
   else
-    AC_ACTUAL="$(shasum -a 256 < "$AC_STAGING/$AC_ARCHIVE" | cut -d' ' -f1)"
+    ANKIEL_ACTUAL="$(shasum -a 256 < "$ANKIEL_STAGING/$ANKIEL_ARCHIVE" | cut -d' ' -f1)"
   fi
-  if [ -z "$AC_EXPECTED" ] || [ "$AC_ACTUAL" != "$AC_EXPECTED" ]; then
-    printf 'Checksum mismatch for %s.\\n' "$AC_ARCHIVE" >&2; exit 1
+  if [ -z "$ANKIEL_EXPECTED" ] || [ "$ANKIEL_ACTUAL" != "$ANKIEL_EXPECTED" ]; then
+    printf 'Checksum mismatch for %s.\\n' "$ANKIEL_ARCHIVE" >&2; exit 1
   fi
-  if ! AC_TAR_ERROR="$(tar -xzf "$AC_STAGING/$AC_ARCHIVE" -C "$AC_STAGING" --strip-components=1 2>&1)"; then
+  if ! ANKIEL_TAR_ERROR="$(tar -xzf "$ANKIEL_STAGING/$ANKIEL_ARCHIVE" -C "$ANKIEL_STAGING" --strip-components=1 2>&1)"; then
     # Some tars (BusyBox) gunzip internally, so gzip is only blamed once extraction fails.
-    if command -v gzip >/dev/null 2>&1; then printf '%s\\n' "$AC_TAR_ERROR" >&2
-    else printf 'Remote host needs gzip to unpack %s. Install gzip on it and try again.\\n' "$AC_ARCHIVE" >&2
+    if command -v gzip >/dev/null 2>&1; then printf '%s\\n' "$ANKIEL_TAR_ERROR" >&2
+    else printf 'Remote host needs gzip to unpack %s. Install gzip on it and try again.\\n' "$ANKIEL_ARCHIVE" >&2
     fi
     exit 1
   fi
-  rm -f "$AC_STAGING/$AC_ARCHIVE" "$AC_STAGING/SHA256SUMS"
+  rm -f "$ANKIEL_STAGING/$ANKIEL_ARCHIVE" "$ANKIEL_STAGING/SHA256SUMS"
   # Prove the binary runs here (libc, arch) before marking it ready, or every
   # later launch would exec a broken install instead of retrying.
-  if ! "$AC_STAGING/ac" --version >/dev/null 2>&1; then
-    printf 'The ac %s executable does not run on this host.\\n' "$AC_ARCHIVE_VERSION" >&2; exit 1
+  if ! "$ANKIEL_STAGING/ankiel" --version >/dev/null 2>&1; then
+    printf 'The ankiel %s executable does not run on this host.\\n' "$ANKIEL_ARCHIVE_VERSION" >&2; exit 1
   fi
-  printf '%s\\n' "$AC_ARCHIVE_VERSION" > "$AC_STAGING/.install-complete"
-  rm -rf "$AC_RUNTIME_DIR"
-  mv "$AC_STAGING" "$AC_RUNTIME_DIR"
+  printf '%s\\n' "$ANKIEL_ARCHIVE_VERSION" > "$ANKIEL_STAGING/.install-complete"
+  rm -rf "$ANKIEL_RUNTIME_DIR"
+  mv "$ANKIEL_STAGING" "$ANKIEL_RUNTIME_DIR"
 fi
-if [ -n "\${AC_LOCK:-}" ]; then
-  rm -rf "$AC_LOCK"
+if [ -n "\${ANKIEL_LOCK:-}" ]; then
+  rm -rf "$ANKIEL_LOCK"
   trap - EXIT
 fi
-exec "$AC_RUNTIME_DIR/ac" "$@"
+exec "$ANKIEL_RUNTIME_DIR/ankiel" "$@"
 `;
 
 // kill -0 also passes for a zombie, a reused PID and, on Linux, a thread ID,
@@ -602,28 +602,28 @@ const REMOTE_MANAGED_SERVER_RUNNING_SCRIPT = `managed_server_running() {
   ! ps -ww -o args= -p "$$" >/dev/null 2>&1
 }`;
 
-// NFS-shared homes can link ~/.ac to a directory that does not exist yet, and
+// NFS-shared homes can link ~/.ankiel to a directory that does not exist yet, and
 // mkdir -p fails with EEXIST on a dangling symlink, so create its target first.
-const REMOTE_ENSURE_AC_HOME_SCRIPT = `if [ -L "$HOME/.ac" ] && [ ! -e "$HOME/.ac" ]; then
-  (cd "$HOME" && mkdir -p "$(readlink .ac)")
+const REMOTE_ENSURE_ANKIEL_HOME_SCRIPT = `if [ -L "$HOME/.ankiel" ] && [ ! -e "$HOME/.ankiel" ]; then
+  (cd "$HOME" && mkdir -p "$(readlink .ankiel)")
 fi`;
 
 const REMOTE_LAUNCH_SCRIPT = `set -eu
-@@AC_NODE_ENV_SCRIPT@@
+@@ANKIEL_NODE_ENV_SCRIPT@@
 STATE_KEY="$1"
 LAUNCHER_ID="\${2:-}"
-STATE_DIR="$HOME/.ac/ssh-launch/$STATE_KEY"
-DEFAULT_SERVER_HOME="$HOME/.ac"
+STATE_DIR="$HOME/.ankiel/ssh-launch/$STATE_KEY"
+DEFAULT_SERVER_HOME="$HOME/.ankiel"
 DEFAULT_RUNTIME_FILE="$DEFAULT_SERVER_HOME/userdata/server-runtime.json"
 PORT_FILE="$STATE_DIR/port"
 PID_FILE="$STATE_DIR/pid"
 MANAGED_FILE="$STATE_DIR/managed"
 LOG_FILE="$STATE_DIR/server.log"
 RUNNER_FILE="$STATE_DIR/run-ankiel.test"
-RUNNER_NEXT="$STATE_DIR/run-ac.next.$$"
+RUNNER_NEXT="$STATE_DIR/run-ankiel.next.$$"
 LAUNCH_LOCK="$DEFAULT_SERVER_HOME/ssh-launch/.launch.lock"
 LAUNCH_BREAK_LOCK="$LAUNCH_LOCK.break"
-@@AC_ENSURE_AC_HOME_SCRIPT@@
+@@ANKIEL_ENSURE_ANKIEL_HOME_SCRIPT@@
 mkdir -p "$STATE_DIR"
 # The state directory and log are for their owner only. A umask set here would reach the server.
 chmod 700 "$STATE_DIR"
@@ -640,11 +640,11 @@ trap cleanup_launch EXIT
 # the lock is released.
 trap 'exit 1' HUP INT PIPE TERM
 cat >"$RUNNER_NEXT" <<'SH'
-@@AC_RUNNER_SCRIPT@@
+@@ANKIEL_RUNNER_SCRIPT@@
 SH
 chmod 700 "$RUNNER_NEXT"
-AC_ARCHIVE_MODE=@@AC_ARCHIVE_MODE@@
-if [ "$AC_ARCHIVE_MODE" = "1" ]; then
+ANKIEL_ARCHIVE_MODE=@@ANKIEL_ARCHIVE_MODE@@
+if [ "$ANKIEL_ARCHIVE_MODE" = "1" ]; then
   # The archive ships the helpers below inside the executable; the remote
   # needs no Node at all. Resolving the runner once here also downloads the
   # archive before the port and readiness probes rely on it.
@@ -686,7 +686,7 @@ while ! (set -C; printf '%s\\n' "$$" >"$LAUNCH_LOCK") 2>/dev/null; do
       continue
     fi
   fi
-  if [ "$LAUNCH_LOCK_WAITED" -ge @@AC_LAUNCH_LOCK_WAIT_SECONDS@@ ]; then
+  if [ "$LAUNCH_LOCK_WAITED" -ge @@ANKIEL_LAUNCH_LOCK_WAIT_SECONDS@@ ]; then
     if [ -e "$LAUNCH_BREAK_LOCK" ]; then
       printf 'An Ankiel server launch stopped while recovering %s. If no launch is running, delete %s.\\n' "$LAUNCH_LOCK" "$LAUNCH_BREAK_LOCK" >&2
     else
@@ -713,27 +713,27 @@ elif [ -n "$LAUNCHER_ID" ]; then
   printf '%s\\n' "$LAUNCHER_ID" >"$STATE_DIR/launcher"
 fi
 pick_port() {
-  if [ "$AC_ARCHIVE_MODE" = "1" ]; then
-    "$RUNNER_FILE" __ssh-helper pick-port "$PORT_FILE" "@@AC_DEFAULT_REMOTE_PORT@@" "@@AC_REMOTE_PORT_SCAN_WINDOW@@"
+  if [ "$ANKIEL_ARCHIVE_MODE" = "1" ]; then
+    "$RUNNER_FILE" __ssh-helper pick-port "$PORT_FILE" "@@ANKIEL_DEFAULT_REMOTE_PORT@@" "@@ANKIEL_REMOTE_PORT_SCAN_WINDOW@@"
     return
   fi
-  node - "$PORT_FILE" "@@AC_DEFAULT_REMOTE_PORT@@" "@@AC_REMOTE_PORT_SCAN_WINDOW@@" <<'NODE'
-@@AC_PICK_PORT_SCRIPT@@
+  node - "$PORT_FILE" "@@ANKIEL_DEFAULT_REMOTE_PORT@@" "@@ANKIEL_REMOTE_PORT_SCAN_WINDOW@@" <<'NODE'
+@@ANKIEL_PICK_PORT_SCRIPT@@
 NODE
 }
 wait_ready() {
-  if [ "$AC_ARCHIVE_MODE" = "1" ]; then
-    "$RUNNER_FILE" __ssh-helper wait-ready "$REMOTE_PORT" "$1" "@@AC_READY_PROBE_TIMEOUT_MS@@"
+  if [ "$ANKIEL_ARCHIVE_MODE" = "1" ]; then
+    "$RUNNER_FILE" __ssh-helper wait-ready "$REMOTE_PORT" "$1" "@@ANKIEL_READY_PROBE_TIMEOUT_MS@@"
     return
   fi
-  node - "$REMOTE_PORT" "$1" "@@AC_READY_PROBE_TIMEOUT_MS@@" <<'NODE'
-@@AC_WAIT_READY_SCRIPT@@
+  node - "$REMOTE_PORT" "$1" "@@ANKIEL_READY_PROBE_TIMEOUT_MS@@" <<'NODE'
+@@ANKIEL_WAIT_READY_SCRIPT@@
 NODE
 }
 wait_for_pid_exit() {
   PID_TO_WAIT="$1"
   WAIT_COUNT=0
-  while kill -0 "$PID_TO_WAIT" 2>/dev/null && [ "$WAIT_COUNT" -lt @@AC_PID_EXIT_WAIT_TICKS@@ ]; do
+  while kill -0 "$PID_TO_WAIT" 2>/dev/null && [ "$WAIT_COUNT" -lt @@ANKIEL_PID_EXIT_WAIT_TICKS@@ ]; do
     WAIT_COUNT=$((WAIT_COUNT + 1))
     sleep 0.1
   done
@@ -748,17 +748,17 @@ server_running() {
 }
 # An older client replacing a same-or-newer server would run below the database's migrations.
 keeps_running_server() {
-  [ "$AC_ARCHIVE_MODE" = "1" ] &&
+  [ "$ANKIEL_ARCHIVE_MODE" = "1" ] &&
     "$RUNNER_FILE" __ssh-helper keep-server "$DEFAULT_RUNTIME_FILE" "$REMOTE_PID" >/dev/null 2>&1
 }
-@@AC_MANAGED_SERVER_RUNNING_SCRIPT@@
+@@ANKIEL_MANAGED_SERVER_RUNNING_SCRIPT@@
 # The server publishes its runtime record only after it answers, so one that
 # has published and now refuses every connection has closed its listener to
 # shut down; a starting server has not published yet. Exit 2 means refused.
 managed_server_stopping() {
   [ "$DEFAULT_RUNTIME_PID" = "$REMOTE_PID" ] || return 1
   READY_STATUS=0
-  wait_ready "@@AC_REUSE_READY_TIMEOUT_MS@@" || READY_STATUS=$?
+  wait_ready "@@ANKIEL_REUSE_READY_TIMEOUT_MS@@" || READY_STATUS=$?
   [ "$READY_STATUS" -eq 2 ]
 }
 # Both are SQLite locks the OS drops with their holder: a server holds
@@ -766,7 +766,7 @@ managed_server_stopping() {
 # before it starts a server, between two of them during its own update, until
 # it stops or idles behind another server.
 home_owned() {
-  if [ "$AC_ARCHIVE_MODE" = "1" ]; then
+  if [ "$ANKIEL_ARCHIVE_MODE" = "1" ]; then
     "$RUNNER_FILE" __ssh-helper home-owned "$DEFAULT_SERVER_HOME" 2>/dev/null
     return
   fi
@@ -795,7 +795,7 @@ process.exitCode =
 NODE
 }
 resolve_default_runtime_port() {
-  if [ "$AC_ARCHIVE_MODE" = "1" ]; then
+  if [ "$ANKIEL_ARCHIVE_MODE" = "1" ]; then
     "$RUNNER_FILE" __ssh-helper runtime-port "$DEFAULT_RUNTIME_FILE"
     return
   fi
@@ -822,11 +822,11 @@ NODE
 }
 # This script ships with the SSH client; older clients do not honor this marker.
 update_remaining() {
-  if [ "$AC_ARCHIVE_MODE" = "1" ]; then
-    "$RUNNER_FILE" __ssh-helper update-remaining "$DEFAULT_SERVER_HOME/runtime/@@AC_UPDATE_MARKER_FILE@@"
+  if [ "$ANKIEL_ARCHIVE_MODE" = "1" ]; then
+    "$RUNNER_FILE" __ssh-helper update-remaining "$DEFAULT_SERVER_HOME/runtime/@@ANKIEL_UPDATE_MARKER_FILE@@"
     return
   fi
-  node - "$DEFAULT_SERVER_HOME/runtime/@@AC_UPDATE_MARKER_FILE@@" <<'NODE'
+  node - "$DEFAULT_SERVER_HOME/runtime/@@ANKIEL_UPDATE_MARKER_FILE@@" <<'NODE'
 const fs = require("node:fs");
 const path = process.argv[2];
 try {
@@ -834,7 +834,7 @@ try {
   const now = Date.now();
   if (Number.isFinite(startedAt) && Number.isFinite(expiresAt) &&
       startedAt <= now && expiresAt > now && expiresAt > startedAt) {
-    process.stdout.write(String(Math.min(expiresAt - now, @@AC_UPDATE_TTL_MS@@)));
+    process.stdout.write(String(Math.min(expiresAt - now, @@ANKIEL_UPDATE_TTL_MS@@)));
   }
 } catch {}
 NODE
@@ -860,7 +860,7 @@ if [ -n "$DEFAULT_REMOTE_PORT" ] && [ "$REMOTE_MANAGED" = "managed" ] && [ "$DEF
   return 0
 elif [ -n "$DEFAULT_REMOTE_PORT" ]; then
   REMOTE_PORT="$DEFAULT_REMOTE_PORT"
-  if wait_ready "@@AC_REUSE_READY_TIMEOUT_MS@@"; then
+  if wait_ready "@@ANKIEL_REUSE_READY_TIMEOUT_MS@@"; then
     ADOPTED_PID="$DEFAULT_RUNTIME_PID"
     if [ "$REMOTE_MANAGED" = "managed" ]; then
       if managed_server_running "$REMOTE_PID"; then
@@ -918,7 +918,7 @@ if [ "$REMOTE_MANAGED" = "external" ]; then
   # it again could catch a momentary stall and launch a second server beside it.
   if server_running "$ADOPTED_PID"; then
     :
-  elif [ -z "$REMOTE_PORT" ] || ! wait_ready "@@AC_REUSE_READY_TIMEOUT_MS@@"; then
+  elif [ -z "$REMOTE_PORT" ] || ! wait_ready "@@ANKIEL_REUSE_READY_TIMEOUT_MS@@"; then
     REMOTE_PID=""
     REMOTE_PORT=""
     REMOTE_MANAGED=""
@@ -941,7 +941,7 @@ elif [ -n "$REMOTE_PORT" ] && managed_server_running "$REMOTE_PID"; then
     REMOTE_PID=""
     REMOTE_PORT=""
     REMOTE_MANAGED=""
-  elif ! wait_ready "@@AC_READY_TIMEOUT_MS@@"; then
+  elif ! wait_ready "@@ANKIEL_READY_TIMEOUT_MS@@"; then
     printf 'Remote Ankiel server is still running but did not become ready. Retry the connection; the server was left running.\\n' >&2
     exit 1
   elif [ "$FOREIGN_LAUNCHER" -eq 1 ]; then
@@ -960,7 +960,7 @@ if [ -z "$REMOTE_PORT" ] && [ -z "$DEFAULT_RUNTIME_INFO" ]; then
     [ "$SIBLING_DIR" != "$STATE_DIR" ] && [ "$(cat "$SIBLING_DIR/managed" 2>/dev/null || true)" = "managed" ] || continue
     managed_server_running "$(cat "$SIBLING_DIR/pid" 2>/dev/null || true)" || continue
     REMOTE_PORT="$(cat "$SIBLING_DIR/port" 2>/dev/null || true)"
-    if [ -n "$REMOTE_PORT" ] && wait_ready "@@AC_REUSE_READY_TIMEOUT_MS@@"; then
+    if [ -n "$REMOTE_PORT" ] && wait_ready "@@ANKIEL_REUSE_READY_TIMEOUT_MS@@"; then
       REMOTE_MANAGED="external"
       rm -f "$PID_FILE"
       printf '%s\\n' "$REMOTE_PORT" >"$PORT_FILE"
@@ -975,11 +975,11 @@ if [ -z "$REMOTE_PORT" ]; then
   # The sleep count bounds a host clock that stops advancing.
   UPDATE_WAITED=0
   UPDATE_SAW_MARKER=0
-  while [ "$UPDATE_WAITED" -le @@AC_UPDATE_TTL_SECONDS@@ ]; do
+  while [ "$UPDATE_WAITED" -le @@ANKIEL_UPDATE_TTL_SECONDS@@ ]; do
     UPDATE_REMAINING="$(update_remaining 2>/dev/null || true)"
     [ -n "$UPDATE_REMAINING" ] || break
     UPDATE_SAW_MARKER=1
-    [ "$UPDATE_WAITED" -lt @@AC_UPDATE_TTL_SECONDS@@ ] || break
+    [ "$UPDATE_WAITED" -lt @@ANKIEL_UPDATE_TTL_SECONDS@@ ] || break
     if adopt_default_server; then break; fi
     REMOTE_PID=""
     REMOTE_PORT=""
@@ -1001,13 +1001,13 @@ fi
 # held and start one only once it is free. The managed server an update just
 # stopped may still be exiting. The sleep count bounds a host clock that stops.
 OWNER_WAITED=0
-OWNER_DEADLINE=$(($(date +%s) + @@AC_READY_TIMEOUT_SECONDS@@))
+OWNER_DEADLINE=$(($(date +%s) + @@ANKIEL_READY_TIMEOUT_SECONDS@@))
 while [ -z "$REMOTE_PORT" ] && ! managed_server_running "$(cat "$PID_FILE" 2>/dev/null || true)" && home_owned; do
   if adopt_default_server; then break; fi
   REMOTE_PID=""
   REMOTE_PORT=""
   REMOTE_MANAGED=""
-  if [ "$OWNER_WAITED" -ge @@AC_READY_TIMEOUT_SECONDS@@ ] || [ "$(date +%s)" -ge "$OWNER_DEADLINE" ]; then
+  if [ "$OWNER_WAITED" -ge @@ANKIEL_READY_TIMEOUT_SECONDS@@ ] || [ "$(date +%s)" -ge "$OWNER_DEADLINE" ]; then
     printf 'An Ankiel server or boot service holds %s but did not become ready, so no second server was started. Retry once it has started.\\n' "$DEFAULT_SERVER_HOME" >&2
     exit 1
   fi
@@ -1017,7 +1017,7 @@ done
 if [ -z "$REMOTE_PORT" ]; then
   REMOTE_PORT="$(pick_port)" || true
   if [ -z "$REMOTE_PORT" ]; then
-    if [ "$AC_ARCHIVE_MODE" = "1" ]; then
+    if [ "$ANKIEL_ARCHIVE_MODE" = "1" ]; then
       printf 'Failed to find an available port on the remote host.\\n' >&2
     else
       printf 'Failed to find an available port on the remote host. Ensure node is available on PATH.\\n' >&2
@@ -1028,7 +1028,7 @@ if [ -z "$REMOTE_PORT" ]; then
   # earlier launch can still hold the old log open and keep writing to it.
   rm -f "$LOG_FILE"
   (umask 077 && : >"$LOG_FILE")
-  nohup env AC_NO_BROWSER=1 "$RUNNER_FILE" serve --host 127.0.0.1 --port "$REMOTE_PORT" --base-dir "$DEFAULT_SERVER_HOME" >>"$LOG_FILE" 2>&1 < /dev/null &
+  nohup env ANKIEL_NO_BROWSER=1 "$RUNNER_FILE" serve --host 127.0.0.1 --port "$REMOTE_PORT" --base-dir "$DEFAULT_SERVER_HOME" >>"$LOG_FILE" 2>&1 < /dev/null &
   REMOTE_PID="$!"
   printf '%s\\n' "$REMOTE_PID" >"$PID_FILE"
   printf '%s\\n' "$REMOTE_PORT" >"$PORT_FILE"
@@ -1039,7 +1039,7 @@ if [ -z "$REMOTE_PORT" ]; then
   else
     rm -f "$STATE_DIR/launcher"
   fi
-  if ! wait_ready "@@AC_READY_TIMEOUT_MS@@"; then
+  if ! wait_ready "@@ANKIEL_READY_TIMEOUT_MS@@"; then
     printf 'Remote Ankiel server did not become ready on 127.0.0.1:%s.\\n' "$REMOTE_PORT" >&2
     if [ -s "$LOG_FILE" ]; then
       tail -n 80 "$LOG_FILE" >&2 2>/dev/null || true
@@ -1053,7 +1053,7 @@ if [ -z "$REMOTE_PORT" ]; then
   fi
   # Keep the lock until another alias's launch can find this server, or it
   # would start a second one that loses the home's owner lock.
-  RECORD_DEADLINE=$(($(date +%s) + @@AC_RUNTIME_RECORD_WAIT_SECONDS@@))
+  RECORD_DEADLINE=$(($(date +%s) + @@ANKIEL_RUNTIME_RECORD_WAIT_SECONDS@@))
   while [ "$(date +%s)" -lt "$RECORD_DEADLINE" ]; do
     DEFAULT_RUNTIME_INFO="$(resolve_default_runtime_port 2>/dev/null || true)"
     [ "\${DEFAULT_RUNTIME_INFO%% *}" = "$REMOTE_PID" ] && break
@@ -1077,13 +1077,13 @@ printf '{"remotePort":%s,"serverKind":"%s"}\\n' "$REMOTE_PORT" "\${REMOTE_MANAGE
 `;
 
 const REMOTE_PAIRING_SCRIPT = `set -eu
-STATE_DIR="$HOME/.ac/ssh-launch/@@AC_STATE_KEY@@"
-DEFAULT_SERVER_HOME="$HOME/.ac"
+STATE_DIR="$HOME/.ankiel/ssh-launch/@@ANKIEL_STATE_KEY@@"
+DEFAULT_SERVER_HOME="$HOME/.ankiel"
 RUNNER_FILE="$STATE_DIR/run-ankiel.test"
-@@AC_ENSURE_AC_HOME_SCRIPT@@
+@@ANKIEL_ENSURE_ANKIEL_HOME_SCRIPT@@
 mkdir -p "$STATE_DIR"
 cat >"$RUNNER_FILE" <<'SH'
-@@AC_RUNNER_SCRIPT@@
+@@ANKIEL_RUNNER_SCRIPT@@
 SH
 chmod 700 "$RUNNER_FILE"
 PAIRING_BASE_DIR="$DEFAULT_SERVER_HOME"
@@ -1091,11 +1091,11 @@ PAIRING_BASE_DIR="$DEFAULT_SERVER_HOME"
 `;
 
 const REMOTE_STOP_SCRIPT = `set -eu
-STATE_DIR="$HOME/.ac/ssh-launch/@@AC_STATE_KEY@@"
+STATE_DIR="$HOME/.ankiel/ssh-launch/@@ANKIEL_STATE_KEY@@"
 PID_FILE="$STATE_DIR/pid"
 PORT_FILE="$STATE_DIR/port"
 MANAGED_FILE="$STATE_DIR/managed"
-LAUNCHER_ID="@@AC_LAUNCHER_ID@@"
+LAUNCHER_ID="@@ANKIEL_LAUNCHER_ID@@"
 RECORDED_LAUNCHER="$(cat "$STATE_DIR/launcher" 2>/dev/null || true)"
 # Another desktop with the same connection details launched this server.
 if [ -n "$LAUNCHER_ID" ] && [ -n "$RECORDED_LAUNCHER" ] && [ "$RECORDED_LAUNCHER" != "$LAUNCHER_ID" ]; then
@@ -1104,7 +1104,7 @@ if [ -n "$LAUNCHER_ID" ] && [ -n "$RECORDED_LAUNCHER" ] && [ "$RECORDED_LAUNCHER
 fi
 REMOTE_MANAGED="$(cat "$MANAGED_FILE" 2>/dev/null || true)"
 REMOTE_PID="$(cat "$PID_FILE" 2>/dev/null || true)"
-@@AC_MANAGED_SERVER_RUNNING_SCRIPT@@
+@@ANKIEL_MANAGED_SERVER_RUNNING_SCRIPT@@
 if [ "$REMOTE_MANAGED" != "external" ] && managed_server_running "$REMOTE_PID"; then
   kill "$REMOTE_PID" 2>/dev/null || true
   WAIT_COUNT=0
@@ -1122,7 +1122,7 @@ printf '{"stopped":true}\\n'
 `;
 
 const REMOTE_LOG_TAIL_SCRIPT = `set -eu
-STATE_DIR="$HOME/.ac/ssh-launch/@@AC_STATE_KEY@@"
+STATE_DIR="$HOME/.ankiel/ssh-launch/@@ANKIEL_STATE_KEY@@"
 LOG_FILE="$STATE_DIR/server.log"
 if [ -f "$LOG_FILE" ]; then
   tail -n 80 "$LOG_FILE" 2>/dev/null || true
@@ -1134,7 +1134,7 @@ export class SshInvalidArchiveVersionError extends Schema.TaggedError<SshInvalid
   { archiveVersion: Schema.String },
 ) {
   override get message(): string {
-    return `'${this.archiveVersion}' is not an exact ac version and cannot name a runtime directory.`;
+    return `'${this.archiveVersion}' is not an exact ankiel version and cannot name a runtime directory.`;
   }
 }
 
@@ -1149,7 +1149,7 @@ export class SshMissingRunnerError extends Schema.TaggedError<SshMissingRunnerEr
   {},
 ) {
   override get message(): string {
-    return "A remote ac runner needs an archive version or a node script path.";
+    return "A remote ankiel runner needs an archive version or a node script path.";
   }
 }
 
@@ -1168,13 +1168,13 @@ export function buildRemoteAnkielRunnerScript(input?: RemoteAnkielRunnerOptions)
   );
   return stripTrailingNewlines(
     applyScriptPlaceholders(REMOTE_RUNNER_SCRIPT, {
-      AC_NODE_SCRIPT_PATH: shellSingleQuote(nodeScriptPath),
-      AC_ARCHIVE_VERSION: shellSingleQuote(archiveVersion),
-      AC_RELEASE_BASE_URL: shellSingleQuote(releaseBaseUrl),
-      AC_ARCHIVE_LOCK_WAIT_SECONDS: String(REMOTE_ARCHIVE_LOCK_WAIT_SECONDS),
-      AC_ARCHIVE_DOWNLOAD_SECONDS: String(REMOTE_ARCHIVE_DOWNLOAD_SECONDS),
-      AC_ARCHIVE_CHECKSUMS_SECONDS: String(REMOTE_ARCHIVE_CHECKSUMS_SECONDS),
-      AC_NODE_ENV_SCRIPT: buildRemoteNodeEnvScript(input),
+      ANKIEL_NODE_SCRIPT_PATH: shellSingleQuote(nodeScriptPath),
+      ANKIEL_ARCHIVE_VERSION: shellSingleQuote(archiveVersion),
+      ANKIEL_RELEASE_BASE_URL: shellSingleQuote(releaseBaseUrl),
+      ANKIEL_ARCHIVE_LOCK_WAIT_SECONDS: String(REMOTE_ARCHIVE_LOCK_WAIT_SECONDS),
+      ANKIEL_ARCHIVE_DOWNLOAD_SECONDS: String(REMOTE_ARCHIVE_DOWNLOAD_SECONDS),
+      ANKIEL_ARCHIVE_CHECKSUMS_SECONDS: String(REMOTE_ARCHIVE_CHECKSUMS_SECONDS),
+      ANKIEL_NODE_ENV_SCRIPT: buildRemoteNodeEnvScript(input),
     }),
   );
 }
@@ -1182,41 +1182,41 @@ export function buildRemoteAnkielRunnerScript(input?: RemoteAnkielRunnerOptions)
 export function buildRemoteNodeEnvScript(input?: RemoteAnkielRunnerOptions): string {
   return stripTrailingNewlines(
     applyScriptPlaceholders(REMOTE_NODE_ENV_SCRIPT, {
-      AC_NODE_ENGINE_RANGE: shellSingleQuote(input?.nodeEngineRange?.trim() || ""),
-      AC_NODE_ENGINE_CHECK_SCRIPT: stripTrailingNewlines(buildRemoteNodeEngineCheckScript()),
+      ANKIEL_NODE_ENGINE_RANGE: shellSingleQuote(input?.nodeEngineRange?.trim() || ""),
+      ANKIEL_NODE_ENGINE_CHECK_SCRIPT: stripTrailingNewlines(buildRemoteNodeEngineCheckScript()),
     }),
   );
 }
 
 export function buildRemoteLaunchScript(input?: RemoteAnkielRunnerOptions): string {
   return applyScriptPlaceholders(REMOTE_LAUNCH_SCRIPT, {
-    AC_UPDATE_MARKER_FILE: DESKTOP_UPDATE_IN_PROGRESS_MARKER_FILE,
-    AC_UPDATE_TTL_MS: String(DESKTOP_UPDATE_IN_PROGRESS_TTL_MS),
-    AC_UPDATE_TTL_SECONDS: String(DESKTOP_UPDATE_IN_PROGRESS_TTL_MS / 1000),
-    AC_ARCHIVE_MODE: isNodeScriptRunner(input) ? "0" : "1",
-    AC_NODE_ENV_SCRIPT: buildRemoteNodeEnvScript(input),
-    AC_RUNNER_SCRIPT: stripTrailingNewlines(buildRemoteAnkielRunnerScript(input)),
-    AC_PICK_PORT_SCRIPT: stripTrailingNewlines(REMOTE_PICK_PORT_SCRIPT),
-    AC_WAIT_READY_SCRIPT: stripTrailingNewlines(REMOTE_WAIT_READY_SCRIPT),
-    AC_MANAGED_SERVER_RUNNING_SCRIPT: REMOTE_MANAGED_SERVER_RUNNING_SCRIPT,
-    AC_ENSURE_AC_HOME_SCRIPT: REMOTE_ENSURE_AC_HOME_SCRIPT,
-    AC_DEFAULT_REMOTE_PORT: String(DEFAULT_REMOTE_PORT),
-    AC_REMOTE_PORT_SCAN_WINDOW: String(REMOTE_PORT_SCAN_WINDOW),
-    AC_READY_TIMEOUT_MS: String(REMOTE_READY_TIMEOUT_MS),
-    AC_READY_TIMEOUT_SECONDS: String(REMOTE_READY_TIMEOUT_MS / 1000),
-    AC_REUSE_READY_TIMEOUT_MS: String(REMOTE_REUSE_READY_TIMEOUT_MS),
-    AC_READY_PROBE_TIMEOUT_MS: String(SSH_READY_PROBE_TIMEOUT_MS),
-    AC_PID_EXIT_WAIT_TICKS: String(REMOTE_PID_EXIT_WAIT_MS / 100),
-    AC_LAUNCH_LOCK_WAIT_SECONDS: String(REMOTE_LAUNCH_LOCK_WAIT_SECONDS),
-    AC_RUNTIME_RECORD_WAIT_SECONDS: String(REMOTE_RUNTIME_RECORD_WAIT_SECONDS),
+    ANKIEL_UPDATE_MARKER_FILE: DESKTOP_UPDATE_IN_PROGRESS_MARKER_FILE,
+    ANKIEL_UPDATE_TTL_MS: String(DESKTOP_UPDATE_IN_PROGRESS_TTL_MS),
+    ANKIEL_UPDATE_TTL_SECONDS: String(DESKTOP_UPDATE_IN_PROGRESS_TTL_MS / 1000),
+    ANKIEL_ARCHIVE_MODE: isNodeScriptRunner(input) ? "0" : "1",
+    ANKIEL_NODE_ENV_SCRIPT: buildRemoteNodeEnvScript(input),
+    ANKIEL_RUNNER_SCRIPT: stripTrailingNewlines(buildRemoteAnkielRunnerScript(input)),
+    ANKIEL_PICK_PORT_SCRIPT: stripTrailingNewlines(REMOTE_PICK_PORT_SCRIPT),
+    ANKIEL_WAIT_READY_SCRIPT: stripTrailingNewlines(REMOTE_WAIT_READY_SCRIPT),
+    ANKIEL_MANAGED_SERVER_RUNNING_SCRIPT: REMOTE_MANAGED_SERVER_RUNNING_SCRIPT,
+    ANKIEL_ENSURE_ANKIEL_HOME_SCRIPT: REMOTE_ENSURE_ANKIEL_HOME_SCRIPT,
+    ANKIEL_DEFAULT_REMOTE_PORT: String(DEFAULT_REMOTE_PORT),
+    ANKIEL_REMOTE_PORT_SCAN_WINDOW: String(REMOTE_PORT_SCAN_WINDOW),
+    ANKIEL_READY_TIMEOUT_MS: String(REMOTE_READY_TIMEOUT_MS),
+    ANKIEL_READY_TIMEOUT_SECONDS: String(REMOTE_READY_TIMEOUT_MS / 1000),
+    ANKIEL_REUSE_READY_TIMEOUT_MS: String(REMOTE_REUSE_READY_TIMEOUT_MS),
+    ANKIEL_READY_PROBE_TIMEOUT_MS: String(SSH_READY_PROBE_TIMEOUT_MS),
+    ANKIEL_PID_EXIT_WAIT_TICKS: String(REMOTE_PID_EXIT_WAIT_MS / 100),
+    ANKIEL_LAUNCH_LOCK_WAIT_SECONDS: String(REMOTE_LAUNCH_LOCK_WAIT_SECONDS),
+    ANKIEL_RUNTIME_RECORD_WAIT_SECONDS: String(REMOTE_RUNTIME_RECORD_WAIT_SECONDS),
   });
 }
 
 function buildRemotePairingScript(stateKey: string, input?: RemoteAnkielRunnerOptions): string {
   return applyScriptPlaceholders(REMOTE_PAIRING_SCRIPT, {
-    AC_STATE_KEY: stateKey,
-    AC_ENSURE_AC_HOME_SCRIPT: REMOTE_ENSURE_AC_HOME_SCRIPT,
-    AC_RUNNER_SCRIPT: stripTrailingNewlines(buildRemoteAnkielRunnerScript(input)),
+    ANKIEL_STATE_KEY: stateKey,
+    ANKIEL_ENSURE_ANKIEL_HOME_SCRIPT: REMOTE_ENSURE_ANKIEL_HOME_SCRIPT,
+    ANKIEL_RUNNER_SCRIPT: stripTrailingNewlines(buildRemoteAnkielRunnerScript(input)),
   });
 }
 
@@ -1226,15 +1226,15 @@ const validLauncherId = (launcherId: string | null | undefined) =>
 
 function buildRemoteStopScript(stateKey: string, launcherId: string | null): string {
   return applyScriptPlaceholders(REMOTE_STOP_SCRIPT, {
-    AC_STATE_KEY: stateKey,
-    AC_LAUNCHER_ID: launcherId ?? "",
-    AC_MANAGED_SERVER_RUNNING_SCRIPT: REMOTE_MANAGED_SERVER_RUNNING_SCRIPT,
+    ANKIEL_STATE_KEY: stateKey,
+    ANKIEL_LAUNCHER_ID: launcherId ?? "",
+    ANKIEL_MANAGED_SERVER_RUNNING_SCRIPT: REMOTE_MANAGED_SERVER_RUNNING_SCRIPT,
   });
 }
 
 function buildRemoteLogTailScript(stateKey: string): string {
   return applyScriptPlaceholders(REMOTE_LOG_TAIL_SCRIPT, {
-    AC_STATE_KEY: stateKey,
+    ANKIEL_STATE_KEY: stateKey,
   });
 }
 

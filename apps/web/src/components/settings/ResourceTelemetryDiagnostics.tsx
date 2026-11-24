@@ -113,7 +113,7 @@ function categoryLabel(
       return resolve(msg("Electron utility"));
     case "resource-monitor":
       return resolve(msg("Monitor"));
-    case "unknown-ac":
+    case "unknown-ankiel":
       return resolve(msg("Ankiel process"));
   }
 }

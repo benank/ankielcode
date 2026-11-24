@@ -4,8 +4,8 @@ import * as NodePath from "node:path";
 
 import { expect } from "e2e";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 const CHOSEN_MODEL = "anthropic/claude-sonnet-4";
 // A supported Pi whose RPC discovery fails, so its catalog falls back to the "default" alias.
@@ -18,10 +18,10 @@ exit 1
 test(
   "A Pi model chosen in Settings is still the one sent while Pi cannot list its models",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    const project = await ac.project("demo");
-    const fakePi = NodePath.join(AC_HOME, "bin/fake-pi");
-    const settingsPath = NodePath.join(AC_HOME, "userdata/settings.json");
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("demo");
+    const fakePi = NodePath.join(ANKIEL_HOME, "bin/fake-pi");
+    const settingsPath = NodePath.join(ANKIEL_HOME, "userdata/settings.json");
     const originalSettings = await NodeFSP.readFile(settingsPath, "utf8");
     const settings = JSON.parse(originalSettings);
     try {
@@ -34,7 +34,7 @@ test(
       settings.defaultModelSelection = { instanceId: "pi", model: CHOSEN_MODEL };
       await NodeFSP.writeFile(settingsPath, JSON.stringify(settings));
 
-      await ac.open();
+      await ankiel.open();
       // The composer shows a Pi model once the settings watcher has enabled Pi.
       await expect(browser.locator("[data-chat-provider-model-picker-label]").first()).toHaveText(
         /sonnet|default/i,
@@ -44,7 +44,7 @@ test(
 
       await screen.getByRole("textbox").fill("Which model is this?");
       await screen.getByRole("textbox").press("Enter");
-      const { cli } = makeState(AC_HOME);
+      const { cli } = makeState(ANKIEL_HOME);
       await expect
         .poll(
           async () => {

@@ -2313,7 +2313,7 @@ const commandReadsSkipSettledLeafNodes = Effect.gen(function* () {
       parentCheckpointId: null,
       ordinalWithinScope: 1,
       appRunOrdinal: 1,
-      ref: CheckpointRef.make("refs/ac/settled-leaf-nodes/1"),
+      ref: CheckpointRef.make("refs/ankiel/settled-leaf-nodes/1"),
       status: "ready",
       files: [],
       capturedAt: now,
@@ -3189,7 +3189,7 @@ it.effect("SQL shells read a subagent family and a worktree's threads", () =>
     const store = yield* ProjectionStore.ProjectionStoreV2;
     const now = yield* DateTime.now;
     const projectId = ProjectId.make("project:family");
-    const worktreePath = "/repo/.ac/worktrees/family";
+    const worktreePath = "/repo/.ankiel/worktrees/family";
     const id = (name: string) => ThreadId.make(`thread:family:${name}`);
     const payloadOf = (input: {
       readonly name: string;
@@ -4303,7 +4303,7 @@ it.layer(layerTest)("ProjectionStoreV2", (it) => {
           parentCheckpointId: null,
           ordinalWithinScope: 0,
           appRunOrdinal: null,
-          ref: CheckpointRef.make("refs/ac/bounded-sql-history/0"),
+          ref: CheckpointRef.make("refs/ankiel/bounded-sql-history/0"),
           status: "ready",
           files: [],
           capturedAt: now,
@@ -4349,7 +4349,7 @@ it.layer(layerTest)("ProjectionStoreV2", (it) => {
           parentCheckpointId: null,
           ordinalWithinScope: 1_000,
           appRunOrdinal: null,
-          ref: CheckpointRef.make("refs/ac/bounded-sql-history/repository/1000"),
+          ref: CheckpointRef.make("refs/ankiel/bounded-sql-history/repository/1000"),
           status: "ready",
           files: [{ path: "src/main.ts", kind: "modified", additions: 1, deletions: 0 }],
           capturedAt: now,

@@ -34,7 +34,7 @@ const copyTriageCliCommand = () =>
   );
 
 /**
- * In-app `ac triage`: the server writes the session files and starts cloning
+ * In-app `ankiel triage`: the server writes the session files and starts cloning
  * the matching source, then a No project draft opens with the playbook linked.
  * The draft hero explains the rest; the user picks a provider and describes
  * the problem.

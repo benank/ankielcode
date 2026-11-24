@@ -75,7 +75,7 @@ export function readLastUsedProjectKey(): string | null {
   }
 }
 
-// Drafts that opened before their project's ac.json was read. A send waits for the file's
+// Drafts that opened before their project's ankiel.json was read. A send waits for the file's
 // workspace default unless the user has already chosen a workspace.
 interface ProvisionalWorkspace {
   readonly envMode: DraftThreadEnvMode;
@@ -263,7 +263,7 @@ export function createNewThreadHandler(router: AnyRouter) {
         envMode,
         newWorktreesStartFromOrigin: projectSettings.settings.newWorktreesStartFromOrigin,
       });
-    // The draft opens without waiting on ac.json: a cold read takes seconds on a loaded host.
+    // The draft opens without waiting on ankiel.json: a cold read takes seconds on a loaded host.
     // Its workspace default lands afterwards unless the user picked a workspace or sent first.
     const resolveDefaultEnvMode = () => {
       // Environment queries wait for a connection, so an offline machine's file is never read.

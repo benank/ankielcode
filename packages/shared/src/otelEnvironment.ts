@@ -77,8 +77,8 @@ const flag = (
   );
 
 // `Config.Boolean`'s literals, which effect does not export on their own.
-const AC_TRUE = ["true", "yes", "on", "1", "y"];
-const AC_FALSE = ["false", "no", "off", "0", "n"];
+const ANKIEL_TRUE = ["true", "yes", "on", "1", "y"];
+const ANKIEL_FALSE = ["false", "no", "off", "0", "n"];
 
 const RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES";
 
@@ -252,11 +252,11 @@ const endpointSignal = (name: OtlpSignalName, own: Settings, generic: Settings):
 };
 
 const sdkFlags = {
-  ac: flag(
-    "AC_OTEL_SDK_DISABLED",
-    AC_TRUE,
-    AC_FALSE,
-    (value) => `AC_OTEL_SDK_DISABLED=${value} is not a yes or a no and was ignored`,
+  ankiel: flag(
+    "ANKIEL_OTEL_SDK_DISABLED",
+    ANKIEL_TRUE,
+    ANKIEL_FALSE,
+    (value) => `ANKIEL_OTEL_SDK_DISABLED=${value} is not a yes or a no and was ignored`,
   ),
   // OTEL booleans are true only for case-insensitive true; warn on unrecognized values.
   spec: flag(
@@ -264,7 +264,7 @@ const sdkFlags = {
     ["true"],
     ["false"],
     (value) =>
-      `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or AC_OTEL_SDK_DISABLED to say it any other way`,
+      `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or ANKIEL_OTEL_SDK_DISABLED to say it any other way`,
   ),
 };
 
@@ -281,8 +281,8 @@ export const load: Effect.Effect<OtelEnvironment> = Config.all({
     logs: exporter("OTEL_LOGS_EXPORTER"),
   }),
 }).pipe(
-  Effect.map(({ ac, spec, resource, generic, exporters, ...own }) => {
-    const disabled = ac.value ?? spec.value ?? false;
+  Effect.map(({ ankiel, spec, resource, generic, exporters, ...own }) => {
+    const disabled = ankiel.value ?? spec.value ?? false;
     const signals = disabled
       ? undefined
       : {
@@ -294,16 +294,16 @@ export const load: Effect.Effect<OtelEnvironment> = Config.all({
       signals === undefined ? [] : Object.values(signals).flatMap((resolved) => resolved.used),
     );
     const warnings = [
-      ac.warning,
+      ankiel.warning,
       spec.warning,
       resource.warning,
       ...Array.from(used, (setting) => setting.warning),
     ].filter((warning) => warning !== undefined);
     if (disabled) {
       warnings.push(
-        ac.value
-          ? "AC_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it"
-          : "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set AC_OTEL_SDK_DISABLED=false to export anyway",
+        ankiel.value
+          ? "ANKIEL_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it"
+          : "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set ANKIEL_OTEL_SDK_DISABLED=false to export anyway",
       );
     }
     return {
@@ -331,25 +331,25 @@ export interface SignalEndpoint {
 export const resolveSignalEndpoint = (
   otel: OtelEnvironment,
   signal: SignalName,
-  ac: { readonly url: string | undefined; readonly export: SignalExport },
+  ankiel: { readonly url: string | undefined; readonly export: SignalExport },
   fallback: { readonly bootstrapUrl: string | undefined; readonly settingsUrl: string | undefined },
 ): SignalEndpoint | undefined => {
   if (otel.disabled) {
     return undefined;
   }
-  const ankielUrl = blankAsUnset(ac.url);
+  const ankielUrl = blankAsUnset(ankiel.url);
   if (ankielUrl !== undefined) {
     return {
       url: ankielUrl,
-      export: ac.export,
+      export: ankiel.export,
       source: "environment",
-      variable: `AC_OTLP_${signal.toUpperCase()}_URL`,
+      variable: `ANKIEL_OTLP_${signal.toUpperCase()}_URL`,
     };
   }
   return OtelSignal.$match(otel[signal], {
     Export: ({ url, variable, protocol, headers }): SignalEndpoint => ({
       url,
-      export: { protocol, headers, exportIntervalMs: ac.export.exportIntervalMs },
+      export: { protocol, headers, exportIntervalMs: ankiel.export.exportIntervalMs },
       source: "environment",
       variable,
     }),
@@ -360,7 +360,7 @@ export const resolveSignalEndpoint = (
       // the desktop's own.
       const url = blankAsUnset(fallback.bootstrapUrl) ?? settingsUrl;
       if (url === undefined) return undefined;
-      return { url, export: ac.export, source: url === settingsUrl ? "settings" : "bootstrap" };
+      return { url, export: ankiel.export, source: url === settingsUrl ? "settings" : "bootstrap" };
     },
   });
 };

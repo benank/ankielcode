@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import {
-  AC_MCP_TOOL_NAMES,
+  ANKIEL_MCP_TOOL_NAMES,
   resolveAnkielMcpSummaryAction,
   resolveAnkielMcpToolDefinition,
   resolveAnkielMcpToolPresentation,
@@ -9,7 +9,7 @@ import {
 
 describe("resolveAnkielMcpToolPresentation", () => {
   it("recognizes every Ankiel tool across provider prefixes and completion suffixes", () => {
-    for (const tool of AC_MCP_TOOL_NAMES) {
+    for (const tool of ANKIEL_MCP_TOOL_NAMES) {
       const presentation = resolveAnkielMcpToolPresentation(tool);
       for (const prefix of [
         "mcp__ankiel-code__",

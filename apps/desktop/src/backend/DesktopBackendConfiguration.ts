@@ -78,31 +78,31 @@ const emptyBackendObservabilitySettings: BackendObservabilitySettings = {
 };
 
 const DESKTOP_BACKEND_ENV_NAMES = [
-  "AC_PORT",
-  "AC_MODE",
-  "AC_NO_BROWSER",
-  "AC_HOST",
-  "AC_DESKTOP_WS_URL",
-  "AC_DESKTOP_LAN_HOST",
-  "AC_DESKTOP_HTTPS_ENDPOINTS",
-  "AC_TAILSCALE_SERVE",
-  "AC_TAILSCALE_SERVE_PORT",
+  "ANKIEL_PORT",
+  "ANKIEL_MODE",
+  "ANKIEL_NO_BROWSER",
+  "ANKIEL_HOST",
+  "ANKIEL_DESKTOP_WS_URL",
+  "ANKIEL_DESKTOP_LAN_HOST",
+  "ANKIEL_DESKTOP_HTTPS_ENDPOINTS",
+  "ANKIEL_TAILSCALE_SERVE",
+  "ANKIEL_TAILSCALE_SERVE_PORT",
 ] as const;
 
 // Windows forwards these variables into WSL only through WSLENV.
 const WSL_FORWARDED_ENV_NAMES = [
   "OPENAI_API_KEY",
   "ANTHROPIC_API_KEY",
-  "AC_FEATURE_FLAGS",
+  "ANKIEL_FEATURE_FLAGS",
   // Otherwise the WSL server keeps exporting to endpoints from the bootstrap.
-  "AC_OTEL_SDK_DISABLED",
+  "ANKIEL_OTEL_SDK_DISABLED",
   "OTEL_SDK_DISABLED",
-  "AC_OTLP_HEADERS",
-  "AC_OTLP_PROTOCOL",
+  "ANKIEL_OTLP_HEADERS",
+  "ANKIEL_OTLP_PROTOCOL",
   // Untranslated Ankiel URLs must override bootstrap endpoints inside WSL, as they do on Windows.
-  "AC_OTLP_TRACES_URL",
-  "AC_OTLP_METRICS_URL",
-  "AC_OTLP_LOGS_URL",
+  "ANKIEL_OTLP_TRACES_URL",
+  "ANKIEL_OTLP_METRICS_URL",
+  "ANKIEL_OTLP_LOGS_URL",
   "OTEL_EXPORTER_OTLP_ENDPOINT",
   "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
   "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
@@ -251,7 +251,7 @@ interface SharedBootstrapInput {
 }
 
 // Matches the server's DESKTOP_HOST_SCOPE_ENV.
-const DESKTOP_HOST_SCOPE_ENV = "AC_DESKTOP_HOST_SCOPE";
+const DESKTOP_HOST_SCOPE_ENV = "ANKIEL_DESKTOP_HOST_SCOPE";
 const HOST_SCOPE_FILE_NAME = "desktop-host-scope";
 const HOST_SCOPE_PATTERN = /^[0-9a-f]{32}$/;
 
@@ -427,7 +427,7 @@ const runWslPreflight = Effect.fn("desktop.backendConfiguration.wslPreflight")(f
 
   if (input.runtimeArchive !== null) {
     // Staged runtimes bundle Node and node-pty; provider PATH discovery must not require them.
-    // Probe first: the runtime cache lives under the login shell's AC_HOME.
+    // Probe first: the runtime cache lives under the login shell's ANKIEL_HOME.
     const stagedProbe = yield* wslEnv.probeRuntime(runningDistro);
     if (stagedProbe.ok) {
       const runtime = yield* wslEnv.prepareRuntime(
@@ -441,7 +441,7 @@ const runWslPreflight = Effect.fn("desktop.backendConfiguration.wslPreflight")(f
           _tag: "Ready",
           runningDistro,
           windowsEntryPath: environment.backendEntryPath,
-          runtime: { kind: "executable", entryPath: `${runtime.linuxAppRoot}/ac` },
+          runtime: { kind: "executable", entryPath: `${runtime.linuxAppRoot}/ankiel` },
           resolvedPath: stagedProbe.resolvedPath,
           ankielHome: stagedProbe.ankielHome,
           runtimeId: input.runtimeArchive.runtimeId,
@@ -576,8 +576,8 @@ const resolvePrimaryStartConfig = Effect.fn("desktop.backendConfiguration.resolv
       env: {
         ...backendChildEnvPatch(),
         ELECTRON_RUN_AS_NODE: "1",
-        AC_DESKTOP_SHELL_DISCOVERY_PENDING: "1",
-        AC_CLI_PATH: Option.getOrUndefined(input.cliPath),
+        ANKIEL_DESKTOP_SHELL_DISCOVERY_PENDING: "1",
+        ANKIEL_CLI_PATH: Option.getOrUndefined(input.cliPath),
         [DESKTOP_HOST_SCOPE_ENV]: input.hostScope,
       },
       extendEnv: true,
@@ -694,7 +694,7 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
 
   const parentEnvWithoutAnkielHome: Record<string, string | undefined> = {};
   for (const [key, value] of Object.entries(env)) {
-    if (key === "AC_HOME") continue;
+    if (key === "ANKIEL_HOME") continue;
     parentEnvWithoutAnkielHome[key] = value;
   }
   const wslEnv = mergeWslEnv(parentEnvWithoutAnkielHome.WSLENV, forwardedEnvNames);
@@ -710,7 +710,7 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
       ...forwardedEnv,
       ...(wslEnv !== undefined ? { WSLENV: wslEnv } : {}),
     },
-    // env already excludes AC_HOME; merging the host env would restore it.
+    // env already excludes ANKIEL_HOME; merging the host env would restore it.
     extendEnv: false,
     bootstrap,
     bootstrapDelivery: "stdin" as const,
@@ -762,7 +762,7 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
       "--exec",
       "env",
       `PATH=${launchPath}`,
-      ...(preflight.ankielHome === null ? [] : [`AC_HOME=${preflight.ankielHome}`]),
+      ...(preflight.ankielHome === null ? [] : [`ANKIEL_HOME=${preflight.ankielHome}`]),
       ...command,
       "--bootstrap-fd",
       "0",

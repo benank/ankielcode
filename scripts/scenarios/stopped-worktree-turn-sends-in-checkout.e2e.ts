@@ -1,16 +1,16 @@
 import { expect } from "e2e";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 test(
   "A worktree thread stopped mid-turn and moved to the project checkout runs its next message",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
     // The question recording waits for an answer, so the turn is running in its new worktree.
     const started = await runPromise(
-      makeState(AC_HOME).cli(
+      makeState(ANKIEL_HOME).cli(
         [
           "thread",
           "start",
@@ -28,7 +28,7 @@ test(
         [2],
       ),
     );
-    await ac.open(JSON.parse(started.stdout) as { threadId: string });
+    await ankiel.open(JSON.parse(started.stdout) as { threadId: string });
 
     const stop = screen.getByRole("button", "Stop generation");
     await stop.waitFor({ timeout: 60_000 });

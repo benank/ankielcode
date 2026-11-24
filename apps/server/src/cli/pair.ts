@@ -50,7 +50,7 @@ import { authScopesFlag } from "./authScopes.ts";
 import { baseDirFlag, DurationFromString } from "./config.ts";
 import { hostShellWord, resolveHostCliCommand } from "./invocation.ts";
 
-const WELL_KNOWN_ENVIRONMENT_PATH = "/.well-known/ac/environment";
+const WELL_KNOWN_ENVIRONMENT_PATH = "/.well-known/ankiel/environment";
 const PAIR_PROBE_TIMEOUT = Duration.millis(2_500);
 // Tailscale's first HTTPS request may take seconds to provision a certificate.
 const TAILSCALE_PROBE_ATTEMPTS = 5;
@@ -278,7 +278,7 @@ const discoverPairTarget = Effect.fn("pair.discoverPairTarget")(function* (
     bases.push(yield* resolveBaseDir(explicitBaseDir));
   } else {
     // Same precedence as dev-runner: inside a linked worktree only its own
-    // `.ac` counts. Minting opens the target database with this checkout's
+    // `.ankiel` counts. Minting opens the target database with this checkout's
     // migrations, so falling back to the shared home could migrate the live
     // install with unreleased schema.
     const worktreeHome = yield* resolveWorktreeAnkielHome(yield* HostProcess.WorkingDirectory);
@@ -286,7 +286,7 @@ const discoverPairTarget = Effect.fn("pair.discoverPairTarget")(function* (
       bases.push(worktreeHome);
       inLinkedWorktree = true;
     } else {
-      const envHome = yield* Config.String("AC_HOME").pipe(Config.option);
+      const envHome = yield* Config.String("ANKIEL_HOME").pipe(Config.option);
       bases.push(yield* resolveBaseDir(Option.getOrUndefined(envHome)));
     }
   }
@@ -487,7 +487,7 @@ const mintPairingLink = Effect.fn("pair.mintPairingLink")(function* (input: {
     return yield* environmentAuth.createPairingLink({
       scopes: input.scopes,
       subject: "one-time-token",
-      label: Option.getOrElse(input.label, () => "ac pair"),
+      label: Option.getOrElse(input.label, () => "ankiel pair"),
       ...(Option.isSome(input.ttl) ? { ttl: input.ttl.value } : {}),
     });
   }).pipe(
@@ -582,7 +582,7 @@ export const pairCommand = Command.make("pair", {
         pairingBaseUrl = resolveDirectPairingBaseUrl(target.state, yield* HostProcess.Platform);
         if (isLoopbackHost(new URL(pairingBaseUrl).hostname)) {
           notes.push(
-            "This URL is only reachable from this machine. To reach it from your other devices, run `ac up`, or re-run with --tailscale.",
+            "This URL is only reachable from this machine. To reach it from your other devices, run `ankiel up`, or re-run with --tailscale.",
           );
         } else if (target.state.privateNetworkOnly) {
           notes.push(

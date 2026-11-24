@@ -231,9 +231,9 @@ export function makeAcpReplayRuntime(input: {
             cwd: runtimeInput.cwd,
             env: {
               ...process.env,
-              AC_ACP_REPLAY_TRANSCRIPT_PATH: transcriptPath,
-              AC_ACP_REPLAY_STATUS_PATH: input.statusPath,
-              AC_ACP_REPLAY_WORKSPACE: runtimeInput.cwd,
+              ANKIEL_ACP_REPLAY_TRANSCRIPT_PATH: transcriptPath,
+              ANKIEL_ACP_REPLAY_STATUS_PATH: input.statusPath,
+              ANKIEL_ACP_REPLAY_WORKSPACE: runtimeInput.cwd,
             },
           },
           authMethodId: "replay",

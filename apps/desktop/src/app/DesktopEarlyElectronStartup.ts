@@ -53,7 +53,7 @@ function resolveEarlyDesktopSettingsPath(input: {
   readonly homeDirectory: string;
   readonly joinPath: JoinPath;
 }): string {
-  const ankielHome = Option.fromUndefinedOr(input.env.AC_HOME);
+  const ankielHome = Option.fromUndefinedOr(input.env.ANKIEL_HOME);
   const baseDir = resolveDesktopBaseDir({
     homeDirectory: input.homeDirectory,
     joinPath: input.joinPath,

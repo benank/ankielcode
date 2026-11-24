@@ -21,7 +21,9 @@ import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as ServerConfig from "../config.ts";
 
 function checkpointRefForThreadTurn(threadId: ThreadId, turnCount: number): CheckpointRef {
-  return CheckpointRef.make(`refs/ac/checkpoints/${Base64Url.encode(threadId)}/turn/${turnCount}`);
+  return CheckpointRef.make(
+    `refs/ankiel/checkpoints/${Base64Url.encode(threadId)}/turn/${turnCount}`,
+  );
 }
 
 const layerServerConfig = ServerConfig.ServerConfig.layerTest(process.cwd(), {
@@ -714,8 +716,8 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
           yield* initRepoWithCommit(NodePath.join(tmp, clone));
         }
         const refs = {
-          fromCheckpointRef: CheckpointRef.make("refs/ac/test/nested/0"),
-          toCheckpointRef: CheckpointRef.make("refs/ac/test/nested/1"),
+          fromCheckpointRef: CheckpointRef.make("refs/ankiel/test/nested/0"),
+          toCheckpointRef: CheckpointRef.make("refs/ankiel/test/nested/1"),
         };
         // Captured before the clone was tracked, so this snapshot holds it as a gitlink.
         yield* checkpointStore.captureCheckpoint({
@@ -760,7 +762,7 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
         const head = yield* git(tmp, ["rev-parse", "HEAD"]);
 
         expect(yield* checkpointStore.resolveCleanHead(tmp)).toBe(head);
-        const checkpointRef = CheckpointRef.make("refs/ac/test/clean/head");
+        const checkpointRef = CheckpointRef.make("refs/ankiel/test/clean/head");
         yield* checkpointStore.captureHeadCheckpoint({ cwd: tmp, checkpointRef, head, seenAt: 1 });
         expect(yield* git(tmp, ["ls-tree", "-r", checkpointRef])).toBe(
           yield* git(tmp, ["ls-tree", "-r", "HEAD"]),
@@ -781,7 +783,7 @@ it.layer(layerTest)("CheckpointStore.layer", (it) => {
         yield* writeTextFile(NodePath.join(tmp, "later.txt"), "later\n");
         yield* git(tmp, ["add", "later.txt"]);
         yield* git(tmp, ["commit", "-m", "later"], { committedAt: "@1000 +0000" });
-        const toCheckpointRef = CheckpointRef.make("refs/ac/test/clean/after");
+        const toCheckpointRef = CheckpointRef.make("refs/ankiel/test/clean/after");
         yield* checkpointStore.captureCheckpoint({ cwd: tmp, checkpointRef: toCheckpointRef });
         expect(
           yield* checkpointStore.listAuthoredPaths({

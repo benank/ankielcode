@@ -113,9 +113,9 @@ export function renderPrivilegedScript(plan: ProtectionPlan, mode: "apply" | "un
     for (const { path, contents } of plan.system) {
       lines.push(
         `mkdir -p ${quoteShell(directoryOf(path))}`,
-        `cat >${quoteShell(path)} <<'AC_PROTECT'`,
+        `cat >${quoteShell(path)} <<'ANKIEL_PROTECT'`,
         contents.trimEnd(),
-        "AC_PROTECT",
+        "ANKIEL_PROTECT",
       );
     }
   } else {

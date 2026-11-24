@@ -27,7 +27,7 @@ the server process is currently running, and the exact paths for state, logs, an
 the database.
 
 Its triage CLI version (called "Installed version" in older context files) is only
-the version of the \`ac\` that ran \`ac triage\`. It is often not the build the bug
+the version of the \`ankiel\` that ran \`ankiel triage\`. It is often not the build the bug
 happened on: \`npx @ankielcode/cli triage\` runs whatever \`@ankielcode/cli\` npm resolves, while the user may
 run the desktop app, the background service, or a nightly. The server process line
 gives the local server's version when the server recorded one.
@@ -44,7 +44,7 @@ Before cloning, ask the user which version, device, and surface the bug happened
 on. The bug may have happened on another machine, a remote server, the mobile app,
 or an older build they have since updated. Check their answer against local facts
 where they apply: the server version in the context file, or \`serverVersion\` from
-\`<origin>/.well-known/ac/environment\` when a local server is running. If neither
+\`<origin>/.well-known/ankiel/environment\` when a local server is running. If neither
 the user nor the machine can tell you the version, say it is unknown. Do not guess.
 
 Clone the repo at the release tag for that version (\`v\` followed by the version,
@@ -166,7 +166,7 @@ user's environment and evidence instead of filing a new issue. A confirmed
 duplicate with fresh evidence is more useful than a second thread.
 `;
 
-/** Where the session started: the `ac triage` CLI, or "Triage an issue" in a client. */
+/** Where the session started: the `ankiel triage` CLI, or "Triage an issue" in a client. */
 export type TriageEntry =
   | { readonly kind: "cli"; readonly cliVersion: string; readonly launchedAs: string }
   | { readonly kind: "app"; readonly client: string };
@@ -187,7 +187,7 @@ export const buildTriageSeedPrompt = (input: {
   readonly contextFilePath: string;
   readonly entry: TriageEntry;
 }) => `An Ankiel Code user is having a problem with their install and started this \
-session ${input.entry.kind === "cli" ? "with `ac triage`" : "from the Ankiel Code app"}.
+session ${input.entry.kind === "cli" ? "with `ankiel triage`" : "from the Ankiel Code app"}.
 
 Machine facts (versions, OS, paths, server liveness) are in the triage context file:
 
@@ -240,8 +240,8 @@ export interface TriageContextInput {
 const entryLines = (entry: TriageEntry) =>
   entry.kind === "cli"
     ? {
-        generatedBy: "`ac triage`",
-        before: `- Triage CLI version: ${entry.cliVersion} (the \`ac\` that ran this command; the bug may have happened on another build)`,
+        generatedBy: "`ankiel triage`",
+        before: `- Triage CLI version: ${entry.cliVersion} (the \`ankiel\` that ran this command; the bug may have happened on another build)`,
         after: `- CLI launched as: ${entry.launchedAs}`,
       }
     : {

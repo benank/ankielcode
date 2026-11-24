@@ -838,7 +838,7 @@ function isAnkielManagedWorktree(
   const normalized = normalizeForWorktreeMatch(candidatePath, caseFold);
   return (
     normalized.startsWith(normalizeForWorktreeMatch(worktreesDir, caseFold)) ||
-    normalized.includes("/.ac/worktrees/")
+    normalized.includes("/.ankiel/worktrees/")
   );
 }
 

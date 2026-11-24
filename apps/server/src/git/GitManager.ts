@@ -278,7 +278,7 @@ interface SharedPrLookupGitReads {
 }
 
 const prLookupGitReads = Context.Reference<SharedPrLookupGitReads | null>(
-  "ac/GitManager/prLookupGitReads",
+  "ankiel/GitManager/prLookupGitReads",
   { defaultValue: () => null },
 );
 
@@ -2452,7 +2452,10 @@ export const make = Effect.gen(function* () {
     upstreamRef: string | null,
     headContext: Pick<BranchHeadContext, "isCrossRepository" | "remoteName">,
   ) {
-    const configuredRef = yield* gitCore.readConfigValue(cwd, `branch.${branch}.ac-merge-base-ref`);
+    const configuredRef = yield* gitCore.readConfigValue(
+      cwd,
+      `branch.${branch}.ankiel-merge-base-ref`,
+    );
     if (configuredRef?.startsWith("refs/heads/") || configuredRef?.startsWith("refs/remotes/")) {
       const configuredBranch = yield* gitCore.resolveBranchName(cwd, configuredRef);
       if (configuredBranch) return { baseBranch: configuredBranch, baseRef: configuredRef };
@@ -3514,7 +3517,7 @@ export const make = Effect.gen(function* () {
     };
   }, withBranchPullRequestGitReads);
 
-  const checkedOutPullRequestKey = (branch: string) => `branch.${branch}.ac-pull-request`;
+  const checkedOutPullRequestKey = (branch: string) => `branch.${branch}.ankiel-pull-request`;
 
   const branchPullRequest: GitManager["Service"]["branchPullRequest"] = Effect.fn(
     "branchPullRequest",

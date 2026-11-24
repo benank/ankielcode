@@ -1,32 +1,32 @@
 // No Ankiel imports inside the string; resolve Pi and typebox from the user's Pi install.
-import { AC_CODE_ORCHESTRATION_INSTRUCTIONS } from "@ankielcode/provider-core/server/orchestrationInstructions";
+import { ANKIEL_CODE_ORCHESTRATION_INSTRUCTIONS } from "@ankielcode/provider-core/server/orchestrationInstructions";
 import { PULL_REQUEST_LINKING_INSTRUCTIONS } from "@ankielcode/provider-core/server/runtimeInstructions";
 
-export const PI_AC_MCP_EXTENSION_FILENAME = "pi-ankiel-mcp-extension.ts";
+export const PI_ANKIEL_MCP_EXTENSION_FILENAME = "pi-ankiel-mcp-extension.ts";
 
-export const AC_MCP_URL_ENV = "AC_MCP_URL";
-export const AC_MCP_BEARER_ENV = "AC_MCP_BEARER_TOKEN";
-export const AC_PI_RUNTIME_MODE_ENV = "AC_PI_RUNTIME_MODE";
-export const AC_PI_MCP_EXTENSION_PATH_ENV = "AC_PI_MCP_EXTENSION_PATH";
-export const PI_AC_SERVICE_TIER_COMMAND = "ankiel-service-tier";
+export const ANKIEL_MCP_URL_ENV = "ANKIEL_MCP_URL";
+export const ANKIEL_MCP_BEARER_ENV = "ANKIEL_MCP_BEARER_TOKEN";
+export const ANKIEL_PI_RUNTIME_MODE_ENV = "ANKIEL_PI_RUNTIME_MODE";
+export const ANKIEL_PI_MCP_EXTENSION_PATH_ENV = "ANKIEL_PI_MCP_EXTENSION_PATH";
+export const PI_ANKIEL_SERVICE_TIER_COMMAND = "ankiel-service-tier";
 
 // These tools trigger file-change approvals, bypassed by Auto-accept edits.
 export const PI_FILE_CHANGE_TOOLS = ["edit", "write"] as const;
 
-export const PI_AC_MCP_EXTENSION_SOURCE = `\
+export const PI_ANKIEL_MCP_EXTENSION_SOURCE = `\
 import { stripFrontmatter, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
 import * as NodeCrypto from "node:crypto";
 import * as NodeFSP from "node:fs/promises";
 import * as NodePath from "node:path";
 import { Type } from "typebox";
 
-const URL_ENV = ${JSON.stringify(AC_MCP_URL_ENV)};
-const TOKEN_ENV = ${JSON.stringify(AC_MCP_BEARER_ENV)};
-const RUNTIME_MODE_ENV = ${JSON.stringify(AC_PI_RUNTIME_MODE_ENV)};
-const EXTENSION_PATH_ENV = ${JSON.stringify(AC_PI_MCP_EXTENSION_PATH_ENV)};
-const ORCHESTRATION_INSTRUCTIONS = ${JSON.stringify(AC_CODE_ORCHESTRATION_INSTRUCTIONS.trim())};
+const URL_ENV = ${JSON.stringify(ANKIEL_MCP_URL_ENV)};
+const TOKEN_ENV = ${JSON.stringify(ANKIEL_MCP_BEARER_ENV)};
+const RUNTIME_MODE_ENV = ${JSON.stringify(ANKIEL_PI_RUNTIME_MODE_ENV)};
+const EXTENSION_PATH_ENV = ${JSON.stringify(ANKIEL_PI_MCP_EXTENSION_PATH_ENV)};
+const ORCHESTRATION_INSTRUCTIONS = ${JSON.stringify(ANKIEL_CODE_ORCHESTRATION_INSTRUCTIONS.trim())};
 const PULL_REQUEST_LINKING_INSTRUCTIONS = ${JSON.stringify(PULL_REQUEST_LINKING_INSTRUCTIONS)};
-const SERVICE_TIER_COMMAND = ${JSON.stringify(PI_AC_SERVICE_TIER_COMMAND)};
+const SERVICE_TIER_COMMAND = ${JSON.stringify(PI_ANKIEL_SERVICE_TIER_COMMAND)};
 const PROTOCOL = "2025-06-18";
 const READ_ONLY_TOOLS = new Set(["read", "grep", "find", "ls"]);
 const FILE_CHANGE_TOOLS = new Set(${JSON.stringify(PI_FILE_CHANGE_TOOLS)});
@@ -386,7 +386,7 @@ export default async function ankielMcpExtension(pi: ExtensionAPI) {
   if (endpoint === undefined || token === undefined) {
     pi.on("session_start", async (_event, ctx) => {
       ctx.ui.notify(
-        "ankiel-code MCP unavailable: AC_MCP_URL or AC_MCP_BEARER_TOKEN is missing.",
+        "ankiel-code MCP unavailable: ANKIEL_MCP_URL or ANKIEL_MCP_BEARER_TOKEN is missing.",
         "warning",
       );
     });

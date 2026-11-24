@@ -3,15 +3,15 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 
 import { run } from "./shell.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 const utf16 = (text: string) => Buffer.from(`\ufeff${text}`, "utf16le");
 
 test(
   "The commit dialog refuses a merge whose UTF-16 file still has conflict markers",
   WEB,
-  async ({ ac, app, screen }) => {
-    const project = await ac.project("demo", {
+  async ({ ankiel, app, screen }) => {
+    const project = await ankiel.project("demo", {
       ".gitattributes": "README.md text working-tree-encoding=UTF-16\n",
       "README.md": utf16("base\n"),
     });
@@ -36,9 +36,9 @@ test(
     await git(["checkout", "--quiet", "main"]);
     await commitReadme("main version\n");
     await git(["merge", "--quiet", "feature"], [1]);
-    const thread = await ac.thread({ project, title: "Merge", messages: ["merge"] });
+    const thread = await ankiel.thread({ project, title: "Merge", messages: ["merge"] });
 
-    await ac.open(thread);
+    await ankiel.open(thread);
     await screen.getByRole("button", "Git action options").tap();
     await screen.getByRole("menuitem", "Commit").tap();
     await screen.getByPlaceholder("Leave empty to auto-generate").fill("Finish merge");

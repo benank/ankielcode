@@ -26,7 +26,7 @@ export class MigrateDevDbNotInWorktreeError extends Schema.TaggedError<MigrateDe
   {},
 ) {
   override get message(): string {
-    return "Not inside a linked git worktree. Pass --base-dir to target an isolated .ac directory.";
+    return "Not inside a linked git worktree. Pass --base-dir to target an isolated .ankiel directory.";
   }
 }
 
@@ -35,7 +35,7 @@ export class MigrateDevDbSharedHomeError extends Schema.TaggedError<MigrateDevDb
   {},
 ) {
   override get message(): string {
-    return "Refusing to rebuild the shared ~/.ac database. Use an isolated --base-dir.";
+    return "Refusing to rebuild the shared ~/.ankiel database. Use an isolated --base-dir.";
   }
 }
 
@@ -391,7 +391,7 @@ export const dropResumableFamilies = Effect.fn("dropResumableDevDbFamilies")(fun
       Effect.map((info) => Option.map(info.ino, (ino) => `${info.dev}:${ino}`)),
       Effect.orElseSucceed(() => Option.none<string>()),
     );
-  const sharedHome = path.resolve(options.sharedHome ?? path.join(NodeOS.homedir(), ".ac"));
+  const sharedHome = path.resolve(options.sharedHome ?? path.join(NodeOS.homedir(), ".ankiel"));
   const liveDatabase = path.join(sharedHome, "userdata", "statev2.sqlite");
   const [target, live] = yield* Effect.all([resolve(databasePath), resolve(liveDatabase)]);
   const targetIdentity = yield* identity(target);
@@ -613,7 +613,7 @@ export const runMigrateDevDb = Effect.fn("runMigrateDevDb")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
-  const sharedHome = path.resolve(options.sharedHome ?? path.join(NodeOS.homedir(), ".ac"));
+  const sharedHome = path.resolve(options.sharedHome ?? path.join(NodeOS.homedir(), ".ankiel"));
   const sourcePath = path.resolve(
     input.source ?? path.join(sharedHome, "userdata", "statev2.sqlite"),
   );
@@ -756,11 +756,13 @@ export const migrateDevDbCommand = Command.make(
     ),
     baseDir: Flag.String("base-dir").pipe(
       Flag.optional,
-      Flag.withDescription("Isolated .ac directory. Defaults to the current worktree's .ac."),
+      Flag.withDescription(
+        "Isolated .ankiel directory. Defaults to the current worktree's .ankiel.",
+      ),
     ),
     source: Flag.String("source").pipe(
       Flag.optional,
-      Flag.withDescription("Source database. Defaults to ~/.ac/userdata/statev2.sqlite."),
+      Flag.withDescription("Source database. Defaults to ~/.ankiel/userdata/statev2.sqlite."),
     ),
     dropResumable: Flag.String("drop-resumable").pipe(
       Flag.optional,
@@ -798,7 +800,7 @@ export const migrateDevDbCommand = Command.make(
     }),
 ).pipe(
   Command.withDescription(
-    "Rebuild the worktree dev database from a pruned snapshot of the real ~/.ac data, then run migrations.",
+    "Rebuild the worktree dev database from a pruned snapshot of the real ~/.ankiel data, then run migrations.",
   ),
 );
 

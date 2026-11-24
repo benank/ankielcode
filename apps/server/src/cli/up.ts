@@ -27,7 +27,7 @@ type Routes = Readonly<{ lan: boolean }>;
 interface Setup {
   readonly service: BootService.BootServiceStatus;
   readonly lan: boolean;
-  /** An installed service with no AC_LAN or AC_HOST keeps the old default: on. */
+  /** An installed service with no ANKIEL_LAN or ANKIEL_HOST keeps the old default: on. */
   readonly lanFromOldDefault: boolean;
   readonly host: string | undefined;
 }
@@ -37,7 +37,7 @@ const readSetup = Effect.fn("cli.up.read_setup")(function* () {
   const service = yield* (yield* BootService.BootService).status;
   const { entries } = yield* CliService.readServiceEnv(baseDir);
   // Parsed as the server parses it.
-  const lan = yield* Config.Boolean("AC_LAN")
+  const lan = yield* Config.Boolean("ANKIEL_LAN")
     .pipe(Config.option)
     .parse(ConfigProvider.fromEnv({ env: entries }));
   // Another home's service doesn't read this home's service.env.
@@ -45,12 +45,12 @@ const readSetup = Effect.fn("cli.up.read_setup")(function* () {
   return {
     service,
     lan: Option.getOrElse(lan, () => servesThisHome),
-    lanFromOldDefault: Option.isNone(lan) && servesThisHome && entries.AC_HOST === undefined,
-    host: entries.AC_HOST,
+    lanFromOldDefault: Option.isNone(lan) && servesThisHome && entries.ANKIEL_HOST === undefined,
+    host: entries.ANKIEL_HOST,
   } satisfies Setup;
 });
 
-/** Whether `ac up` asks about local network access: only when no flag names it. */
+/** Whether `ankiel up` asks about local network access: only when no flag names it. */
 export const planRoutes = (
   setup: { readonly lan: boolean },
   flags: { readonly lan: Option.Option<boolean> },
@@ -59,7 +59,7 @@ export const planRoutes = (
   ask: Option.isNone(flags.lan),
 });
 
-/** A running service reads AC_LAN only when it starts. */
+/** A running service reads ANKIEL_LAN only when it starts. */
 const needsRestart = (before: Routes, after: Routes) => after.lan !== before.lan;
 
 /** The commands hints name, run with the caller's --base-dir and launcher. */
@@ -101,7 +101,7 @@ const formatSetup = (setup: Setup, hints: Hints) => {
     [
       "Local network",
       setup.host !== undefined
-        ? `overridden · AC_HOST=${setup.host}`
+        ? `overridden · ANKIEL_HOST=${setup.host}`
         : setup.lanFromOldDefault
           ? "on · kept from an older install"
           : setup.lan
@@ -177,7 +177,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
     return yield* new CliError.UserError({
       cause: "routes",
       userMessage:
-        "No terminal. Choose access with --lan or --no-lan, or use --yes for the default. See `ac up --help`.",
+        "No terminal. Choose access with --lan or --no-lan, or use --yes for the default. See `ankiel up --help`.",
     });
   }
   if (routes.lan && !current.lan) {
@@ -188,7 +188,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
   }
   // Nothing to run in the background, but a route left on still gets turned off.
   if (!before.service.installed && !routes.lan) {
-    if (current.lan) yield* CliService.writeServiceEnv(baseDir, { AC_LAN: "false" });
+    if (current.lan) yield* CliService.writeServiceEnv(baseDir, { ANKIEL_LAN: "false" });
     return yield* Console.log(formatNextSteps(routes, false, hints));
   }
   const { installedVersion } = before.service;
@@ -218,13 +218,13 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
     if (!confirmed) return yield* Console.log("Nothing changed.");
   }
 
-  const previousLan = (yield* CliService.readServiceEnv(baseDir)).entries.AC_LAN;
-  // Also with no service manager: the file records the choice that `ac status` shows.
-  yield* CliService.writeServiceEnv(baseDir, { AC_LAN: String(routes.lan) });
+  const previousLan = (yield* CliService.readServiceEnv(baseDir)).entries.ANKIEL_LAN;
+  // Also with no service manager: the file records the choice that `ankiel status` shows.
+  yield* CliService.writeServiceEnv(baseDir, { ANKIEL_LAN: String(routes.lan) });
   // When the service step fails, an installed service still runs with the old
   // value, so the file goes back to match it.
   const restoreServiceEnv = before.service.installed
-    ? CliService.writeServiceEnv(baseDir, { AC_LAN: previousLan })
+    ? CliService.writeServiceEnv(baseDir, { ANKIEL_LAN: previousLan })
     : Effect.void;
   // A failed update or restart may still have started the service with the new
   // settings, so restart it once more on the old ones.
@@ -233,22 +233,22 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
     : Effect.void;
   if (before.host !== undefined) {
     yield* Console.warn(
-      `AC_HOST=${before.host} in service.env overrides the network choice. Remove it to apply it.`,
+      `ANKIEL_HOST=${before.host} in service.env overrides the network choice. Remove it to apply it.`,
     );
   }
 
   const printServeCommand = Effect.fn(function* (reason: string) {
     const { command } = yield* resolveHostCliCommand("serve", [
       ...baseDirArgs,
-      // Explicit either way, so a AC_LAN in the shell cannot override the choice.
+      // Explicit either way, so a ANKIEL_LAN in the shell cannot override the choice.
       routes.lan ? "--lan" : "--no-lan",
     ]);
     yield* Console.log(`${reason} Keep this command running:\n  ${command}`);
     // A host wins over --lan and --no-lan, as it does in service.env.
-    const shellHost = (yield* HostProcess.Environment).AC_HOST;
+    const shellHost = (yield* HostProcess.Environment).ANKIEL_HOST;
     if (shellHost !== undefined) {
       yield* Console.warn(
-        `AC_HOST=${shellHost} in this shell overrides that choice. Unset it before you run the command.`,
+        `ANKIEL_HOST=${shellHost} in this shell overrides that choice. Unset it before you run the command.`,
       );
     }
   });
@@ -290,7 +290,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
       }
       if (outcome === "skipped") {
         yield* Console.log(
-          "The installed service was not restarted. Run `ac service status` to see why.",
+          "The installed service was not restarted. Run `ankiel service status` to see why.",
         );
       }
     }
@@ -307,7 +307,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
   );
 });
 
-/** Runs `ac up` with only what it reads: the service manager and the managed policy. */
+/** Runs `ankiel up` with only what it reads: the service manager and the managed policy. */
 const runUpCommand = Effect.fn("cli.up.run")(function* <A, E>(
   flags: { readonly baseDir: Option.Option<string> },
   run: Effect.Effect<
@@ -351,16 +351,16 @@ export const upCommand = Command.make("up", {
     "Set up remote access and the Ankiel Code background service. Access flags skip the question, and routes not named keep their settings. Without a terminal, a needed restart runs without asking and stops running agent turns.",
   ),
   Command.withExamples([
-    { command: "ac up", description: "Choose remote access." },
-    { command: "ac up --lan", description: "Allow LAN access with pairing codes." },
-    { command: "ac up --no-lan", description: "Stop LAN access." },
-    { command: "ac up --yes", description: "Take the defaults with no questions." },
-    { command: "ac status --json", description: "Read the settings from a script." },
+    { command: "ankiel up", description: "Choose remote access." },
+    { command: "ankiel up --lan", description: "Allow LAN access with pairing codes." },
+    { command: "ankiel up --no-lan", description: "Stop LAN access." },
+    { command: "ankiel up --yes", description: "Take the defaults with no questions." },
+    { command: "ankiel status --json", description: "Read the settings from a script." },
   ]),
   Command.withHandler((flags) => runUpCommand(flags, setUp(flags))),
 );
 
-/** `ac status --json`, for scripts and agents. */
+/** `ankiel status --json`, for scripts and agents. */
 const setupJson = (setup: Setup) =>
   JSON.stringify(
     {
@@ -389,8 +389,8 @@ export const statusCommand = Command.make("status", {
 }).pipe(
   Command.withDescription("Show service setup and remote access settings."),
   Command.withExamples([
-    { command: "ac status", description: "Show the settings." },
-    { command: "ac status --json", description: "Print them for scripts and agents." },
+    { command: "ankiel status", description: "Show the settings." },
+    { command: "ankiel status --json", description: "Print them for scripts and agents." },
   ]),
   Command.withHandler(
     Effect.fn("cli.status")(function* (flags) {

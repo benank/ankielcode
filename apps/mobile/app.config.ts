@@ -11,18 +11,18 @@ Object.assign(process.env, repoEnv);
 process.env.EXPO_NO_TYPESCRIPT_SETUP = "1";
 
 const APP_VARIANT = resolveAppVariant(repoEnv.APP_VARIANT);
-const isIosPersonalTeamBuild = repoEnv.AC_IOS_PERSONAL_TEAM === "1";
+const isIosPersonalTeamBuild = repoEnv.ANKIEL_IOS_PERSONAL_TEAM === "1";
 const runtimeVersionPolicy =
   process.env.MOBILE_VERSION_POLICY ??
   (APP_VARIANT === "development" ? "appVersion" : "fingerprint");
 
 // Expo/Apple account identifiers belong to whoever builds the app, so none are baked in.
-// Without AC_EAS_PROJECT_ID, OTA updates are disabled.
-const easProjectId = repoEnv.AC_EAS_PROJECT_ID?.trim() || undefined;
-const easOwner = repoEnv.AC_EAS_OWNER?.trim() || undefined;
-const appleTeamId = repoEnv.AC_APPLE_TEAM_ID?.trim() || undefined;
+// Without ANKIEL_EAS_PROJECT_ID, OTA updates are disabled.
+const easProjectId = repoEnv.ANKIEL_EAS_PROJECT_ID?.trim() || undefined;
+const easOwner = repoEnv.ANKIEL_EAS_OWNER?.trim() || undefined;
+const appleTeamId = repoEnv.ANKIEL_APPLE_TEAM_ID?.trim() || undefined;
 
-const personalTeamBundleIdentifier = repoEnv.AC_IOS_PERSONAL_TEAM_BUNDLE_ID?.trim();
+const personalTeamBundleIdentifier = repoEnv.ANKIEL_IOS_PERSONAL_TEAM_BUNDLE_ID?.trim();
 const IOS_BUNDLE_IDENTIFIER_PATTERN = /^[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/;
 
 const fromRepoRoot = (relativePath: string) => `../../${relativePath}`;
@@ -34,7 +34,7 @@ if (
     !IOS_BUNDLE_IDENTIFIER_PATTERN.test(personalTeamBundleIdentifier))
 ) {
   throw new Error(
-    "AC_IOS_PERSONAL_TEAM_BUNDLE_ID must be a reverse-DNS identifier such as com.example.ankielcode when AC_IOS_PERSONAL_TEAM=1.",
+    "ANKIEL_IOS_PERSONAL_TEAM_BUNDLE_ID must be a reverse-DNS identifier such as com.example.ankielcode when ANKIEL_IOS_PERSONAL_TEAM=1.",
   );
 }
 
@@ -234,7 +234,7 @@ const config: ExpoConfig = {
   slug: "ankiel-code",
   platforms: ["ios", "android"],
   scheme: variant.scheme,
-  version: repoEnv.AC_MOBILE_VERSION ?? "2.3.0",
+  version: repoEnv.ANKIEL_MOBILE_VERSION ?? "2.3.0",
   runtimeVersion: {
     // Skip costly fingerprinting on dev launches; preview and production OTAs require matching native projects.
     policy: runtimeVersionPolicy,
@@ -243,7 +243,7 @@ const config: ExpoConfig = {
   icon: variant.assets.appIcon,
   userInterfaceStyle: "automatic",
   updates: {
-    enabled: easProjectId !== undefined && repoEnv.AC_MOBILE_UPDATES_ENABLED !== "0",
+    enabled: easProjectId !== undefined && repoEnv.ANKIEL_MOBILE_UPDATES_ENABLED !== "0",
     ...(easProjectId ? { url: `https://u.expo.dev/${easProjectId}` } : {}),
     checkAutomatically: "ON_LOAD",
     fallbackToCacheTimeout: 0,
@@ -251,7 +251,7 @@ const config: ExpoConfig = {
   ios: {
     icon: variant.assets.iosIcon,
     supportsTablet: true,
-    requireFullScreen: process.env.AC_SHOWCASE_CAPTURE_BUILD === "1",
+    requireFullScreen: process.env.ANKIEL_SHOWCASE_CAPTURE_BUILD === "1",
     bundleIdentifier: iosBundleIdentifier,
     // Avoid Personal Team fallback: it cannot sign App Groups, Apple sign-in or push entitlements.
     ...(appleTeamId ? { appleTeamId } : {}),
@@ -277,7 +277,7 @@ const config: ExpoConfig = {
       UIBackgroundModes: ["audio"],
       ITSAppUsesNonExemptEncryption: false,
       // Capture builds disable multitasking because iPadOS otherwise ignores orientation requests.
-      ...(process.env.AC_SHOWCASE_CAPTURE_BUILD === "1"
+      ...(process.env.ANKIEL_SHOWCASE_CAPTURE_BUILD === "1"
         ? {
             "UISupportedInterfaceOrientations~ipad": [
               "UIInterfaceOrientationPortrait",
@@ -292,8 +292,8 @@ const config: ExpoConfig = {
   android: {
     icon: variant.assets.appIcon,
     package: variant.androidPackage,
-    ...(repoEnv.AC_ANDROID_GOOGLE_SERVICES_FILE
-      ? { googleServicesFile: repoEnv.AC_ANDROID_GOOGLE_SERVICES_FILE }
+    ...(repoEnv.ANKIEL_ANDROID_GOOGLE_SERVICES_FILE
+      ? { googleServicesFile: repoEnv.ANKIEL_ANDROID_GOOGLE_SERVICES_FILE }
       : {}),
     adaptiveIcon: {
       backgroundColor: variant.assets.androidAdaptiveBackgroundColor,

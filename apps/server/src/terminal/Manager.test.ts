@@ -2447,7 +2447,7 @@ it.layer(
   ] as const)("prefers the configured terminal shell on $platform: $shell", ({ platform, shell }) =>
     Effect.gen(function* () {
       const { manager, ptyAdapter } = yield* createManager(5, {
-        env: { AC_TERMINAL_SHELL: ` ${shell} `, SHELL: "/bin/zsh" },
+        env: { ANKIEL_TERMINAL_SHELL: ` ${shell} `, SHELL: "/bin/zsh" },
       }).pipe(Effect.provide(layerWithHostPlatform(platform)));
 
       yield* manager.open(openInput());
@@ -2460,10 +2460,10 @@ it.layer(
     Effect.gen(function* () {
       const gitBash = String.raw`C:\Program Files\Git\bin\bash.exe`;
       const { manager, ptyAdapter } = yield* createManager(5, {
-        env: { AC_TERMINAL_SHELL: gitBash },
+        env: { ANKIEL_TERMINAL_SHELL: gitBash },
       }).pipe(Effect.provide(layerWithHostPlatform("win32")));
 
-      yield* manager.open(openInput({ env: { AC_TERMINAL_SHELL: "" } }));
+      yield* manager.open(openInput({ env: { ANKIEL_TERMINAL_SHELL: "" } }));
       yield* manager.open(openInput({ terminalId: "interactive" }));
 
       expect(ptyAdapter.spawnInputs.map((input) => input.shell)).toEqual(["pwsh.exe", gitBash]);
@@ -2516,7 +2516,7 @@ it.layer(
               },
             },
             shellResolver: () => "/bin/sh",
-            env: { ...process.env, AC_TERMINAL_SHELL: shell, PATH: searchPath },
+            env: { ...process.env, ANKIEL_TERMINAL_SHELL: shell, PATH: searchPath },
           });
           const snapshot = yield* manager.open(openInput({ cwd: cwd ?? baseDir }));
           expect(spawnedShells).toEqual([expectedShell]);
@@ -2596,7 +2596,7 @@ it.layer(
       const { manager } = yield* createManager(5, {
         ptyAdapter,
         env: {
-          AC_TERMINAL_SHELL: "C:\\missing\\custom-shell.exe",
+          ANKIEL_TERMINAL_SHELL: "C:\\missing\\custom-shell.exe",
           ComSpec: "C:\\Windows\\System32\\cmd.exe",
           PATH: "C:\\Windows\\System32",
           SystemRoot: "C:\\Windows",
@@ -2798,8 +2798,8 @@ it.layer(
       const { manager, ptyAdapter } = yield* createManager(5, {
         env: {
           PORT: "5173",
-          AC_PORT: "3773",
-          AC_THREAD_ID: "server-thread",
+          ANKIEL_PORT: "3773",
+          ANKIEL_THREAD_ID: "server-thread",
           VITE_DEV_SERVER_URL: "http://localhost:5173",
           TEST_TERMINAL_KEEP: "keep-me",
           TMUX: "/tmp/tmux-1000/default,1234,0",
@@ -2812,7 +2812,7 @@ it.layer(
       yield* manager.open(
         openInput({
           terminalId: "explicit",
-          env: { TMUX_PANE: "%9", AC_THREAD_ID: "client-thread" },
+          env: { TMUX_PANE: "%9", ANKIEL_THREAD_ID: "client-thread" },
         }),
       );
       const spawnInput = ptyAdapter.spawnInputs[0];
@@ -2820,9 +2820,9 @@ it.layer(
       if (!spawnInput) return;
 
       expect(spawnInput.env.PORT).toBeUndefined();
-      expect(spawnInput.env.AC_PORT).toBeUndefined();
-      expect(spawnInput.env.AC_THREAD_ID).toBe("thread-1");
-      expect(ptyAdapter.spawnInputs[1]?.env.AC_THREAD_ID).toBe("thread-1");
+      expect(spawnInput.env.ANKIEL_PORT).toBeUndefined();
+      expect(spawnInput.env.ANKIEL_THREAD_ID).toBe("thread-1");
+      expect(ptyAdapter.spawnInputs[1]?.env.ANKIEL_THREAD_ID).toBe("thread-1");
       expect(spawnInput.env.VITE_DEV_SERVER_URL).toBeUndefined();
       expect(spawnInput.env.TEST_TERMINAL_KEEP).toBe("keep-me");
       expect(spawnInput.env.TMUX).toBeUndefined();
@@ -2870,7 +2870,7 @@ it.layer(
     Effect.gen(function* () {
       const providerInstanceId = ProviderInstanceId.make("codex_work");
       const { manager, ptyAdapter } = yield* createManager(5, {
-        env: { AC_SECRET: "server-only" },
+        env: { ANKIEL_SECRET: "server-only" },
         resolveProviderInstanceEnvironment: (requestedId, env) =>
           Effect.succeed({
             ...env,
@@ -2886,7 +2886,7 @@ it.layer(
       expect(ptyAdapter.spawnInputs[0]?.env.PROVIDER_SECRET).toBe("secret-value");
       expect(ptyAdapter.spawnInputs[0]?.env.CODEX_HOME).toBe("/accounts/codex-work");
       expect(ptyAdapter.spawnInputs[0]?.env.CLIENT_FLAG).toBe("1");
-      expect(ptyAdapter.spawnInputs[0]?.env.AC_SECRET).toBeUndefined();
+      expect(ptyAdapter.spawnInputs[0]?.env.ANKIEL_SECRET).toBeUndefined();
       expect(snapshot).not.toHaveProperty("env");
       expect(snapshot).not.toHaveProperty("providerInstanceId");
     }),

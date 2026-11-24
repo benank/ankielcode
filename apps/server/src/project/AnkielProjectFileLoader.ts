@@ -6,7 +6,7 @@ import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { AC_PROJECT_FILE_NAME, type AnkielProjectFile } from "@ankielcode/contracts";
+import { ANKIEL_PROJECT_FILE_NAME, type AnkielProjectFile } from "@ankielcode/contracts";
 import { AnkielProjectFileFromJson } from "@ankielcode/shared/ankielProjectFile";
 
 const decodeAnkielProjectFileJson = Schema.decodeEffect(AnkielProjectFileFromJson);
@@ -21,7 +21,7 @@ export class AnkielProjectFileLoadError extends Schema.TaggedError<AnkielProject
   },
 ) {
   override get message(): string {
-    return `Failed to ${this.operation} ${AC_PROJECT_FILE_NAME} at ${this.filePath}.`;
+    return `Failed to ${this.operation} ${ANKIEL_PROJECT_FILE_NAME} at ${this.filePath}.`;
   }
 }
 
@@ -51,7 +51,7 @@ export const make = Effect.gen(function* () {
   const load: AnkielProjectFileLoader["Service"]["load"] = Effect.fn(
     "AnkielProjectFileLoader.load",
   )(function* (workspaceRoot) {
-    const filePath = path.join(workspaceRoot, AC_PROJECT_FILE_NAME);
+    const filePath = path.join(workspaceRoot, ANKIEL_PROJECT_FILE_NAME);
     const raw = yield* fileSystem.readFileString(filePath).pipe(
       Effect.asSome,
       Effect.catchTags({

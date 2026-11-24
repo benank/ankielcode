@@ -231,7 +231,7 @@ describe("checkCursorProviderStatus", () => {
     Effect.gen(function* () {
       const fiber = yield* checkCursorProviderStatus(baseCursorSettings, {
         CURSOR_API_KEY: "test-key",
-        AC_CURSOR_PROBE_TIMEOUT_MS: "30000",
+        ANKIEL_CURSOR_PROBE_TIMEOUT_MS: "30000",
       }).pipe(
         Effect.provide(
           CursorSdkCatalog.layerTest(() =>

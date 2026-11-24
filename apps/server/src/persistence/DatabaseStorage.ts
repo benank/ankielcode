@@ -37,7 +37,7 @@ export class DatabaseStorage extends Context.Service<
 
 /** Stops this server so its desktop app or background service starts it again; null when run by hand. */
 export const ServerRestart = Context.Reference<Effect.Effect<void> | null>(
-  "ac/persistence/DatabaseStorage/ServerRestart",
+  "ankiel/persistence/DatabaseStorage/ServerRestart",
   { defaultValue: () => null },
 );
 
@@ -56,7 +56,7 @@ const make = Effect.gen(function* () {
     yield* fs.readFileString(reclaimFiles.failure).pipe(Effect.option),
   );
 
-  // The notice shows host-shell quoting verbatim; desktop needs its launcher because ac is absent from PATH.
+  // The notice shows host-shell quoting verbatim; desktop needs its launcher because ankiel is absent from PATH.
   const { command: compactCommand } = yield* resolveHostCliCommand("doctor", [
     "--base-dir",
     config.baseDir,

@@ -25,7 +25,7 @@ import {
   resolveDesktopTheme,
   resolveThemeAppearance,
   serializeThemeFile,
-  AC_CHAT_THEME,
+  ANKIEL_CHAT_THEME,
   GROVE_THEME,
   updateCustomTheme,
   updateThemeColorFamily,
@@ -300,11 +300,11 @@ describe("theme files", () => {
       canvas: canonical("#101827"),
       text: canonical("#eef5ff"),
     });
-    expect(getThemeModes(AC_CHAT_THEME)).toEqual(["light", "dark"]);
-    expect(resolveThemeAppearance(AC_CHAT_THEME.id, true, true)).toBe("dark");
-    expect(resolveDesktopTheme(AC_CHAT_THEME.id, true)).toBe("system");
-    expect(resolveThemeAppearance(AC_CHAT_THEME.id, false, false, "dark")).toBe("dark");
-    expect(resolveDesktopTheme(AC_CHAT_THEME.id, false, "dark")).toBe("dark");
+    expect(getThemeModes(ANKIEL_CHAT_THEME)).toEqual(["light", "dark"]);
+    expect(resolveThemeAppearance(ANKIEL_CHAT_THEME.id, true, true)).toBe("dark");
+    expect(resolveDesktopTheme(ANKIEL_CHAT_THEME.id, true)).toBe("system");
+    expect(resolveThemeAppearance(ANKIEL_CHAT_THEME.id, false, false, "dark")).toBe("dark");
+    expect(resolveDesktopTheme(ANKIEL_CHAT_THEME.id, false, "dark")).toBe("dark");
     expect(JSON.parse(serializeThemeFile(theme)).variants.dark).toMatchObject({
       canvas: canonical("#101827"),
       text: canonical("#eef5ff"),

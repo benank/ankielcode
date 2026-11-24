@@ -5,10 +5,10 @@ import { IOS, test } from "./ankiel-mobile.ts";
 test(
   "The iOS app lists a seeded thread and opens its history",
   IOS,
-  async ({ ac, app, screen }) => {
-    const project = await ac.project("demo");
-    await ac.thread({ project, title: "Earlier work", messages: ["first", "second"] });
-    await ac.open();
+  async ({ ankiel, app, screen }) => {
+    const project = await ankiel.project("demo");
+    await ankiel.thread({ project, title: "Earlier work", messages: ["first", "second"] });
+    await ankiel.open();
 
     const thread = screen.getByText("Earlier work", { exact: false }).first();
     await expect(thread).toBeVisible({ timeout: 120_000 });

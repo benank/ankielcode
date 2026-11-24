@@ -106,7 +106,7 @@ export class DesktopWslEnvironment extends Context.Service<
     readonly getUserHome: (distro: string | null) => Effect.Effect<Option.Option<string>>;
     // Use the distro IP to avoid unreliable wslhost localhost forwarding.
     readonly getDistroIp: (distro: string | null) => Effect.Effect<Option.Option<string>>;
-    // A null ankielHome means the distro's login shell has no absolute AC_HOME, so ~/.ac applies.
+    // A null ankielHome means the distro's login shell has no absolute ANKIEL_HOME, so ~/.ankiel applies.
     readonly prepareRuntime: (
       distro: string | null,
       archive: WslRuntimeArchive,
@@ -273,7 +273,7 @@ const sanitizeWslRuntimeId = (value: string): string => value.replace(/[^A-Za-z0
 
 const runtimeParentAssignment = (ankielHome: string | null): string =>
   ankielHome === null
-    ? 'runtime_parent="$HOME/.ac/wsl-runtime"'
+    ? 'runtime_parent="$HOME/.ankiel/wsl-runtime"'
     : `runtime_parent=${shellQuote(`${ankielHome}/wsl-runtime`)}`;
 
 // A null archive path asks for a staging directory to copy the archive into, unless the cache is ready.
@@ -290,11 +290,11 @@ export const buildWslRuntimeInstallScript = (
     `runtime_root="$runtime_parent/${safeRuntimeId}"`,
     `ready_marker="$runtime_root/${WSL_RUNTIME_READY_MARKER}"`,
     "runtime_entry_runs() {",
-    '  [ -x "$1/ac" ] && "$1/ac" --version >/dev/null',
+    '  [ -x "$1/ankiel" ] && "$1/ankiel" --version >/dev/null',
     "}",
     // Hash the entry to detect a swapped or partially written executable, even if it still runs.
     "runtime_server_entry_digest() {",
-    `  sha256sum "$1/ac" 2>/dev/null | cut -d ' ' -f 1`,
+    `  sha256sum "$1/ankiel" 2>/dev/null | cut -d ' ' -f 1`,
     "}",
     "runtime_is_ready() {",
     '  [ -f "$ready_marker" ] &&',
@@ -357,7 +357,7 @@ export const buildWslRuntimeInstallScript = (
     "trap cleanup_runtime_install EXIT",
     `tar -xzf ${shellQuote(linuxArchivePath)} -C "$runtime_tmp" --strip-components=1`,
     'if ! runtime_entry_runs "$runtime_tmp"; then',
-    "  printf 'WSL runtime archive does not contain a working ac executable\\n' >&2",
+    "  printf 'WSL runtime archive does not contain a working ankiel executable\\n' >&2",
     "  exit 1",
     "fi",
     'installed_entry_digest=$(runtime_server_entry_digest "$runtime_tmp")',
@@ -455,15 +455,15 @@ const formatNodePtyProbeFailureReason = (exitCode: number): string | null =>
 
 // Capture login-shell PATH because the server launches provider CLIs by name.
 const RESOLVED_PATH_LINE = `printf 'resolvedPath:%s\\n' "$PATH"`;
-// wsl.exe --exec skips the profile, so the server only sees a profile-exported AC_HOME if passed on.
-const AC_HOME_LINE = `printf 'ankielHome:%s\\n' "\${AC_HOME:-}"`;
+// wsl.exe --exec skips the profile, so the server only sees a profile-exported ANKIEL_HOME if passed on.
+const ANKIEL_HOME_LINE = `printf 'ankielHome:%s\\n' "\${ANKIEL_HOME:-}"`;
 
 const NODE_PTY_PROBE_SCRIPT = (
   linuxServerDir: string,
 ) => `printf 'nodePath:%s\\n' "$(command -v node 2>/dev/null)"
 printf 'nodeVersion:%s\\n' "$(node -p 'process.versions.node' 2>/dev/null)"
 ${RESOLVED_PATH_LINE}
-${AC_HOME_LINE}
+${ANKIEL_HOME_LINE}
 cd ${shellQuote(linuxServerDir)} && node <<'NODE' >/dev/null 2>&1
 // The WSL Node can't read inside app.asar, so confirm what the server needs is
 // unpacked on the real filesystem before reporting the backend healthy. Exit 3
@@ -490,9 +490,9 @@ require("node-pty");
 NODE`;
 
 // Resolve version-managed Node for providers without making runtime readiness depend on it.
-// The install script already ran the staged ac, so running it again here only adds a second startup.
+// The install script already ran the staged ankiel, so running it again here only adds a second startup.
 export const buildWslRuntimeProbeScript = () =>
-  `bash -lc ${shellQuote(`${buildWslNodeEnvPreamble()}${RESOLVED_PATH_LINE}\n${AC_HOME_LINE}`)} 2>/dev/null || ${RESOLVED_PATH_LINE}`;
+  `bash -lc ${shellQuote(`${buildWslNodeEnvPreamble()}${RESOLVED_PATH_LINE}\n${ANKIEL_HOME_LINE}`)} 2>/dev/null || ${RESOLVED_PATH_LINE}`;
 
 const TOOLCHAIN_CHECK_SCRIPT = [
   "for tool in node make g++ python3; do",

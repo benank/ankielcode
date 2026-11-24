@@ -47,13 +47,13 @@ const sameWindowsPath = (left: string, right: string) =>
 // Failed reads must exit nonzero to prevent replacing PATH wholesale.
 const WINDOWS_USER_PATH_SCRIPT = `
 $ErrorActionPreference = 'Stop'
-if ($env:AC_SET -eq '1') {
+if ($env:ANKIEL_SET -eq '1') {
   $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey('Environment')
   $kind = [Microsoft.Win32.RegistryValueKind]::ExpandString
   if ($key.GetValueNames() -contains 'Path' -and $key.GetValueKind('Path') -eq 'String') {
     $kind = [Microsoft.Win32.RegistryValueKind]::String
   }
-  $key.SetValue('Path', $env:AC_PATH, $kind)
+  $key.SetValue('Path', $env:ANKIEL_PATH, $kind)
   Add-Type -Namespace Ankiel -Name Env -MemberDefinition '[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern System.IntPtr SendMessageTimeout(System.IntPtr hWnd, uint Msg, System.UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out System.UIntPtr lpdwResult);'
   $result = [System.UIntPtr]::Zero
   [void][Ankiel.Env]::SendMessageTimeout([System.IntPtr]0xffff, 0x1A, [System.UIntPtr]::Zero, 'Environment', 2, 5000, [ref]$result)
@@ -94,7 +94,7 @@ export const make = Effect.gen(function* () {
   const fail = (message: string) => new DesktopCliCommandError({ message });
   const exists = (target: string) => fs.exists(target).pipe(Effect.orElseSucceed(() => false));
   // Read before this launch writes either one: an app that ran before left its launcher or
-  // settings. Its user may have removed ac or chosen another, so only Settings installs there.
+  // settings. Its user may have removed ankiel or chosen another, so only Settings installs there.
   const freshInstall =
     !(yield* exists(launcher)) && !(yield* exists(environment.desktopSettingsPath));
   const writableDirectory = (directory: string) =>
@@ -106,7 +106,7 @@ export const make = Effect.gen(function* () {
   const isOurLink = Effect.fn("DesktopCliCommand.isOurLink")(
     function* (link: string) {
       yield* fs.readLink(link);
-      // The launcher is a few KB; never read a large binary another `ac` links to.
+      // The launcher is a few KB; never read a large binary another `ankiel` links to.
       const info = yield* fs.stat(link);
       if (info.type !== "File" || Number(info.size) > 16_384) return false;
       const content = yield* fs.readFileString(link);
@@ -147,13 +147,13 @@ export const make = Effect.gen(function* () {
         return stdout;
       }),
     );
-  // Explicit, so an inherited AC_SET=1 can never turn a read into a PATH write.
-  const readUserPath = powershell({ AC_SET: "0" }).pipe(
+  // Explicit, so an inherited ANKIEL_SET=1 can never turn a read into a PATH write.
+  const readUserPath = powershell({ ANKIEL_SET: "0" }).pipe(
     Effect.map((encoded) => Buffer.from(encoded.trim(), "base64").toString("utf8")),
     Effect.mapError(() => fail("Could not read your PATH, so it was left unchanged.")),
   );
   const writeUserPath = (value: string) =>
-    powershell({ AC_SET: "1", AC_PATH: value }).pipe(
+    powershell({ ANKIEL_SET: "1", ANKIEL_PATH: value }).pipe(
       Effect.asVoid,
       Effect.mapError(() => fail("Could not update your PATH.")),
     );
@@ -172,7 +172,7 @@ export const make = Effect.gen(function* () {
 
   const firstOnPath = Effect.gen(function* () {
     for (const directory of pathEntries(env.PATH, ":")) {
-      const candidate = path.join(directory, "ac");
+      const candidate = path.join(directory, "ankiel");
       if (yield* isExecutableFile(candidate)) return Option.some(candidate);
     }
     return Option.none<string>();
@@ -201,7 +201,7 @@ export const make = Effect.gen(function* () {
         : Option.none<string>();
     }
     for (const directory of knownLocations(environment.homeDirectory, environment.platform)) {
-      const link = path.join(directory, "ac");
+      const link = path.join(directory, "ankiel");
       if (yield* isOurLink(link)) return Option.some(link);
     }
     return Option.none<string>();
@@ -253,8 +253,8 @@ export const make = Effect.gen(function* () {
     const onPath = windows
       ? Option.isSome(installed)
       : Option.isSome(first) && (yield* runsOurLauncher(first.value));
-    // Only a folder missing from PATH, with no other ac first: with one, the added folder (last
-    // on PATH) would still not run this ac.
+    // Only a folder missing from PATH, with no other ankiel first: with one, the added folder (last
+    // on PATH) would still not run this ankiel.
     const setup =
       onPath ||
       Option.isSome(shadowedBy) ||
@@ -286,14 +286,14 @@ export const make = Effect.gen(function* () {
     Effect.provideService(FileSystem.FileSystem, fs),
     Effect.flatMap(
       Option.match({
-        onNone: () => Effect.fail(fail(`Could not set up the ac launcher at ${launcher}.`)),
+        onNone: () => Effect.fail(fail(`Could not set up the ankiel launcher at ${launcher}.`)),
         onSome: () => Effect.void,
       }),
     ),
   );
 
   const install: DesktopCliCommand["Service"]["install"] = Effect.gen(function* () {
-    if (!environment.isPackaged) return yield* fail("The ac command needs an installed app.");
+    if (!environment.isPackaged) return yield* fail("The ankiel command needs an installed app.");
     yield* ensureLauncher;
     if (windows) {
       // PATH would split the folder at the `;`, leaving two wrong entries behind.
@@ -307,7 +307,7 @@ export const make = Effect.gen(function* () {
         yield* writeUserPath([...entries, binDirectory].join(";"));
         yield* fs
           .writeFileString(ownedPathMarker, `${binDirectory}\n`)
-          .pipe(Effect.mapError(() => fail("Added ac to your PATH but could not record it.")));
+          .pipe(Effect.mapError(() => fail("Added ankiel to your PATH but could not record it.")));
       }
       return yield* state;
     }
@@ -321,10 +321,10 @@ export const make = Effect.gen(function* () {
     // Our own link into another Ankiel home runs first too; it is the one this install updates.
     if (Option.isSome(shadowedBy) && shadowedBy.value !== replaced) {
       return yield* fail(
-        `Another ac at ${shadowedBy.value} runs first in a new terminal. Remove it, or run the launcher directly at ${launcher}.`,
+        `Another ankiel at ${shadowedBy.value} runs first in a new terminal. Remove it, or run the launcher directly at ${launcher}.`,
       );
     }
-    // An old link of ours is updated where it is, so an ac that works now keeps working. It is
+    // An old link of ours is updated where it is, so an ankiel that works now keeps working. It is
     // removed only once a new link exists elsewhere.
     const onPath = pathEntries(env.PATH, ":").map((entry) => entry.replace(/\/+$/, ""));
     for (const directory of new Set([
@@ -332,7 +332,7 @@ export const make = Effect.gen(function* () {
       ...candidates.filter((candidate) => onPath.includes(candidate)),
       ...candidates.filter((candidate) => !onPath.includes(candidate)),
     ])) {
-      const link = path.join(directory, "ac");
+      const link = path.join(directory, "ankiel");
       const created = (yield* exists(directory))
         ? yield* writableDirectory(directory)
         : yield* fs.makeDirectory(directory, { recursive: true }).pipe(
@@ -365,7 +365,7 @@ export const make = Effect.gen(function* () {
       return yield* state;
     }
     return yield* fail(
-      `Another ac command is already in ~/.local/bin and ~/bin, or neither is writable. Run the launcher directly at ${launcher}.`,
+      `Another ankiel command is already in ~/.local/bin and ~/bin, or neither is writable. Run the launcher directly at ${launcher}.`,
     );
   }).pipe(Effect.withSpan("desktop.cliCommand.install"));
 
@@ -382,7 +382,7 @@ export const make = Effect.gen(function* () {
       return yield* state;
     }
     for (const directory of knownLocations(environment.homeDirectory, environment.platform)) {
-      const link = path.join(directory, "ac");
+      const link = path.join(directory, "ankiel");
       if (yield* isOurLink(link)) {
         yield* fs.remove(link).pipe(Effect.mapError(() => fail(`Could not remove ${link}.`)));
       }
@@ -395,14 +395,15 @@ export const make = Effect.gen(function* () {
   const addToPath: DesktopCliCommand["Service"]["addToPath"] = Effect.gen(function* () {
     const installed = yield* installedAt;
     if (Option.isNone(installed) || !(yield* leadsHere(installed.value))) {
-      return yield* fail("Install the ac command first.");
+      return yield* fail("Install the ankiel command first.");
     }
     const setup = startupLine(installed.value);
-    if (setup === undefined) return yield* fail("Ankiel Code cannot add ac to this shell's PATH.");
+    if (setup === undefined)
+      return yield* fail("Ankiel Code cannot add ankiel to this shell's PATH.");
     const shadowedBy = yield* foreignFirstOnPath;
     if (Option.isSome(shadowedBy)) {
       return yield* fail(
-        `Another ac at ${shadowedBy.value} runs first; Ankiel Code leaves it in place.`,
+        `Another ankiel at ${shadowedBy.value} runs first; Ankiel Code leaves it in place.`,
       );
     }
     if (!(yield* folderOnPath(installed.value)) && !(yield* hasLine(setup))) {
@@ -412,7 +413,7 @@ export const make = Effect.gen(function* () {
             flag: "a",
           }),
         ),
-        Effect.mapError(() => fail(`Could not add ac to ${setup.file}.`)),
+        Effect.mapError(() => fail(`Could not add ankiel to ${setup.file}.`)),
       );
     }
     return yield* state;
@@ -424,32 +425,34 @@ export const make = Effect.gen(function* () {
       // Mark first so a failed or removed install is never retried behind the user's back.
       yield* fs.writeFileString(firstLaunchMarker, "");
       if (!freshInstall) {
-        return yield* logInfo("left the ac command to Settings on an existing install");
+        return yield* logInfo("left the ankiel command to Settings on an existing install");
       }
       // Another Ankiel home's app owns the existing link; only Install in Settings may take it over.
       const existing = Option.getOrUndefined(yield* installedAt);
       if (existing !== undefined) {
         const target = yield* fs.readLink(existing).pipe(Effect.option);
         if (Option.getOrUndefined(target) !== launcher) {
-          return yield* logInfo("left another Ankiel Code app's ac command in place", {
+          return yield* logInfo("left another Ankiel Code app's ankiel command in place", {
             existing,
           });
         }
       }
-      // An ac that is not ours in these folders, even off PATH, means the user has one already. On
-      // Windows the app never writes there, so any ac there is someone else's.
+      // An ankiel that is not ours in these folders, even off PATH, means the user has one already. On
+      // Windows the app never writes there, so any ankiel there is someone else's.
       for (const directory of userCandidates(environment.homeDirectory)) {
-        for (const name of windows ? ["ac.cmd", "ac.exe"] : ["ac"]) {
+        for (const name of windows ? ["ankiel.cmd", "ankiel.exe"] : ["ankiel"]) {
           const other = path.join(directory, name);
           const present =
             (yield* exists(other)) || Option.isSome(yield* fs.readLink(other).pipe(Effect.option));
           if (present && (windows || !(yield* isOurLink(other)))) {
-            return yield* logInfo("left the ac command to Settings beside another ac", { other });
+            return yield* logInfo("left the ankiel command to Settings beside another ankiel", {
+              other,
+            });
           }
         }
       }
       const installed = yield* install;
-      yield* logInfo("installed the ac command on first launch", {
+      yield* logInfo("installed the ankiel command on first launch", {
         installedPath: installed.installedPath,
         onPath: installed.onPath,
       });
@@ -457,7 +460,7 @@ export const make = Effect.gen(function* () {
   ).pipe(
     // Our own messages are short and name only paths; anything else is logged as a category.
     Effect.catch((error) =>
-      logWarning("did not install the ac command on first launch", {
+      logWarning("did not install the ankiel command on first launch", {
         reason: error._tag === "DesktopCliCommandError" ? error.message : "state-write-failed",
       }),
     ),

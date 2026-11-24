@@ -32,7 +32,7 @@ import * as CheckpointStore from "../checkpointing/CheckpointStore.ts";
 import * as IdAllocator from "@ankielcode/provider-core/server/IdAllocator";
 import * as WorkspaceFolders from "../workspace/WorkspaceFolders.ts";
 
-const CHECKPOINT_REFS_PREFIX = "refs/ac/orchestration-v2/checkpoints";
+const CHECKPOINT_REFS_PREFIX = "refs/ankiel/orchestration-v2/checkpoints";
 const ROOT_CHECKPOINT_SCOPE_NAME = "root";
 // The provider turn waits on the baseline, so a workspace too slow for this starts without one.
 // It bounds only the snapshot: waiting on the lock lets an in-flight capture finish the same ref.

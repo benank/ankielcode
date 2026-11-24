@@ -89,15 +89,16 @@ export const resolveNewestVersion = Effect.fn("cli.update.resolve_newest")(funct
     const body = yield* httpClient.execute(authenticatedRequest).pipe(
       Effect.flatMap(HttpClientResponse.filterStatusOk),
       Effect.flatMap((response) => response.text),
-      Effect.mapError(() => new CliUpdateError({ reason: "Could not list ac releases." })),
+      Effect.mapError(() => new CliUpdateError({ reason: "Could not list ankiel releases." })),
       Effect.timeoutOrElse({
         duration: RELEASE_INDEX_TIMEOUT,
-        orElse: () => Effect.fail(new CliUpdateError({ reason: "Timed out listing ac releases." })),
+        orElse: () =>
+          Effect.fail(new CliUpdateError({ reason: "Timed out listing ankiel releases." })),
       }),
     );
     const releases = yield* decodeReleaseIndex(body).pipe(
       Effect.mapError(
-        () => new CliUpdateError({ reason: "The ac release index had an unexpected shape." }),
+        () => new CliUpdateError({ reason: "The ankiel release index had an unexpected shape." }),
       ),
     );
     const version = newestCliReleaseVersion(releases, channel);
@@ -167,7 +168,8 @@ export const repointLauncher = Effect.fn("cli.update.repoint_launcher")(function
   const remember = (launcher: string) =>
     recordPinnedRuntimeLauncher({ baseDir: input.baseDir, launcher }).pipe(
       Effect.mapError(
-        () => new CliUpdateError({ reason: `Could not record the ac launcher at ${launcher}.` }),
+        () =>
+          new CliUpdateError({ reason: `Could not record the ankiel launcher at ${launcher}.` }),
       ),
     );
 
@@ -182,7 +184,8 @@ export const repointLauncher = Effect.fn("cli.update.repoint_launcher")(function
       .writeFileString(shimPath, `@echo off\r\n"${input.targetEntryPath}" %*`)
       .pipe(
         Effect.mapError(
-          () => new CliUpdateError({ reason: `Could not rewrite the ac launcher at ${shimPath}.` }),
+          () =>
+            new CliUpdateError({ reason: `Could not rewrite the ankiel launcher at ${shimPath}.` }),
         ),
       );
     return Option.some(shimPath);
@@ -198,7 +201,10 @@ export const repointLauncher = Effect.fn("cli.update.repoint_launcher")(function
   }).pipe(
     Effect.mapError(
       (cause) =>
-        new CliUpdateError({ reason: `Could not repoint the ac launcher at ${launcher}.`, cause }),
+        new CliUpdateError({
+          reason: `Could not repoint the ankiel launcher at ${launcher}.`,
+          cause,
+        }),
     ),
   );
   return Option.some(launcher);
@@ -213,12 +219,12 @@ export const findWindowsShim = Effect.fn("cli.update.find_windows_shim")(functio
   const path = yield* Path.Path;
   const environment = yield* HostProcess.Environment;
   const candidates = [
-    ...(environment["AC_INSTALL_BIN_DIR"] ? [environment["AC_INSTALL_BIN_DIR"]] : []),
+    ...(environment["ANKIEL_INSTALL_BIN_DIR"] ? [environment["ANKIEL_INSTALL_BIN_DIR"]] : []),
     ...(environment["PATH"] ?? environment["Path"] ?? "").split(";"),
   ]
     .filter((entry) => entry.trim().length > 0)
     .map((directory) => ({
-      shimPath: path.join(directory, "ac.cmd"),
+      shimPath: path.join(directory, "ankiel.cmd"),
       parseTarget: windowsShimTarget,
     }));
   if (versionsDir !== undefined) {
@@ -226,7 +232,7 @@ export const findWindowsShim = Effect.fn("cli.update.find_windows_shim")(functio
       .readFileString(path.join(path.dirname(versionsDir), "launchers"))
       .pipe(Effect.orElseSucceed(() => ""));
     for (const shimPath of recorded.split(/\r?\n/)) {
-      if (path.isAbsolute(shimPath) && path.basename(shimPath).toLowerCase() === "ac.cmd") {
+      if (path.isAbsolute(shimPath) && path.basename(shimPath).toLowerCase() === "ankiel.cmd") {
         candidates.push({ shimPath, parseTarget: generatedWindowsShimTarget });
       }
     }
@@ -249,7 +255,7 @@ const updateFlags = {
   ...projectLocationFlags,
   channel: Flag.Literals("channel", CLI_RELEASE_CHANNELS).pipe(
     Flag.withDescription(
-      "Release channel to follow. Defaults to the channel this ac was published on.",
+      "Release channel to follow. Defaults to the channel this ankiel was published on.",
     ),
     Flag.optional,
   ),
@@ -278,7 +284,7 @@ export const updateCommand = Command.make("update", {
   version: versionArgument,
 }).pipe(
   Command.withDescription(
-    "Download a newer ac and switch this machine to it, including the background service when one is installed.",
+    "Download a newer ankiel and switch this machine to it, including the background service when one is installed.",
   ),
   Command.withHandler((flags) =>
     Effect.gen(function* () {
@@ -382,7 +388,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
   }
   if (input.requestedVersion !== undefined && !isExactServiceVersion(input.requestedVersion)) {
     return yield* new CliUpdateError({
-      reason: `'${input.requestedVersion}' is not an exact ac version.`,
+      reason: `'${input.requestedVersion}' is not an exact ankiel version.`,
     });
   }
   const progress = createUpdateProgress();
@@ -403,7 +409,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
         `@ankielcode/cli@${targetVersion} is a preview build.`,
         "  Preview builds are cut by maintainers from unreleased branches to exercise the release",
         "  pipeline. They can be broken, receive no fixes, and are never offered as updates; you",
-        `  will have to switch back to ${currentChannel} yourself with \`ac update --channel ${currentChannel} --allow-downgrade\`.`,
+        `  will have to switch back to ${currentChannel} yourself with \`ankiel update --channel ${currentChannel} --allow-downgrade\`.`,
       ].join("\n"),
     );
     if (!(process.stdin.isTTY && process.stdout.isTTY)) {
@@ -444,8 +450,8 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
   if (executableCurrent && serviceCurrent) {
     yield* Console.log(
       serviceVersion !== undefined
-        ? `ac and its background service are already on ${targetVersion} (${targetChannel}).`
-        : `ac is already on ${targetVersion} (${targetChannel}).`,
+        ? `ankiel and its background service are already on ${targetVersion} (${targetChannel}).`
+        : `ankiel is already on ${targetVersion} (${targetChannel}).`,
     );
     return;
   }
@@ -490,7 +496,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
       ).pipe(Effect.catchTags({ QuitError: () => Effect.succeed(false) }));
     } else {
       yield* Console.log(
-        "  Not a terminal, so the service keeps running its current version. Rerun with --yes to restart it now, or run `ac service restart` later.",
+        "  Not a terminal, so the service keeps running its current version. Rerun with --yes to restart it now, or run `ankiel service restart` later.",
       );
     }
   }
@@ -527,7 +533,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
                 ? error
                 : new PinnedRuntimePreflightBlockedError({
                     version: targetVersion,
-                    reason: `@ankielcode/cli@${targetVersion} could not confirm it supports this database (its check exited with code ${error.exitCode}), so ac did not switch to it.`,
+                    reason: `@ankielcode/cli@${targetVersion} could not confirm it supports this database (its check exited with code ${error.exitCode}), so ankiel did not switch to it.`,
                   }),
             ),
         }),
@@ -601,7 +607,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
 
   progress.success(`Installed Ankiel Code ${targetVersion}`);
   if (Option.isSome(repointed)) {
-    yield* Console.log("  Run ac to get started.\n");
+    yield* Console.log("  Run ankiel to get started.\n");
   } else {
     yield* Console.log(`  Run ${runtime.entryPath}\n`);
   }
@@ -622,7 +628,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
           ? `the version before ${serviceVersion}`
           : serviceVersion;
     yield* Console.log(
-      `  Background service still running ${running}. Run \`ac service restart\` when you are ready to switch it to ${targetVersion}.`,
+      `  Background service still running ${running}. Run \`ankiel service restart\` when you are ready to switch it to ${targetVersion}.`,
     );
   } else if (status.installed && !servesThisHome) {
     yield* Console.log(

@@ -973,9 +973,9 @@ describe("terminalLinkAtPositionWithRange", () => {
       cells: [
         { ...cell("🙂"), wide: 1 },
         { ...cell(""), wide: 2 },
-        ...Array.from("https://ac.code", (character) => cell(character)),
+        ...Array.from("https://ankiel.code", (character) => cell(character)),
       ],
-      text: "🙂 https://ac.code",
+      text: "🙂 https://ankiel.code",
       isWrapContinuation: false,
       wrapsToNext: true,
     };

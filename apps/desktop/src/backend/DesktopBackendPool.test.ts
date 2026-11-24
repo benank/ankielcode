@@ -95,7 +95,7 @@ const runningConfig = {
     mode: "desktop",
     noBrowser: true,
     port: 3774,
-    ankielHome: "/tmp/ac",
+    ankielHome: "/tmp/ankiel",
     host: "127.0.0.1",
     desktopBootstrapToken: "token",
     tailscaleServeEnabled: false,
@@ -138,7 +138,7 @@ function layerPool(
           runningUnderArm64Translation: false,
         }).pipe(
           Layer.provide(
-            Layer.mergeAll(Path.layer, DesktopConfig.layerTest({ AC_HOME: "/test-home" })),
+            Layer.mergeAll(Path.layer, DesktopConfig.layerTest({ ANKIEL_HOME: "/test-home" })),
           ),
           Layer.orDie,
         ),

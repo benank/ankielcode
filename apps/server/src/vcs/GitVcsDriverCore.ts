@@ -27,7 +27,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
   GitCommandError,
   type GitCommandFailureReason,
-  AC_PROJECT_FILE_NAME,
+  ANKIEL_PROJECT_FILE_NAME,
   type ReviewBranchCommitsInput,
   type ReviewDiffChangeType,
   type ReviewDiffFileContentsInput,
@@ -63,7 +63,7 @@ import { sourceControlDefinitions } from "../sourceControl/sourceControlDefiniti
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 /** Ankiel's record of the branch, named as on the host, that a branch was cut from. */
-const branchBaseConfigKey = (branch: string) => `branch.${branch}.ac-merge-base`;
+const branchBaseConfigKey = (branch: string) => `branch.${branch}.ankiel-merge-base`;
 /**
  * Where Ankiel kept that record before it had a key of its own, for every host alike: the GitHub
  * CLI's key, which branches cut before then still carry instead.
@@ -2364,7 +2364,10 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
     options?: { readonly allowRemoteOfCurrent?: boolean },
     trace?: { dependsOnRemoteOfCurrent: boolean; degraded: boolean },
   ) {
-    const configuredBaseRef = yield* readConfigValue(cwd, `branch.${refName}.ac-merge-base-ref`);
+    const configuredBaseRef = yield* readConfigValue(
+      cwd,
+      `branch.${refName}.ankiel-merge-base-ref`,
+    );
     if (
       configuredBaseRef?.startsWith("refs/heads/") ||
       configuredBaseRef?.startsWith("refs/remotes/")
@@ -3910,10 +3913,10 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
           key: branchBaseConfigKey(branch),
           value: upstream.branchName,
         });
-        if (!(yield* readConfigValue(cwd, `branch.${branch}.ac-merge-base-ref`))) {
+        if (!(yield* readConfigValue(cwd, `branch.${branch}.ankiel-merge-base-ref`))) {
           yield* writeConfigValue({
             cwd,
-            key: `branch.${branch}.ac-merge-base-ref`,
+            key: `branch.${branch}.ankiel-merge-base-ref`,
             value:
               upstream.remoteName === "."
                 ? `refs/heads/${upstream.branchName}`
@@ -5763,7 +5766,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
     },
   );
 
-  // A new worktree has no files yet, so ac.json and its pattern file come from the ref itself.
+  // A new worktree has no files yet, so ankiel.json and its pattern file come from the ref itself.
   const readWorktreeSparsePatterns = Effect.fn("readWorktreeSparsePatterns")(function* (
     cwd: string,
     refName: string,
@@ -5773,13 +5776,16 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
     const projectFile = yield* executeGit(
       "GitVcsDriver.createWorktree.readProjectFile",
       cwd,
-      ["show", `${ref}:${AC_PROJECT_FILE_NAME}`],
+      ["show", `${ref}:${ANKIEL_PROJECT_FILE_NAME}`],
       { allowNonZeroExit: true },
     );
     if (projectFile.exitCode !== 0) return null;
     const file = parseAnkielProjectFile(projectFile.stdout);
     if (file === null) {
-      yield* Effect.logWarning("ac.json is invalid; checking out the full worktree", { cwd, ref });
+      yield* Effect.logWarning("ankiel.json is invalid; checking out the full worktree", {
+        cwd,
+        ref,
+      });
       return null;
     }
     if (file.worktreeSparsePatternsPath === undefined) return null;
@@ -5798,7 +5804,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
         operation: "GitVcsDriver.createWorktree",
         command: "git worktree add",
         cwd,
-        detail: `ac.json names the sparse-checkout pattern file "${file.worktreeSparsePatternsPath}", which is not a file in ${refName}.`,
+        detail: `ankiel.json names the sparse-checkout pattern file "${file.worktreeSparsePatternsPath}", which is not a file in ${refName}.`,
       });
     }
     return patterns.stdout;
@@ -5852,7 +5858,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
     // Waiting here would hold up the thread's agent, and refreshing in place later would hold the
     // index lock while its setup script and agent run Git. So refresh a copy in the background and
     // take the lock only to swap it in, unless Git holds it or the index changed since the copy.
-    const copyPath = `${indexPath}.ac-refresh`;
+    const copyPath = `${indexPath}.ankiel-refresh`;
     const lockPath = `${indexPath}.lock`;
     const stamp = (info: FileSystem.File.Info) =>
       `${info.size}:${Option.getOrUndefined(info.ino)}:${Option.getOrUndefined(info.mtime)?.getTime()}`;
@@ -6158,20 +6164,23 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
           options?.submodules ?? null,
           options?.submodules != null
             ? null
-            : // Read HEAD for the same reason: sparse patterns can leave ac.json out too.
+            : // Read HEAD for the same reason: sparse patterns can leave ankiel.json out too.
               yield* executeGit(
                 "GitVcsDriver.createWorktree.readProjectFile",
                 worktreePath,
-                ["show", `HEAD:${AC_PROJECT_FILE_NAME}`],
+                ["show", `HEAD:${ANKIEL_PROJECT_FILE_NAME}`],
                 { allowNonZeroExit: true },
               ).pipe(
                 Effect.flatMap((result) => {
                   if (result.exitCode !== 0) return Effect.succeed(null);
                   const file = parseAnkielProjectFile(result.stdout);
                   return file === null
-                    ? Effect.logWarning("ac.json is invalid; initializing submodules recursively", {
-                        worktreePath,
-                      }).pipe(Effect.as(null))
+                    ? Effect.logWarning(
+                        "ankiel.json is invalid; initializing submodules recursively",
+                        {
+                          worktreePath,
+                        },
+                      ).pipe(Effect.as(null))
                     : Effect.succeed(file);
                 }),
                 Effect.orElseSucceed(() => null),
@@ -6179,7 +6188,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
         );
     if (hasSubmodules && submoduleMode.value === "none" && progress?.onSubmodulesDisabled) {
       yield* progress.onSubmodulesDisabled({
-        source: submoduleMode.source === "ac.json" ? "ac.json" : "settings",
+        source: submoduleMode.source === "ankiel.json" ? "ankiel.json" : "settings",
       });
     }
     if (submoduleMode.value !== "none") {
@@ -6303,7 +6312,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
           // The base key names a branch on the host; this one keeps the remote it came from.
           yield* writeConfigValue({
             cwd: input.cwd,
-            key: `branch.${newRefName}.ac-merge-base-ref`,
+            key: `branch.${newRefName}.ankiel-merge-base-ref`,
             value: base.baseRef,
           });
         }

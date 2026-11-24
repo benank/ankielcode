@@ -15,12 +15,12 @@ import { SettingsRow } from "./settingsLayout";
 import { useSearchableSetting } from "./settingsSearch";
 
 const FAILURE_TITLES = {
-  install: msg("Could not install ac"),
-  uninstall: msg("Could not remove ac"),
-  addToPath: msg("Could not add ac to PATH"),
+  install: msg("Could not install ankiel"),
+  uninstall: msg("Could not remove ankiel"),
+  addToPath: msg("Could not add ankiel to PATH"),
 } as const;
 
-/** The desktop `ac` command's state, and its actions with a toast on failure. */
+/** The desktop `ankiel` command's state, and its actions with a toast on failure. */
 export function useDesktopCliCommand() {
   const bridge = getDesktopCliCommandBridge();
   const query = useEnvironmentQuery(bridge ? desktopCliCommandStateAtom : null);
@@ -62,12 +62,15 @@ export function CliCommandSettingsRow() {
   const installed = state.installedPath !== null;
   const description = state.shadowedBy
     ? resolve(
-        msg("Another ac at {path} runs first in a new terminal. Remove it to use Ankiel Code's.", {
-          path: state.shadowedBy,
-        }),
+        msg(
+          "Another ankiel at {path} runs first in a new terminal. Remove it to use Ankiel Code's.",
+          {
+            path: state.shadowedBy,
+          },
+        ),
       )
     : !installed
-      ? resolve(msg("Run Ankiel Code's CLI as `ac` from any terminal."))
+      ? resolve(msg("Run Ankiel Code's CLI as `ankiel` from any terminal."))
       : state.onPath
         ? resolve(
             msg("Installed at {path}. Open a new terminal to use it.", {
@@ -89,7 +92,7 @@ export function CliCommandSettingsRow() {
               )
             : resolve(
                 msg(
-                  "Installed at {path}, which is not on your PATH yet. Add its folder to your PATH to run `ac`.",
+                  "Installed at {path}, which is not on your PATH yet. Add its folder to your PATH to run `ankiel`.",
                   { path: state.installedPath },
                 ),
               );
@@ -112,8 +115,8 @@ export function CliCommandSettingsRow() {
             onClick={() => run(installed ? "uninstall" : "install")}
           >
             {installed
-              ? resolve(msg("Remove", { $context: "verb, uninstalls the ac command" }))
-              : resolve(msg("Install", { $context: "verb, installs the ac command" }))}
+              ? resolve(msg("Remove", { $context: "verb, uninstalls the ankiel command" }))
+              : resolve(msg("Install", { $context: "verb, installs the ankiel command" }))}
           </Button>
         </div>
       }

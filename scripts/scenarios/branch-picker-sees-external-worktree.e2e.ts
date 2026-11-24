@@ -3,13 +3,13 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 
 import { run } from "./shell.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 test(
   "Reopening the branch picker shows a worktree created outside Ankiel Code",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
     const git = (...args: string[]) => runPromise(run("git", args, { cwd: project }));
     await git("branch", "feature");
     await browser.setViewport({ width: 1280, height: 800 });
@@ -46,7 +46,7 @@ test(
       };
     });
 
-    await ac.open("/");
+    await ankiel.open("/");
     const branchPicker = browser
       .locator('[data-slot="combobox-trigger"][aria-label^="Branch:"]:visible')
       .first();

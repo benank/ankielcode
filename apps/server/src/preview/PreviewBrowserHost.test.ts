@@ -60,9 +60,9 @@ const diagnose = (input: {
     version: input.version ?? LOADER_ERROR,
   });
   return PreviewBrowserHost.diagnoseLaunchFailure({
-    executable: "/home/me/.ac/tools/chrome-headless-shell/linux64/154/chrome-headless-shell",
+    executable: "/home/me/.ankiel/tools/chrome-headless-shell/linux64/154/chrome-headless-shell",
     output: input.output,
-    setupCommand: "sudo ac browser setup",
+    setupCommand: "sudo ankiel browser setup",
   }).pipe(
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
     Effect.provideService(HostProcess.Platform, input.platform),
@@ -83,8 +83,8 @@ describe("diagnoseLaunchFailure", () => {
       expect(error).toBeInstanceOf(PreviewBrowserHost.PreviewBrowserRootError);
       expect(error?.message).toContain("Ankiel server is running as root");
       expect(error?.message).toContain("Ankiel server's environment and restart the server");
-      expect(error?.message).toContain("AC_SERVER_BROWSER_SANDBOX=0 ac serve");
-      expect(error?.message).toContain("Environment=AC_SERVER_BROWSER_SANDBOX=0");
+      expect(error?.message).toContain("ANKIEL_SERVER_BROWSER_SANDBOX=0 ankiel serve");
+      expect(error?.message).toContain("Environment=ANKIEL_SERVER_BROWSER_SANDBOX=0");
       expect(error?.message).toContain("this disables Chrome's sandbox");
       expect(commands).toEqual([]);
     }),
@@ -98,7 +98,7 @@ describe("diagnoseLaunchFailure", () => {
         ldd: "",
       });
       expect(error).toBeInstanceOf(PreviewBrowserHost.PreviewBrowserSandboxError);
-      expect(error?.message).toContain("Run `sudo ac browser setup` on the host");
+      expect(error?.message).toContain("Run `sudo ankiel browser setup` on the host");
     }),
   );
 
@@ -113,7 +113,7 @@ describe("diagnoseLaunchFailure", () => {
         _tag: "PreviewBrowserLibrariesError",
         libraries: ["libglib-2.0.so.0", "libnss3.so", "libX11.so.6"],
       });
-      expect(error?.message).toContain("Run `sudo ac browser setup` on the host");
+      expect(error?.message).toContain("Run `sudo ankiel browser setup` on the host");
     }),
   );
 

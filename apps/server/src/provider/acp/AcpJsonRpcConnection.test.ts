@@ -108,8 +108,8 @@ const promptThenCancel = (input: {
       spawn: {
         ...mockRuntimeOptions.spawn,
         env: {
-          AC_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1",
-          AC_ACP_REQUEST_LOG_PATH: requestLogPath,
+          ANKIEL_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1",
+          ANKIEL_ACP_REQUEST_LOG_PATH: requestLogPath,
         },
       },
       cancelBehavior: input.cancelBehavior,
@@ -192,7 +192,7 @@ describe("AcpSessionRuntime", () => {
             ? {
                 spawn: {
                   ...mockRuntimeOptions.spawn,
-                  env: { AC_ACP_SESSION_LIFECYCLE: "1" },
+                  env: { ANKIEL_ACP_SESSION_LIFECYCLE: "1" },
                 },
                 resumeSessionId: "mock-session-1",
                 resumeMethod: "resume" as const,
@@ -264,7 +264,7 @@ describe("AcpSessionRuntime", () => {
         ...mockRuntimeOptions,
         spawn: {
           ...mockRuntimeOptions.spawn,
-          env: { AC_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
+          env: { ANKIEL_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
         },
         cancelBehavior: "wait-for-prompt",
         requestLogger: (event) =>
@@ -404,7 +404,7 @@ describe("AcpSessionRuntime", () => {
         ...mockRuntimeOptions,
         spawn: {
           ...mockRuntimeOptions.spawn,
-          env: { AC_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
+          env: { ANKIEL_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
         },
         cancelBehavior: "wait-for-prompt",
       });
@@ -445,7 +445,7 @@ describe("AcpSessionRuntime", () => {
       });
       const runtime = yield* AcpSessionRuntime.make({
         ...mockRuntimeOptions,
-        spawn: { ...mockRuntimeOptions.spawn, env: { AC_ACP_FLOOD_STDERR: "1" } },
+        spawn: { ...mockRuntimeOptions.spawn, env: { ANKIEL_ACP_FLOOD_STDERR: "1" } },
         onStderr: () => Effect.fail(failure),
       });
       expect(yield* runtime.start().pipe(Effect.flip)).toBe(failure);
@@ -514,7 +514,7 @@ describe("AcpSessionRuntime", () => {
         yield* Effect.gen(function* () {
           const runtime = yield* AcpSessionRuntime.make({
             ...mockRuntimeOptions,
-            spawn: { ...mockRuntimeOptions.spawn, env: { AC_ACP_FLOOD_STDERR: "1" } },
+            spawn: { ...mockRuntimeOptions.spawn, env: { ANKIEL_ACP_FLOOD_STDERR: "1" } },
             ...(logStderr
               ? {
                   onStderr: (text: string) =>
@@ -573,7 +573,7 @@ describe("AcpSessionRuntime", () => {
     ({ extendEnv }) =>
       Effect.gen(function* () {
         yield* Effect.acquireRelease(
-          Effect.sync(() => setProcessEnv("AC_ACP_RUNTIME_AMBIENT", "sentinel")),
+          Effect.sync(() => setProcessEnv("ANKIEL_ACP_RUNTIME_AMBIENT", "sentinel")),
           (restore) => Effect.sync(restore),
         );
         const runtime = yield* AcpSessionRuntime.make({
@@ -582,7 +582,7 @@ describe("AcpSessionRuntime", () => {
             command: process.execPath,
             args: mockAgentArgs,
             ...(extendEnv === undefined ? {} : { extendEnv }),
-            env: { AC_ACP_RUNTIME_EXPLICIT: "kept" },
+            env: { ANKIEL_ACP_RUNTIME_EXPLICIT: "kept" },
           },
         });
         yield* runtime.initialize();
@@ -624,7 +624,7 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { AC_ACP_MCP_ACP: "1" },
+            env: { ANKIEL_ACP_MCP_ACP: "1" },
           },
           cwd: process.cwd(),
           clientInfo: { name: "ankiel-test", version: "0.0.0" },
@@ -679,7 +679,7 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { AC_ACP_V2_MANAGEMENT: "1" },
+            env: { ANKIEL_ACP_V2_MANAGEMENT: "1" },
           },
           cwd: process.cwd(),
           clientInfo: { name: "ankiel-test", version: "0.0.0" },
@@ -722,8 +722,8 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_AUTH_METHOD_ID: "test",
-              AC_ACP_REQUIRE_AUTH: "1",
+              ANKIEL_ACP_AUTH_METHOD_ID: "test",
+              ANKIEL_ACP_REQUIRE_AUTH: "1",
             },
           },
           cwd: process.cwd(),
@@ -760,8 +760,8 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_AUTH_METHOD_ID: "test",
-              AC_ACP_REQUIRE_AUTH: "1",
+              ANKIEL_ACP_AUTH_METHOD_ID: "test",
+              ANKIEL_ACP_REQUIRE_AUTH: "1",
             },
           },
           cwd: process.cwd(),
@@ -906,7 +906,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_EMIT_FOREIGN_SESSION_UPDATES: "1",
+              ANKIEL_ACP_EMIT_FOREIGN_SESSION_UPDATES: "1",
             },
           },
           cwd: process.cwd(),
@@ -967,7 +967,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS: "1",
+              ANKIEL_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS: "1",
             },
           },
           cwd: process.cwd(),
@@ -1014,7 +1014,7 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { AC_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER: "1" },
+            env: { ANKIEL_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER: "1" },
           },
           cwd: process.cwd(),
           clientInfo: { name: "ankiel-test", version: "0.0.0" },
@@ -1060,7 +1060,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1",
+              ANKIEL_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1",
             },
           },
           cwd: process.cwd(),
@@ -1132,7 +1132,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_SESSION_LIFECYCLE: "1",
+              ANKIEL_ACP_SESSION_LIFECYCLE: "1",
             },
           },
           additionalDirectories: ["/tmp/ankiel-attachments"],
@@ -1188,8 +1188,8 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_REQUIRE_AUTH: "1",
-              AC_ACP_SESSION_LIFECYCLE: "1",
+              ANKIEL_ACP_REQUIRE_AUTH: "1",
+              ANKIEL_ACP_SESSION_LIFECYCLE: "1",
             },
           },
           cwd: process.cwd(),
@@ -1217,7 +1217,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_FAIL_LOAD_SESSION: "1",
+              ANKIEL_ACP_FAIL_LOAD_SESSION: "1",
             },
           },
           cwd: process.cwd(),
@@ -1238,8 +1238,8 @@ describe("AcpSessionRuntime", () => {
         spawn: {
           ...mockRuntimeOptions.spawn,
           env: {
-            AC_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-            AC_ACP_LOAD_SESSION_DELAY_MS: "500",
+            ANKIEL_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+            ANKIEL_ACP_LOAD_SESSION_DELAY_MS: "500",
           },
         },
         resumeSessionId: "mock-session-1",
@@ -1273,9 +1273,9 @@ describe("AcpSessionRuntime", () => {
         spawn: {
           ...mockRuntimeOptions.spawn,
           env: {
-            AC_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-            AC_ACP_LOAD_SESSION_DELAY_MS: "500",
-            AC_ACP_HOLD_SET_CONFIG_OPTION_UNTIL_LOAD_REPLY: "1",
+            ANKIEL_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+            ANKIEL_ACP_LOAD_SESSION_DELAY_MS: "500",
+            ANKIEL_ACP_HOLD_SET_CONFIG_OPTION_UNTIL_LOAD_REPLY: "1",
           },
         },
         resumeSessionId: "mock-session-1",
@@ -1309,9 +1309,9 @@ describe("AcpSessionRuntime", () => {
         spawn: {
           ...mockRuntimeOptions.spawn,
           env: {
-            AC_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-            AC_ACP_LOAD_SESSION_DELAY_MS: "500",
-            AC_ACP_NOTIFY_MODE_BEFORE_LOAD_REPLY: "code",
+            ANKIEL_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+            ANKIEL_ACP_LOAD_SESSION_DELAY_MS: "500",
+            ANKIEL_ACP_NOTIFY_MODE_BEFORE_LOAD_REPLY: "code",
           },
         },
         resumeSessionId: "mock-session-1",
@@ -1354,8 +1354,8 @@ describe("AcpSessionRuntime", () => {
         spawn: {
           ...mockRuntimeOptions.spawn,
           env: {
-            AC_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-            AC_ACP_LOAD_SESSION_DELAY_MS: "500",
+            ANKIEL_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+            ANKIEL_ACP_LOAD_SESSION_DELAY_MS: "500",
           },
         },
         resumeSessionId: "mock-session-1",
@@ -1406,7 +1406,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY: "1",
+              ANKIEL_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY: "1",
             },
           },
           cwd: process.cwd(),
@@ -1442,7 +1442,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_EMIT_LOAD_REPLAY: "1",
+              ANKIEL_ACP_EMIT_LOAD_REPLAY: "1",
             },
           },
           cwd: process.cwd(),
@@ -1473,9 +1473,9 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_EMIT_LOAD_REPLAY: "1",
-              AC_ACP_LOAD_REPLY_DELAY_MS: "500",
-              AC_ACP_REJECT_PROMPT_UNTIL_LOADED: "1",
+              ANKIEL_ACP_EMIT_LOAD_REPLAY: "1",
+              ANKIEL_ACP_LOAD_REPLY_DELAY_MS: "500",
+              ANKIEL_ACP_REJECT_PROMPT_UNTIL_LOADED: "1",
             },
           },
           cwd: process.cwd(),
@@ -1505,8 +1505,8 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_EMIT_LOAD_REPLAY: "1",
-              AC_ACP_LOAD_NEVER_REPLIES: "1",
+              ANKIEL_ACP_EMIT_LOAD_REPLAY: "1",
+              ANKIEL_ACP_LOAD_NEVER_REPLIES: "1",
             },
           },
           cwd: process.cwd(),
@@ -1558,7 +1558,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              AC_ACP_REQUEST_LOG_PATH: requestLogPath,
+              ANKIEL_ACP_REQUEST_LOG_PATH: requestLogPath,
             },
           },
           cwd: process.cwd(),
@@ -1597,7 +1597,7 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { AC_ACP_REQUEST_LOG_PATH: requestLogPath },
+            env: { ANKIEL_ACP_REQUEST_LOG_PATH: requestLogPath },
           },
           customModels: ["cline-free/custom-model"],
         }),
@@ -1682,7 +1682,10 @@ describe("AcpSessionRuntime", () => {
         let promptsStarted = 0;
         const runtime = yield* AcpSessionRuntime.make({
           ...mockRuntimeOptions,
-          spawn: { ...mockRuntimeOptions.spawn, env: { AC_ACP_REQUEST_LOG_PATH: requestLogPath } },
+          spawn: {
+            ...mockRuntimeOptions.spawn,
+            env: { ANKIEL_ACP_REQUEST_LOG_PATH: requestLogPath },
+          },
           interruptPromptOnCancel: false,
           // The cancel spends a test-clock second in its outgoing record, the window in which the
           // next prompt could overtake it.

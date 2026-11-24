@@ -1,18 +1,18 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "Sending a new thread's first message leaves the sidebar where it was",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
     for (let index = 1; index <= 12; index += 1) {
-      await ac.thread({ project, title: `Earlier work ${index}`, messages: ["first"] });
+      await ankiel.thread({ project, title: `Earlier work ${index}`, messages: ["first"] });
     }
     // Short enough that the Working shelf, below the listed threads, starts out of view.
     await browser.setViewport({ width: 1280, height: 520 });
-    await ac.open();
+    await ankiel.open();
     await expect(screen.getByRole("button", "Earlier work 12", { exact: false })).toBeVisible();
     const sidebarScrollTop = () =>
       browser.evaluate(

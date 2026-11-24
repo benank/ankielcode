@@ -23,26 +23,30 @@ const notOnPath = (launcherPath: string | null): DesktopCliCommandState => ({
 });
 
 describe("resolveTriageCommand", () => {
-  it("prefers ac on PATH, then the desktop launcher", async () => {
-    const onPath = { ...notOnPath("/home/me/.ac/bin/ac"), onPath: true };
-    await expect(resolveTriageCommand(desktopWith(async () => onPath))).resolves.toBe("ac triage");
+  it("prefers ankiel on PATH, then the desktop launcher", async () => {
+    const onPath = { ...notOnPath("/home/me/.ankiel/bin/ankiel"), onPath: true };
+    await expect(resolveTriageCommand(desktopWith(async () => onPath))).resolves.toBe(
+      "ankiel triage",
+    );
     await expect(
-      resolveTriageCommand(desktopWith(async () => notOnPath("/home/me/.ac/bin/ac"))),
-    ).resolves.toBe("/home/me/.ac/bin/ac triage");
+      resolveTriageCommand(desktopWith(async () => notOnPath("/home/me/.ankiel/bin/ankiel"))),
+    ).resolves.toBe("/home/me/.ankiel/bin/ankiel triage");
   });
 
   it("quotes launcher paths for the shell that runs them", async () => {
     await expect(
-      resolveTriageCommand(desktopWith(async () => notOnPath("/Users/O'Neil/.ac/bin/ac"))),
-    ).resolves.toBe(`'/Users/O'"'"'Neil/.ac/bin/ac' triage`);
-    await expect(
-      resolveTriageCommand(desktopWith(async () => notOnPath("C:\\Users\\Me\\.ac\\bin\\ac.cmd"))),
-    ).resolves.toBe("C:\\Users\\Me\\.ac\\bin\\ac.cmd triage");
+      resolveTriageCommand(desktopWith(async () => notOnPath("/Users/O'Neil/.ankiel/bin/ankiel"))),
+    ).resolves.toBe(`'/Users/O'"'"'Neil/.ankiel/bin/ankiel' triage`);
     await expect(
       resolveTriageCommand(
-        desktopWith(async () => notOnPath("C:\\Users\\Jo O'Neil\\.ac\\bin\\ac.cmd")),
+        desktopWith(async () => notOnPath("C:\\Users\\Me\\.ankiel\\bin\\ankiel.cmd")),
       ),
-    ).resolves.toBe("& 'C:\\Users\\Jo O''Neil\\.ac\\bin\\ac.cmd' triage");
+    ).resolves.toBe("C:\\Users\\Me\\.ankiel\\bin\\ankiel.cmd triage");
+    await expect(
+      resolveTriageCommand(
+        desktopWith(async () => notOnPath("C:\\Users\\Jo O'Neil\\.ankiel\\bin\\ankiel.cmd")),
+      ),
+    ).resolves.toBe("& 'C:\\Users\\Jo O''Neil\\.ankiel\\bin\\ankiel.cmd' triage");
   });
 
   it("falls back to npx without a usable desktop launcher", async () => {

@@ -1305,12 +1305,12 @@ describe("environment query lifecycle", () => {
       const harness = yield* makeEnvironmentQueryHarness(Effect.void);
       const entry = (name: string): FilesystemBrowseEntry => ({
         name,
-        fullPath: `/tmp/ac-11476-repro/${name}`,
+        fullPath: `/tmp/ankiel-11476-repro/${name}`,
       });
       let onDisk = [entry("existing")];
       const client = {
         [WS_METHODS.filesystemBrowse]: () =>
-          Effect.sync(() => ({ parentPath: "/tmp/ac-11476-repro/", entries: onDisk })),
+          Effect.sync(() => ({ parentPath: "/tmp/ankiel-11476-repro/", entries: onDisk })),
       } as unknown as RpcSession.RpcSession["client"];
       yield* SubscriptionRef.set(
         harness.supervisorSession,
@@ -1318,7 +1318,7 @@ describe("environment query lifecycle", () => {
       );
       const atom = createFilesystemEnvironmentAtoms(harness.runtime).browse({
         environmentId: QUERY_ENVIRONMENT.environmentId,
-        input: { partialPath: "/tmp/ac-11476-repro/" },
+        input: { partialPath: "/tmp/ankiel-11476-repro/" },
       });
       const registry = AtomRegistry.make();
       yield* Effect.addFinalizer(() => Effect.sync(() => registry.dispose()));

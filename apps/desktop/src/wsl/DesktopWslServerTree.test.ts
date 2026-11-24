@@ -34,8 +34,8 @@ const layerEnvironment = (input: {
       Layer.mergeAll(
         NodeServices.layer,
         DesktopConfig.layerTest({
-          AC_HOME: input.baseDir,
-          AC_MODE: "desktop",
+          ANKIEL_HOME: input.baseDir,
+          ANKIEL_MODE: "desktop",
         }),
       ),
     ),

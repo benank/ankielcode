@@ -930,10 +930,10 @@ export interface SearchMatchHint {
   readonly ranges: ReadonlyArray<SearchRange>;
 }
 
-// Most threads' branches start with the app's own worktree prefix ("ac/", and
-// "ankielcode/" before it, "ac-<hex>" when a "ac" branch blocks nested refs), so
-// "ac connect" would match nearly every thread.
-// Only before more text, so typing "ac/" does not empty the list for a keystroke.
+// Most threads' branches start with the app's own worktree prefix ("ankiel/", and
+// "ankielcode/" before it, "ankiel-<hex>" when a "ankiel" branch blocks nested refs), so
+// "ankiel connect" would match nearly every thread.
+// Only before more text, so typing "ankiel/" does not empty the list for a keystroke.
 const WORKTREE_BRANCH_PREFIX_PATTERN = new RegExp(
   `^(?:(?:${WORKTREE_BRANCH_PREFIX}|ankielcode)/(?=\\S)|${WORKTREE_BRANCH_PREFIX}-(?=[0-9a-f]{8}$))`,
 );

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// GitHub archives avoid npm scanning delays; output <output-dir>/ac/ and publishable ac.tgz.
+// GitHub archives avoid npm scanning delays; output <output-dir>/ankiel/ and publishable ankiel.tgz.
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Effect from "effect/Effect";
@@ -19,7 +19,7 @@ import { windowsSystemTar } from "./lib/windows-tar.ts";
 
 export const NPM_LAUNCHER_PACKAGE_NAME = "@ankielcode/cli";
 // The scope contains a slash, so artifacts on disk use the bare bin name.
-const NPM_LAUNCHER_ARTIFACT_NAME = "ac";
+const NPM_LAUNCHER_ARTIFACT_NAME = "ankiel";
 
 const encodePackageJson = Schema.encodeEffect(fromJsonStringPretty(Schema.Unknown));
 
@@ -41,7 +41,7 @@ export function npmLauncherPackageManifest(version: string, databaseMigration: n
       "Ankiel Code CLI. Downloads the self-contained executable for this platform from the GitHub Release.",
     license: serverPackageJson.license,
     repository: serverPackageJson.repository,
-    bin: { ac: "./bin/ac.mjs" },
+    bin: { ankiel: "./bin/ankiel.mjs" },
     files: ["bin", "dist"],
     engines: { node: ">=20.11" },
     ankielcode: { databaseMigration },
@@ -85,8 +85,8 @@ export const buildNpmLauncher = Effect.fn("buildNpmLauncher")(function* (input: 
       npmLauncherPackageManifest(input.version, yield* latestServerMigrationId()),
     )}\n`,
   );
-  yield* fs.copyFile(path.join(sourceDir, "ac.mjs"), path.join(stageDir, "bin/ac.mjs"));
-  yield* fs.chmod(path.join(stageDir, "bin/ac.mjs"), 0o755);
+  yield* fs.copyFile(path.join(sourceDir, "ankiel.mjs"), path.join(stageDir, "bin/ankiel.mjs"));
+  yield* fs.chmod(path.join(stageDir, "bin/ankiel.mjs"), 0o755);
   yield* fs.copyFile(path.join(sourceDir, "bin.mjs"), path.join(stageDir, "dist/bin.mjs"));
   const readme = yield* path.fromFileUrl(new URL("../apps/server/README.md", import.meta.url));
   if (yield* fs.exists(readme)) {
@@ -123,7 +123,7 @@ const command = Command.make(
     outputDir: Flag.String("output-dir").pipe(Flag.withDefault("npm-packages")),
   },
   buildNpmLauncher,
-).pipe(Command.withDescription("Build the ac npm launcher package."));
+).pipe(Command.withDescription("Build the ankiel npm launcher package."));
 
 if (import.meta.main) {
   Command.run(command, { version: "0.0.0" }).pipe(

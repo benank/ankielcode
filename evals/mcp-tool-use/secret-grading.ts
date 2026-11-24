@@ -553,7 +553,7 @@ export const gradeSecretValues = (
   return [...failures];
 };
 
-const SECRET_FILE = /[^\s'"=<>$(){}|;&]*\/\.ac\/userdata\/secrets\/files\/[0-9a-f]{32}/g;
+const SECRET_FILE = /[^\s'"=<>$(){}|;&]*\/\.ankiel\/userdata\/secrets\/files\/[0-9a-f]{32}/g;
 const fileId = (path: string) => path.slice(-32);
 
 type Part = { readonly text: string; readonly op: string };
@@ -1545,7 +1545,7 @@ export const classifyFileUse = (
   // Written shell scripts being read, so one that runs itself is read once.
   const reading = new Set<string>();
   const fileVars = new Set<string>();
-  // Variables that hold the secrets directory, as in S=~/.ac/userdata/secrets/files; cat "$S/<id>".
+  // Variables that hold the secrets directory, as in S=~/.ankiel/userdata/secrets/files; cat "$S/<id>".
   const dirVars = new Set<string>();
   const ids = [...new Set(files.map(fileId))].join("|");
   const secretVars = new Set<string>();
@@ -1753,7 +1753,7 @@ export const classifyFileUse = (
       return false;
     }
     for (const [, name = "", value = ""] of parsed.flatMap((match) => (match ? [match] : []))) {
-      const dir = /\/\.ac\/userdata\/secrets\/files\/?$/.test(unquote(value));
+      const dir = /\/\.ankiel\/userdata\/secrets\/files\/?$/.test(unquote(value));
       const file = !dir && namesFile(value);
       const holds = !dir && !file && holdsValue(value);
       // A reassignment replaces what the name held.

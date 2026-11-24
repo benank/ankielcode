@@ -3,9 +3,9 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { AC_HOME } from "../e2e.config.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
 import { SECOND_HOME, startSecondServer } from "./second-server.ts";
-import { environmentId, makeState, rpcClient, runPromise, test, WEB } from "./ac.ts";
+import { environmentId, makeState, rpcClient, runPromise, test, WEB } from "./ankiel.ts";
 
 const decodePairing = Schema.decodeEffect(
   Schema.fromJsonString(Schema.Struct({ credential: Schema.String })),
@@ -16,7 +16,7 @@ const linkEnvironments = Effect.fn("scenario.linkEnvironments")(function* (
   secondOrigin: string,
   fallback: string,
 ) {
-  const primary = yield* rpcClient(AC_HOME, primaryOrigin);
+  const primary = yield* rpcClient(ANKIEL_HOME, primaryOrigin);
   const second = yield* rpcClient(SECOND_HOME, secondOrigin);
   for (const client of [primary, second]) {
     yield* client["server.updateSettings"]({ patch: { linkedEnvironmentsEnabled: true } });
@@ -34,8 +34,8 @@ const linkEnvironments = Effect.fn("scenario.linkEnvironments")(function* (
 test(
   "Connect to interact opens the editable thread before a silent fallback times out",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    await ac.project("primary");
+  async ({ ankiel, app, browser, screen }) => {
+    await ankiel.project("primary");
     const primary = app.baseUrl ?? "";
     const secondServer = startSecondServer(primary);
     try {
@@ -58,7 +58,7 @@ test(
         const fetchActual = globalThis.fetch;
         globalThis.fetch = (input, init) => {
           const url = new URL(input instanceof Request ? input.url : String(input), location.href);
-          if (url.origin !== fallback || url.pathname !== "/.well-known/ac/environment") {
+          if (url.origin !== fallback || url.pathname !== "/.well-known/ankiel/environment") {
             // @effect-diagnostics-next-line globalFetch:off - This interception runs inside the browser.
             return fetchActual(input, init);
           }
@@ -70,7 +70,7 @@ test(
         };
       }, alternate.origin);
 
-      await ac.open(`/linked/${via}/${target}/${thread.threadId}`);
+      await ankiel.open(`/linked/${via}/${target}/${thread.threadId}`);
       await screen.getByRole("heading", "Linked handoff").waitFor();
       await screen.getByRole("button", "Connect to interact").tap();
 

@@ -1,16 +1,20 @@
 import { expect } from "e2e";
 
 import { MOBILE } from "../e2e.config.ts";
-import { environmentId, runPromise } from "./ac.ts";
+import { environmentId, runPromise } from "./ankiel.ts";
 import { IOS, test } from "./ankiel-mobile.ts";
 
 test(
   "A latched terminal ctrl key reads as selected to iOS accessibility",
   IOS,
-  async ({ ac, app, screen, device }) => {
-    const project = await ac.project("demo");
-    const { threadId } = await ac.thread({ project, title: "Latched keys", messages: ["hello"] });
-    await ac.open();
+  async ({ ankiel, app, screen, device }) => {
+    const project = await ankiel.project("demo");
+    const { threadId } = await ankiel.thread({
+      project,
+      title: "Latched keys",
+      messages: ["hello"],
+    });
+    await ankiel.open();
     await screen.getByText("Latched keys", { exact: false }).first().waitFor({ timeout: 120_000 });
 
     const environment = await runPromise(

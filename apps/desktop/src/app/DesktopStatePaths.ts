@@ -16,7 +16,7 @@ export function resolveDesktopBaseDir(input: {
   readonly ankielHome: Option.Option<string>;
 }): string {
   return Option.getOrElse(normalizeConfiguredBaseDir(input.ankielHome), () =>
-    input.joinPath(input.homeDirectory, ".ac"),
+    input.joinPath(input.homeDirectory, ".ankiel"),
   );
 }
 

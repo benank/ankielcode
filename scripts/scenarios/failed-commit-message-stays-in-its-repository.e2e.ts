@@ -4,20 +4,20 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 
 import { run } from "./shell.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 test(
   "A failed commit message stays in the repository it was written for",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const first = await ac.project("first-repository");
-    const second = await ac.project("second-repository");
-    const firstThread = await ac.thread({
+  async ({ ankiel, app, browser, screen }) => {
+    const first = await ankiel.project("first-repository");
+    const second = await ankiel.project("second-repository");
+    const firstThread = await ankiel.thread({
       project: first,
       title: "First checkout",
       messages: ["First"],
     });
-    await ac.thread({ project: second, title: "Second checkout", messages: ["Second"] });
+    await ankiel.thread({ project: second, title: "Second checkout", messages: ["Second"] });
 
     await runPromise(
       Effect.gen(function* () {
@@ -40,7 +40,7 @@ test(
     );
 
     await browser.setViewport({ width: 1920, height: 1000 });
-    await ac.open(firstThread);
+    await ankiel.open(firstThread);
     const openCommit = async (file: string) => {
       await screen.getByRole("button", "Git action options").tap();
       await screen.getByRole("menuitem", "Commit", { exact: true }).tap();

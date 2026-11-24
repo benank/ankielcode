@@ -563,7 +563,7 @@ function makeMockRuntime(input: {
             args: [input.mockAgentPath],
             cwd: runtimeInput.cwd,
             env: {
-              AC_ACP_SESSION_LIFECYCLE: "1",
+              ANKIEL_ACP_SESSION_LIFECYCLE: "1",
               NODE_COMPILE_CACHE: (yield* Deferred.await(bundledAgents)).compileCache,
               ...(typeof input.environment === "function"
                 ? input.environment(runtimeOrdinal)
@@ -1071,9 +1071,9 @@ const runFormElicitation = (input: {
           childProcessSpawner,
           mockAgentPath,
           environment: {
-            AC_ACP_EMIT_ELICITATION: "1",
-            AC_ACP_ELICITATION_SCHEMA: JSON.stringify(input.requestedSchema),
-            AC_ACP_ELICITATION_RESPONSE_LOG_PATH: responseLog,
+            ANKIEL_ACP_EMIT_ELICITATION: "1",
+            ANKIEL_ACP_ELICITATION_SCHEMA: JSON.stringify(input.requestedSchema),
+            ANKIEL_ACP_ELICITATION_RESPONSE_LOG_PATH: responseLog,
           },
         }),
       },
@@ -1966,7 +1966,7 @@ describe("AcpAdapterV2", () => {
             makeRuntime: makeMockRuntime({
               childProcessSpawner: yield* ChildProcessSpawner.ChildProcessSpawner,
               mockAgentPath: yield* bundledMockAgentPath,
-              environment: { AC_ACP_IDLE_ERROR: details },
+              environment: { ANKIEL_ACP_IDLE_ERROR: details },
             }),
           },
         });
@@ -2497,7 +2497,7 @@ describe("AcpAdapterV2", () => {
             makeRuntime: makeMockRuntime({
               childProcessSpawner: yield* ChildProcessSpawner.ChildProcessSpawner,
               mockAgentPath: yield* bundledMockAgentPath,
-              environment: { AC_ACP_VIBE_RETRY_OUTCOME: outcome },
+              environment: { ANKIEL_ACP_VIBE_RETRY_OUTCOME: outcome },
             }),
           },
         });
@@ -2568,14 +2568,17 @@ describe("AcpAdapterV2", () => {
     { modeIds: "plain", environment: {}, planModeId: "architect", buildModeId: "ask" },
     {
       modeIds: "Copilot URL",
-      environment: { AC_ACP_COPILOT_MODES: "1" },
+      environment: { ANKIEL_ACP_COPILOT_MODES: "1" },
       planModeId: "https://agentclientprotocol.com/protocol/session-modes#plan",
       buildModeId: "https://agentclientprotocol.com/protocol/session-modes#agent",
     },
     {
       // Without a `mode` category, Ankiel derives no mode state and only the config option switches.
       modeIds: "Copilot URL collaboration_mode",
-      environment: { AC_ACP_COPILOT_MODES: "1", AC_ACP_MODE_OPTION_CATEGORY: "collaboration_mode" },
+      environment: {
+        ANKIEL_ACP_COPILOT_MODES: "1",
+        ANKIEL_ACP_MODE_OPTION_CATEGORY: "collaboration_mode",
+      },
       planModeId: "https://agentclientprotocol.com/protocol/session-modes#plan",
       buildModeId: "https://agentclientprotocol.com/protocol/session-modes#agent",
     },
@@ -2739,8 +2742,8 @@ describe("AcpAdapterV2", () => {
           reportNextPromptStopped,
         } = yield* makeInstructionCompactionHarness(
           {
-            AC_ACP_COMPACTION_PROMPT_ORDINALS: "2,4",
-            AC_ACP_OPEN_COMPACTION_PROMPT_ORDINALS: "13",
+            ANKIEL_ACP_COMPACTION_PROMPT_ORDINALS: "2,4",
+            ANKIEL_ACP_OPEN_COMPACTION_PROMPT_ORDINALS: "13",
           },
           stopReason === "error",
         );
@@ -2863,7 +2866,7 @@ describe("AcpAdapterV2", () => {
     () =>
       Effect.gen(function* () {
         const { runTurn } = yield* makeInstructionCompactionHarness({
-          AC_ACP_FAIL_PROMPT_ORDINAL: "2",
+          ANKIEL_ACP_FAIL_PROMPT_ORDINAL: "2",
         });
         yield* runTurn("Start work.");
         assert.deepEqual(yield* runTurn("/compact", "failed"), [
@@ -2892,8 +2895,8 @@ describe("AcpAdapterV2", () => {
     (structured) =>
       Effect.gen(function* () {
         const harness = yield* makeAdvertisedCompactionHarness({
-          AC_ACP_AVAILABLE_COMMANDS: "compact,plan",
-          AC_ACP_COMPACTION_PROMPT_ORDINALS: structured ? "1" : "",
+          ANKIEL_ACP_AVAILABLE_COMMANDS: "compact,plan",
+          ANKIEL_ACP_COMPACTION_PROMPT_ORDINALS: structured ? "1" : "",
         });
         const compacted = yield* harness.compact();
         assert.isTrue(Exit.isSuccess(compacted));
@@ -2941,11 +2944,11 @@ describe("AcpAdapterV2", () => {
     ({ active, target, allowed, loadedCommandsDelayMs }) =>
       Effect.gen(function* () {
         const harness = yield* makeAdvertisedCompactionHarness({
-          AC_ACP_AVAILABLE_COMMANDS: active,
-          ...(target === undefined ? {} : { AC_ACP_LOADED_COMMANDS: target }),
+          ANKIEL_ACP_AVAILABLE_COMMANDS: active,
+          ...(target === undefined ? {} : { ANKIEL_ACP_LOADED_COMMANDS: target }),
           ...(loadedCommandsDelayMs === undefined
             ? {}
-            : { AC_ACP_LOADED_COMMANDS_DELAY_MS: String(loadedCommandsDelayMs) }),
+            : { ANKIEL_ACP_LOADED_COMMANDS_DELAY_MS: String(loadedCommandsDelayMs) }),
         });
         const result = yield* harness.compact(true);
         assert.equal(Exit.isSuccess(result), allowed);
@@ -2987,7 +2990,7 @@ describe("AcpAdapterV2", () => {
             childProcessSpawner,
             mockAgentPath,
             protocolEvents,
-            environment: () => ({ AC_ACP_FAIL_LOAD_SESSION: "1" }),
+            environment: () => ({ ANKIEL_ACP_FAIL_LOAD_SESSION: "1" }),
           }),
         },
         selfInvocation,
@@ -3052,7 +3055,7 @@ describe("AcpAdapterV2", () => {
             childProcessSpawner,
             mockAgentPath,
             protocolEvents,
-            environment: { AC_ACP_FAIL_SET_MODE_CONFIG_OPTION: "1" },
+            environment: { ANKIEL_ACP_FAIL_SET_MODE_CONFIG_OPTION: "1" },
           }),
         },
         selfInvocation: yield* resolveSelfInvocation(),
@@ -3133,7 +3136,7 @@ describe("AcpAdapterV2", () => {
             childProcessSpawner,
             mockAgentPath,
             protocolEvents,
-            environment: { AC_ACP_FAIL_SET_MODE_CONFIG_OPTION: "1" },
+            environment: { ANKIEL_ACP_FAIL_SET_MODE_CONFIG_OPTION: "1" },
           }),
         },
         selfInvocation: yield* resolveSelfInvocation(),
@@ -4946,7 +4949,7 @@ describe("AcpAdapterV2", () => {
             childProcessSpawner,
             mockAgentPath,
             protocolEvents,
-            environment: { AC_ACP_EMIT_NOTICE: "1" },
+            environment: { ANKIEL_ACP_EMIT_NOTICE: "1" },
           }),
         },
         selfInvocation,
@@ -5025,7 +5028,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_EMIT_V2_FIDELITY: "1" },
+            environment: { ANKIEL_ACP_EMIT_V2_FIDELITY: "1" },
             wrapRuntime: (runtime) => ({
               ...runtime,
               handleSessionUpdate: (handler) =>
@@ -5202,8 +5205,8 @@ describe("AcpAdapterV2", () => {
         results: undefined,
       });
       assert.deepEqual(webItem("grok-web-search", "completed"), {
-        title: "Web search: ac code",
-        patterns: ["ac code"],
+        title: "Web search: ankiel code",
+        patterns: ["ankiel code"],
         results: [
           { url: "https://code.ankiel.com" },
           { url: "https://github.com/benank/ankielcode" },
@@ -5277,7 +5280,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_EMIT_TERMINAL_OUTPUT_BYTES: String(1024 * 1024) },
+            environment: { ANKIEL_ACP_EMIT_TERMINAL_OUTPUT_BYTES: String(1024 * 1024) },
           }),
         },
         selfInvocation: yield* resolveSelfInvocation(),
@@ -5431,8 +5434,8 @@ describe("AcpAdapterV2", () => {
             childProcessSpawner,
             mockAgentPath,
             environment: {
-              AC_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-              AC_ACP_LOAD_SESSION_DELAY_MS: "500",
+              ANKIEL_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+              ANKIEL_ACP_LOAD_SESSION_DELAY_MS: "500",
             },
             sessionLoadReplayIdleGap: "100 millis",
             wrapRuntime: (runtime) => {
@@ -5526,8 +5529,8 @@ describe("AcpAdapterV2", () => {
             mockAgentPath,
             protocolEvents,
             environment: {
-              AC_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-              AC_ACP_LOAD_SESSION_DELAY_MS: "500",
+              ANKIEL_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+              ANKIEL_ACP_LOAD_SESSION_DELAY_MS: "500",
             },
             sessionLoadReplayIdleGap: "100 millis",
             wrapRuntime: (runtime) => {
@@ -5623,8 +5626,8 @@ describe("AcpAdapterV2", () => {
               mockAgentPath,
               protocolEvents,
               environment: {
-                AC_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-                AC_ACP_LOAD_SESSION_DELAY_MS: "500",
+                ANKIEL_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+                ANKIEL_ACP_LOAD_SESSION_DELAY_MS: "500",
               },
               sessionLoadReplayIdleGap: "100 millis",
               wrapRuntime: (runtime) => {
@@ -5822,7 +5825,7 @@ describe("AcpAdapterV2", () => {
             mockAgentPath,
             protocolEvents,
             environment: (runtimeOrdinal) =>
-              runtimeOrdinal === 1 ? { AC_ACP_FAIL_LOAD_SESSION: "1" } : {},
+              runtimeOrdinal === 1 ? { ANKIEL_ACP_FAIL_LOAD_SESSION: "1" } : {},
           }),
         },
         selfInvocation,
@@ -5992,7 +5995,7 @@ describe("AcpAdapterV2", () => {
     Effect.gen(function* () {
       const harness = yield* makePromptInactivityHarness({
         environment: (runtimeOrdinal) =>
-          runtimeOrdinal === 1 ? { AC_ACP_HANG_PROMPT_FOREVER: "1" } : {},
+          runtimeOrdinal === 1 ? { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" } : {},
       });
       const thought = (sessionId: string) => ({
         sessionId,
@@ -6034,7 +6037,7 @@ describe("AcpAdapterV2", () => {
       } as const;
       // The agent logs the upstream error and leaves session/prompt open.
       const harness = yield* makePromptInactivityHarness({
-        environment: () => ({ AC_ACP_HANG_PROMPT_FOREVER: "1" }),
+        environment: () => ({ ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" }),
         watchPromptOutcome: () =>
           Effect.succeed((_result, options) =>
             Effect.succeed(
@@ -6055,7 +6058,7 @@ describe("AcpAdapterV2", () => {
   it.effect("retires a silent prompt whose outcome check dies", () =>
     Effect.gen(function* () {
       const harness = yield* makePromptInactivityHarness({
-        environment: () => ({ AC_ACP_HANG_PROMPT_FOREVER: "1" }),
+        environment: () => ({ ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" }),
         watchPromptOutcome: () => Effect.succeed(() => Effect.die("session log unreadable")),
       });
       yield* harness.startTurn(1);
@@ -6095,7 +6098,7 @@ describe("AcpAdapterV2", () => {
         yield* Effect.gen(function* () {
           const harness = yield* makePromptInactivityHarness({
             environment: (runtimeOrdinal) =>
-              runtimeOrdinal === 1 ? { AC_ACP_HANG_PROMPT_FOREVER: "1" } : {},
+              runtimeOrdinal === 1 ? { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" } : {},
           });
           yield* harness.startTurn(1);
           yield* TestClock.adjust("5 minutes");
@@ -6131,7 +6134,9 @@ describe("AcpAdapterV2", () => {
       Effect.gen(function* () {
         const harness = yield* makePromptInactivityHarness({
           environment: (runtimeOrdinal) =>
-            runtimeOrdinal === 1 ? { AC_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG: "execute" } : {},
+            runtimeOrdinal === 1
+              ? { ANKIEL_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG: "execute" }
+              : {},
         });
         yield* harness.startTurn(1);
         yield* harness.runtime.events.pipe(
@@ -6250,7 +6255,7 @@ describe("AcpAdapterV2", () => {
   it.effect("holds the inactivity timeout while the agent waits on an approval", () =>
     Effect.gen(function* () {
       const harness = yield* makePromptInactivityHarness({
-        environment: () => ({ AC_ACP_EMIT_TOOL_CALLS: "1" }),
+        environment: () => ({ ANKIEL_ACP_EMIT_TOOL_CALLS: "1" }),
         runtimeMode: "approval-required",
       });
       yield* harness.startTurn(1);
@@ -6293,9 +6298,9 @@ describe("AcpAdapterV2", () => {
       const harness = yield* makePromptInactivityHarness({
         environment: (runtimeOrdinal) =>
           runtimeOrdinal === 1
-            ? { AC_ACP_EMIT_TOOL_CALLS: "1" }
+            ? { ANKIEL_ACP_EMIT_TOOL_CALLS: "1" }
             : runtimeOrdinal === 2
-              ? { AC_ACP_HANG_PROMPT_FOREVER: "1" }
+              ? { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" }
               : {},
         runtimeMode: "approval-required",
       });
@@ -6339,8 +6344,8 @@ describe("AcpAdapterV2", () => {
           environment: (runtimeOrdinal) =>
             runtimeOrdinal === 1
               ? {
-                  AC_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG: "execute",
-                  ...(agentExits ? {} : { AC_ACP_FAIL_PROMPT: "1" }),
+                  ANKIEL_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG: "execute",
+                  ...(agentExits ? {} : { ANKIEL_ACP_FAIL_PROMPT: "1" }),
                 }
               : {},
         });
@@ -6379,7 +6384,7 @@ describe("AcpAdapterV2", () => {
       const sessionScope = yield* Scope.make();
       const harness = yield* makePromptInactivityHarness({
         sessionScope,
-        environment: () => ({ AC_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG: "other" }),
+        environment: () => ({ ANKIEL_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG: "other" }),
       });
       const trackedToolStatus = (event: ProviderAdapter.ProviderAdapterV2Event) =>
         event.type === "turn_item.updated" &&
@@ -6626,13 +6631,13 @@ describe("AcpAdapterV2", () => {
             name: "ankiel-code",
             command: process.execPath,
             args: [
-              process.argv[1] === undefined ? "ac" : NodePath.resolve(process.argv[1]),
+              process.argv[1] === undefined ? "ankiel" : NodePath.resolve(process.argv[1]),
               "acp-mcp-bridge",
             ],
             env: [
               { name: "ELECTRON_RUN_AS_NODE", value: "1" },
-              { name: "AC_ACP_MCP_ENDPOINT", value: "http://127.0.0.1:43123/mcp" },
-              { name: "AC_ACP_MCP_AUTHORIZATION", value: "Bearer target-thread-token" },
+              { name: "ANKIEL_ACP_MCP_ENDPOINT", value: "http://127.0.0.1:43123/mcp" },
+              { name: "ANKIEL_ACP_MCP_AUTHORIZATION", value: "Bearer target-thread-token" },
             ],
           },
         ],
@@ -6653,7 +6658,7 @@ describe("AcpAdapterV2", () => {
         {
           sessionId: "mock-child-session-without-credential-scope",
           command: process.execPath,
-          args: ["-e", "process.stdout.write(process.env.AC_ACP_MCP_AUTHORIZATION ?? '')"],
+          args: ["-e", "process.stdout.write(process.env.ANKIEL_ACP_MCP_AUTHORIZATION ?? '')"],
         },
         { requestId: "test-unknown-terminal-create", method: "terminal/create" },
       );
@@ -6679,7 +6684,7 @@ describe("AcpAdapterV2", () => {
           command: process.execPath,
           args: [
             "-e",
-            "process.stdout.write(`${process.env.AC_THREAD_ID ?? ''}\n${process.env.AC_ACP_MCP_AUTHORIZATION ?? ''}`)",
+            "process.stdout.write(`${process.env.ANKIEL_THREAD_ID ?? ''}\n${process.env.ANKIEL_ACP_MCP_AUTHORIZATION ?? ''}`)",
           ],
         },
         { requestId: "test-terminal-create", method: "terminal/create" },
@@ -6731,8 +6736,8 @@ describe("AcpAdapterV2", () => {
               mockAgentPath,
               protocolEvents,
               environment: {
-                AC_ACP_CLIENT_FS_PROBE_PATH: probePath,
-                AC_ACP_CLIENT_FS_PROBE_LOG_PATH: probeLogPath,
+                ANKIEL_ACP_CLIENT_FS_PROBE_PATH: probePath,
+                ANKIEL_ACP_CLIENT_FS_PROBE_LOG_PATH: probeLogPath,
               },
             }),
           },
@@ -6808,7 +6813,7 @@ describe("AcpAdapterV2", () => {
       const makeRuntime = makeMockRuntime({
         childProcessSpawner,
         mockAgentPath,
-        environment: { AC_ACP_HANG_PROMPT_FOREVER: "1" },
+        environment: { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
         wrapRuntime: (runtime) => ({
           ...runtime,
           handleRequestPermission: (handler) =>
@@ -6974,7 +6979,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner: yield* ChildProcessSpawner.ChildProcessSpawner,
             mockAgentPath: yield* bundledMockAgentPath,
-            environment: { AC_ACP_HANG_PROMPT_FOREVER: "1" },
+            environment: { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
             wrapRuntime: (runtime) => ({
               ...runtime,
               handleMcpConnect: (handler) =>
@@ -7086,7 +7091,7 @@ describe("AcpAdapterV2", () => {
       const makeRuntime = makeMockRuntime({
         childProcessSpawner,
         mockAgentPath,
-        environment: { AC_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG: kind },
+        environment: { ANKIEL_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG: kind },
         wrapRuntime: (runtime) => ({
           ...runtime,
           handleRequestPermission: (handler) =>
@@ -7261,7 +7266,7 @@ describe("AcpAdapterV2", () => {
       const makeRuntime = makeMockRuntime({
         childProcessSpawner,
         mockAgentPath,
-        environment: { AC_ACP_HANG_PROMPT_FOREVER: "1" },
+        environment: { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
         wrapRuntime: (runtime) => ({
           ...runtime,
           handleRequestPermission: (handler) =>
@@ -7388,7 +7393,7 @@ describe("AcpAdapterV2", () => {
         childProcessSpawner,
         mockAgentPath,
         protocolEvents,
-        environment: { AC_ACP_PROMPT_DELAY_MS: "100" },
+        environment: { ANKIEL_ACP_PROMPT_DELAY_MS: "100" },
         wrapRuntime: (nativeRuntime) => {
           nativeRuntimes.push(nativeRuntime);
           return nativeRuntime;
@@ -7478,11 +7483,11 @@ describe("AcpAdapterV2", () => {
       });
       assert.isString(rolledBack.providerThread.nativeThreadRef?.nativeId);
       assert.equal(
-        runtimeInputs[1]?.processEnvironment?.AC_ACP_MCP_AUTHORIZATION,
+        runtimeInputs[1]?.processEnvironment?.ANKIEL_ACP_MCP_AUTHORIZATION,
         "Bearer rollback-target-token",
       );
       assert.equal(
-        runtimeInputs[1]?.processEnvironment?.AC_THREAD_ID,
+        runtimeInputs[1]?.processEnvironment?.ANKIEL_THREAD_ID,
         "thread-acp-rollback-session-target",
       );
       const replacementMcpServer = runtimeInputs[1]?.mcpServers[0];
@@ -7493,8 +7498,9 @@ describe("AcpAdapterV2", () => {
           ? replacementMcpServer.env
           : undefined;
       assert.equal(
-        replacementMcpEnvironment?.find((variable) => variable.name === "AC_ACP_MCP_AUTHORIZATION")
-          ?.value,
+        replacementMcpEnvironment?.find(
+          (variable) => variable.name === "ANKIEL_ACP_MCP_AUTHORIZATION",
+        )?.value,
         "Bearer rollback-target-token",
       );
       const snapshotAfterRollback = yield* runtime.readThreadSnapshot({
@@ -7836,7 +7842,7 @@ describe("AcpAdapterV2", () => {
           makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_IDLE_ERROR: "grok-background" },
+            environment: { ANKIEL_ACP_IDLE_ERROR: "grok-background" },
           })(input).pipe(Effect.flatMap(makeXAiPromptCompletionRuntime)),
       });
       const threadId = ThreadId.make("grok-idle-error-background");
@@ -7894,7 +7900,7 @@ describe("AcpAdapterV2", () => {
         childProcessSpawner,
         mockAgentPath,
         protocolEvents,
-        environment: { AC_ACP_HANG_CLOSE_SESSION: "1" },
+        environment: { ANKIEL_ACP_HANG_CLOSE_SESSION: "1" },
       });
       let runtimeClosed = false;
       const instanceId = ProviderInstanceId.make("acp-test");
@@ -7961,7 +7967,7 @@ describe("AcpAdapterV2", () => {
             makeMockRuntime({
               childProcessSpawner,
               mockAgentPath,
-              environment: { AC_ACP_GROK_BACKGROUND_TASK_COMPLETION: "poll" },
+              environment: { ANKIEL_ACP_GROK_BACKGROUND_TASK_COMPLETION: "poll" },
             })(input).pipe(Effect.flatMap(makeXAiPromptCompletionRuntime)),
         });
         const threadId = ThreadId.make("grok-background-completion");
@@ -8138,7 +8144,7 @@ describe("AcpAdapterV2", () => {
             makeMockRuntime({
               childProcessSpawner,
               mockAgentPath,
-              environment: { AC_ACP_GROK_KILL_TASK_SHAPE: shape },
+              environment: { ANKIEL_ACP_GROK_KILL_TASK_SHAPE: shape },
             })(input).pipe(Effect.flatMap(makeXAiPromptCompletionRuntime)),
         });
         const threadId = ThreadId.make("grok-kill-completion");
@@ -8219,7 +8225,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_EMIT_EMPTY_DEFAULT_AGENT_OPTION: "1" },
+            environment: { ANKIEL_ACP_EMIT_EMPTY_DEFAULT_AGENT_OPTION: "1" },
             protocolEvents,
           }),
           onSessionConfigurationUpdate: (configOptions, modeState) =>
@@ -8316,7 +8322,7 @@ describe("AcpAdapterV2", () => {
             childProcessSpawner,
             mockAgentPath,
             environment: (runtimeOrdinal) =>
-              runtimeOrdinal === 1 ? { AC_ACP_EMIT_EMPTY_SUCCESSFUL_BASH_THEN_HANG: "1" } : {},
+              runtimeOrdinal === 1 ? { ANKIEL_ACP_EMIT_EMPTY_SUCCESSFUL_BASH_THEN_HANG: "1" } : {},
             ownDetachedProcessGroup: true,
             processGroupTerminationGrace: 0,
             protocolEvents,
@@ -8473,7 +8479,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath: yield* bundledMockAgentPath,
-            environment: { AC_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
+            environment: { ANKIEL_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
             protocolEvents,
             cancelBehavior: "wait-for-prompt",
             wrapRuntime: (runtime) => {
@@ -8619,7 +8625,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_EMIT_TOOL_CALLS: "1" },
+            environment: { ANKIEL_ACP_EMIT_TOOL_CALLS: "1" },
             wrapCancel: (cancel) => Deferred.await(releaseCancel).pipe(Effect.andThen(cancel)),
           }),
         },
@@ -8711,7 +8717,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_EMIT_TOOL_CALLS: "1" },
+            environment: { ANKIEL_ACP_EMIT_TOOL_CALLS: "1" },
             wrapOutgoingResponse: (onOutgoingResponse) => (requestId) =>
               Deferred.succeed(responseEnqueued, undefined).pipe(
                 Effect.andThen(Deferred.await(releaseResponseAcknowledgement)),
@@ -9054,7 +9060,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_EMIT_MCP_TOOL_APPROVAL_ELICITATION: "1" },
+            environment: { ANKIEL_ACP_EMIT_MCP_TOOL_APPROVAL_ELICITATION: "1" },
           }),
         },
         selfInvocation,
@@ -9116,7 +9122,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_EMIT_TOOL_CALLS: "1" },
+            environment: { ANKIEL_ACP_EMIT_TOOL_CALLS: "1" },
             wrapOutgoingResponse: (onOutgoingResponse) => (requestId) =>
               Deferred.succeed(responseWritten, undefined).pipe(
                 Effect.andThen(Deferred.await(releaseResponseAcknowledgement)),
@@ -9217,7 +9223,7 @@ describe("AcpAdapterV2", () => {
             mockAgentPath,
             ownDetachedProcessGroup: true,
             processGroupTerminationGrace: 0,
-            environment: { AC_ACP_HANG_PROMPT_FOREVER: "1" },
+            environment: { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
             protocolEvents,
           }),
         },
@@ -9331,7 +9337,7 @@ describe("AcpAdapterV2", () => {
             makeRuntime: makeMockRuntime({
               childProcessSpawner,
               mockAgentPath,
-              environment: { AC_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" },
+              environment: { ANKIEL_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" },
             }),
           },
           selfInvocation,
@@ -9496,7 +9502,7 @@ describe("AcpAdapterV2", () => {
               makeRuntime: makeMockRuntime({
                 childProcessSpawner,
                 mockAgentPath,
-                environment: { AC_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" },
+                environment: { ANKIEL_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" },
                 wrapRuntime: (runtime) => ({
                   ...runtime,
                   handleSessionUpdate: (handler) =>
@@ -9767,7 +9773,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" },
+            environment: { ANKIEL_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" },
             protocolEvents,
             wrapRuntime: (runtime) => ({
               ...runtime,
@@ -10010,7 +10016,7 @@ describe("AcpAdapterV2", () => {
             makeRuntime: makeMockRuntime({
               childProcessSpawner,
               mockAgentPath,
-              environment: { AC_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" },
+              environment: { ANKIEL_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" },
               wrapRuntime: (runtime) => ({
                 ...runtime,
                 handleSessionUpdate: (handler) =>
@@ -10303,7 +10309,7 @@ describe("AcpAdapterV2", () => {
               mockAgentPath,
               environment: (runtimeOrdinal) => {
                 runtimeOrdinalSeen = Math.max(runtimeOrdinalSeen, runtimeOrdinal);
-                return { AC_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" };
+                return { ANKIEL_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" };
               },
               wrapCancel: (cancel) =>
                 Effect.sync(() => {
@@ -10427,7 +10433,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_HANG_PROMPT_FOREVER: "1" },
+            environment: { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
             protocolEvents,
           }),
         },
@@ -10513,7 +10519,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_HANG_PROMPT_FOREVER: "1" },
+            environment: { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
             ownDetachedProcessGroup: true,
             processGroupTerminationGrace: 0,
             protocolEvents,
@@ -10648,7 +10654,7 @@ describe("AcpAdapterV2", () => {
               childProcessSpawner,
               mockAgentPath,
               environment: {
-                AC_ACP_EMIT_IN_TURN_TASKOUTPUT_THEN_LATE_DUPLICATE: "1",
+                ANKIEL_ACP_EMIT_IN_TURN_TASKOUTPUT_THEN_LATE_DUPLICATE: "1",
               },
               protocolEvents,
               wrapRuntime: (runtime) => {
@@ -11002,7 +11008,7 @@ describe("AcpAdapterV2", () => {
             makeRuntime: makeMockRuntime({
               childProcessSpawner,
               mockAgentPath,
-              environment: { AC_ACP_HANG_PROMPT_FOREVER: "1" },
+              environment: { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
               protocolEvents,
               wrapRuntime: (runtime) => ({
                 ...runtime,
@@ -11247,7 +11253,7 @@ describe("AcpAdapterV2", () => {
             makeRuntime: makeMockRuntime({
               childProcessSpawner,
               mockAgentPath,
-              environment: { AC_ACP_HANG_PROMPT_FOREVER: "1" },
+              environment: { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
               protocolEvents,
               wrapRuntime: (runtime) => ({
                 ...runtime,
@@ -11562,7 +11568,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_HANG_PROMPT_FOREVER: "1" },
+            environment: { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
             wrapRuntime: (runtime) => ({
               ...runtime,
               handleSessionUpdate: (handler) =>
@@ -12277,7 +12283,7 @@ describe("AcpAdapterV2", () => {
           makeRuntime: makeMockRuntime({
             childProcessSpawner,
             mockAgentPath,
-            environment: { AC_ACP_HANG_PROMPT_FOREVER: "1" },
+            environment: { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
             protocolEvents,
           }),
         },
@@ -12369,7 +12375,7 @@ describe("AcpAdapterV2", () => {
               ),
             environment: (runtimeOrdinal) => {
               runtimeOrdinalSeen = runtimeOrdinal;
-              return runtimeOrdinal === 1 ? { AC_ACP_HANG_PROMPT_FOREVER: "1" } : {};
+              return runtimeOrdinal === 1 ? { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" } : {};
             },
             protocolEvents,
           }),
@@ -12473,7 +12479,7 @@ describe("AcpAdapterV2", () => {
               ),
             environment: (runtimeOrdinal) => {
               runtimeOrdinalSeen = runtimeOrdinal;
-              return runtimeOrdinal === 1 ? { AC_ACP_HANG_PROMPT_FOREVER: "1" } : {};
+              return runtimeOrdinal === 1 ? { ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" } : {};
             },
             protocolEvents,
           }),
@@ -12577,7 +12583,7 @@ describe("AcpAdapterV2", () => {
             makeRuntime: makeMockRuntime({
               childProcessSpawner,
               mockAgentPath,
-              environment: { AC_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" },
+              environment: { ANKIEL_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1" },
             }),
           },
           selfInvocation,

@@ -37,11 +37,11 @@ and reuses a matching client. Otherwise it installs the build for that fingerpri
 neither has it. A build runs in the `Mobile Dev Client` workflow (CI runners with warm
 Gradle and ccache state, and a macOS runner for iOS) when `gh` may dispatch workflows on
 `benank/ankielcode` and HEAD is pushed; the helper waits for the client in the shared cache.
-Otherwise, or when HEAD lacks your native edits or `AC_NATIVE_CLIENT_BUILD=local` is set, it builds
+Otherwise, or when HEAD lacks your native edits or `ANKIEL_NATIVE_CLIENT_BUILD=local` is set, it builds
 on this machine. Main's client is built there on every native change, so most checkouts hit. One iOS simulator build serves every iPhone and iPad simulator, and one APK per
 ABI (x86_64 or arm64-v8a) serves every emulator and phone of that ABI. Build output goes to the
-log file it prints (`AC_NATIVE_CLIENT_VERBOSE=1` streams it instead). Builds are shared back when
-your task-cache login (`bash infra/task-cache/install.sh`) can write. `AC_NATIVE_CLIENT_CACHE=read`
+log file it prints (`ANKIEL_NATIVE_CLIENT_VERBOSE=1` streams it instead). Builds are shared back when
+your task-cache login (`bash infra/task-cache/install.sh`) can write. `ANKIEL_NATIVE_CLIENT_CACHE=read`
 skips the upload and `off` skips the shared cache. Physical iPhones still use `vp run ios:dev`.
 
 `--session <name>` installs into an agent-device session opened elsewhere, such as a device pool
@@ -87,8 +87,8 @@ reduced-capability local build. Personal Team builds omit the widget and share e
 entitlement; builds without this opt-in are unchanged.
 
 ```bash
-AC_IOS_PERSONAL_TEAM=1 \
-AC_IOS_PERSONAL_TEAM_BUNDLE_ID=com.example.ankielcode.dev \
+ANKIEL_IOS_PERSONAL_TEAM=1 \
+ANKIEL_IOS_PERSONAL_TEAM_BUNDLE_ID=com.example.ankielcode.dev \
 vp run ios:dev
 ```
 
@@ -101,8 +101,8 @@ vp run ios:release
 The Personal Team equivalent also needs a unique bundle identifier:
 
 ```bash
-AC_IOS_PERSONAL_TEAM=1 \
-AC_IOS_PERSONAL_TEAM_BUNDLE_ID=com.example.ankielcode \
+ANKIEL_IOS_PERSONAL_TEAM=1 \
+ANKIEL_IOS_PERSONAL_TEAM_BUNDLE_ID=com.example.ankielcode \
 vp run ios:release
 ```
 

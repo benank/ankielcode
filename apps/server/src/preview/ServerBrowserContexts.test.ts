@@ -321,7 +321,7 @@ describe("ServerBrowserContexts", () => {
     launches.launch.mockResolvedValue(browser as unknown as Browser);
     const pool = new ServerBrowserContexts({
       ...options(),
-      env: { AC_SERVER_BROWSER_SANDBOX: "0" },
+      env: { ANKIEL_SERVER_BROWSER_SANDBOX: "0" },
     });
     await pool.contextFor(INCOGNITO_BROWSER_PROFILE_ID);
     expect(launches.launch).toHaveBeenCalledWith(
@@ -442,7 +442,7 @@ describe("ServerBrowserContexts", () => {
       await probe.close();
       const pool = new ServerBrowserContexts({
         ...options(),
-        env: { ...process.env, AC_SERVER_BROWSER_SANDBOX: "0" },
+        env: { ...process.env, ANKIEL_SERVER_BROWSER_SANDBOX: "0" },
         chrome: { version, platform: host.platform },
       });
       try {

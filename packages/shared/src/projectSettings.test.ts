@@ -187,7 +187,7 @@ describe("resolveProjectSettings", () => {
   });
 });
 
-describe("resolveProjectSettings with an ac.json", () => {
+describe("resolveProjectSettings with an ankiel.json", () => {
   it("walks project override, environment value, file, then built-in for file-backed keys", () => {
     const file = { defaultThreadEnvMode: "worktree" as const };
     const fromOverride = resolveProjectSettings(
@@ -213,7 +213,7 @@ describe("resolveProjectSettings with an ac.json", () => {
 
     const fromFile = resolveProjectSettings(DEFAULT_SERVER_SETTINGS, projectId, null, file);
     expect(fromFile.settings.defaultThreadEnvMode).toBe("worktree");
-    expect(fromFile.sources.defaultThreadEnvMode).toBe("ac.json");
+    expect(fromFile.sources.defaultThreadEnvMode).toBe("ankiel.json");
 
     const builtIn = resolveProjectSettings(DEFAULT_SERVER_SETTINGS, projectId, null, null);
     expect(builtIn.settings.defaultThreadEnvMode).toBe("local");
@@ -228,7 +228,7 @@ describe("resolveProjectSettings with an ac.json", () => {
       file,
     );
     expect(nullOverride.settings.defaultThreadEnvMode).toBe("worktree");
-    expect(nullOverride.sources.defaultThreadEnvMode).toBe("ac.json");
+    expect(nullOverride.sources.defaultThreadEnvMode).toBe("ankiel.json");
     expect(
       resolveProjectSettings(DEFAULT_SERVER_SETTINGS, projectId, null, {}).sources
         .defaultThreadEnvMode,
@@ -275,7 +275,7 @@ describe("resolveNewThreadEnvMode", () => {
     expect(resolveNewThreadEnvMode({ ...newProject, newProjectsRoot: undefined })).toBe("worktree");
   });
 
-  it("lets a project override, or an ac.json the environment defers to, keep worktree mode", () => {
+  it("lets a project override, or an ankiel.json the environment defers to, keep worktree mode", () => {
     for (const projectSettings of [
       resolveProjectSettings(
         {

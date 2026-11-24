@@ -71,10 +71,10 @@ describe("filesystem read access", () => {
 
 describe("filesystem browse model", () => {
   it("derives the browse target and navigation state", () => {
-    expect(getFilesystemBrowsePath("~/projects/ac")).toEqual({
+    expect(getFilesystemBrowsePath("~/projects/ankiel")).toEqual({
       isBrowsing: true,
       directoryPath: "~/projects/",
-      filterQuery: "ac",
+      filterQuery: "ankiel",
       parentPath: "~/",
       canBrowseUp: true,
     });

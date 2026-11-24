@@ -212,9 +212,9 @@ describe("AntigravityAdapterV2 compaction", () => {
                 args: [mockAgentPath],
                 cwd: input.cwd,
                 env: {
-                  AC_ACP_ANTIGRAVITY: "1",
-                  AC_ACP_AVAILABLE_COMMANDS: compact ? "compact" : "",
-                  AC_ACP_REQUEST_LOG_PATH: requestLog,
+                  ANKIEL_ACP_ANTIGRAVITY: "1",
+                  ANKIEL_ACP_AVAILABLE_COMMANDS: compact ? "compact" : "",
+                  ANKIEL_ACP_REQUEST_LOG_PATH: requestLog,
                 },
               },
             }).pipe(
@@ -399,7 +399,7 @@ describe("AntigravityAdapterV2 client file system", () => {
               command: process.execPath,
               args: [mockAgentPath],
               cwd: input.cwd,
-              env: { AC_ACP_ANTIGRAVITY: "1", AC_ACP_REQUEST_LOG_PATH: requestLog },
+              env: { ANKIEL_ACP_ANTIGRAVITY: "1", ANKIEL_ACP_REQUEST_LOG_PATH: requestLog },
             },
           }).pipe(
             Effect.provideService(SecureRandom.SecureRandom, crypto),
@@ -560,7 +560,7 @@ describe("AntigravityAdapterV2 workspace changes", () => {
               command: process.execPath,
               args: [mockAgentPath],
               cwd: input.cwd,
-              env: { AC_ACP_ANTIGRAVITY: "1", AC_ACP_HANG_PROMPT_FOREVER: "1" },
+              env: { ANKIEL_ACP_ANTIGRAVITY: "1", ANKIEL_ACP_HANG_PROMPT_FOREVER: "1" },
             },
           }).pipe(
             Effect.provideService(SecureRandom.SecureRandom, crypto),
@@ -735,7 +735,7 @@ describe("AntigravityAdapterV2 html_render pages", () => {
               command: process.execPath,
               args: [mockAgentPath],
               cwd: input.cwd,
-              env: { AC_ACP_ANTIGRAVITY: "1" },
+              env: { ANKIEL_ACP_ANTIGRAVITY: "1" },
             },
           }).pipe(
             Effect.provideService(SecureRandom.SecureRandom, crypto),
@@ -1028,7 +1028,7 @@ describe("AntigravityAdapterV2 html_render pages", () => {
                 command: process.execPath,
                 args: [mockAgentPath],
                 cwd: input.cwd,
-                env: { AC_ACP_ANTIGRAVITY: "1" },
+                env: { ANKIEL_ACP_ANTIGRAVITY: "1" },
               },
             }).pipe(
               Effect.provideService(SecureRandom.SecureRandom, crypto),
@@ -1382,8 +1382,8 @@ const openSessionWithRunningCommand = Effect.fn("openSessionWithRunningCommand")
           args: [mockAgentPath],
           cwd: input.cwd,
           env: {
-            AC_ACP_ANTIGRAVITY: "1",
-            ...(steering === undefined ? {} : { AC_ACP_AGENT_VERSION: steering.agentVersion }),
+            ANKIEL_ACP_ANTIGRAVITY: "1",
+            ...(steering === undefined ? {} : { ANKIEL_ACP_AGENT_VERSION: steering.agentVersion }),
           },
         },
       }).pipe(
@@ -2509,7 +2509,7 @@ describe("AntigravityAdapterV2 subagent reads", () => {
               command: process.execPath,
               args: [mockAgentPath],
               cwd: input.cwd,
-              env: { AC_ACP_ANTIGRAVITY: "1" },
+              env: { ANKIEL_ACP_ANTIGRAVITY: "1" },
             },
           }).pipe(
             Effect.provideService(SecureRandom.SecureRandom, crypto),
@@ -2704,7 +2704,7 @@ describe("AntigravityAdapterV2 runtime mode ceiling", () => {
               command: process.execPath,
               args: [mockAgentPath],
               cwd: input.cwd,
-              env: { AC_ACP_ANTIGRAVITY: "1" },
+              env: { ANKIEL_ACP_ANTIGRAVITY: "1" },
             },
           }).pipe(
             Effect.provideService(SecureRandom.SecureRandom, crypto),
@@ -2726,7 +2726,7 @@ describe("AntigravityAdapterV2 runtime mode ceiling", () => {
         modelSelection: {
           instanceId,
           model: "gemini-test-low",
-          options: [{ id: "_ac/session-mode", value: pickedMode }],
+          options: [{ id: "_ankiel/session-mode", value: pickedMode }],
         },
         runtimePolicy: ProviderAdapter.ProviderAdapterV2RuntimePolicy.make({
           ...modes,
@@ -2778,7 +2778,7 @@ describe("AntigravityAdapterV2 runtime mode ceiling", () => {
               command: process.execPath,
               args: [mockAgentPath],
               cwd: input.cwd,
-              env: { AC_ACP_ANTIGRAVITY: "1" },
+              env: { ANKIEL_ACP_ANTIGRAVITY: "1" },
             },
           }).pipe(
             Effect.provideService(SecureRandom.SecureRandom, crypto),
@@ -2869,10 +2869,10 @@ describe("AntigravityAdapterV2 session system prompt", () => {
                 args: [mockAgentPath],
                 cwd: input.cwd,
                 env: {
-                  AC_ACP_ANTIGRAVITY: "1",
-                  AC_ACP_AGENT_VERSION: agentVersion,
-                  AC_ACP_REQUEST_LOG_PATH: requestLog,
-                  AC_ACP_HANG_PROMPT_FOREVER: "1",
+                  ANKIEL_ACP_ANTIGRAVITY: "1",
+                  ANKIEL_ACP_AGENT_VERSION: agentVersion,
+                  ANKIEL_ACP_REQUEST_LOG_PATH: requestLog,
+                  ANKIEL_ACP_HANG_PROMPT_FOREVER: "1",
                 },
               },
             }).pipe(
@@ -2990,7 +2990,7 @@ describe("AntigravityAdapterV2 update_steps checklist", () => {
               command: process.execPath,
               args: [mockAgentPath],
               cwd: input.cwd,
-              env: { AC_ACP_ANTIGRAVITY: "1" },
+              env: { ANKIEL_ACP_ANTIGRAVITY: "1" },
             },
           }).pipe(
             Effect.provideService(SecureRandom.SecureRandom, crypto),

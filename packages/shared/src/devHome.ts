@@ -1,4 +1,4 @@
-/** Worktrees use isolated .ac state; ambient AC_HOME could otherwise select the live userdata database. */
+/** Worktrees use isolated .ankiel state; ambient ANKIEL_HOME could otherwise select the live userdata database. */
 
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -62,5 +62,5 @@ export const resolveWorktreeAnkielHome = Effect.fn("devHome.resolveWorktreeAnkie
     return undefined;
   }
   const path = yield* Path.Path;
-  return path.join(worktreePath, ".ac");
+  return path.join(worktreePath, ".ankiel");
 });

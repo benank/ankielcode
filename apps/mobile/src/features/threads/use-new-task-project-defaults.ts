@@ -2,7 +2,7 @@ import { resolveFilesystemReadAccess } from "@ankielcode/client-runtime/state/fi
 import { isScratchProject } from "@ankielcode/client-runtime/state/projects";
 import type { EnvironmentProject } from "@ankielcode/client-runtime/state/shell";
 import type { ProjectReadFileResult } from "@ankielcode/contracts";
-import { DEFAULT_SERVER_SETTINGS, AC_PROJECT_FILE_NAME } from "@ankielcode/contracts";
+import { DEFAULT_SERVER_SETTINGS, ANKIEL_PROJECT_FILE_NAME } from "@ankielcode/contracts";
 import {
   resolveNewThreadEnvMode,
   resolveProjectSettings,
@@ -18,7 +18,7 @@ import { useEnvironmentQuery } from "../../state/query";
 import { environmentSession } from "../../state/session";
 
 /**
- * A project's new-task defaults: server settings merged with its ac.json. The
+ * A project's new-task defaults: server settings merged with its ankiel.json. The
  * new-task flow and the home pending-drafts list both read the default
  * workspace mode here, so a draft that never picked one shows what it sends.
  * Every read is a shared per-environment or per-project atom.
@@ -48,7 +48,7 @@ export function useNewTaskProjectDefaults(project: EnvironmentProject | null) {
           environmentId: project.environmentId,
           input: {
             cwd: project.workspaceRoot,
-            relativePath: AC_PROJECT_FILE_NAME,
+            relativePath: ANKIEL_PROJECT_FILE_NAME,
             allowMissing: true,
           },
         })
@@ -76,7 +76,7 @@ export function useNewTaskProjectDefaults(project: EnvironmentProject | null) {
         newProjectsRoot: serverConfig?.newProjectsRoot,
         projectHasThreads,
       });
-  // While ac.json loads, the environment default is provisional; ac.json may replace it.
+  // While ankiel.json loads, the environment default is provisional; ankiel.json may replace it.
   const defaultWorkspaceModeSettled =
     projectSettings.sources.defaultThreadEnvMode !== "environment" ||
     (!ankielProjectFileQuery.isPending && !fileAccessPending);

@@ -27,7 +27,7 @@ There are two ways to build one:
 2. **Write the story** before any code: who the user is, what they want, and two or three
    beats that get them there. Show it to the maintainer if the angle is a guess.
 3. **Stage it.** Copy `stagings/linked-environments/` to `stagings/<slug>/`.
-   - `serve.mjs` builds fresh homes under `.ac/launch/<slug>/` with `scripts/stage-env.mjs`.
+   - `serve.mjs` builds fresh homes under `.ankiel/launch/<slug>/` with `scripts/stage-env.mjs`.
      Each home gets a fictional machine label, the replay agent, and no paid provider.
      It starts the servers, creates projects, writes `<out>/stage.json` and keeps running.
      Run it in the background.
@@ -89,7 +89,7 @@ harness's task stop; it ends its servers' process groups.
 
 ### Staging traps
 
-- **Machine names and icons.** `AC_ENVIRONMENT_LABEL` and `AC_ENVIRONMENT_MACHINE_KIND`
+- **Machine names and icons.** `ANKIEL_ENVIRONMENT_LABEL` and `ANKIEL_ENVIRONMENT_MACHINE_KIND`
   (laptop, desktop, cloud, linux, mac-mini, mac-studio) override what the server detects.
   `prepareHome({ label, machine })` records them and `startEnvironment` and `cli()` pass them
   on; the CLI needs them too, because a link introduces the machine by its label.

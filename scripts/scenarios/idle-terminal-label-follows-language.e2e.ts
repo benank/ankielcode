@@ -1,21 +1,21 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "An idle numbered terminal shows its name in the app's language after switching threads",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Terminal work", messages: ["Start"] });
-    await ac.thread({ project, title: "Other work", messages: ["Start"] });
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Terminal work", messages: ["Start"] });
+    await ankiel.thread({ project, title: "Other work", messages: ["Start"] });
 
-    await ac.open("/settings/general");
+    await ankiel.open("/settings/general");
     await screen.getByLabel("Language", { exact: true }).tap();
     await screen.getByText("日本語", { exact: true }).tap();
     await screen.getByLabel("言語", { exact: true }).waitFor();
 
-    await ac.open(thread);
+    await ankiel.open(thread);
     const drawerToggle = screen.getByRole("button", "ターミナルドロワーの切り替え");
     await drawerToggle.tap();
     const input = browser.locator('[aria-label="ターミナルの入力"][data-workspace-focus-default]');

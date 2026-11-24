@@ -3,7 +3,7 @@
 import type { Browser } from "@e2e-dev/web";
 import { expect, type Screen } from "e2e";
 
-import type { Ankiel } from "./ac.ts";
+import type { Ankiel } from "./ankiel.ts";
 
 const FILE_NAMES = Array.from(
   { length: 40 },
@@ -11,11 +11,11 @@ const FILE_NAMES = Array.from(
 );
 
 /** Seeds a project with enough files to overflow the menu and opens a thread in it. */
-export async function openThreadWithManyFiles(ac: Ankiel) {
+export async function openThreadWithManyFiles(ankiel: Ankiel) {
   const files = Object.fromEntries(FILE_NAMES.map((name) => [`src/${name}`, `export {};\n`]));
-  const project = await ac.project("demo", files);
-  const thread = await ac.thread({ project, title: "Short window", messages: ["hello"] });
-  await ac.open(thread);
+  const project = await ankiel.project("demo", files);
+  const thread = await ankiel.thread({ project, title: "Short window", messages: ["hello"] });
+  await ankiel.open(thread);
 }
 
 /** Types a fourteen-line draft, then opens the `@` file suggestions at its end. */

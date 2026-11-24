@@ -511,7 +511,7 @@ describe("live body deduper", () => {
         parentCheckpointId: null,
         ordinalWithinScope: 1,
         appRunOrdinal: null,
-        ref: CheckpointRef.make("refs/ac/checkpoints/large"),
+        ref: CheckpointRef.make("refs/ankiel/checkpoints/large"),
         status: "ready",
         files,
         capturedAt: at,

@@ -10,11 +10,11 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Path from "effect/Path";
 
-import { APP_DIR, AC_HOME } from "../e2e.config.ts";
+import { APP_DIR, ANKIEL_HOME } from "../e2e.config.ts";
 import { ScenarioError } from "./shell.ts";
 import { prepareHome, SCENARIO_MACHINE_ENV, start } from "./start-app.ts";
 
-export const SECOND_HOME = `${AC_HOME}-second-environment`;
+export const SECOND_HOME = `${ANKIEL_HOME}-second-environment`;
 
 /** A second server on its own Ankiel home, running until interrupted. `--dev-url` admits the web
  * origin through CORS and registers the replay agent; `paired` gets the Add environment input. */
@@ -46,7 +46,7 @@ const runSecondServer = Effect.fn("scenario.secondServer")(function* (
     env: {
       PATH: `${path.join(SECOND_HOME, "bin")}:${hostEnvironment.PATH ?? ""}`,
       HOME: hostEnvironment.HOME,
-      AC_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
+      ANKIEL_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
       ...SCENARIO_MACHINE_ENV,
     },
     onLine: (line) => {

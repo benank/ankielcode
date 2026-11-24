@@ -111,7 +111,7 @@ function writeScratch(baseDir: string) {
         [EVAL_INSTANCE]: {
           driver: "fx",
           displayName: "Eval Bot",
-          environment: [{ name: "AC_EVAL_FX_CONTROL_DIR", value: control }],
+          environment: [{ name: "ANKIEL_EVAL_FX_CONTROL_DIR", value: control }],
           config: { enabled: true, binaryPath: launcher },
         },
       },
@@ -187,7 +187,7 @@ export const startEnvironment = Effect.fn("environment.start")(function* (input:
     HttpClient.filterStatusOk,
   );
   const descriptor = yield* http
-    .get(`${origin}/.well-known/ac/environment`)
+    .get(`${origin}/.well-known/ankiel/environment`)
     .pipe(Effect.flatMap(HttpClientResponse.schemaBodyJson(ExecutionEnvironmentDescriptor)));
   const shell = () =>
     http

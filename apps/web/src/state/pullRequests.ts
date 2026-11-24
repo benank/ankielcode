@@ -256,9 +256,9 @@ function snapshotStorage(): Storage | undefined {
 
 type ListAnswerStorage = Pick<Storage, "getItem" | "setItem" | "removeItem" | "key" | "length">;
 
-const LIST_SCOPE_INDEX_KEY = "ac.pullRequests.listScopes";
-const LIST_SCOPE_KEY_PREFIX = "ac.pullRequests.listScope:";
-const LEGACY_SNAPSHOT_KEY_PREFIX = "ac.pullRequests.list:";
+const LIST_SCOPE_INDEX_KEY = "ankiel.pullRequests.listScopes";
+const LIST_SCOPE_KEY_PREFIX = "ankiel.pullRequests.listScope:";
+const LEGACY_SNAPSHOT_KEY_PREFIX = "ankiel.pullRequests.list:";
 const LIST_ANSWER_MAX_ENTRIES = 99;
 /**
  * A scope holds a page of rows per environment, so only the scopes visited most recently are

@@ -969,7 +969,7 @@ it.effect("bounds page text made of wide characters before dropping locators", (
     Effect.gen(function* () {
       const accessibilityTree = Array.from(
         { length: 20 },
-        (_, i) => `- button "Button ${i}" [ref=ac-1-e${i}]`,
+        (_, i) => `- button "Button ${i}" [ref=ankiel-1-e${i}]`,
       ).join("\n");
       yield* serveSnapshots("mcp-wide-text-client", {
         ...snapshotResult,

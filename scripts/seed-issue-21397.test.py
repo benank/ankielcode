@@ -47,8 +47,8 @@ class SeederTest(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         self.tmp = pathlib.Path(temp.name)
         self.fake_home = self.tmp / 'user'
-        (self.fake_home / '.ac/userdata').mkdir(parents=True)
-        self.source_home = self.tmp / 'worktree/.ac/userdata'
+        (self.fake_home / '.ankiel/userdata').mkdir(parents=True)
+        self.source_home = self.tmp / 'worktree/.ankiel/userdata'
         self.source_home.mkdir(parents=True)
         self.source = self.source_home / 'statev2.sqlite'
         db = sqlite3.connect(self.source)
@@ -130,15 +130,15 @@ class SeederTest(unittest.TestCase):
         dangling = self.tmp / 'dangling'
         dangling.symlink_to(self.tmp / 'missing')
         live_link = self.tmp / 'live-link'
-        live_link.symlink_to(self.fake_home / '.ac')
+        live_link.symlink_to(self.fake_home / '.ankiel')
         cases = {
             'existing directory': existing_dir,
             'existing file': existing_file,
             'symlink to directory': link_to_dir,
             'dangling symlink': dangling,
             'source home': self.source_home.parent,
-            'live home': self.fake_home / '.ac',
-            'inside live home': self.fake_home / '.ac/fixture',
+            'live home': self.fake_home / '.ankiel',
+            'inside live home': self.fake_home / '.ankiel/fixture',
             'through symlink into live home': live_link / 'fixture',
         }
         for name, home in cases.items():

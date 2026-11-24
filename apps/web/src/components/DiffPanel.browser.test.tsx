@@ -383,7 +383,7 @@ it("shows a turn's repositories in a folder that is not a Git repository", async
     {
       runId: RunId.make("run-1"),
       checkpointTurnCount: 1,
-      checkpointRef: CheckpointRef.make("refs/ac/root-1"),
+      checkpointRef: CheckpointRef.make("refs/ankiel/root-1"),
       status: "missing",
       files: [],
       repositories: [repository("api"), repository("web")],

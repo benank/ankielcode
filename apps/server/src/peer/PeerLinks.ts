@@ -234,7 +234,7 @@ const probeFailure = (
 
 /** Whether a host is this machine's own loopback. Tests serve their peers there, so they narrow it. */
 export const LoopbackHost = Context.Reference<(host: string) => boolean>(
-  "ac/peer/PeerLinks/LoopbackHost",
+  "ankiel/peer/PeerLinks/LoopbackHost",
   { defaultValue: () => isLocalLoopbackHost },
 );
 

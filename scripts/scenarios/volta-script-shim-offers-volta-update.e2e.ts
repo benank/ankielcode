@@ -4,8 +4,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 // Windows Volta 2 writes `bin/<tool>` scripts that run `volta run`, not links to `volta-shim`.
 // The fake `volta` only reports a version, so nothing installs or reaches a model. The latest
@@ -26,7 +26,7 @@ const encodeSettings = Schema.encodeEffect(SettingsJson);
 const installVoltaOpenCode = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const voltaHome = path.join(AC_HOME, "Volta");
+  const voltaHome = path.join(ANKIEL_HOME, "Volta");
   const shim = path.join(voltaHome, "bin", "opencode");
   const executable = (file: string, text: string) =>
     fs
@@ -37,9 +37,9 @@ const installVoltaOpenCode = Effect.gen(function* () {
     recursive: true,
   });
   // The scenario home's `bin` is on the server's PATH.
-  yield* executable(path.join(AC_HOME, "bin", "volta"), FAKE_VOLTA);
+  yield* executable(path.join(ANKIEL_HOME, "bin", "volta"), FAKE_VOLTA);
 
-  const settingsPath = path.join(AC_HOME, "userdata", "settings.json");
+  const settingsPath = path.join(ANKIEL_HOME, "userdata", "settings.json");
   const settings = yield* decodeSettings(yield* fs.readFileString(settingsPath));
   const opencode = { driver: "opencode", enabled: true, config: { binaryPath: shim } };
   yield* fs.writeFileString(
@@ -54,11 +54,11 @@ const installVoltaOpenCode = Effect.gen(function* () {
 test(
   "OpenCode installed through a Volta script shim offers a Volta update",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     await browser.emulateMedia({ colorScheme: "dark" });
-    await ac.project("demo");
+    await ankiel.project("demo");
     await runPromise(installVoltaOpenCode);
-    await ac.open("/settings/providers?instanceId=opencode");
+    await ankiel.open("/settings/providers?instanceId=opencode");
 
     // The list row and the detail header both carry the button; take the header's.
     const details = screen.getByRole("button", /view details/).last();

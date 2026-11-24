@@ -9,7 +9,7 @@ import {
   type TaskFolderError,
   type Project as ProjectRecord,
   type ServerProvider,
-  AC_PROJECT_FILE_NAME,
+  ANKIEL_PROJECT_FILE_NAME,
 } from "@ankielcode/contracts";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -113,13 +113,13 @@ const projectWorktreePath = Effect.fn("mcp.assertProjectWorktree")(function* (
   });
 });
 
-/** The composer falls back to the project's ac.json when no setting picks the mode. */
+/** The composer falls back to the project's ankiel.json when no setting picks the mode. */
 const projectFileThreadEnvMode = Effect.fn("mcp.projectFileThreadEnvMode")(function* (
   workspaceRoot: string,
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   const contents = yield* fileSystem
-    .readFileString(`${workspaceRoot}/${AC_PROJECT_FILE_NAME}`)
+    .readFileString(`${workspaceRoot}/${ANKIEL_PROJECT_FILE_NAME}`)
     .pipe(Effect.orElseSucceed(() => null));
   return resolveProjectFileBackedSetting(
     "defaultThreadEnvMode",

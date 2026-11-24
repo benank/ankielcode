@@ -38,7 +38,7 @@ const startBesideBootService = Effect.fn("test.startBesideBootService")(function
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-owner-boot-service-" });
-  const ankielHome = path.join(root, ".ac");
+  const ankielHome = path.join(root, ".ankiel");
   const serviceHome = input.unitServesOtherHome ? path.join(root, "other") : ankielHome;
   for (const home of [ankielHome, serviceHome]) {
     yield* fs.makeDirectory(path.join(home, "userdata"), { recursive: true });
@@ -53,7 +53,7 @@ const startBesideBootService = Effect.fn("test.startBesideBootService")(function
   }
   if (input.npmRuntime) {
     const versionDir = path.join(serviceHome, "runtime", "versions", activeVersion);
-    const entryPath = path.join(versionDir, "node_modules", "ac", "dist", "bin.mjs");
+    const entryPath = path.join(versionDir, "node_modules", "ankiel", "dist", "bin.mjs");
     yield* fs.makeDirectory(path.dirname(entryPath), { recursive: true });
     yield* fs.writeFileString(entryPath, "");
   }
@@ -372,8 +372,8 @@ describe("server ownership", () => {
           assert.equal(result.failure._tag, "OlderBootServiceError");
           assert.equal(Runtime.getErrorExitCode(result.failure), 78);
           assert.include(result.failure.message, ankielHome);
-          assert.include(result.failure.message, "ac update");
-          assert.include(result.failure.message, "ac service restart");
+          assert.include(result.failure.message, "ankiel update");
+          assert.include(result.failure.message, "ankiel service restart");
           assert.include(result.failure.message, "No server was stopped");
         }
       }).pipe(Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),

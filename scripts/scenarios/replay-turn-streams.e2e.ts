@@ -1,13 +1,13 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "A replayed turn streams a reply, shows its tool calls, and finishes",
   WEB,
-  async ({ ac, app, screen }) => {
-    await ac.project("demo", { "src/math.ts": "export const sum = 1 + 1;\n" });
-    await ac.open();
+  async ({ ankiel, app, screen }) => {
+    await ankiel.project("demo", { "src/math.ts": "export const sum = 1 + 1;\n" });
+    await ankiel.open();
 
     await screen.getByRole("textbox").fill("Give me a short tour");
     await screen.getByRole("textbox").press("Enter");

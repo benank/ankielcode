@@ -1414,7 +1414,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive", (it) => {
         runtimeMode: "full-access",
         interactionMode: "default",
         branch: null,
-        worktreePath: `/tmp/ac-${name}`,
+        worktreePath: `/tmp/ankiel-${name}`,
       });
       yield* orchestrator.dispatch({
         type: "message.dispatch",
@@ -1447,7 +1447,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive", (it) => {
               parentCheckpointId: null,
               ordinalWithinScope: 0,
               appRunOrdinal: null,
-              ref: CheckpointRef.make(`refs/ac/${name}`),
+              ref: CheckpointRef.make(`refs/ankiel/${name}`),
               status: "ready",
               files: [],
               capturedAt: now,
@@ -1779,7 +1779,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive", (it) => {
                 parentCheckpointId: null,
                 ordinalWithinScope: 0,
                 appRunOrdinal: null,
-                ref: CheckpointRef.make(`refs/ac/runtime-rollback-${status}`),
+                ref: CheckpointRef.make(`refs/ankiel/runtime-rollback-${status}`),
                 status,
                 files: [],
                 capturedAt: now,

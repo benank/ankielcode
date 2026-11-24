@@ -753,7 +753,7 @@ const capture = async (
   const accessibilityTree = (dotted ? maskTree(redacted, dotted) : redacted)
     .slice(0, MAX_VISIBLE_TEXT_LENGTH)
     .replace(/\[ref=((?:f\d+)?e\d+)\]/g, (_match, nativeRef: string) => {
-      const ref = `ac-${generation}-${nativeRef}`;
+      const ref = `ankiel-${generation}-${nativeRef}`;
       state.refs.set(ref, nativeRef);
       return `[ref=${ref}]`;
     });

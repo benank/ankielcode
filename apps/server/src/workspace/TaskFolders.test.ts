@@ -461,15 +461,15 @@ it.live("adopts the checkouts a project's own layout command makes, and runs its
       const web = yield* repository("shop/web");
       // The project checks `api` out itself, copies its build cache and leaves `web` out.
       yield* fileSystem.writeFileString(
-        path.join(shop, "ac.json"),
+        path.join(shop, "ankiel.json"),
         JSON.stringify({
           worktreeLayout: {
             // A plain project's folder is no worktree, even when the command leaves a `.git` there.
             create:
-              'mkdir -p "$AC_WORKTREE_PROJECT_PATH/cache" && git init -q "$AC_WORKTREE_PROJECT_PATH" && printf %s "$AC_WORKTREE_REPOSITORIES" > "$AC_WORKTREE_PROJECT_PATH/chosen" && git -C "$AC_PROJECT_ROOT/api" worktree add -q -b "$AC_WORKTREE_BRANCH" "$AC_WORKTREE_PROJECT_PATH/api" "$AC_WORKTREE_BASE"',
+              'mkdir -p "$ANKIEL_WORKTREE_PROJECT_PATH/cache" && git init -q "$ANKIEL_WORKTREE_PROJECT_PATH" && printf %s "$ANKIEL_WORKTREE_REPOSITORIES" > "$ANKIEL_WORKTREE_PROJECT_PATH/chosen" && git -C "$ANKIEL_PROJECT_ROOT/api" worktree add -q -b "$ANKIEL_WORKTREE_BRANCH" "$ANKIEL_WORKTREE_PROJECT_PATH/api" "$ANKIEL_WORKTREE_BASE"',
             // Cleanup never deletes files that exist only here, so the teardown clears its own.
             remove:
-              'touch "$AC_PROJECT_ROOT/torn-down" && rm -rf "$AC_WORKTREE_PROJECT_PATH/cache" "$AC_WORKTREE_PROJECT_PATH/chosen" "$AC_WORKTREE_PROJECT_PATH/.git"',
+              'touch "$ANKIEL_PROJECT_ROOT/torn-down" && rm -rf "$ANKIEL_WORKTREE_PROJECT_PATH/cache" "$ANKIEL_WORKTREE_PROJECT_PATH/chosen" "$ANKIEL_WORKTREE_PROJECT_PATH/.git"',
           },
         }),
       );
@@ -517,10 +517,10 @@ it.live("leaves a project's layout commands out for a request that may not run t
       const api = yield* repository("shop/api");
       const ran = path.join(tmp, "ran");
       yield* fileSystem.writeFileString(
-        path.join(shop, "ac.json"),
+        path.join(shop, "ankiel.json"),
         JSON.stringify({
           worktreeLayout: {
-            create: `echo create >> "${ran}" && mkdir -p "$AC_WORKTREE_PROJECT_PATH" && git -C "$AC_PROJECT_ROOT/api" worktree add -q -b "$AC_WORKTREE_BRANCH" "$AC_WORKTREE_PROJECT_PATH/api"`,
+            create: `echo create >> "${ran}" && mkdir -p "$ANKIEL_WORKTREE_PROJECT_PATH" && git -C "$ANKIEL_PROJECT_ROOT/api" worktree add -q -b "$ANKIEL_WORKTREE_BRANCH" "$ANKIEL_WORKTREE_PROJECT_PATH/api"`,
             remove: `echo remove >> "${ran}"`,
           },
         }),
@@ -581,7 +581,7 @@ it.live(
         const taskFolders = yield* TaskFolders.TaskFolders;
         const attempt = Effect.fnUntraced(function* (command: string) {
           yield* fileSystem.writeFileString(
-            path.join(shop, "ac.json"),
+            path.join(shop, "ankiel.json"),
             JSON.stringify({ worktreeLayout: { create: command } }),
           );
           const plan = yield* taskFolders.plan({ projectId, repositories: [{ path: api }] });
@@ -597,26 +597,26 @@ it.live(
         });
 
         yield* attempt(
-          'mkdir -p "$AC_WORKTREE_PROJECT_PATH" && git -C "$AC_PROJECT_ROOT/api" worktree add -q -b "$AC_WORKTREE_BRANCH" "$AC_WORKTREE_PROJECT_PATH/api" && exit 1',
+          'mkdir -p "$ANKIEL_WORKTREE_PROJECT_PATH" && git -C "$ANKIEL_PROJECT_ROOT/api" worktree add -q -b "$ANKIEL_WORKTREE_BRANCH" "$ANKIEL_WORKTREE_PROJECT_PATH/api" && exit 1',
         );
         assert.equal(yield* worktreeCount(api), 1);
 
         // A clone has no worktree registration to remove, and no thread branch to rename.
         const refused = yield* attempt(
-          'mkdir -p "$AC_WORKTREE_PROJECT_PATH" && git clone -q "$AC_PROJECT_ROOT/api" "$AC_WORKTREE_PROJECT_PATH/api"',
+          'mkdir -p "$ANKIEL_WORKTREE_PROJECT_PATH" && git clone -q "$ANKIEL_PROJECT_ROOT/api" "$ANKIEL_WORKTREE_PROJECT_PATH/api"',
         );
         assert.include(refused.detail, "is not a Git worktree of");
 
         // The refused checkout's folder is deleted, so its registration must go too.
         const wrongBranch = yield* attempt(
-          'mkdir -p "$AC_WORKTREE_PROJECT_PATH" && git -C "$AC_PROJECT_ROOT/api" worktree add -q -b other "$AC_WORKTREE_PROJECT_PATH/api"',
+          'mkdir -p "$ANKIEL_WORKTREE_PROJECT_PATH" && git -C "$ANKIEL_PROJECT_ROOT/api" worktree add -q -b other "$ANKIEL_WORKTREE_PROJECT_PATH/api"',
         );
         assert.include(wrongBranch.detail, "is not on the branch feature");
         assert.equal(yield* worktreeCount(api), 1);
 
         // A branch that was there before the command checked it out outlives the rollback.
         yield* attempt(
-          'mkdir -p "$AC_WORKTREE_PROJECT_PATH" && git -C "$AC_PROJECT_ROOT/web" worktree add -q "$AC_WORKTREE_PROJECT_PATH/web" "$AC_WORKTREE_BRANCH" && exit 1',
+          'mkdir -p "$ANKIEL_WORKTREE_PROJECT_PATH" && git -C "$ANKIEL_PROJECT_ROOT/web" worktree add -q "$ANKIEL_WORKTREE_PROJECT_PATH/web" "$ANKIEL_WORKTREE_BRANCH" && exit 1',
         );
         assert.equal(yield* worktreeCount(web), 1);
         assert.deepEqual((yield* run(web, "branch", "--format=%(refname:short)")).split("\n"), [
@@ -638,11 +638,11 @@ it.live.each([{ linked: false }, { linked: true }])(
         const mono = path.join(tmp, "mono");
         if (linked) yield* run(origin, "worktree", "add", "-q", "-b", "dev", mono);
         yield* fileSystem.writeFileString(
-          path.join(mono, "ac.json"),
+          path.join(mono, "ankiel.json"),
           JSON.stringify({
             worktreeLayout: {
               create:
-                '(git worktree add -q "$AC_WORKTREE_PROJECT_PATH" "$AC_WORKTREE_BRANCH" 2>/dev/null || git worktree add -q -b "$AC_WORKTREE_BRANCH" "$AC_WORKTREE_PROJECT_PATH") && touch "$AC_WORKTREE_PROJECT_PATH/prepared"',
+                '(git worktree add -q "$ANKIEL_WORKTREE_PROJECT_PATH" "$ANKIEL_WORKTREE_BRANCH" 2>/dev/null || git worktree add -q -b "$ANKIEL_WORKTREE_BRANCH" "$ANKIEL_WORKTREE_PROJECT_PATH") && touch "$ANKIEL_WORKTREE_PROJECT_PATH/prepared"',
             },
           }),
         );
@@ -1014,7 +1014,7 @@ it.live("restores a recorded repository the project stopped tracking as its work
 
       yield* fileSystem.remove(root, { recursive: true });
       yield* fileSystem.writeFileString(
-        path.join(shop, "ac.json"),
+        path.join(shop, "ankiel.json"),
         JSON.stringify({ ignoreRepositories: ["web"] }),
       );
       yield* (yield* TaskFolders.TaskFolders).restore({
@@ -1033,7 +1033,7 @@ it.live("restores a recorded repository the project stopped tracking as its work
         assert.isFalse(yield* isLink(worktree));
         assert.equal(yield* run(worktree, "symbolic-ref", "--short", "HEAD"), "feature");
       }
-      assert.isTrue(yield* isLink(path.join(root, "ac.json")));
+      assert.isTrue(yield* isLink(path.join(root, "ankiel.json")));
     }),
   ),
 );
@@ -1050,7 +1050,7 @@ it.live("resumes once an excluded dependency's worktree is replaced by a clone",
       yield* fileSystem.remove(clone, { recursive: true });
       yield* run(taskFolder.projectPath, "clone", "-q", "--local", dependency, clone);
       yield* fileSystem.writeFileString(
-        path.join(project, "ac.json"),
+        path.join(project, "ankiel.json"),
         JSON.stringify({ ignoreRepositories: ["deps"] }),
       );
       const taskFolders = yield* TaskFolders.TaskFolders;

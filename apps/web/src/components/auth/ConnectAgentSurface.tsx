@@ -352,7 +352,7 @@ function McpConsent({
             <p className="text-xs text-muted-foreground">
               <T>
                 Get one from Use Ankiel Code in another app (MCP), Settings → Sharing & access, or{" "}
-                <code>ac auth pairing create</code> on this machine.
+                <code>ankiel auth pairing create</code> on this machine.
               </T>
             </p>
           </div>

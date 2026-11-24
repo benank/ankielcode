@@ -673,7 +673,7 @@ describe("share cleanup ownership", () => {
   });
 
   it("deletes only the resolver's share copies on Android", () => {
-    const data = "file:///data/user/0/codes.ac.app";
+    const data = "file:///data/user/0/codes.ankiel.app";
     const owned = (uri: string, platform = "android") =>
       isOwnedShareFileUri(uri, {
         platform,
@@ -684,7 +684,7 @@ describe("share cleanup ownership", () => {
     expect(owned(`file:${copy.slice("file://".length)}/report.pdf`)).toBe(true);
     expect(
       owned(
-        "file:///data/data/codes.ac.app/cache/shared-0b0e3f0c-6c1d-4b53-9d0a-2f6f1c3a9e11/a.png",
+        "file:///data/data/codes.ankiel.app/cache/shared-0b0e3f0c-6c1d-4b53-9d0a-2f6f1c3a9e11/a.png",
       ),
     ).toBe(true);
     for (const uri of [

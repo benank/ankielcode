@@ -5,80 +5,80 @@ do not need to keep a terminal open.
 
 ## Manage the service
 
-Install the `ac` CLI first ([Install Ankiel Code](./install.md#command-line)), then
+Install the `ankiel` CLI first ([Install Ankiel Code](./install.md#command-line)), then
 run these commands on the machine that will host Ankiel Code:
 
-| Task                                  | Command                |
-| ------------------------------------- | ---------------------- |
-| Set up access from your other devices | `ac up`                |
-| See how your other devices reach it   | `ac status`            |
-| Install and start                     | `ac service install`   |
-| Inspect status and log location       | `ac service status`    |
-| Move to a newer release               | `ac update`            |
-| Restart                               | `ac service restart`   |
-| Stop and remove from startup          | `ac service uninstall` |
+| Task                                  | Command                    |
+| ------------------------------------- | -------------------------- |
+| Set up access from your other devices | `ankiel up`                |
+| See how your other devices reach it   | `ankiel status`            |
+| Install and start                     | `ankiel service install`   |
+| Inspect status and log location       | `ankiel service status`    |
+| Move to a newer release               | `ankiel update`            |
+| Restart                               | `ankiel service restart`   |
+| Stop and remove from startup          | `ankiel service uninstall` |
 
 Uninstalling the service leaves your projects, threads, and settings intact.
-Running `ac service install` again repairs a service that `ac service status`
+Running `ankiel service install` again repairs a service that `ankiel service status`
 reports as broken.
 
-`ac update` downloads the newest release on your channel and switches `ac`
+`ankiel update` downloads the newest release on your channel and switches `ankiel`
 and the service to it. Restarting interrupts running agent turns, terminals,
 and remote clients, so it asks first; answer no and the service keeps running
-the old version until you run `ac service restart`. Pass `--yes` from a
+the old version until you run `ankiel service restart`. Pass `--yes` from a
 script. A server you started by hand is left running; stop and start it again
 to pick up the new version. Wait for any remote update already in progress
 before updating; to match a remote client's version, follow
 [Updating Ankiel Code](./updating.md).
 
-Pass an exact version (`ac update 0.0.42`) to pin one, `--channel nightly` to
+Pass an exact version (`ankiel update 0.0.42`) to pin one, `--channel nightly` to
 switch trains, or `--allow-downgrade` to move backwards. `preview` is a
 maintainers' test train: its builds can be broken and are never offered as
-updates, so the installer and `ac update` ask for confirmation before
+updates, so the installer and `ankiel update` ask for confirmation before
 installing one.
 
-`ac uninstall` removes the background service, the `ac` launcher, and the
+`ankiel uninstall` removes the background service, the `ankiel` launcher, and the
 downloaded versions after showing you the list and asking once. Your projects,
-threads, and settings under `~/.ac/userdata` are kept, along with `service.env`
+threads, and settings under `~/.ankiel/userdata` are kept, along with `service.env`
 under Ankiel home. Pass `--yes` from a script.
 
 ## Local network access
 
-A new service answers only on this machine. Other devices reach it once you choose the local network in `ac up` (or run
-`ac up --lan`, which sets `AC_LAN=true` in `service.env`). It then listens on
+A new service answers only on this machine. Other devices reach it once you choose the local network in `ankiel up` (or run
+`ankiel up --lan`, which sets `ANKIEL_LAN=true` in `service.env`). It then listens on
 your local network and Tailscale addresses, so the desktop and mobile apps on
 the same network connect directly. It still does not answer on public addresses.
 Anyone on the same network can reach the port, so a pairing code is all that
 keeps them out. The hosted web app at app.code.ankiel.com cannot reach it over plain
 HTTP, because browsers block plain HTTP from an HTTPS page.
 
-A service installed before `AC_LAN` existed keeps listening on the local
-network. `ac status` says so, and `ac up --no-lan` turns it off. Any
-`AC_HOST` value replaces this setting.
+A service installed before `ANKIEL_LAN` existed keeps listening on the local
+network. `ankiel status` says so, and `ankiel up --no-lan` turns it off. Any
+`ANKIEL_HOST` value replaces this setting.
 
 ## Configure the service environment
 
 Put custom environment variables in `service.env` under the service's Ankiel home
-directory, normally `~/.ac/service.env`. This file survives service installation
+directory, normally `~/.ankiel/service.env`. This file survives service installation
 and updates. For example:
 
 ```dotenv
-AC_PORT=3773
-AC_HOST=127.0.0.1
+ANKIEL_PORT=3773
+ANKIEL_HOST=127.0.0.1
 ```
 
 Use `KEY=VALUE` entries, quoting values that contain spaces or `#`. Values are
 literal: shell commands and variable expansion are not evaluated. Entries
-override the inherited service environment, except for `PATH`, `AC_HOME`,
-`AC_BOOT_SERVICE_UNIT`, and `AC_SERVICE_LAUNCHER_CONTEXT` (including case variants).
+override the inherited service environment, except for `PATH`, `ANKIEL_HOME`,
+`ANKIEL_BOOT_SERVICE_UNIT`, and `ANKIEL_SERVICE_LAUNCHER_CONTEXT` (including case variants).
 
-Run `ac service restart` after changing the file. Changes apply when the service
+Run `ankiel service restart` after changing the file. Changes apply when the service
 starts again; switching the server version alone keeps the current values.
-For a service installed before env-file support, run `ac service install` once
+For a service installed before env-file support, run `ankiel service install` once
 with an up-to-date CLI.
 A missing file is ignored; other read failures stop service startup.
 If the file contains credentials, restrict access to that file with `chmod 600`
-(for the default Ankiel home, `chmod 600 ~/.ac/service.env`).
+(for the default Ankiel home, `chmod 600 ~/.ankiel/service.env`).
 
 ## Platform support
 
@@ -98,7 +98,7 @@ of signing out, and keep the PC awake, for unattended remote access. Installing
 over SSH while nobody is signed in at the PC can fail at the final start step;
 the service is still installed and will start at the next sign-in.
 
-`ac up` installs the service, which is managed separately from your sign-in to
+`ankiel up` installs the service, which is managed separately from your sign-in to
 the computer; see [manage the service](#manage-the-service).
 
 ## Keep the server responsive when agents use all memory
@@ -109,19 +109,19 @@ server, because only an administrator can reserve memory for it. Run, as your
 normal user:
 
 ```sh
-ac service protect
+ankiel service protect
 ```
 
 It shows the system settings it will change, asks before applying them, and
 then asks for your sudo password. If the machine runs Tailscale or SSH, it
 also offers to protect them, so you can still reach the machine. Memory
 protection takes effect at once. The server's protection from the kernel's
-out-of-memory killer takes effect after `ac service restart`. `ac service status` reports whether
-the protection is in place, and `ac service protect --undo` removes it.
+out-of-memory killer takes effect after `ankiel service restart`. `ankiel service status` reports whether
+the protection is in place, and `ankiel service protect --undo` removes it.
 
 ## Troubleshooting
 
-Start with `ac service status` on the host. It prints the log path and, on Linux,
+Start with `ankiel service status` on the host. It prints the log path and, on Linux,
 checks whether the installed service is running, enabled, and allowed to survive
 logout.
 
@@ -139,7 +139,7 @@ ssh -t your-server 'sudo loginctl enable-linger "$(id -un)"'
 ```
 
 Then retry service setup as your normal user. Run only the `loginctl` command
-with sudo; running Ankiel Code as root creates a separate installation. Without administrator access, run `ac serve` in a terminal and keep
+with sudo; running Ankiel Code as root creates a separate installation. Without administrator access, run `ankiel serve` in a terminal and keep
 that session open.
 
 | Status problem                          | Next step                                                                                                                      |
@@ -147,11 +147,11 @@ that session open.
 | `linger-unavailable`                    | Run `loginctl show-user "$(id -un)" --property=Linger` and check that systemd-logind is available.                             |
 | `user-manager-unavailable`              | Run `systemctl --user status` in a login session for the service user; check your distribution's systemd user-session support. |
 | `service-disabled` or `service-stopped` | Read the log and, on Linux, `systemctl --user status ankielcode.service`, then use the repair command printed by Ankiel Code.  |
-| `restart-pending`                       | A newer version is installed but the service still runs the previous one. Run `ac service restart`.                            |
+| `restart-pending`                       | A newer version is installed but the service still runs the previous one. Run `ankiel service restart`.                        |
 
 On macOS, check **System Settings → General → Login Items** if the service no
 longer starts at login. If agent work cannot access Desktop, Documents, or
-Downloads, it may need Full Disk Access for the `ac` executable listed in
+Downloads, it may need Full Disk Access for the `ankiel` executable listed in
 `ProgramArguments` in
 `~/Library/LaunchAgents/com.ankiel.ankielcode.service.plist`.
 
@@ -170,7 +170,7 @@ space, then stops, repairs the database, and starts again. It is offline while
 the repair runs, and running agents stop. If the repair fails, Settings shows
 why.
 
-In other cases, such as a server you started by hand, run `ac doctor` on the
+In other cases, such as a server you started by hand, run `ankiel doctor` on the
 machine that hosts the environment. It reports the database size and the
 space it can reclaim, then asks which repairs to run;
 pass `--fix` to run the recommended ones without a prompt (for scripts), or
@@ -185,14 +185,14 @@ directory.
 
 The repair's time grows with the size of the whole database, not only the
 space it reclaims, and can exceed an hour on a large database or a slow disk;
-`ac doctor` shows each step as it runs. It rebuilds the database through a
+`ankiel doctor` shows each step as it runs. It rebuilds the database through a
 temporary copy, so it needs free space of about twice the data still in use
 (the database size minus the reclaimable space): once in the system temporary
 directory (on Linux and macOS, `TMPDIR`, or `/var/tmp` when it is not set) and
 once next to the database for its write-ahead log.
 
 If you upgraded from a version before 0.1.0, its database (`state.sqlite`) is
-still kept next to the current one so you can roll back. `ac doctor` offers to
+still kept next to the current one so you can roll back. `ankiel doctor` offers to
 delete it, but never selects that repair for you and `--fix` skips it: once it
 is gone, a version before 0.1.0 starts with no threads or settings. It does
 not offer to delete it while any project or thread you have not deleted is

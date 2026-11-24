@@ -32,7 +32,7 @@ if (!executable)
 const artifactsDir = NodePath.resolve(values["artifacts-dir"] ?? "desktop-launch-check");
 
 const home = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "ankiel-desktop-launch-"));
-const ankielHome = NodePath.join(home, "ac");
+const ankielHome = NodePath.join(home, "ankiel");
 NodeFS.mkdirSync(NodePath.join(ankielHome, "userdata"), { recursive: true });
 NodeFS.copyFileSync(FIXTURE_DB, NodePath.join(ankielHome, "userdata/statev2.sqlite"));
 
@@ -49,8 +49,8 @@ try {
       ...process.env,
       XDG_CONFIG_HOME: NodePath.join(home, ".config"),
       XDG_DATA_HOME: NodePath.join(home, ".local/share"),
-      AC_HOME: ankielHome,
-      AC_DISABLE_AUTO_UPDATE: "true",
+      ANKIEL_HOME: ankielHome,
+      ANKIEL_DISABLE_AUTO_UPDATE: "true",
     },
     timeout: STEP_TIMEOUT_MS,
   });

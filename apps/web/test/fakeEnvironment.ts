@@ -119,13 +119,13 @@ const makeServerConfig = (
     },
     auth,
     cwd: "/workspace/render",
-    keybindingsConfigPath: "/workspace/.ac/keybindings.json",
+    keybindingsConfigPath: "/workspace/.ankiel/keybindings.json",
     keybindings: [],
     issues: [],
     providers,
     availableEditors: [],
     observability: {
-      logsDirectoryPath: "/workspace/.ac/logs",
+      logsDirectoryPath: "/workspace/.ankiel/logs",
       localTracingEnabled: false,
       otlpTracesEnabled: false,
       otlpMetricsEnabled: false,
@@ -636,7 +636,7 @@ export function installFakeEnvironment(
   globalThis.fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input), window.location.href);
     if (url.origin !== window.location.origin) return realFetch(input, init);
-    if (url.pathname === "/.well-known/ac/environment") return json(encodedDescriptor);
+    if (url.pathname === "/.well-known/ankiel/environment") return json(encodedDescriptor);
     if (url.pathname === "/api/auth/session") {
       return json({
         authenticated: true,

@@ -11,7 +11,7 @@ import {
   type ThreadId,
   type VcsCreateWorktreeInput,
   type VcsCreateWorktreeResult,
-  AC_PROJECT_FILE_NAME,
+  ANKIEL_PROJECT_FILE_NAME,
 } from "@ankielcode/contracts";
 import { resolveProjectSettings } from "@ankielcode/shared/projectSettings";
 import {
@@ -314,9 +314,9 @@ const make = Effect.gen(function* () {
     (cause: unknown): TaskFolderError =>
       new TaskFolderError({ operation, detail: `${prefix}: ${failureDetail(cause)}`, cause });
 
-  // A project that lays its own thread folder out says so in its `ac.json`.
+  // A project that lays its own thread folder out says so in its `ankiel.json`.
   const projectFile = (projectRoot: string) =>
-    fileSystem.readFileString(path.join(projectRoot, AC_PROJECT_FILE_NAME)).pipe(
+    fileSystem.readFileString(path.join(projectRoot, ANKIEL_PROJECT_FILE_NAME)).pipe(
       Effect.map(parseAnkielProjectFile),
       Effect.orElseSucceed(() => null),
     );
@@ -344,12 +344,12 @@ const make = Effect.gen(function* () {
             ...hostEnvironment,
             // A `GIT_DIR` the server inherited would point the command's Git at another repository.
             ...VcsProcess.unsetInheritedRepositoryEnv(hostEnvironment, hostPlatform),
-            AC_PROJECT_ROOT: taskFolder.projectRoot,
-            AC_WORKTREE_ROOT: taskFolder.root,
-            AC_WORKTREE_PROJECT_PATH: taskFolder.projectPath,
-            AC_WORKTREE_BRANCH: branch,
-            AC_WORKTREE_BASE: baseBranch ?? "",
-            AC_WORKTREE_REPOSITORIES: repositories.join("\n"),
+            ANKIEL_PROJECT_ROOT: taskFolder.projectRoot,
+            ANKIEL_WORKTREE_ROOT: taskFolder.root,
+            ANKIEL_WORKTREE_PROJECT_PATH: taskFolder.projectPath,
+            ANKIEL_WORKTREE_BRANCH: branch,
+            ANKIEL_WORKTREE_BASE: baseBranch ?? "",
+            ANKIEL_WORKTREE_REPOSITORIES: repositories.join("\n"),
           },
           timeoutMs: LAYOUT_COMMAND_TIMEOUT_MS,
         })
@@ -1004,7 +1004,7 @@ const make = Effect.gen(function* () {
         if (layout !== null && !input.projectCommands) {
           return yield* new TaskFolderError({
             operation: "create",
-            detail: `This project lays out its worktrees with its own command (worktreeLayout in ${AC_PROJECT_FILE_NAME}), which this request is not permitted to run.`,
+            detail: `This project lays out its worktrees with its own command (worktreeLayout in ${ANKIEL_PROJECT_FILE_NAME}), which this request is not permitted to run.`,
           });
         }
         if (layout !== null) {

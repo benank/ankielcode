@@ -58,7 +58,7 @@ const FOLLOW_MAX_BACKOFF = Duration.minutes(5);
 const FOLLOW_MAX_DEFECTS = 3;
 /** How a follower retries; tests step it by hand. */
 export const FollowRetrySchedule = Context.Reference<Schedule.Schedule<unknown>>(
-  "ac/peer/RemoteDelegation/FollowRetrySchedule",
+  "ankiel/peer/RemoteDelegation/FollowRetrySchedule",
   {
     defaultValue: () =>
       Schedule.exponential(Duration.seconds(2)).pipe(

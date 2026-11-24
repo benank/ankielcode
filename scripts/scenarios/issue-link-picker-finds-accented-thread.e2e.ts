@@ -2,14 +2,14 @@
 import type { IssueDetail, IssueRef } from "@ankielcode/contracts";
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "The issue link picker finds a thread title without its accent",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    await ac.thread({ project, title: "Café planning", messages: ["first"] });
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    await ankiel.thread({ project, title: "Café planning", messages: ["first"] });
     await browser.addInitScript(() => {
       const send = WebSocket.prototype.send;
       WebSocket.prototype.send = function (data) {
@@ -74,7 +74,7 @@ test(
       };
     });
 
-    await ac.open("/issues?selectedProjectId=demo&tracker=github&scope=example/demo&key=42");
+    await ankiel.open("/issues?selectedProjectId=demo&tracker=github&scope=example/demo&key=42");
     await screen.getByText("Publish the release notes", { exact: true }).waitFor();
     await screen.getByRole("button", "Link to thread", { exact: true }).tap();
     const dialog = screen.getByRole("dialog", "Link issue to a thread");

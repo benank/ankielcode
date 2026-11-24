@@ -4,8 +4,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 const SettingsJson = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
 const decodeSettings = Schema.decodeEffect(SettingsJson);
@@ -13,7 +13,7 @@ const encodeSettings = Schema.encodeEffect(SettingsJson);
 
 const threadRuntimeSettings = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const settingsPath = (yield* Path.Path).join(AC_HOME, "userdata/settings.json");
+  const settingsPath = (yield* Path.Path).join(ANKIEL_HOME, "userdata/settings.json");
   const original = yield* fs.readFileString(settingsPath);
   const settings = yield* decodeSettings(original);
   return {
@@ -25,47 +25,53 @@ const threadRuntimeSettings = Effect.gen(function* () {
   };
 });
 
-test("/compact sent while the agent works waits for the turn", WEB, async ({ ac, app, screen }) => {
-  const project = await ac.project("demo");
-  // The showcase recording streams for several seconds, long enough to send into its turn.
-  const thread = await ac.thread({
-    project,
-    title: "Long work",
-    messages: ["Show me around"],
-    model: "showcase",
-  });
-  await ac.open(thread);
-
-  const composer = screen.getByRole("textbox");
-  await composer.tap();
-  await composer.pressSequentially("Show me again");
-  await composer.press("Enter");
-  await expect(screen.getByRole("button", "Stop generation")).toBeVisible();
-
-  // The trailing space closes the slash menu so Enter sends instead of picking a command.
-  await composer.pressSequentially("/compact ");
-  await composer.press("Enter");
-  await app.screenshot("compact-sent");
-  await expect(screen.getByRole("button", "Edit queued message")).toBeVisible();
-
-  const settings = await runPromise(threadRuntimeSettings);
-  try {
-    // An approval holds this turn open, so the queued command stays put while Send now is hovered.
-    await runPromise(settings.supervise);
-    const waiting = await ac.thread({
+test(
+  "/compact sent while the agent works waits for the turn",
+  WEB,
+  async ({ ankiel, app, screen }) => {
+    const project = await ankiel.project("demo");
+    // The showcase recording streams for several seconds, long enough to send into its turn.
+    const thread = await ankiel.thread({
       project,
-      title: "Waiting work",
-      messages: ["Change the file"],
-      model: "approval",
+      title: "Long work",
+      messages: ["Show me around"],
+      model: "showcase",
     });
-    await runPromise(makeState(AC_HOME).cli(["thread", "send", waiting.threadId, "/compact"]));
-    await ac.open(waiting);
-    await screen.getByRole("button", "Send now").hover();
-    await expect(
-      screen.getByText("Move this command to the front of the queue", { exact: false }),
-    ).toBeVisible();
-    await app.screenshot("send-now-tooltip");
-  } finally {
-    await runPromise(settings.restore);
-  }
-});
+    await ankiel.open(thread);
+
+    const composer = screen.getByRole("textbox");
+    await composer.tap();
+    await composer.pressSequentially("Show me again");
+    await composer.press("Enter");
+    await expect(screen.getByRole("button", "Stop generation")).toBeVisible();
+
+    // The trailing space closes the slash menu so Enter sends instead of picking a command.
+    await composer.pressSequentially("/compact ");
+    await composer.press("Enter");
+    await app.screenshot("compact-sent");
+    await expect(screen.getByRole("button", "Edit queued message")).toBeVisible();
+
+    const settings = await runPromise(threadRuntimeSettings);
+    try {
+      // An approval holds this turn open, so the queued command stays put while Send now is hovered.
+      await runPromise(settings.supervise);
+      const waiting = await ankiel.thread({
+        project,
+        title: "Waiting work",
+        messages: ["Change the file"],
+        model: "approval",
+      });
+      await runPromise(
+        makeState(ANKIEL_HOME).cli(["thread", "send", waiting.threadId, "/compact"]),
+      );
+      await ankiel.open(waiting);
+      await screen.getByRole("button", "Send now").hover();
+      await expect(
+        screen.getByText("Move this command to the front of the queue", { exact: false }),
+      ).toBeVisible();
+      await app.screenshot("send-now-tooltip");
+    } finally {
+      await runPromise(settings.restore);
+    }
+  },
+);

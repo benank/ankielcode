@@ -2,13 +2,13 @@
 import type { IssueComment, IssueDetail, IssueRef } from "@ankielcode/contracts";
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "A failed issue refresh keeps the older comments already loaded",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    await ac.project("demo");
+  async ({ ankiel, app, browser, screen }) => {
+    await ankiel.project("demo");
     await browser.addInitScript(() => {
       let rateLimited = false;
       Object.assign(window, {
@@ -124,7 +124,7 @@ test(
       };
     });
 
-    await ac.open("/issues?selectedProjectId=demo&tracker=github&scope=example/demo&key=42");
+    await ankiel.open("/issues?selectedProjectId=demo&tracker=github&scope=example/demo&key=42");
     const loadOlder = screen.getByRole("button", "Load older comments", { exact: true });
     const loadedComment = screen.getByText("Older comment already read", { exact: true });
     await loadOlder.waitFor({ timeout: 60_000 });

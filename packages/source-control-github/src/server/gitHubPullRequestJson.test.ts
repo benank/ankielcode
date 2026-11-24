@@ -1114,7 +1114,7 @@ describe("review thread decoding", () => {
             id: "PRRT_all_hidden",
             path: "apps/web/src/main.tsx",
             comments: {
-              nodes: [{ id: "ac", createdAt: "2026-07-01T00:00:00Z", isMinimized: true }],
+              nodes: [{ id: "ankiel", createdAt: "2026-07-01T00:00:00Z", isMinimized: true }],
             },
           },
         ]),

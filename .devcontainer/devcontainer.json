@@ -21,9 +21,9 @@
     "storage": "32gb"
   },
   "containerEnv": {
-    // Keep all runtime state inside the (gitignored) workspace .ac, matching
+    // Keep all runtime state inside the (gitignored) workspace .ankiel, matching
     // the worktree default. An explicit --home-dir still wins.
-    "AC_HOME": "${containerWorkspaceFolder}/.ac"
+    "ANKIEL_HOME": "${containerWorkspaceFolder}/.ankiel"
   },
   "mounts": [
     // vp keeps the pnpm content-addressable store and metadata cache under
@@ -42,11 +42,11 @@
   "forwardPorts": [5733, 13773],
   "portsAttributes": {
     "5733": {
-      "label": "ac web (open via the pairing URL, not the bare origin)",
+      "label": "ankiel web (open via the pairing URL, not the bare origin)",
       "onAutoForward": "notify"
     },
     "13773": {
-      "label": "ac server",
+      "label": "ankiel server",
       "onAutoForward": "silent"
     }
   },
@@ -61,7 +61,7 @@
         // burns CPU and file handles.
         "files.watcherExclude": {
           "**/.repos/**": true,
-          "**/.ac/**": true
+          "**/.ankiel/**": true
         },
         "search.exclude": {
           "**/.repos": true

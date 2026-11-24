@@ -57,7 +57,7 @@ import {
 } from "./adapter.ts";
 import { makePiRpcConnection, type PiRpcRecord } from "./rpc.ts";
 import { loadMcpBridge } from "./mcpBridge.testkit.ts";
-import { PI_AC_SERVICE_TIER_COMMAND } from "./mcpExtensionSource.ts";
+import { PI_ANKIEL_SERVICE_TIER_COMMAND } from "./mcpExtensionSource.ts";
 import { turnItemOutputText } from "../../../client-runtime/src/work-log/itemDetail.ts";
 
 const layerTest = Layer.mergeAll(
@@ -256,7 +256,7 @@ const makeFakePi: Effect.Effect<FakePi> = Effect.gen(function* () {
   let serviceTier: string | null = null;
   let promptDisposition = true;
   let currentModel = "default";
-  const serviceTierCommand = `/${PI_AC_SERVICE_TIER_COMMAND}`;
+  const serviceTierCommand = `/${PI_ANKIEL_SERVICE_TIER_COMMAND}`;
 
   const emit = (record: PiRpcRecord, chunkBytes?: number) =>
     Effect.gen(function* () {
@@ -2209,10 +2209,10 @@ describe("PiAdapterV2", () => {
       assert.notInclude(spawn.args, "--offline");
       assert.isUndefined(spawn.env.PI_OFFLINE);
       assert.isTrue(extensions.some((path) => path?.endsWith("pi-ankiel-mcp-extension.ts")));
-      assert.equal(spawn.env.AC_MCP_URL, "http://127.0.0.1:43123/mcp");
-      assert.equal(spawn.env.AC_MCP_BEARER_TOKEN, "secret-pi-token");
-      assert.equal(spawn.env.AC_PI_RUNTIME_MODE, "full-access");
-      assert.equal(spawn.env.AC_THREAD_ID, THREAD_ID);
+      assert.equal(spawn.env.ANKIEL_MCP_URL, "http://127.0.0.1:43123/mcp");
+      assert.equal(spawn.env.ANKIEL_MCP_BEARER_TOKEN, "secret-pi-token");
+      assert.equal(spawn.env.ANKIEL_PI_RUNTIME_MODE, "full-access");
+      assert.equal(spawn.env.ANKIEL_THREAD_ID, THREAD_ID);
     }).pipe(Effect.scoped, Effect.provide(layerTest)),
   );
 
@@ -2871,15 +2871,15 @@ describe("PiAdapterV2", () => {
         fake
           .allRequests()
           .flatMap((request) =>
-            String(request["message"]).startsWith(`/${PI_AC_SERVICE_TIER_COMMAND}`)
+            String(request["message"]).startsWith(`/${PI_ANKIEL_SERVICE_TIER_COMMAND}`)
               ? [request["message"]]
               : [],
           ),
         [
-          `/${PI_AC_SERVICE_TIER_COMMAND} priority`,
-          `/${PI_AC_SERVICE_TIER_COMMAND} priority`,
-          `/${PI_AC_SERVICE_TIER_COMMAND} ultrafast`,
-          `/${PI_AC_SERVICE_TIER_COMMAND}`,
+          `/${PI_ANKIEL_SERVICE_TIER_COMMAND} priority`,
+          `/${PI_ANKIEL_SERVICE_TIER_COMMAND} priority`,
+          `/${PI_ANKIEL_SERVICE_TIER_COMMAND} ultrafast`,
+          `/${PI_ANKIEL_SERVICE_TIER_COMMAND}`,
         ],
       );
     }).pipe(Effect.scoped, Effect.provide(layerTest)),
@@ -7111,7 +7111,7 @@ describe("PiAdapterV2", () => {
               yield* fake.takeRequest("get_state");
             }
             yield* fake.emit({
-              type: "ac.settle_probe",
+              type: "ankiel.settle_probe",
               providerTurnId,
               settleProbeGeneration: 2,
               data: { isStreaming: false, isCompacting: false, pendingMessageCount: 0 },

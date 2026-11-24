@@ -3,7 +3,7 @@ import * as NodeHttp from "node:http";
 
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 // One app link that fills the page. Its click renames the page a moment later, after the server
 // has seen the link's request.
@@ -15,7 +15,7 @@ const PAGE = `<!doctype html>
 test(
   "An app link clicked in the Browser leaves the page shown and loaded",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     const server = NodeHttp.createServer((_request, response) => {
       response.writeHead(200, { "content-type": "text/html" });
       response.end(PAGE);
@@ -25,9 +25,9 @@ test(
       const address = server.address();
       if (address === null || typeof address === "string") throw new Error("No page port.");
       const url = `http://127.0.0.1:${address.port}/`;
-      const project = await ac.project("demo");
-      const thread = await ac.thread({ project, title: "Note check", messages: ["first"] });
-      await ac.open(thread);
+      const project = await ankiel.project("demo");
+      const thread = await ankiel.thread({ project, title: "Note check", messages: ["first"] });
+      await ankiel.open(thread);
 
       await screen.getByRole("button", "Toggle right panel").tap();
       await screen.getByRole("button", "Browser B").tap();

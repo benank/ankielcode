@@ -10,7 +10,7 @@ import type * as Scope from "effect/Scope";
 import type * as Stream from "effect/Stream";
 
 export interface ProviderAuthController {
-  readonly credentialBinding?: { readonly owner: "provider" | "ac"; readonly key: string };
+  readonly credentialBinding?: { readonly owner: "provider" | "ankiel"; readonly key: string };
   readonly reconnectProfile?: (
     methodId: string,
   ) => Effect.Effect<ChatGptReconnectProfile | null, ProviderSetupError>;

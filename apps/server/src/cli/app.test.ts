@@ -156,7 +156,7 @@ const withTempDirectory = <A, E, R>(
     (root) => Effect.promise(() => NodeFSP.rm(root, { recursive: true, force: true })),
   );
 
-describe("ac server command safety", () => {
+describe("ankiel server command safety", () => {
   it.effect("rejects unknown command words without creating a home or project", () =>
     withTempDirectory("ankiel-cli-unknown-", (root) =>
       Effect.gen(function* () {
@@ -219,7 +219,7 @@ describe("ac server command safety", () => {
           [newDirectory],
           ["start", newDirectory],
         ]) {
-          const error = yield* runCli(args, { AC_HOME: baseDir }).pipe(
+          const error = yield* runCli(args, { ANKIEL_HOME: baseDir }).pipe(
             Effect.provideService(
               HostProcess.Platform,
               args[0] === "C:new-project" ? "win32" : platform,
@@ -238,7 +238,7 @@ describe("ac server command safety", () => {
   );
 });
 
-describe("ac app", () => {
+describe("ankiel app", () => {
   it.live.each(["permissions", "owner", "symlink", "missing owner"] as const)(
     "rejects unsafe %s on the socket directory before sending",
     (unsafe) =>
@@ -253,7 +253,7 @@ describe("ac app", () => {
                 Effect.sync(() => setProcessEnv("TMPDIR", root)),
                 (restore) => Effect.sync(restore),
               );
-              const baseDir = NodePath.join(root, ".ac");
+              const baseDir = NodePath.join(root, ".ankiel");
               const userId = yield* HostProcess.UserId;
               assert(userId !== undefined);
               const expectedUserId =
@@ -286,7 +286,7 @@ describe("ac app", () => {
       }),
   );
 
-  it.effect("uses AC_HOME or --base-dir and sends the default or explicit path", () =>
+  it.effect("uses ANKIEL_HOME or --base-dir and sends the default or explicit path", () =>
     withTempDirectory("ankiel-app-command-test-", (root) =>
       Effect.gen(function* () {
         const baseDir = NodePath.join(root, "ankiel-home");
@@ -295,7 +295,7 @@ describe("ac app", () => {
         const workingDirectory = yield* HostProcess.WorkingDirectory;
         const desktop = yield* fakeDesktop({ baseDir });
 
-        yield* runCli(["app"], { AC_HOME: baseDir });
+        yield* runCli(["app"], { ANKIEL_HOME: baseDir });
         yield* runCli(["app", explicitPath, "--base-dir", baseDir]);
 
         expect(desktop.received.map((request) => request.workspaceRoot)).toEqual([
@@ -310,7 +310,7 @@ describe("ac app", () => {
   it.effect("prefers the installed desktop app when a dev desktop is also running", () =>
     withTempDirectory("ankiel-app-preferred-test-", (root) =>
       Effect.gen(function* () {
-        const baseDir = NodePath.join(root, ".ac");
+        const baseDir = NodePath.join(root, ".ankiel");
         const desktop = yield* fakeDesktop({ baseDir });
         const development = yield* fakeDesktop({ baseDir, stateSubdirectory: "dev" });
 
@@ -325,11 +325,11 @@ describe("ac app", () => {
   it.effect("finds the dev desktop when the default desktop socket is absent", () =>
     withTempDirectory("ankiel-app-dev-test-", (root) =>
       Effect.gen(function* () {
-        const baseDir = NodePath.join(root, ".ac");
+        const baseDir = NodePath.join(root, ".ankiel");
         const development = yield* fakeDesktop({ baseDir, stateSubdirectory: "dev" });
 
         yield* runCli(["app"]);
-        yield* runCli(["app"], { AC_HOME: "   " });
+        yield* runCli(["app"], { ANKIEL_HOME: "   " });
 
         expect(development.received).toHaveLength(2);
         expect(yield* pathExists(baseDir)).toBe(false);
@@ -340,11 +340,11 @@ describe("ac app", () => {
   it.effect("never searches a dev state directory for an explicit Ankiel home", () =>
     withTempDirectory("ankiel-app-explicit-test-", (root) =>
       Effect.gen(function* () {
-        const baseDir = NodePath.join(root, ".ac");
+        const baseDir = NodePath.join(root, ".ankiel");
         const development = yield* fakeDesktop({ baseDir, stateSubdirectory: "dev" });
 
         const flagError = yield* runCli(["app", "--base-dir", baseDir]).pipe(Effect.flip);
-        const envError = yield* runCli(["app"], { AC_HOME: baseDir }).pipe(Effect.flip);
+        const envError = yield* runCli(["app"], { ANKIEL_HOME: baseDir }).pipe(Effect.flip);
 
         expect(flagError).toMatchObject({ _tag: "DesktopAppUnreachableError" });
         expect(envError).toMatchObject({ _tag: "DesktopAppUnreachableError" });
@@ -358,7 +358,7 @@ describe("ac app", () => {
     (responseKind) =>
       withTempDirectory("ankiel-app-response-test-", (root) =>
         Effect.gen(function* () {
-          const baseDir = NodePath.join(root, ".ac");
+          const baseDir = NodePath.join(root, ".ankiel");
           const desktop = yield* fakeDesktop({
             baseDir,
             reply: (request) =>

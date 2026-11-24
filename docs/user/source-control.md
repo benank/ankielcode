@@ -105,15 +105,15 @@ If no credentials are saved, Ankiel Code falls back to these variables in the se
 Restart the server after changing them:
 
 ```bash
-export AC_BITBUCKET_ACCESS_TOKEN="your-access-token"
+export ANKIEL_BITBUCKET_ACCESS_TOKEN="your-access-token"
 # or
-export AC_BITBUCKET_EMAIL="you@example.com"
-export AC_BITBUCKET_API_TOKEN="your-token"
+export ANKIEL_BITBUCKET_EMAIL="you@example.com"
+export ANKIEL_BITBUCKET_API_TOKEN="your-token"
 ```
 
 For a background service, put these `KEY=VALUE` entries in
 [`service.env`](./background-service.md#configure-the-service-environment)
-under Ankiel home, then run `ac service restart`. Service installation and updates
+under Ankiel home, then run `ankiel service restart`. Service installation and updates
 preserve that file.
 
 ### Azure DevOps
@@ -146,7 +146,7 @@ Merging a stack lands it through GitCafe, and updating a branch restacks the lay
 ### TanStack Source
 
 TanStack Source is in private beta, so the server shows it only when its environment turns the flag
-on: `export AC_FEATURE_FLAGS=tanstack_source` in your shell profile, then restart Ankiel Code. Separate
+on: `export ANKIEL_FEATURE_FLAGS=tanstack_source` in your shell profile, then restart Ankiel Code. Separate
 several flags with commas. A value already set in the server's own environment, such as a service
 definition, is used instead of the profile. Install its CLI and sign in:
 
@@ -183,7 +183,7 @@ from GitHub keep their pull requests on GitHub; open those from the GitHub remot
 
 To start from nothing, choose **New project** in the command palette (`Cmd/Ctrl+K`), or
 **New project** under **Add Project** on any client, and type a name. Ankiel Code makes a Git
-repository in `~/.ac/projects` (the `projects` folder of your Ankiel data directory) with a README,
+repository in `~/.ankiel/projects` (the `projects` folder of your Ankiel data directory) with a README,
 an icon, and a first commit, then opens a new thread in it. Until the project has a thread, new
 threads work in its folder, even when your default is a new worktree. The folder is named after the project,
 like `pinball-stats` for "Pinball Stats". Turn on **Create private repository on GitHub** to also

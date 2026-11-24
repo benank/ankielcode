@@ -12,9 +12,9 @@ function snapshot(overrides: Partial<WorktreeSetupSnapshot>): WorktreeSetupSnaps
     phase: "running",
     startedAt: "2026-10-26T12:00:00.000Z",
     endedAt: null,
-    branch: "ac/feature",
+    branch: "ankiel/feature",
     baseRef: "main",
-    worktreePath: "/repo/.ac/worktrees/feature",
+    worktreePath: "/repo/.ankiel/worktrees/feature",
     setupScript: null,
     stages: [
       {

@@ -266,11 +266,11 @@ it.layer(layerTest, { excludeTestServices: true })("WorkspaceFileSystemLive", (i
 
         const result = yield* workspaceFileSystem.readFile({
           cwd,
-          relativePath: "ac.json",
+          relativePath: "ankiel.json",
           allowMissing: true,
         });
         expect(result).toEqual({
-          relativePath: "ac.json",
+          relativePath: "ankiel.json",
           contents: "",
           byteLength: 0,
           truncated: false,
@@ -278,7 +278,7 @@ it.layer(layerTest, { excludeTestServices: true })("WorkspaceFileSystemLive", (i
         });
 
         const error = yield* workspaceFileSystem
-          .readFile({ cwd, relativePath: "ac.json" })
+          .readFile({ cwd, relativePath: "ankiel.json" })
           .pipe(Effect.flip);
         expect(error).toMatchObject({ operation: "realpath-workspace-root" });
       }),
@@ -560,7 +560,7 @@ it.layer(layerTest, { excludeTestServices: true })("WorkspaceFileSystemLive", (i
           const missingChildError = yield* workspaceFileSystem
             .readFile(
               Object.assign(
-                { cwd, relativePath: "linked-dir/missing/ac.json" },
+                { cwd, relativePath: "linked-dir/missing/ankiel.json" },
                 { allowMissing: true },
               ),
             )

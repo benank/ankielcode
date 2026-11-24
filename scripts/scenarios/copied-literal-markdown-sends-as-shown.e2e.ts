@@ -2,7 +2,7 @@
 // The DOM lib types the function this scenario runs in the page.
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 const MESSAGE = "Type \\*word\\* and \\[label](https://example.com) literally.";
 const SHOWN = "Type *word* and [label](https://example.com) literally.";
@@ -10,10 +10,10 @@ const SHOWN = "Type *word* and [label](https://example.com) literally.";
 test(
   "A copied message with literal Markdown characters sends as it was shown",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Literal", messages: [MESSAGE] });
-    await ac.open(thread);
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Literal", messages: [MESSAGE] });
+    await ankiel.open(thread);
     // A message sent through the CLI shows collapsed under its sender.
     await screen.getByRole("button", /^Agent Type/).tap();
     await expect(screen.getByText(SHOWN)).toBeVisible();

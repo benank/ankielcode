@@ -56,8 +56,8 @@ if (fixture === undefined || variant === undefined) {
   throw new Error(`Pass --scenario with a fixture that registers Muse: ${names.join(", ")}`);
 }
 
-const museBinary = process.env.AC_MUSE_BIN ?? "muse";
-// Match Ankiel's launch so Windows needs no AC_MUSE_BIN for `muse.cmd`.
+const museBinary = process.env.ANKIEL_MUSE_BIN ?? "muse";
+// Match Ankiel's launch so Windows needs no ANKIEL_MUSE_BIN for `muse.cmd`.
 const museStart = Effect.runSync(museLaunch(museBinary));
 const home = process.env.HOME ?? "";
 

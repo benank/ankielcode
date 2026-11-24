@@ -2,16 +2,16 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 test(
   "Appearance follows edits after restoring a symlinked theme tree",
   WEB,
-  async ({ ac, app, screen }) => {
-    await ac.project("symlinked-theme-tree");
-    const fixture = `${AC_HOME}/symlinked-theme-tree`;
-    const themes = `${AC_HOME}/userdata/themes`;
+  async ({ ankiel, app, screen }) => {
+    await ankiel.project("symlinked-theme-tree");
+    const fixture = `${ANKIEL_HOME}/symlinked-theme-tree`;
+    const themes = `${ANKIEL_HOME}/userdata/themes`;
     const file = "restore-theme-tree.json";
     const active = `${fixture}/active`;
     const restored = `${fixture}/restored`;
@@ -41,7 +41,7 @@ test(
     );
 
     try {
-      await ac.open("/settings/appearance");
+      await ankiel.open("/settings/appearance");
       await theme("Original Tree Palette").waitFor();
       await runPromise(
         Effect.gen(function* () {

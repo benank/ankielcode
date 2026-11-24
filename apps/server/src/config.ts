@@ -22,10 +22,10 @@ import { type ReleaseChannel, releaseResourceAttributes } from "@ankielcode/shar
 import packageJson from "../package.json" with { type: "json" };
 
 // Official release workflows set this telemetry channel; other builds report dev.
-// Unlike __AC_BUILD_CHANNEL__, this is not the sign-in page's latest/nightly channel.
-declare const __AC_RELEASE_CHANNEL__: ReleaseChannel | undefined;
+// Unlike __ANKIEL_BUILD_CHANNEL__, this is not the sign-in page's latest/nightly channel.
+declare const __ANKIEL_RELEASE_CHANNEL__: ReleaseChannel | undefined;
 export const releaseChannel: ReleaseChannel =
-  typeof __AC_RELEASE_CHANNEL__ === "undefined" ? "dev" : __AC_RELEASE_CHANNEL__;
+  typeof __ANKIEL_RELEASE_CHANNEL__ === "undefined" ? "dev" : __ANKIEL_RELEASE_CHANNEL__;
 
 export const DEFAULT_PORT = 3773;
 

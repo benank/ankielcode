@@ -19,8 +19,8 @@ const setup = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-install-" });
-  const runtimeDir = path.join(root, ".ac/runtime");
-  const executable = path.join(runtimeDir, "versions", VERSION, "ac");
+  const runtimeDir = path.join(root, ".ankiel/runtime");
+  const executable = path.join(runtimeDir, "versions", VERSION, "ankiel");
   yield* fs.makeDirectory(path.dirname(executable), { recursive: true });
   yield* fs.writeFileString(executable, "");
   const npmPackage = path.join(root, ".npm/_npx/abc/node_modules/@ankielcode/cli");
@@ -39,22 +39,22 @@ const setup = Effect.gen(function* () {
       Effect.provideService(HostProcess.Environment, {
         PATH: "/usr/bin",
         SHELL: "/bin/zsh",
-        AC_INSTALL_BIN_DIR: binDir,
-        AC_NPM_LAUNCHER_PATH: path.join(npmPackage, "bin/ac.mjs"),
+        ANKIEL_INSTALL_BIN_DIR: binDir,
+        ANKIEL_NPM_LAUNCHER_PATH: path.join(npmPackage, "bin/ankiel.mjs"),
         ...env,
       }),
     );
-  return { root, npmPackage, runtimeDir, executable, link: path.join(binDir, "ac"), provide };
+  return { root, npmPackage, runtimeDir, executable, link: path.join(binDir, "ankiel"), provide };
 });
 
-it.layer(NodeServices.layer)("ac install", (it) => {
-  it.effect("installs the running runtime, records it, and never replaces another ac", () =>
+it.layer(NodeServices.layer)("ankiel install", (it) => {
+  it.effect("installs the running runtime, records it, and never replaces another ankiel", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const { root, runtimeDir, executable, link, provide } = yield* setup;
 
-      const older = path.join(runtimeDir, "versions/0.0.1/ac");
+      const older = path.join(runtimeDir, "versions/0.0.1/ankiel");
       yield* fs.makeDirectory(path.dirname(link), { recursive: true });
       yield* fs.symlink(older, link);
       const installed = yield* provide(installCli());
@@ -64,23 +64,23 @@ it.layer(NodeServices.layer)("ac install", (it) => {
 
       // A link written through a symlinked Ankiel home is still ours.
       const alias = path.join(root, "alias");
-      yield* fs.symlink(path.join(root, ".ac"), alias);
+      yield* fs.symlink(path.join(root, ".ankiel"), alias);
       yield* fs.remove(link);
-      yield* fs.symlink(path.join(alias, "runtime/versions", VERSION, "ac"), link);
+      yield* fs.symlink(path.join(alias, "runtime/versions", VERSION, "ankiel"), link);
       const onPath = yield* provide(installCli(), { PATH: `/usr/bin:${path.join(root, "bin")}/` });
       assert.isTrue(onPath.onPath);
-      // Another ac earlier on PATH still runs first, so `ac` would not run this one.
+      // Another ankiel earlier on PATH still runs first, so `ankiel` would not run this one.
       const binDir = path.join(root, "bin");
       const otherBin = path.join(root, "other-bin");
       yield* fs.makeDirectory(otherBin);
-      yield* fs.writeFileString(path.join(otherBin, "ac"), "", { mode: 0o755 });
+      yield* fs.writeFileString(path.join(otherBin, "ankiel"), "", { mode: 0o755 });
       const installIn = (cwd: string, PATH: string) =>
         provide(installCli().pipe(Effect.provideService(HostProcess.WorkingDirectory, cwd)), {
           PATH,
         });
       const assertShadowed = (result: Effect.Success<ReturnType<typeof installCli>>) => {
         assert.isFalse(result.onPath);
-        assert.equal(result.shadowedBy, path.join(otherBin, "ac"));
+        assert.equal(result.shadowedBy, path.join(otherBin, "ankiel"));
         assert.isUndefined(result.pathCommand);
       };
       assertShadowed(yield* provide(installCli(), { PATH: `${otherBin}:${binDir}` }));
@@ -100,30 +100,30 @@ it.layer(NodeServices.layer)("ac install", (it) => {
         assert.isUndefined(installedOnPath.shadowedBy);
       }
       yield* fs.remove(alias);
-      yield* fs.remove(path.join(otherBin, "ac"));
-      yield* fs.makeDirectory(path.join(otherBin, "ac"));
+      yield* fs.remove(path.join(otherBin, "ankiel"));
+      yield* fs.makeDirectory(path.join(otherBin, "ankiel"));
       const directory = yield* provide(installCli(), {
         PATH: `${otherBin}:${path.join(root, "bin")}`,
       });
       assert.isTrue(directory.onPath);
       assert.isUndefined(directory.shadowedBy);
       const recorded = yield* fs.readFileString(path.join(runtimeDir, "launchers"));
-      assert.equal(recorded, `\n${yield* fs.realPath(path.join(root, "bin"))}/ac\n`);
+      assert.equal(recorded, `\n${yield* fs.realPath(path.join(root, "bin"))}/ankiel\n`);
 
       yield* fs.remove(link);
       yield* fs.writeFileString(link, "#!/bin/sh\n");
       const error = yield* provide(installCli()).pipe(Effect.flip);
-      assert.include(error.message, "Another ac is already at");
+      assert.include(error.message, "Another ankiel is already at");
       assert.equal(yield* fs.readFileString(link), "#!/bin/sh\n");
 
-      // Only `<version>/ac` is ours, not another program inside a version.
+      // Only `<version>/ankiel` is ours, not another program inside a version.
       yield* fs.remove(link);
       yield* fs.symlink(path.join(runtimeDir, "versions/0.0.1/node"), link);
       const sibling = yield* provide(installCli()).pipe(Effect.flip);
-      assert.include(sibling.message, "Another ac is already at");
+      assert.include(sibling.message, "Another ankiel is already at");
       // This home's desktop launcher is replaced, as install.sh does.
       yield* fs.remove(link);
-      yield* fs.symlink(path.join(root, ".ac/bin/ac"), link);
+      yield* fs.symlink(path.join(root, ".ankiel/bin/ankiel"), link);
       yield* provide(installCli());
       assert.equal(yield* fs.readFileString(link), posixLauncherScript(executable));
 
@@ -147,18 +147,18 @@ it.layer(NodeServices.layer)("ac install", (it) => {
       assert.equal(yield* fs.readFileString(link), "#!/bin/sh\necho raced\n");
       yield* fs.remove(link);
 
-      // Windows writes an ac.cmd: only over its own, and only for paths cmd can run.
-      const shim = path.join(root, "bin", "ac.cmd");
+      // Windows writes an ankiel.cmd: only over its own, and only for paths cmd can run.
+      const shim = path.join(root, "bin", "ankiel.cmd");
       const windows = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
         provide(effect.pipe(Effect.provideService(HostProcess.Platform, "win32")));
       const desktopShim =
         '@echo off\r\nrem Written by Ankiel Code\r\n"C:\\Ankiel Code\\Ankiel Code.exe" "x" %*\r\n';
       yield* fs.writeFileString(shim, desktopShim);
       const foreignShim = yield* windows(installCli()).pipe(Effect.flip);
-      assert.include(foreignShim.message, "Another ac is already at");
+      assert.include(foreignShim.message, "Another ankiel is already at");
       assert.equal(yield* fs.readFileString(shim), desktopShim);
-      // A user's wrapper that also runs a managed ac.exe is still theirs.
-      const wrapper = `@echo off\r\nset FOO=1\r\n"${path.join(runtimeDir, "versions/0.0.1/ac.exe")}" %*`;
+      // A user's wrapper that also runs a managed ankiel.exe is still theirs.
+      const wrapper = `@echo off\r\nset FOO=1\r\n"${path.join(runtimeDir, "versions/0.0.1/ankiel.exe")}" %*`;
       yield* fs.writeFileString(shim, wrapper);
       yield* windows(installCli()).pipe(Effect.flip);
       assert.equal(yield* fs.readFileString(shim), wrapper);
@@ -171,7 +171,7 @@ it.layer(NodeServices.layer)("ac install", (it) => {
       yield* fs.remove(shim);
       yield* fs.writeFileString(
         shim,
-        `@echo off\r\n"${path.join(runtimeDir, "versions/0.0.1/ac.exe")}" %*`,
+        `@echo off\r\n"${path.join(runtimeDir, "versions/0.0.1/ankiel.exe")}" %*`,
       );
       const windowsInstalled = yield* windows(installCli());
       assert.equal(yield* fs.readFileString(shim), `@echo off\r\n"${executable}" %*`);
@@ -181,7 +181,7 @@ it.layer(NodeServices.layer)("ac install", (it) => {
         installCli().pipe(
           Effect.provideService(
             HostProcess.ExecutablePath,
-            path.join(runtimeDir, "versions/100%/ac"),
+            path.join(runtimeDir, "versions/100%/ankiel"),
           ),
         ),
       ).pipe(Effect.flip);
@@ -189,131 +189,133 @@ it.layer(NodeServices.layer)("ac install", (it) => {
     }),
   );
 
-  it.effect("asks npx users without an ac command once per minor release and installs on yes", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const { root, npmPackage, runtimeDir, executable, link, provide } = yield* setup;
-      let asked = 0;
-      const offer = (
-        answer: boolean | undefined | Effect.Effect<boolean>,
-        options: {
-          readonly args?: ReadonlyArray<string>;
-          readonly env?: NodeJS.ProcessEnv;
-          readonly interactive?: boolean;
-          readonly foreground?: boolean;
-        } = {},
-      ) =>
-        provide(
-          offerCliInstall({
-            args: options.args ?? ["connect"],
-            interactive: options.interactive ?? true,
-            foreground: Effect.succeed(options.foreground ?? true),
-            confirm: Effect.andThen(
-              Effect.sync(() => (asked += 1)),
-              Effect.isEffect(answer) ? answer : Effect.succeed(answer),
-            ),
-          }),
-          options.env,
+  it.effect(
+    "asks npx users without an ankiel command once per minor release and installs on yes",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { root, npmPackage, runtimeDir, executable, link, provide } = yield* setup;
+        let asked = 0;
+        const offer = (
+          answer: boolean | undefined | Effect.Effect<boolean>,
+          options: {
+            readonly args?: ReadonlyArray<string>;
+            readonly env?: NodeJS.ProcessEnv;
+            readonly interactive?: boolean;
+            readonly foreground?: boolean;
+          } = {},
+        ) =>
+          provide(
+            offerCliInstall({
+              args: options.args ?? ["connect"],
+              interactive: options.interactive ?? true,
+              foreground: Effect.succeed(options.foreground ?? true),
+              confirm: Effect.andThen(
+                Effect.sync(() => (asked += 1)),
+                Effect.isEffect(answer) ? answer : Effect.succeed(answer),
+              ),
+            }),
+            options.env,
+          );
+
+        // Scripts, CI, sudo, dumb terminals, background jobs, and help never ask.
+        yield* offer(false, { interactive: false });
+        yield* offer(false, { env: { CI: "true" } });
+        yield* offer(false, { env: { SUDO_USER: "theo" } });
+        yield* offer(false, { env: { TERM: "dumb" } });
+        yield* offer(false, { env: { npm_config_yes: "true" } });
+        yield* offer(false, { args: ["--completions", "zsh"] });
+        yield* offer(false, { foreground: false });
+        yield* offer(false, { args: ["connect", "--help"] });
+        yield* offer(false, { args: ["--log-level", "debug", "install"] });
+        yield* offer(false, { args: ["status", "--json"] });
+        yield* offer(false, { args: ["up", "--yes"] });
+        yield* offer(false, { args: ["status", "--json=true"] });
+        const globalBin = path.join(root, "global-bin");
+        yield* fs.makeDirectory(globalBin);
+        yield* fs.writeFileString(path.join(globalBin, "ankiel"), "");
+        yield* fs.chmod(path.join(globalBin, "ankiel"), 0o755);
+        yield* offer(false, { env: { PATH: globalBin } });
+        assert.equal(asked, 0);
+        assert.isFalse(yield* fs.exists(link));
+
+        // A directory or non-executable file named `ankiel` on PATH is not an installed ankiel.
+        const dirBin = path.join(root, "dir-bin");
+        yield* fs.makeDirectory(path.join(dirBin, "ankiel"), { recursive: true });
+        const nonExecBin = path.join(root, "non-exec-bin");
+        yield* fs.makeDirectory(nonExecBin);
+        yield* fs.writeFileString(path.join(nonExecBin, "ankiel"), "");
+        assert.isFalse(yield* offer(undefined, { env: { PATH: dirBin } }));
+        assert.equal(asked, 1);
+        assert.isFalse(yield* offer(undefined, { env: { PATH: nonExecBin } }));
+        assert.equal(asked, 2);
+        asked = 0;
+
+        // A runner's own .bin on PATH, even found through a bare launcher record, is not an installed ankiel.
+        const npxBin = path.join(npmPackage, "../.bin");
+        const pnpmBin = path.join(root, ".cache/pnpm/dlx/abc/node_modules/.bin");
+        for (const bin of [npxBin, pnpmBin]) {
+          yield* fs.makeDirectory(bin, { recursive: true });
+          yield* fs.writeFileString(path.join(bin, "ankiel"), "");
+          yield* fs.chmod(path.join(bin, "ankiel"), 0o755);
+        }
+        yield* fs.writeFileString(path.join(runtimeDir, "launchers"), "ankiel\n");
+        assert.isFalse(yield* offer(undefined, { env: { PATH: `${npxBin}:${pnpmBin}` } }));
+        assert.equal(asked, 1);
+        assert.isFalse(yield* fs.exists(path.join(runtimeDir, "install-prompt-declined")));
+        asked = 0;
+
+        // `service install` is not `ankiel install`; it still leaves the command unlinked.
+        yield* offer(false, { args: ["service", "install"] });
+        assert.equal(asked, 1);
+        yield* offer(false);
+        assert.equal(asked, 1);
+        assert.isFalse(yield* fs.exists(link));
+
+        yield* fs.writeFileString(path.join(runtimeDir, "install-prompt-declined"), "0.0\n");
+        yield* offer(true);
+        assert.equal(asked, 2);
+        assert.equal(yield* fs.readFileString(link), posixLauncherScript(executable));
+
+        yield* fs.remove(path.join(runtimeDir, "install-prompt-declined"));
+        yield* offer(true);
+        assert.equal(asked, 2);
+
+        // A yes that cannot install, and no answer at all, also wait for the next minor release.
+        const declined = path.join(runtimeDir, "install-prompt-declined");
+        yield* fs.remove(link);
+        yield* fs.remove(path.join(runtimeDir, "launchers"));
+        yield* fs.writeFileString(link, "#!/bin/sh\necho mine\n");
+        asked = 0;
+        assert.isTrue(yield* offer(true));
+        assert.equal(yield* fs.readFileString(link), "#!/bin/sh\necho mine\n");
+        assert.equal(
+          (yield* fs.readFileString(declined)).trim(),
+          VERSION.split(".").slice(0, 2).join("."),
         );
+        yield* offer(true);
+        assert.equal(asked, 1);
 
-      // Scripts, CI, sudo, dumb terminals, background jobs, and help never ask.
-      yield* offer(false, { interactive: false });
-      yield* offer(false, { env: { CI: "true" } });
-      yield* offer(false, { env: { SUDO_USER: "theo" } });
-      yield* offer(false, { env: { TERM: "dumb" } });
-      yield* offer(false, { env: { npm_config_yes: "true" } });
-      yield* offer(false, { args: ["--completions", "zsh"] });
-      yield* offer(false, { foreground: false });
-      yield* offer(false, { args: ["connect", "--help"] });
-      yield* offer(false, { args: ["--log-level", "debug", "install"] });
-      yield* offer(false, { args: ["status", "--json"] });
-      yield* offer(false, { args: ["up", "--yes"] });
-      yield* offer(false, { args: ["status", "--json=true"] });
-      const globalBin = path.join(root, "global-bin");
-      yield* fs.makeDirectory(globalBin);
-      yield* fs.writeFileString(path.join(globalBin, "ac"), "");
-      yield* fs.chmod(path.join(globalBin, "ac"), 0o755);
-      yield* offer(false, { env: { PATH: globalBin } });
-      assert.equal(asked, 0);
-      assert.isFalse(yield* fs.exists(link));
-
-      // A directory or non-executable file named `ac` on PATH is not an installed ac.
-      const dirBin = path.join(root, "dir-bin");
-      yield* fs.makeDirectory(path.join(dirBin, "ac"), { recursive: true });
-      const nonExecBin = path.join(root, "non-exec-bin");
-      yield* fs.makeDirectory(nonExecBin);
-      yield* fs.writeFileString(path.join(nonExecBin, "ac"), "");
-      assert.isFalse(yield* offer(undefined, { env: { PATH: dirBin } }));
-      assert.equal(asked, 1);
-      assert.isFalse(yield* offer(undefined, { env: { PATH: nonExecBin } }));
-      assert.equal(asked, 2);
-      asked = 0;
-
-      // A runner's own .bin on PATH, even found through a bare launcher record, is not an installed ac.
-      const npxBin = path.join(npmPackage, "../.bin");
-      const pnpmBin = path.join(root, ".cache/pnpm/dlx/abc/node_modules/.bin");
-      for (const bin of [npxBin, pnpmBin]) {
-        yield* fs.makeDirectory(bin, { recursive: true });
-        yield* fs.writeFileString(path.join(bin, "ac"), "");
-        yield* fs.chmod(path.join(bin, "ac"), 0o755);
-      }
-      yield* fs.writeFileString(path.join(runtimeDir, "launchers"), "ac\n");
-      assert.isFalse(yield* offer(undefined, { env: { PATH: `${npxBin}:${pnpmBin}` } }));
-      assert.equal(asked, 1);
-      assert.isFalse(yield* fs.exists(path.join(runtimeDir, "install-prompt-declined")));
-      asked = 0;
-
-      // `service install` is not `ac install`; it still leaves the command unlinked.
-      yield* offer(false, { args: ["service", "install"] });
-      assert.equal(asked, 1);
-      yield* offer(false);
-      assert.equal(asked, 1);
-      assert.isFalse(yield* fs.exists(link));
-
-      yield* fs.writeFileString(path.join(runtimeDir, "install-prompt-declined"), "0.0\n");
-      yield* offer(true);
-      assert.equal(asked, 2);
-      assert.equal(yield* fs.readFileString(link), posixLauncherScript(executable));
-
-      yield* fs.remove(path.join(runtimeDir, "install-prompt-declined"));
-      yield* offer(true);
-      assert.equal(asked, 2);
-
-      // A yes that cannot install, and no answer at all, also wait for the next minor release.
-      const declined = path.join(runtimeDir, "install-prompt-declined");
-      yield* fs.remove(link);
-      yield* fs.remove(path.join(runtimeDir, "launchers"));
-      yield* fs.writeFileString(link, "#!/bin/sh\necho mine\n");
-      asked = 0;
-      assert.isTrue(yield* offer(true));
-      assert.equal(yield* fs.readFileString(link), "#!/bin/sh\necho mine\n");
-      assert.equal(
-        (yield* fs.readFileString(declined)).trim(),
-        VERSION.split(".").slice(0, 2).join("."),
-      );
-      yield* offer(true);
-      assert.equal(asked, 1);
-
-      yield* fs.remove(declined);
-      yield* fs.remove(link);
-      const waiting = yield* Deferred.make<void>();
-      const unanswered = yield* offer(
-        Effect.andThen(Deferred.succeed(waiting, undefined), Effect.never),
-      ).pipe(Effect.forkChild);
-      yield* Deferred.await(waiting);
-      yield* TestClock.adjust("30 seconds");
-      assert.isTrue(yield* Fiber.join(unanswered));
-      assert.isTrue(yield* fs.exists(declined));
-      assert.isFalse(yield* fs.exists(link));
-    }),
+        yield* fs.remove(declined);
+        yield* fs.remove(link);
+        const waiting = yield* Deferred.make<void>();
+        const unanswered = yield* offer(
+          Effect.andThen(Deferred.succeed(waiting, undefined), Effect.never),
+        ).pipe(Effect.forkChild);
+        yield* Deferred.await(waiting);
+        yield* TestClock.adjust("30 seconds");
+        assert.isTrue(yield* Fiber.join(unanswered));
+        assert.isTrue(yield* fs.exists(declined));
+        assert.isFalse(yield* fs.exists(link));
+      }),
   );
 
   it.effect("reads the terminal's foreground group from /proc and ps", () =>
     Effect.sync(() => {
       // The command name can hold spaces and parentheses.
       const stat = (pgrp: number, tpgid: number) =>
-        `4242 (ac (serve) x) S 100 ${pgrp} 100 34816 ${tpgid} 4194560 0 0`;
+        `4242 (ankiel (serve) x) S 100 ${pgrp} 100 34816 ${tpgid} 4194560 0 0`;
       assert.isTrue(isForegroundProcStat(stat(4242, 4242)));
       assert.isFalse(isForegroundProcStat(stat(4242, 4300)));
       assert.isFalse(isForegroundProcStat(stat(4242, -1)));

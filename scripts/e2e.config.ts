@@ -18,7 +18,7 @@ const resolved = await Effect.gen(function* () {
   const path = yield* Path.Path;
   const env = yield* HostProcess.Environment;
   const scripts = yield* path.fromFileUrl(new URL(".", import.meta.url));
-  const home = path.resolve(scripts, "../.ac/scenarios");
+  const home = path.resolve(scripts, "../.ankiel/scenarios");
   // A pooled device reaches this machine over the tailnet, not localhost.
   const host = yield* run("tailscale", ["ip", "-4"]).pipe(
     Effect.map((result) => result.stdout.trim().split("\n")[0] ?? ""),
@@ -28,28 +28,28 @@ const resolved = await Effect.gen(function* () {
     node: yield* HostProcess.ExecutablePath,
     scripts,
     /** The checkout whose app runs. `prove-scenario.ts` points it at a base or head worktree. */
-    appDir: path.resolve(scripts, env.AC_SCENARIO_APP_DIR ?? ".."),
+    appDir: path.resolve(scripts, env.ANKIEL_SCENARIO_APP_DIR ?? ".."),
     home,
     startApp: path.join(scripts, "scenarios/start-app.ts"),
     // e2e gives the app only PATH, HOME and the temp directory. A scenario that needs more names
     // it here: exact names or prefixes ending in `*`, separated by commas.
-    inheritEnv: (env.AC_SCENARIO_INHERIT_ENV ?? "")
+    inheritEnv: (env.ANKIEL_SCENARIO_INHERIT_ENV ?? "")
       .split(",")
       .map((name) => name.trim())
       .filter((name) => name !== ""),
     mobile: {
       host: host || "127.0.0.1",
       // A mobile target has no `app.url`, so e2e cannot pick these ports.
-      serverPort: Number(env.AC_SCENARIO_SERVER_PORT ?? 13_990),
-      metroPort: Number(env.AC_SCENARIO_METRO_PORT ?? 8_190),
+      serverPort: Number(env.ANKIEL_SCENARIO_SERVER_PORT ?? 13_990),
+      metroPort: Number(env.ANKIEL_SCENARIO_METRO_PORT ?? 8_190),
     },
   };
 }).pipe(Effect.provide(NodeServices.layer), Effect.runPromise);
 
 export const APP_DIR = resolved.appDir;
-/** Ankiel homes only scenarios use, recreated on every run. `.ac` is gitignored. */
-export const AC_HOME = resolved.home;
-export const MOBILE_AC_HOME = `${AC_HOME}-mobile`;
+/** Ankiel homes only scenarios use, recreated on every run. `.ankiel` is gitignored. */
+export const ANKIEL_HOME = resolved.home;
+export const MOBILE_ANKIEL_HOME = `${ANKIEL_HOME}-mobile`;
 export const MOBILE = resolved.mobile;
 const startApp = resolved.startApp;
 /**
@@ -158,10 +158,10 @@ export default {
         // Lets a scenario put an image on the clipboard for a real keyboard paste.
         permissions: { "clipboard-write": "grant" },
         // Vite answers before the server does; this path is proxied to the server.
-        readyUrl: `http://${LOOPBACK}:{port}/.well-known/ac/environment`,
+        readyUrl: `http://${LOOPBACK}:{port}/.well-known/ankiel/environment`,
         command: {
           executable: resolved.node,
-          args: [startApp, "web", AC_HOME, LOOPBACK, "{port}"],
+          args: [startApp, "web", ANKIEL_HOME, LOOPBACK, "{port}"],
           cwd: APP_DIR,
           inheritEnv: resolved.inheritEnv,
           startupTimeout: 300_000,
@@ -185,7 +185,7 @@ export default {
           args: [
             startApp,
             "mobile",
-            MOBILE_AC_HOME,
+            MOBILE_ANKIEL_HOME,
             String(MOBILE.serverPort),
             String(MOBILE.metroPort),
             MOBILE.host,

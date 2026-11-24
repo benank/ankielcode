@@ -135,9 +135,9 @@ const buildExeCmd = Command.make(
             cwd: serverDir,
             env: {
               ...process.env,
-              AC_PACK_EXE: packMode,
-              AC_CLI_ASSET_DIR: cliAssetDir,
-              AC_PACK_EXE_TARGET: target ?? "",
+              ANKIEL_PACK_EXE: packMode,
+              ANKIEL_CLI_ASSET_DIR: cliAssetDir,
+              ANKIEL_PACK_EXE_TARGET: target ?? "",
             },
             stdout: config.verbose ? "inherit" : "ignore",
             stderr: "inherit",
@@ -170,13 +170,13 @@ const buildExeCmd = Command.make(
         yield* injectLinuxArm64Sea({
           bundlePath: bootstrapPath,
           cliAssetPath: cliMainPath,
-          outputPath: path.join(serverDir, "dist-exe/ac"),
+          outputPath: path.join(serverDir, "dist-exe/ankiel"),
           nodeVersion: rootPackageJson.engines.node,
           verbose: config.verbose,
         });
       }
       yield* Effect.log(
-        "[cli] Built dist-exe/ac (expects client/, resource-monitor/, and the runtime-external node_modules beside it; scripts/build-cli-archive.ts assembles that tree)",
+        "[cli] Built dist-exe/ankiel (expects client/, resource-monitor/, and the runtime-external node_modules beside it; scripts/build-cli-archive.ts assembles that tree)",
       );
     }),
 ).pipe(
@@ -203,7 +203,7 @@ const publishCmd = Command.make(
       const path = yield* Path.Path;
       const fs = yield* FileSystem.FileSystem;
       const packagesDir = path.resolve(config.packagesDir);
-      const launcherTarball = path.join(packagesDir, "ac.tgz");
+      const launcherTarball = path.join(packagesDir, "ankiel.tgz");
       if (!(yield* fs.exists(launcherTarball))) {
         return yield* new ServerCliBuildAssetMissingError({ assetPath: launcherTarball });
       }
@@ -212,7 +212,7 @@ const publishCmd = Command.make(
       if (config.provenance) args.push("--provenance");
       if (config.dryRun) args.push("--dry-run");
       const spawnCommand = yield* resolveSpawnCommand("npm", [...args, launcherTarball]);
-      yield* Effect.log(`[cli] npm ${args.join(" ")} ac.tgz`);
+      yield* Effect.log(`[cli] npm ${args.join(" ")} ankiel.tgz`);
       yield* runCommand(
         ChildProcess.make(spawnCommand.command, spawnCommand.args, {
           cwd: packagesDir,
@@ -222,7 +222,7 @@ const publishCmd = Command.make(
         }),
       );
     }),
-).pipe(Command.withDescription("Publish the ac launcher to npm."));
+).pipe(Command.withDescription("Publish the ankiel launcher to npm."));
 
 const cli = Command.make("cli").pipe(
   Command.withDescription("Ankiel server build & publish CLI."),

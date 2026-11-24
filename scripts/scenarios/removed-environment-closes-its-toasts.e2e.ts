@@ -1,20 +1,20 @@
 import { expect } from "e2e";
 
-import { AC_HOME } from "../e2e.config.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
 import { SECOND_HOME, startSecondServer } from "./second-server.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 test(
   "Removing an environment closes the in-app notifications it raised",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    const project = await ac.project("demo");
-    const primaryThread = await ac.thread({
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("demo");
+    const primaryThread = await ankiel.thread({
       project,
       title: "Finished here",
       messages: ["first"],
     });
-    const primary = makeState(AC_HOME);
+    const primary = makeState(ANKIEL_HOME);
     const second = makeState(SECOND_HOME);
     const server = startSecondServer(app.baseUrl ?? "");
     try {
@@ -26,7 +26,7 @@ test(
         messages: ["first"],
       });
 
-      await ac.open("/settings/general");
+      await ankiel.open("/settings/general");
       await screen.getByRole("switch", "In-app notifications").check();
       await app.open("/settings/connections");
       await screen.getByRole("button", "Add environment").tap();

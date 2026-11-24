@@ -1,12 +1,12 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "Finishing a pairing link leaves a reopened Create link dialog open",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    await ac.project("demo");
+  async ({ ankiel, app, browser, screen }) => {
+    await ankiel.project("demo");
     const pairingToken = "**/api/auth/pairing-token";
     const requested = Promise.withResolvers<void>();
     const release = Promise.withResolvers<void>();
@@ -17,7 +17,7 @@ test(
       await route.continue();
     });
 
-    await ac.open("/settings/access");
+    await ankiel.open("/settings/access");
     const authorizedClients = browser.locator("#authorized-clients");
     const open = authorizedClients.getByRole("button", "Create link", { exact: true });
     const dialog = screen.getByRole("dialog", "Create pairing link", { exact: true });

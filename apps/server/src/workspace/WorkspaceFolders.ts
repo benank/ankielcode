@@ -14,7 +14,7 @@ import { expandHomePath } from "@ankielcode/provider-core/server/pathExpansion";
 import { splitsSurrogatePair } from "@ankielcode/shared/assistantCitations";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { fromLenientJson } from "@ankielcode/shared/schemaJson";
-import { AC_PROJECT_FILE_NAME } from "@ankielcode/contracts";
+import { ANKIEL_PROJECT_FILE_NAME } from "@ankielcode/contracts";
 import { parseAnkielProjectFile } from "@ankielcode/shared/ankielProjectFile";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -274,7 +274,7 @@ const scanFolders = Effect.fn("WorkspaceFolders.scan")(function* (
 
 /**
  * The repositories inside a project folder, read from disk: the ones a scan finds there, less
- * those the project's `ac.json` leaves out. A folder outside it is never found this way, since
+ * those the project's `ankiel.json` leaves out. A folder outside it is never found this way, since
  * tracking one grants agents a place they could not reach before.
  */
 export const discoverFolders = Effect.fn("WorkspaceFolders.discover")(function* (
@@ -287,7 +287,7 @@ export const discoverFolders = Effect.fn("WorkspaceFolders.discover")(function* 
   const ignored = (
     parseAnkielProjectFile(
       yield* fileSystem
-        .readFileString(path.join(root, AC_PROJECT_FILE_NAME))
+        .readFileString(path.join(root, ANKIEL_PROJECT_FILE_NAME))
         .pipe(Effect.orElseSucceed(() => "")),
     )?.ignoreRepositories ?? []
   ).map((entry) => path.resolve(root, entry));

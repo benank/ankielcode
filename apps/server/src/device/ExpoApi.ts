@@ -153,7 +153,9 @@ export interface CreateEasSessionInput {
 }
 
 /** Sends every operation with the resolved credential. */
-class ExpoAuth extends GraphQLMiddleware.Service<ExpoAuth>()("ac/server/device/ExpoApi/ExpoAuth") {}
+class ExpoAuth extends GraphQLMiddleware.Service<ExpoAuth>()(
+  "ankiel/server/device/ExpoApi/ExpoAuth",
+) {}
 
 const ExpoGroup = ExpoApiGraphQLGroup.middleware(ExpoAuth);
 

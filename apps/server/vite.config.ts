@@ -25,21 +25,21 @@ const buildVersion =
 const cliBuildChannel = /^[^-+]+-(?:nightly|preview)\./.test(buildVersion) ? "nightly" : "latest";
 // Official release workflows set the telemetry channel; local builds and forks use "dev".
 const RELEASE_CHANNELS = ["stable", "nightly", "preview", "dev"];
-const releaseChannel = process.env.AC_RELEASE_CHANNEL?.trim() || "dev";
+const releaseChannel = process.env.ANKIEL_RELEASE_CHANNEL?.trim() || "dev";
 if (!RELEASE_CHANNELS.includes(releaseChannel)) {
   throw new Error(
-    `AC_RELEASE_CHANNEL must be one of ${RELEASE_CHANNELS.join(", ")}, got "${releaseChannel}".`,
+    `ANKIEL_RELEASE_CHANNEL must be one of ${RELEASE_CHANNELS.join(", ")}, got "${releaseChannel}".`,
   );
 }
 
 // tsdown SEA needs one chunk (sourcemaps count) and Node >=25.7, so package separately.
-// "bundle" emits the embedded CLI. "1" builds dist-exe/ac from the bootstrap.
+// "bundle" emits the embedded CLI. "1" builds dist-exe/ankiel from the bootstrap.
 // TEMPORARY one-time Node fix. Remove when fixed: https://github.com/nodejs/node/issues/67048
 // "bootstrap" stops at bin.mjs for scripts/cli.ts to inject (linux-arm64).
-const packMode = process.env.AC_PACK_EXE;
+const packMode = process.env.ANKIEL_PACK_EXE;
 const packBootstrap = packMode === "1" || packMode === "bootstrap";
 const packExecutable = packBootstrap || packMode === "bundle";
-const cliAssetDir = process.env.AC_CLI_ASSET_DIR ?? "";
+const cliAssetDir = process.env.ANKIEL_CLI_ASSET_DIR ?? "";
 if (packExecutable && !cliAssetDir) throw new Error("Build the executable with build:exe.");
 // TEMPORARY one-time Node fix. Remove when fixed: https://github.com/nodejs/node/issues/67048
 // No linux-arm64: --build-sea output cannot load on 16/64 KiB page kernels, so it builds natively.
@@ -50,7 +50,7 @@ const SEA_TARGETS = {
   "win-arm64": { platform: "win", arch: "arm64" },
   "win-x64": { platform: "win", arch: "x64" },
 } as const;
-const packExecutableTarget = process.env.AC_PACK_EXE_TARGET?.trim();
+const packExecutableTarget = process.env.ANKIEL_PACK_EXE_TARGET?.trim();
 const cliNodeVersion = rootPackageJson.engines.node;
 if (packExecutable && !packExecutableTarget && process.versions.node !== cliNodeVersion) {
   throw new Error(
@@ -59,7 +59,7 @@ if (packExecutable && !packExecutableTarget && process.versions.node !== cliNode
 }
 if (packExecutableTarget && !Object.hasOwn(SEA_TARGETS, packExecutableTarget)) {
   throw new Error(
-    `AC_PACK_EXE_TARGET must be one of ${Object.keys(SEA_TARGETS).join(", ")}, got "${packExecutableTarget}".`,
+    `ANKIEL_PACK_EXE_TARGET must be one of ${Object.keys(SEA_TARGETS).join(", ")}, got "${packExecutableTarget}".`,
   );
 }
 const packExecutableTargets = packExecutableTarget
@@ -122,7 +122,7 @@ export default mergeConfig(
       ...(packMode === "1"
         ? {
             exe: {
-              fileName: "ac",
+              fileName: "ankiel",
               outDir: "dist-exe",
               ...(packExecutableTargets ? { targets: packExecutableTargets } : {}),
               // Node SEA useCodeCache breaks import(), which the server needs.
@@ -148,8 +148,8 @@ export default mergeConfig(
         js: "#!/usr/bin/env node\n",
       },
       define: {
-        __AC_BUILD_CHANNEL__: JSON.stringify(cliBuildChannel),
-        __AC_RELEASE_CHANNEL__: JSON.stringify(releaseChannel),
+        __ANKIEL_BUILD_CHANNEL__: JSON.stringify(cliBuildChannel),
+        __ANKIEL_RELEASE_CHANNEL__: JSON.stringify(releaseChannel),
       },
     },
     test: {

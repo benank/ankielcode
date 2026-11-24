@@ -448,12 +448,12 @@ describe("ProcessRunner.layer", () => {
       Effect.gen(function* () {
         const runner = yield* ProcessRunner.ProcessRunner;
         const error = yield* runner
-          .run({ command: "true", args: [], env: { AC_TOKEN: "secret\0value" } })
+          .run({ command: "true", args: [], env: { ANKIEL_TOKEN: "secret\0value" } })
           .pipe(Effect.flip);
 
         expect(error._tag).toBe("ProcessSpawnError");
         expect((error.cause as PlatformError.PlatformError).reason._tag).toBe("BadArgument");
-        expect(String(error.cause)).toContain("AC_TOKEN");
+        expect(String(error.cause)).toContain("ANKIEL_TOKEN");
         expect(String(error.cause)).not.toContain("secret");
       }).pipe(Effect.provide(layerLaunched.pipe(Layer.provide(NodeServices.layer)))),
   );

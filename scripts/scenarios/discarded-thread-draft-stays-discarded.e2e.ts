@@ -5,17 +5,17 @@ import {
   holdImageCompression,
   pasteWideScreenshot,
 } from "./image-compression-hold.ts";
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "A thread draft discarded while its pasted image compresses stays discarded and can be restored",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     await holdImageCompression(browser);
-    const project = await ac.project("demo");
-    const source = await ac.thread({ project, title: "Screenshot work", messages: ["first"] });
-    await ac.thread({ project, title: "Other work", messages: ["first"] });
-    await ac.open(source);
+    const project = await ankiel.project("demo");
+    const source = await ankiel.thread({ project, title: "Screenshot work", messages: ["first"] });
+    await ankiel.thread({ project, title: "Other work", messages: ["first"] });
+    await ankiel.open(source);
     await expect(screen.getByText("first fixture turn complete", { exact: false })).toBeVisible();
 
     const composer = screen.getByRole("textbox");

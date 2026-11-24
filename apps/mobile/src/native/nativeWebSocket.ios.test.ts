@@ -24,7 +24,7 @@ function setup() {
     listeners.get(event)?.(payload as never);
   const sockets = new NativeWebSocket.Sockets(native);
   const events: Array<Record<string, unknown>> = [];
-  const socket = new NativeWebSocket.Connection(sockets, "ws://host/ws", ["ac"]);
+  const socket = new NativeWebSocket.Connection(sockets, "ws://host/ws", ["ankiel"]);
   for (const type of ["open", "message", "error", "close"] as const) {
     socket.addEventListener(type, (event) => events.push({ ...event }));
   }
@@ -34,7 +34,7 @@ function setup() {
 describe("NativeWebSocket", () => {
   it("opens, then delivers text and binary frames as string and ArrayBuffer", () => {
     const { native, emit, socket, events, id } = setup();
-    expect(native.connect).toHaveBeenCalledWith("ws://host/ws", ["ac"]);
+    expect(native.connect).toHaveBeenCalledWith("ws://host/ws", ["ankiel"]);
     expect(socket.readyState).toBe(NativeWebSocket.Connection.CONNECTING);
     expect(() => socket.send("early")).toThrow(/connecting/);
 

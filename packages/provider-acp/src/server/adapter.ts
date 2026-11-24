@@ -1067,11 +1067,11 @@ const ACP_MCP_CALL_LAUNCHER = [
   "@echo off",
   "setlocal EnableExtensions DisableDelayedExpansion",
   'set "ELECTRON_RUN_AS_NODE=1"',
-  "if not defined AC_ACP_MCP_ENTRYPOINT goto packaged",
-  '"%AC_ACP_MCP_NODE%" "%AC_ACP_MCP_ENTRYPOINT%" acp-mcp-call %*',
+  "if not defined ANKIEL_ACP_MCP_ENTRYPOINT goto packaged",
+  '"%ANKIEL_ACP_MCP_NODE%" "%ANKIEL_ACP_MCP_ENTRYPOINT%" acp-mcp-call %*',
   "exit /b %errorlevel%",
   ":packaged",
-  '"%AC_ACP_MCP_NODE%" acp-mcp-call %*',
+  '"%ANKIEL_ACP_MCP_NODE%" acp-mcp-call %*',
   "",
 ].join("\r\n");
 
@@ -1112,8 +1112,8 @@ function acpMcpContext(
         args: [...selfInvocationArgs(self, ["acp-mcp-bridge"])],
         env: [
           { name: "ELECTRON_RUN_AS_NODE", value: "1" },
-          { name: "AC_ACP_MCP_ENDPOINT", value: session.endpoint },
-          { name: "AC_ACP_MCP_AUTHORIZATION", value: session.authorizationHeader },
+          { name: "ANKIEL_ACP_MCP_ENDPOINT", value: session.endpoint },
+          { name: "ANKIEL_ACP_MCP_AUTHORIZATION", value: session.authorizationHeader },
         ],
       },
     ],
@@ -1141,12 +1141,12 @@ function acpMcpContext(
       // from its shell can find its Ankiel thread. Claude and Codex sessions set
       // the same variable (PortScanner.AGENT_THREAD_ENV; a string literal here
       // because this package cannot reach apps/server).
-      AC_THREAD_ID: session.threadId,
-      AC_ACP_MCP_ENDPOINT: session.endpoint,
-      AC_ACP_MCP_AUTHORIZATION: session.authorizationHeader,
-      AC_ACP_MCP_NODE: self.command,
-      ...(self.entrypoint === undefined ? {} : { AC_ACP_MCP_ENTRYPOINT: self.entrypoint }),
-      ...(callLauncher === undefined ? {} : { AC_ACP_MCP_CALL: callLauncher }),
+      ANKIEL_THREAD_ID: session.threadId,
+      ANKIEL_ACP_MCP_ENDPOINT: session.endpoint,
+      ANKIEL_ACP_MCP_AUTHORIZATION: session.authorizationHeader,
+      ANKIEL_ACP_MCP_NODE: self.command,
+      ...(self.entrypoint === undefined ? {} : { ANKIEL_ACP_MCP_ENTRYPOINT: self.entrypoint }),
+      ...(callLauncher === undefined ? {} : { ANKIEL_ACP_MCP_CALL: callLauncher }),
     },
   };
 }

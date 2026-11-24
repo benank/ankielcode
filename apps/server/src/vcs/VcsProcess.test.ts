@@ -205,13 +205,13 @@ describe("VcsProcess.run", () => {
     },
     {
       stderr:
-        "fatal: update_ref failed for ref 'refs/ac/checkpoints/x': cannot update ref 'refs/ac/checkpoints/x': couldn't write '/Volumes/share/.git/refs/ac/checkpoints/x.lock'",
+        "fatal: update_ref failed for ref 'refs/ankiel/checkpoints/x': cannot update ref 'refs/ankiel/checkpoints/x': couldn't write '/Volumes/share/.git/refs/ankiel/checkpoints/x.lock'",
       fsyncMethods: ["fsync", "writeout-only"],
     },
     { stderr: "fatal: Operation not supported", fsyncMethods: ["fsync"] },
     {
       stderr:
-        "fatal: update_ref failed for ref 'refs/ac/checkpoints/x': cannot update ref 'refs/ac/checkpoints/x': couldn't write '/Volumes/share/.git/refs/ac/checkpoints/x.lock': Input/output error",
+        "fatal: update_ref failed for ref 'refs/ankiel/checkpoints/x': cannot update ref 'refs/ankiel/checkpoints/x': couldn't write '/Volumes/share/.git/refs/ankiel/checkpoints/x.lock': Input/output error",
       fsyncMethods: ["fsync"],
     },
     {
@@ -235,7 +235,7 @@ describe("VcsProcess.run", () => {
     },
     {
       stderr:
-        "fatal: update_ref failed for ref 'refs/ac/checkpoints/x': cannot update ref 'refs/ac/checkpoints/x': couldn't write '/Volumes/share/.git/refs/ac/checkpoints/x.lock'",
+        "fatal: update_ref failed for ref 'refs/ankiel/checkpoints/x': cannot update ref 'refs/ankiel/checkpoints/x': couldn't write '/Volumes/share/.git/refs/ankiel/checkpoints/x.lock'",
       fsyncMethods: ["batch", "writeout-only"],
     },
   ] as const)(

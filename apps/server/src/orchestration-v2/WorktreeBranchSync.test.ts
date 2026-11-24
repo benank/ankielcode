@@ -28,13 +28,13 @@ it.effect.each([false, true])(
       schemaVersion: 2,
       snapshotSequence: 0,
       threads: [
-        thread("generated", "ac/unify-converter-branches", "/worktree"),
-        thread("shared", "ac/bfc349ae", "/link/worktree"),
+        thread("generated", "ankiel/unify-converter-branches", "/worktree"),
+        thread("shared", "ankiel/bfc349ae", "/link/worktree"),
         thread("current", "union", "/worktree"),
         thread("root", "main", null),
         thread("other", "feature", "/other"),
       ],
-      archivedThreads: [thread("archived", "ac/bfc349ae", "/worktree")],
+      archivedThreads: [thread("archived", "ankiel/bfc349ae", "/worktree")],
     };
     return Effect.gen(function* () {
       yield* Layer.build(WorktreeBranchSync.layer);
@@ -51,9 +51,9 @@ it.effect.each([false, true])(
           ];
         }),
         [
-          ["generated", "union", "ac/unify-converter-branches", "/worktree"],
-          ["shared", "union", "ac/bfc349ae", "/link/worktree"],
-          ["archived", "union", "ac/bfc349ae", "/worktree"],
+          ["generated", "union", "ankiel/unify-converter-branches", "/worktree"],
+          ["shared", "union", "ankiel/bfc349ae", "/link/worktree"],
+          ["archived", "union", "ankiel/bfc349ae", "/worktree"],
         ],
       );
     }).pipe(
@@ -73,7 +73,7 @@ it.effect.each([false, true])(
               ),
           }),
           Layer.mock(VcsStatusBroadcaster.VcsStatusBroadcaster)({
-            streamBranchChanges: Stream.fromIterable([null, "ac/bfc349ae", "union"]).pipe(
+            streamBranchChanges: Stream.fromIterable([null, "ankiel/bfc349ae", "union"]).pipe(
               Stream.map((refName) => ({
                 cwd: "/worktree",
                 refName,

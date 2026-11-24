@@ -77,7 +77,7 @@ interface ManagedChild {
 const runtimePaths = (baseDir: string, version: string) => {
   const versionDir = NodePath.join(baseDir, "runtime", "versions", version);
   // oxlint-disable-next-line ankielcode/no-global-process-runtime -- Standalone launcher has no Effect runtime.
-  const executableName = process.platform === "win32" ? "ac.exe" : "ac";
+  const executableName = process.platform === "win32" ? "ankiel.exe" : "ankiel";
   return {
     versionDir,
     entryPath: NodePath.join(versionDir, executableName),
@@ -127,7 +127,7 @@ function appendOutput(source: NodeJS.ReadableStream, fd: number): void {
 }
 
 /**
- * The unit or launch agent that `ac service install` wrote. Its program names
+ * The unit or launch agent that `ankiel service install` wrote. Its program names
  * the runtime that ran the install, and a remote update never replaces it, so
  * after a commit the launcher points it at the committed runtime. Otherwise the
  * next start lands on a runtime that nothing in the service state records.
@@ -257,14 +257,14 @@ async function serviceUnitFromEnvironment(
 // Only the version segment changes, so quoted or escaped paths stay as rendered.
 // The launch agent's PATH names a versions directory without the executable; leave it.
 const SERVICE_UNIT_PROGRAMS = [
-  /^(ExecStart=.*?[\\/]runtime[\\/]versions[\\/])([^\\/\s"]+)([\\/]ac)(?=["\s])/m,
-  /(<string>[^<]*?[\\/]runtime[\\/]versions[\\/])([^\\/<]+)([\\/]ac<\/string>\s*<string>__service-launcher<\/string>)/,
-  /(<Arguments>--headless "[^"<]*?[\\/]runtime[\\/]versions[\\/])([^\\/"<]+)([\\/]ac\.exe" "__service-launcher")/,
+  /^(ExecStart=.*?[\\/]runtime[\\/]versions[\\/])([^\\/\s"]+)([\\/]ankiel)(?=["\s])/m,
+  /(<string>[^<]*?[\\/]runtime[\\/]versions[\\/])([^\\/<]+)([\\/]ankiel<\/string>\s*<string>__service-launcher<\/string>)/,
+  /(<Arguments>--headless "[^"<]*?[\\/]runtime[\\/]versions[\\/])([^\\/"<]+)([\\/]ankiel\.exe" "__service-launcher")/,
 ] as const;
 
 /**
  * The unit contents with their program pointed at `version`'s runtime. A unit
- * already at that version or a newer one is returned unchanged: `ac update`
+ * already at that version or a newer one is returned unchanged: `ankiel update`
  * may have repointed it to a later version while this commit was in flight.
  */
 function repointServiceUnit(contents: string, version: string): string {
@@ -334,8 +334,8 @@ async function pathExists(target: string): Promise<boolean> {
 
 const MANAGED_SERVICE_ENV_NAMES = new Set([
   "PATH",
-  "AC_HOME",
-  "AC_BOOT_SERVICE_UNIT",
+  "ANKIEL_HOME",
+  "ANKIEL_BOOT_SERVICE_UNIT",
   SERVICE_LAUNCHER_CONTEXT_ENV,
 ]);
 
@@ -1586,9 +1586,9 @@ export interface LauncherOptions {
 }
 
 export async function main(options: LauncherOptions = {}): Promise<void> {
-  const baseDir = options.baseDir ?? process.env.AC_HOME;
+  const baseDir = options.baseDir ?? process.env.ANKIEL_HOME;
   if (baseDir === undefined || baseDir.trim() === "") {
-    throw new Error("AC_HOME is required by the Ankiel Code service launcher.");
+    throw new Error("ANKIEL_HOME is required by the Ankiel Code service launcher.");
   }
   const output =
     options.logFile === undefined ? undefined : NodeFS.openSync(options.logFile, "a", 0o600);
@@ -1602,7 +1602,7 @@ export async function main(options: LauncherOptions = {}): Promise<void> {
     // changes only what the server gets.
     const managerEnvironment = {
       ...process.env,
-      AC_HOME: baseDir,
+      ANKIEL_HOME: baseDir,
       ...(options.serviceUnit === undefined ? {} : { [SERVICE_UNIT_ENV]: options.serviceUnit }),
     };
     const environment = await readServiceEnvironment(baseDir, managerEnvironment);

@@ -110,12 +110,12 @@ const makeHarness = Effect.fn("makeAntigravityDriverHarness")(function* (
         ...(options.newSessionErrorData === undefined
           ? []
           : [
-              `export AC_ACP_NEW_SESSION_ERROR_DATA=${shellQuote(JSON.stringify(options.newSessionErrorData))}`,
+              `export ANKIEL_ACP_NEW_SESSION_ERROR_DATA=${shellQuote(JSON.stringify(options.newSessionErrorData))}`,
             ]),
         ...(options.initialMode === undefined
           ? []
-          : [`export AC_ACP_INITIAL_MODE=${shellQuote(options.initialMode)}`]),
-        `export AC_ACP_AGENT_VERSION=${shellQuote(options.agentVersion ?? "1.5.12")}`,
+          : [`export ANKIEL_ACP_INITIAL_MODE=${shellQuote(options.initialMode)}`]),
+        `export ANKIEL_ACP_AGENT_VERSION=${shellQuote(options.agentVersion ?? "1.5.12")}`,
         `exec ${shellQuote(nodePath)} ${shellQuote(mockAgentPath)} "$@"`,
         "",
       ].join("\n"),
@@ -228,8 +228,8 @@ const makeHarness = Effect.fn("makeAntigravityDriverHarness")(function* (
     config: { ...AntigravityDriver.defaultConfig(), ...options.config },
     environment: [
       { name: "PATH", value: instancePath },
-      { name: "AC_ACP_ANTIGRAVITY", value: "1" },
-      { name: "AC_ACP_REQUEST_LOG_PATH", value: requestLog },
+      { name: "ANKIEL_ACP_ANTIGRAVITY", value: "1" },
+      { name: "ANKIEL_ACP_REQUEST_LOG_PATH", value: requestLog },
       { name: "GEMINI_API_KEY", value: "must-not-be-used" },
       { name: "google_api_key", value: "must-not-be-used" },
       { name: "GOOGLE_APPLICATION_CREDENTIALS", value: "/must-not-be-used.json" },
@@ -468,11 +468,11 @@ it.layer(layerTest)("AntigravityDriver", (it) => {
       Effect.gen(function* () {
         const h = yield* makeHarness({
           environment: [
-            { name: "AC_THREAD_ID", value: "thread-antigravity-ambient" },
-            { name: "AC_ACP_MCP_ENDPOINT", value: "http://127.0.0.1:9/ambient" },
-            { name: "AC_ACP_MCP_AUTHORIZATION", value: "Bearer ambient-token" },
-            { name: "AC_ACP_MCP_NODE", value: "/ambient/node" },
-            { name: "AC_ACP_MCP_ENTRYPOINT", value: "/ambient/entrypoint.mjs" },
+            { name: "ANKIEL_THREAD_ID", value: "thread-antigravity-ambient" },
+            { name: "ANKIEL_ACP_MCP_ENDPOINT", value: "http://127.0.0.1:9/ambient" },
+            { name: "ANKIEL_ACP_MCP_AUTHORIZATION", value: "Bearer ambient-token" },
+            { name: "ANKIEL_ACP_MCP_NODE", value: "/ambient/node" },
+            { name: "ANKIEL_ACP_MCP_ENTRYPOINT", value: "/ambient/entrypoint.mjs" },
           ],
         });
         yield* h.refresh();
@@ -519,19 +519,19 @@ it.layer(layerTest)("AntigravityDriver", (it) => {
         );
         expect(agentLaunches).toHaveLength(2);
         expect(agentLaunches[1]?.environment).toMatchObject({
-          AC_THREAD_ID: threadId,
-          AC_ACP_MCP_ENDPOINT: endpoint,
-          AC_ACP_MCP_AUTHORIZATION: "Bearer antigravity-thread-token",
-          AC_ACP_MCP_NODE: process.execPath,
-          AC_ACP_MCP_ENTRYPOINT: entrypoint,
+          ANKIEL_THREAD_ID: threadId,
+          ANKIEL_ACP_MCP_ENDPOINT: endpoint,
+          ANKIEL_ACP_MCP_AUTHORIZATION: "Bearer antigravity-thread-token",
+          ANKIEL_ACP_MCP_NODE: process.execPath,
+          ANKIEL_ACP_MCP_ENTRYPOINT: entrypoint,
         });
         // Model refresh and sign-in launches are not part of a thread.
         expect(agentLaunches[0]?.environment).toMatchObject({
-          AC_THREAD_ID: "thread-antigravity-ambient",
-          AC_ACP_MCP_ENDPOINT: "http://127.0.0.1:9/ambient",
-          AC_ACP_MCP_AUTHORIZATION: "Bearer ambient-token",
-          AC_ACP_MCP_NODE: "/ambient/node",
-          AC_ACP_MCP_ENTRYPOINT: "/ambient/entrypoint.mjs",
+          ANKIEL_THREAD_ID: "thread-antigravity-ambient",
+          ANKIEL_ACP_MCP_ENDPOINT: "http://127.0.0.1:9/ambient",
+          ANKIEL_ACP_MCP_AUTHORIZATION: "Bearer ambient-token",
+          ANKIEL_ACP_MCP_NODE: "/ambient/node",
+          ANKIEL_ACP_MCP_ENTRYPOINT: "/ambient/entrypoint.mjs",
         });
         yield* h.assertClosed;
       }),

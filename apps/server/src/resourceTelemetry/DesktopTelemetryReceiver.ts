@@ -272,7 +272,7 @@ export function makeApplyDesktopShellEnvironmentSnapshot(
         ),
       );
     }
-    if (message.discovered) delete environment.AC_DESKTOP_SHELL_DISCOVERY_PENDING;
+    if (message.discovered) delete environment.ANKIEL_DESKTOP_SHELL_DISCOVERY_PENDING;
   });
 }
 

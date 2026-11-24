@@ -120,8 +120,8 @@ describe("DesktopUpdates", () => {
   );
 
   it.effect("keeps the disabled reason available after configuration and channel changes", () => {
-    const harness = makeHarness({ env: { AC_DISABLE_AUTO_UPDATE: "true" } });
-    const reason = "Automatic updates are disabled by the AC_DISABLE_AUTO_UPDATE setting.";
+    const harness = makeHarness({ env: { ANKIEL_DISABLE_AUTO_UPDATE: "true" } });
+    const reason = "Automatic updates are disabled by the ANKIEL_DISABLE_AUTO_UPDATE setting.";
 
     return Effect.scoped(
       Effect.gen(function* () {
@@ -1439,7 +1439,7 @@ describe("DesktopUpdates under a managed policy", () => {
   it.effect("updates from the administrator's feed", () => {
     const harness = makeHarness({
       // Any user can set the mock flag; it must not redirect a managed feed.
-      env: { AC_DESKTOP_MOCK_UPDATES: "true" },
+      env: { ANKIEL_DESKTOP_MOCK_UPDATES: "true" },
       policy: managed({ feedUrl: "https://updates.example.com/ankielcode" }),
     });
 
@@ -1494,7 +1494,7 @@ describe("DesktopUpdates under a managed policy", () => {
   it.effect("does not report the channel as the only block when updates are off anyway", () => {
     const harness = makeHarness({
       appVersion: "1.2.3-nightly.20261028.1",
-      env: { AC_DISABLE_AUTO_UPDATE: "true" },
+      env: { ANKIEL_DISABLE_AUTO_UPDATE: "true" },
       policy: managed({ allowNightly: false, feedUrl: "https://updates.example.com/ankielcode" }),
     });
 

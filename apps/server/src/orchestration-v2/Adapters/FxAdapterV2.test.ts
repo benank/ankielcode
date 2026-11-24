@@ -317,7 +317,7 @@ describe("FxAdapterV2", () => {
       scenario: "supervised-mode-policy",
       runtimeMode: "approval-required",
       modeOptions: [
-        { id: "_ac/session-mode", value: "auto" },
+        { id: "_ankiel/session-mode", value: "auto" },
         { id: "mode", value: "auto" },
       ],
       frames: [

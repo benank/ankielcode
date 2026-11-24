@@ -91,7 +91,7 @@ const makeLinuxCliArchiveFixture = Effect.fn("test.makeLinuxCliArchiveFixture")(
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const contentRoot = path.join(input.root, "content");
   const members = [
-    `${input.stem}/ac`,
+    `${input.stem}/ankiel`,
     `${input.stem}/client/index.html`,
     `${input.stem}/node_modules/node-pty/package.json`,
     `${input.stem}/node_modules/node-pty/build/Release/pty.node`,
@@ -182,7 +182,7 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
         ? yield* makeLinuxCliArchiveFixture({
             root: path.join(tempDir, "wsl-runtime"),
             stem: "apps",
-            omitMembers: ["apps/ac", "apps/client/index.html"],
+            omitMembers: ["apps/ankiel", "apps/client/index.html"],
             extraMembers: ["apps/server/dist/bin.mjs", "node_modules/node-pty/package.json"],
           })
         : yield* makeLinuxCliArchiveFixture({
@@ -900,7 +900,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
                 ConfigProvider.fromEnv({
                   env: {
                     npm_config_python: pythonPath,
-                    AC_DESKTOP_REUSE_RESOURCE_MONITOR: "true",
+                    ANKIEL_DESKTOP_REUSE_RESOURCE_MONITOR: "true",
                   },
                 }),
               ),
@@ -946,7 +946,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
               spawner,
               ConfigProvider.layer(
                 ConfigProvider.fromEnv({
-                  env: { AC_DESKTOP_REUSE_RESOURCE_MONITOR: "true" },
+                  env: { ANKIEL_DESKTOP_REUSE_RESOURCE_MONITOR: "true" },
                 }),
               ),
             ),
@@ -1451,7 +1451,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     ).pipe(
       Effect.provide(
         ConfigProvider.layer(
-          ConfigProvider.fromEnv({ env: { AC_DESKTOP_UNTRUSTED_BUNDLE: "true" } }),
+          ConfigProvider.fromEnv({ env: { ANKIEL_DESKTOP_UNTRUSTED_BUNDLE: "true" } }),
         ),
       ),
     ),
@@ -1569,8 +1569,8 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
 
   it("resolves macOS passkey signing configuration and renders required entitlements", () => {
     const configuration = resolveMacPasskeySigningConfiguration({
-      AC_APPLE_TEAM_ID: "abc1234567",
-      AC_MACOS_PROVISIONING_PROFILE: "/tmp/ankielcode.provisionprofile",
+      ANKIEL_APPLE_TEAM_ID: "abc1234567",
+      ANKIEL_MACOS_PROVISIONING_PROFILE: "/tmp/ankielcode.provisionprofile",
     });
     const entitlements = renderMacPasskeyEntitlements(configuration, {
       touchIdKeychainAccessGroup: undefined,
@@ -1672,11 +1672,11 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       return assert.fail("Expected passkey signing configuration to fail.");
     };
 
-    const missingProfileError = captureError({ AC_APPLE_TEAM_ID: "ABC1234567" });
+    const missingProfileError = captureError({ ANKIEL_APPLE_TEAM_ID: "ABC1234567" });
     assert.instanceOf(missingProfileError, MissingMacPasskeyProvisioningProfileError);
     assert.equal(
       missingProfileError.message,
-      "AC_MACOS_PROVISIONING_PROFILE must point to a macOS provisioning profile.",
+      "ANKIEL_MACOS_PROVISIONING_PROFILE must point to a macOS provisioning profile.",
     );
   });
 
@@ -1727,8 +1727,10 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
 
   it("parses Windows bsdtar member listings with CRLF line endings", () => {
     assert.deepStrictEqual(
-      parseWslRuntimeArchiveMembers("./ac-1.2.3-linux-x64/ac\r\nac-1.2.3-linux-x64/client/\r\n"),
-      ["ac-1.2.3-linux-x64/ac", "ac-1.2.3-linux-x64/client"],
+      parseWslRuntimeArchiveMembers(
+        "./ankiel-1.2.3-linux-x64/ankiel\r\nankiel-1.2.3-linux-x64/client/\r\n",
+      ),
+      ["ankiel-1.2.3-linux-x64/ankiel", "ankiel-1.2.3-linux-x64/client"],
     );
   });
 
@@ -1740,7 +1742,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-wsl-runtime-stage-" });
         const sourceArchivePath = yield* makeLinuxCliArchiveFixture({
           root,
-          stem: "ac-1.2.3-linux-x64",
+          stem: "ankiel-1.2.3-linux-x64",
         });
         const stageAppDir = path.join(root, "app");
         const archivePath = path.join(stageAppDir, WSL_RUNTIME_ARCHIVE_EXTRA_RESOURCE.from);
@@ -1805,11 +1807,11 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
           ConfigProvider.layer(
             ConfigProvider.fromEnv({
               env: {
-                AC_DESKTOP_SKIP_BUILD: "true",
-                AC_DESKTOP_KEEP_STAGE: "true",
-                AC_DESKTOP_SIGNED: "true",
-                AC_DESKTOP_VERBOSE: "true",
-                AC_DESKTOP_MOCK_UPDATES: "true",
+                ANKIEL_DESKTOP_SKIP_BUILD: "true",
+                ANKIEL_DESKTOP_KEEP_STAGE: "true",
+                ANKIEL_DESKTOP_SIGNED: "true",
+                ANKIEL_DESKTOP_VERBOSE: "true",
+                ANKIEL_DESKTOP_MOCK_UPDATES: "true",
               },
             }),
           ),

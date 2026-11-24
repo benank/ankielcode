@@ -22,7 +22,7 @@ const status = {
   installed: true,
   current: true,
   unitPath: "/home/me/.config/systemd/user/ankielcode.service",
-  logPath: "/home/me/.ac/userdata/logs/boot-service.log",
+  logPath: "/home/me/.ankiel/userdata/logs/boot-service.log",
 } as const;
 
 const newerServiceStatus = { ...status, current: false, installedVersion: "999.0.0" };
@@ -45,8 +45,8 @@ function makeTestService(
       Effect.sync(() => {
         installOptions.push(options);
         return {
-          program: ["/test/ac/runtime/versions/1.0.0/ac", "__service-launcher"],
-          baseDir: "/test/ac",
+          program: ["/test/ankiel/runtime/versions/1.0.0/ankiel", "__service-launcher"],
+          baseDir: "/test/ankiel",
           unitPath: serviceStatus.unitPath,
           logPath: serviceStatus.logPath,
         };
@@ -76,8 +76,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
       {
         command,
         label: "another home's service",
-        status: { ...newerServiceStatus, otherBaseDir: "/srv/ac" },
-        error: { _tag: "BootServiceOtherBaseDirError", installedBaseDir: "/srv/ac" },
+        status: { ...newerServiceStatus, otherBaseDir: "/srv/ankiel" },
+        error: { _tag: "BootServiceOtherBaseDirError", installedBaseDir: "/srv/ankiel" },
       },
     ]),
   )(
@@ -107,20 +107,20 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
   );
 
   it.effect.each([
-    { label: "a new service", installed: false, env: "", expected: "AC_LAN=false\n" },
-    // Services installed before AC_LAN existed keep listening on the local network.
+    { label: "a new service", installed: false, env: "", expected: "ANKIEL_LAN=false\n" },
+    // Services installed before ANKIEL_LAN existed keep listening on the local network.
     { label: "an older service", installed: true, env: "", expected: "" },
     {
       label: "a set host",
       installed: false,
-      env: "AC_HOST=::\n",
-      expected: "AC_HOST=::\n",
+      env: "ANKIEL_HOST=::\n",
+      expected: "ANKIEL_HOST=::\n",
     },
     {
       label: "a quoted multiline value",
       installed: false,
-      env: 'CUSTOM="first\nAC_LAN=example\nlast"\n',
-      expected: 'CUSTOM="first\nAC_LAN=example\nlast"\nAC_LAN=false\n',
+      env: 'CUSTOM="first\nANKIEL_LAN=example\nlast"\n',
+      expected: 'CUSTOM="first\nANKIEL_LAN=example\nlast"\nANKIEL_LAN=false\n',
     },
   ])("install keeps $label off the local network only when it is new", (input) =>
     Effect.gen(function* () {
@@ -163,7 +163,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-service-cli-test-" });
-      const baseDir = `${parent}/ac`;
+      const baseDir = `${parent}/ankiel`;
       vi.spyOn(BootService, "layer").mockReturnValue(
         Layer.succeed(BootService.BootService, makeTestService(status).service),
       );
@@ -288,8 +288,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
       const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-service-cli-test-" });
       const { service, uninstalls } = makeTestService({
         ...status,
-        installedBaseDir: input.otherHome ? "/home/me/.ac" : baseDir,
-        ...(input.otherHome ? { otherBaseDir: "/home/me/.ac" } : {}),
+        installedBaseDir: input.otherHome ? "/home/me/.ankiel" : baseDir,
+        ...(input.otherHome ? { otherBaseDir: "/home/me/.ankiel" } : {}),
       });
       vi.spyOn(BootService, "layer").mockReturnValue(
         Layer.succeed(
@@ -319,7 +319,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
         ),
       );
       expect(uninstalls).toEqual(input.removed);
-      expect(output).toContain(input.otherHome ? "--base-dir '/home/me/.ac'" : "Removed");
+      expect(output).toContain(input.otherHome ? "--base-dir '/home/me/.ankiel'" : "Removed");
     }),
   );
 });

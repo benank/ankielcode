@@ -81,7 +81,7 @@ describe("openTerminalLinkInPreview", () => {
     );
 
     await openTerminalLinkInPreview({
-      url: "https://ac.chat/",
+      url: "https://ankiel.chat/",
       threadRef,
       openPreview,
       fallbackToBrowser: vi.fn(),

@@ -4,12 +4,12 @@ import * as NodeHttp from "node:http";
 
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "Browser history keeps visits from both open tabs after a reload",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     const server = NodeHttp.createServer((request, response) => {
       const title = request.url === "/first" ? "First preview visit" : "Second preview visit";
       response.writeHead(200, { "content-type": "text/html" });
@@ -21,11 +21,15 @@ test(
       if (address === null || typeof address === "string") throw new Error("No page port.");
       const host = `127.0.0.1:${address.port}`;
       const origin = `http://${host}`;
-      const project = await ac.project("demo");
-      const first = await ac.thread({ project, title: "First browser", messages: ["first"] });
-      const second = await ac.thread({ project, title: "Second browser", messages: ["second"] });
-      const history = await ac.thread({ project, title: "History check", messages: ["third"] });
-      await ac.open(first);
+      const project = await ankiel.project("demo");
+      const first = await ankiel.thread({ project, title: "First browser", messages: ["first"] });
+      const second = await ankiel.thread({
+        project,
+        title: "Second browser",
+        messages: ["second"],
+      });
+      const history = await ankiel.thread({ project, title: "History check", messages: ["third"] });
+      await ankiel.open(first);
 
       // Load the second app before either visit, with an independent store and shared storage.
       await browser.evaluate((threadId) => {

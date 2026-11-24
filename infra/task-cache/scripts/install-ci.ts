@@ -19,7 +19,7 @@ await NodeFSP.writeFile(
 const { endpoint } = JSON.parse(
   await NodeFSP.readFile(NodePath.join(root, ".task-cache.json"), "utf8"),
 );
-const token = process.env.AC_TASK_CACHE_READ_TOKEN;
+const token = process.env.ANKIEL_TASK_CACHE_READ_TOKEN;
 if (!token || token.length < 32) throw new Error("Missing task-cache read credential");
 const credentialFile = NodePath.join(
   NodeOS.homedir(),

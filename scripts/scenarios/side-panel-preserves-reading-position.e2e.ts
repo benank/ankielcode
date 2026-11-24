@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 const text = Array.from(
   { length: 70 },
@@ -12,16 +12,16 @@ const text = Array.from(
 test(
   "Opening a side panel preserves the visible text in the conversation and draft",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({
       project,
       title: "Reading position",
       messages: ["Start"],
       model: "multi-turn",
     });
     await browser.setViewport({ width: 1440, height: 1000 });
-    await ac.open(thread);
+    await ankiel.open(thread);
     await screen.getByRole("button", "Toggle thread details panel").tap();
     await screen.getByRole("textbox").fill(text);
     await screen.getByRole("textbox").press("Enter");

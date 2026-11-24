@@ -6,8 +6,8 @@ import * as NodePath from "node:path";
 
 import { expect } from "e2e";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 // An OpenCode 1.19.5 server with background subagents on (OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS,
 // which Ankiel never sets). Frames follow v1.19.5 source: tool/task.ts injects a finished background
@@ -180,12 +180,12 @@ function fakeOpenCode() {
 test(
   "An OpenCode 1.x background task's result wakes its settled thread",
   WEB,
-  async ({ ac, app, screen }) => {
+  async ({ ankiel, app, screen }) => {
     const opencode = fakeOpenCode();
     await new Promise<void>((resolve) => opencode.server.listen(0, "127.0.0.1", resolve));
     try {
       const { port } = opencode.server.address() as NodeNet.AddressInfo;
-      const settingsPath = NodePath.join(AC_HOME, "userdata/settings.json");
+      const settingsPath = NodePath.join(ANKIEL_HOME, "userdata/settings.json");
       const settings = JSON.parse(await NodeFSP.readFile(settingsPath, "utf8"));
       settings.providerInstances.opencode = {
         driver: "opencode",
@@ -194,8 +194,8 @@ test(
       };
       await NodeFSP.writeFile(settingsPath, JSON.stringify(settings));
 
-      const project = await ac.project("demo");
-      const { cli } = makeState(AC_HOME);
+      const project = await ankiel.project("demo");
+      const { cli } = makeState(ANKIEL_HOME);
       const start = [
         "thread",
         "start",
@@ -222,7 +222,7 @@ test(
         )
         .toBe(true);
       const { threadId } = JSON.parse(started) as { threadId: string };
-      await ac.open({ threadId });
+      await ankiel.open({ threadId });
 
       await expect(screen.getByText("PARENT_OK")).toBeVisible({ timeout: 60_000 });
       opencode.finishBackgroundTask();

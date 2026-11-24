@@ -585,7 +585,7 @@ export function LinkEnvironmentDialog({
                   onChange={(event) => setPairingCode(event.target.value)}
                   placeholder={
                     machine === null
-                      ? gt("From Sharing & access there, or ac pair")
+                      ? gt("From Sharing & access there, or ankiel pair")
                       : gt("Paste the code")
                   }
                   disabled={busy}

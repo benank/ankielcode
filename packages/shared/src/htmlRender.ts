@@ -1,6 +1,6 @@
 import {
-  AC_CODE_DARK_THEME_COLORS,
-  AC_CODE_LIGHT_THEME_COLORS,
+  ANKIEL_CODE_DARK_THEME_COLORS,
+  ANKIEL_CODE_LIGHT_THEME_COLORS,
   type ThemeAppearance,
   type ThemeColors,
 } from "./themePalettes.ts";
@@ -241,9 +241,9 @@ const HOST_CONTEXT_CHANGED_METHOD = "ui/notifications/host-context-changed";
 const OPEN_LINK_METHOD = "ui/open-link";
 const SIZE_CHANGED_METHOD = "ui/notifications/size-changed";
 // Custom bridge forwards app shortcuts because focused frames otherwise capture them.
-const SHORTCUTS_METHOD = "ac/notifications/shortcuts";
-const KEY_DOWN_METHOD = "ac/notifications/keydown";
-const OPEN_IMAGE_METHOD = "ac/notifications/open-image";
+const SHORTCUTS_METHOD = "ankiel/notifications/shortcuts";
+const KEY_DOWN_METHOD = "ankiel/notifications/keydown";
+const OPEN_IMAGE_METHOD = "ankiel/notifications/open-image";
 
 export function readHtmlRenderContentHeight(data: unknown): number | undefined {
   if (typeof data !== "object" || data === null) return undefined;
@@ -419,8 +419,8 @@ const BOOTSTRAP_SCRIPT = `(function(){var s=document.getElementById("ankiel-them
 // The tag patterns below stop at the next `<` outside a quoted value, so matching stays linear in
 // the length of the document.
 function bootstrapMarkup(markup: string): string {
-  const dark = htmlRenderTheme(AC_CODE_DARK_THEME_COLORS, "dark");
-  const light = htmlRenderTheme(AC_CODE_LIGHT_THEME_COLORS, "light");
+  const dark = htmlRenderTheme(ANKIEL_CODE_DARK_THEME_COLORS, "dark");
+  const light = htmlRenderTheme(ANKIEL_CODE_LIGHT_THEME_COLORS, "light");
   const defaultCss = `${rootRule(dark)}@media (prefers-color-scheme: light){${rootRule(light)}}${BASE_CSS}`;
   return [
     /<meta\s[^<>]*charset/i.test(markup.slice(0, 4096)) ? "" : '<meta charset="utf-8">',
@@ -480,9 +480,9 @@ export function injectHtmlRenderBootstrap(html: string): string {
   return `<!doctype html><head>${markup}</head>${html}`;
 }
 
-const FILE_PREVIEW_SCROLL_METHOD = "ac/notifications/file-preview-scroll";
-const FILE_PREVIEW_RESTORE_SCROLL_METHOD = "ac/file-preview/restore-scroll";
-const FILE_PREVIEW_SCROLL_RESTORED_METHOD = "ac/notifications/file-preview-scroll-restored";
+const FILE_PREVIEW_SCROLL_METHOD = "ankiel/notifications/file-preview-scroll";
+const FILE_PREVIEW_RESTORE_SCROLL_METHOD = "ankiel/file-preview/restore-scroll";
+const FILE_PREVIEW_SCROLL_RESTORED_METHOD = "ankiel/notifications/file-preview-scroll-restored";
 
 export interface FilePreviewScroll {
   readonly x: number;

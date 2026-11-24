@@ -8,7 +8,7 @@
     "directory": "apps/server"
   },
   "bin": {
-    "ac": "./dist/bin.mjs"
+    "ankiel": "./dist/bin.mjs"
   },
   "files": [
     "dist"

@@ -50,7 +50,7 @@ depend on each project's working directory and cannot be reliably discovered by 
 sharing a history directory count once.
 
 The server saves its first hostname in `<Ankiel home>/usage-host-id`, so a recreated container keeps
-its usage identity when Ankiel home is persisted. Set `AC_HOST_ID` to choose the identity
+its usage identity when Ankiel home is persisted. Set `ANKIEL_HOST_ID` to choose the identity
 explicitly.
 
 When your app and server support different providers, usage totals may cover only the providers
@@ -94,7 +94,7 @@ the dialog.
 ## Show only some models
 
 To count only some models, or to leave some out, add `usageModelFilter` to the server's
-`settings.json` in its `userdata` directory, such as `~/.ac/userdata/settings.json`:
+`settings.json` in its `userdata` directory, such as `~/.ankiel/userdata/settings.json`:
 
 ```json
 {

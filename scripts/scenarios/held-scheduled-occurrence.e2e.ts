@@ -4,8 +4,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 const SettingsJson = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
 const decodeSettings = Schema.decodeEffect(SettingsJson);
@@ -13,7 +13,7 @@ const encodeSettings = Schema.encodeEffect(SettingsJson);
 
 const threadRuntimeSettings = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const settingsPath = (yield* Path.Path).join(AC_HOME, "userdata/settings.json");
+  const settingsPath = (yield* Path.Path).join(ANKIEL_HOME, "userdata/settings.json");
   const original = yield* fs.readFileString(settingsPath);
   const settings = yield* decodeSettings(original);
   return {
@@ -28,21 +28,21 @@ const threadRuntimeSettings = Effect.gen(function* () {
 test(
   "A recurring task reports when its queued occurrence is held",
   WEB,
-  async ({ ac, app, screen }) => {
+  async ({ ankiel, app, screen }) => {
     const settings = await runPromise(threadRuntimeSettings);
     try {
       // Supervised mode makes the approval recording wait for an answer, which holds its turn open.
       await runPromise(settings.supervise);
-      const project = await ac.project("scheduled-hold");
-      await ac.thread({ project, title: "Earlier work", messages: ["Start"] });
-      const thread = await ac.thread({
+      const project = await ankiel.project("scheduled-hold");
+      await ankiel.thread({ project, title: "Earlier work", messages: ["Start"] });
+      const thread = await ankiel.thread({
         project,
         title: "Waiting scheduled thread",
         messages: ["Ask a question"],
         model: "approval",
       });
 
-      await ac.open("/settings/scheduled-tasks");
+      await ankiel.open("/settings/scheduled-tasks");
       await screen.getByRole("button", "New task").tap();
       await screen.getByRole("textbox", "Name").fill("Held recurring task");
       await screen.getByRole("combobox", "Destination").tap();
@@ -54,7 +54,7 @@ test(
       await screen.getByRole("spinbutton", "Run every").fill("1");
       await screen.getByRole("button", "Create task").tap();
 
-      await ac.open(thread);
+      await ankiel.open(thread);
       await screen.getByRole("button", "Approve", { exact: true }).waitFor();
       await screen
         .getByRole("button", "Automation Held recurring task")

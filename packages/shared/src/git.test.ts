@@ -281,7 +281,7 @@ describe("isTemporaryWorktreeBranch", () => {
     );
   });
 
-  it("matches the flat fallback used when a plain ac branch exists", () => {
+  it("matches the flat fallback used when a plain ankiel branch exists", () => {
     const flat = flattenTemporaryWorktreeBranchName(`${WORKTREE_BRANCH_PREFIX}/deadbeef`);
     expect(flat).toBe(`${WORKTREE_BRANCH_PREFIX}-deadbeef`);
     expect(isTemporaryWorktreeBranch(flat)).toBe(true);

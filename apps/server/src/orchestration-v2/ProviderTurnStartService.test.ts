@@ -2079,7 +2079,7 @@ effectIt.effect(
                 yield* git(worktreePath, ["rev-parse", "--symbolic-full-name", "@{upstream}"]),
               ).toBe(expected.upstream);
             }
-            expect(yield* branchConfig("ac-merge-base")).toBe(expected.base);
+            expect(yield* branchConfig("ankiel-merge-base")).toBe(expected.base);
             return yield* open();
           }).pipe(Effect.orDie),
         );

@@ -46,7 +46,7 @@ type LimitsSummary = NonNullable<ManagedPolicySummary["limits"]>;
 
 const encodeDocumentJson = Schema.encodeEffect(Schema.fromJsonString(ManagedPolicyDocument));
 
-/** What `ac policy show` compares to tell whether a running server loaded the installed policy. */
+/** What `ankiel policy show` compares to tell whether a running server loaded the installed policy. */
 export const loadedPolicy = Effect.fn("ManagedPolicy.loadedPolicy")(function* (
   policy: Pick<ManagedPolicy["Service"], "path" | "document">,
 ) {
@@ -174,7 +174,7 @@ const make = Effect.gen(function* () {
   // builds never do: any override a user can set is a way around the policy.
   const devPath =
     releaseChannel === "dev"
-      ? yield* Config.option(Config.String("AC_DEV_MANAGED_POLICY_PATH")).pipe(
+      ? yield* Config.option(Config.String("ANKIEL_DEV_MANAGED_POLICY_PATH")).pipe(
           Effect.orElseSucceed(() => Option.none<string>()),
         )
       : Option.none<string>();

@@ -370,7 +370,7 @@ describe("AcpRegistrySupport", () => {
         source: "local",
         commandPath: "node.exe",
         commandArgs: [
-          "C:\\Users\\me\\.ac\\bin\\cmdcode\\node_modules\\command-code\\dist\\index.mjs",
+          "C:\\Users\\me\\.ankiel\\bin\\cmdcode\\node_modules\\command-code\\dist\\index.mjs",
           "acp",
         ],
       });

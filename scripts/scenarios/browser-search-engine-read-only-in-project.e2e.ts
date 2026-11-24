@@ -1,13 +1,13 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "Browser's Search engine is read-only while a project is selected",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    await ac.project("demo");
-    await ac.open("/settings/browser");
+  async ({ ankiel, app, browser, screen }) => {
+    await ankiel.project("demo");
+    await ankiel.open("/settings/browser");
 
     await screen.getByRole("button", "Project scope: All projects").tap();
     await screen.getByRole("menuitemradio").filter({ hasText: "demo" }).tap();

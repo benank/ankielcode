@@ -26,7 +26,7 @@ import { isProjectScopedSettingKey } from "./scopedSettings";
 import { settingsScopeEnvironmentLabels } from "./settingsScopeAxis";
 
 interface InheritanceLayer {
-  readonly key: "project" | "environment" | "ac.json" | "built-in";
+  readonly key: "project" | "environment" | "ankiel.json" | "built-in";
   readonly label: string;
   readonly value: string;
   readonly effective: boolean;
@@ -151,14 +151,14 @@ export function settingInheritanceLayers(
   });
   if (fileBacked && target.projectId !== null) {
     layers.push({
-      key: "ac.json",
-      label: "ac.json",
+      key: "ankiel.json",
+      label: "ankiel.json",
       value:
-        source === "ac.json"
+        source === "ankiel.json"
           ? formatValue(key, target.settings[key], resolve)
           : resolve(msg("Inherits")),
-      effective: source === "ac.json",
-      set: source === "ac.json",
+      effective: source === "ankiel.json",
+      set: source === "ankiel.json",
     });
   }
   // File-backed defaults come from the resolver, not the schema's decoded null.

@@ -5,13 +5,13 @@ import { ThreadEnvMode, WorktreeSubmodules } from "./environment.ts";
 import { ProjectScriptIcon } from "./project.ts";
 import type { ProjectScopedServerSettingKey, ServerSettings } from "./settings.ts";
 
-export const AC_PROJECT_FILE_NAME = "ac.json";
+export const ANKIEL_PROJECT_FILE_NAME = "ankiel.json";
 
-export const AC_PROJECT_FILE_SCHEMA_URL = "https://code.ankiel.com/schema/ac.json";
+export const ANKIEL_PROJECT_FILE_SCHEMA_URL = "https://code.ankiel.com/schema/ankiel.json";
 
-const AC_PROJECT_FILE_PATH_MAX_LENGTH = 512;
-const AC_PROJECT_FILE_COMMAND_MAX_LENGTH = 4096;
-const AC_PROJECT_FILE_MAX_SCRIPTS = 50;
+const ANKIEL_PROJECT_FILE_PATH_MAX_LENGTH = 512;
+const ANKIEL_PROJECT_FILE_COMMAND_MAX_LENGTH = 4096;
+const ANKIEL_PROJECT_FILE_MAX_SCRIPTS = 50;
 
 // Encoded-side annotations survive into JSON Schema; decoding still trims and rejects empty strings.
 const trimmedNonEmpty = (annotations: { readonly description: string }, maxLength?: number) => {
@@ -79,7 +79,7 @@ export type AnkielProjectFileScript = typeof AnkielProjectFileScript.Type;
 export const AnkielProjectFile = Schema.Struct({
   $schema: Schema.optionalKey(
     Schema.String.annotate({
-      description: `URL of the JSON Schema for this file, typically "${AC_PROJECT_FILE_SCHEMA_URL}".`,
+      description: `URL of the JSON Schema for this file, typically "${ANKIEL_PROJECT_FILE_SCHEMA_URL}".`,
     }),
   ),
   iconPath: Schema.optionalKey(
@@ -88,7 +88,7 @@ export const AnkielProjectFile = Schema.Struct({
         description:
           'Workspace-relative path to the project icon (e.g. "assets/logo.svg"). Checked before Ankiel Code\'s built-in icon locations.',
       },
-      AC_PROJECT_FILE_PATH_MAX_LENGTH,
+      ANKIEL_PROJECT_FILE_PATH_MAX_LENGTH,
     ),
   ),
   defaultThreadEnvMode: Schema.optionalKey(
@@ -114,9 +114,9 @@ export const AnkielProjectFile = Schema.Struct({
       create: trimmedNonEmpty(
         {
           description:
-            "Shell command that lays out a thread's folder for a project tracking several repositories, in place of Ankiel Code's own worktrees and links. It runs in the project folder with AC_WORKTREE_ROOT (the folder to fill), AC_WORKTREE_PROJECT_PATH (where the project folder goes inside it), AC_WORKTREE_BRANCH, AC_WORKTREE_BASE, AC_WORKTREE_REPOSITORIES (the chosen repositories, one path per line) and AC_PROJECT_ROOT set. Each of the project's repositories it checks out at the same relative place is adopted as the thread's checkout of it, and must be a git worktree of that repository on AC_WORKTREE_BRANCH. It runs again when the folder goes missing, so it must cope with the branch already existing. It has ten minutes.",
+            "Shell command that lays out a thread's folder for a project tracking several repositories, in place of Ankiel Code's own worktrees and links. It runs in the project folder with ANKIEL_WORKTREE_ROOT (the folder to fill), ANKIEL_WORKTREE_PROJECT_PATH (where the project folder goes inside it), ANKIEL_WORKTREE_BRANCH, ANKIEL_WORKTREE_BASE, ANKIEL_WORKTREE_REPOSITORIES (the chosen repositories, one path per line) and ANKIEL_PROJECT_ROOT set. Each of the project's repositories it checks out at the same relative place is adopted as the thread's checkout of it, and must be a git worktree of that repository on ANKIEL_WORKTREE_BRANCH. It runs again when the folder goes missing, so it must cope with the branch already existing. It has ten minutes.",
         },
-        AC_PROJECT_FILE_COMMAND_MAX_LENGTH,
+        ANKIEL_PROJECT_FILE_COMMAND_MAX_LENGTH,
       ),
       remove: Schema.optionalKey(
         trimmedNonEmpty(
@@ -124,7 +124,7 @@ export const AnkielProjectFile = Schema.Struct({
             description:
               "Shell command that takes the thread's folder down again, with the same variables. It can run on a folder that is partly gone, and should delete what create generated. Ankiel Code removes the checkouts it leaves behind.",
           },
-          AC_PROJECT_FILE_COMMAND_MAX_LENGTH,
+          ANKIEL_PROJECT_FILE_COMMAND_MAX_LENGTH,
         ),
       ),
     }).annotate({
@@ -136,9 +136,9 @@ export const AnkielProjectFile = Schema.Struct({
     trimmedNonEmpty(
       {
         description:
-          'Repository-relative path to a git sparse-checkout pattern file in non-cone syntax (e.g. ".ac/sparse-checkout"). New worktrees check out only the files it matches. Both files are read from the branch being checked out; a missing pattern file fails the worktree instead of checking out everything.',
+          'Repository-relative path to a git sparse-checkout pattern file in non-cone syntax (e.g. ".ankiel/sparse-checkout"). New worktrees check out only the files it matches. Both files are read from the branch being checked out; a missing pattern file fails the worktree instead of checking out everything.',
       },
-      AC_PROJECT_FILE_PATH_MAX_LENGTH,
+      ANKIEL_PROJECT_FILE_PATH_MAX_LENGTH,
     ),
   ),
   scripts: Schema.optionalKey(
@@ -147,16 +147,16 @@ export const AnkielProjectFile = Schema.Struct({
         description:
           "Project scripts shared with everyone who opens this repository in Ankiel Code.",
       })
-      .check(Schema.isMaxLength(AC_PROJECT_FILE_MAX_SCRIPTS)),
+      .check(Schema.isMaxLength(ANKIEL_PROJECT_FILE_MAX_SCRIPTS)),
   ),
 }).annotate({
   title: "Ankiel project file",
   description:
-    "Checked-in project configuration for Ankiel Code (ac.json at the repository root). See https://code.ankiel.com for documentation.",
+    "Checked-in project configuration for Ankiel Code (ankiel.json at the repository root). See https://code.ankiel.com for documentation.",
 });
 export type AnkielProjectFile = typeof AnkielProjectFile.Type;
 
-/** Keys must be nullable in ServerSettings so both environment and project overrides can inherit ac.json. */
+/** Keys must be nullable in ServerSettings so both environment and project overrides can inherit ankiel.json. */
 export const PROJECT_FILE_BACKED_SETTINGS = {
   defaultThreadEnvMode: { field: "defaultThreadEnvMode", builtIn: "local" },
   worktreeSubmodules: { field: "worktreeSubmodules", builtIn: "recursive" },

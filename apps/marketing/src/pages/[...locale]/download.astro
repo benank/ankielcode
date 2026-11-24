@@ -151,8 +151,8 @@ const imageProps = {
         </div>
         <code class="cli-line cli-line--stable">curl -fsSL https://code.ankiel.com/install.sh | sh</code>
         <code class="cli-line cli-line--stable">irm https://code.ankiel.com/install.ps1 | iex</code>
-        <code class="cli-line cli-line--nightly">curl -fsSL https://code.ankiel.com/install.sh | AC_CHANNEL=nightly sh</code>
-        <code class="cli-line cli-line--nightly">$env:AC_CHANNEL="nightly"; irm https://code.ankiel.com/install.ps1 | iex</code>
+        <code class="cli-line cli-line--nightly">curl -fsSL https://code.ankiel.com/install.sh | ANKIEL_CHANNEL=nightly sh</code>
+        <code class="cli-line cli-line--nightly">$env:ANKIEL_CHANNEL="nightly"; irm https://code.ankiel.com/install.ps1 | iex</code>
         <p class="cli-note">{t.tryOnce}</p>
         <code class="cli-line cli-line--stable">npx @ankielcode/cli@latest</code>
         <code class="cli-line cli-line--nightly">npx @ankielcode/cli@nightly</code>

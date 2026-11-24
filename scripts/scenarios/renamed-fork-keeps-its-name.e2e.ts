@@ -1,14 +1,14 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "A fork renamed before its first message keeps that name",
   WEB,
-  async ({ ac, app, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Earlier work", messages: ["first"] });
-    await ac.open(thread);
+  async ({ ankiel, app, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Earlier work", messages: ["first"] });
+    await ankiel.open(thread);
 
     await expect(screen.getByText("first fixture turn complete", { exact: false })).toBeVisible();
     await screen.getByRole("button", "Fork from this response").first().tap();

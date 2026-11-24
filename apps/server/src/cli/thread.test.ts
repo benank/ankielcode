@@ -145,7 +145,7 @@ it.effect("list includes delegated threads across pages and still leaves out sub
         NodeServices.layer,
         NodeCrypto.layer,
         NetService.layer,
-        ConfigProvider.layer(ConfigProvider.fromEnv({ env: { AC_PORT: "3773" } })),
+        ConfigProvider.layer(ConfigProvider.fromEnv({ env: { ANKIEL_PORT: "3773" } })),
       ),
     ),
   ),
@@ -233,7 +233,7 @@ it.effect(
           NodeServices.layer,
           NodeCrypto.layer,
           NetService.layer,
-          ConfigProvider.layer(ConfigProvider.fromEnv({ env: { AC_PORT: "3773" } })),
+          ConfigProvider.layer(ConfigProvider.fromEnv({ env: { ANKIEL_PORT: "3773" } })),
         ),
       ),
     ),
@@ -272,7 +272,7 @@ it.effect("does not sign in to whatever took over a dead server's port", () =>
         NodeServices.layer,
         NodeCrypto.layer,
         NetService.layer,
-        ConfigProvider.layer(ConfigProvider.fromEnv({ env: { AC_PORT: "3773" } })),
+        ConfigProvider.layer(ConfigProvider.fromEnv({ env: { ANKIEL_PORT: "3773" } })),
       ),
     ),
   ),
@@ -731,16 +731,16 @@ it.live("resolves a path inside a git worktree of the project's repository to th
     const path = yield* Path.Path;
     const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "ankiel-thread-worktree-" });
     const repo = path.join(root, "sample");
-    const worktree = path.join(root, "worktrees", "sample", "ac-8ff64c24");
+    const worktree = path.join(root, "worktrees", "sample", "ankiel-8ff64c24");
     const feature = path.join(root, "wt", "feature");
-    const featureWorktree = path.join(root, "worktrees", "feature", "ac-1a2b3c4d");
+    const featureWorktree = path.join(root, "worktrees", "feature", "ankiel-1a2b3c4d");
     yield* fileSystem.makeDirectory(path.join(repo, "pkg"), { recursive: true });
     yield* fileSystem.writeFileString(path.join(repo, "pkg", "index.ts"), "export {};\n");
     yield* git(repo, ["init", "--quiet", "-b", "main"]);
     yield* commitAll(repo);
-    yield* git(repo, ["worktree", "add", "--quiet", "-b", "ac/8ff64c24", worktree]);
+    yield* git(repo, ["worktree", "add", "--quiet", "-b", "ankiel/8ff64c24", worktree]);
     yield* git(repo, ["worktree", "add", "--quiet", "-b", "feature", feature]);
-    yield* git(feature, ["worktree", "add", "--quiet", "-b", "ac/1a2b3c4d", featureWorktree]);
+    yield* git(feature, ["worktree", "add", "--quiet", "-b", "ankiel/1a2b3c4d", featureWorktree]);
 
     const project = (id: string, workspaceRoot: string) => ({
       id: ProjectId.make(id),

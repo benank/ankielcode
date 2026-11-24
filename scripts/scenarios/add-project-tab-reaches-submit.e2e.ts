@@ -1,13 +1,13 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "Tab moves from the add-project Git URL field to its submit button",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    await ac.project("demo");
-    await ac.open();
+  async ({ ankiel, app, screen, browser }) => {
+    await ankiel.project("demo");
+    await ankiel.open();
 
     await screen.getByRole("combobox", "Projects").tap();
     await screen.getByRole("option", "Add project").tap();

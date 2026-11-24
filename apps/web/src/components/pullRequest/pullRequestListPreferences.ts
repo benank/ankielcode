@@ -62,7 +62,7 @@ export const PullRequestListPreferencesSchema = Schema.Struct({
 const decodePullRequestListPreferences = Schema.decodeUnknownOption(
   PullRequestListPreferencesSchema,
 );
-const PULL_REQUEST_LIST_PREFERENCES_STORAGE_KEY = "ac.pullRequests.preferences";
+const PULL_REQUEST_LIST_PREFERENCES_STORAGE_KEY = "ankiel.pullRequests.preferences";
 type PreferenceStorage = Pick<Storage, "getItem" | "setItem">;
 
 function resolvePreferenceStorage(

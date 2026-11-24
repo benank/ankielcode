@@ -2,8 +2,8 @@
 import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { environmentId, rpcClient, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { environmentId, rpcClient, runPromise, test, WEB } from "./ankiel.ts";
 
 declare global {
   interface Window {
@@ -14,13 +14,13 @@ declare global {
 test(
   "A second SSH connection check keeps the pending status visible",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     const origin = app.baseUrl ?? "";
     const environment = await runPromise(environmentId(origin));
-    await ac.project("demo");
+    await ankiel.project("demo");
     await runPromise(
       Effect.gen(function* () {
-        const client = yield* rpcClient(AC_HOME, origin);
+        const client = yield* rpcClient(ANKIEL_HOME, origin);
         yield* client["server.updateSettings"]({
           patch: {
             enableDeviceSupport: true,
@@ -60,7 +60,9 @@ test(
       };
     });
 
-    await ac.open(`/settings/devices?machine=${encodeURIComponent(environment)}#device-sources`);
+    await ankiel.open(
+      `/settings/devices?machine=${encodeURIComponent(environment)}#device-sources`,
+    );
     const more = browser.locator("#device-sources").getByRole("button", "More", { exact: true });
     const testConnection = screen.getByRole("menuitem", "Test connection", { exact: true });
     const pending = screen.getByText("Testing connection", { exact: true });

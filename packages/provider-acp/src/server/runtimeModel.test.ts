@@ -1433,7 +1433,7 @@ describe("extractMcpToolCallIdentity", () => {
     expect(
       extractMcpToolCallIdentity(toolCall, {
         embeddedTerminalCommands: [
-          '/usr/bin/node /srv/ac/bin.ts acp-mcp-call delegate_task {"task":"x"}',
+          '/usr/bin/node /srv/ankiel/bin.ts acp-mcp-call delegate_task {"task":"x"}',
         ],
       }),
     ).toEqual({ server: "ankiel-code", tool: "delegate_task", input: { task: "x" } });
@@ -1445,7 +1445,7 @@ describe("extractMcpToolCallIdentity", () => {
       toolCallId: "call_JdxnvzjHHrbvyASTLVekLYWV|fc_08f5a805a7159aa6016a7ec4afad548191",
       kind: "execute",
       title:
-        '"$AC_ACP_MCP_NODE" "$AC_ACP_MCP_ENTRYPOINT" acp-mcp-call orchestrator_capabilities \'{}\'',
+        '"$ANKIEL_ACP_MCP_NODE" "$ANKIEL_ACP_MCP_ENTRYPOINT" acp-mcp-call orchestrator_capabilities \'{}\'',
       status: "in_progress",
       rawInput: null,
       content: [

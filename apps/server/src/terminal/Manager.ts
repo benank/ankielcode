@@ -175,7 +175,7 @@ class TerminalProcessSignalError extends Schema.TaggedError<TerminalProcessSigna
 
 export class TerminalCwdRecovery extends Context.Reference<
   (error: TerminalCwdNotFoundError) => Effect.Effect<void, TerminalCwdNotFoundError>
->("ac/terminal/TerminalCwdRecovery", { defaultValue: () => (error) => Effect.fail(error) }) {}
+>("ankiel/terminal/TerminalCwdRecovery", { defaultValue: () => (error) => Effect.fail(error) }) {}
 
 export class TerminalManager extends Context.Service<
   TerminalManager,
@@ -1638,7 +1638,7 @@ function toSessionKey(threadId: string, terminalId: string): string {
 
 function shouldExcludeTerminalEnvKey(key: string): boolean {
   const normalizedKey = key.toUpperCase();
-  if (normalizedKey.startsWith("AC_")) {
+  if (normalizedKey.startsWith("ANKIEL_")) {
     return true;
   }
   if (normalizedKey.startsWith("VITE_")) {
@@ -2905,7 +2905,7 @@ export const makeWithOptions = Effect.fn("TerminalManager.makeWithOptions")(func
               shellResolver,
               platform,
               baseEnv,
-              session.runtimeEnv?.AC_TERMINAL_SHELL ?? baseEnv.AC_TERMINAL_SHELL,
+              session.runtimeEnv?.ANKIEL_TERMINAL_SHELL ?? baseEnv.ANKIEL_TERMINAL_SHELL,
             ).pipe(Effect.provideService(FileSystem.FileSystem, fileSystem));
             const terminalEnv = createTerminalSpawnEnv(
               baseEnv,

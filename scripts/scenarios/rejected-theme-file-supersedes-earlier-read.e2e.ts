@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 declare global {
   interface Window {
@@ -12,9 +12,9 @@ declare global {
 test(
   "An earlier theme file cannot become the draft after its replacement is rejected",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    await ac.project("demo");
-    await ac.open("/settings/appearance");
+  async ({ ankiel, app, browser, screen }) => {
+    await ankiel.project("demo");
+    await ankiel.open("/settings/appearance");
     await screen.getByRole("button", "Add theme", { exact: true }).tap();
     const dialog = screen.getByRole("dialog", "Add a theme");
 

@@ -1,20 +1,20 @@
 import { expect } from "e2e";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 test(
   "A queued message shows its @-file mention by name, not as a raw link",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    const project = await ac.project("demo", { "src/foo.ts": "export {};\n" });
-    const thread = await ac.thread({
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("demo", { "src/foo.ts": "export {};\n" });
+    const thread = await ankiel.thread({
       project,
       title: "Long work",
       messages: ["Show me around"],
       model: "showcase",
     });
-    await ac.open(thread);
+    await ankiel.open(thread);
 
     const composer = screen.getByRole("textbox");
     await composer.pressSequentially("Review @foo");
@@ -22,7 +22,9 @@ test(
     await expect(composer).toContainText("foo.ts");
 
     // The showcase recording streams for several seconds, long enough to queue behind its turn.
-    await runPromise(makeState(AC_HOME).cli(["thread", "send", thread.threadId, "Show me again"]));
+    await runPromise(
+      makeState(ANKIEL_HOME).cli(["thread", "send", thread.threadId, "Show me again"]),
+    );
     await screen.getByText("Working for", { exact: false }).waitFor();
     // Enter steers by default; the alternate send queues.
     await browser.keyboard.press("ControlOrMeta+Enter");

@@ -8,7 +8,7 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 
-/** The launcher install.sh, `ac install`, and `ac update` write; exec by absolute path. */
+/** The launcher install.sh, `ankiel install`, and `ankiel update` write; exec by absolute path. */
 const launcherScript = (executable: string) =>
   `#!/bin/sh\nexec '${executable.replaceAll("'", "'\\''")}' "$@"\n`;
 
@@ -26,23 +26,27 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer home
     const home = NodePath.join(root, homeName);
     const version = "1.2.3";
     const target = NodePath.join(home, "runtime/versions", version);
-    const launcher = NodePath.join(root, "bin/ac");
+    const launcher = NodePath.join(root, "bin/ankiel");
     try {
       await NodeFSP.mkdir(target, { recursive: true });
       await NodeFSP.writeFile(NodePath.join(target, ".install-complete"), `${version}\n`);
-      await NodeFSP.writeFile(NodePath.join(target, "ac"), "#!/bin/sh\necho 'ac v1.2.3'\n", {
-        mode: 0o755,
-      });
+      await NodeFSP.writeFile(
+        NodePath.join(target, "ankiel"),
+        "#!/bin/sh\necho 'ankiel v1.2.3'\n",
+        {
+          mode: 0o755,
+        },
+      );
       const install = () =>
         NodeChildProcess.spawnSync("sh", [NodePath.resolve(import.meta.dirname, "install.sh")], {
           cwd: root,
           env: {
             ...process.env,
             HOME: root,
-            AC_HOME: homeName,
-            AC_VERSION: version,
-            AC_INSTALL_BIN_DIR: NodePath.dirname(launcher),
-            AC_RELEASE_BASE_URL: "http://127.0.0.1:1",
+            ANKIEL_HOME: homeName,
+            ANKIEL_VERSION: version,
+            ANKIEL_INSTALL_BIN_DIR: NodePath.dirname(launcher),
+            ANKIEL_RELEASE_BASE_URL: "http://127.0.0.1:1",
           },
           encoding: "utf8",
         });
@@ -53,14 +57,14 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer home
       expect(status, stdout + stderr).toBe(0);
       expect(stderr).toContain(`Installed Ankiel Code ${version}`);
       expect(await NodeFSP.readFile(launcher, "utf8")).toBe(
-        launcherScript(NodePath.join(target, "ac")),
+        launcherScript(NodePath.join(target, "ankiel")),
       );
       expect(
         NodeChildProcess.execFileSync(launcher, ["--version"], {
           cwd: NodeOS.tmpdir(),
           encoding: "utf8",
         }).trim(),
-      ).toBe("ac v1.2.3");
+      ).toBe("ankiel v1.2.3");
     } finally {
       await NodeFSP.rm(temporaryRoot, { recursive: true, force: true });
     }
@@ -111,12 +115,12 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer chan
           const child = NodeChildProcess.spawn("sh", [installer], {
             env: {
               ...process.env,
-              AC_VERSION: "",
-              AC_CHANNEL: channel,
-              AC_HOME: NodePath.join(root, "home"),
-              AC_INSTALL_BIN_DIR: NodePath.join(root, "bin"),
+              ANKIEL_VERSION: "",
+              ANKIEL_CHANNEL: channel,
+              ANKIEL_HOME: NodePath.join(root, "home"),
+              ANKIEL_INSTALL_BIN_DIR: NodePath.join(root, "bin"),
               // A wrong version must fail here instead of downloading a real release.
-              AC_RELEASE_BASE_URL: origin,
+              ANKIEL_RELEASE_BASE_URL: origin,
             },
             stdio: ["ignore", "pipe", "pipe"],
           });
@@ -144,7 +148,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")(
     it("names the archive when it returns 404", async () => {
       const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "ankiel-install-archive-"));
       const arch = HostProcess.Architecture.defaultValue() === "arm64" ? "arm64" : "x64";
-      const archive = `ac-1.2.3-linux-${arch}.tar.gz`;
+      const archive = `ankiel-1.2.3-linux-${arch}.tar.gz`;
       const server = NodeHttp.createServer((request, response) => {
         if (request.url === "/v1.2.3/SHA256SUMS")
           return response.end(`${"0".repeat(64)}  ${archive}\n`);
@@ -162,11 +166,11 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")(
               {
                 env: {
                   ...process.env,
-                  AC_CHANNEL: "",
-                  AC_VERSION: "1.2.3",
-                  AC_HOME: NodePath.join(root, "home"),
-                  AC_INSTALL_BIN_DIR: NodePath.join(root, "bin"),
-                  AC_RELEASE_BASE_URL: `http://127.0.0.1:${address.port}`,
+                  ANKIEL_CHANNEL: "",
+                  ANKIEL_VERSION: "1.2.3",
+                  ANKIEL_HOME: NodePath.join(root, "home"),
+                  ANKIEL_INSTALL_BIN_DIR: NodePath.join(root, "bin"),
+                  ANKIEL_RELEASE_BASE_URL: `http://127.0.0.1:${address.port}`,
                 },
                 stdio: ["ignore", "pipe", "pipe"],
               },
@@ -179,7 +183,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")(
           },
         );
         expect(code, output).not.toBe(0);
-        expect(output).toMatch(new RegExp(`ac install: .*${archive.replaceAll(".", "\\.")}`));
+        expect(output).toMatch(new RegExp(`ankiel install: .*${archive.replaceAll(".", "\\.")}`));
       } finally {
         server.closeAllConnections();
         await new Promise<void>((resolve) => server.close(() => resolve()));
@@ -189,7 +193,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")(
   },
 );
 
-/** Runs an installer for a version that is already unpacked, so only the ac command step runs. */
+/** Runs an installer for a version that is already unpacked, so only the ankiel command step runs. */
 async function installOver(input: {
   readonly script: "install.sh" | "install.ps1";
   readonly home: string;
@@ -210,215 +214,221 @@ async function installOver(input: {
     ...(input.cwd === undefined ? {} : { cwd: input.cwd }),
     env: {
       ...process.env,
-      AC_CHANNEL: "",
-      AC_VERSION: "1.2.3",
-      AC_HOME: input.home,
-      AC_INSTALL_BIN_DIR: input.binDir,
-      AC_RELEASE_BASE_URL: "http://127.0.0.1:9",
+      ANKIEL_CHANNEL: "",
+      ANKIEL_VERSION: "1.2.3",
+      ANKIEL_HOME: input.home,
+      ANKIEL_INSTALL_BIN_DIR: input.binDir,
+      ANKIEL_RELEASE_BASE_URL: "http://127.0.0.1:9",
       ...input.env,
     },
   });
   return { code: result.status, output: `${result.stdout}${result.stderr}`, target };
 }
 
-describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("install.sh ac command", () => {
-  it("replaces only this home's own launchers and prints a PATH command", async () => {
-    const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "ankiel-install-link-"));
-    try {
-      const home = NodePath.join(root, "home");
-      const binDir = NodePath.join(root, "bin");
-      const link = NodePath.join(binDir, "ac");
-      await NodeFSP.mkdir(binDir, { recursive: true });
+describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")(
+  "install.sh ankiel command",
+  () => {
+    it("replaces only this home's own launchers and prints a PATH command", async () => {
+      const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "ankiel-install-link-"));
+      try {
+        const home = NodePath.join(root, "home");
+        const binDir = NodePath.join(root, "bin");
+        const link = NodePath.join(binDir, "ankiel");
+        await NodeFSP.mkdir(binDir, { recursive: true });
 
-      await NodeFSP.writeFile(link, "#!/bin/sh\necho mine\n");
-      const foreign = await installOver({ script: "install.sh", home, binDir });
-      expect(foreign.code).not.toBe(0);
-      expect(foreign.output).toContain(`another ac is already at ${link}`);
-      expect(await NodeFSP.readFile(link, "utf8")).toBe("#!/bin/sh\necho mine\n");
-      // Not even from inside the versions folder, where `.` would resolve into it.
-      const fromVersions = await installOver({
-        script: "install.sh",
-        home,
-        binDir,
-        cwd: foreign.target,
-      });
-      expect(fromVersions.code).not.toBe(0);
-      expect(await NodeFSP.readFile(link, "utf8")).toBe("#!/bin/sh\necho mine\n");
+        await NodeFSP.writeFile(link, "#!/bin/sh\necho mine\n");
+        const foreign = await installOver({ script: "install.sh", home, binDir });
+        expect(foreign.code).not.toBe(0);
+        expect(foreign.output).toContain(`another ankiel is already at ${link}`);
+        expect(await NodeFSP.readFile(link, "utf8")).toBe("#!/bin/sh\necho mine\n");
+        // Not even from inside the versions folder, where `.` would resolve into it.
+        const fromVersions = await installOver({
+          script: "install.sh",
+          home,
+          binDir,
+          cwd: foreign.target,
+        });
+        expect(fromVersions.code).not.toBe(0);
+        expect(await NodeFSP.readFile(link, "utf8")).toBe("#!/bin/sh\necho mine\n");
 
-      // A link that only looks like it points into versions (join() would normalize the ..).
-      await NodeFSP.rm(link);
-      await NodeFSP.mkdir(NodePath.join(home, "other"), { recursive: true });
-      await NodeFSP.writeFile(NodePath.join(home, "other/ac"), "#!/bin/sh\n");
-      await NodeFSP.symlink(`${home}/runtime/versions/../../other/ac`, link);
-      const climbing = await installOver({ script: "install.sh", home, binDir });
-      expect(climbing.code).not.toBe(0);
-      expect(await NodeFSP.readlink(link)).toBe(`${home}/runtime/versions/../../other/ac`);
+        // A link that only looks like it points into versions (join() would normalize the ..).
+        await NodeFSP.rm(link);
+        await NodeFSP.mkdir(NodePath.join(home, "other"), { recursive: true });
+        await NodeFSP.writeFile(NodePath.join(home, "other/ankiel"), "#!/bin/sh\n");
+        await NodeFSP.symlink(`${home}/runtime/versions/../../other/ankiel`, link);
+        const climbing = await installOver({ script: "install.sh", home, binDir });
+        expect(climbing.code).not.toBe(0);
+        expect(await NodeFSP.readlink(link)).toBe(`${home}/runtime/versions/../../other/ankiel`);
 
-      // Only `<version>/ac` counts, not another program inside a version.
-      await NodeFSP.rm(link);
-      await NodeFSP.symlink(NodePath.join(home, "runtime/versions/1.0.0/helper"), link);
-      const sibling = await installOver({ script: "install.sh", home, binDir });
-      expect(sibling.code).not.toBe(0);
-      expect(await NodeFSP.readlink(link)).toBe(
-        NodePath.join(home, "runtime/versions/1.0.0/helper"),
-      );
+        // Only `<version>/ankiel` counts, not another program inside a version.
+        await NodeFSP.rm(link);
+        await NodeFSP.symlink(NodePath.join(home, "runtime/versions/1.0.0/helper"), link);
+        const sibling = await installOver({ script: "install.sh", home, binDir });
+        expect(sibling.code).not.toBe(0);
+        expect(await NodeFSP.readlink(link)).toBe(
+          NodePath.join(home, "runtime/versions/1.0.0/helper"),
+        );
 
-      // An upgrade over an older version's link, written through a symlinked Ankiel home.
-      await NodeFSP.rm(link);
-      await NodeFSP.symlink(NodePath.join(home, "runtime/versions/1.0.0/ac"), link);
-      await NodeFSP.symlink(home, NodePath.join(root, "alias"));
-      const upgrade = await installOver({
-        script: "install.sh",
-        home: NodePath.join(root, "alias"),
-        binDir,
-        env: { HOME: root, SHELL: "/bin/zsh", PATH: "/usr/bin:/bin" },
-      });
-      expect(upgrade.code, upgrade.output).toBe(0);
-      expect(await NodeFSP.readFile(link, "utf8")).toBe(
-        launcherScript(NodePath.join(root, "alias/runtime/versions/1.2.3/ac")),
-      );
-      expect(upgrade.output).toContain(
-        `printf '\\n%s\\n' 'export PATH="$PATH:$HOME/bin"' >> ~/.zshrc`,
-      );
+        // An upgrade over an older version's link, written through a symlinked Ankiel home.
+        await NodeFSP.rm(link);
+        await NodeFSP.symlink(NodePath.join(home, "runtime/versions/1.0.0/ankiel"), link);
+        await NodeFSP.symlink(home, NodePath.join(root, "alias"));
+        const upgrade = await installOver({
+          script: "install.sh",
+          home: NodePath.join(root, "alias"),
+          binDir,
+          env: { HOME: root, SHELL: "/bin/zsh", PATH: "/usr/bin:/bin" },
+        });
+        expect(upgrade.code, upgrade.output).toBe(0);
+        expect(await NodeFSP.readFile(link, "utf8")).toBe(
+          launcherScript(NodePath.join(root, "alias/runtime/versions/1.2.3/ankiel")),
+        );
+        expect(upgrade.output).toContain(
+          `printf '\\n%s\\n' 'export PATH="$PATH:$HOME/bin"' >> ~/.zshrc`,
+        );
 
-      // Containers and CI often have no SHELL; `set -u` must not stop the installer there.
-      const noShell = await installOver({
-        script: "install.sh",
-        home,
-        binDir,
-        env: { HOME: root, SHELL: undefined, PATH: "/usr/bin:/bin" },
-      });
-      expect(noShell.code, noShell.output).toBe(0);
-      expect(noShell.output).toContain(`Add ${binDir} to your PATH`);
+        // Containers and CI often have no SHELL; `set -u` must not stop the installer there.
+        const noShell = await installOver({
+          script: "install.sh",
+          home,
+          binDir,
+          env: { HOME: root, SHELL: undefined, PATH: "/usr/bin:/bin" },
+        });
+        expect(noShell.code, noShell.output).toBe(0);
+        expect(noShell.output).toContain(`Add ${binDir} to your PATH`);
 
-      // Its folder on PATH with a trailing slash is still this ac, not another one.
-      const slashed = await installOver({
-        script: "install.sh",
-        home,
-        binDir,
-        env: { HOME: root, PATH: `${binDir}/:/usr/bin:/bin` },
-      });
-      expect(slashed.code, slashed.output).toBe(0);
-      expect(slashed.output).toContain("Run ac to use Ankiel Code here");
+        // Its folder on PATH with a trailing slash is still this ankiel, not another one.
+        const slashed = await installOver({
+          script: "install.sh",
+          home,
+          binDir,
+          env: { HOME: root, PATH: `${binDir}/:/usr/bin:/bin` },
+        });
+        expect(slashed.code, slashed.output).toBe(0);
+        expect(slashed.output).toContain("Run ankiel to use Ankiel Code here");
 
-      // A relative folder is made absolute, so the PATH command never follows the working directory.
-      const relative = await installOver({
-        script: "install.sh",
-        home,
-        binDir: "bin",
-        cwd: root,
-        env: { HOME: root, SHELL: "/bin/zsh", PATH: "/usr/bin:/bin" },
-      });
-      expect(relative.code, relative.output).toBe(0);
-      expect(relative.output).toContain(`'export PATH="$PATH:$HOME/bin"'`);
+        // A relative folder is made absolute, so the PATH command never follows the working directory.
+        const relative = await installOver({
+          script: "install.sh",
+          home,
+          binDir: "bin",
+          cwd: root,
+          env: { HOME: root, SHELL: "/bin/zsh", PATH: "/usr/bin:/bin" },
+        });
+        expect(relative.code, relative.output).toBe(0);
+        expect(relative.output).toContain(`'export PATH="$PATH:$HOME/bin"'`);
 
-      // A launcher script someone edited is theirs now.
-      const edited = `${launcherScript(NodePath.join(home, "runtime/versions/1.2.3/ac"))}# mine\n`;
-      await NodeFSP.writeFile(link, edited);
-      const overEdited = await installOver({ script: "install.sh", home, binDir });
-      expect(overEdited.code).not.toBe(0);
-      expect(await NodeFSP.readFile(link, "utf8")).toBe(edited);
+        // A launcher script someone edited is theirs now.
+        const edited = `${launcherScript(NodePath.join(home, "runtime/versions/1.2.3/ankiel"))}# mine\n`;
+        await NodeFSP.writeFile(link, edited);
+        const overEdited = await installOver({ script: "install.sh", home, binDir });
+        expect(overEdited.code).not.toBe(0);
+        expect(await NodeFSP.readFile(link, "utf8")).toBe(edited);
 
-      await NodeFSP.rm(link);
-      await NodeFSP.symlink(NodePath.join(home, "bin/ac"), link);
-      const overDesktop = await installOver({
-        script: "install.sh",
-        home: `${home}//`,
-        binDir: `${binDir}/`,
-      });
-      expect(overDesktop.code, overDesktop.output).toBe(0);
-      expect(await NodeFSP.readFile(link, "utf8")).toBe(
-        launcherScript(NodePath.join(home, "runtime/versions/1.2.3/ac")),
-      );
-    } finally {
-      await NodeFSP.rm(root, { recursive: true, force: true });
-    }
-  });
-});
+        await NodeFSP.rm(link);
+        await NodeFSP.symlink(NodePath.join(home, "bin/ankiel"), link);
+        const overDesktop = await installOver({
+          script: "install.sh",
+          home: `${home}//`,
+          binDir: `${binDir}/`,
+        });
+        expect(overDesktop.code, overDesktop.output).toBe(0);
+        expect(await NodeFSP.readFile(link, "utf8")).toBe(
+          launcherScript(NodePath.join(home, "runtime/versions/1.2.3/ankiel")),
+        );
+      } finally {
+        await NodeFSP.rm(root, { recursive: true, force: true });
+      }
+    });
+  },
+);
 
-describe.skipIf(HostProcess.Platform.defaultValue() !== "win32")("install.ps1 ac command", () => {
-  it("replaces only its own ac.cmd, also in non-ASCII and bracketed paths", async () => {
-    const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "ankiel-install-ps1-"));
-    try {
-      // Windows PowerShell 5.1 reads files as ANSI by default and expands wildcards in paths.
-      const home = NodePath.join(root, "José", ".ac");
-      const binDir = NodePath.join(root, "bin[ac]");
-      const shim = NodePath.join(binDir, "ac.cmd");
-      await NodeFSP.mkdir(binDir, { recursive: true });
+describe.skipIf(HostProcess.Platform.defaultValue() !== "win32")(
+  "install.ps1 ankiel command",
+  () => {
+    it("replaces only its own ankiel.cmd, also in non-ASCII and bracketed paths", async () => {
+      const root = await NodeFSP.mkdtemp(NodePath.join(NodeOS.tmpdir(), "ankiel-install-ps1-"));
+      try {
+        // Windows PowerShell 5.1 reads files as ANSI by default and expands wildcards in paths.
+        const home = NodePath.join(root, "José", ".ankiel");
+        const binDir = NodePath.join(root, "bin[ankiel]");
+        const shim = NodePath.join(binDir, "ankiel.cmd");
+        await NodeFSP.mkdir(binDir, { recursive: true });
 
-      const desktopShim =
-        '@echo off\r\n"C:\\Program Files\\Ankiel Code\\Ankiel Code.exe" "x" %*\r\n';
-      await NodeFSP.writeFile(shim, desktopShim);
-      const foreign = await installOver({ script: "install.ps1", home, binDir });
-      expect(foreign.code).not.toBe(0);
-      expect(foreign.output).toContain("another ac is already at");
-      expect(await NodeFSP.readFile(shim, "utf8")).toBe(desktopShim);
+        const desktopShim =
+          '@echo off\r\n"C:\\Program Files\\Ankiel Code\\Ankiel Code.exe" "x" %*\r\n';
+        await NodeFSP.writeFile(shim, desktopShim);
+        const foreign = await installOver({ script: "install.ps1", home, binDir });
+        expect(foreign.code).not.toBe(0);
+        expect(foreign.output).toContain("another ankiel is already at");
+        expect(await NodeFSP.readFile(shim, "utf8")).toBe(desktopShim);
 
-      // A hand-edited wrapper may set its own environment; replacing it would drop that.
-      const edited = `@echo off\r\nset "AC_HOME=D:\\other"\r\n"${NodePath.join(home, "runtime", "versions", "1.0.0", "ac.exe")}" %*`;
-      await NodeFSP.writeFile(shim, edited, "utf8");
-      const wrapper = await installOver({ script: "install.ps1", home, binDir });
-      expect(wrapper.code).not.toBe(0);
-      expect(await NodeFSP.readFile(shim, "utf8")).toBe(edited);
+        // A hand-edited wrapper may set its own environment; replacing it would drop that.
+        const edited = `@echo off\r\nset "ANKIEL_HOME=D:\\other"\r\n"${NodePath.join(home, "runtime", "versions", "1.0.0", "ankiel.exe")}" %*`;
+        await NodeFSP.writeFile(shim, edited, "utf8");
+        const wrapper = await installOver({ script: "install.ps1", home, binDir });
+        expect(wrapper.code).not.toBe(0);
+        expect(await NodeFSP.readFile(shim, "utf8")).toBe(edited);
 
-      const climbing = `@echo off\r\n"${NodePath.join(home, "runtime", "versions")}\\..\\other\\ac.exe" %*`;
-      await NodeFSP.writeFile(shim, climbing, "utf8");
-      const outside = await installOver({ script: "install.ps1", home, binDir });
-      expect(outside.code).not.toBe(0);
-      expect(await NodeFSP.readFile(shim, "utf8")).toBe(climbing);
+        const climbing = `@echo off\r\n"${NodePath.join(home, "runtime", "versions")}\\..\\other\\ankiel.exe" %*`;
+        await NodeFSP.writeFile(shim, climbing, "utf8");
+        const outside = await installOver({ script: "install.ps1", home, binDir });
+        expect(outside.code).not.toBe(0);
+        expect(await NodeFSP.readFile(shim, "utf8")).toBe(climbing);
 
-      const older = NodePath.join(home, "runtime", "versions", "1.0.0", "ac.exe");
-      await NodeFSP.writeFile(shim, `@echo off\r\n"${older}" %*`, "utf8");
-      const upgrade = await installOver({ script: "install.ps1", home, binDir });
-      expect(upgrade.code, upgrade.output).toBe(0);
-      expect(await NodeFSP.readFile(shim, "utf8")).toContain(
-        NodePath.join(upgrade.target, "ac.exe"),
-      );
+        const older = NodePath.join(home, "runtime", "versions", "1.0.0", "ankiel.exe");
+        await NodeFSP.writeFile(shim, `@echo off\r\n"${older}" %*`, "utf8");
+        const upgrade = await installOver({ script: "install.ps1", home, binDir });
+        expect(upgrade.code, upgrade.output).toBe(0);
+        expect(await NodeFSP.readFile(shim, "utf8")).toContain(
+          NodePath.join(upgrade.target, "ankiel.exe"),
+        );
 
-      const again = await installOver({ script: "install.ps1", home, binDir });
-      expect(again.code, again.output).toBe(0);
+        const again = await installOver({ script: "install.ps1", home, binDir });
+        expect(again.code, again.output).toBe(0);
 
-      // Another ac first on PATH still runs, so the installer names this one in full.
-      const otherBin = NodePath.join(root, "other");
-      await NodeFSP.mkdir(otherBin);
-      await NodeFSP.writeFile(NodePath.join(otherBin, "ac.cmd"), "@echo off\r\n");
-      // Windows spells it Path; a second PATH key would be ambiguous.
-      const pathKey =
-        Object.keys(process.env).find((key) => key.toUpperCase() === "PATH") ?? "PATH";
-      const shadowed = await installOver({
-        script: "install.ps1",
-        home,
-        binDir,
-        env: { [pathKey]: `${otherBin};${process.env[pathKey] ?? ""}` },
-      });
-      expect(shadowed.code, shadowed.output).toBe(0);
-      expect(shadowed.output).toContain(
-        `Another ac at ${NodePath.join(otherBin, "ac.cmd")} runs first`,
-      );
+        // Another ankiel first on PATH still runs, so the installer names this one in full.
+        const otherBin = NodePath.join(root, "other");
+        await NodeFSP.mkdir(otherBin);
+        await NodeFSP.writeFile(NodePath.join(otherBin, "ankiel.cmd"), "@echo off\r\n");
+        // Windows spells it Path; a second PATH key would be ambiguous.
+        const pathKey =
+          Object.keys(process.env).find((key) => key.toUpperCase() === "PATH") ?? "PATH";
+        const shadowed = await installOver({
+          script: "install.ps1",
+          home,
+          binDir,
+          env: { [pathKey]: `${otherBin};${process.env[pathKey] ?? ""}` },
+        });
+        expect(shadowed.code, shadowed.output).toBe(0);
+        expect(shadowed.output).toContain(
+          `Another ankiel at ${NodePath.join(otherBin, "ankiel.cmd")} runs first`,
+        );
 
-      // Its own folder on PATH with a trailing separator is already on PATH.
-      const slashed = await installOver({
-        script: "install.ps1",
-        home,
-        binDir,
-        env: { [pathKey]: `${binDir}\\;${process.env[pathKey] ?? ""}` },
-      });
-      expect(slashed.code, slashed.output).toBe(0);
-      expect(slashed.output).toContain("to use Ankiel Code here");
-      // The same when the install folder itself is given with a trailing separator.
-      const bothSlashed = await installOver({
-        script: "install.ps1",
-        home,
-        binDir: `${binDir}\\`,
-        env: { [pathKey]: `${binDir}\\;${process.env[pathKey] ?? ""}` },
-      });
-      expect(bothSlashed.code, bothSlashed.output).toBe(0);
-      expect(bothSlashed.output).toContain("to use Ankiel Code here");
-    } finally {
-      await NodeFSP.rm(root, { recursive: true, force: true });
-    }
-  });
-});
+        // Its own folder on PATH with a trailing separator is already on PATH.
+        const slashed = await installOver({
+          script: "install.ps1",
+          home,
+          binDir,
+          env: { [pathKey]: `${binDir}\\;${process.env[pathKey] ?? ""}` },
+        });
+        expect(slashed.code, slashed.output).toBe(0);
+        expect(slashed.output).toContain("to use Ankiel Code here");
+        // The same when the install folder itself is given with a trailing separator.
+        const bothSlashed = await installOver({
+          script: "install.ps1",
+          home,
+          binDir: `${binDir}\\`,
+          env: { [pathKey]: `${binDir}\\;${process.env[pathKey] ?? ""}` },
+        });
+        expect(bothSlashed.code, bothSlashed.output).toBe(0);
+        expect(bothSlashed.output).toContain("to use Ankiel Code here");
+      } finally {
+        await NodeFSP.rm(root, { recursive: true, force: true });
+      }
+    });
+  },
+);
 
 describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer checksum", () => {
   it.each(
@@ -439,7 +449,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer chec
         );
         const home = NodePath.join(root, homeName);
         const version = "1.2.3";
-        const stem = `ac-${version}-linux-${HostProcess.Architecture.defaultValue()}`;
+        const stem = `ankiel-${version}-linux-${HostProcess.Architecture.defaultValue()}`;
         const archiveName = `${stem}.tar.gz`;
         const server = NodeHttp.createServer();
         try {
@@ -471,8 +481,8 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer chec
           }
           await NodeFSP.mkdir(NodePath.join(root, stem));
           await NodeFSP.writeFile(
-            NodePath.join(root, stem, "ac"),
-            "#!/bin/sh\necho 'ac v1.2.3'\n",
+            NodePath.join(root, stem, "ankiel"),
+            "#!/bin/sh\necho 'ankiel v1.2.3'\n",
             { mode: 0o755 },
           );
           const archivePath = NodePath.join(root, archiveName);
@@ -498,10 +508,10 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer chec
                   env: {
                     ...process.env,
                     PATH: tools,
-                    AC_VERSION: version,
-                    AC_HOME: home,
-                    AC_INSTALL_BIN_DIR: NodePath.join(root, "bin"),
-                    AC_RELEASE_BASE_URL: `http://127.0.0.1:${address.port}`,
+                    ANKIEL_VERSION: version,
+                    ANKIEL_HOME: home,
+                    ANKIEL_INSTALL_BIN_DIR: NodePath.join(root, "bin"),
+                    ANKIEL_RELEASE_BASE_URL: `http://127.0.0.1:${address.port}`,
                   },
                   stdio: ["ignore", "pipe", "pipe"],
                 },
@@ -520,10 +530,10 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("installer chec
               await NodeFSP.readFile(NodePath.join(versions, version, ".install-complete"), "utf8"),
             ).toBe("1.2.3\n");
             expect(
-              NodeChildProcess.execFileSync(NodePath.join(root, "bin/ac"), ["--version"], {
+              NodeChildProcess.execFileSync(NodePath.join(root, "bin/ankiel"), ["--version"], {
                 encoding: "utf8",
               }).trim(),
-            ).toBe("ac v1.2.3");
+            ).toBe("ankiel v1.2.3");
           } else {
             expect(code).not.toBe(0);
             expect(output).toContain("checksum mismatch");
@@ -547,7 +557,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("concurrent ins
       NodePath.join(NodeOS.tmpdir(), "ankiel-install-concurrent-"),
     );
     const version = "1.2.3";
-    const stem = `ac-${version}-linux-${HostProcess.Architecture.defaultValue()}`;
+    const stem = `ankiel-${version}-linux-${HostProcess.Architecture.defaultValue()}`;
     const archiveName = `${stem}.tar.gz`;
     const target = NodePath.join(root, "home/runtime/versions", version);
     const waiting = new Map<string, NodeHttp.ServerResponse>();
@@ -556,9 +566,13 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("concurrent ins
       const tools = NodePath.join(root, "tools");
       await NodeFSP.mkdir(tools);
       await NodeFSP.mkdir(NodePath.join(root, stem));
-      await NodeFSP.writeFile(NodePath.join(root, stem, "ac"), "#!/bin/sh\necho 'ac v1.2.3'\n", {
-        mode: 0o755,
-      });
+      await NodeFSP.writeFile(
+        NodePath.join(root, stem, "ankiel"),
+        "#!/bin/sh\necho 'ankiel v1.2.3'\n",
+        {
+          mode: 0o755,
+        },
+      );
       const archivePath = NodePath.join(root, archiveName);
       NodeChildProcess.execFileSync("tar", ["-czf", archivePath, "-C", root, stem]);
       const archive = await NodeFSP.readFile(archivePath);
@@ -589,9 +603,9 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("concurrent ins
         wrapper,
         `
 import { execFileSync } from 'node:child_process';
-await fetch(process.env.AC_TEST_ORIGIN + '/ready/' + process.env.AC_TEST_INSTALLER);
+await fetch(process.env.ANKIEL_TEST_ORIGIN + '/ready/' + process.env.ANKIEL_TEST_INSTALLER);
 execFileSync(${JSON.stringify(realMv)}, process.argv.slice(2));
-if (process.env.AC_TEST_INSTALLER === 'first') await fetch(process.env.AC_TEST_ORIGIN + '/published');
+if (process.env.ANKIEL_TEST_INSTALLER === 'first') await fetch(process.env.ANKIEL_TEST_ORIGIN + '/published');
 `,
       );
       await NodeFSP.writeFile(
@@ -608,12 +622,12 @@ if (process.env.AC_TEST_INSTALLER === 'first') await fetch(process.env.AC_TEST_O
               env: {
                 ...process.env,
                 PATH: `${tools}:${process.env.PATH}`,
-                AC_VERSION: version,
-                AC_HOME: NodePath.join(root, "home"),
-                AC_INSTALL_BIN_DIR: NodePath.join(root, "bin", id),
-                AC_RELEASE_BASE_URL: origin,
-                AC_TEST_ORIGIN: origin,
-                AC_TEST_INSTALLER: id,
+                ANKIEL_VERSION: version,
+                ANKIEL_HOME: NodePath.join(root, "home"),
+                ANKIEL_INSTALL_BIN_DIR: NodePath.join(root, "bin", id),
+                ANKIEL_RELEASE_BASE_URL: origin,
+                ANKIEL_TEST_ORIGIN: origin,
+                ANKIEL_TEST_INSTALLER: id,
               },
               stdio: ["ignore", "pipe", "pipe"],
             },

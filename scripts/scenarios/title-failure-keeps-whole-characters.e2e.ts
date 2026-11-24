@@ -3,8 +3,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 const PREFIX = "Codex CLI command failed: ";
 const KEPT = `${PREFIX}${"The title model refused this request. ".repeat(10)}`.slice(0, 298);
@@ -17,15 +17,17 @@ exit 1
 test(
   "A long title regeneration failure ends without a broken character",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     const { fakeCodex, settingsPath, originalSettings } = await runPromise(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         return {
-          fakeCodex: path.join(AC_HOME, "bin/fake-codex"),
-          settingsPath: path.join(AC_HOME, "userdata/settings.json"),
-          originalSettings: yield* fs.readFileString(path.join(AC_HOME, "userdata/settings.json")),
+          fakeCodex: path.join(ANKIEL_HOME, "bin/fake-codex"),
+          settingsPath: path.join(ANKIEL_HOME, "userdata/settings.json"),
+          originalSettings: yield* fs.readFileString(
+            path.join(ANKIEL_HOME, "userdata/settings.json"),
+          ),
         };
       }),
     );
@@ -46,9 +48,9 @@ test(
         }),
       );
 
-      const project = await ac.project("demo");
-      const thread = await ac.thread({ project, title: "Earlier work", messages: ["first"] });
-      await ac.open(thread);
+      const project = await ankiel.project("demo");
+      const thread = await ankiel.thread({ project, title: "Earlier work", messages: ["first"] });
+      await ankiel.open(thread);
 
       await screen.getByRole("button", "Thread actions for Earlier work").tap();
       await screen.getByRole("menuitem", "Regenerate title").tap();

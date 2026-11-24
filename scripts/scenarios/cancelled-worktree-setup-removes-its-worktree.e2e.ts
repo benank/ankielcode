@@ -4,9 +4,9 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 
-import { APP_DIR, AC_HOME } from "../e2e.config.ts";
+import { APP_DIR, ANKIEL_HOME } from "../e2e.config.ts";
 import { run } from "./shell.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 const decodeLaunched = Schema.decodeUnknownEffect(
   Schema.fromJsonString(Schema.Struct({ threadId: Schema.String })),
@@ -15,8 +15,8 @@ const decodeLaunched = Schema.decodeUnknownEffect(
 test(
   "Cancelling worktree setup during its post-checkout hook removes the new worktree",
   WEB,
-  async ({ ac, app, screen }) => {
-    const project = await ac.project("demo");
+  async ({ ankiel, app, screen }) => {
+    const project = await ankiel.project("demo");
     const git = (...args: ReadonlyArray<string>) =>
       runPromise(run("git", args, { cwd: project })).then(({ stdout }) => stdout);
     const connected = Promise.withResolvers<void>();
@@ -70,14 +70,14 @@ test(
           "showcase",
           "--json",
           "--base-dir",
-          AC_HOME,
+          ANKIEL_HOME,
         ],
         { cwd: APP_DIR, env: { PATH: process.env.PATH, HOME: process.env.HOME } },
       ).pipe(Effect.flatMap(({ stdout }) => decodeLaunched(stdout))),
     );
 
     await connected.promise;
-    await ac.open(started);
+    await ankiel.open(started);
     await expect(screen.getByText("50%")).toBeVisible();
     await screen.getByRole("button", "Cancel").tap();
     await app.screenshot("after-cancel");
@@ -88,6 +88,6 @@ test(
         async () => (await git("worktree", "list", "--porcelain")).match(/^worktree /gm)?.length,
       )
       .toBe(1);
-    await expect.poll(() => git("branch", "--list", "ac/*")).toBe("");
+    await expect.poll(() => git("branch", "--list", "ankiel/*")).toBe("");
   },
 );

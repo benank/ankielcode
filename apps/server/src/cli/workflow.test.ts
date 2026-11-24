@@ -54,7 +54,7 @@ const makeRun = (status: WorkflowRun["status"]): WorkflowRun => ({
   endedAt: ["running", "waiting", "paused"].includes(status) ? null : "2026-11-20T00:00:00.000Z",
 });
 
-/** Runs `ac workflow <args>` against a live-looking server whose ankiel_workflow is `call`. */
+/** Runs `ankiel workflow <args>` against a live-looking server whose ankiel_workflow is `call`. */
 const runCli = (
   args: ReadonlyArray<string>,
   call: McpBridge.McpToolSession["call"] = () => Effect.die("no tool call expected"),
@@ -95,7 +95,7 @@ const runCli = (
         NodeServices.layer,
         NodeCrypto.layer,
         NetService.layer,
-        ConfigProvider.layer(ConfigProvider.fromEnv({ env: { AC_PORT: "3773" } })),
+        ConfigProvider.layer(ConfigProvider.fromEnv({ env: { ANKIEL_PORT: "3773" } })),
       ),
     ),
   );

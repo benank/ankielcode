@@ -1,5 +1,5 @@
 import {
-  AC_PROJECT_FILE_NAME,
+  ANKIEL_PROJECT_FILE_NAME,
   type EnvironmentId,
   type ProjectReadFileResult,
   type AnkielProjectFile,
@@ -22,7 +22,7 @@ function toAnkielProjectFile(
   const data = resolveProjectFileQueryData(
     environmentId,
     workspaceRoot,
-    AC_PROJECT_FILE_NAME,
+    ANKIEL_PROJECT_FILE_NAME,
     result,
   );
   if (data === null || data.exists === false || data.truncated) return null;
@@ -35,7 +35,7 @@ export async function readAnkielProjectFile(
 ): Promise<AnkielProjectFile | null> {
   const result = await executeAtomQuery(
     appAtomRegistry,
-    getProjectFileQueryAtom(environmentId, workspaceRoot, AC_PROJECT_FILE_NAME),
+    getProjectFileQueryAtom(environmentId, workspaceRoot, ANKIEL_PROJECT_FILE_NAME),
     { reportDefect: false, reportFailure: false },
   );
   return toAnkielProjectFile(
@@ -45,13 +45,13 @@ export async function readAnkielProjectFile(
   );
 }
 
-/** The project's ac.json from an earlier read, or `undefined` when none has loaded yet. */
+/** The project's ankiel.json from an earlier read, or `undefined` when none has loaded yet. */
 export function peekAnkielProjectFile(
   environmentId: EnvironmentId,
   workspaceRoot: string,
 ): AnkielProjectFile | null | undefined {
   const result = appAtomRegistry.get(
-    getProjectFileQueryAtom(environmentId, workspaceRoot, AC_PROJECT_FILE_NAME),
+    getProjectFileQueryAtom(environmentId, workspaceRoot, ANKIEL_PROJECT_FILE_NAME),
   );
   return AsyncResult.isSuccess(result)
     ? toAnkielProjectFile(environmentId, workspaceRoot, result.value)

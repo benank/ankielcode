@@ -22,9 +22,11 @@ it("stays byte-identical to .github/triage/PLAYBOOK.md", () => {
 
 it("launch prompt stays a single argv-safe line naming the prompt file", () => {
   // Windows .cmd shims cannot carry multiline argv.
-  const launch = buildTriageLaunchPrompt(String.raw`C:\Users\a b\.ac\userdata\triage\x\prompt.md`);
+  const launch = buildTriageLaunchPrompt(
+    String.raw`C:\Users\a b\.ankiel\userdata\triage\x\prompt.md`,
+  );
   assert.notInclude(launch, "\n");
-  assert.include(launch, String.raw`C:\Users\a b\.ac\userdata\triage\x\prompt.md`);
+  assert.include(launch, String.raw`C:\Users\a b\.ankiel\userdata\triage\x\prompt.md`);
   assert.isBelow(launch.length, 1_000);
 });
 
@@ -48,7 +50,7 @@ it("in-app context warns the agent off its own server and points at the clone in
     server: "running (pid 42, version 0.1.1); this session runs inside it",
     sourceClone: {
       _tag: "cloning",
-      directory: "/home/u/.ac/source/abc123",
+      directory: "/home/u/.ankiel/source/abc123",
       ref: "v0.1.1",
       commit: "abc123",
       serverVersion: "0.1.1",
@@ -57,7 +59,7 @@ it("in-app context warns the agent off its own server and points at the clone in
   assert.notInclude(context, "Triage CLI version");
   assert.include(context, "- Started from: Ankiel Code Desktop version 0.1.1 on macos (");
   assert.include(context, "## This session runs inside Ankiel Code");
-  assert.include(context, "/home/u/.ac/source/abc123  (v0.1.1, commit abc123)");
+  assert.include(context, "/home/u/.ankiel/source/abc123  (v0.1.1, commit abc123)");
   assert.include(context, "Wait for it instead of\ncloning again.");
 });
 
@@ -66,17 +68,17 @@ const contextInput = {
   os: "linux x64 (7.2.0)",
   nodeVersion: "v26.8.2",
   paths: {
-    stateDir: "/home/u/.ac/userdata",
-    dbPath: "/home/u/.ac/userdata/state.sqlite",
-    settingsPath: "/home/u/.ac/userdata/settings.json",
-    logsDir: "/home/u/.ac/userdata/logs",
-    serviceLogPath: "/home/u/.ac/userdata/logs/boot-service.log",
-    desktopBackendLogGlob: "/home/u/.ac/userdata/logs/server-child*.log*",
-    serverTracePath: "/home/u/.ac/userdata/logs/server.trace.ndjson",
-    providerEventLogPath: "/home/u/.ac/userdata/logs/provider/events.log",
-    terminalLogsDir: "/home/u/.ac/userdata/logs/terminals",
-    providerStatusCacheDir: "/home/u/.ac/caches",
-    secretsDir: "/home/u/.ac/userdata/secrets",
-    sourceCacheDir: "/home/u/.ac/source",
+    stateDir: "/home/u/.ankiel/userdata",
+    dbPath: "/home/u/.ankiel/userdata/state.sqlite",
+    settingsPath: "/home/u/.ankiel/userdata/settings.json",
+    logsDir: "/home/u/.ankiel/userdata/logs",
+    serviceLogPath: "/home/u/.ankiel/userdata/logs/boot-service.log",
+    desktopBackendLogGlob: "/home/u/.ankiel/userdata/logs/server-child*.log*",
+    serverTracePath: "/home/u/.ankiel/userdata/logs/server.trace.ndjson",
+    providerEventLogPath: "/home/u/.ankiel/userdata/logs/provider/events.log",
+    terminalLogsDir: "/home/u/.ankiel/userdata/logs/terminals",
+    providerStatusCacheDir: "/home/u/.ankiel/caches",
+    secretsDir: "/home/u/.ankiel/userdata/secrets",
+    sourceCacheDir: "/home/u/.ankiel/source",
   },
 } satisfies Omit<TriageContextInput, "entry" | "server">;

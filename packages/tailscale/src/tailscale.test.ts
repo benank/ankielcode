@@ -163,7 +163,7 @@ describe("tailscale", () => {
       Web: {
         "box.tailnet.ts.net:443": {
           Handlers: {
-            "/ac": { Proxy: "http://127.0.0.1:3773" },
+            "/ankiel": { Proxy: "http://127.0.0.1:3773" },
             "/dashboard": { Proxy: "http://127.0.0.1:9000" },
           },
         },
@@ -195,9 +195,9 @@ describe("tailscale", () => {
         },
       },
       Services: {
-        "svc:ac": {
+        "svc:ankiel": {
           Web: {
-            "ac.tailnet.ts.net:443": { Handlers: { "/": { Proxy: "http://127.0.0.1:3773" } } },
+            "ankiel.tailnet.ts.net:443": { Handlers: { "/": { Proxy: "http://127.0.0.1:3773" } } },
           },
         },
       },
@@ -207,7 +207,7 @@ describe("tailscale", () => {
     });
     assert.deepEqual(parseTailscaleServeRoutesTo(status, { host: "127.0.0.1", port: 3773 }), [
       { servePort: 7000 },
-      { servePort: 443, mount: "/ac", host: "box.tailnet.ts.net" },
+      { servePort: 443, mount: "/ankiel", host: "box.tailnet.ts.net" },
       // `localhost` and `[::]` can dial either loopback, so they might be another service's.
       ...(
         [
@@ -230,7 +230,7 @@ describe("tailscale", () => {
         host: "box.tailnet.ts.net",
         ...(ambiguous === undefined ? {} : { ambiguous }),
       })),
-      { servePort: 443, mount: "/", host: "ac.tailnet.ts.net", owner: "svc:ac" },
+      { servePort: 443, mount: "/", host: "ankiel.tailnet.ts.net", owner: "svc:ankiel" },
       { servePort: 9000, ambiguous: "localhost", owner: "foreground" },
     ]);
     assert.deepEqual(
@@ -261,8 +261,8 @@ describe("tailscale", () => {
         "box.tailnet.ts.net:10002": { Handlers: { "/": { Text: "hi" } } },
       },
       Services: {
-        "svc:ac": {
-          Web: { "ac.tailnet.ts.net:10000": { Handlers: { "/": { Proxy: "4003" } } } },
+        "svc:ankiel": {
+          Web: { "ankiel.tailnet.ts.net:10000": { Handlers: { "/": { Proxy: "4003" } } } },
         },
       },
     });

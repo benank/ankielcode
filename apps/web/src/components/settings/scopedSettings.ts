@@ -233,8 +233,8 @@ export function scopedSettingsSource(
     ? "mixed"
     : sources.has("project")
       ? "project"
-      : sources.has("ac.json")
-        ? "ac.json"
+      : sources.has("ankiel.json")
+        ? "ankiel.json"
         : "environment";
 }
 

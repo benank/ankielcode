@@ -91,14 +91,14 @@ function layerEnvironment(
         NodeServices.layer,
         NodeCrypto.layer,
         DesktopConfig.layerTest({
-          AC_HOME: baseDir,
-          AC_PORT: "9999",
-          AC_MODE: "desktop",
-          AC_DESKTOP_LAN_HOST: "192.168.1.50",
+          ANKIEL_HOME: baseDir,
+          ANKIEL_PORT: "9999",
+          ANKIEL_MODE: "desktop",
+          ANKIEL_DESKTOP_LAN_HOST: "192.168.1.50",
           VITE_DEV_SERVER_URL: options?.devServerUrl,
-          AC_OTLP_TRACES_URL: options?.otlpTracesUrl,
-          AC_OTLP_METRICS_URL: options?.otlpMetricsUrl,
-          AC_OTLP_LOGS_URL: options?.otlpLogsUrl,
+          ANKIEL_OTLP_TRACES_URL: options?.otlpTracesUrl,
+          ANKIEL_OTLP_METRICS_URL: options?.otlpMetricsUrl,
+          ANKIEL_OTLP_LOGS_URL: options?.otlpLogsUrl,
         }),
       ),
     ),
@@ -247,10 +247,10 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(first.cwd, environment.backendCwd);
         assert.equal(first.captureOutput, true);
         assert.equal(first.env.ELECTRON_RUN_AS_NODE, "1");
-        assert.equal(first.env.AC_DESKTOP_SHELL_DISCOVERY_PENDING, "1");
-        assert.isUndefined(first.env.AC_PORT);
-        assert.isUndefined(first.env.AC_MODE);
-        assert.isUndefined(first.env.AC_DESKTOP_LAN_HOST);
+        assert.equal(first.env.ANKIEL_DESKTOP_SHELL_DISCOVERY_PENDING, "1");
+        assert.isUndefined(first.env.ANKIEL_PORT);
+        assert.isUndefined(first.env.ANKIEL_MODE);
+        assert.isUndefined(first.env.ANKIEL_DESKTOP_LAN_HOST);
 
         assert.equal(first.bootstrap.mode, "desktop");
         assert.equal(first.bootstrap.noBrowser, true);
@@ -399,7 +399,7 @@ describe("DesktopBackendConfiguration", () => {
     }> = [];
     let probeCount = 0;
     let legacyCleanupCount = 0;
-    const ankielHome = "/home/test/.config/ac";
+    const ankielHome = "/home/test/.config/ankiel";
     const linuxAppRoot = `${ankielHome}/wsl-runtime/1.2.3-x64`;
     const resolvedPath = "/home/test/.local/bin:/usr/bin:/bin";
 
@@ -456,8 +456,8 @@ describe("DesktopBackendConfiguration", () => {
             "--exec",
             "env",
             `PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${resolvedPath}`,
-            `AC_HOME=${ankielHome}`,
-            `${linuxAppRoot}/ac`,
+            `ANKIEL_HOME=${ankielHome}`,
+            `${linuxAppRoot}/ankiel`,
             "--bootstrap-fd",
             "0",
           ]);
@@ -502,9 +502,9 @@ describe("DesktopBackendConfiguration", () => {
 
           assert.deepEqual(observedRuntimeIds, [`sha256-${firstHash}`, `sha256-${secondHash}`]);
           assert.equal(first.wslRuntimeId, observedRuntimeIds[0]);
-          assert.include(first.args, `/runtime/sha256-${firstHash}/ac`);
+          assert.include(first.args, `/runtime/sha256-${firstHash}/ankiel`);
           assert.equal(second.wslRuntimeId, observedRuntimeIds[1]);
-          assert.include(second.args, `/runtime/sha256-${secondHash}/ac`);
+          assert.include(second.args, `/runtime/sha256-${secondHash}/ankiel`);
           assert.isUndefined(invalidIdentity.wslRuntimeId);
           assert.include(invalidIdentity.args, "/usr/bin/node");
           assert.include(invalidIdentity.args, `${mountedAppRoot}/apps/server/dist/bin.mjs`);
@@ -547,7 +547,7 @@ describe("DesktopBackendConfiguration", () => {
 
   it.effect("resolveWsl does not stage a runtime when the login-shell probe fails", () => {
     const archiveHash = "c".repeat(64);
-    const stagedAppRoot = `/home/test/.ac/wsl-runtime/sha256-${archiveHash}`;
+    const stagedAppRoot = `/home/test/.ankiel/wsl-runtime/sha256-${archiveHash}`;
     let probeCount = 0;
     const observedNodePtyRoots: string[] = [];
     return withPackagedWslHarness(
@@ -581,7 +581,7 @@ describe("DesktopBackendConfiguration", () => {
           assert.deepEqual(observedNodePtyRoots, [mountedAppRoot]);
           assert.include(config.args, "/usr/bin/node");
           assert.include(config.args, `${mountedAppRoot}/apps/server/dist/bin.mjs`);
-          assert.notInclude(config.args, `${stagedAppRoot}/ac`);
+          assert.notInclude(config.args, `${stagedAppRoot}/ankiel`);
           assert.equal(config.entryPath, mountedEntryPath);
           assert.isUndefined(config.wslRuntimeId);
           assert.isTrue(Option.isNone(config.preflightFailure));
@@ -590,7 +590,7 @@ describe("DesktopBackendConfiguration", () => {
   });
 
   it.effect("resolveWsl keeps WSL retryable when the mounted fallback fails transiently", () => {
-    const stagedAppRoot = "/home/test/.ac/wsl-runtime/cache";
+    const stagedAppRoot = "/home/test/.ankiel/wsl-runtime/cache";
     return withPackagedWslHarness(
       {
         archiveHash: "f".repeat(64),
@@ -631,7 +631,7 @@ describe("DesktopBackendConfiguration", () => {
         yield* fileSystem.writeFileString(entryPath, "");
 
         const nodePath = "/home/test user's/.nvm/versions/node/v22.0.0/bin/node";
-        const linuxAppRoot = "/tmp/ac code's launch";
+        const linuxAppRoot = "/tmp/ankiel code's launch";
         const linuxEntryPath = `${linuxAppRoot}/apps/server/dist/bin.mjs`;
         const resolvedPath = "/home/test user/bin:/opt/test's tools/bin:/usr/bin:/bin";
         const devServerUrl = "http://127.0.0.1:5733/dev%20assets/?label=hello%20world";
@@ -752,9 +752,9 @@ describe("DesktopBackendConfiguration", () => {
         const configuration = yield* DesktopBackendConfiguration.DesktopBackendConfiguration;
         const primary = yield* configuration.resolvePrimary;
         const wsl = yield* configuration.resolveWsl({ port: 5050, distro: null });
-        assert.equal(wsl.env.AC_DESKTOP_HOST_SCOPE, primary.env.AC_DESKTOP_HOST_SCOPE);
-        assert.include((wsl.env.WSLENV ?? "").split(":"), "AC_DESKTOP_HOST_SCOPE");
-        return primary.env.AC_DESKTOP_HOST_SCOPE;
+        assert.equal(wsl.env.ANKIEL_DESKTOP_HOST_SCOPE, primary.env.ANKIEL_DESKTOP_HOST_SCOPE);
+        assert.include((wsl.env.WSLENV ?? "").split(":"), "ANKIEL_DESKTOP_HOST_SCOPE");
+        return primary.env.ANKIEL_DESKTOP_HOST_SCOPE;
       }).pipe(
         Effect.provide(
           layerBackendConfiguration().pipe(
@@ -838,10 +838,10 @@ describe("DesktopBackendConfiguration", () => {
         assert.equal(config.httpBaseUrl.href, "http://172.27.0.99:5050/");
         assert.equal(config.env.OPENAI_API_KEY, "openai-key");
         assert.equal(config.env.ANTHROPIC_API_KEY, "anthropic-key");
-        assert.equal(config.env.AC_OTLP_PROTOCOL, "http/protobuf");
+        assert.equal(config.env.ANKIEL_OTLP_PROTOCOL, "http/protobuf");
         assert.equal(
           config.env.WSLENV,
-          "GOPATH/p:OPENAI_API_KEY/u:EMPTY::AZURE_DEVOPS_EXT_PAT/u:AC_DESKTOP_HOST_SCOPE:ANTHROPIC_API_KEY:AC_OTLP_HEADERS:AC_OTLP_PROTOCOL",
+          "GOPATH/p:OPENAI_API_KEY/u:EMPTY::AZURE_DEVOPS_EXT_PAT/u:ANKIEL_DESKTOP_HOST_SCOPE:ANTHROPIC_API_KEY:ANKIEL_OTLP_HEADERS:ANKIEL_OTLP_PROTOCOL",
         );
       }).pipe(
         Effect.provide(
@@ -863,8 +863,8 @@ describe("DesktopBackendConfiguration", () => {
           WSLENV: "GOPATH/p:OPENAI_API_KEY/u:EMPTY::AZURE_DEVOPS_EXT_PAT/u",
           OPENAI_API_KEY: "openai-key",
           ANTHROPIC_API_KEY: "anthropic-key",
-          AC_OTLP_HEADERS: 'authorization="Bearer%20my-token"',
-          AC_OTLP_PROTOCOL: "http/protobuf",
+          ANKIEL_OTLP_HEADERS: 'authorization="Bearer%20my-token"',
+          ANKIEL_OTLP_PROTOCOL: "http/protobuf",
         }),
       );
     }).pipe(Effect.scoped, Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),

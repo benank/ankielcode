@@ -2,12 +2,12 @@
 import * as NodeHttp from "node:http";
 import { expect } from "e2e";
 
-import { environmentId, runPromise, test, WEB } from "./ac.ts";
+import { environmentId, runPromise, test, WEB } from "./ankiel.ts";
 
 test(
   "The corrected traces endpoint can be tested while the previous URL is still checking",
   WEB,
-  async ({ ac, app, browser }) => {
+  async ({ ankiel, app, browser }) => {
     const firstProbe = Promise.withResolvers<void>();
     let slowProbeClosed = false;
     const collector = NodeHttp.createServer((request, response) => {
@@ -27,9 +27,9 @@ test(
       if (address === null || typeof address === "string") throw new Error("No collector port");
       const origin = `http://127.0.0.1:${address.port}`;
 
-      await ac.project("demo");
+      await ankiel.project("demo");
       const environment = await runPromise(environmentId(app.baseUrl ?? ""));
-      await ac.open(
+      await ankiel.open(
         `/settings/diagnostics?machine=${encodeURIComponent(environment)}#telemetry-export`,
       );
 

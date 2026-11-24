@@ -29,7 +29,7 @@ import {
   type AcpRuntimePolicy,
 } from "@ankielcode/provider-acp/server/clientPolicy";
 import type { AcpSessionModeState } from "@ankielcode/provider-acp/server/runtimeModel";
-import { AC_MCP_TOOL_NAMES } from "@ankielcode/shared/ankielMcpToolPresentation";
+import { ANKIEL_MCP_TOOL_NAMES } from "@ankielcode/shared/ankielMcpToolPresentation";
 import packageJson from "../../../package.json" with { type: "json" };
 import { normalizeAntigravitySessionUpdate } from "./AntigravityProtocol.ts";
 
@@ -185,7 +185,7 @@ export function antigravitySessionMode(
 
 // Only calls that name Ankiel's server: before agy 1.5.8 "Running <tool>" names no server, so another
 // MCP server's tool of the same name would pass.
-const ANTIGRAVITY_AC_MCP_TITLE = /^Run mcp_ankiel-code_(?<tool>[A-Za-z0-9_]+)\??$/;
+const ANTIGRAVITY_ANKIEL_MCP_TITLE = /^Run mcp_ankiel-code_(?<tool>[A-Za-z0-9_]+)\??$/;
 
 // call_mcp_tool is the one call whose rawInput names a server and tool; in every other call
 // rawInput is the tool's own arguments.
@@ -199,12 +199,12 @@ function isAntigravityAnkielMcpRequest(request: EffectAcpSchema.RequestPermissio
     return (
       rawInput?.ServerName === "ankiel-code" &&
       rawInput.ToolName === proxiedTool &&
-      AC_MCP_TOOL_NAMES.has(proxiedTool)
+      ANKIEL_MCP_TOOL_NAMES.has(proxiedTool)
     );
   }
   if (typeof rawInput?.CommandLine === "string") return false;
-  const tool = ANTIGRAVITY_AC_MCP_TITLE.exec(title)?.groups?.tool;
-  return tool !== undefined && AC_MCP_TOOL_NAMES.has(tool);
+  const tool = ANTIGRAVITY_ANKIEL_MCP_TITLE.exec(title)?.groups?.tool;
+  return tool !== undefined && ANKIEL_MCP_TOOL_NAMES.has(tool);
 }
 
 export function antigravityPermissionDisposition(

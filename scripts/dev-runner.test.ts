@@ -75,7 +75,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
     it.effect("forwards the reusable auth token to web dev and removes it for desktop", () =>
       Effect.gen(function* () {
         const input = {
-          baseEnv: { AC_DEV_AUTH_TOKEN: "reusable-dev-auth-token-that-is-long-enough" },
+          baseEnv: { ANKIEL_DEV_AUTH_TOKEN: "reusable-dev-auth-token-that-is-long-enough" },
           serverOffset: 0,
           webOffset: 0,
           ankielHome: undefined,
@@ -89,8 +89,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         const web = yield* createDevRunnerEnv({ ...input, mode: "dev" });
         const desktop = yield* createDevRunnerEnv({ ...input, mode: "dev:desktop" });
 
-        assert.equal(web.AC_DEV_AUTH_TOKEN, input.baseEnv.AC_DEV_AUTH_TOKEN);
-        assert.equal(desktop.AC_DEV_AUTH_TOKEN, undefined);
+        assert.equal(web.ANKIEL_DEV_AUTH_TOKEN, input.baseEnv.ANKIEL_DEV_AUTH_TOKEN);
+        assert.equal(desktop.ANKIEL_DEV_AUTH_TOKEN, undefined);
       }),
     );
 
@@ -99,8 +99,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
           baseEnv: {
-            AC_SERVICE_LAUNCHER_CONTEXT: '{"childVersion":"9.9.9"}',
-            AC_BOOT_SERVICE_UNIT: "ankielcode.service",
+            ANKIEL_SERVICE_LAUNCHER_CONTEXT: '{"childVersion":"9.9.9"}',
+            ANKIEL_BOOT_SERVICE_UNIT: "ankielcode.service",
           },
           serverOffset: 0,
           webOffset: 0,
@@ -113,8 +113,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.AC_SERVICE_LAUNCHER_CONTEXT, undefined);
-        assert.equal(env.AC_BOOT_SERVICE_UNIT, undefined);
+        assert.equal(env.ANKIEL_SERVICE_LAUNCHER_CONTEXT, undefined);
+        assert.equal(env.ANKIEL_BOOT_SERVICE_UNIT, undefined);
       }),
     );
 
@@ -141,8 +141,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
 
           assert.equal(env.VITE_HTTP_URL, undefined);
           assert.equal(env.VITE_WS_URL, undefined);
-          assert.equal(env.AC_PORT, "13773");
-          assert.equal(env.AC_SINGLE_ORIGIN_DEV, "1");
+          assert.equal(env.ANKIEL_PORT, "13773");
+          assert.equal(env.ANKIEL_SINGLE_ORIGIN_DEV, "1");
         }),
     );
 
@@ -166,11 +166,11 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       }),
     );
 
-    it.effect("drops an inherited AC_HOST and AC_LAN from a parent Ankiel server", () =>
+    it.effect("drops an inherited ANKIEL_HOST and ANKIEL_LAN from a parent Ankiel server", () =>
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
-          baseEnv: { AC_PORT: "3773", AC_HOST: "0.0.0.0", AC_LAN: "true" },
+          baseEnv: { ANKIEL_PORT: "3773", ANKIEL_HOST: "0.0.0.0", ANKIEL_LAN: "true" },
           serverOffset: 0,
           webOffset: 0,
           ankielHome: undefined,
@@ -182,15 +182,15 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.AC_PORT, "13773");
-        assert.equal(env.AC_HOST, undefined);
-        assert.equal(env.AC_LAN, undefined);
+        assert.equal(env.ANKIEL_PORT, "13773");
+        assert.equal(env.ANKIEL_HOST, undefined);
+        assert.equal(env.ANKIEL_LAN, undefined);
       }),
     );
   });
 
   describe("cli", () => {
-    it("ignores the parent Ankiel server's AC_PORT and AC_HOST", () => {
+    it("ignores the parent Ankiel server's ANKIEL_PORT and ANKIEL_HOST", () => {
       const result = NodeChildProcess.spawnSync(
         process.execPath,
         ["scripts/dev-runner.ts", "dev:server", "--dry-run"],
@@ -199,8 +199,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           encoding: "utf8",
           env: {
             ...process.env,
-            AC_PORT: "3773",
-            AC_HOST: "0.0.0.0",
+            ANKIEL_PORT: "3773",
+            ANKIEL_HOST: "0.0.0.0",
           },
         },
       );
@@ -476,11 +476,11 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         }),
     );
 
-    it.effect("ignores an ambient AC_HOME when no home is resolved", () =>
+    it.effect("ignores an ambient ANKIEL_HOME when no home is resolved", () =>
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
-          baseEnv: { AC_HOME: "/home/user/.ac" },
+          baseEnv: { ANKIEL_HOME: "/home/user/.ankiel" },
           serverOffset: 0,
           webOffset: 0,
           ankielHome: undefined,
@@ -492,7 +492,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           devUrl: undefined,
         });
 
-        assert.equal(env.AC_HOME, undefined);
+        assert.equal(env.ANKIEL_HOME, undefined);
       }),
     );
 
@@ -514,7 +514,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
             devUrl: undefined,
           }).pipe(
             Effect.provideService(HostProcess.HomeDirectory, "/home/dev"),
-            Effect.map((env) => env.AC_HOME),
+            Effect.map((env) => env.ANKIEL_HOME),
           );
 
         assert.equal(yield* homeFor("~/ankiel-dev"), path.join("/home/dev", "ankiel-dev"));
@@ -524,9 +524,9 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         assert.equal(yield* homeFor("~someone/ankiel-dev"), path.resolve("~someone/ankiel-dev"));
         assert.equal(yield* homeFor("relative/ankiel-dev"), path.resolve("relative/ankiel-dev"));
         assert.equal(yield* homeFor("/tmp/ankiel-dev"), path.resolve("/tmp/ankiel-dev"));
-        // An explicit ~/.ac would put state in the live userdata; leaving it implicit selects ~/.ac/dev.
-        assert.equal(yield* homeFor("~/.ac"), undefined);
-        assert.equal(yield* homeFor("/home/dev/.ac/"), undefined);
+        // An explicit ~/.ankiel would put state in the live userdata; leaving it implicit selects ~/.ankiel/dev.
+        assert.equal(yield* homeFor("~/.ankiel"), undefined);
+        assert.equal(yield* homeFor("/home/dev/.ankiel/"), undefined);
       }),
     );
 
@@ -561,7 +561,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
     // A shared origin means a remote browser, where unbundled dev's
     // per-module waterfall pays a tailnet round trip per import level. The
     // runner defaults bundled dev on for the spawned stack, but only
-    // defaults: an explicit AC_BUNDLED_DEV (even "0") must pass through.
+    // defaults: an explicit ANKIEL_BUNDLED_DEV (even "0") must pass through.
     describe("--share spawn wiring", () => {
       const shareSpawned = (input: {
         readonly ambientBundledDev?: string | undefined;
@@ -624,17 +624,17 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
               HostProcess.Environment,
               input.ambientBundledDev === undefined
                 ? {}
-                : { AC_BUNDLED_DEV: input.ambientBundledDev },
+                : { ANKIEL_BUNDLED_DEV: input.ambientBundledDev },
             ),
           );
 
           return { env: captured, vpArgs, tailscaleCalls };
         });
 
-      it.effect("keeps an explicit AC_BUNDLED_DEV=0 opt-out", () =>
+      it.effect("keeps an explicit ANKIEL_BUNDLED_DEV=0 opt-out", () =>
         Effect.gen(function* () {
           const { env } = yield* shareSpawned({ ambientBundledDev: "0" });
-          assert.equal(env?.AC_BUNDLED_DEV, "0");
+          assert.equal(env?.ANKIEL_BUNDLED_DEV, "0");
         }),
       );
 
@@ -642,13 +642,13 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         Effect.gen(function* () {
           const { env, vpArgs, tailscaleCalls } = yield* shareSpawned({ built: true });
           assert.include(vpArgs, "dev:built");
-          assert.equal(env?.AC_BUILT_DEV, "1");
-          assert.equal(env?.AC_BUNDLED_DEV, undefined);
+          assert.equal(env?.ANKIEL_BUILT_DEV, "1");
+          assert.equal(env?.ANKIEL_BUNDLED_DEV, undefined);
           assert.equal(env?.VITE_DEV_SERVER_URL, `https://host.example.ts.net:${env?.PORT}/`);
           const serve = tailscaleCalls.find((args) => args.includes("--bg"));
           assert.deepEqual(serve?.slice(-2), [
             `--https=${env?.PORT}`,
-            `http://127.0.0.1:${env?.AC_PORT}`,
+            `http://127.0.0.1:${env?.ANKIEL_PORT}`,
           ]);
         }),
       );
@@ -657,7 +657,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         Effect.gen(function* () {
           const { env, tailscaleCalls } = yield* shareSpawned({ built: true, host: "::1" });
           const serve = tailscaleCalls.find((args) => args.includes("--bg"));
-          assert.equal(serve?.at(-1), `http://[::1]:${env?.AC_PORT}`);
+          assert.equal(serve?.at(-1), `http://[::1]:${env?.ANKIEL_PORT}`);
         }),
       );
 
@@ -666,7 +666,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         Effect.gen(function* () {
           const { env, tailscaleCalls } = yield* shareSpawned({ built: true, host: "localhost" });
           const serve = tailscaleCalls.find((args) => args.includes("--bg"));
-          assert.equal(serve?.at(-1), `http://localhost:${env?.AC_PORT}`);
+          assert.equal(serve?.at(-1), `http://localhost:${env?.ANKIEL_PORT}`);
         }),
       );
 
@@ -675,7 +675,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const { env, vpArgs, tailscaleCalls } = yield* shareSpawned({});
           assert.include(vpArgs, "dev");
           assert.notInclude(vpArgs, "dev:built");
-          assert.equal(env?.AC_BUNDLED_DEV, "1");
+          assert.equal(env?.ANKIEL_BUNDLED_DEV, "1");
           const serve = tailscaleCalls.find((args) => args.includes("--bg"));
           assert.equal(serve?.at(-1), `http://localhost:${env?.PORT}`);
         }),
@@ -736,7 +736,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       });
     });
 
-    describe("ac home precedence", () => {
+    describe("ankiel home precedence", () => {
       const makeWorktree = Effect.acquireRelease(
         Effect.sync(() => {
           const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "ankiel-devrunner-"));
@@ -772,15 +772,15 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
             Effect.provide(Layer.mergeAll(emptyConfigLayer, netServiceLayer, spawnerLayer)),
             Effect.provideService(HostProcess.Platform, "linux"),
             Effect.provideService(HostProcess.WorkingDirectory, input.cwd),
-            // No ~/.ac here, so these runs never seed from this machine's install.
+            // No ~/.ankiel here, so these runs never seed from this machine's install.
             Effect.provideService(HostProcess.HomeDirectory, NodePath.join(input.cwd, "home")),
             Effect.provideService(
               HostProcess.Environment,
-              input.ambientHome === undefined ? {} : { AC_HOME: input.ambientHome },
+              input.ambientHome === undefined ? {} : { ANKIEL_HOME: input.ambientHome },
             ),
           );
 
-          return captured?.AC_HOME;
+          return captured?.ANKIEL_HOME;
         });
 
       it.effect("prefers an explicit --home-dir over the worktree default", () =>
@@ -790,7 +790,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const home = yield* spawnedHome({
             ankielHome: "/tmp/explicit-home",
             cwd: root,
-            ambientHome: "/home/user/.ac",
+            ambientHome: "/home/user/.ankiel",
           });
           assert.equal(home, path.resolve("/tmp/explicit-home"));
         }).pipe(Effect.scoped),
@@ -803,32 +803,32 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           const home = yield* spawnedHome({
             ankielHome: "   ",
             cwd: root,
-            ambientHome: "/home/user/.ac",
+            ambientHome: "/home/user/.ankiel",
           });
-          assert.equal(home, path.join(path.resolve(root), ".ac"));
+          assert.equal(home, path.join(path.resolve(root), ".ankiel"));
         }).pipe(Effect.scoped),
       );
 
-      it.effect("prefers the worktree .ac over an ambient AC_HOME", () =>
+      it.effect("prefers the worktree .ankiel over an ambient ANKIEL_HOME", () =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const root = yield* makeWorktree;
           const home = yield* spawnedHome({
             ankielHome: undefined,
             cwd: root,
-            ambientHome: "/home/user/.ac",
+            ambientHome: "/home/user/.ankiel",
           });
-          assert.equal(home, path.join(path.resolve(root), ".ac"));
+          assert.equal(home, path.join(path.resolve(root), ".ankiel"));
         }).pipe(Effect.scoped),
       );
 
-      it.effect("seeds a worktree database from ~/.ac only when it has none", () =>
+      it.effect("seeds a worktree database from ~/.ankiel only when it has none", () =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const root = yield* makeWorktree;
           const home = path.join(root, "home");
-          NodeFS.mkdirSync(path.join(home, ".ac", "userdata"), { recursive: true });
-          NodeFS.writeFileSync(path.join(home, ".ac", "userdata", "statev2.sqlite"), "");
+          NodeFS.mkdirSync(path.join(home, ".ankiel", "userdata"), { recursive: true });
+          NodeFS.writeFileSync(path.join(home, ".ankiel", "userdata", "statev2.sqlite"), "");
 
           const spawnedArgs = (seed: boolean | undefined) =>
             Effect.gen(function* () {
@@ -856,11 +856,11 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
 
           assert.deepStrictEqual(yield* spawnedArgs(false), []);
           const [seedArgs] = yield* spawnedArgs(undefined);
-          assert.includeMembers([...(seedArgs ?? [])], ["--base-dir", path.join(root, ".ac")]);
+          assert.includeMembers([...(seedArgs ?? [])], ["--base-dir", path.join(root, ".ankiel")]);
 
           // Either database means the worktree already has data.
           for (const name of ["state.sqlite", "statev2.sqlite"]) {
-            const file = path.join(root, ".ac", "userdata", name);
+            const file = path.join(root, ".ankiel", "userdata", name);
             NodeFS.mkdirSync(path.dirname(file), { recursive: true });
             NodeFS.writeFileSync(file, "");
             assert.deepStrictEqual(yield* spawnedArgs(undefined), []);
@@ -881,7 +881,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
             const path = yield* Path.Path;
             const root = yield* makeWorktree;
             const home = path.join(root, "home");
-            const source = path.join(home, ".ac", "userdata", "statev2.sqlite");
+            const source = path.join(home, ".ankiel", "userdata", "statev2.sqlite");
             NodeFS.mkdirSync(path.dirname(source), { recursive: true });
             NodeFS.writeFileSync(source, "");
             const spawned: Array<ReadonlyArray<string>> = [];
@@ -943,15 +943,15 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           }).pipe(Effect.scoped),
       );
 
-      it.effect("falls back to an ambient AC_HOME outside a worktree", () =>
+      it.effect("falls back to an ambient ANKIEL_HOME outside a worktree", () =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const home = yield* spawnedHome({
             ankielHome: undefined,
             cwd: NodeOS.tmpdir(),
-            ambientHome: "/home/user/.ac",
+            ambientHome: "/home/user/.ankiel",
           });
-          assert.equal(home, path.resolve("/home/user/.ac"));
+          assert.equal(home, path.resolve("/home/user/.ankiel"));
         }),
       );
     });

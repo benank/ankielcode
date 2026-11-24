@@ -1,6 +1,6 @@
 import {
   type EnvironmentId,
-  AC_PROJECT_FILE_NAME,
+  ANKIEL_PROJECT_FILE_NAME,
   type AnkielProjectFile,
 } from "@ankielcode/contracts";
 import { parseAnkielProjectFile } from "@ankielcode/shared/ankielProjectFile";
@@ -33,11 +33,11 @@ const memberProjectFilesAtom = Atom.family((membersKey: string) => {
     const files = new Map<string, AnkielProjectFile | null>();
     for (const [environmentId, workspaceRoot, physicalProjectKey] of members) {
       const result = get(
-        getProjectFileQueryAtom(environmentId, workspaceRoot, AC_PROJECT_FILE_NAME),
+        getProjectFileQueryAtom(environmentId, workspaceRoot, ANKIEL_PROJECT_FILE_NAME),
       );
       if (result.waiting) continue;
       const data =
-        get(optimisticFileAtom(environmentId, workspaceRoot, AC_PROJECT_FILE_NAME))?.data ??
+        get(optimisticFileAtom(environmentId, workspaceRoot, ANKIEL_PROJECT_FILE_NAME))?.data ??
         AsyncResult.getOrElse(result, () => null);
       files.set(
         physicalProjectKey,

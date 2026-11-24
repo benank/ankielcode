@@ -3,18 +3,18 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { AC_HOME } from "../e2e.config.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
 import { SECOND_HOME, startSecondServer } from "./second-server.ts";
-import { environmentId, makeState, rpcClient, runPromise, test, WEB } from "./ac.ts";
+import { environmentId, makeState, rpcClient, runPromise, test, WEB } from "./ankiel.ts";
 
 const decodeCredential = Schema.decodeUnknownSync(Schema.Struct({ credential: Schema.String }));
 
 test(
   "A closed linked-thread tab does not take over the conversation when pairing finishes",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("primary");
-    const parent = await ac.thread({
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("primary");
+    const parent = await ankiel.thread({
       project,
       title: "Current work",
       messages: ["Keep this conversation open"],
@@ -38,7 +38,7 @@ test(
       const { credential } = decodeCredential(await pairing.json());
       await runPromise(
         Effect.gen(function* () {
-          const primary = yield* rpcClient(AC_HOME, origin);
+          const primary = yield* rpcClient(ANKIEL_HOME, origin);
           const remote = yield* rpcClient(SECOND_HOME, host);
           for (const client of [primary, remote]) {
             yield* client["server.updateSettings"]({ patch: { linkedEnvironmentsEnabled: true } });
@@ -114,7 +114,7 @@ test(
         await route.continue();
       });
       try {
-        await ac.open(parent);
+        await ankiel.open(parent);
         await screen.getByText(linkedPrompt, { exact: true }).waitFor();
         const originalUrl = await browser.url();
         await screen.getByRole("button", "Connect to interact", { exact: true }).tap();

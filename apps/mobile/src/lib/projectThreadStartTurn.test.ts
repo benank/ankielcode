@@ -89,13 +89,13 @@ describe("project thread title", () => {
       worktreePath: null,
       startFromOrigin: false,
       worktreeRepositories: ["/workspace/api"],
-      worktreeBranchName: "ac/new",
+      worktreeBranchName: "ankiel/new",
     });
 
     expect(input.bootstrap.prepareWorktree).toEqual({
       projectCwd: "/workspace",
       baseBranch: "HEAD",
-      branch: "ac/new",
+      branch: "ankiel/new",
       repositories: [{ path: "/workspace/api" }],
     });
   });

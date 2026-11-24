@@ -168,11 +168,11 @@ export class ThemeTargetMissingError extends Schema.TaggedError<ThemeTargetMissi
   {},
 ) {
   override get message(): string {
-    return "Provide a theme id or file, or run `ac theme clear` to remove the theme.";
+    return "Provide a theme id or file, or run `ankiel theme clear` to remove the theme.";
   }
 }
 
-const envAnkielHome = Config.String("AC_HOME").pipe(Config.option);
+const envAnkielHome = Config.String("ANKIEL_HOME").pipe(Config.option);
 const DEV_STATE_PLACEHOLDER_URL = new URL("http://localhost");
 
 const hasLiveServer = (statePath: string) =>
@@ -189,7 +189,7 @@ const resolveThemePaths = Effect.fn(function* (explicitBaseDir: Option.Option<st
     baseDirIsExplicit: Option.isSome(configuredBaseDir),
   });
   // A dev server with an implicit home keeps its state in `dev`; follow it unless a
-  // `userdata` server is running too, the same order `ac pair` checks.
+  // `userdata` server is running too, the same order `ankiel pair` checks.
   let derivedPaths = userdataPaths;
   if (
     Option.isNone(configuredBaseDir) &&

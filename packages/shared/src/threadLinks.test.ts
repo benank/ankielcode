@@ -179,7 +179,7 @@ describe("thread links", () => {
   it("lists the threads a message's links can name, outside code", () => {
     expect(
       threadLinkRefs(
-        "<ankiel-thread://v2/there/t1> [a](ankiel-thread://v1/t%3A2) `<ankiel-thread://v2/code/ac>`",
+        "<ankiel-thread://v2/there/t1> [a](ankiel-thread://v1/t%3A2) `<ankiel-thread://v2/code/ankiel>`",
         local,
       ),
     ).toEqual([ref("there", "t1"), ref("local", "t%3A2"), ref("local", "t:2")]);

@@ -33,7 +33,7 @@ export const ResourceTelemetryProcessCategory = Schema.Literals([
   "electron-gpu",
   "electron-utility",
   "resource-monitor",
-  "unknown-ac",
+  "unknown-ankiel",
 ]);
 export type ResourceTelemetryProcessCategory = typeof ResourceTelemetryProcessCategory.Type;
 
@@ -319,8 +319,8 @@ export const ShellEnvironmentPatch = Schema.Struct({
   SSL_CERT_FILE: Schema.optionalKey(Schema.NullOr(Schema.String)),
   SSL_CERT_DIR: Schema.optionalKey(Schema.NullOr(Schema.String)),
   NODE_EXTRA_CA_CERTS: Schema.optionalKey(Schema.NullOr(Schema.String)),
-  AC_FEATURE_FLAGS: Schema.optionalKey(Schema.NullOr(Schema.String)),
-  AC_RELEASE_BASE_URL: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  ANKIEL_FEATURE_FLAGS: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  ANKIEL_RELEASE_BASE_URL: Schema.optionalKey(Schema.NullOr(Schema.String)),
   __MISE_DIFF: Schema.optionalKey(Schema.NullOr(Schema.String)),
   JAVA_HOME: Schema.optionalKey(Schema.NullOr(Schema.String)),
   PNPM_HOME: Schema.optionalKey(Schema.NullOr(Schema.String)),

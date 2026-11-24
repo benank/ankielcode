@@ -1,13 +1,13 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "Renaming same-named themes during a batch import preserves their CSS",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    await ac.project("demo");
-    await ac.open("/settings/appearance");
+  async ({ ankiel, app, screen, browser }) => {
+    await ankiel.project("demo");
+    await ankiel.open("/settings/appearance");
     await screen.getByRole("button", "Add theme", { exact: true }).tap();
 
     await browser.evaluate(() => {

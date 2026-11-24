@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 const MATCH = "quartzneedle";
 const columns = Array.from({ length: 16 }, (_, index) => `DiagnosticsColumn${index + 1}`);
@@ -15,10 +15,10 @@ const TABLE = [
 test(
   "Find reveals a match in the last column of a wide table",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    const project = await ac.project("wide-table");
-    const thread = await ac.thread({ project, title: "Diagnostics table", messages: [TABLE] });
-    await ac.open(thread);
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("wide-table");
+    const thread = await ankiel.thread({ project, title: "Diagnostics table", messages: [TABLE] });
+    await ankiel.open(thread);
     await screen.getByText("first fixture turn complete", { exact: false }).waitFor({
       timeout: 120_000,
     });

@@ -61,7 +61,7 @@ export function pinnedRuntimePaths(
   const versionDir = path.join(pinnedRuntimeVersionsDir(path, baseDir), version);
   return {
     versionDir,
-    entryPath: path.join(versionDir, platform === "win32" ? "ac.exe" : "ac"),
+    entryPath: path.join(versionDir, platform === "win32" ? "ankiel.exe" : "ankiel"),
     sentinelPath: path.join(versionDir, ".install-complete"),
   };
 }
@@ -267,7 +267,7 @@ const downloadArchive = Effect.fn("cloud.pinned_runtime.download_archive")(funct
   const platformKey = cliArchivePlatformKey(input.platform, input.arch);
   if (platformKey === undefined) {
     return yield* new PinnedRuntimeInstallError({
-      step: `selecting an ac release archive for ${input.platform}-${input.arch}`,
+      step: `selecting an ankiel release archive for ${input.platform}-${input.arch}`,
     });
   }
   const httpClient = input.httpClient;
@@ -276,7 +276,7 @@ const downloadArchive = Effect.fn("cloud.pinned_runtime.download_archive")(funct
   const archive = yield* fetchReleaseAsset(
     httpClient,
     cliReleaseAssetUrl(input.version, fileName, input.releaseBaseUrl),
-    "downloading the ac release archive",
+    "downloading the ankiel release archive",
     true,
     input.onProgress,
   );
@@ -284,11 +284,11 @@ const downloadArchive = Effect.fn("cloud.pinned_runtime.download_archive")(funct
   const digest = yield* Effect.tryPromise({
     try: () => crypto.subtle.digest("SHA-256", archive),
     catch: (cause) =>
-      new PinnedRuntimeInstallError({ step: "verifying the ac release archive", cause }),
+      new PinnedRuntimeInstallError({ step: "verifying the ankiel release archive", cause }),
   });
   if (Hex.encode(new Uint8Array(digest)) !== expected) {
     return yield* new PinnedRuntimeInstallError({
-      step: "verifying the ac release archive checksum",
+      step: "verifying the ankiel release archive checksum",
     });
   }
   return archive;
@@ -305,12 +305,13 @@ const installFromArchive = Effect.fn("cloud.pinned_runtime.install_archive")(fun
     .writeFile(archivePath, archive)
     .pipe(
       Effect.mapError(
-        (cause) => new PinnedRuntimeInstallError({ step: "writing the ac release archive", cause }),
+        (cause) =>
+          new PinnedRuntimeInstallError({ step: "writing the ankiel release archive", cause }),
       ),
     );
   input.onProgress?.({ stage: "extract" });
-  const extractStep = "extracting the ac release archive";
-  // Strip the archive's stem directory so the executable lands at <versionDir>/ac.
+  const extractStep = "extracting the ankiel release archive";
+  // Strip the archive's stem directory so the executable lands at <versionDir>/ankiel.
   yield* input.runner
     .run({
       command: cliArchiveTarCommand(input.platform, process.env),
@@ -344,7 +345,7 @@ const publishedArchive = Effect.fn("cloud.pinned_runtime.published_archive")(fun
       yield* fetchReleaseAsset(
         input.httpClient,
         cliReleaseAssetUrl(input.version, CLI_RELEASE_CHECKSUMS_FILE, input.releaseBaseUrl),
-        "downloading the ac release checksums",
+        "downloading the ankiel release checksums",
         false,
       ),
     ),
@@ -352,7 +353,7 @@ const publishedArchive = Effect.fn("cloud.pinned_runtime.published_archive")(fun
   const expected = checksums.get(fileName);
   if (expected === undefined) {
     return yield* new PinnedRuntimeInstallError({
-      step: `finding ${fileName} in the ac release checksums`,
+      step: `finding ${fileName} in the ankiel release checksums`,
     });
   }
   return { fileName, expected };
@@ -364,7 +365,7 @@ const isPinnedRuntimeInstallError = Schema.is(PinnedRuntimeInstallError);
 export const isUnpublishedRelease = (error: unknown): error is PinnedRuntimeInstallError =>
   isPinnedRuntimeInstallError(error) &&
   (error.step.startsWith("finding ") ||
-    (error.step.startsWith("downloading the ac release") &&
+    (error.step.startsWith("downloading the ankiel release") &&
       HttpClientError.isHttpClientError(error.cause) &&
       error.cause.response?.status === 404));
 
@@ -389,7 +390,7 @@ const installPinnedRuntime = Effect.fn("cloud.pinned_runtime.ensure_installed")(
       const platformKey = cliArchivePlatformKey(input.platform, input.arch);
       if (platformKey === undefined) {
         return yield* new PinnedRuntimeInstallError({
-          step: `selecting an ac release archive for ${input.platform}-${input.arch}`,
+          step: `selecting an ankiel release archive for ${input.platform}-${input.arch}`,
         });
       }
       yield* publishedArchive(input, platformKey);
@@ -504,8 +505,8 @@ const PINNED_RUNTIME_PRUNED_PREFIX = ".pruned-";
  */
 const PINNED_RUNTIME_PRUNE_GRACE = Duration.hours(1);
 /**
- * One `ac` launcher path per line, appended by the install scripts and by any prune that finds a
- * launcher on PATH. A service does not see the installer's `AC_INSTALL_BIN_DIR` or the
+ * One `ankiel` launcher path per line, appended by the install scripts and by any prune that finds a
+ * launcher on PATH. A service does not see the installer's `ANKIEL_INSTALL_BIN_DIR` or the
  * interactive PATH, so this is how it finds a custom one, including installs that predate the file.
  */
 const PINNED_RUNTIME_LAUNCHERS_FILE = "launchers";
@@ -557,7 +558,7 @@ export const resolveLauncherPath = Effect.gen(function* () {
 });
 
 /**
- * `ac update` repoints the launcher it was started through, which may be on neither PATH nor the
+ * `ankiel update` repoints the launcher it was started through, which may be on neither PATH nor the
  * default bin dir. Unrecorded, the next prune would remove the runtime it now points at.
  */
 export const recordPinnedRuntimeLauncher = Effect.fn("cloud.pinned_runtime.record_launcher")(
@@ -577,18 +578,18 @@ export const recordPinnedRuntimeLauncher = Effect.fn("cloud.pinned_runtime.recor
   },
 );
 
-/** Whether `candidate` is a version's own executable, `<versionsDir>/<version>/ac[.exe]`. */
+/** Whether `candidate` is a version's own executable, `<versionsDir>/<version>/ankiel[.exe]`. */
 export function isVersionExecutable(
   path: Path.Path,
   versionsDir: string,
   candidate: string,
 ): boolean {
   const relative = path.relative(versionsDir, path.resolve(candidate));
-  // On another Windows drive, relative() returns the absolute path, like `D:\ac.exe`.
-  return !path.isAbsolute(relative) && /^(?!\.\.)[^\\/]+[\\/]ac(?:\.exe)?$/i.test(relative);
+  // On another Windows drive, relative() returns the absolute path, like `D:\ankiel.exe`.
+  return !path.isAbsolute(relative) && /^(?!\.\.)[^\\/]+[\\/]ankiel(?:\.exe)?$/i.test(relative);
 }
 
-/** The executable a `ac.cmd` shim written by the install script or `ac update` runs. */
+/** The executable a `ankiel.cmd` shim written by the install script or `ankiel update` runs. */
 export const windowsShimTarget = (contents: string) => /^"([^"]+)"/m.exec(contents)?.[1];
 
 /** Like {@link windowsShimTarget}, but only for a shim exactly as written; never a user's wrapper. */
@@ -596,7 +597,7 @@ export const generatedWindowsShimTarget = (contents: string) =>
   /^@echo off\r?\n"([^"]+)" %\*\s*$/.exec(contents)?.[1];
 
 /**
- * The `ac` script the install scripts and `ac update` write on macOS and Linux. Exec by absolute
+ * The `ankiel` script the install scripts and `ankiel update` write on macOS and Linux. Exec by absolute
  * path: through a symlink, argv0 is the link, and the Cursor SDK looks for its helpers beside it.
  */
 export const posixLauncherScript = (executable: string) =>
@@ -619,7 +620,7 @@ export const readPosixLauncherTarget = Effect.fn("cloud.pinned_runtime.read_posi
 );
 
 /**
- * The `ac` this executable was started through on macOS or Linux: a legacy symlink into this
+ * The `ankiel` this executable was started through on macOS or Linux: a legacy symlink into this
  * home's runtime/versions, or, since a script execs the executable and argv0 names it, an unedited
  * {@link posixLauncherScript} that runs it.
  */
@@ -650,15 +651,15 @@ export const findPosixLauncher = Effect.fn("cloud.pinned_runtime.find_posix_laun
     const cwd = yield* HostProcess.WorkingDirectory;
     const searchPath = environment["PATH"] ?? "";
     const candidates = [
-      // PATH first, resolved like the shell does: it decides which ac the user runs. An empty
+      // PATH first, resolved like the shell does: it decides which ankiel the user runs. An empty
       // entry of a nonempty PATH is the working directory; an empty PATH searches nothing.
       ...(searchPath.length === 0 ? [] : searchPath.split(":")).map((directory) =>
-        path.resolve(cwd, directory || ".", "ac"),
+        path.resolve(cwd, directory || ".", "ankiel"),
       ),
       path.join(
-        environment["AC_INSTALL_BIN_DIR"] ||
+        environment["ANKIEL_INSTALL_BIN_DIR"] ||
           path.join(yield* HostProcess.HomeDirectory, ".local", "bin"),
-        "ac",
+        "ankiel",
       ),
       ...recorded.split(/\r?\n/),
     ].filter((candidate) => path.isAbsolute(candidate));
@@ -688,7 +689,7 @@ export const writePosixLauncher = Effect.fn("cloud.pinned_runtime.write_posix_la
     const path = yield* Path.Path;
     const staging = yield* fs.makeTempFileScoped({
       directory: path.dirname(input.launcher),
-      prefix: ".ac-",
+      prefix: ".ankiel-",
     });
     yield* fs.writeFileString(staging, posixLauncherScript(input.executable));
     yield* fs.chmod(staging, 0o755);
@@ -697,7 +698,7 @@ export const writePosixLauncher = Effect.fn("cloud.pinned_runtime.write_posix_la
   Effect.scoped,
 );
 
-/** Where the `ac` launchers written by the install scripts and `ac update` point. */
+/** Where the `ankiel` launchers written by the install scripts and `ankiel update` point. */
 const shellLauncherTargets = Effect.fn("cloud.pinned_runtime.shell_launcher_targets")(function* (
   baseDir: string,
 ) {
@@ -706,13 +707,13 @@ const shellLauncherTargets = Effect.fn("cloud.pinned_runtime.shell_launcher_targ
   const platform = yield* HostProcess.Platform;
   const environment = yield* HostProcess.Environment;
   const home = yield* HostProcess.HomeDirectory;
-  const launcherName = platform === "win32" ? "ac.cmd" : "ac";
+  const launcherName = platform === "win32" ? "ankiel.cmd" : "ankiel";
   const launchersFile = path.join(baseDir, PINNED_RUNTIME_DIR, PINNED_RUNTIME_LAUNCHERS_FILE);
   const recorded = (yield* fs.readFileString(launchersFile).pipe(Effect.orElseSucceed(() => "")))
     .split(/\r?\n/)
     .filter((launcher) => launcher.trim().length > 0);
   const found = [
-    environment["AC_INSTALL_BIN_DIR"] || path.join(home, ".local", "bin"),
+    environment["ANKIEL_INSTALL_BIN_DIR"] || path.join(home, ".local", "bin"),
     ...(environment["PATH"] ?? environment["Path"] ?? "").split(platform === "win32" ? ";" : ":"),
   ]
     .filter((directory) => path.isAbsolute(directory))
@@ -743,7 +744,7 @@ const shellLauncherTargets = Effect.fn("cloud.pinned_runtime.shell_launcher_targ
         ? resolved
         : yield* fs.realPath(scriptTarget).pipe(Effect.orElseSucceed(() => scriptTarget));
     // A runtime's own entry, on the macOS service PATH or recorded by an earlier prune, is no launcher.
-    // It is named as `versions/<version>/ac`, and neither it nor its directory is a link.
+    // It is named as `versions/<version>/ankiel`, and neither it nor its directory is a link.
     const entryDir = path.dirname(path.resolve(launcher));
     const parent = path.dirname(entryDir);
     if (
@@ -768,9 +769,9 @@ const shellLauncherTargets = Effect.fn("cloud.pinned_runtime.shell_launcher_targ
 });
 
 /**
- * Resolved executables rather than command lines: a server started through the `ac` symlink
- * shows up as `ac serve`, possibly from another Ankiel home that runs this home's runtimes. Windows
- * has no symlink launcher, and its `ac.cmd` shim runs the absolute path, so command lines do there.
+ * Resolved executables rather than command lines: a server started through the `ankiel` symlink
+ * shows up as `ankiel serve`, possibly from another Ankiel home that runs this home's runtimes. Windows
+ * has no symlink launcher, and its `ankiel.cmd` shim runs the absolute path, so command lines do there.
  */
 const runningExecutables = Effect.fn("cloud.pinned_runtime.running_executables")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -783,7 +784,7 @@ const runningExecutables = Effect.fn("cloud.pinned_runtime.running_executables")
     for (const pid of pids.value) {
       if (!/^\d+$/.test(pid)) continue;
       // Unreadable ones belong to other users or are this user's non-dumpable daemons (systemd
-      // --user, ssh-agent). Neither runs an ac runtime, and bailing on them would never prune.
+      // --user, ssh-agent). Neither runs an ankiel runtime, and bailing on them would never prune.
       const executable = yield* fs.readLink(`/proc/${pid}/exe`).pipe(Effect.option);
       if (Option.isSome(executable)) executables.push(executable.value);
     }
@@ -917,7 +918,7 @@ const selectUnusedRuntimes = Effect.fn("cloud.pinned_runtime.select_unused")(fun
       Effect.andThen(fs.rename(versionDir, target)),
       Effect.andThen(Effect.sync(() => pruned.add(target))),
       Effect.catch((cause) =>
-        Effect.logWarning("Could not remove an unused ac runtime.", { version, cause }),
+        Effect.logWarning("Could not remove an unused ankiel runtime.", { version, cause }),
       ),
     );
   }
@@ -952,7 +953,7 @@ export const prunePinnedRuntimes = Effect.fn("cloud.pinned_runtime.prune")(funct
         }),
       ),
       Effect.catch((cause) =>
-        Effect.logWarning("Could not remove an unused ac runtime.", { target, cause }),
+        Effect.logWarning("Could not remove an unused ankiel runtime.", { target, cause }),
       ),
     );
   }

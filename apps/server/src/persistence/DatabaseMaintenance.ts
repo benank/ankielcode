@@ -353,7 +353,7 @@ export const runRequestedReclaim = Effect.fn("DatabaseMaintenance.runRequestedRe
             .writeFileString(
               files.failure,
               error._tag === "DatabaseInUseError"
-                ? "Another program kept the database open. Close other Ankiel Code apps and ac commands on this machine, then try again."
+                ? "Another program kept the database open. Close other Ankiel Code apps and ankiel commands on this machine, then try again."
                 : error.message,
             )
             .pipe(

@@ -565,14 +565,14 @@ it("keeps backslashes that CommonMark would read as escapes in prose Windows pat
   const render = (markdown: string) => text(processor.runSync(processor.parse(markdown)) as Node);
 
   expect(
-    render(String.raw`Saved to C:\Users\me\.ac\_build and (C:\.scratch) and C:/work\.config.`),
-  ).toBe(String.raw`Saved to C:\Users\me\.ac\_build and (C:\.scratch) and C:/work\.config.`);
+    render(String.raw`Saved to C:\Users\me\.ankiel\_build and (C:\.scratch) and C:/work\.config.`),
+  ).toBe(String.raw`Saved to C:\Users\me\.ankiel\_build and (C:\.scratch) and C:/work\.config.`);
   expect(render(String.raw`Escaped C:\\Users\\me`)).toBe(String.raw`Escaped C:\\Users\\me`);
   expect(render(String.raw`See C:\x and \*this\* and Note:\*that\*.`)).toBe(
     String.raw`See C:\x and *this* and Note:*that*.`,
   );
-  expect(render(String.raw`${"`"}C:\me\.ac${"`"} and C:\me\.ac`)).toBe(
-    String.raw`<code>C:\me\.ac</code> and C:\me\.ac`,
+  expect(render(String.raw`${"`"}C:\me\.ankiel${"`"} and C:\me\.ankiel`)).toBe(
+    String.raw`<code>C:\me\.ankiel</code> and C:\me\.ankiel`,
   );
 });
 

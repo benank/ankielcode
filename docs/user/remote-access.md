@@ -8,21 +8,21 @@ machine. That machine must stay running and reachable while you work.
 For a command-line host, run:
 
 ```bash
-ac up
+ankiel up
 ```
 
 It asks whether other devices on your local network may reach the machine, then
-runs Ankiel Code as a [background service](./background-service.md). Run `ac up`
-again to change your choice, and `ac status` to see it.
+runs Ankiel Code as a [background service](./background-service.md). Run `ankiel up`
+again to change your choice, and `ankiel status` to see it.
 
 Instead of the background service, you can keep the desktop app running with
 its local environment enabled. Closing the desktop app's last window stops its
 local server.
 
-`ac up` asks nothing when you name a choice: `--lan` or `--no-lan`. Choices you
+`ankiel up` asks nothing when you name a choice: `--lan` or `--no-lan`. Choices you
 do not name keep their settings, and `--yes` takes the defaults. Without a
 terminal, a needed restart runs without asking, and stops running agent turns.
-`ac status --json` prints the settings. `ac up --help` lists every flag with
+`ankiel status --json` prints the settings. `ankiel up --help` lists every flag with
 examples.
 
 ## Pair over a LAN or private network
@@ -33,20 +33,20 @@ On a desktop host, open **Settings → Sharing & access**, enable **Network acce
 then create a pairing link using an address the other device can reach. Changing
 network access restarts the desktop app. You can turn it off in the same place.
 
-For a command-line host, choose the local network in `ac up`, or run:
+For a command-line host, choose the local network in `ankiel up`, or run:
 
 ```bash
-ac up --lan
+ankiel up --lan
 ```
 
-For a server in a terminal, run `ac serve --lan`. Either way, Ankiel Code then
+For a server in a terminal, run `ankiel serve --lan`. Either way, Ankiel Code then
 accepts connections from your local network and tailnet, so a pairing code is
 all that keeps other devices on them out.
 
 If a server is already running, generate a fresh link without restarting it:
 
 ```bash
-ac pair
+ankiel pair
 ```
 
 Scan the QR code on your phone or paste the pairing URL into **Add environment**
@@ -89,7 +89,7 @@ pairing once over a VPN is enough to use the LAN at home. When the
 machine's LAN address changes, for example after it joins another Wi-Fi network,
 the learned route follows it. The machine must allow network access for its LAN
 address to be learned: **Network access** in the desktop app, or the
-[local network](./background-service.md#local-network-access) choice in `ac up`.
+[local network](./background-service.md#local-network-access) choice in `ankiel up`.
 You can reorder a learned route, but not remove it; it
 goes away with the route it was learned through, or when the machine stops
 reporting that address.
@@ -146,13 +146,13 @@ add the HTTPS route.
 To start a command-line server with Tailscale HTTPS:
 
 ```bash
-ac serve --tailscale-serve
+ankiel serve --tailscale-serve
 ```
 
 For an already-running server:
 
 ```bash
-ac pair --tailscale
+ankiel pair --tailscale
 ```
 
 The pairing link uses an address such as `https://machine.tailnet.ts.net/`.
@@ -164,7 +164,7 @@ tailscale serve --https=443 --set-path=/ off
 ```
 
 If that port is already in use, choose another with
-`--tailscale-serve-port`. See `ac pair --help` for other pairing options.
+`--tailscale-serve-port`. See `ankiel pair --help` for other pairing options.
 
 ### Hosted web app
 
@@ -186,7 +186,7 @@ credentials, and agent work stay on the remote machine.
 
 The remote host must be Linux or an Apple Silicon Mac with `curl` or `wget`,
 `tar`, `sha256sum` or `shasum`, and [provider setup](./install.md#providers).
-The first launch downloads Ankiel Code's server to `~/.ac/runtime` on the host, so
+The first launch downloads Ankiel Code's server to `~/.ankiel/runtime` on the host, so
 it takes longer than later ones.
 Provider CLIs must be on the `PATH` of a non-interactive login shell there;
 check with:
@@ -213,8 +213,8 @@ running is left alone.
 
 Each desktop app keeps one session on the host for its SSH connection and reuses
 it when it reconnects. Revoke sessions you no longer use in **Settings →
-Sharing & access** on the host, or on a headless host with `ac auth session list` and
-`ac auth session revoke <id>`. A desktop that can still sign in over SSH pairs
+Sharing & access** on the host, or on a headless host with `ankiel auth session list` and
+`ankiel auth session revoke <id>`. A desktop that can still sign in over SSH pairs
 again on its next connect.
 
 For Antigravity's Google callback on a remote host, see
@@ -301,7 +301,7 @@ listed port opens as `http://localhost:<port>` and might not be a web page. For
 an HTTPS server or a specific path, set the **Preview URL** on the project
 script that starts it; Ankiel Code checks that address and opens it as written.
 
-To stop listing ports, set `AC_PORT_DISCOVERY=0` in the environment that
+To stop listing ports, set `ANKIEL_PORT_DISCOVERY=0` in the environment that
 starts the Ankiel Code server, such as
 [`service.env`](./background-service.md#configure-the-service-environment) for
 the background service, and restart it. Script preview URLs still appear.
@@ -315,12 +315,12 @@ the server says so at startup, and browser tabs and HTML previews show the
 command to run on the host:
 
 ```sh
-sudo ac browser setup
+sudo ankiel browser setup
 ```
 
 The server shows the exact line for how you started it, and keeps your `PATH`
-when you started it with `npx` and Node is installed only for your user. Where `ac` is not on your `PATH`, such as with only the
-desktop app installed, it names the full path of the app's own `ac` instead. It allows Chrome's sandbox with an AppArmor profile and installs
+when you started it with `npx` and Node is installed only for your user. Where `ankiel` is not on your `PATH`, such as with only the
+desktop app installed, it names the full path of the app's own `ankiel` instead. It allows Chrome's sandbox with an AppArmor profile and installs
 any missing libraries and system fonts with apt; pages that load without text
 can mean the host has no fonts. It is safe to run again, and each run reloads
 the AppArmor profile: run it again if the browser reports a blocked sandbox on a
@@ -329,17 +329,17 @@ without being loaded. Without `sudo`, it only reports what it would change.
 
 The browser runs in Chrome's sandbox by default. Chrome cannot start that sandbox
 as root. If your Ankiel server runs as root, run it as a nonroot user to keep
-sandboxing enabled. `ac browser setup` does not fix this root restriction.
+sandboxing enabled. `ankiel browser setup` does not fix this root restriction.
 
 If you need to run as root, or cannot enable the sandbox on your host, set
-`AC_SERVER_BROWSER_SANDBOX=0` in the **Ankiel server's environment** and restart
+`ANKIEL_SERVER_BROWSER_SANDBOX=0` in the **Ankiel server's environment** and restart
 the server. This disables Chrome's sandbox. For a manual launch:
 
 ```sh
-AC_SERVER_BROWSER_SANDBOX=0 ac serve
+ANKIEL_SERVER_BROWSER_SANDBOX=0 ankiel serve
 ```
 
-For a systemd service, add `Environment=AC_SERVER_BROWSER_SANDBOX=0` under
+For a systemd service, add `Environment=ANKIEL_SERVER_BROWSER_SANDBOX=0` under
 `[Service]` in its configuration, run `sudo systemctl daemon-reload`, then restart
 your Ankiel service. Setting the variable in an agent's terminal does not change the
 environment of an already running Ankiel server.
@@ -360,7 +360,7 @@ Linked environments is a beta. Turn it on for both machines in **Settings →
 Labs**; on mobile, **Settings → Labs** lists each connected machine. On a
 headless server, open its address in a browser and pair to reach its **Settings
 → Labs**, or add `"linkedEnvironmentsEnabled": true` to `settings.json` in its
-`userdata` directory, such as `~/.ac/userdata/settings.json`; a running server
+`userdata` directory, such as `~/.ankiel/userdata/settings.json`; a running server
 picks it up. While it is
 off on either machine, agents start nothing over a link between them. A task
 already running on the other machine still finishes, and if that machine has it
@@ -373,7 +373,7 @@ app has an address for that machine and is connected to it with a session that
 manages access there, it makes the pairing code itself; otherwise paste one
 from that machine's **Settings → Sharing & access**. An address you type always
 needs a pasted code. From a terminal, use
-`ac environment link <address> --pairing-code <code> --access <mode>`.
+`ankiel environment link <address> --pairing-code <code> --access <mode>`.
 
 To link many machines at once, choose **Link several…** (it appears once this
 app has two other machines saved). Tick the machines, pick one access level for
@@ -384,8 +384,8 @@ reports its own result, and the ones that failed stay ticked so you can try
 only those again. Machines already linked are left as they are.
 
 For machines no app is connected to, put one `<address> <pairing-code>` per
-line in a file (make each code with `ac pair` on that machine) and run
-`ac environment link --from <file> --access <mode>`, or `--from -` to read
+line in a file (make each code with `ankiel pair` on that machine) and run
+`ankiel environment link --from <file> --access <mode>`, or `--from -` to read
 standard input. It prints a result per line, leaves machines already linked as
 they are, and exits non-zero if any line failed, so the same file can be run
 again with fresh codes for the failures.
@@ -501,7 +501,7 @@ any other thread on web and desktop, and a shorter read-only list on mobile.
 On the host, **Settings → Sharing & access** lets authorized administrators create
 pairing links and revoke client sessions. Revoking an unused link prevents new
 pairings; revoke a device's session to remove its existing access. Command-line
-management is available through `ac auth --help`.
+management is available through `ankiel auth --help`.
 
 When the app connects to more than one environment, choose one at the top of the
 page. A desktop app with **Local environment** off can manage a background
@@ -513,11 +513,11 @@ expires.
 To choose a token's permissions, pass `--scope` once for each scope you want:
 
 ```sh
-ac pair --scope orchestration:read --scope filesystem:read
+ankiel pair --scope orchestration:read --scope filesystem:read
 ```
 
 The selected scopes replace the default permissions. The same option works with
-`ac auth pairing create` and `ac auth session issue`; each command's
+`ankiel auth pairing create` and `ankiel auth session issue`; each command's
 `--help` lists the available scopes. Without `--scope`, pairing tokens and issued
 bearer sessions get the standard client permissions, including managing access.
 A terminal or a full-access agent on the host can reach those as well, so a

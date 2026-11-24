@@ -459,7 +459,7 @@ it.layer(layerTest)("ThreadSearch", (it) => {
       ]) {
         assert.deepEqual(yield* threadIds(query), [threadId], query);
       }
-      // `ac doctor` rebuilds the index after VACUUM; quotes must still read.
+      // `ankiel doctor` rebuilds the index after VACUUM; quotes must still read.
       yield* rebuildMessageSearch(sql);
       assert.deepEqual(yield* threadIds("résumé"), [threadId]);
 

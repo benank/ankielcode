@@ -91,7 +91,7 @@ function layer(baseDir: string) {
       Layer.mergeAll(
         NodeServices.layer,
         NodeCrypto.layer,
-        DesktopConfig.layerTest({ AC_HOME: baseDir }),
+        DesktopConfig.layerTest({ ANKIEL_HOME: baseDir }),
       ),
     ),
   );

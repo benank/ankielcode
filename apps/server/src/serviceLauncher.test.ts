@@ -143,7 +143,7 @@ it("rejects contradictory service state", () => {
 });
 
 const unitPlan = (root: string, version: string) => ({
-  program: [`${root}/runtime/versions/${version}/ac`, "__service-launcher"],
+  program: [`${root}/runtime/versions/${version}/ankiel`, "__service-launcher"],
   baseDir: root,
   logPath: `${root}/logs/boot-service.log`,
   unitPath: `${root}/unit/ankielcode.service`,
@@ -156,7 +156,7 @@ const writeFakeRuntime = (
   childSource: string,
 ) =>
   Effect.gen(function* () {
-    const entryPath = path.join(versionDir, "ac");
+    const entryPath = path.join(versionDir, "ankiel");
     yield* fs.makeDirectory(versionDir, { recursive: true });
     yield* fs.writeFileString(entryPath, `#!${process.execPath}\n${childSource}`);
     yield* fs.chmod(entryPath, 0o755);
@@ -168,7 +168,7 @@ const writeFakeRuntime = (
   });
 
 const runLauncher = async (root: string) => {
-  vi.stubEnv("AC_HOME", root);
+  vi.stubEnv("ANKIEL_HOME", root);
   try {
     await main();
   } finally {
@@ -232,7 +232,7 @@ it.layer(NodeServices.layer)("service state persistence", (it) => {
       yield* fs.writeFileString(databasePath, "before trial");
       const childSource = `
 const fs = require("node:fs");
-const context = JSON.parse(process.env.AC_SERVICE_LAUNCHER_CONTEXT);
+const context = JSON.parse(process.env.ANKIEL_SERVICE_LAUNCHER_CONTEXT);
 if (context.update?.status === "pending") {
   if (context.childVersion !== context.update.targetVersion) throw new Error("wrong trial version");
   if (fs.readFileSync(${JSON.stringify(path.dirname(backupPath))} + "/" + context.update.id + "/database", "utf8") !== "before trial") {
@@ -418,10 +418,10 @@ setInterval(() => {}, 1_000);
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-service-env-" });
         const inherited = Object.freeze({
           PATH: "inherited-path",
-          AC_HOME: root,
-          AC_BOOT_SERVICE_UNIT: "managed-unit",
-          AC_SERVICE_LAUNCHER_CONTEXT: "managed-context",
-          AC_PORT: "ambient",
+          ANKIEL_HOME: root,
+          ANKIEL_BOOT_SERVICE_UNIT: "managed-unit",
+          ANKIEL_SERVICE_LAUNCHER_CONTEXT: "managed-context",
+          ANKIEL_PORT: "ambient",
         });
         assert.deepEqual(
           yield* Effect.promise(() => readServiceEnvironment(root, inherited)),
@@ -431,24 +431,24 @@ setInterval(() => {}, 1_000);
           path.join(root, SERVICE_ENV_FILE),
           [
             "# service configuration",
-            "export AC_PORT=1234 # inline comment",
-            'AC_TOKEN="literal $HOME ${USER} $(whoami) # token"',
+            "export ANKIEL_PORT=1234 # inline comment",
+            'ANKIEL_TOKEN="literal $HOME ${USER} $(whoami) # token"',
             'MULTILINE="first\nsecond"',
             "EMPTY=",
             "PATH=/bad",
             "Path=/bad",
-            "AC_HOME=/bad",
-            "ac_home=/bad",
-            "AC_BOOT_SERVICE_UNIT=bad",
-            "ac_boot_service_unit=bad",
-            "AC_SERVICE_LAUNCHER_CONTEXT=bad",
-            "ac_service_launcher_context=bad",
+            "ANKIEL_HOME=/bad",
+            "ankiel_home=/bad",
+            "ANKIEL_BOOT_SERVICE_UNIT=bad",
+            "ankiel_boot_service_unit=bad",
+            "ANKIEL_SERVICE_LAUNCHER_CONTEXT=bad",
+            "ankiel_service_launcher_context=bad",
           ].join("\n"),
         );
         assert.deepEqual(yield* Effect.promise(() => readServiceEnvironment(root, inherited)), {
           ...inherited,
-          AC_PORT: "1234",
-          AC_TOKEN: "literal $HOME ${USER} $(whoami) # token",
+          ANKIEL_PORT: "1234",
+          ANKIEL_TOKEN: "literal $HOME ${USER} $(whoami) # token",
           MULTILINE: "first\nsecond",
           EMPTY: "",
         });
@@ -467,7 +467,7 @@ setInterval(() => {}, 1_000);
         conhostPath: "conhost.exe",
       });
       yield* fs.writeFileString(unitPath, unit);
-      // Task Scheduler's copy: `ac doctor` disabled it to keep the service stopped.
+      // Task Scheduler's copy: `ankiel doctor` disabled it to keep the service stopped.
       let task = disabledServiceTask(unit.replace("1.1.0", "1.0.0"));
       const schtasks = async (...args: ReadonlyArray<string>) => {
         if (args[0] === "/Create") task = decodeServiceUnit(await NodeFSP.readFile(args[2] ?? ""));
@@ -516,7 +516,7 @@ setInterval(() => {}, 1_000);
         }),
       );
       vi.stubEnv("HOME", home);
-      vi.stubEnv("AC_BOOT_SERVICE_UNIT", "ankielcode.plist");
+      vi.stubEnv("ANKIEL_BOOT_SERVICE_UNIT", "ankielcode.plist");
 
       yield* Effect.promise(() =>
         expect(runLauncher(root)).rejects.toThrow("Active child exited unexpectedly (0)."),
@@ -579,7 +579,7 @@ setInterval(() => {}, 1_000);
         vi.stubEnv("HOME", home);
         // environment.d changes what services inherit, not where the manager reads units.
         vi.stubEnv("XDG_CONFIG_HOME", path.join(home, "service-config"));
-        vi.stubEnv("AC_BOOT_SERVICE_UNIT", "ankielcode.service");
+        vi.stubEnv("ANKIEL_BOOT_SERVICE_UNIT", "ankielcode.service");
 
         yield* Effect.promise(() =>
           expect(runLauncher(root)).rejects.toThrow("Active child exited unexpectedly (0)."),
@@ -620,7 +620,7 @@ setInterval(() => {}, 1_000);
         }),
       );
       vi.stubEnv("HOME", home);
-      vi.stubEnv("AC_BOOT_SERVICE_UNIT", "ankielcode.plist");
+      vi.stubEnv("ANKIEL_BOOT_SERVICE_UNIT", "ankielcode.plist");
 
       yield* Effect.promise(() =>
         expect(runLauncher(root)).rejects.toThrow("Active child exited unexpectedly (0)."),
@@ -761,7 +761,7 @@ process.exit(0);
     }),
   );
 
-  it.effect("a fresh launcher clears a restart deferred by ac update", () =>
+  it.effect("a fresh launcher clears a restart deferred by ankiel update", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -1046,7 +1046,7 @@ process.exit(0);
               `const db = new (require("node:sqlite").DatabaseSync)(${JSON.stringify(ownerPath)});`,
               `try { db.exec("PRAGMA busy_timeout = 0; BEGIN EXCLUSIVE;"); }`,
               `catch { process.exit(${SERVER_EXIT_CODE_STATE_DIR_OWNED}); }`,
-              "const context = JSON.parse(process.env.AC_SERVICE_LAUNCHER_CONTEXT);",
+              "const context = JSON.parse(process.env.ANKIEL_SERVICE_LAUNCHER_CONTEXT);",
               `require("node:fs").appendFileSync(${JSON.stringify(startsPath)}, context.childVersion + "\\n");`,
               'if (context.update?.status === "pending") {',
               `  require("node:fs").writeFileSync(${JSON.stringify(databasePath)}, "migrated by failed trial");`,
@@ -1229,7 +1229,7 @@ process.exit(0);
       const childSource = `
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-const context = JSON.parse(process.env.AC_SERVICE_LAUNCHER_CONTEXT);
+const context = JSON.parse(process.env.ANKIEL_SERVICE_LAUNCHER_CONTEXT);
 assert.equal(context.protocol, ${SERVICE_LAUNCHER_PROTOCOL});
 if (context.update?.status === "pending") {
   const state = JSON.parse(readFileSync(${JSON.stringify(statePath)}, "utf8"));
@@ -1379,24 +1379,24 @@ if (context.update?.status === "pending") {
       const databasePath = path.join(root, "userdata", "state.sqlite");
       const observationsPath = path.join(root, "environment-observations.jsonl");
       const envPath = path.join(root, SERVICE_ENV_FILE);
-      yield* fs.writeFileString(envPath, "AC_TEST_SERVICE_TOKEN=initial\n");
-      vi.stubEnv("AC_HOME", root);
-      vi.stubEnv("AC_TEST_SERVICE_TOKEN", "inherited");
+      yield* fs.writeFileString(envPath, "ANKIEL_TEST_SERVICE_TOKEN=initial\n");
+      vi.stubEnv("ANKIEL_HOME", root);
+      vi.stubEnv("ANKIEL_TEST_SERVICE_TOKEN", "inherited");
       yield* Effect.addFinalizer(() => Effect.sync(() => vi.unstubAllEnvs()));
       yield* fs.makeDirectory(path.dirname(databasePath), { recursive: true });
       yield* fs.writeFileString(databasePath, "before trial");
       const encodedDatabasePath = JSON.stringify(databasePath);
       const childSource = `
 import { appendFileSync, writeFileSync } from "node:fs";
-const context = JSON.parse(process.env.AC_SERVICE_LAUNCHER_CONTEXT);
+const context = JSON.parse(process.env.ANKIEL_SERVICE_LAUNCHER_CONTEXT);
 appendFileSync(${JSON.stringify(observationsPath)}, JSON.stringify({
-  token: process.env.AC_TEST_SERVICE_TOKEN,
+  token: process.env.ANKIEL_TEST_SERVICE_TOKEN,
   update: context.update?.status ?? "active",
 }) + "\\n");
 if (context.update?.status === "pending") {
   process.send({ type: "prepared", updateId: "wrong-update" });
 } else if (context.update === undefined) {
-  writeFileSync(${JSON.stringify(envPath)}, "AC_TEST_SERVICE_TOKEN=changed\\n");
+  writeFileSync(${JSON.stringify(envPath)}, "ANKIEL_TEST_SERVICE_TOKEN=changed\\n");
   process.send({ type: "request-update", targetVersion: "1.1.0", dbPath: ${encodedDatabasePath} });
   setInterval(() => {}, 1_000);
 } else {
@@ -1455,8 +1455,8 @@ if (context.update?.status === "pending") {
         { token: "initial", update: "pending" },
         { token: "initial", update: "rolled-back" },
       ]);
-      assert.equal((yield* HostProcess.Environment).AC_TEST_SERVICE_TOKEN, "inherited");
-      assert.equal(yield* fs.readFileString(envPath), "AC_TEST_SERVICE_TOKEN=changed\n");
+      assert.equal((yield* HostProcess.Environment).ANKIEL_TEST_SERVICE_TOKEN, "inherited");
+      assert.equal(yield* fs.readFileString(envPath), "ANKIEL_TEST_SERVICE_TOKEN=changed\n");
     }),
   );
 
@@ -1485,7 +1485,7 @@ if (context.update?.status === "pending") {
         const encodedDatabasePath = JSON.stringify(databasePath);
         const childSource = `
 import { realpathSync, unlinkSync, writeFileSync } from "node:fs";
-const context = JSON.parse(process.env.AC_SERVICE_LAUNCHER_CONTEXT);
+const context = JSON.parse(process.env.ANKIEL_SERVICE_LAUNCHER_CONTEXT);
 if (context.update?.status === "pending") {
   writeFileSync(context.update.dbPath, "database after migration");
   writeFileSync(context.update.dbPath + "-wal", "trial wal");
@@ -1568,7 +1568,7 @@ if (context.update?.status === "pending") {
 import { readdirSync, writeFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 const paths = ${encoded};
-const context = JSON.parse(process.env.AC_SERVICE_LAUNCHER_CONTEXT);
+const context = JSON.parse(process.env.ANKIEL_SERVICE_LAUNCHER_CONTEXT);
 if (context.update?.status === "pending") {
   writeFileSync(paths.observationsPath + ".trial", JSON.stringify(
     readdirSync(paths.root + "/runtime/db-backup/" + context.update.id).sort(),
@@ -1675,7 +1675,7 @@ if (context.update?.status === "pending") {
       const childSource = `
 import { writeFileSync } from "node:fs";
 const paths = ${encoded};
-const context = JSON.parse(process.env.AC_SERVICE_LAUNCHER_CONTEXT);
+const context = JSON.parse(process.env.ANKIEL_SERVICE_LAUNCHER_CONTEXT);
 if (context.update?.status === "pending") {
   writeFileSync(paths.trialMarker, "started");
   process.exit(1);

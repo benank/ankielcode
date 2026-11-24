@@ -962,7 +962,7 @@ it.effect("resolves a branch's base once while its refs and branch config are un
       yield* git(cwd, ["commit", "-m", "feature"]);
       const lookups = () => {
         const count = spawnedArgs.filter((args) =>
-          args.includes("branch.feature/x.ac-merge-base-ref"),
+          args.includes("branch.feature/x.ankiel-merge-base-ref"),
         ).length;
         spawnedArgs.length = 0;
         return count;
@@ -1012,7 +1012,7 @@ it.effect("resolves a branch's base once while its refs and branch config are un
       yield* driver.statusDetailsLocal(cwd);
       assert.equal(lookups(), 0);
 
-      yield* git(cwd, ["config", "branch.feature/x.ac-merge-base-ref", "refs/heads/main"]);
+      yield* git(cwd, ["config", "branch.feature/x.ankiel-merge-base-ref", "refs/heads/main"]);
       yield* driver.statusDetailsLocal(cwd);
       assert.equal(lookups(), 1);
 
@@ -1025,7 +1025,7 @@ it.effect("resolves a branch's base once while its refs and branch config are un
         "config",
         "--file",
         includedConfig,
-        "branch.feature/x.ac-merge-base",
+        "branch.feature/x.ankiel-merge-base",
         "main",
       ]);
       yield* driver.statusDetailsLocal(cwd);
@@ -1037,9 +1037,9 @@ it.effect("resolves a branch's base once while its refs and branch config are un
         "--file",
         includedConfig,
         "--unset",
-        "branch.feature/x.ac-merge-base",
+        "branch.feature/x.ankiel-merge-base",
       ]);
-      yield* git(cwd, ["config", "--unset", "branch.feature/x.ac-merge-base-ref"]);
+      yield* git(cwd, ["config", "--unset", "branch.feature/x.ankiel-merge-base-ref"]);
       failRemoteLookup = true;
       yield* driver.getReviewDiffPreview({ cwd });
       failRemoteLookup = false;
@@ -1079,7 +1079,7 @@ it.effect("keeps a branch's base cached while only other refs' commits move", ()
       yield* git(cwd, ["pack-refs", "--all"]);
       const lookups = () => {
         const count = spawnedArgs.filter((args) =>
-          args.includes("branch.feature/x.ac-merge-base-ref"),
+          args.includes("branch.feature/x.ankiel-merge-base-ref"),
         ).length;
         spawnedArgs.length = 0;
         return count;
@@ -1107,7 +1107,7 @@ it.effect("keeps a branch's base cached while only other refs' commits move", ()
       yield* git(cwd, ["update-ref", "-d", "refs/remotes/origin/develop"]);
       yield* driver.statusDetailsLocal(cwd);
       assert.equal(lookups(), 1);
-      yield* git(cwd, ["config", "branch.feature/x.ac-merge-base", "other"]);
+      yield* git(cwd, ["config", "branch.feature/x.ankiel-merge-base", "other"]);
       yield* driver.statusDetailsLocal(cwd);
       assert.equal(lookups(), 1);
     }),
@@ -1139,7 +1139,7 @@ it.effect("rereads the base after a nested remote's HEAD is retargeted", () =>
       yield* git(cwd, ["checkout", "-b", "feature/x"]);
       const lookups = () => {
         const count = spawnedArgs.filter((args) =>
-          args.includes("branch.feature/x.ac-merge-base-ref"),
+          args.includes("branch.feature/x.ankiel-merge-base-ref"),
         ).length;
         spawnedArgs.length = 0;
         return count;
@@ -1181,7 +1181,7 @@ it.effect("keeps the base cached when a remote branch has a HEAD path component"
       yield* git(cwd, ["checkout", "-b", "feature/x"]);
       const lookups = () => {
         const count = spawnedArgs.filter((args) =>
-          args.includes("branch.feature/x.ac-merge-base-ref"),
+          args.includes("branch.feature/x.ankiel-merge-base-ref"),
         ).length;
         spawnedArgs.length = 0;
         return count;
@@ -1202,7 +1202,7 @@ it.effect("keeps one cached base per branch however often its refs change", () =
       const spawner = ChildProcessSpawner.make((command) => {
         if (
           ChildProcess.isStandardCommand(command) &&
-          command.args.map(String).includes("branch.feature/x.ac-merge-base-ref")
+          command.args.map(String).includes("branch.feature/x.ankiel-merge-base-ref")
         ) {
           lookupCount++;
         }
@@ -1224,7 +1224,7 @@ it.effect("keeps one cached base per branch however often its refs change", () =
         return { lookups: lookupCount, aheadCount: status.aheadCount };
       });
       const useBase = (base: string) =>
-        git(cwd, ["config", "branch.feature/x.ac-merge-base", base]);
+        git(cwd, ["config", "branch.feature/x.ankiel-merge-base", base]);
 
       yield* useBase(initialBranch);
       assert.deepStrictEqual(yield* read(), { lookups: 1, aheadCount: 1 });
@@ -2858,7 +2858,12 @@ it.effect("lets a worktree checkout that is still working run past five minutes"
     const worktreePath = path.join(cwd, "worktree");
 
     const creation = yield* driver
-      .createWorktree({ cwd, refName: "main", newRefName: "ac/slow-checkout", path: worktreePath })
+      .createWorktree({
+        cwd,
+        refName: "main",
+        newRefName: "ankiel/slow-checkout",
+        path: worktreePath,
+      })
       .pipe(Effect.forkChild);
     yield* Deferred.await(checkoutStarted);
     yield* TestClock.adjust("6 minutes");
@@ -2866,7 +2871,7 @@ it.effect("lets a worktree checkout that is still working run past five minutes"
 
     const result = yield* Fiber.join(creation);
     assert.equal(result.worktree.path, worktreePath);
-    assert.equal(result.worktree.refName, "ac/slow-checkout");
+    assert.equal(result.worktree.refName, "ankiel/slow-checkout");
   }).pipe(
     Effect.provide(
       layerServerConfig.pipe(
@@ -3300,7 +3305,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
                   .createWorktree({
                     cwd,
                     refName,
-                    ...(action === "worktree add -b" ? { newRefName: "ac/new-thread" } : {}),
+                    ...(action === "worktree add -b" ? { newRefName: "ankiel/new-thread" } : {}),
                     path: path.join(cwd, "worktree"),
                   })
                   .pipe(Effect.flip);
@@ -5200,7 +5205,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         yield* git(cwd, ["commit", "-m", "upstream work"]);
         yield* git(cwd, ["push", "-u", "upstream", "main"]);
         yield* git(cwd, ["checkout", "-b", "feature/from-local-main"]);
-        yield* git(cwd, ["config", "branch.feature/from-local-main.ac-merge-base", "main"]);
+        yield* git(cwd, ["config", "branch.feature/from-local-main.ankiel-merge-base", "main"]);
         yield* writeTextFile(cwd, "feature.txt", "intended branch change\n");
         yield* git(cwd, ["add", "feature.txt"]);
         yield* git(cwd, ["commit", "-m", "feature work"]);
@@ -5240,11 +5245,11 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         yield* git(cwd, ["push", "upstream", "main"]);
         yield* git(cwd, ["fetch", "origin"]);
         yield* git(cwd, ["fetch", "upstream"]);
-        yield* git(cwd, ["checkout", "-b", "ac/temporary"]);
-        yield* git(cwd, ["config", "branch.ac/temporary.ac-merge-base", "main"]);
+        yield* git(cwd, ["checkout", "-b", "ankiel/temporary"]);
+        yield* git(cwd, ["config", "branch.ankiel/temporary.ankiel-merge-base", "main"]);
         yield* git(cwd, [
           "config",
-          "branch.ac/temporary.ac-merge-base-ref",
+          "branch.ankiel/temporary.ankiel-merge-base-ref",
           "refs/remotes/upstream/main",
         ]);
         yield* writeTextFile(cwd, "feature.txt", "thread work\n");
@@ -5263,7 +5268,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
               !command.args.includes("status.showUntrackedFiles")
             ) {
               if (!(yield* Ref.getAndSet(renameClaimed, true))) {
-                yield* git(cwd, ["branch", "-m", "ac/temporary", "feature/named"]).pipe(
+                yield* git(cwd, ["branch", "-m", "ankiel/temporary", "feature/named"]).pipe(
                   Effect.provideService(GitVcsDriver.GitVcsDriver, outer),
                   Effect.orDie,
                 );
@@ -5281,7 +5286,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
 
         const status = yield* driver.statusDetailsLocal(cwd, { includeBranchChanges: true });
 
-        assert.strictEqual(status.branch, "ac/temporary");
+        assert.strictEqual(status.branch, "ankiel/temporary");
         assert.deepStrictEqual(status.branchChanges, {
           baseRef: null,
           insertions: 1,
@@ -6595,7 +6600,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             GIT_TERMINAL_PROMPT: "1",
             SSH_ASKPASS: "ssh-askpass",
             SSH_ASKPASS_REQUIRE: "force",
-            AC_TEST_SSH_ASKPASS_LOG: sshLogPath,
+            ANKIEL_TEST_SSH_ASKPASS_LOG: sshLogPath,
           }),
         );
       }),
@@ -6796,46 +6801,48 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       }),
     );
 
-    it.effect.each(["ac", "AC"])("flattens a generated name when parent %s blocks it", (parent) =>
-      Effect.gen(function* () {
-        const cwd = yield* makeTmpDir();
-        yield* initRepoWithCommit(cwd);
-        const driver = yield* GitVcsDriver.GitVcsDriver;
-        // A local `ac` branch is why launches start on the flat `ac-<hex>` temporary branch.
-        yield* git(cwd, ["branch", parent]);
-        yield* git(cwd, ["checkout", "-b", "ac-abcd1234"]);
-        yield* git(cwd, ["branch", "ac-fix-login"]);
+    it.effect.each(["ankiel", "ANKIEL"])(
+      "flattens a generated name when parent %s blocks it",
+      (parent) =>
+        Effect.gen(function* () {
+          const cwd = yield* makeTmpDir();
+          yield* initRepoWithCommit(cwd);
+          const driver = yield* GitVcsDriver.GitVcsDriver;
+          // A local `ankiel` branch is why launches start on the flat `ankiel-<hex>` temporary branch.
+          yield* git(cwd, ["branch", parent]);
+          yield* git(cwd, ["checkout", "-b", "ankiel-abcd1234"]);
+          yield* git(cwd, ["branch", "ankiel-fix-login"]);
 
-        const renamed = yield* driver.renameBranch({
-          cwd,
-          oldBranch: "ac-abcd1234",
-          newBranch: "ac/fix-login",
-        });
+          const renamed = yield* driver.renameBranch({
+            cwd,
+            oldBranch: "ankiel-abcd1234",
+            newBranch: "ankiel/fix-login",
+          });
 
-        assert.equal(renamed.branch, "ac-fix-login-1");
-        assert.equal(yield* git(cwd, ["branch", "--show-current"]), "ac-fix-login-1");
-      }),
+          assert.equal(renamed.branch, "ankiel-fix-login-1");
+          assert.equal(yield* git(cwd, ["branch", "--show-current"]), "ankiel-fix-login-1");
+        }),
     );
 
-    it.effect.each(["ac-fix-login/child", "AC-Fix-Login/child", "AC-FIX-LOGIN"])(
+    it.effect.each(["ankiel-fix-login/child", "ANKIEL-Fix-Login/child", "ANKIEL-FIX-LOGIN"])(
       "skips a flattened name blocked by %s",
       (occupied) =>
         Effect.gen(function* () {
           const cwd = yield* makeTmpDir();
           yield* initRepoWithCommit(cwd);
           const driver = yield* GitVcsDriver.GitVcsDriver;
-          yield* git(cwd, ["branch", "ac"]);
-          yield* git(cwd, ["checkout", "-b", "ac-abcd1234"]);
+          yield* git(cwd, ["branch", "ankiel"]);
+          yield* git(cwd, ["checkout", "-b", "ankiel-abcd1234"]);
           yield* git(cwd, ["branch", occupied]);
 
           const renamed = yield* driver.renameBranch({
             cwd,
-            oldBranch: "ac-abcd1234",
-            newBranch: "ac/fix-login",
+            oldBranch: "ankiel-abcd1234",
+            newBranch: "ankiel/fix-login",
           });
 
-          assert.equal(renamed.branch, "ac-fix-login-1");
-          assert.equal(yield* git(cwd, ["branch", "--show-current"]), "ac-fix-login-1");
+          assert.equal(renamed.branch, "ankiel-fix-login-1");
+          assert.equal(yield* git(cwd, ["branch", "--show-current"]), "ankiel-fix-login-1");
         }),
     );
 
@@ -7272,7 +7279,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             cwd,
             path: worktreePath,
             refName: initialBranch,
-            newRefName: "ac/cancel",
+            newRefName: "ankiel/cancel",
           };
           const worktrees = git(cwd, ["worktree", "list", "--porcelain"]);
 
@@ -7292,7 +7299,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
 
           assert.equal(claims, 0);
           assert.notInclude(yield* worktrees, worktreePath);
-          assert.equal(yield* git(cwd, ["branch", "--list", "ac/cancel"]), "");
+          assert.equal(yield* git(cwd, ["branch", "--list", "ankiel/cancel"]), "");
           assert.isFalse(yield* fs.exists(worktreePath));
 
           // A retry gets the same path and branch, and a claimed worktree outlives a later cancel.
@@ -7307,7 +7314,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           yield* Fiber.interrupt(retry);
           assert.include(yield* worktrees, worktreePath);
           assert.notInclude(yield* worktrees, "locked");
-          assert.equal(yield* git(worktreePath, ["branch", "--show-current"]), "ac/cancel");
+          assert.equal(yield* git(worktreePath, ["branch", "--show-current"]), "ankiel/cancel");
         }),
     );
 
@@ -7347,7 +7354,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           yield* git(cwd, ["rev-parse", "HEAD"]),
         );
         assert.equal(
-          yield* git(cwd, ["config", "branch.feature/parallel.ac-merge-base"]),
+          yield* git(cwd, ["config", "branch.feature/parallel.ankiel-merge-base"]),
           initialBranch,
         );
         for (const [configured, expected] of [
@@ -7434,7 +7441,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
 
           const result = yield* driver
             .createWorktree(
-              { cwd, path: worktreePath, refName: initialBranch, newRefName: "ac/noisy" },
+              { cwd, path: worktreePath, refName: initialBranch, newRefName: "ankiel/noisy" },
               withProgress ? { progress: { onCheckoutProgress: () => Effect.void } } : undefined,
             )
             .pipe(Effect.result);
@@ -7496,7 +7503,10 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           assert.equal(entrySeconds.length, 51);
           return entrySeconds.filter((seconds) => seconds >= indexSecond);
         });
-        while ((yield* racyEntries).length > 0 || (yield* fs.exists(`${indexPath}.ac-refresh`))) {
+        while (
+          (yield* racyEntries).length > 0 ||
+          (yield* fs.exists(`${indexPath}.ankiel-refresh`))
+        ) {
           yield* Queue.take(indexChanges);
         }
         assert.isFalse(yield* fs.exists(`${indexPath}.lock`));
@@ -7562,7 +7572,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
 
           assert.equal(yield* git(worktreePath, ["rev-parse", "HEAD"]), commit);
           assert.equal(
-            yield* driver.readConfigValue(cwd, "branch.feature/revision.ac-merge-base"),
+            yield* driver.readConfigValue(cwd, "branch.feature/revision.ankiel-merge-base"),
             null,
           );
         }),
@@ -7605,20 +7615,20 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             cwd,
             path: occupiedPath,
             refName: initialBranch,
-            newRefName: "ac/collide",
+            newRefName: "ankiel/collide",
           })
           .pipe(Effect.result);
 
         assert.isTrue(Result.isFailure(failed));
-        assert.equal(yield* git(cwd, ["branch", "--list", "ac/collide"]), "");
+        assert.equal(yield* git(cwd, ["branch", "--list", "ankiel/collide"]), "");
         const worktreePath = path.join(yield* makeTmpDir("git-worktrees-"), "retry");
         yield* driver.createWorktree({
           cwd,
           path: worktreePath,
           refName: initialBranch,
-          newRefName: "ac/collide",
+          newRefName: "ankiel/collide",
         });
-        assert.equal(yield* git(worktreePath, ["branch", "--show-current"]), "ac/collide");
+        assert.equal(yield* git(worktreePath, ["branch", "--show-current"]), "ankiel/collide");
       }),
     );
 
@@ -7694,7 +7704,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           const renamed = `${branch}-renamed`;
           assert.equal(yield* git(cwd, ["config", `branch.${renamed}.remote`]), "origin");
           assert.equal(
-            yield* git(cwd, ["config", `branch.${renamed}.ac-merge-base-ref`]),
+            yield* git(cwd, ["config", `branch.${renamed}.ankiel-merge-base-ref`]),
             `refs/remotes/origin/${initialBranch}`,
           );
         }
@@ -7710,7 +7720,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         const driver = yield* GitVcsDriver.GitVcsDriver;
         // A multi-model send launches one worktree per model with the same message, so their
         // generated names often match and the renames can land together.
-        const temporaryBranches = ["ac/aaaa1111", "ac/bbbb2222", "ac/cccc3333"];
+        const temporaryBranches = ["ankiel/aaaa1111", "ankiel/bbbb2222", "ankiel/cccc3333"];
         yield* Effect.forEach(temporaryBranches, (branch) =>
           driver.createWorktree({
             cwd,
@@ -7758,7 +7768,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           });
 
           assert.equal(
-            yield* driver.readConfigValue(cwd, "branch.feature/branch.ac-merge-base"),
+            yield* driver.readConfigValue(cwd, "branch.feature/branch.ankiel-merge-base"),
             baseBranch,
           );
         }),
@@ -7791,7 +7801,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         });
 
         assert.equal(
-          yield* driver.readConfigValue(cwd, "branch.feature/remote.ac-merge-base"),
+          yield* driver.readConfigValue(cwd, "branch.feature/remote.ankiel-merge-base"),
           branch,
         );
         const preview = yield* driver.getReviewDiffPreview({ cwd: worktreePath });
@@ -7947,7 +7957,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       }).pipe(withGitFileProtocol),
     );
 
-    it.effect("sparse worktrees read .gitmodules and ac.json from HEAD", () =>
+    it.effect("sparse worktrees read .gitmodules and ankiel.json from HEAD", () =>
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const pathService = yield* Path.Path;
@@ -7964,7 +7974,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         const worktrees = yield* makeTmpDir("git-worktrees-");
 
         const createSparse = Effect.fn(function* (projectFile: string, branch: string) {
-          yield* writeTextFile(cwd, "ac.json", projectFile);
+          yield* writeTextFile(cwd, "ankiel.json", projectFile);
           yield* git(cwd, ["add", "."]);
           yield* git(cwd, ["commit", "-m", branch]);
           const sparsePath = pathService.join(worktrees, branch);
@@ -7976,7 +7986,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             newRefName: branch,
           });
           assert.isFalse(yield* fileSystem.exists(pathService.join(sparsePath, ".gitmodules")));
-          assert.isFalse(yield* fileSystem.exists(pathService.join(sparsePath, "ac.json")));
+          assert.isFalse(yield* fileSystem.exists(pathService.join(sparsePath, "ankiel.json")));
           return yield* fileSystem.exists(pathService.join(sparsePath, "shared", "SHARED.md"));
         });
 
@@ -8165,7 +8175,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       }),
     );
 
-    it.effect("resolves the submodule mode from the option, then ac.json", () =>
+    it.effect("resolves the submodule mode from the option, then ankiel.json", () =>
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const pathService = yield* Path.Path;
@@ -8194,11 +8204,11 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           branch: string,
           submodules: WorktreeSubmodules | null = null,
         ) {
-          yield* writeTextFile(cwd, "ac.json", `{ "worktreeSubmodules": "${fileMode}" }`);
-          yield* git(cwd, ["add", "ac.json"]);
+          yield* writeTextFile(cwd, "ankiel.json", `{ "worktreeSubmodules": "${fileMode}" }`);
+          yield* git(cwd, ["add", "ankiel.json"]);
           yield* git(cwd, ["commit", "--allow-empty", "-m", `submodules: ${fileMode}`]);
           const worktreePath = pathService.join(worktreesDir, branch);
-          const disabled = yield* Ref.make<"settings" | "ac.json" | false>(false);
+          const disabled = yield* Ref.make<"settings" | "ankiel.json" | false>(false);
           yield* driver.createWorktree(
             { cwd, path: worktreePath, refName: initialBranch, newRefName: branch },
             {
@@ -8236,14 +8246,14 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           nested: false,
         });
         assert.deepEqual(yield* createWithMode("none", "none"), {
-          disabled: "ac.json",
+          disabled: "ankiel.json",
           inner: false,
           nested: false,
         });
       }).pipe(withGitFileProtocol),
     );
 
-    it.effect("checks out only the ac.json sparse patterns in a new worktree", () =>
+    it.effect("checks out only the ankiel.json sparse patterns in a new worktree", () =>
       Effect.gen(function* () {
         const fileSystem = yield* FileSystem.FileSystem;
         const pathService = yield* Path.Path;
@@ -8254,7 +8264,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         yield* writeTextFile(repo, "sparse-patterns.txt", "/*\n!/assets/\n");
         yield* writeTextFile(
           repo,
-          "ac.json",
+          "ankiel.json",
           `{ "worktreeSparsePatternsPath": "./sparse-patterns.txt" }`,
         );
         yield* git(repo, ["add", "."]);
@@ -8312,40 +8322,42 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       }),
     );
 
-    it.effect("fails without a worktree when the ac.json sparse pattern path is not a file", () =>
-      Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const pathService = yield* Path.Path;
-        const cwd = yield* makeTmpDir();
-        const { initialBranch } = yield* initRepoWithCommit(cwd);
-        yield* writeTextFile(cwd, "patterns/keep.txt", "/*\n");
-        const driver = yield* GitVcsDriver.GitVcsDriver;
-        const worktrees = yield* makeTmpDir("git-worktrees-");
-        for (const patternsPath of ["missing.txt", "patterns"]) {
-          yield* writeTextFile(
-            cwd,
-            "ac.json",
-            JSON.stringify({ worktreeSparsePatternsPath: patternsPath }),
-          );
-          yield* git(cwd, ["add", "."]);
-          yield* git(cwd, ["commit", "-m", "missing sparse patterns"]);
-          const worktreePath = pathService.join(worktrees, patternsPath);
-
-          const error = yield* Effect.flip(
-            driver.createWorktree({
+    it.effect(
+      "fails without a worktree when the ankiel.json sparse pattern path is not a file",
+      () =>
+        Effect.gen(function* () {
+          const fileSystem = yield* FileSystem.FileSystem;
+          const pathService = yield* Path.Path;
+          const cwd = yield* makeTmpDir();
+          const { initialBranch } = yield* initRepoWithCommit(cwd);
+          yield* writeTextFile(cwd, "patterns/keep.txt", "/*\n");
+          const driver = yield* GitVcsDriver.GitVcsDriver;
+          const worktrees = yield* makeTmpDir("git-worktrees-");
+          for (const patternsPath of ["missing.txt", "patterns"]) {
+            yield* writeTextFile(
               cwd,
-              path: worktreePath,
-              refName: initialBranch,
-              newRefName: `feature/${patternsPath}`,
-            }),
-          );
+              "ankiel.json",
+              JSON.stringify({ worktreeSparsePatternsPath: patternsPath }),
+            );
+            yield* git(cwd, ["add", "."]);
+            yield* git(cwd, ["commit", "-m", "missing sparse patterns"]);
+            const worktreePath = pathService.join(worktrees, patternsPath);
 
-          assert.include(error.detail, patternsPath);
-          assert.isFalse(yield* fileSystem.exists(worktreePath));
-          assert.notInclude(yield* git(cwd, ["worktree", "list"]), worktreePath);
-          assert.equal(yield* git(cwd, ["branch", "--list", `feature/${patternsPath}`]), "");
-        }
-      }),
+            const error = yield* Effect.flip(
+              driver.createWorktree({
+                cwd,
+                path: worktreePath,
+                refName: initialBranch,
+                newRefName: `feature/${patternsPath}`,
+              }),
+            );
+
+            assert.include(error.detail, patternsPath);
+            assert.isFalse(yield* fileSystem.exists(worktreePath));
+            assert.notInclude(yield* git(cwd, ["worktree", "list"]), worktreePath);
+            assert.equal(yield* git(cwd, ["branch", "--list", `feature/${patternsPath}`]), "");
+          }
+        }),
     );
 
     it.effect("still creates the worktree when the base-ref config stays locked", () =>
@@ -8382,7 +8394,10 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           "# test\n",
         );
         assert.equal(
-          yield* driver.readConfigValue(worktreePath, "branch.feature/locked-config.ac-merge-base"),
+          yield* driver.readConfigValue(
+            worktreePath,
+            "branch.feature/locked-config.ankiel-merge-base",
+          ),
           null,
         );
         assert.equal(yield* fileSystem.exists(pathService.join(cwd, ".git/config.lock")), true);
@@ -8393,16 +8408,16 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       Effect.gen(function* () {
         const cwd = yield* makeTmpDir();
         yield* initRepoWithCommit(cwd);
-        yield* git(cwd, ["checkout", "-b", "ac/abcd1234"]);
+        yield* git(cwd, ["checkout", "-b", "ankiel/abcd1234"]);
         yield* writeTextFile(cwd, ".git/config.lock", "");
         const driver = yield* GitVcsDriver.GitVcsDriver;
 
         const renamed = yield* TestClock.withLive(
-          driver.renameBranch({ cwd, oldBranch: "ac/abcd1234", newBranch: "ac/fix-login" }),
+          driver.renameBranch({ cwd, oldBranch: "ankiel/abcd1234", newBranch: "ankiel/fix-login" }),
         );
 
-        assert.equal(renamed.branch, "ac/fix-login");
-        assert.equal(yield* git(cwd, ["branch", "--show-current"]), "ac/fix-login");
+        assert.equal(renamed.branch, "ankiel/fix-login");
+        assert.equal(yield* git(cwd, ["branch", "--show-current"]), "ankiel/fix-login");
       }),
     );
 
@@ -8871,17 +8886,17 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         const lockPath = path.join(cwd, ".git", "config.lock");
         yield* fileSystem.writeFileString(lockPath, "");
         const { driver, failures } = yield* makeDriverReleasingLock(
-          (args) => args[1] === "ac.test",
+          (args) => args[1] === "ankiel.test",
           lockPath,
         );
 
         // The retry waits on the real clock; the lock is already gone by then.
         yield* TestClock.withLive(
-          driver.writeConfigValue({ cwd, key: "ac.test", value: "written" }),
+          driver.writeConfigValue({ cwd, key: "ankiel.test", value: "written" }),
         );
 
         assert.equal(yield* Ref.get(failures), 1);
-        assert.equal(yield* git(cwd, ["config", "ac.test"]), "written");
+        assert.equal(yield* git(cwd, ["config", "ankiel.test"]), "written");
       }),
     );
 
@@ -9998,7 +10013,10 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         assert.strictEqual(status.branchChanges?.deletions, 0);
         // gh pr create consumes this setting verbatim as the hosted target branch.
         assert.equal(
-          yield* driver.readConfigValue(worktreePath, "branch.feature/from-upstream.ac-merge-base"),
+          yield* driver.readConfigValue(
+            worktreePath,
+            "branch.feature/from-upstream.ankiel-merge-base",
+          ),
           "release",
         );
         assert.equal(changes.baseRef, "upstream/release");
@@ -10134,11 +10152,11 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
 
           if (autoSetupMerge) {
             assert.equal(
-              yield* driver.readConfigValue(cwd, "branch.feature/push.ac-merge-base"),
+              yield* driver.readConfigValue(cwd, "branch.feature/push.ankiel-merge-base"),
               initialBranch,
             );
             assert.equal(
-              yield* driver.readConfigValue(cwd, "branch.feature/push.ac-merge-base-ref"),
+              yield* driver.readConfigValue(cwd, "branch.feature/push.ankiel-merge-base-ref"),
               `refs/heads/${initialBranch}`,
             );
           }
@@ -10273,7 +10291,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         assert.equal(
           yield* (yield* GitVcsDriver.GitVcsDriver).readConfigValue(
             cwd,
-            "branch.feature/push.ac-merge-base",
+            "branch.feature/push.ankiel-merge-base",
           ),
           "release",
         );
@@ -10520,11 +10538,11 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             `refs/remotes/origin/${publishBranch}`,
           );
           assert.equal(
-            yield* driver.readConfigValue(cwd, `branch.${branch}.ac-merge-base`),
+            yield* driver.readConfigValue(cwd, `branch.${branch}.ankiel-merge-base`),
             baseBranch,
           );
           assert.equal(
-            yield* driver.readConfigValue(cwd, `branch.${branch}.ac-merge-base-ref`),
+            yield* driver.readConfigValue(cwd, `branch.${branch}.ankiel-merge-base-ref`),
             local ? `refs/heads/${baseBranch}` : `refs/remotes/upstream/${baseBranch}`,
           );
           assert.equal(yield* git(cwd, ["rev-parse", `refs/heads/${baseBranch}`]), upstreamDevSha);
@@ -10552,7 +10570,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
     it.effect.each([
       { upstreamRef: "refs/remotes/origin/main", baseKey: "gh-merge-base" },
       { upstreamRef: "refs/heads/main", baseKey: "gh-merge-base" },
-      { upstreamRef: "refs/heads/main", baseKey: "ac-merge-base" },
+      { upstreamRef: "refs/heads/main", baseKey: "ankiel-merge-base" },
     ])(
       "keeps a recorded $baseKey when publishing a branch tracking $upstreamRef",
       ({ upstreamRef, baseKey }) =>
@@ -10569,7 +10587,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           yield* git(cwd, ["config", `branch.feature/y.${baseKey}`, "release/v2"]);
           yield* git(cwd, [
             "config",
-            "branch.feature/y.ac-merge-base-ref",
+            "branch.feature/y.ankiel-merge-base-ref",
             "refs/heads/release/v2",
           ]);
           yield* writeTextFile(cwd, "feature.txt", "feature\n");
@@ -10590,7 +10608,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           );
           assert.equal(yield* driver.readBranchBase(cwd, "feature/y"), "release/v2");
           assert.equal(
-            yield* driver.readConfigValue(cwd, "branch.feature/y.ac-merge-base-ref"),
+            yield* driver.readConfigValue(cwd, "branch.feature/y.ankiel-merge-base-ref"),
             "refs/heads/release/v2",
           );
         }),

@@ -12,7 +12,7 @@ Unified release workflow: `.github/workflows/release.yml`. Beta is a product lab
 
 ## Critical release invariants
 
-- **Server self-update ordering:** Connected servers update to the exact client version by downloading the GitHub Release CLI archive (or `npx @ankielcode/cli@<version>`). Keep the release graph order strictly: `release` (CLI archives + `SHA256SUMS` + desktop installers) → `publish_cli` (`ac` npm launcher) → `deploy_web` (hosted channel alias). Never publish clients before the archives and npm launcher exist.
+- **Server self-update ordering:** Connected servers update to the exact client version by downloading the GitHub Release CLI archive (or `npx @ankielcode/cli@<version>`). Keep the release graph order strictly: `release` (CLI archives + `SHA256SUMS` + desktop installers) → `publish_cli` (`ankiel` npm launcher) → `deploy_web` (hosted channel alias). Never publish clients before the archives and npm launcher exist.
 - **Standalone CLI archives & Node pin:** `engines.node` in root `package.json` must stay exact (Node SEA builds reject mismatches). There is no macOS x64 CLI archive (SEA is unsupported there; x64 desktop uses Electron).
 - **Smoke fixture:** `scripts/fixtures/desktop-launch` is intentionally an old SQLite snapshot to verify forward migrations on packaged builds—never regenerate it on schema changes.
 - **Hosted web & marketing:** Vercel Git auto-deployments stay disabled (`apps/{web,marketing}/vercel.ts`). Releases build with `--skip-domain` and alias `app.code.ankiel.com` / `latest.app.code.ankiel.com` (stable) or `nightly.app.code.ankiel.com` + marketing (nightly) only after publication.
@@ -26,7 +26,7 @@ Nightly installs check `releases.atom` (the 10 newest git tags), then the `updat
 
 ## Mobile releases
 
-- **iOS TestFlight / App Store:** Merges to `main` publish compatible OTAs and build TestFlight prereleases (`testflight` profile at `3.0.0`). To cut an App Store build, dispatch **Mobile EAS Production** (`mode=build`, `profile=production`, `platform=ios`, explicit version). Before shipping `3.0.0` to the App Store, advance `build.testflight.env.AC_MOBILE_VERSION` in `apps/mobile/eas.json` to the next unreleased major.
+- **iOS TestFlight / App Store:** Merges to `main` publish compatible OTAs and build TestFlight prereleases (`testflight` profile at `3.0.0`). To cut an App Store build, dispatch **Mobile EAS Production** (`mode=build`, `profile=production`, `platform=ios`, explicit version). Before shipping `3.0.0` to the App Store, advance `build.testflight.env.ANKIEL_MOBILE_VERSION` in `apps/mobile/eas.json` to the next unreleased major.
 - **Android APK mirror:** `.github/workflows/mobile-android-apk.yml` polls Google Play Alpha hourly and mirrors new Play-signed universal APKs to `android-beta-<build-number>` prereleases (`GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`). Nightlies attach the latest internal-testing APK when available.
 
 ## Windows payload topology and update validation
@@ -37,7 +37,7 @@ Windows packages the bundled server and its unpacked native modules in `resource
 
 ### npm OIDC trusted publishing
 
-Configure `@ankielcode/cli` on npm with GitHub Actions Trusted Publishing for `.github/workflows/release.yml` (the workflow publishes only the `ac` launcher tarball via `npm publish --provenance`). Set the publisher's environment to `production`, which `publish_cli` declares.
+Configure `@ankielcode/cli` on npm with GitHub Actions Trusted Publishing for `.github/workflows/release.yml` (the workflow publishes only the `ankiel` launcher tarball via `npm publish --provenance`). Set the publisher's environment to `production`, which `publish_cli` declares.
 
 ### Apple signing and notarization (macOS)
 

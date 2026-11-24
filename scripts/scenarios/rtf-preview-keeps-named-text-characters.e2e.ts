@@ -1,6 +1,6 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 // Java's RTFEditorKit writing "Account<em space>Name<en space>Jean<nonbreaking hyphen>Luc".
 const JDK_RTF = String.raw`{\rtf1\ansi
@@ -13,10 +13,10 @@ Account\emspace Name\enspace Jean\_ Luc\par
 test(
   "An RTF preview keeps the spaces and hyphens written as named control words",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    const project = await ac.project("demo", { "contacts.rtf": JDK_RTF });
-    const thread = await ac.thread({ project, title: "Review contacts", messages: ["Start"] });
-    await ac.open(thread);
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("demo", { "contacts.rtf": JDK_RTF });
+    const thread = await ankiel.thread({ project, title: "Review contacts", messages: ["Start"] });
+    await ankiel.open(thread);
     await expect(screen.getByText("fixture turn complete", { exact: false })).toBeVisible();
 
     await browser.keyboard.press("Control+p");

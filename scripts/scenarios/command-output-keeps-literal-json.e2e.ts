@@ -1,19 +1,19 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "An expanded command shows the JSON line it printed, keys and all",
   WEB,
-  async ({ ac, app, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({
+  async ({ ankiel, app, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({
       project,
       title: "JSON output",
       messages: ["Print the JSON"],
       model: "command-output",
     });
-    await ac.open(thread);
+    await ankiel.open(thread);
 
     await expect(screen.getByText("The command printed one JSON line.")).toBeVisible();
     await screen.getByRole("button", "Worked for", { exact: false }).tap();

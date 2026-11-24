@@ -16,101 +16,103 @@ import type * as AcpCompat from "effect-acp/compat";
 
 import { beginAcpMockPrompt } from "./acpMockCancellationState.ts";
 
-const requestLogPath = process.env.AC_ACP_REQUEST_LOG_PATH;
-const antigravityProfile = process.env.AC_ACP_ANTIGRAVITY === "1";
+const requestLogPath = process.env.ANKIEL_ACP_REQUEST_LOG_PATH;
+const antigravityProfile = process.env.ANKIEL_ACP_ANTIGRAVITY === "1";
 // GitHub Copilot CLI advertises URL-shaped session mode ids.
-const copilotModesProfile = process.env.AC_ACP_COPILOT_MODES === "1";
+const copilotModesProfile = process.env.ANKIEL_ACP_COPILOT_MODES === "1";
 const copilotModeId = (name: string) =>
   `https://agentclientprotocol.com/protocol/session-modes#${name}`;
-const modeOptionCategory = process.env.AC_ACP_MODE_OPTION_CATEGORY ?? "mode";
+const modeOptionCategory = process.env.ANKIEL_ACP_MODE_OPTION_CATEGORY ?? "mode";
 // Comma-separated command names the mock advertises, so `/compact` support is testable.
-const advertisedCommandNames = (process.env.AC_ACP_AVAILABLE_COMMANDS ?? "")
+const advertisedCommandNames = (process.env.ANKIEL_ACP_AVAILABLE_COMMANDS ?? "")
   .split(",")
   .map((name) => name.trim())
   .filter((name) => name.length > 0);
-const loadedCommandNames = process.env.AC_ACP_LOADED_COMMANDS?.split(",").filter(Boolean);
+const loadedCommandNames = process.env.ANKIEL_ACP_LOADED_COMMANDS?.split(",").filter(Boolean);
 // omp advertises a loaded session's commands only after it answers session/load.
-const loadedCommandsDelayMs = Number(process.env.AC_ACP_LOADED_COMMANDS_DELAY_MS ?? "");
-const emitToolCalls = process.env.AC_ACP_EMIT_TOOL_CALLS === "1";
+const loadedCommandsDelayMs = Number(process.env.ANKIEL_ACP_LOADED_COMMANDS_DELAY_MS ?? "");
+const emitToolCalls = process.env.ANKIEL_ACP_EMIT_TOOL_CALLS === "1";
 const emitInterleavedAssistantToolCalls =
-  process.env.AC_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS === "1";
-const emitV2Fidelity = process.env.AC_ACP_EMIT_V2_FIDELITY === "1";
-const emitNotice = process.env.AC_ACP_EMIT_NOTICE === "1";
-const hangCloseSession = process.env.AC_ACP_HANG_CLOSE_SESSION === "1";
-const vibeRetryOutcome = process.env.AC_ACP_VIBE_RETRY_OUTCOME;
-const emitGenericToolPlaceholders = process.env.AC_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS === "1";
+  process.env.ANKIEL_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS === "1";
+const emitV2Fidelity = process.env.ANKIEL_ACP_EMIT_V2_FIDELITY === "1";
+const emitNotice = process.env.ANKIEL_ACP_EMIT_NOTICE === "1";
+const hangCloseSession = process.env.ANKIEL_ACP_HANG_CLOSE_SESSION === "1";
+const vibeRetryOutcome = process.env.ANKIEL_ACP_VIBE_RETRY_OUTCOME;
+const emitGenericToolPlaceholders = process.env.ANKIEL_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS === "1";
 const emitInTurnTaskOutputThenLateDuplicate =
-  process.env.AC_ACP_EMIT_IN_TURN_TASKOUTPUT_THEN_LATE_DUPLICATE === "1";
+  process.env.ANKIEL_ACP_EMIT_IN_TURN_TASKOUTPUT_THEN_LATE_DUPLICATE === "1";
 const emitBackgroundToolDuringAnswer =
-  process.env.AC_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER === "1";
+  process.env.ANKIEL_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER === "1";
 const emitMcpToolApprovalElicitation =
-  process.env.AC_ACP_EMIT_MCP_TOOL_APPROVAL_ELICITATION === "1";
-const emitElicitation = process.env.AC_ACP_EMIT_ELICITATION === "1";
-const elicitationSchema = process.env.AC_ACP_ELICITATION_SCHEMA;
+  process.env.ANKIEL_ACP_EMIT_MCP_TOOL_APPROVAL_ELICITATION === "1";
+const emitElicitation = process.env.ANKIEL_ACP_EMIT_ELICITATION === "1";
+const elicitationSchema = process.env.ANKIEL_ACP_ELICITATION_SCHEMA;
 const decodeElicitationSchema = Schema.decodeUnknownSync(
   Schema.fromJsonString(AcpSchema.ElicitationSchema),
 );
-const elicitationResponseLogPath = process.env.AC_ACP_ELICITATION_RESPONSE_LOG_PATH;
-const grokKillTaskShape = process.env.AC_ACP_GROK_KILL_TASK_SHAPE;
-const emitGrokBackgroundTaskPoll = process.env.AC_ACP_GROK_BACKGROUND_TASK_COMPLETION === "poll";
-const emitForeignSessionUpdates = process.env.AC_ACP_EMIT_FOREIGN_SESSION_UPDATES === "1";
-const omitInitializeModelState = process.env.AC_ACP_OMIT_INITIALIZE_MODEL_STATE === "1";
-const completeFirstPromptOnCancel = process.env.AC_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL === "1";
-const floodStderr = process.env.AC_ACP_FLOOD_STDERR === "1";
-const hangPromptForever = process.env.AC_ACP_HANG_PROMPT_FOREVER === "1";
-const agentVersion = process.env.AC_ACP_AGENT_VERSION ?? "0.0.0";
+const elicitationResponseLogPath = process.env.ANKIEL_ACP_ELICITATION_RESPONSE_LOG_PATH;
+const grokKillTaskShape = process.env.ANKIEL_ACP_GROK_KILL_TASK_SHAPE;
+const emitGrokBackgroundTaskPoll =
+  process.env.ANKIEL_ACP_GROK_BACKGROUND_TASK_COMPLETION === "poll";
+const emitForeignSessionUpdates = process.env.ANKIEL_ACP_EMIT_FOREIGN_SESSION_UPDATES === "1";
+const omitInitializeModelState = process.env.ANKIEL_ACP_OMIT_INITIALIZE_MODEL_STATE === "1";
+const completeFirstPromptOnCancel = process.env.ANKIEL_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL === "1";
+const floodStderr = process.env.ANKIEL_ACP_FLOOD_STDERR === "1";
+const hangPromptForever = process.env.ANKIEL_ACP_HANG_PROMPT_FOREVER === "1";
+const agentVersion = process.env.ANKIEL_ACP_AGENT_VERSION ?? "0.0.0";
 const geminiApiKey = process.env.GEMINI_API_KEY;
-const idleError = process.env.AC_ACP_IDLE_ERROR;
-const emitTrackedToolCallKindThenHang = process.env.AC_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG;
-const clientFsProbePath = process.env.AC_ACP_CLIENT_FS_PROBE_PATH;
-const clientFsProbeLogPath = process.env.AC_ACP_CLIENT_FS_PROBE_LOG_PATH;
+const idleError = process.env.ANKIEL_ACP_IDLE_ERROR;
+const emitTrackedToolCallKindThenHang =
+  process.env.ANKIEL_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG;
+const clientFsProbePath = process.env.ANKIEL_ACP_CLIENT_FS_PROBE_PATH;
+const clientFsProbeLogPath = process.env.ANKIEL_ACP_CLIENT_FS_PROBE_LOG_PATH;
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
-const emitEmptySuccessfulBash = process.env.AC_ACP_EMIT_EMPTY_SUCCESSFUL_BASH === "1";
+const emitEmptySuccessfulBash = process.env.ANKIEL_ACP_EMIT_EMPTY_SUCCESSFUL_BASH === "1";
 const emitEmptySuccessfulBashThenHang =
-  process.env.AC_ACP_EMIT_EMPTY_SUCCESSFUL_BASH_THEN_HANG === "1";
-const failLoadSession = process.env.AC_ACP_FAIL_LOAD_SESSION === "1";
+  process.env.ANKIEL_ACP_EMIT_EMPTY_SUCCESSFUL_BASH_THEN_HANG === "1";
+const failLoadSession = process.env.ANKIEL_ACP_FAIL_LOAD_SESSION === "1";
 const failLoadSessionAfterConfigReplay =
-  process.env.AC_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY === "1";
-const emitLoadReplay = process.env.AC_ACP_EMIT_LOAD_REPLAY === "1";
-const delayLoadSessionAfterReplay = process.env.AC_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY === "1";
-const loadSessionDelayMs = Number(process.env.AC_ACP_LOAD_SESSION_DELAY_MS ?? "5000");
-const modeNotifiedBeforeDelayedLoadReply = process.env.AC_ACP_NOTIFY_MODE_BEFORE_LOAD_REPLY;
+  process.env.ANKIEL_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY === "1";
+const emitLoadReplay = process.env.ANKIEL_ACP_EMIT_LOAD_REPLAY === "1";
+const delayLoadSessionAfterReplay = process.env.ANKIEL_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY === "1";
+const loadSessionDelayMs = Number(process.env.ANKIEL_ACP_LOAD_SESSION_DELAY_MS ?? "5000");
+const modeNotifiedBeforeDelayedLoadReply = process.env.ANKIEL_ACP_NOTIFY_MODE_BEFORE_LOAD_REPLY;
 const holdSetConfigOptionUntilLoadReply =
-  process.env.AC_ACP_HOLD_SET_CONFIG_OPTION_UNTIL_LOAD_REPLY === "1";
-const loadReplyDelayMs = Number(process.env.AC_ACP_LOAD_REPLY_DELAY_MS ?? "0");
-const loadNeverReplies = process.env.AC_ACP_LOAD_NEVER_REPLIES === "1";
-const rejectPromptUntilLoaded = process.env.AC_ACP_REJECT_PROMPT_UNTIL_LOADED === "1";
-const failPrompt = process.env.AC_ACP_FAIL_PROMPT === "1";
+  process.env.ANKIEL_ACP_HOLD_SET_CONFIG_OPTION_UNTIL_LOAD_REPLY === "1";
+const loadReplyDelayMs = Number(process.env.ANKIEL_ACP_LOAD_REPLY_DELAY_MS ?? "0");
+const loadNeverReplies = process.env.ANKIEL_ACP_LOAD_NEVER_REPLIES === "1";
+const rejectPromptUntilLoaded = process.env.ANKIEL_ACP_REJECT_PROMPT_UNTIL_LOADED === "1";
+const failPrompt = process.env.ANKIEL_ACP_FAIL_PROMPT === "1";
 // JSON for the `data` of an "Internal error" response to `session/new`, as
 // Antigravity sends when its runtime cannot reach its local harness.
 const newSessionErrorData =
-  process.env.AC_ACP_NEW_SESSION_ERROR_DATA === undefined
+  process.env.ANKIEL_ACP_NEW_SESSION_ERROR_DATA === undefined
     ? undefined
     : Schema.decodeSync(Schema.fromJsonString(Schema.Unknown))(
-        process.env.AC_ACP_NEW_SESSION_ERROR_DATA,
+        process.env.ANKIEL_ACP_NEW_SESSION_ERROR_DATA,
       );
-const failPromptOrdinal = Number(process.env.AC_ACP_FAIL_PROMPT_ORDINAL);
+const failPromptOrdinal = Number(process.env.ANKIEL_ACP_FAIL_PROMPT_ORDINAL);
 const compactionPromptOrdinals = new Set(
-  (process.env.AC_ACP_COMPACTION_PROMPT_ORDINALS ?? "").split(",").map(Number),
+  (process.env.ANKIEL_ACP_COMPACTION_PROMPT_ORDINALS ?? "").split(",").map(Number),
 );
 // These prompts end while their compaction is still in progress.
 const openCompactionPromptOrdinals = new Set(
-  (process.env.AC_ACP_OPEN_COMPACTION_PROMPT_ORDINALS ?? "").split(",").map(Number),
+  (process.env.ANKIEL_ACP_OPEN_COMPACTION_PROMPT_ORDINALS ?? "").split(",").map(Number),
 );
-const failSetModeConfigOption = process.env.AC_ACP_FAIL_SET_MODE_CONFIG_OPTION === "1";
-const emitEmptyDefaultAgentOption = process.env.AC_ACP_EMIT_EMPTY_DEFAULT_AGENT_OPTION === "1";
-const promptResponseText = process.env.AC_ACP_PROMPT_RESPONSE_TEXT;
-const promptDelayMs = Number(process.env.AC_ACP_PROMPT_DELAY_MS ?? "0");
-const terminalOutputBytes = Number(process.env.AC_ACP_EMIT_TERMINAL_OUTPUT_BYTES ?? "0");
-const supportsSessionLifecycle = process.env.AC_ACP_SESSION_LIFECYCLE === "1";
-const supportsAcpMcp = process.env.AC_ACP_MCP_ACP === "1";
-const supportsHttpMcp = process.env.AC_ACP_MCP_HTTP === "1";
-const supportsV2Management = process.env.AC_ACP_V2_MANAGEMENT === "1";
-const failDeleteSession = process.env.AC_ACP_FAIL_DELETE_SESSION === "1";
-const advertisedAuthMethodId = process.env.AC_ACP_AUTH_METHOD_ID?.trim();
+const failSetModeConfigOption = process.env.ANKIEL_ACP_FAIL_SET_MODE_CONFIG_OPTION === "1";
+const emitEmptyDefaultAgentOption = process.env.ANKIEL_ACP_EMIT_EMPTY_DEFAULT_AGENT_OPTION === "1";
+const promptResponseText = process.env.ANKIEL_ACP_PROMPT_RESPONSE_TEXT;
+const promptDelayMs = Number(process.env.ANKIEL_ACP_PROMPT_DELAY_MS ?? "0");
+const terminalOutputBytes = Number(process.env.ANKIEL_ACP_EMIT_TERMINAL_OUTPUT_BYTES ?? "0");
+const supportsSessionLifecycle = process.env.ANKIEL_ACP_SESSION_LIFECYCLE === "1";
+const supportsAcpMcp = process.env.ANKIEL_ACP_MCP_ACP === "1";
+const supportsHttpMcp = process.env.ANKIEL_ACP_MCP_HTTP === "1";
+const supportsV2Management = process.env.ANKIEL_ACP_V2_MANAGEMENT === "1";
+const failDeleteSession = process.env.ANKIEL_ACP_FAIL_DELETE_SESSION === "1";
+const advertisedAuthMethodId = process.env.ANKIEL_ACP_AUTH_METHOD_ID?.trim();
 const initializeAuthMethodId =
   advertisedAuthMethodId ?? (supportsSessionLifecycle ? "test" : undefined);
-const requiresAuthentication = process.env.AC_ACP_REQUIRE_AUTH === "1";
+const requiresAuthentication = process.env.ANKIEL_ACP_REQUIRE_AUTH === "1";
 const permissionOptionIds = {
   allowOnce: "allow-once",
   allowAlways: "allow-always",
@@ -119,7 +121,7 @@ const permissionOptionIds = {
 const sessionId = "mock-session-1";
 
 let currentModeId = antigravityProfile
-  ? (process.env.AC_ACP_INITIAL_MODE ?? "default")
+  ? (process.env.ANKIEL_ACP_INITIAL_MODE ?? "default")
   : copilotModesProfile
     ? copilotModeId("agent")
     : "ask";
@@ -1384,7 +1386,7 @@ const program = Effect.gen(function* () {
             rawOutput: {
               action: {
                 type: "search",
-                query: "ac code",
+                query: "ankiel code",
                 sources: [
                   { type: "url", url: "https://code.ankiel.com" },
                   { type: "url", url: "https://code.ankiel.com" },
@@ -1889,7 +1891,7 @@ const program = Effect.gen(function* () {
             status: "completed",
             rawOutput: {
               exitCode: 0,
-              stdout: '{ "name": "ac" }',
+              stdout: '{ "name": "ankiel" }',
               stderr: "",
             },
           },
@@ -2092,8 +2094,8 @@ const program = Effect.gen(function* () {
   yield* agent.handleUnknownExtRequest((method, params) => {
     if (method === "_test/environment") {
       return Effect.succeed({
-        inherited: process.env.AC_ACP_RUNTIME_AMBIENT === "sentinel",
-        explicit: process.env.AC_ACP_RUNTIME_EXPLICIT === "kept",
+        inherited: process.env.ANKIEL_ACP_RUNTIME_AMBIENT === "sentinel",
+        explicit: process.env.ANKIEL_ACP_RUNTIME_EXPLICIT === "kept",
       });
     }
     if (method === "_test/finish-cancel") {

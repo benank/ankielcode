@@ -63,15 +63,15 @@ const windowsTaskOptions = {
 
 it("reads the served Ankiel home and log back out of a rendered unit, plist, or task", () => {
   const plan = (baseDir: string) => ({
-    program: [`${baseDir}/runtime/versions/1.2.3/ac`, "__service-launcher"],
+    program: [`${baseDir}/runtime/versions/1.2.3/ankiel`, "__service-launcher"],
     baseDir,
     logPath: `${baseDir}/userdata/logs/boot-service.log`,
     unitPath: "/home/sam/.config/systemd/user/ankielcode.service",
   });
 
   expect(
-    BootService.bootServiceBaseDirOf(BootService.renderBootServiceUnit(plan("/home/sam/.ac"))),
-  ).toBe("/home/sam/.ac");
+    BootService.bootServiceBaseDirOf(BootService.renderBootServiceUnit(plan("/home/sam/.ankiel"))),
+  ).toBe("/home/sam/.ankiel");
   expect(
     BootService.bootServiceBaseDirOf(
       BootService.renderBootServiceUnit(plan("/home/sam/Ankiel Data/100%")),
@@ -106,9 +106,9 @@ it("reads the served Ankiel home and log back out of a rendered unit, plist, or 
 
 it("protects the server unit from agents under CPU and memory pressure", () => {
   const unit = BootService.renderBootServiceUnit({
-    program: ["/home/sam/.ac/runtime/versions/1.2.3/ac", "__service-launcher"],
-    baseDir: "/home/sam/.ac",
-    logPath: "/home/sam/.ac/userdata/logs/boot-service.log",
+    program: ["/home/sam/.ankiel/runtime/versions/1.2.3/ankiel", "__service-launcher"],
+    baseDir: "/home/sam/.ankiel",
+    logPath: "/home/sam/.ankiel/userdata/logs/boot-service.log",
     unitPath: "/home/sam/.config/systemd/user/ankielcode.service",
   });
   const service = unit.slice(unit.indexOf("[Service]"), unit.indexOf("[Install]"));
@@ -138,7 +138,7 @@ it.each([
       BootService.renderBootServiceTask(plan, windowsTaskOptions),
   ],
 ] as const)("reads the launcher back out of %s", (_, baseDir, render) => {
-  const program = `${baseDir}/runtime/versions/1.2.3/ac`;
+  const program = `${baseDir}/runtime/versions/1.2.3/ankiel`;
   expect(
     BootService.bootServiceProgramOf(
       render({ program: [program, "__service-launcher"], baseDir, logPath: "/log", unitPath: "" }),
@@ -156,7 +156,7 @@ it.each([
   let unit: string;
   try {
     unit = BootService.renderBootServiceUnit({
-      program: [`${baseDir}/runtime/versions/1.2.3/ac`, "__service-launcher"],
+      program: [`${baseDir}/runtime/versions/1.2.3/ankiel`, "__service-launcher"],
       baseDir,
       logPath: `${baseDir}/userdata/logs/boot-service.log`,
       unitPath: "/home/sam/.config/systemd/user/ankielcode.service",
@@ -201,7 +201,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
     "systemd",
     "user",
   );
-  const baseDir = path.join(home, ".ac");
+  const baseDir = path.join(home, ".ankiel");
   const statePath = path.join(baseDir, "runtime", "service-state.json");
   const runtime = pinnedRuntimePaths(path, baseDir, "1.2.3", platform);
   yield* fs.makeDirectory(path.dirname(runtime.entryPath), { recursive: true });
@@ -321,7 +321,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
                 ],
               })
             : input.args[0] === "--version"
-              ? `ac v${/versions[\\/]([^\\/]+)[\\/]/.exec(input.command)?.[1] ?? "1.2.3"}\n`
+              ? `ankiel v${/versions[\\/]([^\\/]+)[\\/]/.exec(input.command)?.[1] ?? "1.2.3"}\n`
               : input.command === SCHTASKS && input.args.includes("/XML")
                 ? control.task?.enabled === false
                   ? disabledServiceTask(control.task.xml)
@@ -364,7 +364,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
     cliVersion = "1.2.3",
     serviceBaseDir = baseDir,
     insideService = false,
-    hostExecPath = "/usr/bin/ac",
+    hostExecPath = "/usr/bin/ankiel",
     underSudo = false,
     serviceInstallBinDir: string | null | undefined = installBinDir,
   ) =>
@@ -396,7 +396,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
                 HOME: home,
                 ...(serviceInstallBinDir === undefined || serviceInstallBinDir === null
                   ? {}
-                  : { AC_INSTALL_BIN_DIR: serviceInstallBinDir }),
+                  : { ANKIEL_INSTALL_BIN_DIR: serviceInstallBinDir }),
                 ...(xdgConfigHome === undefined ? {} : { XDG_CONFIG_HOME: xdgConfigHome }),
                 USERPROFILE: home,
                 LOCALAPPDATA: path.join(home, "AppData", "Local"),
@@ -408,7 +408,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
                   : { PATH: environmentPath }),
                 ...(insideService
                   ? {
-                      AC_BOOT_SERVICE_UNIT:
+                      ANKIEL_BOOT_SERVICE_UNIT:
                         platform === "win32" ? "ankielcode-task.xml" : "ankielcode.service",
                     }
                   : {}),
@@ -716,8 +716,8 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
         const unit = yield* fs.readFileString(plan.unitPath);
         expect(unit).toContain(
           platform === "linux"
-            ? 'Environment=AC_INSTALL_BIN_DIR="/custom/Ankiel\t& <100%%>/\\"quoted\\"\\\\bin"'
-            : '<key>AC_INSTALL_BIN_DIR</key>\n    <string>/custom/Ankiel\t&amp; &lt;100%&gt;/"quoted"\\bin</string>',
+            ? 'Environment=ANKIEL_INSTALL_BIN_DIR="/custom/Ankiel\t& <100%%>/\\"quoted\\"\\\\bin"'
+            : '<key>ANKIEL_INSTALL_BIN_DIR</key>\n    <string>/custom/Ankiel\t&amp; &lt;100%&gt;/"quoted"\\bin</string>',
         );
         expect((yield* service.status).current).toBe(true);
 
@@ -815,7 +815,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
         activeVersion: "1.2.3",
       });
       expect(plan.program).toEqual([runtime.entryPath, "__service-launcher"]);
-      expect(yield* fs.readFileString(plan.unitPath)).not.toContain("AC_INSTALL_BIN_DIR");
+      expect(yield* fs.readFileString(plan.unitPath)).not.toContain("ANKIEL_INSTALL_BIN_DIR");
       expect(yield* fs.readFileString(plan.unitPath)).toContain(
         `ExecStart=${runtime.entryPath} __service-launcher`,
       );
@@ -978,7 +978,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
         const path = yield* Path.Path;
         const envPath = path.join(baseDir, SERVICE_ENV_FILE);
         const envBytes = new TextEncoder().encode(
-          '# user configuration\r\nAC_TOKEN="literal $HOME # token"',
+          '# user configuration\r\nANKIEL_TOKEN="literal $HOME # token"',
         );
         yield* fs.writeFile(envPath, envBytes);
         yield* service.install();
@@ -995,7 +995,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
           protocol: SERVICE_LAUNCHER_PROTOCOL,
           activeVersion: "1.2.4",
         });
-        expect(yield* fs.readFileString(plan.unitPath)).toContain("versions/1.2.4/ac");
+        expect(yield* fs.readFileString(plan.unitPath)).toContain("versions/1.2.4/ankiel");
         expect(
           commands.filter(
             (command) =>
@@ -1017,7 +1017,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
           protocol: SERVICE_LAUNCHER_PROTOCOL,
           activeVersion: "1.2.5",
         });
-        expect(yield* fs.readFileString(plan.unitPath)).toContain("versions/1.2.5/ac");
+        expect(yield* fs.readFileString(plan.unitPath)).toContain("versions/1.2.5/ankiel");
         expect((yield* latest.status).current).toBe(true);
         expect(
           yield* fs.exists(path.join(path.dirname(statePath), SERVICE_RESTART_PENDING_FILE)),
@@ -1035,7 +1035,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
         const unit = yield* fs.readFileString(plan.unitPath);
         yield* fs.writeFileString(
           plan.unitPath,
-          unit.replace("versions/1.2.3/ac", "versions/1.2.2/ac"),
+          unit.replace("versions/1.2.3/ankiel", "versions/1.2.2/ankiel"),
         );
         yield* fs.writeFileString(
           statePath,
@@ -1163,7 +1163,7 @@ process.disconnect();
           protocol: SERVICE_LAUNCHER_PROTOCOL,
           activeVersion: "1.2.4",
         });
-        expect(yield* fs.readFileString(plan.unitPath)).toContain("versions/1.2.4/ac");
+        expect(yield* fs.readFileString(plan.unitPath)).toContain("versions/1.2.4/ankiel");
         expect(
           yield* fs.readFileString(
             path.join(path.dirname(statePath), SERVICE_RESTART_PENDING_FILE),
@@ -1292,7 +1292,7 @@ process.disconnect();
       const path = yield* Path.Path;
       const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-other-home-" });
 
-      const other = yield* makeService(undefined, "1.2.3", path.join(otherHome, ".ac"));
+      const other = yield* makeService(undefined, "1.2.3", path.join(otherHome, ".ankiel"));
       commands.length = 0;
       expect(yield* other.restart).toBe("skipped");
       const refused = yield* other.install().pipe(Effect.flip);
@@ -1364,7 +1364,7 @@ process.disconnect();
         "--quiet",
         `--property=StandardOutput=append:${plan.logPath}`,
         `--property=StandardError=append:${plan.logPath}`,
-        "--setenv=AC_BOOT_SERVICE_UNIT=",
+        "--setenv=ANKIEL_BOOT_SERVICE_UNIT=",
         pinnedRuntimePaths(path, baseDir, "1.2.4", "linux").entryPath,
         "service",
         "install",

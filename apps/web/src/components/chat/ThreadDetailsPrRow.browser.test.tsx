@@ -142,7 +142,7 @@ const scratchProject = {
   id: ProjectId.make("scratch"),
   environmentId: EnvironmentId.make("environment"),
   title: "No project",
-  workspaceRoot: "/home/user/.ac/scratch",
+  workspaceRoot: "/home/user/.ankiel/scratch",
   scripts: [],
 };
 const repositoryProject = {

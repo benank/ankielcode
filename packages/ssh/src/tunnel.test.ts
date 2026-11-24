@@ -100,7 +100,7 @@ function commandArgs(command: ChildProcess.Command): ReadonlyArray<string> {
 
 const ARCHIVE = { archiveVersion: "1.2.3-preview.20260911.4" } as const;
 
-// Emulates `ac serve`: it takes the home owner lock at startup, then binds
+// Emulates `ankiel serve`: it takes the home owner lock at startup, then binds
 // once a second server has tried the same home (or after 2s), so a concurrent
 // launch always sees the home still unclaimed. Like the real server, it
 // publishes server-runtime.json after it starts answering HTTP, if at all.
@@ -228,7 +228,7 @@ describe("ssh tunnel scripts", () => {
       const fs = yield* FileSystem.FileSystem;
       const home = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-ssh-launch-log-" });
       const target = { alias: "devbox", hostname: "devbox", username: null, port: null };
-      const stateDir = NodePath.join(home, ".ac", "ssh-launch", yield* remoteStateKey(target));
+      const stateDir = NodePath.join(home, ".ankiel", "ssh-launch", yield* remoteStateKey(target));
       const bin = NodePath.join(home, "bin");
       yield* fs.makeDirectory(stateDir, { recursive: true });
       yield* fs.makeDirectory(bin);
@@ -301,7 +301,7 @@ describe("ssh tunnel scripts", () => {
     }
     assert.include(
       SshTunnel.buildRemoteAnkielRunnerScript(ARCHIVE),
-      "AC_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
+      "ANKIEL_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
     );
   });
 
@@ -335,12 +335,12 @@ describe("ssh tunnel scripts", () => {
         assert.notEqual(result.status, 0);
         if (downloads) {
           assert.include(result.stderr, "download attempt");
-          // A bare curl error does not tell the user that ac itself could not be downloaded.
+          // A bare curl error does not tell the user that ankiel itself could not be downloaded.
           assert.include(result.stderr, ARCHIVE.archiveVersion);
           assert.include(result.stderr, "https://github.com/benank/ankielcode/releases/download");
         } else {
           assert.notInclude(result.stderr, "download attempt");
-          assert.include(result.stderr, "has no ac release archive.");
+          assert.include(result.stderr, "has no ankiel release archive.");
         }
       } finally {
         NodeFS.rmSync(root, { recursive: true, force: true });
@@ -353,7 +353,7 @@ describe("ssh tunnel scripts", () => {
     { installed: ARCHIVE.archiveVersion, status: 1, reuses: false },
     { installed: "9.9.9", status: 0, reuses: false },
   ])(
-    "reuses a host ac only at exactly the requested version: installed $installed, status $status",
+    "reuses a host ankiel only at exactly the requested version: installed $installed, status $status",
     ({ installed, status, reuses }) => {
       const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "ankiel-ssh-runner-"));
       try {
@@ -367,8 +367,8 @@ describe("ssh tunnel scripts", () => {
           { mode: 0o755 },
         );
         NodeFS.writeFileSync(
-          NodePath.join(bin, "ac"),
-          `#!/bin/sh\ncase "$1" in --version) echo "ac v${installed}"; exit ${status} ;; *) echo "host ac $*" ;; esac\n`,
+          NodePath.join(bin, "ankiel"),
+          `#!/bin/sh\ncase "$1" in --version) echo "ankiel v${installed}"; exit ${status} ;; *) echo "host ankiel $*" ;; esac\n`,
           { mode: 0o755 },
         );
         const runner = NodePath.join(root, "run-ankiel.test");
@@ -379,10 +379,10 @@ describe("ssh tunnel scripts", () => {
         });
         if (reuses) {
           assert.equal(result.status, 0);
-          assert.equal(result.stdout, "host ac serve\n");
+          assert.equal(result.stdout, "host ankiel serve\n");
         } else {
           assert.notEqual(result.status, 0);
-          assert.include(result.stderr, "has no ac release archive.");
+          assert.include(result.stderr, "has no ankiel release archive.");
         }
       } finally {
         NodeFS.rmSync(root, { recursive: true, force: true });
@@ -401,14 +401,14 @@ describe("ssh tunnel scripts", () => {
       const bin = NodePath.join(root, "bin");
       const release = NodePath.join(root, "release");
       const home = NodePath.join(root, "home\ncache");
-      const archive = `ac-${ARCHIVE.archiveVersion}-linux-x64.tar.gz`;
+      const archive = `ankiel-${ARCHIVE.archiveVersion}-linux-x64.tar.gz`;
       NodeFS.mkdirSync(bin);
       NodeFS.mkdirSync(home);
-      NodeFS.mkdirSync(NodePath.join(release, "ac"), { recursive: true });
-      NodeFS.writeFileSync(NodePath.join(release, "ac", "ac"), "#!/bin/sh\necho ok\n", {
+      NodeFS.mkdirSync(NodePath.join(release, "ankiel"), { recursive: true });
+      NodeFS.writeFileSync(NodePath.join(release, "ankiel", "ankiel"), "#!/bin/sh\necho ok\n", {
         mode: 0o755,
       });
-      NodeChildProcess.execFileSync("tar", ["-czf", archive, "ac"], { cwd: release });
+      NodeChildProcess.execFileSync("tar", ["-czf", archive, "ankiel"], { cwd: release });
       NodeChildProcess.execFileSync("sh", ["-c", `sha256sum ${archive} > SHA256SUMS`], {
         cwd: release,
       });
@@ -530,7 +530,7 @@ describe("ssh tunnel scripts", () => {
         yield* fs.chmod(bash, 0o755);
         yield* fs.writeFileString(
           startupFile,
-          "if shopt -q login_shell; then export AC_SSH_LOGIN_ENV=loaded; fi\n",
+          "if shopt -q login_shell; then export ANKIEL_SSH_LOGIN_ENV=loaded; fi\n",
         );
         const target = { alias: "login-test", hostname: "login-test", username: null, port: null };
         const remoteCommands: string[] = [];
@@ -549,7 +549,7 @@ describe("ssh tunnel scripts", () => {
         );
         yield* fs.writeFileString(
           `${directory}/.zprofile`,
-          "if [[ -o login ]]; then export AC_SSH_LOGIN_ENV=loaded; fi\n",
+          "if [[ -o login ]]; then export ANKIEL_SSH_LOGIN_ENV=loaded; fi\n",
         );
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
         const cases = [
@@ -586,11 +586,13 @@ describe("ssh tunnel scripts", () => {
                 SHELL: shell,
                 BASH_ENV: startupFile,
                 ZDOTDIR: directory,
-                AC_SSH_LOGIN_ENV: "",
+                ANKIEL_SSH_LOGIN_ENV: "",
               },
               stdin: {
                 stream: Stream.make(
-                  new TextEncoder().encode('printf "%s:%s" "${AC_SSH_LOGIN_ENV:-missing}" "$1"'),
+                  new TextEncoder().encode(
+                    'printf "%s:%s" "${ANKIEL_SSH_LOGIN_ENV:-missing}" "$1"',
+                  ),
                 ),
                 endOnDone: true,
               },
@@ -1306,7 +1308,7 @@ describe("ssh tunnel scripts", () => {
             Effect.ignore,
           ),
         );
-        const serverScript = path.join(home, "fake-ac.cjs");
+        const serverScript = path.join(home, "fake-ankiel.cjs");
         yield* fs.writeFileString(serverScript, fakeAnkielServe(publishDelayMs));
         const wrapperScript = path.join(home, "wrapper.cjs");
         yield* fs.writeFileString(
@@ -1315,7 +1317,7 @@ describe("ssh tunnel scripts", () => {
 child.on("exit", (code) => process.exit(code ?? 1));`,
         );
         // A launch that died holding the lock must not block or double-admit later ones.
-        const launchLock = path.join(home, ".ac", "ssh-launch", ".launch.lock");
+        const launchLock = path.join(home, ".ankiel", "ssh-launch", ".launch.lock");
         yield* fs.makeDirectory(path.dirname(launchLock), { recursive: true });
         yield* fs.writeFileString(launchLock, "999999999\n");
         const targets = [
@@ -1333,7 +1335,7 @@ child.on("exit", (code) => process.exit(code ?? 1));`,
         ).pipe(Effect.provide(localRemoteShellLayer(home)));
 
         const ownerPid = Number(
-          yield* fs.readFileString(path.join(home, ".ac", "userdata", "server.lock")),
+          yield* fs.readFileString(path.join(home, ".ankiel", "userdata", "server.lock")),
         );
         assert.sameMembers(
           launches.map((launch) => launch.remoteServerKind),
@@ -1347,7 +1349,7 @@ child.on("exit", (code) => process.exit(code ?? 1));`,
           if (launch.remoteServerKind !== "managed") continue;
           const stateKey = yield* remoteStateKey(targets[index]!);
           const recordedPid = yield* fs.readFileString(
-            path.join(home, ".ac", "ssh-launch", stateKey, "pid"),
+            path.join(home, ".ankiel", "ssh-launch", stateKey, "pid"),
           );
           assert.equal(
             Number(recordedPid.trim()),
@@ -1407,7 +1409,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
       const realSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-stale-pid-" });
       const home = `${root}/home`;
-      const fakeServer = `${root}/fake-ac.cjs`;
+      const fakeServer = `${root}/fake-ankiel.cjs`;
       yield* fs.makeDirectory(home, { recursive: true });
       yield* fs.writeFileString(fakeServer, FAKE_SERVER);
       // Runs the remote command locally under the temp HOME. setsid keeps a launched server alive
@@ -1450,7 +1452,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
         holderPort,
         sshAsLocalShell,
         staleId: staleId === "an unrelated process" ? holder.pid : tid,
-        stateDir: `${home}/.ac/ssh-launch/${yield* remoteStateKey(target)}`,
+        stateDir: `${home}/.ankiel/ssh-launch/${yield* remoteStateKey(target)}`,
       };
     });
 
@@ -1484,7 +1486,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
       // Reboot: our server is gone and its recorded PID now names something that
       // answers on the recorded port.
       process.kill(firstPid, "SIGKILL");
-      yield* fs.remove(`${home}/.ac/userdata/server-runtime.json`);
+      yield* fs.remove(`${home}/.ankiel/userdata/server-runtime.json`);
       yield* fs.writeFileString(`${stateDir}/pid`, `${staleId}\n`);
       yield* fs.writeFileString(`${stateDir}/port`, `${holderPort}\n`);
 
@@ -1549,7 +1551,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
           launcherId,
         ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, sshAsLocalShell));
       const runtimePid = fs
-        .readFileString(`${home}/.ac/userdata/server-runtime.json`)
+        .readFileString(`${home}/.ankiel/userdata/server-runtime.json`)
         .pipe(Effect.map((runtime) => Number(JSON.parse(runtime).pid)));
       const launchedPids: Array<number> = [];
       yield* Effect.addFinalizer(() =>
@@ -1626,7 +1628,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
             launcherId,
           ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, sshAsLocalShell));
         const runtimePid = fs
-          .readFileString(`${home}/.ac/userdata/server-runtime.json`)
+          .readFileString(`${home}/.ankiel/userdata/server-runtime.json`)
           .pipe(Effect.map((runtime) => Number(JSON.parse(runtime).pid)));
 
         assert.equal((yield* launch("a".repeat(32))).remoteServerKind, "managed");
@@ -1698,7 +1700,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
 
 // Reuse decisions live in generated shell, so drive the real launch script in
 // a temporary HOME. Each archive version gets a pre-installed fake runtime
-// whose server writes the default runtime file the way `ac serve` does.
+// whose server writes the default runtime file the way `ankiel serve` does.
 describe("archive launch script", () => {
   const windowsHost = HostProcess.Platform.defaultValue() === "win32";
   const FAKE_Ankiel = `const fs = require("node:fs");
@@ -1813,27 +1815,27 @@ const canBind = (port) =>
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-archive-launch-" });
       const home = `${root}/home`;
-      const stateDir = `${home}/.ac/ssh-launch/test-state`;
-      const fakeAnkiel = `${root}/fake-ac.cjs`;
+      const stateDir = `${home}/.ankiel/ssh-launch/test-state`;
+      const fakeAnkiel = `${root}/fake-ankiel.cjs`;
       yield* fs.makeDirectory(stateDir, { recursive: true });
       yield* fs.writeFileString(`${stateDir}/port`, `${yield* freeLoopbackPort}\n`);
       yield* fs.writeFileString(fakeAnkiel, FAKE_Ankiel);
       for (const version of versions) {
-        const runtimeDir = `${home}/.ac/runtime/versions/${version}`;
+        const runtimeDir = `${home}/.ankiel/runtime/versions/${version}`;
         yield* fs.makeDirectory(runtimeDir, { recursive: true });
         // The runner gets only HOME, so `node` would resolve on sh's default PATH, which may not have it.
         yield* fs.writeFileString(
-          `${runtimeDir}/ac`,
+          `${runtimeDir}/ankiel`,
           `#!/bin/sh\nexec '${process.execPath}' '${fakeAnkiel}' '${version}' "$@"\n`,
         );
-        yield* fs.chmod(`${runtimeDir}/ac`, 0o755);
+        yield* fs.chmod(`${runtimeDir}/ankiel`, 0o755);
         yield* fs.writeFileString(`${runtimeDir}/.install-complete`, `${version}\n`);
       }
       const readManagedPid = fs
         .readFileString(`${stateDir}/pid`)
         .pipe(Effect.map((pid) => Number(pid.trim())));
       const readServerVersion = fs
-        .readFileString(`${home}/.ac/userdata/server-runtime.json`)
+        .readFileString(`${home}/.ankiel/userdata/server-runtime.json`)
         .pipe(Effect.map((raw) => (JSON.parse(raw) as { serverVersion: string }).serverVersion));
       // Launched servers outlive the script, so stop each PID it recorded.
       const launchedPids = new Set<number>();
@@ -1879,15 +1881,15 @@ const canBind = (port) =>
       }).pipe(Effect.provide(NodeServices.layer)),
   );
 
-  // An NFS home can carry a ~/.ac symlink whose target exists only on another host.
-  it.live.skipIf(windowsHost)("launches through a ~/.ac symlink whose target is missing", () =>
+  // An NFS home can carry a ~/.ankiel symlink whose target exists only on another host.
+  it.live.skipIf(windowsHost)("launches through a ~/.ankiel symlink whose target is missing", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-dangling-home-" });
       const home = `${root}/home`;
-      const target = `${root}/shared/ac`;
+      const target = `${root}/shared/ankiel`;
       yield* fs.makeDirectory(home, { recursive: true });
-      yield* fs.symlink(target, `${home}/.ac`);
+      yield* fs.symlink(target, `${home}/.ankiel`);
       const launch = `${root}/launch.sh`;
       yield* fs.writeFileString(
         launch,

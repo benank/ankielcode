@@ -6,8 +6,8 @@ import { isTriagePrompt, replaceTriagePlaybookLink } from "./triagePrompt.ts";
 const appPrompt = (playbookPath: string) =>
   `Read ${serializeComposerFileLink(playbookPath)} and follow it. `;
 
-const MACHINE_A = "/Users/a/.ac/triage/1/triage-playbook.md";
-const MACHINE_B = "/home/b/.ac/triage/2/triage-playbook.md";
+const MACHINE_A = "/Users/a/.ankiel/triage/1/triage-playbook.md";
+const MACHINE_B = "/home/b/.ankiel/triage/2/triage-playbook.md";
 
 describe("replaceTriagePlaybookLink", () => {
   it("replaces only the playbook link and keeps the text the user typed", () => {
@@ -21,9 +21,9 @@ describe("replaceTriagePlaybookLink", () => {
 
   it.each([
     ["spaces", "/Users/a b/My Data/triage-playbook.md"],
-    ["parentheses", "/Users/a/ac (dev)/triage-playbook.md"],
+    ["parentheses", "/Users/a/ankiel (dev)/triage-playbook.md"],
     ["hash and question mark", "/Users/a/#1/what?/triage-playbook.md"],
-    ["a Windows path", "C:\\Users\\a b\\ac (dev)\\triage-playbook.md"],
+    ["a Windows path", "C:\\Users\\a b\\ankiel (dev)\\triage-playbook.md"],
   ])("replaces a link whose path has %s", (_name, path) => {
     expect(replaceTriagePlaybookLink(`${appPrompt(path)}It is slow.`, appPrompt(MACHINE_B))).toBe(
       `${appPrompt(MACHINE_B)}It is slow.`,

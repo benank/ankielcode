@@ -462,7 +462,7 @@ interface DestinationToken {
 }
 
 /**
- * Markdown reads `C:\work\.ac` as `C:\work.ac`. Web keeps authored Windows destinations
+ * Markdown reads `C:\work\.ankiel` as `C:\work.ankiel`. Web keeps authored Windows destinations
  * literally (see `remarkKeepWindowsPaths` in shared), so escape their backslashes to give
  * both parsers here the same path. `\&` stays an escape, as `markdownWithHtml` emits it.
  * Expects authored Markdown: already escaped output would be escaped twice.

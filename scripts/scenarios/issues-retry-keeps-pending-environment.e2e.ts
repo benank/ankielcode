@@ -3,13 +3,13 @@ import type { IssueListResult } from "@ankielcode/contracts";
 import { expect } from "e2e";
 
 import { SECOND_HOME, startSecondServer } from "./second-server.ts";
-import { makeState, test, WEB } from "./ac.ts";
+import { makeState, test, WEB } from "./ankiel.ts";
 
 test(
   "Retrying a failed environment keeps the Issues refresh already in progress",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    await ac.project("demo");
+  async ({ ankiel, app, screen, browser }) => {
+    await ankiel.project("demo");
     const server = startSecondServer(app.baseUrl ?? "");
     try {
       const { host, token } = await server.ready;
@@ -114,7 +114,7 @@ test(
         };
       }, new URL(host).host);
 
-      await ac.open("/settings/connections");
+      await ankiel.open("/settings/connections");
       await screen.getByRole("button", "Add environment").tap();
       const dialog = screen.getByRole("dialog");
       await dialog.getByPlaceholder("backend.example.com").fill(host);

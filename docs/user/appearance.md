@@ -67,7 +67,7 @@ to another site. For a full-size image, use a [background image](#background-ima
 Class names in the app change between releases. For rules that keep working, target `data-slot`
 and other `data-` attributes, such as `[data-chat-header]` or `[data-slot="button"]`.
 
-If a rule hides something you need, run `ac theme set ankiel-chat` on the server to switch to a
+If a rule hides something you need, run `ankiel theme set ankiel-chat` on the server to switch to a
 built-in theme, or press **Cmd+Option+A** on macOS or **Ctrl+Alt+A** on Windows/Linux to pick
 another theme.
 
@@ -94,21 +94,21 @@ standard theme.
 Run this on the server to set a default and switch connected clients to it:
 
 ```bash
-ac theme set nightfall
+ankiel theme set nightfall
 ```
 
 Clients that are offline apply it when they reconnect. Each client applies the setting once;
-choosing another theme afterward sticks until the next `ac theme set`. Run the command again to
+choosing another theme afterward sticks until the next `ankiel theme set`. Run the command again to
 reapply it, even if the name is unchanged.
 
-`ac theme clear` removes the default without changing anyone's current theme. `ac theme show` lists
+`ankiel theme clear` removes the default without changing anyone's current theme. `ankiel theme show` lists
 the default and published themes.
 
 ### Publish a theme
 
-Save a theme exported from Ankiel Code into `~/.ac/userdata/themes/` on the server, or the `themes`
+Save a theme exported from Ankiel Code into `~/.ankiel/userdata/themes/` on the server, or the `themes`
 directory under your custom state directory. The filename supplies the theme ID: `nightfall.json`
-can be selected with `ac theme set nightfall`. Keep the filename stable when updating its colors.
+can be selected with `ankiel theme set nightfall`. Keep the filename stable when updating its colors.
 Do not use `system`, `light`, `dark`, or a built-in theme's ID.
 
 For an integration that generates a palette, this shorter format also works:

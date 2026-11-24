@@ -12,7 +12,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { awaitCliNotarization, signMacArchiveContents } from "./build-cli-archive.ts";
 
 const signedEnv = {
-  AC_CLI_MAC_SIGN_IDENTITY: "Developer ID Application: Test (TEAM)",
+  ANKIEL_CLI_MAC_SIGN_IDENTITY: "Developer ID Application: Test (TEAM)",
   APPLE_API_KEY: "/tmp/AuthKey_TEST.p8",
   APPLE_API_KEY_ID: "TEST",
   APPLE_API_ISSUER: "issuer",
@@ -64,8 +64,8 @@ const makeContent = Effect.fn("test.makeContent")(function* () {
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-cli-notary-" });
   const contentDir = path.join(root, "content");
   yield* fs.makeDirectory(contentDir);
-  const executablePath = path.join(contentDir, "ac");
-  yield* fs.writeFileString(executablePath, "ac");
+  const executablePath = path.join(contentDir, "ankiel");
+  yield* fs.writeFileString(executablePath, "ankiel");
   return { root, contentDir, executablePath, submissionFile: path.join(root, "submission") };
 });
 
@@ -78,7 +78,7 @@ it.layer(NodeServices.layer)("build-cli-archive notarization", (it) => {
       const fs = yield* FileSystem.FileSystem;
       // Apple documents id and path for an unwaited submit; a pending status must not fail it.
       for (const submitted of [
-        '{"id":"new-id","message":"Successfully uploaded file","path":"ac.zip"}',
+        '{"id":"new-id","message":"Successfully uploaded file","path":"ankiel.zip"}',
         '{"id":"new-id","status":"In Progress"}',
       ]) {
         const content = yield* makeContent();
@@ -166,7 +166,7 @@ it.layer(NodeServices.layer)("build-cli-archive notarization", (it) => {
         {
           name: "submission without credentials",
           wait: { exitCode: 0, stdout: '{"id":"sub","status":"Accepted"}' },
-          env: { AC_CLI_MAC_SIGN_IDENTITY: signedEnv.AC_CLI_MAC_SIGN_IDENTITY },
+          env: { ANKIEL_CLI_MAC_SIGN_IDENTITY: signedEnv.ANKIEL_CLI_MAC_SIGN_IDENTITY },
           error: "CliArchiveInputMissingError",
         },
         {

@@ -123,7 +123,7 @@ it.effect("reads the newest version from the update feed file a mirror publishes
   }),
 );
 
-it.layer(NodeServices.layer)("ac update under a managed policy", (it) => {
+it.layer(NodeServices.layer)("ankiel update under a managed policy", (it) => {
   const runWithPolicy = (
     updates: ManagedUpdatesPolicy,
     input: { readonly channel?: "stable" | "nightly"; readonly requestedVersion?: string } = {},
@@ -200,15 +200,15 @@ it.layer(NodeServices.layer)("ac update under a managed policy", (it) => {
   );
 });
 
-it.layer(NodeServices.layer)("ac update launcher", (it) => {
+it.layer(NodeServices.layer)("ankiel update launcher", (it) => {
   it.effect("replaces a legacy symlink with a script that execs the new version", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-update-" });
-      const oldExe = path.join(root, "runtime/versions/1.0.0/ac");
-      const newExe = path.join(root, "runtime/versions/2.0.0/ac");
-      const launcher = path.join(root, "bin/ac");
+      const oldExe = path.join(root, "runtime/versions/1.0.0/ankiel");
+      const newExe = path.join(root, "runtime/versions/2.0.0/ankiel");
+      const launcher = path.join(root, "bin/ankiel");
       for (const file of [oldExe, newExe]) {
         yield* fs.makeDirectory(path.dirname(file), { recursive: true });
         yield* fs.writeFileString(file, "");
@@ -236,9 +236,9 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
       const root = yield* fs.makeTempDirectoryScoped();
       const baseDir = path.join(root, "home");
       const runtimeDir = path.join(baseDir, "runtime");
-      const launcher = path.join(root, "custom bin", "ac.cmd");
-      const launchedAs = path.join(runtimeDir, "versions", "1.0.0", "ac.exe");
-      const targetEntryPath = path.join(runtimeDir, "versions", "2.0.0", "ac.exe");
+      const launcher = path.join(root, "custom bin", "ankiel.cmd");
+      const launchedAs = path.join(runtimeDir, "versions", "1.0.0", "ankiel.exe");
+      const targetEntryPath = path.join(runtimeDir, "versions", "2.0.0", "ankiel.exe");
       yield* fs.makeDirectory(runtimeDir, { recursive: true });
       yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
       yield* fs.writeFileString(launcher, `@echo off\r\n"${launchedAs}" %*`);
@@ -267,15 +267,15 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
         );
         // A quote and a space in the home path exercise the script's quoting.
         const home = path.join(root, "it's home");
-        const entry = (version: string) => path.join(home, "runtime/versions", version, "ac");
+        const entry = (version: string) => path.join(home, "runtime/versions", version, "ankiel");
         for (const version of ["1.0.0", "2.0.0"]) {
           yield* fs.makeDirectory(path.dirname(entry(version)), { recursive: true });
           yield* fs.writeFileString(entry(version), '#!/bin/sh\nprintf \'[%s]\\n\' "$0" "$@"\n', {
             mode: 0o755,
           });
         }
-        const launcher = path.join(root, "bin/ac");
-        const alias = path.join(root, "alias/ac");
+        const launcher = path.join(root, "bin/ankiel");
+        const alias = path.join(root, "alias/ankiel");
         yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
         yield* fs.makeDirectory(path.dirname(alias), { recursive: true });
         yield* fs.writeFileString(launcher, posixLauncherScript(entry("1.0.0")), { mode: 0o755 });
@@ -301,7 +301,7 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
 
         // Like the shell, a relative PATH entry resolves from the working directory, and a
         // script nobody can execute is passed over.
-        const unrunnable = path.join(root, "unrunnable/ac");
+        const unrunnable = path.join(root, "unrunnable/ankiel");
         yield* fs.makeDirectory(path.dirname(unrunnable), { recursive: true });
         yield* fs.writeFileString(unrunnable, posixLauncherScript(entry("2.0.0")), { mode: 0o644 });
         yield* fs.writeFileString(launcher, posixLauncherScript(entry("2.0.0")), { mode: 0o755 });
@@ -329,12 +329,12 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
   it.effect.each([
     { name: "no launcher records", recorded: undefined },
     { name: "an empty launcher record", recorded: "" },
-    { name: "whole launcher records", recorded: "/opt/ac\n" },
-    { name: "Windows launcher records", recorded: "C:\\ac.cmd\r\n" },
+    { name: "whole launcher records", recorded: "/opt/ankiel\n" },
+    { name: "Windows launcher records", recorded: "C:\\ankiel.cmd\r\n" },
     // An interrupted append cut this record short.
     { name: "an unterminated launcher record", recorded: "/opt/t" },
-    // Another process's append is cut short after ac update reads the records.
-    { name: "a record cut short after the read", recorded: "/opt/ac\n", cut: "/opt/t" },
+    // Another process's append is cut short after ankiel update reads the records.
+    { name: "a record cut short after the read", recorded: "/opt/ankiel\n", cut: "/opt/t" },
   ])("keeps the runtime a repointed launcher off PATH points at with $name", ({ recorded, cut }) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -344,7 +344,7 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
       for (const version of ["1.0.0", "2.0.0"]) {
         const directory = path.join(root, "runtime/versions", version);
         yield* fs.makeDirectory(directory, { recursive: true });
-        yield* fs.writeFileString(path.join(directory, "ac"), "");
+        yield* fs.writeFileString(path.join(directory, "ankiel"), "");
         yield* fs.writeFileString(path.join(directory, ".install-complete"), `${version}\n`);
         yield* fs.utimes(path.join(directory, ".install-complete"), 0, 0);
       }
@@ -352,14 +352,14 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
         yield* fs.writeFileString(path.join(root, "runtime/launchers"), recorded);
       }
       // A launcher in the Ankiel home itself, which neither PATH nor the default bin dir reaches.
-      const launcher = path.join(root, "ac");
-      yield* fs.symlink(path.join(root, "runtime/versions/1.0.0/ac"), launcher);
+      const launcher = path.join(root, "ankiel");
+      yield* fs.symlink(path.join(root, "runtime/versions/1.0.0/ankiel"), launcher);
 
       const launchersFile = path.join(root, "runtime/launchers");
       yield* repointLauncher({
         launchedAs: launcher,
         baseDir: root,
-        targetEntryPath: path.join(root, "runtime/versions/2.0.0/ac"),
+        targetEntryPath: path.join(root, "runtime/versions/2.0.0/ankiel"),
       }).pipe(
         Effect.provideService(FileSystem.FileSystem, {
           ...fs,
@@ -375,7 +375,7 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
               ),
         }),
       );
-      // A later server start prunes with no idea how this machine launches ac.
+      // A later server start prunes with no idea how this machine launches ankiel.
       const removed = yield* prunePinnedRuntimes({ baseDir: root, keep: [] }).pipe(
         Effect.provideService(ProcessRunner.ProcessRunner, unrelatedLsof),
         Effect.provideService(HostProcess.Platform, "darwin"),
@@ -386,7 +386,7 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
       assert.deepStrictEqual(removed, ["1.0.0"]);
       assert.equal(
         yield* readPosixLauncherTarget(launcher),
-        path.join(root, "runtime/versions/2.0.0/ac"),
+        path.join(root, "runtime/versions/2.0.0/ankiel"),
       );
     }).pipe(Effect.provideService(HostProcess.Platform, "linux")),
   );
@@ -395,9 +395,9 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-update-" });
-    const oldExe = path.join(root, "runtime/versions/1.0.0/ac");
-    const newExe = path.join(root, "runtime/versions/2.0.0/ac");
-    const launcher = path.join(root, "ac");
+    const oldExe = path.join(root, "runtime/versions/1.0.0/ankiel");
+    const newExe = path.join(root, "runtime/versions/2.0.0/ankiel");
+    const launcher = path.join(root, "ankiel");
     for (const file of [oldExe, newExe]) {
       yield* fs.makeDirectory(path.dirname(file), { recursive: true });
       yield* fs.writeFileString(file, "");
@@ -441,7 +441,7 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
   );
 
   it.effect.each(["recording", "repointing"] as const)(
-    "never leaves a repointed launcher unrecorded when ac update dies while %s",
+    "never leaves a repointed launcher unrecorded when ankiel update dies while %s",
     (step) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -456,11 +456,11 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
             ...fs,
             writeFileString: (path, data, options) =>
               step === "recording" && path === launchersFile
-                ? Effect.die("ac update was killed")
+                ? Effect.die("ankiel update was killed")
                 : fs.writeFileString(path, data, options),
             rename: (from, to) =>
               step === "repointing" && to === launcher
-                ? Effect.die("ac update was killed")
+                ? Effect.die("ankiel update was killed")
                 : fs.rename(from, to),
           }),
           Effect.exit,
@@ -481,12 +481,12 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-update-" });
-      const newExe = path.join(root, "runtime/versions/2.0.0/ac");
-      const copy = path.join(root, "copy/ac");
-      const foreign = path.join(root, "foreign/ac");
-      const elsewhere = path.join(root, "elsewhere/ac");
-      const otherHome = path.join(root, "other/runtime/versions/1.0.0/ac");
-      const otherLauncher = path.join(root, "other/bin/ac");
+      const newExe = path.join(root, "runtime/versions/2.0.0/ankiel");
+      const copy = path.join(root, "copy/ankiel");
+      const foreign = path.join(root, "foreign/ankiel");
+      const elsewhere = path.join(root, "elsewhere/ankiel");
+      const otherHome = path.join(root, "other/runtime/versions/1.0.0/ankiel");
+      const otherLauncher = path.join(root, "other/bin/ankiel");
       for (const file of [newExe, copy, elsewhere, otherHome]) {
         yield* fs.makeDirectory(path.dirname(file), { recursive: true });
         yield* fs.writeFileString(file, "");
@@ -515,24 +515,24 @@ it.layer(NodeServices.layer)("ac update launcher", (it) => {
       const path = yield* Path.Path;
       const delimiter = (yield* HostProcess.Platform) === "win32" ? ";" : ":";
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-update-" });
-      const launcher = path.join(root, "bin/ac");
+      const launcher = path.join(root, "bin/ankiel");
       yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
       yield* fs.writeFileString(launcher, "", { mode: 0o755 });
 
       const bare = yield* resolveLauncherPath.pipe(
-        Effect.provideService(HostProcess.InvokedAs, "ac"),
+        Effect.provideService(HostProcess.InvokedAs, "ankiel"),
         Effect.provideService(HostProcess.Environment, {
           PATH: [path.join(root, "missing"), path.join(root, "bin")].join(delimiter),
         }),
         Effect.provideService(HostProcess.WorkingDirectory, root),
       );
       const relative = yield* resolveLauncherPath.pipe(
-        Effect.provideService(HostProcess.InvokedAs, "./bin/ac"),
+        Effect.provideService(HostProcess.InvokedAs, "./bin/ankiel"),
         Effect.provideService(HostProcess.Environment, { PATH: "" }),
         Effect.provideService(HostProcess.WorkingDirectory, root),
       );
       const absent = yield* resolveLauncherPath.pipe(
-        Effect.provideService(HostProcess.InvokedAs, "ac"),
+        Effect.provideService(HostProcess.InvokedAs, "ankiel"),
         Effect.provideService(HostProcess.Environment, { PATH: path.join(root, "missing") }),
         Effect.provideService(HostProcess.WorkingDirectory, root),
       );
@@ -562,7 +562,7 @@ const withoutTerminals = Effect.acquireRelease(
     }),
 );
 
-it.layer(NodeServices.layer)("ac update with a background service", (it) => {
+it.layer(NodeServices.layer)("ankiel update with a background service", (it) => {
   it.effect("names the version a service with a pending restart still runs", () =>
     Effect.gen(function* () {
       yield* withoutTerminals;
@@ -576,7 +576,7 @@ it.layer(NodeServices.layer)("ac update with a background service", (it) => {
       yield* fs.writeFileString(runtime.sentinelPath, `${version}\n`);
       const unitPath = path.join(baseDir, "ankielcode.service");
       const logPath = path.join(baseDir, "boot-service.log");
-      // An earlier `ac update` pointed the service at this version without restarting it.
+      // An earlier `ankiel update` pointed the service at this version without restarting it.
       const service = Layer.mock(BootService.BootService, {
         status: Effect.succeed<BootService.BootServiceStatus>({
           supported: true,
@@ -635,7 +635,7 @@ it.layer(NodeServices.layer)("ac update with a background service", (it) => {
 
       assert.include(
         output,
-        `Background service still running the version before ${version}. Run \`ac service restart\` when you are ready to switch it to ${version}.`,
+        `Background service still running the version before ${version}. Run \`ankiel service restart\` when you are ready to switch it to ${version}.`,
       );
     }).pipe(
       Effect.provideService(HostProcess.Platform, "linux"),
@@ -644,7 +644,7 @@ it.layer(NodeServices.layer)("ac update with a background service", (it) => {
   );
 });
 
-it.layer(NodeServices.layer)("ac update checks the database before switching", (it) => {
+it.layer(NodeServices.layer)("ankiel update checks the database before switching", (it) => {
   const preflightOutput = (stdout: string, code = 0) => ({
     stdout,
     stderr: code === 0 ? "" : "Unknown command: __service-preflight",
@@ -683,7 +683,7 @@ it.layer(NodeServices.layer)("ac update checks the database before switching", (
       launcherProtocol: 3,
       preflight: preflightOutput("", 1),
       failure:
-        "@ankielcode/cli@0.1.8 could not confirm it supports this database (its check exited with code 1), so ac did not switch to it.",
+        "@ankielcode/cli@0.1.8 could not confirm it supports this database (its check exited with code 1), so ankiel did not switch to it.",
     },
     {
       // Newer builds keep accepting the current launcher protocol, which may drop 3.
@@ -727,7 +727,7 @@ it.layer(NodeServices.layer)("ac update checks the database before switching", (
           }
           // A target's --version always answers, whatever its database support.
           return input.args?.includes("--version") === true
-            ? Effect.succeed(preflightOutput(`ac v${targetVersion}\n`))
+            ? Effect.succeed(preflightOutput(`ankiel v${targetVersion}\n`))
             : unrelatedLsof.run(input);
         },
       });

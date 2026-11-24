@@ -4,7 +4,7 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 
-import { runPromise, test, WEB } from "./ac.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 // A raw-mode program that turns on bracketed paste, logs every byte it receives to `received`,
 // and exits once the paste's closing marker arrives.
@@ -45,10 +45,10 @@ const compare = (received: Uint8Array) => ({
 test(
   "A web terminal paste larger than one write reaches the program intact",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     await browser.emulateMedia({ colorScheme: "dark" });
-    const project = await ac.project("demo", { "paste-probe.mjs": PROBE });
-    const thread = await ac.thread({ project, title: "Paste", messages: ["hello"] });
+    const project = await ankiel.project("demo", { "paste-probe.mjs": PROBE });
+    const thread = await ankiel.thread({ project, title: "Paste", messages: ["hello"] });
     const read = (file: string) =>
       runPromise(
         Effect.gen(function* () {
@@ -63,7 +63,7 @@ test(
           return compare(yield* fs.readFile(`${project}/received`));
         }).pipe(Effect.orElseSucceed(() => compare(new Uint8Array()))),
       );
-    await ac.open(thread);
+    await ankiel.open(thread);
 
     await screen.getByRole("button", "Toggle terminal drawer").tap();
     const terminal = screen.getByLabel("Terminal input");

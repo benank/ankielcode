@@ -214,7 +214,7 @@ const command = Effect.fn("nativeClient.command")(function* (
         ...(sdk ? { ANDROID_HOME: sdk } : {}),
         APP_VARIANT: "development",
         MOBILE_VERSION_POLICY: "appVersion",
-        AC_IOS_PERSONAL_TEAM: "0",
+        ANKIEL_IOS_PERSONAL_TEAM: "0",
         CI: "1",
         EXPO_NO_GIT_STATUS: "1",
         // macOS tar otherwise adds AppleDouble entries that change the extracted bundle.
@@ -255,12 +255,12 @@ const fingerprint = Effect.fn("nativeClient.fingerprint")(function* (platform: N
     "--eval",
     // Same hash on every machine: generated native projects and the config's `extra` (env-specific
     // values a dev client reads from Metro) stay out, so a Mac and a Linux VM share builds.
-    `const f = require('expo/fingerprint'); f.createFingerprintAsync(process.cwd(), { platforms: [process.argv[1]], silent: true, ignorePaths: ['android/**', 'ios/**'], sourceSkips: f.DEFAULT_SOURCE_SKIPS | f.SourceSkips.ExpoConfigExtraSection }).then(fp => console.log('AC_NATIVE_FINGERPRINT=' + fp.hash)).catch(e => { console.error(e); process.exitCode = 1; });`,
+    `const f = require('expo/fingerprint'); f.createFingerprintAsync(process.cwd(), { platforms: [process.argv[1]], silent: true, ignorePaths: ['android/**', 'ios/**'], sourceSkips: f.DEFAULT_SOURCE_SKIPS | f.SourceSkips.ExpoConfigExtraSection }).then(fp => console.log('ANKIEL_NATIVE_FINGERPRINT=' + fp.hash)).catch(e => { console.error(e); process.exitCode = 1; });`,
     platform,
   ]);
   const hash = output
     .split("\n")
-    .find((line) => line.startsWith("AC_NATIVE_FINGERPRINT="))
+    .find((line) => line.startsWith("ANKIEL_NATIVE_FINGERPRINT="))
     ?.split("=")[1];
   if (!hash || !/^[a-f0-9]{40,64}$/.test(hash))
     return yield* new NativeClientError({ message: "Expo did not return a native fingerprint." });
@@ -463,7 +463,7 @@ interface RemoteCache {
 const remoteCache = Effect.fn("nativeClient.remoteCache")(
   function* (home: string) {
     const environment = yield* HostProcess.Environment;
-    if (environment.AC_NATIVE_CLIENT_CACHE === "off") return null;
+    if (environment.ANKIEL_NATIVE_CLIENT_CACHE === "off") return null;
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const { endpoint } = yield* decodeEndpoint(
@@ -870,10 +870,10 @@ const buildInCi = Effect.fn("nativeClient.buildInCi")(
   ) {
     const environment = yield* HostProcess.Environment;
     // The workflow itself runs this script: it must build, never dispatch.
-    if (environment.GITHUB_ACTIONS === "true" || environment.AC_NATIVE_CLIENT_BUILD === "local")
+    if (environment.GITHUB_ACTIONS === "true" || environment.ANKIEL_NATIVE_CLIENT_BUILD === "local")
       return false;
     if (!(yield* isCommandAvailable("gh"))) return false;
-    const repository = environment.AC_NATIVE_CLIENT_REPOSITORY ?? "benank/ankielcode";
+    const repository = environment.ANKIEL_NATIVE_CLIENT_REPOSITORY ?? "benank/ankielcode";
     const { repo } = yield* roots;
     const sha = yield* command("git", ["rev-parse", "HEAD"], false, repo);
     const pushed = yield* command(
@@ -1017,9 +1017,9 @@ export const resolveArtifact = Effect.fn("nativeClient.resolveArtifact")(functio
   yield* build(platform, abi, directory, fingerprint);
   yield* writeBuildMs(directory, (yield* Clock.currentTimeMillis) - started);
   yield* prune(path.dirname(directory), fingerprint);
-  if (remote && (yield* HostProcess.Environment).AC_NATIVE_CLIENT_CACHE !== "read") {
+  if (remote && (yield* HostProcess.Environment).ANKIEL_NATIVE_CLIENT_CACHE !== "read") {
     // The CI workflow exists to share the client: there a failed upload fails the run.
-    const required = (yield* HostProcess.Environment).AC_NATIVE_CLIENT_SHARE === "required";
+    const required = (yield* HostProcess.Environment).ANKIEL_NATIVE_CLIENT_SHARE === "required";
     yield* upload(remote, platform, key, directory).pipe(
       Effect.catch((error) =>
         required
@@ -1336,7 +1336,10 @@ const main = Command.make(
     const stamp = DateTime.formatIso(DateTime.makeUnsafe(started)).replaceAll(":", "-");
     const log = path.join(logs, `${stamp}-${platform}.log`);
     const result = yield* ensureClient(operations).pipe(
-      Effect.provideService(BuildLog, environment.AC_NATIVE_CLIENT_VERBOSE === "1" ? null : log),
+      Effect.provideService(
+        BuildLog,
+        environment.ANKIEL_NATIVE_CLIENT_VERBOSE === "1" ? null : log,
+      ),
     );
     const seconds = Math.round(((yield* Clock.currentTimeMillis) - started) / 1000);
     yield* Console.error(

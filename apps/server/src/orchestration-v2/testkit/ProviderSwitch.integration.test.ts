@@ -3215,7 +3215,7 @@ describe("orchestration v2 provider switching", () => {
           type: "thread.metadata.update",
           commandId: CommandId.make(`command:${key}:release`),
           threadId: scenarioThreadId,
-          branch: `ac/${key}`,
+          branch: `ankiel/${key}`,
           worktreePath,
           expectedWorktreePath: null,
         });

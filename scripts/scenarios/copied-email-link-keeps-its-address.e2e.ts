@@ -2,17 +2,17 @@
 // The DOM lib types the function this scenario runs in the page.
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 const MESSAGE = "Contact [Support](mailto:support@example.com?subject=Help) for help.";
 
 test(
   "A copied message pastes its labelled email link with the address",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Support", messages: [MESSAGE] });
-    await ac.open(thread);
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Support", messages: [MESSAGE] });
+    await ankiel.open(thread);
     // A message sent through the CLI shows collapsed under its sender.
     await screen.getByRole("button", /^Agent Contact/).tap();
     await expect(screen.getByRole("link", "Support")).toBeVisible();

@@ -329,12 +329,12 @@ export function ServerUpdateAction({
         type: "success",
         title: updatesInstall ? gt("Update command copied") : gt("Relaunch command copied"),
         description: updatesInstall
-          ? gt("Run `{command}` on {serverLabel}, then restart ac with your usual options.", {
+          ? gt("Run `{command}` on {serverLabel}, then restart ankiel with your usual options.", {
               command,
               serverLabel,
             })
           : gt(
-              "Stop ac on {serverLabel}, then relaunch with `{command}` using the same subcommand and options. This does not update an installed ac command.",
+              "Stop ankiel on {serverLabel}, then relaunch with `{command}` using the same subcommand and options. This does not update an installed ankiel command.",
               { command, serverLabel },
             ),
       });

@@ -45,7 +45,7 @@ effectIt.effect("hydrates PATH when the desktop handoff is absent", () =>
     Effect.sync(() =>
       vi
         .spyOn(NodeChildProcess, "execFileSync")
-        .mockReturnValue("__AC_ENV_PATH_START__\n/opt/tools/bin\n__AC_ENV_PATH_END__\n"),
+        .mockReturnValue("__ANKIEL_ENV_PATH_START__\n/opt/tools/bin\n__ANKIEL_ENV_PATH_END__\n"),
     ),
     (probe) =>
       Effect.gen(function* () {
@@ -73,7 +73,7 @@ effectIt.effect("waits longer for a login shell that times out at startup", () =
       vi.spyOn(NodeChildProcess, "execFileSync").mockImplementation((file, _args, options) => {
         // This profile takes 8 seconds while the machine is under load.
         if ((options?.timeout ?? 0) < 8_000) throw timedOut(String(file));
-        return "__AC_ENV_PATH_START__\n/opt/tools/bin\n__AC_ENV_PATH_END__\n";
+        return "__ANKIEL_ENV_PATH_START__\n/opt/tools/bin\n__ANKIEL_ENV_PATH_END__\n";
       }),
     ),
     () =>
@@ -124,12 +124,12 @@ effectIt.effect("keeps mise's PATH record with the login shell PATH", () =>
         .spyOn(NodeChildProcess, "execFileSync")
         .mockReturnValue(
           [
-            "__AC_ENV_PATH_START__",
+            "__ANKIEL_ENV_PATH_START__",
             "/home/me/.local/bin:/mise/installs/claude/latest:/mise/shims",
-            "__AC_ENV_PATH_END__",
-            "__AC_ENV___MISE_DIFF_START__",
+            "__ANKIEL_ENV_PATH_END__",
+            "__ANKIEL_ENV___MISE_DIFF_START__",
             "mise-diff",
-            "__AC_ENV___MISE_DIFF_END__",
+            "__ANKIEL_ENV___MISE_DIFF_END__",
           ].join("\n"),
         ),
     ),
@@ -158,15 +158,15 @@ effectIt.effect(
           .spyOn(NodeChildProcess, "execFileSync")
           .mockReturnValue(
             [
-              "__AC_ENV_PATH_START__",
+              "__ANKIEL_ENV_PATH_START__",
               "/opt/homebrew/bin",
-              "__AC_ENV_PATH_END__",
-              "__AC_ENV_JAVA_HOME_START__",
+              "__ANKIEL_ENV_PATH_END__",
+              "__ANKIEL_ENV_JAVA_HOME_START__",
               "/opt/homebrew/opt/openjdk@17",
-              "__AC_ENV_JAVA_HOME_END__",
-              "__AC_ENV_AC_FEATURE_FLAGS_START__",
+              "__ANKIEL_ENV_JAVA_HOME_END__",
+              "__ANKIEL_ENV_ANKIEL_FEATURE_FLAGS_START__",
               "tanstack_source",
-              "__AC_ENV_AC_FEATURE_FLAGS_END__",
+              "__ANKIEL_ENV_ANKIEL_FEATURE_FLAGS_END__",
             ].join("\n"),
           ),
       ),
@@ -177,7 +177,7 @@ effectIt.effect(
             SHELL: "/bin/zsh",
             PATH: "/usr/bin",
             JAVA_HOME: "/custom/jdk",
-            AC_FEATURE_FLAGS: "",
+            ANKIEL_FEATURE_FLAGS: "",
           };
 
           for (const env of [missing, explicit]) {
@@ -190,8 +190,8 @@ effectIt.effect(
 
           assert.equal(missing.JAVA_HOME, "/opt/homebrew/opt/openjdk@17");
           assert.equal(explicit.JAVA_HOME, "/custom/jdk");
-          assert.equal(missing.AC_FEATURE_FLAGS, "tanstack_source");
-          assert.equal(explicit.AC_FEATURE_FLAGS, "");
+          assert.equal(missing.ANKIEL_FEATURE_FLAGS, "tanstack_source");
+          assert.equal(explicit.ANKIEL_FEATURE_FLAGS, "");
         }),
       (probe) => Effect.sync(() => probe.mockRestore()),
     ),

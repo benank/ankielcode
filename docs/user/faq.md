@@ -4,7 +4,7 @@
 
 No. A harness is what turns an LLM into an agent: it gives the model tools, a way to call them, runs them, and hands the results back. Claude Code is kind of a harness. It is an interface (the TUI, the Code tab in the desktop app) plus a harness underneath (the Anthropic Agent SDK). Codex is the same split: the app plus the Codex App Server. Ankiel Code uses those harnesses. It is not a harness, and it does not work without one.
 
-Chef = LLM. Kitchen = harness. Ankiel Code = the restaurant that lets you bring whatever kitchen you want. Our MCP is a cookbook we hand the kitchen, but the chef won't open it unless you tell them to :) I wrote the long version here: [What is a harness?](https://ac.gg/blog/post/what-is-a-harness)
+Chef = LLM. Kitchen = harness. Ankiel Code = the restaurant that lets you bring whatever kitchen you want. Our MCP is a cookbook we hand the kitchen, but the chef won't open it unless you tell them to :) I wrote the long version here: [What is a harness?](https://ankiel.gg/blog/post/what-is-a-harness)
 
 Bring your own: Claude Code, Codex, Cursor, Grok Build, OpenCode, Google Antigravity, Kiro, Pi, Muse Code, or fx. [Provider setup](./install.md#providers)
 
@@ -13,7 +13,7 @@ Bring your own: Claude Code, Codex, Cursor, Grok Build, OpenCode, Google Antigra
 We were inspired by the Codex desktop app, Conductor, Claude Desktop, and Cursor Glass, but none met our bar. What you get:
 
 - Bring your own sub. Claude, Codex, and whatever else you already have installed.
-- Best in class remote. Run `ac up` on any box and drive it from anywhere.
+- Best in class remote. Run `ankiel up` on any box and drive it from anywhere.
 - Best in class mobile app.
 - Truly 100% open source code (MIT). If we go the wrong direction, fork it under your own branding.
 
@@ -37,7 +37,7 @@ It shouldn't anymore. Ankiel Code drives Claude through Anthropic's Agent SDK, a
 
 ## How do I use Ankiel Code remotely?
 
-Your agents run wherever Ankiel Code runs: your desktop, a server, a VPS. You connect to it from anywhere. Run `ac up` on that machine and you get really good remote support. LAN pairing, Tailscale, and SSH all work, and [app.code.ankiel.com](https://app.code.ankiel.com) is the web client. [Remote access](./remote-access.md)
+Your agents run wherever Ankiel Code runs: your desktop, a server, a VPS. You connect to it from anywhere. Run `ankiel up` on that machine and you get really good remote support. LAN pairing, Tailscale, and SSH all work, and [app.code.ankiel.com](https://app.code.ankiel.com) is the web client. [Remote access](./remote-access.md)
 
 ## How do I use Ankiel Code on my phone?
 
@@ -75,7 +75,7 @@ Yes. On iPhone and Android, dictation uses on-device speech by default, with the
 
 ## Does it work on Windows, Mac, and Linux?
 
-Yes, all three. Desktop app, CLI, the works. One catch: there is no `ac` binary for Intel Macs, so use the desktop app there. Windows folks can also run agents inside WSL. [Install](./install.md)
+Yes, all three. Desktop app, CLI, the works. One catch: there is no `ankiel` binary for Intel Macs, so use the desktop app there. Windows folks can also run agents inside WSL. [Install](./install.md)
 
 ## Why is my provider not showing up?
 

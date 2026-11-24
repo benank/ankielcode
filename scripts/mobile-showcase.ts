@@ -71,7 +71,7 @@ const MOBILE_BUILD_ENV = {
   APP_VARIANT: "production",
   EXPO_NO_GIT_STATUS: "1",
   // iPad self-rotation needs the capture build's fullscreen mode (app.config.ts).
-  AC_SHOWCASE_CAPTURE_BUILD: "1",
+  ANKIEL_SHOWCASE_CAPTURE_BUILD: "1",
   JAVA_HOME:
     NodeProcess.env.JAVA_HOME ??
     (NodeProcess.platform === "darwin"

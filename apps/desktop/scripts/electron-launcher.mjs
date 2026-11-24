@@ -109,14 +109,14 @@ function shellSingleQuote(value) {
 export function makeDevelopmentEnvironmentScript(environment) {
   const envEntries = [
     ["VITE_DEV_SERVER_URL", environment.VITE_DEV_SERVER_URL],
-    ["AC_PORT", environment.AC_PORT],
-    ["AC_HOME", environment.AC_HOME],
-    ["AC_COMMIT_HASH", environment.AC_COMMIT_HASH],
-    ["AC_OTLP_TRACES_URL", environment.AC_OTLP_TRACES_URL],
-    ["AC_OTLP_EXPORT_INTERVAL_MS", environment.AC_OTLP_EXPORT_INTERVAL_MS],
-    ["AC_OTLP_HEADERS", environment.AC_OTLP_HEADERS],
-    ["AC_OTLP_PROTOCOL", environment.AC_OTLP_PROTOCOL],
-    ["AC_DESKTOP_APP_USER_MODEL_ID", APP_BUNDLE_ID],
+    ["ANKIEL_PORT", environment.ANKIEL_PORT],
+    ["ANKIEL_HOME", environment.ANKIEL_HOME],
+    ["ANKIEL_COMMIT_HASH", environment.ANKIEL_COMMIT_HASH],
+    ["ANKIEL_OTLP_TRACES_URL", environment.ANKIEL_OTLP_TRACES_URL],
+    ["ANKIEL_OTLP_EXPORT_INTERVAL_MS", environment.ANKIEL_OTLP_EXPORT_INTERVAL_MS],
+    ["ANKIEL_OTLP_HEADERS", environment.ANKIEL_OTLP_HEADERS],
+    ["ANKIEL_OTLP_PROTOCOL", environment.ANKIEL_OTLP_PROTOCOL],
+    ["ANKIEL_DESKTOP_APP_USER_MODEL_ID", APP_BUNDLE_ID],
   ].filter((entry) => typeof entry[1] === "string" && entry[1].trim().length > 0);
   return [
     ...envEntries.map(

@@ -258,10 +258,10 @@ describe("ThreadPullRequestServiceV2 reads", () => {
 
   it.effect("looks up a finished turn's branch once for all its turn-end events", () =>
     Effect.gen(function* () {
-      const thread = { ...threadShell("turn-end-thread"), branch: "ac/turn-end" };
+      const thread = { ...threadShell("turn-end-thread"), branch: "ankiel/turn-end" };
       const otherThread = {
         ...threadShell("other-turn-end-thread"),
-        branch: "ac/other-turn-end",
+        branch: "ankiel/other-turn-end",
       };
       const project: OrchestrationProjectShell = {
         id: thread.projectId,
@@ -683,7 +683,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
       };
       const child: OrchestrationV2ThreadShell = {
         ...threadShell("child-thread"),
-        branch: "ac/reply-ok",
+        branch: "ankiel/reply-ok",
         worktreePath: "/workspace/child",
         lineage: {
           rootThreadId: parent.id,
@@ -812,7 +812,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
       // Every start repeats the backfill, so it reads only the most recently updated threads.
       const older = Array.from({ length: 100 }, (_, index) => ({
         ...threadShell(`old-${index}`),
-        branch: `ac/old-${index}`,
+        branch: `ankiel/old-${index}`,
         worktreePath: `/workspace/worktrees/old-${index}`,
         settledAt: NOW,
         updatedAt: DateTime.subtract(NOW, { minutes: index + 1 }),

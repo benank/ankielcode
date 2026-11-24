@@ -2,13 +2,13 @@
 import type { IssueDetail, IssueRef } from "@ankielcode/contracts";
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "A failed issue refresh tells the reader what went wrong",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    await ac.project("demo");
+  async ({ ankiel, app, browser, screen }) => {
+    await ankiel.project("demo");
     await browser.addInitScript(() => {
       let rateLimited = false;
       Object.assign(window, {
@@ -102,7 +102,7 @@ test(
       };
     });
 
-    await ac.open("/issues?selectedProjectId=demo&tracker=github&scope=example/demo&key=42");
+    await ankiel.open("/issues?selectedProjectId=demo&tracker=github&scope=example/demo&key=42");
     await screen.getByText("Issue before the rate limit", { exact: true }).waitFor();
     await browser.evaluate(() => {
       (window as unknown as { armIssueRefreshFailure: () => void }).armIssueRefreshFailure();

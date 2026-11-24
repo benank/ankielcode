@@ -3342,7 +3342,7 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
         yield* runGit(repoDir, ["fetch", "origin"]);
         yield* runGit(repoDir, ["remote", "set-head", "origin", "main"]);
         yield* runGit(repoDir, ["checkout", "-b", "feature/from-dev", "origin/dev"]);
-        yield* runGit(repoDir, ["config", "branch.feature/from-dev.ac-merge-base", "dev"]);
+        yield* runGit(repoDir, ["config", "branch.feature/from-dev.ankiel-merge-base", "dev"]);
 
         const { manager, providerCalls } = yield* makeManager({
           providerScenario: {
@@ -6596,7 +6596,7 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
           "keep me\n",
         );
         expect(
-          (yield* runGit(repoDir, ["config", "branch.feature/pr-safe.ac-pull-request"])).stdout,
+          (yield* runGit(repoDir, ["config", "branch.feature/pr-safe.ankiel-pull-request"])).stdout,
         ).toBe("https://github.com/benank/codething-mvp/pull/91\n");
       }),
   );

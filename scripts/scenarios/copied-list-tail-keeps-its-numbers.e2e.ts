@@ -2,19 +2,19 @@
 // The DOM lib types the function this scenario runs in the page.
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "A copy that starts at a later list item and ends past the list keeps the shown numbers",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({
       project,
       title: "Steps",
       messages: ["Steps:\n\n1. Install\n2. Configure\n3. Deploy\n\nThen report back."],
     });
-    await ac.open(thread);
+    await ankiel.open(thread);
     // A message sent through the CLI shows collapsed under its sender.
     await screen.getByRole("button", /^Agent Steps/).tap();
     await expect(screen.getByText("Configure")).toBeVisible();

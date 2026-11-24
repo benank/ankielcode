@@ -43,7 +43,7 @@ const identityEnv = (home) => {
   const { label, machine } = JSON.parse(
     NodeFS.readFileSync(NodePath.join(home, "identity.json"), "utf8"),
   );
-  return { AC_ENVIRONMENT_LABEL: label, AC_ENVIRONMENT_MACHINE_KIND: machine };
+  return { ANKIEL_ENVIRONMENT_LABEL: label, ANKIEL_ENVIRONMENT_MACHINE_KIND: machine };
 };
 
 /**
@@ -141,8 +141,8 @@ export async function startEnvironment(
           FAKE_CLAUDE_LOG: NodePath.join(home, "fake-claude.log"),
         }
       : {}),
-    AC_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
-    AC_PORT_OFFSET: String(webPort - BASE_WEB_PORT),
+    ANKIEL_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
+    ANKIEL_PORT_OFFSET: String(webPort - BASE_WEB_PORT),
     ...env,
   };
   const runner = (mode, extra) => [
@@ -162,8 +162,8 @@ export async function startEnvironment(
     runner("dev:server", ["--host", host]),
     {
       ...baseEnv,
-      AC_DEV_ALLOWED_ORIGINS: [webOrigin, ...allowedOrigins].join(","),
-      AC_DEV_AUTH_TOKEN: token,
+      ANKIEL_DEV_ALLOWED_ORIGINS: [webOrigin, ...allowedOrigins].join(","),
+      ANKIEL_DEV_AUTH_TOKEN: token,
     },
     log,
   );
@@ -187,7 +187,7 @@ export async function startEnvironment(
     processes.push(spawn(runner("dev:web", ["--", "--host", "127.0.0.1"]), baseEnv, log));
     for (let i = 0; ; i++) {
       try {
-        if ((await fetch(`${webOrigin}/.well-known/ac/environment`)).ok) break;
+        if ((await fetch(`${webOrigin}/.well-known/ankiel/environment`)).ok) break;
       } catch {}
       if (i > 300) throw new Error(`web client for ${home} never answered; see ${log}`);
       await new Promise((r) => setTimeout(r, 500));
@@ -195,7 +195,7 @@ export async function startEnvironment(
   }
   const reachableHost = host === "0.0.0.0" || host === "::" ? "127.0.0.1" : host;
   const origin = `http://${reachableHost.includes(":") ? `[${reachableHost}]` : reachableHost}:${serverPort}`;
-  const descriptor = await (await fetch(`${origin}/.well-known/ac/environment`)).json();
+  const descriptor = await (await fetch(`${origin}/.well-known/ankiel/environment`)).json();
   return {
     home,
     origin,
@@ -302,7 +302,7 @@ export async function openBrowser({ width = 1440, height = 720, args = [] } = {}
 }
 
 /**
- * Writes link rows straight into a stopped server's database, as if `ac environment link` had
+ * Writes link rows straight into a stopped server's database, as if `ankiel environment link` had
  * made them. The server must have started once (migrations). The map probes each row's URLs
  * live: a row is "reachable" only while something there answers as that environment.
  * Rows: { environmentId, label, urls, access = "full-access", lastError = null }.

@@ -4,8 +4,8 @@ import * as NodePath from "node:path";
 
 import { expect } from "e2e";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 const DRAFT = "Draft summary the agent discarded";
 const REPLY = "Compaction did not finish.";
@@ -44,10 +44,10 @@ for await (const line of createInterface({ input: process.stdin })) {
 test(
   "A failed ACP compaction does not show the draft summary its agent cleared",
   WEB,
-  async ({ ac, app, screen }) => {
-    const project = await ac.project("demo");
+  async ({ ankiel, app, screen }) => {
+    const project = await ankiel.project("demo");
     const script = NodePath.join(project, "compaction-acp.mjs");
-    const settingsPath = NodePath.join(AC_HOME, "userdata/settings.json");
+    const settingsPath = NodePath.join(ANKIEL_HOME, "userdata/settings.json");
     const originalSettings = await NodeFSP.readFile(settingsPath, "utf8");
     const settings = JSON.parse(originalSettings);
     await NodeFSP.writeFile(script, ACP);
@@ -59,7 +59,7 @@ test(
     };
     try {
       await NodeFSP.writeFile(settingsPath, JSON.stringify(settings));
-      const { cli } = makeState(AC_HOME);
+      const { cli } = makeState(ANKIEL_HOME);
       // The watcher reloads settings asynchronously. Retry only before a thread was created.
       let threadId: string | undefined;
       for (let attempt = 0; attempt < 8 && threadId === undefined; attempt++) {
@@ -95,7 +95,7 @@ test(
       }
       if (threadId === undefined) throw new Error("Could not start the compaction turn.");
 
-      await ac.open({ threadId });
+      await ankiel.open({ threadId });
       await screen.getByText(REPLY, { exact: true }).waitFor({ timeout: 60_000 });
       const separator = screen.getByRole("separator", /^Context compaction failed/);
       await separator.waitFor({ timeout: 15_000 });

@@ -2,9 +2,9 @@ import { describe, expect, it } from "vite-plus/test";
 import {
   BUILT_IN_THEME_IDS,
   BUILT_IN_THEMES,
-  AC_CHAT_THEME,
-  AC_CODE_LIGHT_THEME_COLORS,
-  AC_CODE_DARK_THEME_COLORS,
+  ANKIEL_CHAT_THEME,
+  ANKIEL_CODE_LIGHT_THEME_COLORS,
+  ANKIEL_CODE_DARK_THEME_COLORS,
   MOBILE_THEME_IDS,
   getThemeColorsForAppearance,
 } from "@ankielcode/shared/themePalettes";
@@ -58,7 +58,7 @@ function compositeOver(overlay: string, background: string): string {
 
 describe("mobile themes", () => {
   it("declares every runtime theme variable in the static stylesheet", () => {
-    const generatedVariables = createMobileThemeVariables(AC_CHAT_THEME.colors, "light");
+    const generatedVariables = createMobileThemeVariables(ANKIEL_CHAT_THEME.colors, "light");
     expect(Object.keys(readDefaultMobileThemeVariables("light")).sort()).toEqual(
       Object.keys(generatedVariables).sort(),
     );
@@ -73,8 +73,8 @@ describe("mobile themes", () => {
       const colors = theme
         ? getThemeColorsForAppearance(theme, appearance)!
         : appearance === "dark"
-          ? AC_CODE_DARK_THEME_COLORS
-          : AC_CODE_LIGHT_THEME_COLORS;
+          ? ANKIEL_CODE_DARK_THEME_COLORS
+          : ANKIEL_CODE_LIGHT_THEME_COLORS;
       const variables =
         themeId === DEFAULT_MOBILE_THEME_ID
           ? readDefaultMobileThemeVariables(appearance)

@@ -696,7 +696,7 @@ const runCleanupTest = <A, E>(
 ) => effect.pipe(Effect.provide(cleanupTestLayer));
 
 const legacyCheckpointRef = (threadId: string, turn: number) =>
-  `refs/ac/checkpoints/${Base64Url.encode(threadId)}/turn/${turn}`;
+  `refs/ankiel/checkpoints/${Base64Url.encode(threadId)}/turn/${turn}`;
 
 const checkpointCleanupFixture = Effect.fn("test.checkpointCleanupFixture")(function* () {
   const sql = yield* SqlClient.SqlClient;
@@ -760,7 +760,7 @@ const checkpointCleanupFixture = Effect.fn("test.checkpointCleanupFixture")(func
       .execute({
         operation: "cleanup-test.list-checkpoints",
         cwd: repo,
-        args: ["for-each-ref", "--format=%(refname)", "refs/ac/"],
+        args: ["for-each-ref", "--format=%(refname)", "refs/ankiel/"],
         maxOutputBytes: 16 * 1024 * 1024,
       })
       .pipe(Effect.map(({ stdout }) => stdout.trim().split("\n").filter(Boolean).sort()));
@@ -837,7 +837,7 @@ describe("checkpoint ref cleanup", () => {
         const refs = yield* addThread("deleted", { deleted: true });
         yield* command(repo, ["symbolic-ref", refs[0]!, "refs/heads/main"]);
         const retained = [
-          "refs/ac/unrelated/0",
+          "refs/ankiel/unrelated/0",
           `${refs[1]}-other`,
           refs[1]!.replace(/1$/, "2/nested"),
         ];
@@ -1186,7 +1186,7 @@ it.live("removes clean submodules recursively, including deinitialized repositor
       ])).stdout.trim();
       yield* command(submodule, [
         "update-ref",
-        "refs/ac/orchestration-v2/checkpoints/test",
+        "refs/ankiel/orchestration-v2/checkpoints/test",
         checkpoint,
       ]);
       const admin = (yield* command(worktree, ["rev-parse", "--absolute-git-dir"])).stdout.trim();
@@ -1634,7 +1634,7 @@ describe("subagent worktree ownership", () => {
           scenario === "null-branch"
             ? null
             : scenario === "stale-branch"
-              ? "ac/15a6e5ae"
+              ? "ankiel/15a6e5ae"
               : "feature",
         worktreePath: fixture.worktree,
         lineage: {
@@ -1806,7 +1806,7 @@ describe("subagent worktree ownership", () => {
               change === "null-branch"
                 ? null
                 : change === "stale-branch"
-                  ? "ac/15a6e5ae"
+                  ? "ankiel/15a6e5ae"
                   : child.branch,
             settledAt: change === "settled" ? at(-20 * DAY_MS) : child.settledAt,
             updatedAt: change === "settled" || change === "resettled" ? at(0) : child.updatedAt,
@@ -2479,7 +2479,7 @@ describe("orphan worktree reports", () => {
           const config = yield* ServerConfig.ServerConfig;
           const checkout = yield* fs.makeTempDirectoryScoped({ prefix: "cleanup-dev-checkout-" });
           yield* fs.writeFileString(`${checkout}/.git`, "gitdir: /repo/.git/worktrees/dev\n");
-          const baseDir = worktreeHome ? `${checkout}/.ac` : config.baseDir;
+          const baseDir = worktreeHome ? `${checkout}/.ankiel` : config.baseDir;
           const fixture = yield* cleanupFixture().pipe(
             Effect.provideService(ServerConfig.ServerConfig, {
               ...config,

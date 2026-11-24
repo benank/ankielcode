@@ -2,17 +2,17 @@
 // The DOM lib types the function this scenario runs in the page.
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 const LINES = ["Plan", "   Step one", "   Step two", "        Detail a", "        Detail b"];
 
 test(
   "A sent message shows the spaces typed at the start of its lines",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Outline", messages: ["Start"] });
-    await ac.open(thread);
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Outline", messages: ["Start"] });
+    await ankiel.open(thread);
 
     const composer = screen.getByRole("textbox");
     for (const [index, line] of LINES.entries()) {

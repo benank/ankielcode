@@ -146,7 +146,7 @@ export function ProjectActionsSettings() {
                 <MenuPopup align="end">
                   <MenuGroup>
                     <MenuGroupLabel>
-                      <T>Import from ac.json</T>
+                      <T>Import from ankiel.json</T>
                     </MenuGroupLabel>
                     <p className="px-2 pb-2 text-pretty text-sm text-muted-foreground">
                       <T>Add actions declared by this checkout without editing them first.</T>
@@ -199,9 +199,9 @@ export function ProjectActionsSettings() {
       )}
       {ankielFile.status === "invalid" ? (
         <SettingsRow
-          title={gt("ac.json is invalid")}
+          title={gt("ankiel.json is invalid")}
           description={gt(
-            "An ac.json exists in this checkout but fails to parse, so every action and icon it declares is ignored. Check the JSON syntax and icon values.",
+            "An ankiel.json exists in this checkout but fails to parse, so every action and icon it declares is ignored. Check the JSON syntax and icon values.",
           )}
           className="text-warning"
         />

@@ -3,8 +3,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { makeState, rpcClient, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { makeState, rpcClient, runPromise, test, WEB } from "./ankiel.ts";
 
 const KEPT = "a".repeat(199);
 // The emoji's two UTF-16 units straddle unit 200, where the server cuts a run's title.
@@ -17,14 +17,14 @@ const DEFINITION = `export default Ankiel.workflow("titled", { version: 1, paylo
 test(
   "A long workflow run title ends without a broken character",
   WEB,
-  async ({ ac, app, screen }) => {
+  async ({ ankiel, app, screen }) => {
     const definition = await runPromise(
-      Effect.map(Path.Path, (path) => path.join(AC_HOME, "workflows/titled.ts")),
+      Effect.map(Path.Path, (path) => path.join(ANKIEL_HOME, "workflows/titled.ts")),
     );
     const workflowsOn = (on: boolean) =>
       runPromise(
         Effect.gen(function* () {
-          const client = yield* rpcClient(AC_HOME, app.baseUrl ?? "");
+          const client = yield* rpcClient(ANKIEL_HOME, app.baseUrl ?? "");
           yield* client["server.updateSettings"]({ patch: { workflowsEnabled: on } });
         }).pipe(Effect.scoped),
       );
@@ -37,13 +37,13 @@ test(
           yield* fs.writeFileString(definition, DEFINITION);
         }),
       );
-      await ac.project("demo");
+      await ankiel.project("demo");
       await workflowsOn(true);
       const started = await runPromise(
-        makeState(AC_HOME).cli(["workflow", "start", "titled", "--key", "one", "--json"]),
+        makeState(ANKIEL_HOME).cli(["workflow", "start", "titled", "--key", "one", "--json"]),
       );
       const { run } = JSON.parse(started.stdout);
-      await ac.open(`/workflows?run=${run.runId}`);
+      await ankiel.open(`/workflows?run=${run.runId}`);
 
       // Until the title activity commits, the heading is the workflow's name and key.
       const heading = screen.getByRole("heading", KEPT, { exact: false });

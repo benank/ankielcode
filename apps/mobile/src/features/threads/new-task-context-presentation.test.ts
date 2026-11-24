@@ -112,14 +112,14 @@ describe("resolveNewTaskLocalWorkspaceSelection", () => {
     expect(
       resolveNewTaskLocalWorkspaceSelection({
         branches: [
-          { name: "feature/split", current: true, worktreePath: "/repo/.ac/worktrees/split" },
+          { name: "feature/split", current: true, worktreePath: "/repo/.ankiel/worktrees/split" },
           { name: "main", current: false, worktreePath: "/repo" },
         ],
         projectCwd: "/repo",
       }),
     ).toEqual({
       branch: "feature/split",
-      worktreePath: "/repo/.ac/worktrees/split",
+      worktreePath: "/repo/.ankiel/worktrees/split",
       awaitsCurrentBranch: false,
     });
   });
@@ -131,7 +131,7 @@ describe("resolveNewTaskBranchWorktreePath", () => {
       resolveNewTaskBranchWorktreePath({
         workspaceMode: "worktree",
         projectCwd: "/repo",
-        branchWorktreePath: "/repo/.ac/worktrees/feature",
+        branchWorktreePath: "/repo/.ankiel/worktrees/feature",
       }),
     ).toBeNull();
   });

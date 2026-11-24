@@ -2,10 +2,10 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import { EnvironmentId, ProviderInstanceId, ThreadId } from "@ankielcode/contracts";
 
 import {
-  AC_MCP_BEARER_ENV,
-  AC_MCP_URL_ENV,
-  AC_PI_RUNTIME_MODE_ENV,
-  AC_PI_MCP_EXTENSION_PATH_ENV,
+  ANKIEL_MCP_BEARER_ENV,
+  ANKIEL_MCP_URL_ENV,
+  ANKIEL_PI_RUNTIME_MODE_ENV,
+  ANKIEL_PI_MCP_EXTENSION_PATH_ENV,
 } from "./mcpExtensionSource.ts";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -18,7 +18,7 @@ import {
   materializePiAnkielMcpExtension,
   resolvePiLaunchArgs,
 } from "./mcpInjection.ts";
-import { PI_AC_MCP_EXTENSION_SOURCE } from "./mcpExtensionSource.ts";
+import { PI_ANKIEL_MCP_EXTENSION_SOURCE } from "./mcpExtensionSource.ts";
 
 const threadId = ThreadId.make("thread-pi-ankiel-mcp");
 
@@ -66,17 +66,20 @@ describe("pi Ankiel MCP injection", () => {
       "/tmp/cache/pi-ankiel-mcp-extension.ts",
     ]);
     assert.notInclude(launch.args, "--no-extensions");
-    assert.equal(launch.env[AC_MCP_URL_ENV], "http://127.0.0.1:43123/mcp");
-    assert.equal(launch.env[AC_MCP_BEARER_ENV], "secret-pi-token");
-    assert.equal(launch.env[AC_PI_RUNTIME_MODE_ENV], "approval-required");
-    assert.equal(launch.env[AC_PI_MCP_EXTENSION_PATH_ENV], "/tmp/cache/pi-ankiel-mcp-extension.ts");
+    assert.equal(launch.env[ANKIEL_MCP_URL_ENV], "http://127.0.0.1:43123/mcp");
+    assert.equal(launch.env[ANKIEL_MCP_BEARER_ENV], "secret-pi-token");
+    assert.equal(launch.env[ANKIEL_PI_RUNTIME_MODE_ENV], "approval-required");
+    assert.equal(
+      launch.env[ANKIEL_PI_MCP_EXTENSION_PATH_ENV],
+      "/tmp/cache/pi-ankiel-mcp-extension.ts",
+    );
 
     const permissionOnly = buildPiRpcLaunch({
       launchArgs: [],
       environment: {
-        [AC_MCP_URL_ENV]: "http://127.0.0.1:9999/stale",
-        [AC_MCP_BEARER_ENV]: "stale-token",
-        [AC_PI_MCP_EXTENSION_PATH_ENV]: "/stale/extension.ts",
+        [ANKIEL_MCP_URL_ENV]: "http://127.0.0.1:9999/stale",
+        [ANKIEL_MCP_BEARER_ENV]: "stale-token",
+        [ANKIEL_PI_MCP_EXTENSION_PATH_ENV]: "/stale/extension.ts",
       },
       mcpSession: undefined,
       extensionPath: "/tmp/cache/pi-ankiel-mcp-extension.ts",
@@ -88,11 +91,11 @@ describe("pi Ankiel MCP injection", () => {
       "--extension",
       "/tmp/cache/pi-ankiel-mcp-extension.ts",
     ]);
-    assert.isUndefined(permissionOnly.env[AC_MCP_URL_ENV]);
-    assert.isUndefined(permissionOnly.env[AC_MCP_BEARER_ENV]);
-    assert.equal(permissionOnly.env[AC_PI_RUNTIME_MODE_ENV], "auto-accept-edits");
+    assert.isUndefined(permissionOnly.env[ANKIEL_MCP_URL_ENV]);
+    assert.isUndefined(permissionOnly.env[ANKIEL_MCP_BEARER_ENV]);
+    assert.equal(permissionOnly.env[ANKIEL_PI_RUNTIME_MODE_ENV], "auto-accept-edits");
     assert.equal(
-      permissionOnly.env[AC_PI_MCP_EXTENSION_PATH_ENV],
+      permissionOnly.env[ANKIEL_PI_MCP_EXTENSION_PATH_ENV],
       "/tmp/cache/pi-ankiel-mcp-extension.ts",
     );
   });
@@ -195,9 +198,9 @@ describe("materializePiAnkielMcpExtension", () => {
             // partial read means the writer truncated the file mid-write.
             if (text.value.length === 0) {
               anomalies.push("empty: truncated mid-write");
-            } else if (text.value.length !== PI_AC_MCP_EXTENSION_SOURCE.length) {
+            } else if (text.value.length !== PI_ANKIEL_MCP_EXTENSION_SOURCE.length) {
               anomalies.push(
-                `partial: ${text.value.length} of ${PI_AC_MCP_EXTENSION_SOURCE.length} chars`,
+                `partial: ${text.value.length} of ${PI_ANKIEL_MCP_EXTENSION_SOURCE.length} chars`,
               );
             }
           }),

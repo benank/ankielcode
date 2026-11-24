@@ -654,7 +654,7 @@ it.effect.skipIf(windowsHost)(
         yield* fileSystem.chmod(filePath, 0o755);
       }
 
-      const target = "/home/ac/workspace [draft]/author's ‘$media/clip|draft.mp4";
+      const target = "/home/ankiel/workspace [draft]/author's ‘$media/clip|draft.mp4";
       let spawned: ChildProcess.StandardCommand | undefined;
       const result = yield* Effect.gen(function* () {
         const launcher = yield* ExternalLauncher.ExternalLauncher;
@@ -689,11 +689,11 @@ it.effect.skipIf(windowsHost)(
       assert.include(decodedCommand, "'Directory', 'Folder'");
       assert.include(
         decodedCommand,
-        "Invoke-Item -LiteralPath '\\\\wsl.localhost\\Ubuntu-24.04\\home\\ac\\workspace [draft]\\author''s ‘‘$media'",
+        "Invoke-Item -LiteralPath '\\\\wsl.localhost\\Ubuntu-24.04\\home\\ankiel\\workspace [draft]\\author''s ‘‘$media'",
       );
       assert.include(
         decodedCommand,
-        "'\\\\wsl.localhost\\Ubuntu-24.04\\home\\ac\\workspace [draft]\\author''s ‘‘$media\\clip|draft.mp4'",
+        "'\\\\wsl.localhost\\Ubuntu-24.04\\home\\ankiel\\workspace [draft]\\author''s ‘‘$media\\clip|draft.mp4'",
       );
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
 );
@@ -722,7 +722,7 @@ it.effect.each([
       return yield* launcher
         .launchEditor({
           editor: "file-manager",
-          cwd: "C:/Users/ac/my project/a,b.ts",
+          cwd: "C:/Users/ankiel/my project/a,b.ts",
           reveal: true,
         })
         .pipe(Effect.exit);
@@ -734,7 +734,7 @@ it.effect.each([
         layerTest({
           platform: "win32",
           env: { PATH: binDir, PATHEXT: ".COM;.EXE;.BAT;.CMD", SYSTEMROOT: "C:\\Windows" },
-          existingPaths: ["C:/Users/ac/my project/a,b.ts"],
+          existingPaths: ["C:/Users/ankiel/my project/a,b.ts"],
           onSpawn: (command) => spawned.push(command),
           spawnResult: (command) => (command.command.endsWith("reg.exe") ? registry : undefined),
         }),
@@ -748,7 +748,7 @@ it.effect.each([
     if (native) {
       assert.isTrue(Exit.isSuccess(exit));
       assert.deepEqual(verbatim, [
-        ["C:\\Windows\\explorer.exe", ['/select,"C:\\Users\\ac\\my project\\a,b.ts"']],
+        ["C:\\Windows\\explorer.exe", ['/select,"C:\\Users\\ankiel\\my project\\a,b.ts"']],
       ]);
     } else {
       assert.deepEqual(verbatim, []);

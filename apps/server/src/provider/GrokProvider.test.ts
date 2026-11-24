@@ -433,7 +433,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("checkGrokProvide
           });
           return yield* checkGrokProviderStatus(
             decodeGrokSettings({ enabled: true, binaryPath: grokPath }),
-            { ...process.env, XAI_API_KEY: "", AC_ACP_OMIT_INITIALIZE_MODEL_STATE: "1" },
+            { ...process.env, XAI_API_KEY: "", ANKIEL_ACP_OMIT_INITIALIZE_MODEL_STATE: "1" },
           );
         }),
       );

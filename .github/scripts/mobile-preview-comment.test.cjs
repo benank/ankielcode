@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
-process.env.AC_EAS_PROJECT_ID = "00000000-0000-4000-8000-000000000000";
+process.env.ANKIEL_EAS_PROJECT_ID = "00000000-0000-4000-8000-000000000000";
 const { main, mergeState, readState, render } = require("./mobile-preview-comment.cjs");
 
 const fingerprint = "c31608b37a8a2dca35ccee39cfd2ec7305042629";

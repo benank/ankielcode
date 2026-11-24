@@ -765,7 +765,7 @@ describe("scoped settings mixed values", () => {
 describe("project overrides at environment scope", () => {
   const laptop = EnvironmentId.make("laptop");
   const fleet = ProjectId.make("fleet");
-  const ac = ProjectId.make("ac");
+  const ankiel = ProjectId.make("ankiel");
   const environment = (
     environmentId: EnvironmentId,
     overrides: ServerSettings["projectSettingsOverrides"],
@@ -784,12 +784,12 @@ describe("project overrides at environment scope", () => {
       [
         environment(laptop, {
           [fleet]: { defaultAutoPull: true, defaultThreadEnvMode: "local" },
-          [ac]: { defaultAutoPull: true },
+          [ankiel]: { defaultAutoPull: true },
         }),
       ],
       [
         { environmentId: laptop, projectId: fleet },
-        { environmentId: laptop, projectId: ac },
+        { environmentId: laptop, projectId: ankiel },
       ],
       ["defaultAutoPull"],
     );
@@ -799,7 +799,7 @@ describe("project overrides at environment scope", () => {
         label: laptop,
         previous: expect.anything(),
         patch: {
-          projectSettingsOverrides: { [fleet]: { defaultThreadEnvMode: "local" }, [ac]: null },
+          projectSettingsOverrides: { [fleet]: { defaultThreadEnvMode: "local" }, [ankiel]: null },
         },
       },
     ]);

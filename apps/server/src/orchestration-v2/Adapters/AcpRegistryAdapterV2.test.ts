@@ -1525,7 +1525,7 @@ describe("AcpRegistryAdapterV2", () => {
                   spawn: {
                     command: process.execPath,
                     args: [mockAgentPath],
-                    env: { AC_ACP_SESSION_LIFECYCLE: "1", ...agentEnvironment },
+                    env: { ANKIEL_ACP_SESSION_LIFECYCLE: "1", ...agentEnvironment },
                   },
                 }),
             }),
@@ -1593,21 +1593,21 @@ describe("AcpRegistryAdapterV2", () => {
           args: [...selfInvocationArgs(selfInvocation, ["acp-mcp-bridge"])],
           env: [
             { name: "ELECTRON_RUN_AS_NODE", value: "1" },
-            { name: "AC_ACP_MCP_ENDPOINT", value: endpoint },
-            { name: "AC_ACP_MCP_AUTHORIZATION", value: authorization },
+            { name: "ANKIEL_ACP_MCP_ENDPOINT", value: endpoint },
+            { name: "ANKIEL_ACP_MCP_AUTHORIZATION", value: authorization },
           ],
         },
       ];
 
       assert.deepEqual(
-        yield* sessionMcpServers({ agentId: "github-copilot-cli" }, { AC_ACP_MCP_HTTP: "1" }),
+        yield* sessionMcpServers({ agentId: "github-copilot-cli" }, { ANKIEL_ACP_MCP_HTTP: "1" }),
         { new: http("Bearer opened-token"), load: http("Bearer rotated-token") },
       );
       const acp = [{ type: "acp", name: "ankiel-code", serverId: "ankiel-code" }];
       assert.deepEqual(
         yield* sessionMcpServers(
           { agentId: "github-copilot-cli" },
-          { AC_ACP_MCP_HTTP: "1", AC_ACP_MCP_ACP: "1" },
+          { ANKIEL_ACP_MCP_HTTP: "1", ANKIEL_ACP_MCP_ACP: "1" },
         ),
         { new: acp, load: acp },
       );
@@ -1615,10 +1615,13 @@ describe("AcpRegistryAdapterV2", () => {
         new: stdio("Bearer opened-token"),
         load: stdio("Bearer rotated-token"),
       });
-      assert.deepEqual(yield* sessionMcpServers({ agentId: "gemini" }, { AC_ACP_MCP_HTTP: "1" }), {
-        new: stdio("Bearer opened-token"),
-        load: stdio("Bearer rotated-token"),
-      });
+      assert.deepEqual(
+        yield* sessionMcpServers({ agentId: "gemini" }, { ANKIEL_ACP_MCP_HTTP: "1" }),
+        {
+          new: stdio("Bearer opened-token"),
+          load: stdio("Bearer rotated-token"),
+        },
+      );
       // Command Code cannot start the stdio bridge on Windows: it spawns MCP commands through
       // cmd.exe, which splits the unquoted Ankiel executable path at the space.
       const commandCode = {
@@ -1627,7 +1630,7 @@ describe("AcpRegistryAdapterV2", () => {
         commandArgs: ["acp"],
       };
       // Command Code is not Copilot: no deferred tool-exposure header.
-      assert.deepEqual(yield* sessionMcpServers(commandCode, { AC_ACP_MCP_HTTP: "1" }), {
+      assert.deepEqual(yield* sessionMcpServers(commandCode, { ANKIEL_ACP_MCP_HTTP: "1" }), {
         new: plainHttp("Bearer opened-token"),
         load: plainHttp("Bearer rotated-token"),
       });
@@ -1639,7 +1642,7 @@ describe("AcpRegistryAdapterV2", () => {
       assert.deepEqual(
         yield* sessionMcpServers(
           { source: "local", commandPath: "C:\\tools\\node.exe", commandArgs: ["agent.mjs"] },
-          { AC_ACP_MCP_HTTP: "1" },
+          { ANKIEL_ACP_MCP_HTTP: "1" },
         ),
         { new: stdio("Bearer opened-token"), load: stdio("Bearer rotated-token") },
       );
@@ -1693,7 +1696,7 @@ describe("AcpRegistryAdapterV2", () => {
                   spawn: {
                     command: process.execPath,
                     args: [mockAgentPath],
-                    env: { AC_ACP_SESSION_LIFECYCLE: "1" },
+                    env: { ANKIEL_ACP_SESSION_LIFECYCLE: "1" },
                   },
                 }),
             }),
@@ -1716,12 +1719,12 @@ describe("AcpRegistryAdapterV2", () => {
       );
       yield* withCapturedSpawns(runtime.ensureThread({ threadId, modelSelection, runtimePolicy }));
       const agentEnvironment = spawnEnvironments.find(
-        (environment) => environment?.AC_ACP_SESSION_LIFECYCLE === "1",
+        (environment) => environment?.ANKIEL_ACP_SESSION_LIFECYCLE === "1",
       );
       assert.isDefined(agentEnvironment, "the agent itself must have been spawned");
-      assert.equal(agentEnvironment?.AC_THREAD_ID, "thread-acp-registry-thread-env");
-      assert.equal(agentEnvironment?.AC_ACP_MCP_ENDPOINT, endpoint);
-      assert.equal(agentEnvironment?.AC_ACP_MCP_AUTHORIZATION, "Bearer thread-env-token");
+      assert.equal(agentEnvironment?.ANKIEL_THREAD_ID, "thread-acp-registry-thread-env");
+      assert.equal(agentEnvironment?.ANKIEL_ACP_MCP_ENDPOINT, endpoint);
+      assert.equal(agentEnvironment?.ANKIEL_ACP_MCP_AUTHORIZATION, "Bearer thread-env-token");
     }).pipe(Effect.provide(layerTest)),
   );
 
@@ -3262,7 +3265,8 @@ describe("AcpRegistryAdapterV2", () => {
               ...update("grandchild", {
                 sessionUpdate: "terminal_update",
                 terminalId: "nested-terminal",
-                command: "/usr/bin/node /srv/ac/bin.ts acp-mcp-call orchestrator_capabilities {}",
+                command:
+                  "/usr/bin/node /srv/ankiel/bin.ts acp-mcp-call orchestrator_capabilities {}",
               }),
               label: "nested-output",
             },

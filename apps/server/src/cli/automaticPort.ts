@@ -67,7 +67,7 @@ export const make = Effect.gen(function* () {
     }
     return yield* new CliError.UserError({
       cause:
-        "Windows is already using every port Ankiel Code tried. Pass --port or set AC_PORT to a port Windows is not using.",
+        "Windows is already using every port Ankiel Code tried. Pass --port or set ANKIEL_PORT to a port Windows is not using.",
     });
   });
 });

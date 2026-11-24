@@ -282,7 +282,7 @@ function normalizeThreadRequest(frame: unknown, ignoredConfigKeys: ReadonlySet<s
       ([key]) =>
         key !== "mcp_servers" &&
         !key.startsWith("mcp_servers.") &&
-        key !== "shell_environment_policy.set.AC_THREAD_ID",
+        key !== "shell_environment_policy.set.ANKIEL_THREAD_ID",
     ),
   );
   for (const key of ignoredConfigKeys) delete owned[key];

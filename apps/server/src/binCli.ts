@@ -44,16 +44,16 @@ import { statusCommand, upCommand } from "./cli/up.ts";
 const layerCliRuntime = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer);
 
 export const makeCli = () =>
-  Command.make("ac", { ...sharedServerCommandFlags }).pipe(
+  Command.make("ankiel", { ...sharedServerCommandFlags }).pipe(
     Command.withDescription(
-      "Run Ankiel Code in this terminal and open it in your browser. To use it from your other devices, run `ac up`.",
+      "Run Ankiel Code in this terminal and open it in your browser. To use it from your other devices, run `ankiel up`.",
     ),
     Command.withHandler(runDefaultServerCommand),
     Command.withSubcommands([
       Command.make("help").pipe(
         Command.withDescription("Show command help."),
         Command.withHandler(() =>
-          Effect.fail(new CliError.ShowHelp({ commandPath: ["ac"], errors: [] })),
+          Effect.fail(new CliError.ShowHelp({ commandPath: ["ankiel"], errors: [] })),
         ),
       ),
       acpMcpBridgeCommand,

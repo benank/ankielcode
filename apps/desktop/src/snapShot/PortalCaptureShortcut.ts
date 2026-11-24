@@ -296,7 +296,7 @@ export class PortalCaptureShortcut {
     body: unknown[],
     options: Record<string, Variant<unknown>> = {},
   ) {
-    const token = `ac_${NodeCrypto.randomUUID().replaceAll("-", "")}`;
+    const token = `ankiel_${NodeCrypto.randomUUID().replaceAll("-", "")}`;
     const expectedPath = this.namespace + token;
     let resolve!: (body: unknown) => void;
     const response = new Promise<unknown>((done) => {

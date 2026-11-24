@@ -55,10 +55,10 @@ describe("device tool helpers", () => {
     const text = agentDeviceQuickStart(
       device,
       ["--session", "thread-1", "--config", "/tmp/host.json"],
-      "/tmp/ac tools/agent-device",
+      "/tmp/ankiel tools/agent-device",
     );
     expect(text).toContain(
-      "'/tmp/ac tools/agent-device' snapshot -i --session thread-1 --config /tmp/host.json",
+      "'/tmp/ankiel tools/agent-device' snapshot -i --session thread-1 --config /tmp/host.json",
     );
     expect(text).not.toContain("  agent-device ");
     expect(text).not.toContain("is on PATH");

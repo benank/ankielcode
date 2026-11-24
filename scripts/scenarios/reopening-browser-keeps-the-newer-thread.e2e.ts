@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 interface ReopenGate {
   readonly closed: Promise<void>;
@@ -19,10 +19,10 @@ declare global {
 test(
   "A browser tab finishing its reopen leaves the newer conversation on screen",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    const owner = await ac.thread({ project, title: "Browser owner", messages: ["first"] });
-    await ac.thread({
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    const owner = await ankiel.thread({ project, title: "Browser owner", messages: ["first"] });
+    await ankiel.thread({
       project,
       title: "Newer conversation",
       messages: ["Stay in this conversation"],
@@ -73,7 +73,7 @@ test(
       };
     });
 
-    await ac.open(owner);
+    await ankiel.open(owner);
     await screen.getByRole("button", "Toggle right panel").tap();
     await screen.getByRole("button", "Browser B").tap();
     await screen.getByRole("button", "Close Browser", { exact: true }).tap();

@@ -205,7 +205,8 @@ function wireToEntries(wire: ReadonlyArray<WireMessage>): {
   return { entries, droppedFrames };
 }
 
-const AC_INSTRUCTIONS_BODY = /<ankiel_code_instructions>\n[\s\S]*?\n<\/ankiel_code_instructions>/u;
+const ANKIEL_INSTRUCTIONS_BODY =
+  /<ankiel_code_instructions>\n[\s\S]*?\n<\/ankiel_code_instructions>/u;
 
 function normalizeOutboundFrame(frame: Record<string, unknown>, runtimeInstructions: string) {
   const params = isRecord(frame.params) ? frame.params : undefined;
@@ -241,7 +242,7 @@ function normalizeOutboundFrame(frame: Record<string, unknown>, runtimeInstructi
               ? {
                   ...part,
                   text: part.text.replace(
-                    AC_INSTRUCTIONS_BODY,
+                    ANKIEL_INSTRUCTIONS_BODY,
                     "<ankiel_code_instructions>\n<any>\n</ankiel_code_instructions>",
                   ),
                 }
@@ -374,7 +375,10 @@ function normalizeEntries(input: {
 const DEFAULT_GROK_SETTINGS = Schema.decodeSync(GrokSettings)({});
 
 const RecorderEnv = Config.all({
-  AC_GROK_BIN: Config.String("AC_GROK_BIN").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  ANKIEL_GROK_BIN: Config.String("ANKIEL_GROK_BIN").pipe(
+    Config.option,
+    Config.map(Option.getOrUndefined),
+  ),
   HOME: Config.String("HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
   USER: Config.String("USER").pipe(Config.option, Config.map(Option.getOrUndefined)),
 });
@@ -414,7 +418,7 @@ const recordScenario = Effect.fn("recordGrokScenario")(function* (fixtureName: s
   };
 
   const tee = makeWireTee();
-  const settings = { ...DEFAULT_GROK_SETTINGS, binaryPath: recorderEnv.AC_GROK_BIN ?? "grok" };
+  const settings = { ...DEFAULT_GROK_SETTINGS, binaryPath: recorderEnv.ANKIEL_GROK_BIN ?? "grok" };
   const layerRegistry = ProviderAdapterRegistry.layerFromAdaptersEffect(
     Effect.gen(function* () {
       const environment = yield* HostProcess.Environment;

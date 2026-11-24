@@ -1,12 +1,12 @@
 import { tokenizeCliArgs } from "@ankielcode/shared/cliArgs";
 
-const AC_CODEX_LAUNCH_ARGS_ENV = "AC_CODEX_LAUNCH_ARGS";
+const ANKIEL_CODEX_LAUNCH_ARGS_ENV = "ANKIEL_CODEX_LAUNCH_ARGS";
 
 export const resolveCodexLaunchArgs = (
   launchArgs?: string,
   environment: NodeJS.ProcessEnv = process.env,
 ) => {
-  const override = environment[AC_CODEX_LAUNCH_ARGS_ENV];
+  const override = environment[ANKIEL_CODEX_LAUNCH_ARGS_ENV];
   return override?.trim() ? override : launchArgs?.trim() || "";
 };
 

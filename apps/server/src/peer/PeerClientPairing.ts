@@ -103,7 +103,7 @@ const makeIssuer = Effect.gen(function* () {
       });
     }
     // A full-access link's agents already run as this machine's user and could run
-    // `ac auth pairing create` themselves, so minting here adds no power. Any lower link would
+    // `ankiel auth pairing create` themselves, so minting here adds no power. Any lower link would
     // gain more than it holds, and so would one an administrator's ceiling holds below full access.
     if (
       !caller.peerLink ||

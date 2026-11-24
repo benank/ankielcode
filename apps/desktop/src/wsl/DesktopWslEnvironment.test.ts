@@ -120,12 +120,12 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
       [
         "set -eu",
         "work=$(mktemp -d)",
-        'stage="$work/stage/ac-0.0.0-linux-x64"',
+        'stage="$work/stage/ankiel-0.0.0-linux-x64"',
         'mkdir -p "$stage/node_modules/node-pty/build/Release" "$work/home"',
-        `printf '%s' ${sh(serverEntry)} > "$stage/ac"`,
-        'chmod +x "$stage/ac"',
+        `printf '%s' ${sh(serverEntry)} > "$stage/ankiel"`,
+        'chmod +x "$stage/ankiel"',
         `printf '%s' 'pty-native-payload' > "$stage/node_modules/node-pty/build/Release/pty.node"`,
-        `tar -czf "$work/wsl-runtime.tar.gz" -C "$work/stage" ac-0.0.0-linux-x64`,
+        `tar -czf "$work/wsl-runtime.tar.gz" -C "$work/stage" ankiel-0.0.0-linux-x64`,
         `printf 'work:%s\\n' "$work"`,
         `printf 'archiveSha:%s\\n' "$(sha256sum "$work/wsl-runtime.tar.gz" | cut -d ' ' -f 1)"`,
       ].join("\n"),
@@ -153,9 +153,9 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
       archivePath,
       archiveSha,
       runtimeId,
-      runtimeParent: `${work}/home/.ac/wsl-runtime`,
-      runtimeRoot: `${work}/home/.ac/wsl-runtime/${runtimeId}`,
-      serverEntry: `${work}/home/.ac/wsl-runtime/${runtimeId}/ac`,
+      runtimeParent: `${work}/home/.ankiel/wsl-runtime`,
+      runtimeRoot: `${work}/home/.ankiel/wsl-runtime/${runtimeId}`,
+      serverEntry: `${work}/home/.ankiel/wsl-runtime/${runtimeId}/ankiel`,
       installScript,
       install: (archive?: string, sha?: string, ankielHome?: string | null) =>
         runShell(installScript(archive, sha, ankielHome)),
@@ -204,19 +204,19 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
     expect(provider.stdout).toBe("linux-node-provider\n");
   });
 
-  it("stages the runtime under the login shell's AC_HOME and reports it to the launcher", () => {
+  it("stages the runtime under the login shell's ANKIEL_HOME and reports it to the launcher", () => {
     const fixture = createFixture();
-    const ankielHome = `${fixture.work}/home/.config/ac home`;
+    const ankielHome = `${fixture.work}/home/.config/ankiel home`;
     const install = fixture.install(undefined, undefined, ankielHome);
     expect(install.status, install.stderr).toBe(0);
     expect(parseWslRuntimeRoot(install.stdout)).toBe(
       `${ankielHome}/wsl-runtime/${fixture.runtimeId}`,
     );
-    expect(runShell(`test ! -e ${sh(`${fixture.work}/home/.ac`)}`).status).toBe(0);
+    expect(runShell(`test ! -e ${sh(`${fixture.work}/home/.ankiel`)}`).status).toBe(0);
 
     const probe = runShell(
       [
-        `bash() { ( export AC_HOME=${sh(ankielHome)}; eval "$2" ); }`,
+        `bash() { ( export ANKIEL_HOME=${sh(ankielHome)}; eval "$2" ); }`,
         buildWslRuntimeProbeScript(),
       ].join("\n"),
     );
@@ -322,9 +322,9 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         ': > "$work/tar-calls"',
         'PATH="$work/bin:$PATH"',
         "export PATH",
-        `cat > "$work/install.sh" <<'AC_INSTALL_SCRIPT'`,
+        `cat > "$work/install.sh" <<'ANKIEL_INSTALL_SCRIPT'`,
         fixture.installScript(),
-        "AC_INSTALL_SCRIPT",
+        "ANKIEL_INSTALL_SCRIPT",
         // Keep runtime roots out of both racers' argv so their /proc scans cannot match themselves.
         'sh "$work/install.sh" > "$work/first.out" 2>&1 &',
         "first=$!",
@@ -400,9 +400,9 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         'printf ready > "$runtime_parent/sha256-previous/.ankielcode-wsl-runtime-ready"',
         `touch -d "10 minutes ago" ${sh(fixture.runtimeRoot)}`,
         'touch -d "1 minute ago" "$runtime_parent/sha256-previous"',
-        `cat > ${sh(`${fixture.work}/select.sh`)} <<'AC_SELECT_SCRIPT'`,
+        `cat > ${sh(`${fixture.work}/select.sh`)} <<'ANKIEL_SELECT_SCRIPT'`,
         fixture.installScript(),
-        "AC_SELECT_SCRIPT",
+        "ANKIEL_SELECT_SCRIPT",
         `sh ${sh(`${fixture.work}/select.sh`)}`,
         `HOME=${sh(`${fixture.work}/home`)}`,
         "export HOME",
@@ -511,7 +511,7 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         "set -eu",
         "work=$(mktemp -d)",
         'home="$work/home"',
-        'runtime_parent="$home/.ac/wsl-runtime"',
+        'runtime_parent="$home/.ankiel/wsl-runtime"',
         'mkdir -p "$runtime_parent"',
         'make_ready() { mkdir -p "$runtime_parent/$1"; printf ready > "$runtime_parent/$1/.ankielcode-wsl-runtime-ready"; }',
         "make_ready sha256-current",
@@ -524,7 +524,7 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         'touch -d "4 minutes ago" "$runtime_parent/sha256-active"',
         'touch -d "3 minutes ago" "$runtime_parent/sha256-old"',
         'touch -d "2 minutes ago" "$runtime_parent/sha256-locked"',
-        holdRuntimeBusy('"$runtime_parent/sha256-active/ac"'),
+        holdRuntimeBusy('"$runtime_parent/sha256-active/ankiel"'),
         holdInstallLock('"$runtime_parent/.sha256-locked.install.lock"'),
         `HOME="$home"`,
         "export HOME",

@@ -40,7 +40,7 @@ Ankiel Code is forked from [T3 Code](https://github.com/pingdotgg/t3code) (MIT).
 
 ### Command line
 
-This installs the `ac` command. Run `ac` to start the server and open the web app.
+This installs the `ankiel` command. Run `ankiel` to start the server and open the web app.
 
 ```bash
 curl -fsSL https://code.ankiel.com/install.sh | sh

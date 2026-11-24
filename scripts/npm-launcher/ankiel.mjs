@@ -15,8 +15,8 @@ const SUPPORTED = ["darwin-arm64", "linux-arm64", "linux-x64", "win32-arm64", "w
 const TERMINATE_GRACE_MS = 5_000;
 
 function ankielHome() {
-  const raw = (process.env.AC_HOME || "").trim();
-  if (raw === "") return path.join(os.homedir(), ".ac");
+  const raw = (process.env.ANKIEL_HOME || "").trim();
+  if (raw === "") return path.join(os.homedir(), ".ankiel");
   if (raw === "~") return os.homedir();
   if (raw.startsWith("~/") || raw.startsWith("~\\")) return path.join(os.homedir(), raw.slice(2));
   return path.resolve(raw);
@@ -76,9 +76,9 @@ async function download(url, file) {
 }
 
 async function install(dir, key) {
-  const archive = `ac-${version}-${key}.${process.platform === "win32" ? "zip" : "tar.gz"}`;
+  const archive = `ankiel-${version}-${key}.${process.platform === "win32" ? "zip" : "tar.gz"}`;
   const base = (
-    process.env.AC_RELEASE_BASE_URL || "https://github.com/benank/ankielcode/releases/download"
+    process.env.ANKIEL_RELEASE_BASE_URL || "https://github.com/benank/ankielcode/releases/download"
   ).replace(/\/+$/, "");
   const sums = await (await get(`${base}/v${version}/SHA256SUMS`)).text();
   const expected = /^([0-9a-f]{64})\s+\*?(.+)$/im;
@@ -105,7 +105,7 @@ async function install(dir, key) {
     if (extract.status !== 0) throw new Error(`could not extract ${archive}`);
     fs.rmSync(file);
     const validate = spawnSync(
-      path.join(staging, process.platform === "win32" ? "ac.exe" : "ac"),
+      path.join(staging, process.platform === "win32" ? "ankiel.exe" : "ankiel"),
       ["--version"],
       {
         stdio: ["ignore", "ignore", "pipe"],
@@ -152,7 +152,7 @@ function publish(staging, dir) {
   } catch (error) {
     if (error.code !== "EEXIST") throw error;
     throw new Error(
-      `another ac is installing ${version}. If none is running, delete ${lock} and try again.`,
+      `another ankiel is installing ${version}. If none is running, delete ${lock} and try again.`,
       { cause: error },
     );
   }
@@ -188,12 +188,12 @@ async function main() {
   // Service IPC and signals must reach the child; terminal Ctrl-C already does, so do not forward SIGINT twice.
   const ipc = process.send !== undefined;
   const child = spawn(
-    path.join(dir, process.platform === "win32" ? "ac.exe" : "ac"),
+    path.join(dir, process.platform === "win32" ? "ankiel.exe" : "ankiel"),
     process.argv.slice(2),
     {
       stdio: ipc ? ["inherit", "inherit", "inherit", "ipc"] : "inherit",
       // The executable lives in the Ankiel home, so this is how it knows npm launched it.
-      env: { ...process.env, AC_NPM_LAUNCHER_PATH: import.meta.filename },
+      env: { ...process.env, ANKIEL_NPM_LAUNCHER_PATH: import.meta.filename },
     },
   );
   if (ipc) {
@@ -248,7 +248,7 @@ function executableError(key, detail) {
 }
 
 function fail(error) {
-  process.stderr.write(`ac: ${error.message}\n`);
+  process.stderr.write(`ankiel: ${error.message}\n`);
   process.exit(1);
 }
 

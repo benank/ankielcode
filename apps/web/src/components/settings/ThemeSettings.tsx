@@ -22,7 +22,7 @@ import {
   type ThemeAppearance,
   type ThemeDefinition,
   type ThemeHalves,
-  AC_CHAT_THEME,
+  ANKIEL_CHAT_THEME,
   EMBER_THEME,
   GROVE_THEME,
   IRIS_THEME,
@@ -56,7 +56,7 @@ import { ThemeWireframe } from "./ThemeWireframe";
 import { T, useGT } from "gt-react";
 
 const MAINTAINER_THEMES: ReadonlyArray<ThemeDefinition> = [
-  AC_CHAT_THEME,
+  ANKIEL_CHAT_THEME,
   GROVE_THEME,
   OCEAN_THEME,
   EMBER_THEME,

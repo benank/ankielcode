@@ -85,9 +85,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("ServerEnvironmen
       yield* fs.writeFileString(entry, "");
       yield* fs.writeFileString(
         `${prefix}/lib/node_modules/@ankielcode/cli/package.json`,
-        '{"name":"@ankielcode/cli","version":"0.0.45","bin":{"ac":"./dist/bin.mjs"}}',
+        '{"name":"@ankielcode/cli","version":"0.0.45","bin":{"ankiel":"./dist/bin.mjs"}}',
       );
-      yield* fs.symlink(entry, `${prefix}/bin/ac`);
+      yield* fs.symlink(entry, `${prefix}/bin/ankiel`);
       const config = yield* makeServerConfig(baseDir);
       yield* fs.makeDirectory(config.stateDir, { recursive: true });
       for (const mode of ["web", "desktop"] as const) {
@@ -181,8 +181,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("ServerEnvironmen
               ConfigProvider.layer(
                 ConfigProvider.fromEnv({
                   env: {
-                    AC_ENVIRONMENT_LABEL: " MacBook ",
-                    AC_ENVIRONMENT_MACHINE_KIND: "laptop",
+                    ANKIEL_ENVIRONMENT_LABEL: " MacBook ",
+                    ANKIEL_ENVIRONMENT_MACHINE_KIND: "laptop",
                   },
                 }),
               ),

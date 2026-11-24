@@ -23,7 +23,7 @@ const DOCUMENT_ICON_COLORS: Readonly<Record<string, string>> = {
   "ankiel-file-icon-epub": "light-dark(#693acf, #9d6afb)",
 };
 
-const AC_FILE_ICON_SPRITE = `
+const ANKIEL_FILE_ICON_SPRITE = `
 <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true">
   <!-- Lucide Film icon, ISC license. -->
   <symbol id="ankiel-file-icon-video" viewBox="0 0 24 24">
@@ -132,10 +132,10 @@ const AC_FILE_ICON_SPRITE = `
   </symbol>
 </svg>`;
 
-export const AC_PIERRE_ICONS = {
+export const ANKIEL_PIERRE_ICONS = {
   set: "complete",
   colored: true,
-  spriteSheet: AC_FILE_ICON_SPRITE,
+  spriteSheet: ANKIEL_FILE_ICON_SPRITE,
   byFileName: {
     "package.json": "file-tree-builtin-npm",
     "tsconfig.json": "file-tree-builtin-typescript",
@@ -191,7 +191,7 @@ export const AC_PIERRE_ICONS = {
   },
 } satisfies FileTreeIcons;
 
-const completeIconResolver = createFileTreeIconResolver(AC_PIERRE_ICONS);
+const completeIconResolver = createFileTreeIconResolver(ANKIEL_PIERRE_ICONS);
 
 const LANGUAGE_EXTENSION_ALIASES: Record<string, string> = {
   bash: "sh",
@@ -282,6 +282,6 @@ export function ensurePierreIconSprite(): void {
   container.style.height = "0";
   container.style.overflow = "hidden";
   container.style.pointerEvents = "none";
-  container.innerHTML = `${getBuiltInSpriteSheet("complete")}${AC_FILE_ICON_SPRITE}`;
+  container.innerHTML = `${getBuiltInSpriteSheet("complete")}${ANKIEL_FILE_ICON_SPRITE}`;
   document.body.prepend(container);
 }

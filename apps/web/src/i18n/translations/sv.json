@@ -2032,19 +2032,19 @@
   "bc8ab792af1d656f": "Kör på din dator:",
   "0ba14e4e920cfa00": "Eller ladda ned skrivbordsappen",
   "0e79b7a6508a6286": "Sedan",
-  "cfca7a55a9a2fcb4": [
+  "754c728de3ca9fc8": [
     "Hoppa över installationen om du redan har ",
     {
       "t": "code",
       "i": 1,
-      "c": "ac"
+      "c": "ankiel"
     },
     ". Om",
     " ",
     {
       "t": "code",
       "i": 2,
-      "c": "ac"
+      "c": "ankiel"
     },
     " inte hittas efter installationen, lägg till mappen som installationsprogrammet anger i din PATH."
   ],
@@ -2102,7 +2102,7 @@
   "a1190e56375f2032": "{action} ({shortcut})",
   "f16b6d8ef68bab61": "Det gick inte att importera {name}.",
   "924d4b8e011c9127": "Det gick inte att importera åtgärden.",
-  "8fe93cb6ae78f13b": "Importera",
+  "663619054e7debf1": "Importera",
   "06690d4ce0d19c30": "Redigera {name}",
   "ecb748ae62a9a0b8": "Lägg till projektskript",
   "56cbda4e9747cfb0": "Lägg till åtgärd",
@@ -2281,8 +2281,8 @@
   "b25472ef70df9b5d": "Uppdatera alla",
   "febf4ec3cdcdf372": "Uppdateringskommandot kopierades",
   "bee440d0da53841c": "Omstartskommandot kopierades",
-  "2666cce5f69c24ed": "Kör `{command}` på {serverLabel} och starta sedan om ac med dina vanliga alternativ.",
-  "32b77370c697d05b": "Stoppa ac på {serverLabel} och starta sedan om med `{command}` med samma underkommando och alternativ. Det här uppdaterar inte ett installerat ankiel-kommando.",
+  "27b357927d8ae8f7": "Kör `{command}` på {serverLabel} och starta sedan om ankiel med dina vanliga alternativ.",
+  "77d92e0d0f731207": "Stoppa ankiel på {serverLabel} och starta sedan om med `{command}` med samma underkommando och alternativ. Det här uppdaterar inte ett installerat ankiel-kommando.",
   "3cb4fcae1546e2eb": "Kunde inte kopiera uppdateringskommandot",
   "7d3b6d270fbb8f0d": "Uppdatera Ankiel Code-skrivbordsappen som kör {serverLabel}? Den stängs och startas om på den datorn.",
   "a1581c125ff5ba06": "Kopiera uppdateringskommando",
@@ -2872,8 +2872,8 @@
   "62450481c00d2ef3": "Utkastets miljö är inte tillgänglig för att städa transkriptionen.",
   "0674544195fcdc39": "Den ursprungliga transkriptionen lades till.",
   "c64cb58d9cecbcd2": "Det gick inte att städa transkriptionen",
-  "3c225a761345892c": "Kommandot ac är inte tillgängligt.",
-  "ac1aeb69de4e7553": "Det gick inte att läsa in statusen för kommandot ac.",
+  "4be0869469f66905": "Kommandot ankiel är inte tillgängligt.",
+  "ee3dff7537814cd9": "Det gick inte att läsa in statusen för kommandot ankiel.",
   "1bf6910332426e62": "Skrivbordsappens nätverksåtkomst är inte tillgänglig.",
   "453d2f1825d6e763": "Det gick inte att läsa in skrivbordsserverns exponeringsstatus.",
   "2f388f3d76869c03": "Det gick inte att läsa in skrivbordsappens annonserade slutpunkter.",
@@ -2996,13 +2996,13 @@
   ],
   "c54cc9c75db9dc58": "Godkänn bara en inloggning som du själv precis har startat.",
   "e9f4b93c4ec30453": "Inloggningskod",
-  "06d1f161c2647a14": [
+  "93d753032e15f1be": [
     "Hämta en från Använd Ankiel Code i en annan app (MCP), Inställningar → Delning och åtkomst eller",
     " ",
     {
       "t": "code",
       "i": 1,
-      "c": "ac auth pairing create"
+      "c": "ankiel auth pairing create"
     },
     " på den här datorn."
   ],
@@ -5657,7 +5657,7 @@
     "i den här terminalen."
   ],
   "9d9b9624c7bd95df": "Andra mappar",
-  "ef6d61884d758c44": [
+  "815c9238c306cf79": [
     "Tillagd i ",
     {
       "i": 1,
@@ -5669,16 +5669,16 @@
     {
       "t": "code",
       "i": 2,
-      "c": "ac"
+      "c": "ankiel"
     },
     "."
   ],
-  "453f17e849c366c5": [
+  "fecdf5662c541c0c": [
     "Använd ",
     {
       "t": "code",
       "i": 1,
-      "c": "ac"
+      "c": "ankiel"
     },
     " från valfri terminal. Lägger till en rad i",
     " ",
@@ -6810,7 +6810,7 @@
   "8a333daf9b7fd03f": "Anslut till {environment}",
   "7662025844bf543f": "Lägg till miljö",
   "65b1d784a5e84254": "Parkoppla den här datorn igen via en annan adress, till exempel dess Tailscale-namn. Den ansluter till de befintliga rutterna i stället för att lägga till en andra dator.",
-  "8f9173010f8d17f8": "Skapa en parkopplingskod på {environment}, i dess Inställningar → Delning och åtkomst eller med `ac auth pairing create`, och ange den här.",
+  "724f4d9d8dcc9ce5": "Skapa en parkopplingskod på {environment}, i dess Inställningar → Delning och åtkomst eller med `ankiel auth pairing create`, och ange den här.",
   "1bea4864d46d70d0": "Parkoppla en annan miljö med den här klienten.",
   "9b24ef052b321e57": "Ange en backend-värd och en parkopplingskod.",
   "3e20f17f71edf0ad": "Använd lokal SSH-konfiguration, agent och tunnlar för backenden.",
@@ -7079,7 +7079,7 @@
   "f818040c75078d53": "Återställ namngivning av grenar till standard",
   "2c82cf0bf586ddd8": "Namngivning av worktree-grenar",
   "bff8a0d14cb10f17": "Grenprefix",
-  "b9d115ba3a4fb3f0": "Till exempel ger ac eller ac/ resultatet ac/add-search. Lämna tomt för inget prefix.",
+  "d7b25fa67fcec9d3": "Till exempel ger ankiel eller ankiel/ resultatet ankiel/add-search. Lämna tomt för inget prefix.",
   "fc32aa5738bccb9a": "Återställ grenprefix till standard",
   "452b86cb8c4e0432": "Inget prefix",
   "abcdead6f7529103": "Instruktioner för grennamngivning",
@@ -7259,17 +7259,17 @@
       "v": "v"
     }
   ],
-  "88fe42475ca28b85": "Kunde inte installera ac",
-  "ee1821abe6f9cacd": "Kunde inte ta bort ac",
-  "650adf0aac086a1e": "Kunde inte lägga till ac i PATH",
-  "dfc065762962b0fb": "En annan ac i {path} körs först i en ny terminal. Ta bort den för att använda Ankiel Codes.",
-  "a04640d6d7b4985b": "Kör Ankiel Codes CLI som `ac` från valfri terminal.",
+  "09fb032045f225e3": "Kunde inte installera ankiel",
+  "c87078772952f947": "Kunde inte ta bort ankiel",
+  "97df5936dd8184a8": "Kunde inte lägga till ankiel i PATH",
+  "558bf79029d80921": "En annan ankiel i {path} körs först i en ny terminal. Ta bort den för att använda Ankiel Codes.",
+  "fe8f07a2d7ddb9ff": "Kör Ankiel Codes CLI som `ankiel` från valfri terminal.",
   "4f6e93011ef2da6f": "Installerad i {path}. Öppna en ny terminal för att använda den.",
   "371ca438cf467125": "Installerad i {path} och tillagd i PATH i {file}. Öppna en ny terminal för att använda den.",
   "fd3eece9d1a7ea38": "Installerad i {path}, som inte finns i din PATH än.",
-  "c9a13a14cda6b1d5": "Installerad i {path}, som inte finns i din PATH än. Lägg till mappen i din PATH för att köra `ac`.",
-  "d322b55c8423f1d3": "Ta bort",
-  "320c8328108c83b0": "Installera",
+  "437c6ac2716a2710": "Installerad i {path}, som inte finns i din PATH än. Lägg till mappen i din PATH för att köra `ankiel`.",
+  "78e60242724c5fcd": "Ta bort",
+  "eced2267f057fcf5": "Installera",
   "9a284b5893dc04a2": "OpenRouter-modell",
   "c8361c16c47d5fb5": "Sök transkriberingsmodeller",
   "d72eccdd92d4f989": "Kunde inte spara ändringen. Kontrollera anslutningen och försök igen.",
@@ -8306,7 +8306,7 @@
   "ca4e4015b89ed9a8": "Kunde inte länka {target} tillbaka till {source}",
   "64ac3d1579ca9f5b": "Länka {source} till {target}",
   "5f2e20c62a4fece3": "{via} är länkad till {target} med full åtkomst och hämtar därför parkopplingskoden. Ingen kod att klistra in.",
-  "54878cf5402fee39": "Från Delning och åtkomst där, eller ac pair",
+  "d3c539a54eaabb89": "Från Delning och åtkomst där, eller ankiel pair",
   "1e3fee7084791773": "Länka även {target} tillbaka till {source}",
   "ea34a190b0bd804c": "Agenter på {target} kan då också arbeta på {source}.",
   "974f8c65e8b5f492": "Glöm {label}? Agenter här slutar arbeta där, och deras session på {label} avslutas också om den svarar.",
@@ -8416,10 +8416,10 @@
   "74a80f881d59c64d": "Kommandon som körs i projektets utcheckning eller dess worktree, med valfria kortkommandon.",
   "b021ef2874c6c24b": "Olika åtgärder i olika utcheckningar",
   "1e0bbb3a6c4afd6c": "Begränsa urvalet ovan till en utcheckning för att redigera dess lista. Om du lägger till en åtgärd här läggs den till i varje vald utcheckning.",
-  "04cf90f46cdb2bf6": "ac.json är ogiltig",
-  "2dc7d38655f56dfa": "Det finns en ac.json i den här utcheckningen men den kan inte tolkas, så alla åtgärder och ikoner den deklarerar ignoreras. Kontrollera JSON-syntaxen och ikonvärdena.",
+  "cadea0b16f1c04d2": "ankiel.json är ogiltig",
+  "85855bc77b8ebe02": "Det finns en ankiel.json i den här utcheckningen men den kan inte tolkas, så alla åtgärder och ikoner den deklarerar ignoreras. Kontrollera JSON-syntaxen och ikonvärdena.",
   "df4cf566c6d08a4b": "Importera skript",
-  "70b41dde44c7c955": "Importera från ac.json",
+  "8e7ff6b1cbf59e0d": "Importera från ankiel.json",
   "84f1752d64c3152e": "Lägg till åtgärder som den här utcheckningen deklarerar utan att redigera dem först.",
   "3b893da0373ab50e": "Lägg till åtgärd",
   "5afea423d829496e": "Leverantören är inte tillgänglig i den här miljön.",
@@ -8436,7 +8436,7 @@
   "2f65da0a2375c66a": "Automatisk (blandad)",
   "369304844a14a649": "Inga leverantörer tillgängliga",
   "846ba52561c0e6bb": "Var nya trådar i det här projektet startar.",
-  "6fd04e26194b539c": "Var nya trådar startar. Projekt och deras ac.json kan åsidosätta det.",
+  "775d9d472acb4fad": "Var nya trådar startar. Projekt och deras ankiel.json kan åsidosätta det.",
   "8ab693ae67cd5e86": "Återställ standardarbetsyta till standard",
   "d1d1342ccb83a14b": "Standardarbetsyta",
   "a22721e847136f21": "Inte tillgänglig",
@@ -8467,7 +8467,7 @@
   "9290d5de050e5302": "Standardmetod för merge av pull requests",
   "3619911bbdb05fc1": "Senast vald",
   "87717de46afcdaed": "Hur nya worktrees i det här projektet fyller i Git-submoduler.",
-  "5013be9ba55604f5": "Hur nya worktrees fyller i Git-submoduler. Projekt och deras ac.json kan åsidosätta det.",
+  "3b0a2459278e58c2": "Hur nya worktrees fyller i Git-submoduler. Projekt och deras ankiel.json kan åsidosätta det.",
   "74a80f6d7962be21": "Återställ submoduler i worktrees till standard",
   "1c97d5a78ca1fdb6": "Worktree-submoduler",
   "2c2b437431e4cd1d": "Inga leverantörer tillgängliga",
@@ -9027,7 +9027,7 @@
   "cdacfb87d557007b": "Kunde inte kopiera MCP-URL:en till urklipp.",
   "a9f514109c355d42": "Kunde inte kopiera spårnings-id",
   "7ae6db00431a85fe": "MCP-URL kopierad",
-  "8abc042f1dd922f4": "Lägg till den i en agent, t.ex. claude mcp add --transport http ac {url}",
+  "5b81d23fe4f0cb25": "Lägg till den i en agent, t.ex. claude mcp add --transport http ankiel {url}",
   "69f1a5115bd716c8": "Kunde inte kopiera MCP-URL",
   "4112c1a7b3c1d029": "Startar om",
   "543ef9fcaf8aa96f": "Avstängd",
@@ -11054,7 +11054,7 @@
   "dfd5b72fe7308d9e": "Sparad på den här enheten. Välj Alla projekt för att ändra den.",
   "091be13f50490708": "Blandat bland valda miljöer",
   "06e9973f7537ed51": "Åsidosatt för det här projektet",
-  "85162f366d6f4e9c": "Ärvt från repots ac.json",
+  "a5eaf5910f1c9ada": "Ärvt från repots ankiel.json",
   "539b097411fd1307": "Ärvt från miljön",
   "6340f81c024cfe12": "Ärvt från {environment}",
   "49a60879f4348f46": "Angivet i miljön",
@@ -11178,7 +11178,7 @@
   "00469926c7027e2d": "balanserad prestanda batterisparläge avancerat git fetch leverantör hälsa uppdatera värd ström övervakning inaktiv policy",
   "54e33e572cc71746": "standard arbetsyta läge utkast lokal worktree",
   "b2ece956b72c4a48": "Submoduler",
-  "f8a7b2411ce9243b": "git undermodul init rekursiv toppnivå ingen worktree ac.json submodule",
+  "a1582d42fd15c3d7": "git undermodul init rekursiv toppnivå ingen worktree ankiel.json submodule",
   "88553740587a9beb": "Starta från fjärrgrenen",
   "4a172e139167badc": "nya worktrees startar fjärr origin senaste hämtade gren lokal",
   "30aac12099fcaf53": "Lägg till projekt startar i",
@@ -11192,7 +11192,7 @@
   "0c5fc3b5e41e1956": "genererade trådtitlar prompt anpassad stil namngivning byt namn generera om",
   "a83570bcb45d8fa1": "om sök efter uppdateringar ladda ner installera uppgradera version",
   "d65bdf6748801734": "versionskanal stabil latest nightly förhandsversion",
-  "0583168f77c0d564": "Kommandot ac",
+  "b6001b03d11515f3": "Kommandot ankiel",
   "46dd4dc08c1e552f": "cli terminal skal sökväg installera kommandorad",
   "86479042bae0e2db": "Mobilapp",
   "dc2a999ca67ccf31": "telefon surfplatta iPhone iPad iOS Android App Store Google Play QR",
@@ -11249,7 +11249,7 @@
   "4c241258fdc87942": "pull request pr guidad granskning guide rundtur beta experimentell",
   "39e4c844a9d56a1d": "pull request pr guidad granskning guide sammanfattning underhållare",
   "f27f2e85e05f664c": "pull request pr guidad granskning guide inställningar smak prompt anpassad",
-  "f64aa58a2824bc01": "kommandon skript konfiguration kör dev-server utcheckning worktree ac.json importera",
+  "539d7ddd20619d83": "kommandon skript konfiguration kör dev-server utcheckning worktree ankiel.json importera",
   "756e41fd7e0b044c": "spårade mappar multi repo arbetsyta code-workspace skanna om lägg till mapp",
   "c349ea1db3f9e9f1": "Miljöns ikon",
   "18bd7981d6c50994": "dator symbol sidofält mac mini studio laptop skrivbord server moln vm",

@@ -4060,7 +4060,7 @@ it.layer(Layer.merge(layerTest, ProviderContinuationRequests.layer))(
             creationSource: outcome === "failed" ? "web" : "mcp",
             commandId: CommandId.make(`command:followup-send-${outcome}`),
             threadId: child.childThreadId,
-            // `ac thread send` and unscoped MCP sessions carry no sender thread.
+            // `ankiel thread send` and unscoped MCP sessions carry no sender thread.
             ...(outcome === "completed" ? {} : { senderThreadId: parentThreadId }),
             messageId,
             text: "Check the same work again.",

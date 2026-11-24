@@ -20,7 +20,7 @@ declare global {
   }
 }
 
-/** Installs the hold before the app loads; call before `ac.open`. */
+/** Installs the hold before the app loads; call before `ankiel.open`. */
 export const holdImageCompression = (browser: Browser) =>
   browser.addInitScript(() => {
     const hold: CompressionHold = {

@@ -1026,7 +1026,7 @@ const make = Effect.gen(function* () {
             "--max-count=1",
             "HEAD",
             // Checkpoint refs hold workspace snapshots, not commits a user could lose.
-            "--exclude=refs/ac/*",
+            "--exclude=refs/ankiel/*",
             "--all",
             "--reflog",
             "--not",
@@ -2038,7 +2038,7 @@ const make = Effect.gen(function* () {
     for (const row of rows) {
       // Derive ownership from tombstones, never from absence in this database:
       // another Ankiel home can own refs in the same Git repository.
-      const prefixes = [`refs/ac/checkpoints/${Base64Url.encode(row.threadId)}/turn/`];
+      const prefixes = [`refs/ankiel/checkpoints/${Base64Url.encode(row.threadId)}/turn/`];
       if (row.scopeId !== null) {
         prefixes.push(
           (yield* checkpointRefForScopeOrdinal({
@@ -2085,8 +2085,8 @@ const make = Effect.gen(function* () {
           args: [
             "for-each-ref",
             "--format=%(refname)",
-            "refs/ac/checkpoints/",
-            "refs/ac/orchestration-v2/checkpoints/",
+            "refs/ankiel/checkpoints/",
+            "refs/ankiel/orchestration-v2/checkpoints/",
           ],
           maxOutputBytes: 16 * 1024 * 1024,
         });

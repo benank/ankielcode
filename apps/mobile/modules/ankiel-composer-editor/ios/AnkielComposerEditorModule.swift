@@ -2,7 +2,7 @@ import ExpoModulesCore
 import UIKit
 
 enum AnkielComposerClipboard {
-  static let fragmentType = "app.ac.context-fragment"
+  static let fragmentType = "app.ankiel.context-fragment"
 
   // Pasted thread links become chips in JS; packages/shared/src/threadLinks.ts parses them.
   static func hasThreadLink(_ text: String) -> Bool {

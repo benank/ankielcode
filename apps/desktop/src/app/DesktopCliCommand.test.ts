@@ -42,7 +42,7 @@ const commandIn = (
   Effect.gen(function* () {
     const path = yield* Path.Path;
     const fs = yield* FileSystem.FileSystem;
-    const baseDir = input.baseDir ?? path.join(input.home, ".ac");
+    const baseDir = input.baseDir ?? path.join(input.home, ".ankiel");
     yield* fs.makeDirectory(path.join(baseDir, "userdata"), { recursive: true });
     const make = DesktopCliCommand.make.pipe(
       Effect.provideService(
@@ -67,8 +67,8 @@ const fakePowerShell = (initial: string, inherited: Record<string, string> = {})
       const env = { ...(options.extendEnv ? inherited : {}), ...options.env };
       let exitCode = 0;
       let stdout = "";
-      if (env.AC_SET === "1") {
-        registry.path = env.AC_PATH ?? "";
+      if (env.ANKIEL_SET === "1") {
+        registry.path = env.ANKIEL_PATH ?? "";
         registry.writes += 1;
       } else if (registry.failReads) {
         exitCode = 1;
@@ -101,7 +101,7 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
       const command = yield* commandIn({ home, env });
-      const link = path.join(home, ".local", "bin", "ac");
+      const link = path.join(home, ".local", "bin", "ankiel");
 
       expect(yield* command.state).toEqual({
         supported: true,
@@ -113,9 +113,9 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       expect((yield* command.state).installedPath).toBe(link);
       const installed = yield* command.install;
       expect(installed.installedPath).toBe(link);
-      expect(installed.launcherPath).toBe(path.join(home, ".ac", "bin", "ac"));
+      expect(installed.launcherPath).toBe(path.join(home, ".ankiel", "bin", "ankiel"));
       expect(installed.pathSetup).toEqual({ file: "~/.zshrc", added: false });
-      expect(yield* fs.readLink(link)).toBe(path.join(home, ".ac", "bin", "ac"));
+      expect(yield* fs.readLink(link)).toBe(path.join(home, ".ankiel", "bin", "ankiel"));
       expect((yield* command.install).installedPath).toBe(link);
 
       // Add to PATH appends one line, once, and keeps a final line with no newline intact.
@@ -134,7 +134,7 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
 
       expect((yield* command.uninstall).installedPath).toBeNull();
       expect(yield* fs.exists(link)).toBe(false);
-      expect(yield* fs.exists(path.join(home, ".ac", "bin", "ac"))).toBe(true);
+      expect(yield* fs.exists(path.join(home, ".ankiel", "bin", "ankiel"))).toBe(true);
       // Removed stays removed: first launch never installs again.
       yield* command.installOnFirstLaunch;
       expect(yield* fs.exists(link)).toBe(false);
@@ -145,63 +145,63 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       yield* later.install;
       yield* later.uninstall;
       yield* later.installOnFirstLaunch;
-      expect(yield* fs.exists(path.join(laterHome, ".local", "bin", "ac"))).toBe(false);
+      expect(yield* fs.exists(path.join(laterHome, ".local", "bin", "ankiel"))).toBe(false);
 
-      // An app that ran before left its settings or launcher. Its user may have removed ac or
+      // An app that ran before left its settings or launcher. Its user may have removed ankiel or
       // chosen another, so first launch leaves it to Settings, where Install still works.
-      for (const left of ["userdata/desktop-settings.json", "bin/ac"]) {
+      for (const left of ["userdata/desktop-settings.json", "bin/ankiel"]) {
         const upgradedHome = yield* fs.makeTempDirectoryScoped();
-        const leftFile = path.join(upgradedHome, ".ac", left);
+        const leftFile = path.join(upgradedHome, ".ankiel", left);
         yield* fs.makeDirectory(path.dirname(leftFile), { recursive: true });
         yield* fs.writeFileString(leftFile, `#!/bin/sh\n# ${DesktopCliShim.MARKER}\n`);
         const upgraded = yield* commandIn({ home: upgradedHome, env });
         yield* upgraded.installOnFirstLaunch;
-        const upgradedLink = path.join(upgradedHome, ".local", "bin", "ac");
+        const upgradedLink = path.join(upgradedHome, ".local", "bin", "ankiel");
         expect(yield* fs.exists(upgradedLink)).toBe(false);
         expect((yield* upgraded.install).installedPath).toBe(upgradedLink);
       }
     }),
   );
 
-  it.effect("never replaces or removes an ac it did not create", () =>
+  it.effect("never replaces or removes an ankiel it did not create", () =>
     Effect.gen(function* () {
       const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
       const command = yield* commandIn({ home, env });
-      const theirs = path.join(home, ".local", "bin", "ac");
+      const theirs = path.join(home, ".local", "bin", "ankiel");
       yield* fs.makeDirectory(path.dirname(theirs), { recursive: true });
-      yield* fs.writeFileString(theirs, "npm's ac\n");
+      yield* fs.writeFileString(theirs, "npm's ankiel\n");
       yield* fs.makeDirectory(path.join(home, "bin"), { recursive: true });
-      yield* fs.symlink(path.join(home, "gone"), path.join(home, "bin", "ac"));
+      yield* fs.symlink(path.join(home, "gone"), path.join(home, "bin", "ankiel"));
 
       const error = yield* Effect.flip(command.install);
-      expect(error.message).toContain("Another ac command is already in");
+      expect(error.message).toContain("Another ankiel command is already in");
       yield* command.uninstall;
-      expect(yield* fs.readFileString(theirs)).toBe("npm's ac\n");
-      expect(yield* fs.readLink(path.join(home, "bin", "ac"))).toBe(path.join(home, "gone"));
+      expect(yield* fs.readFileString(theirs)).toBe("npm's ankiel\n");
+      expect(yield* fs.readLink(path.join(home, "bin", "ankiel"))).toBe(path.join(home, "gone"));
 
-      // A fresh install beside someone else's ac (even off PATH or a dangling link) adds no second
-      // ac in ~/bin.
+      // A fresh install beside someone else's ankiel (even off PATH or a dangling link) adds no second
+      // ankiel in ~/bin.
       for (const dangling of [false, true]) {
         const besideHome = yield* fs.makeTempDirectoryScoped();
-        const other = path.join(besideHome, ".local", "bin", "ac");
+        const other = path.join(besideHome, ".local", "bin", "ankiel");
         yield* fs.makeDirectory(path.dirname(other), { recursive: true });
         yield* dangling
           ? fs.symlink(path.join(besideHome, "gone"), other)
-          : fs.writeFileString(other, "npm's ac\n");
+          : fs.writeFileString(other, "npm's ankiel\n");
         yield* (yield* commandIn({ home: besideHome })).installOnFirstLaunch;
-        expect(yield* fs.exists(path.join(besideHome, "bin", "ac"))).toBe(false);
+        expect(yield* fs.exists(path.join(besideHome, "bin", "ankiel"))).toBe(false);
       }
 
-      const launcher = path.join(home, ".ac", "bin", "ac");
-      yield* fs.writeFileString(launcher, "npm's ac\n");
+      const launcher = path.join(home, ".ankiel", "bin", "ankiel");
+      yield* fs.writeFileString(launcher, "npm's ankiel\n");
       env.PATH = path.dirname(launcher);
       expect(yield* command.state).toMatchObject({ onPath: false, shadowedBy: launcher });
       expect((yield* Effect.flip(command.install)).message).toContain("Could not set up");
       yield* command.uninstall;
-      expect(yield* fs.readFileString(launcher)).toBe("npm's ac\n");
+      expect(yield* fs.readFileString(launcher)).toBe("npm's ankiel\n");
     }),
   );
 
@@ -211,15 +211,15 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
-      const before = yield* commandIn({ home, baseDir: path.join(home, "old-ac"), env });
+      const before = yield* commandIn({ home, baseDir: path.join(home, "old-ankiel"), env });
       const link = (yield* before.install).installedPath;
 
-      const after = yield* commandIn({ home, baseDir: path.join(home, "new-ac"), env });
+      const after = yield* commandIn({ home, baseDir: path.join(home, "new-ankiel"), env });
       // A first launch leaves another home's command alone; only Install takes it over.
       yield* after.installOnFirstLaunch;
-      expect(yield* fs.readLink(link!)).toBe(path.join(home, "old-ac", "bin", "ac"));
+      expect(yield* fs.readLink(link!)).toBe(path.join(home, "old-ankiel", "bin", "ankiel"));
       // On PATH, it runs the other home's launcher. Settings offers Install (not Remove, and not
-      // "another ac runs first"), which updates that link in place.
+      // "another ankiel runs first"), which updates that link in place.
       env.PATH = path.dirname(link!);
       expect(yield* after.state).toMatchObject({ installedPath: null, onPath: false });
       expect((yield* after.state).shadowedBy).toBeUndefined();
@@ -228,41 +228,44 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       expect((yield* after.state).pathSetup).toBeUndefined();
       yield* Effect.flip(after.addToPath);
       expect(yield* fs.exists(path.join(home, ".zshrc"))).toBe(false);
-      // Behind another ac the install fails, and the old link still works.
+      // Behind another ankiel the install fails, and the old link still works.
       const shadow = path.join(home, "shadow");
       yield* fs.makeDirectory(shadow);
-      yield* fs.writeFileString(path.join(shadow, "ac"), "#!/bin/sh\n", { mode: 0o755 });
+      yield* fs.writeFileString(path.join(shadow, "ankiel"), "#!/bin/sh\n", { mode: 0o755 });
       env.PATH = shadow;
       yield* Effect.flip(after.install);
-      expect(yield* fs.readLink(link!)).toBe(path.join(home, "old-ac", "bin", "ac"));
+      expect(yield* fs.readLink(link!)).toBe(path.join(home, "old-ankiel", "bin", "ankiel"));
       // Install takes it over, also with its folder first on PATH.
       env.PATH = path.dirname(link!);
       expect((yield* after.install).installedPath).toBe(link);
-      expect(yield* fs.readLink(link!)).toBe(path.join(home, "new-ac", "bin", "ac"));
+      expect(yield* fs.readLink(link!)).toBe(path.join(home, "new-ankiel", "bin", "ankiel"));
       env.PATH = "";
       yield* after.uninstall;
-      expect(yield* fs.exists(path.join(home, ".local", "bin", "ac"))).toBe(false);
-      expect(yield* fs.exists(path.join(home, "bin", "ac"))).toBe(false);
+      expect(yield* fs.exists(path.join(home, ".local", "bin", "ankiel"))).toBe(false);
+      expect(yield* fs.exists(path.join(home, "bin", "ankiel"))).toBe(false);
 
       // A folder already on PATH wins, even written with a trailing slash.
       env.PATH = `${path.join(home, "bin")}/`;
-      expect((yield* after.install).installedPath).toBe(path.join(home, "bin", "ac"));
+      expect((yield* after.install).installedPath).toBe(path.join(home, "bin", "ankiel"));
 
       // An old link of ours is updated where it is, not moved to a folder that may be off PATH.
-      yield* fs.writeFileString(path.join(home, "bin", "ac.staging"), "mine");
-      yield* fs.remove(path.join(home, "bin", "ac"));
-      yield* fs.symlink(path.join(home, "old-ac", "bin", "ac"), path.join(home, "bin", "ac"));
-      env.PATH = "";
-      expect((yield* after.install).installedPath).toBe(path.join(home, "bin", "ac"));
-      expect(yield* fs.readLink(path.join(home, "bin", "ac"))).toBe(
-        path.join(home, "new-ac", "bin", "ac"),
+      yield* fs.writeFileString(path.join(home, "bin", "ankiel.staging"), "mine");
+      yield* fs.remove(path.join(home, "bin", "ankiel"));
+      yield* fs.symlink(
+        path.join(home, "old-ankiel", "bin", "ankiel"),
+        path.join(home, "bin", "ankiel"),
       );
-      expect(yield* fs.exists(path.join(home, ".local", "bin", "ac"))).toBe(false);
-      expect(yield* fs.readFileString(path.join(home, "bin", "ac.staging"))).toBe("mine");
+      env.PATH = "";
+      expect((yield* after.install).installedPath).toBe(path.join(home, "bin", "ankiel"));
+      expect(yield* fs.readLink(path.join(home, "bin", "ankiel"))).toBe(
+        path.join(home, "new-ankiel", "bin", "ankiel"),
+      );
+      expect(yield* fs.exists(path.join(home, ".local", "bin", "ankiel"))).toBe(false);
+      expect(yield* fs.readFileString(path.join(home, "bin", "ankiel.staging"))).toBe("mine");
     }),
   );
 
-  it.effect("refuses to install behind another ac that runs first", () =>
+  it.effect("refuses to install behind another ankiel that runs first", () =>
     Effect.gen(function* () {
       const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
       const fs = yield* FileSystem.FileSystem;
@@ -270,26 +273,26 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       const home = yield* fs.makeTempDirectoryScoped();
       const shadow = path.join(home, "shadow");
       yield* fs.makeDirectory(shadow);
-      yield* fs.writeFileString(path.join(shadow, "ac"), "#!/bin/sh\n", { mode: 0o755 });
+      yield* fs.writeFileString(path.join(shadow, "ankiel"), "#!/bin/sh\n", { mode: 0o755 });
       env.PATH = [shadow, `${path.join(home, ".local", "bin")}/`].join(":");
 
       const command = yield* commandIn({ home, env });
-      const theirs = path.join(shadow, "ac");
+      const theirs = path.join(shadow, "ankiel");
       expect((yield* command.state).shadowedBy).toBe(theirs);
       const error = yield* Effect.flip(command.install);
       expect(error.message).toContain(theirs);
       yield* command.installOnFirstLaunch;
-      expect(yield* fs.exists(path.join(home, ".local", "bin", "ac"))).toBe(false);
+      expect(yield* fs.exists(path.join(home, ".local", "bin", "ankiel"))).toBe(false);
       expect(yield* fs.readFileString(theirs)).toBe("#!/bin/sh\n");
 
-      // Its folder is already on PATH behind theirs; adding it again would change which ac runs.
+      // Its folder is already on PATH behind theirs; adding it again would change which ankiel runs.
       yield* fs.makeDirectory(path.join(home, ".local", "bin"), { recursive: true });
       yield* fs.symlink(
-        path.join(home, ".ac", "bin", "ac"),
-        path.join(home, ".local", "bin", "ac"),
+        path.join(home, ".ankiel", "bin", "ankiel"),
+        path.join(home, ".local", "bin", "ankiel"),
       );
       const behind = yield* command.state;
-      expect(behind.installedPath).toBe(path.join(home, ".local", "bin", "ac"));
+      expect(behind.installedPath).toBe(path.join(home, ".local", "bin", "ankiel"));
       expect(behind.pathSetup).toBeUndefined();
       // Off PATH behind theirs, adding the folder would still put ours first.
       env.PATH = shadow;
@@ -297,23 +300,23 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       yield* Effect.flip(command.addToPath);
       expect(yield* fs.exists(path.join(home, ".zshrc"))).toBe(false);
       env.PATH = [shadow, `${path.join(home, ".local", "bin")}/`].join(":");
-      yield* fs.remove(path.join(home, ".local", "bin", "ac"));
+      yield* fs.remove(path.join(home, ".local", "bin", "ankiel"));
 
       // A first-launch install that failed is not retried behind the user's back.
       yield* fs.remove(theirs);
       yield* command.installOnFirstLaunch;
-      expect(yield* fs.exists(path.join(home, ".local", "bin", "ac"))).toBe(false);
+      expect(yield* fs.exists(path.join(home, ".local", "bin", "ankiel"))).toBe(false);
       const installed = yield* command.install;
       expect(installed).toMatchObject({
         onPath: true,
-        installedPath: path.join(home, ".local", "bin", "ac"),
+        installedPath: path.join(home, ".local", "bin", "ankiel"),
       });
       expect(installed.shadowedBy).toBeUndefined();
     }),
   );
 
   it.effect.skipIf(HostProcess.Platform.defaultValue() === "win32")(
-    "skips an ac directory or a file this user cannot execute",
+    "skips an ankiel directory or a file this user cannot execute",
     () =>
       Effect.gen(function* () {
         const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
@@ -323,56 +326,58 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
         const folder = path.join(home, "folder");
         const plain = path.join(home, "plain");
         const shadow = path.join(home, "shadow");
-        yield* fs.makeDirectory(path.join(folder, "ac"), { recursive: true });
+        yield* fs.makeDirectory(path.join(folder, "ankiel"), { recursive: true });
         yield* fs.makeDirectory(plain);
-        yield* fs.writeFileString(path.join(plain, "ac"), "notes\n");
+        yield* fs.writeFileString(path.join(plain, "ankiel"), "notes\n");
         // Root can execute mode 0o601; other users must honor the owner permissions.
-        yield* fs.chmod(path.join(plain, "ac"), process.getuid?.() === 0 ? 0o600 : 0o601);
+        yield* fs.chmod(path.join(plain, "ankiel"), process.getuid?.() === 0 ? 0o600 : 0o601);
         yield* fs.makeDirectory(shadow);
-        yield* fs.writeFileString(path.join(shadow, "ac"), "#!/bin/sh\n", { mode: 0o755 });
+        yield* fs.writeFileString(path.join(shadow, "ankiel"), "#!/bin/sh\n", { mode: 0o755 });
         env.PATH = [folder, plain, shadow, path.join(home, ".local", "bin")].join(":");
 
         const command = yield* commandIn({ home, env });
-        expect((yield* command.state).shadowedBy).toBe(path.join(shadow, "ac"));
+        expect((yield* command.state).shadowedBy).toBe(path.join(shadow, "ankiel"));
 
         const error = yield* Effect.flip(command.install);
-        expect(error.message).toContain(path.join(shadow, "ac"));
+        expect(error.message).toContain(path.join(shadow, "ankiel"));
 
         yield* fs.remove(shadow, { recursive: true });
         expect(yield* command.install).toMatchObject({
           onPath: true,
-          installedPath: path.join(home, ".local", "bin", "ac"),
+          installedPath: path.join(home, ".local", "bin", "ankiel"),
         });
       }),
   );
 
-  it.effect("does not treat its own launcher as another ac when its folder is first on PATH", () =>
-    Effect.gen(function* () {
-      const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const home = yield* fs.makeTempDirectoryScoped();
-      const launcher = path.join(home, ".ac", "bin", "ac");
-      env.PATH = [path.dirname(launcher), path.join(home, ".local", "bin")].join(":");
+  it.effect(
+    "does not treat its own launcher as another ankiel when its folder is first on PATH",
+    () =>
+      Effect.gen(function* () {
+        const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const home = yield* fs.makeTempDirectoryScoped();
+        const launcher = path.join(home, ".ankiel", "bin", "ankiel");
+        env.PATH = [path.dirname(launcher), path.join(home, ".local", "bin")].join(":");
 
-      const command = yield* commandIn({ home, env });
-      const installed = yield* command.install;
+        const command = yield* commandIn({ home, env });
+        const installed = yield* command.install;
 
-      expect(yield* fs.exists(launcher)).toBe(true);
-      expect(installed).toMatchObject({
-        onPath: true,
-        installedPath: path.join(home, ".local", "bin", "ac"),
-      });
-      expect(installed.shadowedBy).toBeUndefined();
-      expect(yield* command.state).toEqual(installed);
+        expect(yield* fs.exists(launcher)).toBe(true);
+        expect(installed).toMatchObject({
+          onPath: true,
+          installedPath: path.join(home, ".local", "bin", "ankiel"),
+        });
+        expect(installed.shadowedBy).toBeUndefined();
+        expect(yield* command.state).toEqual(installed);
 
-      const removed = yield* command.uninstall;
-      expect(removed.installedPath).toBeNull();
-      expect(removed.onPath).toBe(true);
-      expect(yield* command.state).toEqual(removed);
-      expect(yield* fs.exists(installed.installedPath!)).toBe(false);
-      expect(yield* fs.exists(launcher)).toBe(true);
-    }),
+        const removed = yield* command.uninstall;
+        expect(removed.installedPath).toBeNull();
+        expect(removed.onPath).toBe(true);
+        expect(yield* command.state).toEqual(removed);
+        expect(yield* fs.exists(installed.installedPath!)).toBe(false);
+        expect(yield* fs.exists(launcher)).toBe(true);
+      }),
   );
 
   it.effect("leaves the Windows PATH alone when it cannot be read", () =>
@@ -390,8 +395,8 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
 
       registry.failReads = false;
       const launcherDir = DesktopCliShim.launcherPath(
-        environmentFor(yield* Path.Path, { home, baseDir: `${home}/.ac`, platform: "win32" }),
-      ).replace(/[\\/]ac\.cmd$/, "");
+        environmentFor(yield* Path.Path, { home, baseDir: `${home}/.ankiel`, platform: "win32" }),
+      ).replace(/[\\/]ankiel\.cmd$/, "");
       yield* command.install;
       expect(registry.path).toBe(`${userPath};${launcherDir}`);
       yield* command.uninstall;
@@ -406,8 +411,8 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       expect((yield* Effect.flip(semicolon.install)).message).toContain('has a ";"');
       expect(split.registry).toMatchObject({ path: userPath, writes: 0 });
 
-      // An inherited AC_SET=1 never turns a read into a write of the whole PATH.
-      const inherited = fakePowerShell(userPath, { AC_SET: "1", AC_PATH: "C:\\other" });
+      // An inherited ANKIEL_SET=1 never turns a read into a write of the whole PATH.
+      const inherited = fakePowerShell(userPath, { ANKIEL_SET: "1", ANKIEL_PATH: "C:\\other" });
       const reader = yield* commandIn({ home, platform: "win32" }, inherited.spawner);
       yield* reader.install;
       expect(inherited.registry).toMatchObject({ path: `${userPath};${launcherDir}`, writes: 1 });
@@ -421,7 +426,7 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       const home = yield* fs.makeTempDirectoryScoped();
       const launcherDir = path.dirname(
         DesktopCliShim.launcherPath(
-          environmentFor(path, { home, baseDir: path.join(home, ".ac"), platform: "win32" }),
+          environmentFor(path, { home, baseDir: path.join(home, ".ankiel"), platform: "win32" }),
         ),
       );
       const userPath = `C:\\Tools;${launcherDir}`;
@@ -432,11 +437,14 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       yield* command.uninstall;
       expect(registry.path).toBe(userPath);
 
-      // A fresh install beside a standalone ac.cmd (from `ac install`), even off PATH, leaves
+      // A fresh install beside a standalone ankiel.cmd (from `ankiel install`), even off PATH, leaves
       // PATH alone.
       const besideHome = yield* fs.makeTempDirectoryScoped();
       yield* fs.makeDirectory(path.join(besideHome, ".local", "bin"), { recursive: true });
-      yield* fs.writeFileString(path.join(besideHome, ".local", "bin", "ac.cmd"), "@echo off\r\n");
+      yield* fs.writeFileString(
+        path.join(besideHome, ".local", "bin", "ankiel.cmd"),
+        "@echo off\r\n",
+      );
       const beside = fakePowerShell("C:\\Tools");
       yield* (yield* commandIn({ home: besideHome, platform: "win32" }, beside.spawner))
         .installOnFirstLaunch;

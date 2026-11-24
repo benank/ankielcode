@@ -1,14 +1,14 @@
 /// <reference lib="dom" />
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "The project folder for threads without a project follows the app language",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("scenario-scratch");
-    const thread = await ac.thread({ project, title: "Scratch work", messages: ["Start"] });
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("scenario-scratch");
+    const thread = await ankiel.thread({ project, title: "Scratch work", messages: ["Start"] });
 
     // The scenario home is inside a Git checkout, where the server disables native scratch.
     // Advertise the seeded workspace as scratch while leaving the real project and thread in place.
@@ -66,11 +66,11 @@ test(
       } as typeof WebSocket.prototype.addEventListener;
     }, project);
 
-    await ac.open("/settings/labs");
+    await ankiel.open("/settings/labs");
     await screen.getByLabel("Boring sidebar (group by project)", { exact: true }).tap();
     await screen.getByLabel("Two-line folder rows", { exact: true }).waitFor();
 
-    await ac.open("/settings/general");
+    await ankiel.open("/settings/general");
     const openFolder = screen.getByTestId("sidebar-project-folder");
     await expect(openFolder).toContainText("No project", { timeout: 60_000 });
     await screen.getByLabel("Language", { exact: true }).tap();
@@ -79,7 +79,7 @@ test(
     // Settings leaves the sidebar mounted. Keep this failure through the capture after reopening.
     await expect.soft(openFolder).toContainText("プロジェクトなし");
 
-    await ac.open(thread);
+    await ankiel.open(thread);
     const folder = screen.getByTestId("sidebar-project-folder");
     await folder.getByText(/^(?:No project|プロジェクトなし)$/, { exact: true }).waitFor({
       timeout: 60_000,

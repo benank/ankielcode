@@ -150,12 +150,12 @@ runs:
         import { appendFileSync, readFileSync } from "node:fs";
         import { parseEnv } from "node:util";
         const env = parseEnv(readFileSync(".env.local", "utf8"));
-        const googleServicesFile = env.AC_ANDROID_GOOGLE_SERVICES_FILE;
+        const googleServicesFile = env.ANKIEL_ANDROID_GOOGLE_SERVICES_FILE;
         if (!googleServicesFile && process.env.PLATFORM === "android") {
-          throw new Error(`AC_ANDROID_GOOGLE_SERVICES_FILE is missing from the ${process.env.ENVIRONMENT} environment`);
+          throw new Error(`ANKIEL_ANDROID_GOOGLE_SERVICES_FILE is missing from the ${process.env.ENVIRONMENT} environment`);
         }
         if (googleServicesFile) {
-          appendFileSync(process.env.GITHUB_ENV, `AC_ANDROID_GOOGLE_SERVICES_FILE=${googleServicesFile}\n`);
+          appendFileSync(process.env.GITHUB_ENV, `ANKIEL_ANDROID_GOOGLE_SERVICES_FILE=${googleServicesFile}\n`);
         }
         NODE
 

@@ -95,7 +95,7 @@ describe("ankielcode/no-raw-mcp-registration", () => {
   rule.invalid(
     "reports McpServer.resource and McpServer.prompt",
     `
-      export const resource = McpServer.resource({ uri: "ac://x", name: "x", content: "x" });
+      export const resource = McpServer.resource({ uri: "ankiel://x", name: "x", content: "x" });
       export const prompt = McpServer.prompt({ name: "x", content: () => "x" });
     `,
   );

@@ -329,7 +329,7 @@ it.effect.each([false, true])(
 );
 
 it.effect(
-  "points a stale ac launcher at the updated AppImage and accepts ac <dir> with Local environment off",
+  "points a stale ankiel launcher at the updated AppImage and accepts ankiel <dir> with Local environment off",
   () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -377,11 +377,11 @@ it.effect(
       assert.include(
         content,
         `app='${updatedAppImage}'`,
-        "startup left the ac launcher pointing at the removed AppImage",
+        "startup left the ankiel launcher pointing at the removed AppImage",
       );
       assert.isTrue(
         yield* Deferred.isDone(activationStarted),
-        "startup left the ac <dir> control socket closed",
+        "startup left the ankiel <dir> control socket closed",
       );
     }).pipe(Effect.provide(Layer.mergeAll(DesktopShutdown.layer, NodeServices.layer))),
 );

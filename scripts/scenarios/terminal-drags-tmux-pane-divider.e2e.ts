@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 
 import { run } from "./shell.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 const SOCKET = `ankiel-scenario-divider-${process.pid}`;
 
@@ -23,9 +23,9 @@ const paneWidths = async () =>
 test(
   "Dragging a tmux pane divider in the web terminal resizes the panes",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Panes", messages: ["hello"] });
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Panes", messages: ["hello"] });
     const read = (file: string) =>
       runPromise(
         Effect.gen(function* () {
@@ -33,7 +33,7 @@ test(
           return yield* fs.readFileString(`${project}/${file}`);
         }).pipe(Effect.orElseSucceed(() => "")),
       );
-    await ac.open(thread);
+    await ankiel.open(thread);
 
     await screen.getByRole("button", "Toggle terminal drawer").tap();
     const terminal = screen.getByLabel("Terminal input");

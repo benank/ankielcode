@@ -18,7 +18,7 @@ describe("resolveDesktopAppControlAddress", () => {
       joinPath: (...segments) => segments.join("/"),
     });
     const second = resolveDesktopAppControlAddress({
-      stateDir: "/home/user/.ac/other/userdata",
+      stateDir: "/home/user/.ankiel/other/userdata",
       platform,
       tempDir,
       userId: 1000,
@@ -32,7 +32,7 @@ describe("resolveDesktopAppControlAddress", () => {
 
   it("uses a Windows named pipe", () => {
     const result = resolveDesktopAppControlAddress({
-      stateDir: "C:\\Users\\user\\.ac\\userdata",
+      stateDir: "C:\\Users\\user\\.ankiel\\userdata",
       platform: "win32",
       tempDir: "C:\\Temp",
       userId: undefined,

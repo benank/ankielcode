@@ -1,4 +1,4 @@
-// `test` for web scenarios: e2e's web test plus `ac`, which seeds state and opens the signed-in
+// `test` for web scenarios: e2e's web test plus `ankiel`, which seeds state and opens the signed-in
 // app. `ankiel-mobile.ts` is the same for the iOS app.
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -33,7 +33,7 @@ import {
 import { RpcClient, RpcSerialization } from "effect/rpc";
 import { Socket } from "effect/socket";
 
-import { APP_DIR, AC_HOME } from "../e2e.config.ts";
+import { APP_DIR, ANKIEL_HOME } from "../e2e.config.ts";
 import { run, ScenarioError } from "./shell.ts";
 
 export interface AnkielState {
@@ -61,7 +61,7 @@ export interface AnkielThread {
 
 export interface Ankiel extends AnkielState {
   /**
-   * Opens the app, signed in, at a path or on a thread `ac.thread` returned. Opening the thread
+   * Opens the app, signed in, at a path or on a thread `ankiel.thread` returned. Opening the thread
    * by its link is the reliable way to reach it: a sidebar row covers its own title text.
    */
   readonly open: (target?: string | AnkielThread) => Promise<void>;
@@ -244,7 +244,7 @@ const sameSite = { lax: "Lax", strict: "Strict", none: "None" } as const;
 const signIn = Effect.fn("scenario.signIn")(function* (baseUrl: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const credential = yield* fs.readFileString(path.join(AC_HOME, "browser-dev-token"));
+  const credential = yield* fs.readFileString(path.join(ANKIEL_HOME, "browser-dev-token"));
   const client = yield* HttpApiClient.make(EnvironmentHttpApi, { baseUrl });
   // Only the cookies are read: a proof runs this against a base server whose body may differ.
   const response = yield* client.auth
@@ -287,7 +287,7 @@ const signIn = Effect.fn("scenario.signIn")(function* (baseUrl: string) {
 
 /** The id every thread link starts with, asked of the server the app talks to. */
 export const environmentId = (baseUrl: string) =>
-  HttpClient.get(`${baseUrl}/.well-known/ac/environment`).pipe(
+  HttpClient.get(`${baseUrl}/.well-known/ankiel/environment`).pipe(
     Effect.flatMap(HttpClientResponse.filterStatusOk),
     Effect.flatMap(
       HttpClientResponse.schemaBodyJson(Schema.Struct({ environmentId: Schema.String })),
@@ -323,9 +323,9 @@ export const rpcClient = Effect.fn("scenario.rpcClient")(function* (home: string
   return yield* RpcClient.make(WsRpcGroup).pipe(Effect.provideContext(protocol));
 });
 
-export const test = base.extend<{ ac: Ankiel }>({
-  ac: async ({ app, browser }, use) => {
-    const { state, cleanup } = makeState(AC_HOME);
+export const test = base.extend<{ ankiel: Ankiel }>({
+  ankiel: async ({ app, browser }, use) => {
+    const { state, cleanup } = makeState(ANKIEL_HOME);
     await use({
       ...state,
       open: async (target = "/") => {

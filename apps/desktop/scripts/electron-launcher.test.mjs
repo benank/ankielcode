@@ -19,9 +19,9 @@ describe("electron development launcher", () => {
   it("uses captured values only as fallbacks for a live runner environment", () => {
     const environmentScript = makeDevelopmentEnvironmentScript({
       VITE_DEV_SERVER_URL: "http://127.0.0.1:8526",
-      AC_PORT: "16566",
-      AC_HOME: "/tmp/ac",
-      AC_OTLP_PROTOCOL: "http/protobuf",
+      ANKIEL_PORT: "16566",
+      ANKIEL_HOME: "/tmp/ankiel",
+      ANKIEL_OTLP_PROTOCOL: "http/protobuf",
     });
 
     assert.include(
@@ -30,7 +30,7 @@ describe("electron development launcher", () => {
     );
     assert.include(
       environmentScript,
-      "if [ -z \"${AC_OTLP_PROTOCOL:-}\" ]; then export AC_OTLP_PROTOCOL='http/protobuf'; fi",
+      "if [ -z \"${ANKIEL_OTLP_PROTOCOL:-}\" ]; then export ANKIEL_OTLP_PROTOCOL='http/protobuf'; fi",
     );
     assert.notInclude(environmentScript, "\nexport VITE_DEV_SERVER_URL=");
   });

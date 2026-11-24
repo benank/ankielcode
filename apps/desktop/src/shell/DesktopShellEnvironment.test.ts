@@ -38,7 +38,11 @@ const decodeCache = Schema.decodeUnknownEffect(cacheCodec);
 
 function envOutput(values: Readonly<Record<string, string>>): string {
   return Object.entries(values)
-    .flatMap(([name, value]) => [`__AC_ENV_${name}_START__`, value, `__AC_ENV_${name}_END__`])
+    .flatMap(([name, value]) => [
+      `__ANKIEL_ENV_${name}_START__`,
+      value,
+      `__ANKIEL_ENV_${name}_END__`,
+    ])
     .join("\n");
 }
 
@@ -181,10 +185,10 @@ function runShellEnvironment(input: {
 
 describe("DesktopShellEnvironment", () => {
   it.effect.each([
-    { platform: "linux" as const, runtime: { APPDIR: "/opt/ac.AppDir/" }, scrub: true },
+    { platform: "linux" as const, runtime: { APPDIR: "/opt/ankiel.AppDir/" }, scrub: true },
     { platform: "linux" as const, runtime: { APPIMAGE: "/opt/Ankiel.AppImage" }, scrub: true },
     { platform: "linux" as const, runtime: {}, scrub: false },
-    { platform: "darwin" as const, runtime: { APPDIR: "/opt/ac.AppDir/" }, scrub: false },
+    { platform: "darwin" as const, runtime: { APPDIR: "/opt/ankiel.AppDir/" }, scrub: false },
   ])(
     "keeps AppImage mounts out of cached and discovered PATH: %j",
     ({ platform, runtime, scrub }) =>
@@ -193,12 +197,13 @@ describe("DesktopShellEnvironment", () => {
         const stateDir = yield* fs.makeTempDirectoryScoped();
         const cachePath = `${stateDir}/shell-environment-cache.json`;
         const inheritedPath =
-          "/tmp/.mount_Ankiel-Codold123/usr/bin:/launcher/bin:/opt/ac.AppDir/usr/bin";
+          "/tmp/.mount_Ankiel-Codold123/usr/bin:/launcher/bin:/opt/ankiel.AppDir/usr/bin";
         const cachedPath = "/cached/bin:/tmp/.mount_Ankiel-Codcache1/usr/bin";
         const discoveredPath = "/fresh/bin:/tmp/.mount_Ankiel-Codprobe1/usr/bin";
-        const retainedPath = "/tmp/tools:/tmp/.mount_Other123/usr/bin:/opt/ac.AppDir-backup/bin";
+        const retainedPath =
+          "/tmp/tools:/tmp/.mount_Other123/usr/bin:/opt/ankiel.AppDir-backup/bin";
         const cleanInherited = scrub
-          ? `/launcher/bin${runtime.APPDIR ? "" : ":/opt/ac.AppDir/usr/bin"}`
+          ? `/launcher/bin${runtime.APPDIR ? "" : ":/opt/ankiel.AppDir/usr/bin"}`
           : inheritedPath;
         const cleanCached = scrub ? "/cached/bin" : cachedPath;
         const cleanDiscovered = scrub ? "/fresh/bin" : discoveredPath;
@@ -353,7 +358,7 @@ describe("DesktopShellEnvironment", () => {
         const source = [
           "const values = { PATH: '/fresh/bin:' + process.env.PATH, __MISE_DIFF: 'fresh-mise', JAVA_HOME: process.env.JAVA_HOME, SSL_CERT_FILE: process.env.SSL_CERT_FILE };",
           "for (const [name, value] of Object.entries(values)) {",
-          "  if (value !== undefined) process.stdout.write('__AC_ENV_' + name + '_START__\\n' + value + '\\n__AC_ENV_' + name + '_END__\\n');",
+          "  if (value !== undefined) process.stdout.write('__ANKIEL_ENV_' + name + '_START__\\n' + value + '\\n__ANKIEL_ENV_' + name + '_END__\\n');",
           "}",
         ].join("\n");
         let calls = 0;

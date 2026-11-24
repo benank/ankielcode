@@ -7,16 +7,16 @@ import { act, render, stubGlobal } from "../../../test/render";
 import { desktopCliCommandStateAtom } from "../../state/desktopCliCommand";
 import { CliCommandSettingsRow } from "./CliCommandSettingsRow";
 
-it("blocks installation behind another ac without blocking removal of our installation", async () => {
+it("blocks installation behind another ankiel without blocking removal of our installation", async () => {
   const state: DesktopCliCommandState = {
     supported: true,
     installedPath: null,
     onPath: false,
-    launcherPath: "/home/test/.ac/bin/ac",
+    launcherPath: "/home/test/.ankiel/bin/ankiel",
   };
   const getState = vi.fn(async (): Promise<DesktopCliCommandState> => ({
     ...state,
-    shadowedBy: "/usr/local/bin/ac",
+    shadowedBy: "/usr/local/bin/ankiel",
   }));
   const uninstall = vi.fn(async () => state);
   using _bridge = stubGlobal("desktopBridge", {
@@ -40,8 +40,8 @@ it("blocks installation behind another ac without blocking removal of our instal
 
   getState.mockResolvedValue({
     ...state,
-    installedPath: "/home/test/.local/bin/ac",
-    shadowedBy: "/usr/local/bin/ac",
+    installedPath: "/home/test/.local/bin/ankiel",
+    shadowedBy: "/usr/local/bin/ankiel",
   });
   await act(() => registry.refresh(desktopCliCommandStateAtom));
   const remove = screen.getByRole("button", { name: "Remove" });

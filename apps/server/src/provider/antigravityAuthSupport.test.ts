@@ -49,10 +49,10 @@ const decodeJson = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown
 describe("Antigravity process environment", () => {
   const profile: AntigravityProfile = {
     platform: "linux",
-    geminiHome: "/ac/userdata/providers/antigravity/profile",
-    acpDirectory: "/ac/userdata/providers/antigravity/profile/antigravity-acp",
-    tokenPath: "/ac/userdata/providers/antigravity/profile/antigravity-acp/acp_token.json",
-    tempDirectory: "/ac/userdata/providers/antigravity/profile/antigravity-acp/tmp",
+    geminiHome: "/ankiel/userdata/providers/antigravity/profile",
+    acpDirectory: "/ankiel/userdata/providers/antigravity/profile/antigravity-acp",
+    tokenPath: "/ankiel/userdata/providers/antigravity/profile/antigravity-acp/acp_token.json",
+    tempDirectory: "/ankiel/userdata/providers/antigravity/profile/antigravity-acp/tmp",
     browserCommand: "managed-browser-helper",
   };
 
@@ -209,7 +209,7 @@ describe("Antigravity process environment", () => {
       const deepestMember =
         "google3\\cloud\\developer_experience\\antigravity_extensions\\acp_server\\_private__agy_acp_server_bin.lazy_imports_info.json";
       const directories = yield* resolveAntigravityInstanceDirectories(
-        "C:\\Users\\a-twenty-char-person\\.ac\\userdata",
+        "C:\\Users\\a-twenty-char-person\\.ankiel\\userdata",
         ProviderInstanceId.make("antigravity"),
       );
       const extracted = (tempDirectory: string) =>
@@ -582,11 +582,11 @@ it.layer(NodeServices.layer)("Antigravity profile preparation", (it) => {
         profileDirectory: path.join(directory, "profile"),
         baseEnv: { PATH: path.dirname(process.execPath) },
       });
-      expect(profile.browserCommand).not.toContain("/packaged/ac");
+      expect(profile.browserCommand).not.toContain("/packaged/ankiel");
       expect(yield* fs.exists(profile.acpDirectory)).toBe(true);
     }).pipe(
       Effect.provideService(HostProcess.IsExecutable, true),
-      Effect.provideService(HostProcess.ExecutablePath, "/packaged/ac"),
+      Effect.provideService(HostProcess.ExecutablePath, "/packaged/ankiel"),
     ),
   );
 

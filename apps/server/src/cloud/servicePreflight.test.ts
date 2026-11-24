@@ -27,10 +27,12 @@ it.each([1])("blocks legacy launcher protocol %i with exact recovery steps", (la
   const reason = result.status === "blocked" ? result.reason : "";
   expect(reason).toMatch(new RegExp(`\\b${launcherProtocol}\\b`));
   expect(reason).toMatch(new RegExp(`\\b${SERVICE_LAUNCHER_PROTOCOL}\\b`));
-  expect(reason).toContain("curl -fsSL https://code.ankiel.com/install.sh | AC_VERSION=9.8.7 sh");
-  expect(reason).toContain("~/.local/bin/ac service install");
-  expect(reason).toContain("ac --version");
-  expect(reason).toContain("which -a ac");
+  expect(reason).toContain(
+    "curl -fsSL https://code.ankiel.com/install.sh | ANKIEL_VERSION=9.8.7 sh",
+  );
+  expect(reason).toContain("~/.local/bin/ankiel service install");
+  expect(reason).toContain("ankiel --version");
+  expect(reason).toContain("which -a ankiel");
 });
 
 // regression: #34502 every installed launcher was protocol 3, so protocol 4 blocked every remote update

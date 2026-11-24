@@ -105,7 +105,7 @@ it.live("keeps migration warnings out of JSON thread output", () =>
           "--base-dir",
           root,
         ],
-        { env: { AC_HOME: root } },
+        { env: { ANKIEL_HOME: root } },
       ),
     );
     const { stdout, stderr, exitCode } = yield* Effect.all(

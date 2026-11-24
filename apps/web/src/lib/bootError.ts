@@ -29,7 +29,7 @@ export async function resolveTriageCommand(bridge: DesktopBridge | undefined) {
     const state = await bridge?.cliCommand.getState();
     // Windows reports onPath from its PATH entry alone; only an existing launcher proves it runs.
     if (state?.launcherPath) {
-      return state.onPath ? "ac triage" : `${launcherCommand(state.launcherPath)} triage`;
+      return state.onPath ? "ankiel triage" : `${launcherCommand(state.launcherPath)} triage`;
     }
   } catch (error) {
     console.warn("Could not read the desktop CLI state.", error);

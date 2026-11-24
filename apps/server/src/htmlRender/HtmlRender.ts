@@ -14,8 +14,8 @@ import {
   type HtmlRenderReference,
 } from "@ankielcode/shared/htmlRender";
 import {
-  AC_CODE_DARK_THEME_COLORS,
-  AC_CODE_LIGHT_THEME_COLORS,
+  ANKIEL_CODE_DARK_THEME_COLORS,
+  ANKIEL_CODE_LIGHT_THEME_COLORS,
   type ThemeAppearance,
 } from "@ankielcode/shared/themePalettes";
 import * as Context from "effect/Context";
@@ -362,7 +362,7 @@ const MAX_CONCURRENT_BROWSERS = 2;
 const MEASURE_TIMEOUT = "6 seconds";
 
 const MEASURE_FRAGMENT = htmlRenderThemeFragment(
-  htmlRenderTheme(AC_CODE_DARK_THEME_COLORS, "dark", HTML_RENDER_MEASURE_FONTS),
+  htmlRenderTheme(ANKIEL_CODE_DARK_THEME_COLORS, "dark", HTML_RENDER_MEASURE_FONTS),
 );
 
 const make = Effect.gen(function* () {
@@ -575,7 +575,7 @@ const make = Effect.gen(function* () {
     const inlined = yield* inline(source);
     const executable = yield* previewBrowser.executable;
     const theme = htmlRenderTheme(
-      appearance === "light" ? AC_CODE_LIGHT_THEME_COLORS : AC_CODE_DARK_THEME_COLORS,
+      appearance === "light" ? ANKIEL_CODE_LIGHT_THEME_COLORS : ANKIEL_CODE_DARK_THEME_COLORS,
       appearance,
       HTML_RENDER_MEASURE_FONTS,
     );

@@ -102,7 +102,7 @@ describe("OtlpEndpointCheck", () => {
   it.effect("does not send export credentials when the signal has no running endpoint", () => {
     const { requests, layer } = checkWith(200, {
       otlpLogsUrl: undefined,
-      otlpLogsExport: { ...DEFAULT_SIGNAL_EXPORT, headers: { authorization: "Bearer ac" } },
+      otlpLogsExport: { ...DEFAULT_SIGNAL_EXPORT, headers: { authorization: "Bearer ankiel" } },
       otelEnvironment: OtelEnvironment.none,
     });
     return Effect.gen(function* () {

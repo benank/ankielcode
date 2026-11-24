@@ -34,7 +34,7 @@ export const WorkflowAgentTranscriptReadObserver = Context.Reference<
     readonly endOffset: number;
     readonly lineCount: number;
   }) => Effect.Effect<void>
->("ac/orchestration/WorkflowAgentTranscriptReadObserver", {
+>("ankiel/orchestration/WorkflowAgentTranscriptReadObserver", {
   defaultValue: () => () => Effect.void,
 });
 

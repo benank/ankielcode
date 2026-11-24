@@ -582,22 +582,22 @@ describe("threadLinkContextReferences", () => {
       [
         "https://app.code.ankiel.com/threads/env-1/t1",
         "<ankiel-thread://v2/env-1/t2>",
-        "[Written](https://app.code.ankiel.com/threads/env-2/ac)",
+        "[Written](https://app.code.ankiel.com/threads/env-2/ankiel)",
       ].join(" "),
       [],
-      ({ threadId }) => (threadId === "ac" ? undefined : `Title ${threadId}`),
+      ({ threadId }) => (threadId === "ankiel" ? undefined : `Title ${threadId}`),
     );
     expect(pasted.text).toBe(
       [
         reference("env-1", "t1", "Title t1"),
         reference("env-1", "t2", "Title t2"),
-        reference("env-2", "ac", "Written"),
+        reference("env-2", "ankiel", "Written"),
       ].join(" "),
     );
     expect(pasted.records).toEqual([
       threadContextRecord(thread("env-1", "t1"), "Title t1"),
       threadContextRecord(thread("env-1", "t2"), "Title t2"),
-      threadContextRecord(thread("env-2", "ac"), "Written"),
+      threadContextRecord(thread("env-2", "ankiel"), "Written"),
     ]);
   });
 
@@ -622,7 +622,7 @@ describe("threadLinkContextReferences", () => {
     const text = [
       "https://app.code.ankiel.com/threads/elsewhere/t1",
       "[Old](ankiel-thread://v1/t2)",
-      "`https://app.code.ankiel.com/threads/env-1/ac`",
+      "`https://app.code.ankiel.com/threads/env-1/ankiel`",
     ].join(" ");
     const pasted = threadLinkContextReferences(
       text,

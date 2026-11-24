@@ -19,8 +19,8 @@ and stop verification. Do not install or switch to another automation system.
 
 Reuse this task's healthy backend. Otherwise run `vp run dev` from the
 repository root, retain its terminal session, and read the actual backend port
-from the dev-runner output. Use the worktree's ignored `.ac` state. Never run
-against `~/.ac/userdata`. The Browser panel is not required for this workflow.
+from the dev-runner output. Use the worktree's ignored `.ankiel` state. Never run
+against `~/.ankiel/userdata`. The Browser panel is not required for this workflow.
 
 Test with meaningful project and thread data. Read the shared
 [SQLite fixture reference](../test-ankiel-app/references/sqlite-fixtures.md) only

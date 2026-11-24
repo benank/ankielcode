@@ -30,17 +30,17 @@ describe("versionSkew", () => {
     expect(
       manualServerUpdateCommand("0.0.45", {
         kind: "ankiel-launcher",
-        launcher: "ac",
-        baseDir: "/home/u/.ac",
+        launcher: "ankiel",
+        baseDir: "/home/u/.ankiel",
       }),
-    ).toBe("'ac' update --base-dir '/home/u/.ac' 0.0.45");
+    ).toBe("'ankiel' update --base-dir '/home/u/.ankiel' 0.0.45");
     expect(
       manualServerUpdateCommand("0.0.45", {
         kind: "ankiel-launcher",
-        launcher: "/opt/maria's bin/ac",
-        baseDir: "/data/ac home",
+        launcher: "/opt/maria's bin/ankiel",
+        baseDir: "/data/ankiel home",
       }),
-    ).toBe("'/opt/maria'\\''s bin/ac' update --base-dir '/data/ac home' 0.0.45");
+    ).toBe("'/opt/maria'\\''s bin/ankiel' update --base-dir '/data/ankiel home' 0.0.45");
   });
   beforeEach(() => {
     branding.APP_VERSION = "0.0.34";

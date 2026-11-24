@@ -2032,19 +2032,19 @@
   "bc8ab792af1d656f": "Execute no seu computador:",
   "0ba14e4e920cfa00": "Ou baixe o app para desktop",
   "0e79b7a6508a6286": "Depois",
-  "cfca7a55a9a2fcb4": [
+  "754c728de3ca9fc8": [
     "Pule a instalação se você já tem o ",
     {
       "t": "code",
       "i": 1,
-      "c": "ac"
+      "c": "ankiel"
     },
     ". Se o",
     " ",
     {
       "t": "code",
       "i": 2,
-      "c": "ac"
+      "c": "ankiel"
     },
     " não for encontrado após a instalação, adicione ao seu PATH a pasta indicada pelo instalador."
   ],
@@ -2102,7 +2102,7 @@
   "a1190e56375f2032": "{action} ({shortcut})",
   "f16b6d8ef68bab61": "Não foi possível importar {name}.",
   "924d4b8e011c9127": "Falha ao importar a ação.",
-  "8fe93cb6ae78f13b": "Importar",
+  "663619054e7debf1": "Importar",
   "06690d4ce0d19c30": "Editar {name}",
   "ecb748ae62a9a0b8": "Adicionar script do projeto",
   "56cbda4e9747cfb0": "Adicionar ação",
@@ -2281,8 +2281,8 @@
   "b25472ef70df9b5d": "Atualizar tudo",
   "febf4ec3cdcdf372": "Comando de atualização copiado",
   "bee440d0da53841c": "Comando de reinício copiado",
-  "2666cce5f69c24ed": "Execute `{command}` em {serverLabel} e reinicie o ac com as opções de sempre.",
-  "32b77370c697d05b": "Pare o ac em {serverLabel} e reinicie com `{command}` usando o mesmo subcomando e as mesmas opções. Isso não atualiza um comando ac instalado.",
+  "27b357927d8ae8f7": "Execute `{command}` em {serverLabel} e reinicie o ankiel com as opções de sempre.",
+  "77d92e0d0f731207": "Pare o ankiel em {serverLabel} e reinicie com `{command}` usando o mesmo subcomando e as mesmas opções. Isso não atualiza um comando ankiel instalado.",
   "3cb4fcae1546e2eb": "Não foi possível copiar o comando de atualização",
   "7d3b6d270fbb8f0d": "Atualizar o app para desktop do Ankiel Code que executa {serverLabel}? Ele será fechado e reaberto nessa máquina.",
   "a1581c125ff5ba06": "Copiar comando de atualização",
@@ -2872,8 +2872,8 @@
   "62450481c00d2ef3": "O ambiente do rascunho não está disponível para limpar a transcrição.",
   "0674544195fcdc39": "A transcrição original foi adicionada.",
   "c64cb58d9cecbcd2": "Falha ao limpar a transcrição",
-  "3c225a761345892c": "O comando ac não está disponível.",
-  "ac1aeb69de4e7553": "Falha ao carregar o estado do comando ac.",
+  "4be0869469f66905": "O comando ankiel não está disponível.",
+  "ee3dff7537814cd9": "Falha ao carregar o estado do comando ankiel.",
   "1bf6910332426e62": "O acesso à rede do desktop não está disponível.",
   "453d2f1825d6e763": "Falha ao carregar o estado de exposição do servidor do desktop.",
   "2f388f3d76869c03": "Falha ao carregar os endpoints anunciados do desktop.",
@@ -2996,13 +2996,13 @@
   ],
   "c54cc9c75db9dc58": "Aprove apenas um login que você acabou de iniciar.",
   "e9f4b93c4ec30453": "Código de login",
-  "06d1f161c2647a14": [
+  "93d753032e15f1be": [
     "Obtenha um em Usar o Ankiel Code em outro app (MCP), Configurações → Compartilhamento ou com",
     " ",
     {
       "t": "code",
       "i": 1,
-      "c": "ac auth pairing create"
+      "c": "ankiel auth pairing create"
     },
     " nesta máquina."
   ],
@@ -5655,7 +5655,7 @@
     "neste terminal."
   ],
   "9d9b9624c7bd95df": "Outras pastas",
-  "ef6d61884d758c44": [
+  "815c9238c306cf79": [
     "Adicionado a ",
     {
       "i": 1,
@@ -5667,16 +5667,16 @@
     {
       "t": "code",
       "i": 2,
-      "c": "ac"
+      "c": "ankiel"
     },
     "."
   ],
-  "453f17e849c366c5": [
+  "fecdf5662c541c0c": [
     "Use ",
     {
       "t": "code",
       "i": 1,
-      "c": "ac"
+      "c": "ankiel"
     },
     " em qualquer terminal. Adiciona uma linha a",
     " ",
@@ -6804,7 +6804,7 @@
   "8a333daf9b7fd03f": "Conectar a {environment}",
   "7662025844bf543f": "Adicionar ambiente",
   "65b1d784a5e84254": "Pareie esta máquina novamente por outro endereço, como o nome dela no Tailscale. Ele se junta às rotas existentes em vez de adicionar uma segunda máquina.",
-  "8f9173010f8d17f8": "Crie um código de pareamento em {environment}, em Configurações → Compartilhamento e acesso ou com `ac auth pairing create`, e insira-o aqui.",
+  "724f4d9d8dcc9ce5": "Crie um código de pareamento em {environment}, em Configurações → Compartilhamento e acesso ou com `ankiel auth pairing create`, e insira-o aqui.",
   "1bea4864d46d70d0": "Parear outro ambiente com este cliente.",
   "9b24ef052b321e57": "Informe o host do backend e um código de pareamento.",
   "3e20f17f71edf0ad": "Usa a configuração SSH local, o agent e túneis para o backend.",
@@ -7073,7 +7073,7 @@
   "f818040c75078d53": "Redefinir a nomenclatura de branches para o padrão",
   "2c82cf0bf586ddd8": "Nomes de branch dos worktrees",
   "bff8a0d14cb10f17": "Prefixo do branch",
-  "b9d115ba3a4fb3f0": "Por exemplo, ac ou ac/ gera ac/add-search. Deixe vazio para não usar prefixo.",
+  "d7b25fa67fcec9d3": "Por exemplo, ankiel ou ankiel/ gera ankiel/add-search. Deixe vazio para não usar prefixo.",
   "fc32aa5738bccb9a": "Redefinir o prefixo de branch para o padrão",
   "452b86cb8c4e0432": "Sem prefixo",
   "abcdead6f7529103": "Instruções para nomear branches",
@@ -7253,17 +7253,17 @@
       "v": "v"
     }
   ],
-  "88fe42475ca28b85": "Não foi possível instalar o ac",
-  "ee1821abe6f9cacd": "Não foi possível remover o ac",
-  "650adf0aac086a1e": "Não foi possível adicionar o ac ao PATH",
-  "dfc065762962b0fb": "Outro ac em {path} roda primeiro em um novo terminal. Remova-o para usar o do Ankiel Code.",
-  "a04640d6d7b4985b": "Execute o CLI do Ankiel Code como `ac` em qualquer terminal.",
+  "09fb032045f225e3": "Não foi possível instalar o ankiel",
+  "c87078772952f947": "Não foi possível remover o ankiel",
+  "97df5936dd8184a8": "Não foi possível adicionar o ankiel ao PATH",
+  "558bf79029d80921": "Outro ankiel em {path} roda primeiro em um novo terminal. Remova-o para usar o do Ankiel Code.",
+  "fe8f07a2d7ddb9ff": "Execute o CLI do Ankiel Code como `ankiel` em qualquer terminal.",
   "4f6e93011ef2da6f": "Instalado em {path}. Abra um novo terminal para usá-lo.",
   "371ca438cf467125": "Instalado em {path} e adicionado ao PATH em {file}. Abra um novo terminal para usá-lo.",
   "fd3eece9d1a7ea38": "Instalado em {path}, que ainda não está no seu PATH.",
-  "c9a13a14cda6b1d5": "Instalado em {path}, que ainda não está no seu PATH. Adicione a pasta dele ao PATH para executar `ac`.",
-  "d322b55c8423f1d3": "Remover",
-  "320c8328108c83b0": "Instalar",
+  "437c6ac2716a2710": "Instalado em {path}, que ainda não está no seu PATH. Adicione a pasta dele ao PATH para executar `ankiel`.",
+  "78e60242724c5fcd": "Remover",
+  "eced2267f057fcf5": "Instalar",
   "9a284b5893dc04a2": "Modelo do OpenRouter",
   "c8361c16c47d5fb5": "Pesquisar modelos de transcrição",
   "d72eccdd92d4f989": "Não foi possível salvar esta alteração. Verifique sua conexão e tente novamente.",
@@ -8299,7 +8299,7 @@
   "ca4e4015b89ed9a8": "Não foi possível vincular {target} de volta a {source}",
   "64ac3d1579ca9f5b": "Vincular {source} a {target}",
   "5f2e20c62a4fece3": "{via} está vinculado a {target} com acesso total, então obtém o código de pareamento. Nenhum código para colar.",
-  "54878cf5402fee39": "Em Compartilhamento e acesso de lá, ou ac pair",
+  "d3c539a54eaabb89": "Em Compartilhamento e acesso de lá, ou ankiel pair",
   "1e3fee7084791773": "Vincular também {target} de volta a {source}",
   "ea34a190b0bd804c": "Os agentes de {target} poderão trabalhar também em {source}.",
   "974f8c65e8b5f492": "Esquecer {label}? Os agentes daqui param de trabalhar lá, e a sessão deles em {label} também termina se ele responder.",
@@ -8409,10 +8409,10 @@
   "74a80f881d59c64d": "Comandos executados no checkout deste projeto ou no worktree dele, com atalhos opcionais.",
   "b021ef2874c6c24b": "Ações diferentes entre checkouts",
   "1e0bbb3a6c4afd6c": "Restrinja a seleção acima a um checkout para editar a lista dele. Adicionar uma ação aqui a adiciona a todos os checkouts selecionados.",
-  "04cf90f46cdb2bf6": "ac.json é inválido",
-  "2dc7d38655f56dfa": "Existe um ac.json neste checkout, mas ele não pode ser analisado, então todas as ações e ícones que ele declara são ignorados. Verifique a sintaxe JSON e os valores dos ícones.",
+  "cadea0b16f1c04d2": "ankiel.json é inválido",
+  "85855bc77b8ebe02": "Existe um ankiel.json neste checkout, mas ele não pode ser analisado, então todas as ações e ícones que ele declara são ignorados. Verifique a sintaxe JSON e os valores dos ícones.",
   "df4cf566c6d08a4b": "Importar scripts",
-  "70b41dde44c7c955": "Importar do ac.json",
+  "8e7ff6b1cbf59e0d": "Importar do ankiel.json",
   "84f1752d64c3152e": "Adiciona as ações declaradas por este checkout sem editá-las antes.",
   "3b893da0373ab50e": "Adicionar ação",
   "5afea423d829496e": "Este provedor não está disponível neste ambiente.",
@@ -8429,7 +8429,7 @@
   "2f65da0a2375c66a": "Automático (misto)",
   "369304844a14a649": "Nenhum provedor disponível",
   "846ba52561c0e6bb": "Onde as novas threads deste projeto começam.",
-  "6fd04e26194b539c": "Onde as novas threads começam. Os projetos e o ac.json deles podem substituir isso.",
+  "775d9d472acb4fad": "Onde as novas threads começam. Os projetos e o ankiel.json deles podem substituir isso.",
   "8ab693ae67cd5e86": "Redefinir o workspace padrão para o padrão",
   "d1d1342ccb83a14b": "Workspace padrão",
   "a22721e847136f21": "Indisponível",
@@ -8460,7 +8460,7 @@
   "9290d5de050e5302": "Método de merge padrão de pull requests",
   "3619911bbdb05fc1": "Último selecionado",
   "87717de46afcdaed": "Como os novos worktrees deste projeto preenchem os submódulos git.",
-  "5013be9ba55604f5": "Como os novos worktrees preenchem os submódulos git. Os projetos e o ac.json deles podem substituir isso.",
+  "3b0a2459278e58c2": "Como os novos worktrees preenchem os submódulos git. Os projetos e o ankiel.json deles podem substituir isso.",
   "74a80f6d7962be21": "Redefinir os submódulos de worktrees para o padrão",
   "1c97d5a78ca1fdb6": "Submódulos do worktree",
   "2c2b437431e4cd1d": "Nenhum provedor disponível",
@@ -9019,7 +9019,7 @@
   "cdacfb87d557007b": "Falha ao copiar a URL do MCP para a área de transferência.",
   "a9f514109c355d42": "Não foi possível copiar o ID do trace",
   "7ae6db00431a85fe": "URL do MCP copiada",
-  "8abc042f1dd922f4": "Adicione-a a um agente, ex.: claude mcp add --transport http ac {url}",
+  "5b81d23fe4f0cb25": "Adicione-a a um agente, ex.: claude mcp add --transport http ankiel {url}",
   "69f1a5115bd716c8": "Não foi possível copiar a URL do MCP",
   "4112c1a7b3c1d029": "Reiniciando",
   "543ef9fcaf8aa96f": "Desligado",
@@ -11046,7 +11046,7 @@
   "dfd5b72fe7308d9e": "Salvo neste dispositivo. Selecione Todos os projetos para alterar.",
   "091be13f50490708": "Misto entre os ambientes selecionados",
   "06e9973f7537ed51": "Substituído neste projeto",
-  "85162f366d6f4e9c": "Herdado do ac.json do repositório",
+  "a5eaf5910f1c9ada": "Herdado do ankiel.json do repositório",
   "539b097411fd1307": "Herdado do ambiente",
   "6340f81c024cfe12": "Herdado de {environment}",
   "49a60879f4348f46": "Definido no ambiente",
@@ -11170,7 +11170,7 @@
   "00469926c7027e2d": "equilibrado desempenho economia de bateria avançado git fetch verificação de provedores atualizar host energia monitor política de ociosidade",
   "54e33e572cc71746": "workspace padrão modo rascunho local worktree",
   "b2ece956b72c4a48": "Submódulos",
-  "f8a7b2411ce9243b": "git submódulo init recursivo nível superior nenhum worktree ac.json",
+  "a1582d42fd15c3d7": "git submódulo init recursivo nível superior nenhum worktree ankiel.json",
   "88553740587a9beb": "Iniciar a partir do remoto",
   "4a172e139167badc": "novos worktrees começar remoto origin mais recente branch buscado local",
   "30aac12099fcaf53": "Adicionar projeto começa em",
@@ -11184,7 +11184,7 @@
   "0c5fc3b5e41e1956": "títulos gerados de threads prompt estilo personalizado nomenclatura renomear gerar novamente",
   "a83570bcb45d8fa1": "sobre verificar atualizações baixar instalar atualizar versão",
   "d65bdf6748801734": "canal de versões estável latest nightly pré-lançamento",
-  "0583168f77c0d564": "Comando ac",
+  "b6001b03d11515f3": "Comando ankiel",
   "46dd4dc08c1e552f": "cli terminal shell path instalar linha de comando",
   "86479042bae0e2db": "App móvel",
   "dc2a999ca67ccf31": "celular tablet iPhone iPad iOS Android App Store Google Play QR",
@@ -11241,7 +11241,7 @@
   "4c241258fdc87942": "pull request pr revisão guiada guia tour beta experimental",
   "39e4c844a9d56a1d": "pull request pr revisão guiada guia resumo mantenedor",
   "f27f2e85e05f664c": "pull request pr revisão guiada guia preferências gosto prompt personalizado",
-  "f64aa58a2824bc01": "comandos scripts setup executar servidor dev checkout worktree ac.json importar",
+  "539d7ddd20619d83": "comandos scripts setup executar servidor dev checkout worktree ankiel.json importar",
   "756e41fd7e0b044c": "pastas rastreadas multi repo workspace code-workspace reescanear adicionar pasta",
   "c349ea1db3f9e9f1": "Ícone do ambiente",
   "18bd7981d6c50994": "máquina glifo barra lateral mac mini studio notebook desktop servidor nuvem vm",

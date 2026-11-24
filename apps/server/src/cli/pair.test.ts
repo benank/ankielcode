@@ -113,7 +113,7 @@ const withDescriptorServer = <A, E, R>(
   Effect.acquireUseRelease(
     Effect.callback<NodeHttp.Server>((resume) => {
       const server = NodeHttp.createServer((request, response) => {
-        if (request.url === "/.well-known/ac/environment") {
+        if (request.url === "/.well-known/ankiel/environment") {
           response.writeHead(200, { "content-type": "application/json" });
           response.end(JSON.stringify(descriptor));
           return;
@@ -133,7 +133,7 @@ const withDescriptorServer = <A, E, R>(
     (server) => Effect.sync(() => server.close()),
   );
 
-describe("ac pair", () => {
+describe("ankiel pair", () => {
   it.effect("publishes an IPv6-only server through Tailscale Serve when pairing", () =>
     withDescriptorServer(
       (origin) =>
@@ -147,7 +147,7 @@ describe("ac pair", () => {
               if (command.args[0] === "serve" && command.args[1] === "--bg") {
                 const target = String(command.args.at(-1));
                 const descriptor = yield* Effect.promise(async () =>
-                  (await fetch(new URL("/.well-known/ac/environment", target))).json(),
+                  (await fetch(new URL("/.well-known/ankiel/environment", target))).json(),
                 );
                 expect(descriptor).toEqual(testDescriptor);
                 serving = true;
@@ -188,7 +188,7 @@ describe("ac pair", () => {
                 if (String(input).startsWith(origin)) return fetch(input, init);
                 assert.equal(
                   String(input),
-                  "https://pair-test.tail.ts.net/.well-known/ac/environment",
+                  "https://pair-test.tail.ts.net/.well-known/ankiel/environment",
                 );
                 return serving
                   ? Response.json(testDescriptor)
@@ -320,7 +320,7 @@ describe("ac pair", () => {
           readonly scopes: ReadonlyArray<string>;
         }>;
         assert.equal(credentials.length, 1);
-        assert.equal(credentials[0]?.label, "ac pair");
+        assert.equal(credentials[0]?.label, "ankiel pair");
         assert.deepEqual(credentials[0]?.scopes, AuthStandardClientScopes);
       }),
     ).pipe(
@@ -393,7 +393,7 @@ describe("ac pair", () => {
             ),
             Effect.provide(
               ConfigProvider.layer(
-                ConfigProvider.fromEnv({ env: { AC_DEV_MANAGED_POLICY_PATH: policyPath } }),
+                ConfigProvider.fromEnv({ env: { ANKIEL_DEV_MANAGED_POLICY_PATH: policyPath } }),
               ),
             ),
             Effect.flip,
@@ -411,7 +411,7 @@ describe("ac pair", () => {
   it.effect("ignores runtime state whose recorded pid is no longer alive", () =>
     withDescriptorServer((origin) =>
       Effect.gen(function* () {
-        const baseDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "ac pair pid test-"));
+        const baseDir = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "ankiel pair pid test-"));
         const statePath = NodePath.join(baseDir, "userdata", "server-runtime.json");
         const state = yield* makePersistedServerRuntimeState({
           config: { host: "127.0.0.1", devUrl: undefined },
@@ -465,7 +465,7 @@ describe("ac pair", () => {
           runCli(["pair"]).pipe(
             Effect.provideService(HostProcess.WorkingDirectory, worktree),
             Effect.provide(
-              ConfigProvider.layer(ConfigProvider.fromEnv({ env: { AC_HOME: sharedHome } })),
+              ConfigProvider.layer(ConfigProvider.fromEnv({ env: { ANKIEL_HOME: sharedHome } })),
             ),
             Effect.flip,
           ),
@@ -620,10 +620,13 @@ describe("ac pair", () => {
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideService(HostProcess.Platform, "darwin"),
           Effect.provideService(FetchHttpClient.Fetch, async (input) => {
-            if (String(input) === "http://127.0.0.2:3773/.well-known/ac/environment") {
+            if (String(input) === "http://127.0.0.2:3773/.well-known/ankiel/environment") {
               return Response.json(testDescriptor);
             }
-            assert.equal(String(input), "https://pair-test.tail.ts.net/.well-known/ac/environment");
+            assert.equal(
+              String(input),
+              "https://pair-test.tail.ts.net/.well-known/ankiel/environment",
+            );
             return new Response(null, { status: 503 });
           }),
           Effect.flip,
@@ -686,10 +689,13 @@ describe("ac pair", () => {
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideService(HostProcess.Platform, "linux"),
           Effect.provideService(FetchHttpClient.Fetch, async (input) => {
-            if (String(input) === "http://127.0.0.1:3773/.well-known/ac/environment") {
+            if (String(input) === "http://127.0.0.1:3773/.well-known/ankiel/environment") {
               return Response.json(testDescriptor);
             }
-            assert.equal(String(input), "https://pair-test.tail.ts.net/.well-known/ac/environment");
+            assert.equal(
+              String(input),
+              "https://pair-test.tail.ts.net/.well-known/ankiel/environment",
+            );
             return new Response(null, { status: 503 });
           }),
           Effect.flip,
@@ -905,7 +911,7 @@ describe("auth scope options", () => {
       if (!CliError.isCliError(error) || error._tag !== "ShowHelp") {
         assert.fail(`Expected ShowHelp, got ${String(error)}`);
       }
-      assert.deepEqual(error.commandPath, ["ac", ...command]);
+      assert.deepEqual(error.commandPath, ["ankiel", ...command]);
       const scopeError = error.errors[0];
       if (scopeError?._tag !== "InvalidValue") {
         assert.fail(`Expected InvalidValue, got ${String(scopeError?._tag)}`);

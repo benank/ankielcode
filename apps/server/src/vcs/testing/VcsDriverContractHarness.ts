@@ -43,7 +43,7 @@ export interface VcsDriverContractSuiteInput<R, E> {
 
 export function runVcsDriverContractSuite<R, E>(input: VcsDriverContractSuiteInput<R, E>) {
   const makeTmpDir = (
-    prefix = `ac-${input.kind}-vcs-contract-`,
+    prefix = `ankiel-${input.kind}-vcs-contract-`,
   ): Effect.Effect<string, PlatformError.PlatformError, FileSystem.FileSystem | Scope.Scope> =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;

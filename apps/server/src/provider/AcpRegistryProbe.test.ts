@@ -379,8 +379,8 @@ describe("ACP Registry probe", () => {
             args: [mockAgentPath],
             env: {
               ...process.env,
-              AC_ACP_SESSION_LIFECYCLE: "1",
-              AC_ACP_AUTH_METHOD_ID: "mock-login",
+              ANKIEL_ACP_SESSION_LIFECYCLE: "1",
+              ANKIEL_ACP_AUTH_METHOD_ID: "mock-login",
             },
           },
         }),
@@ -440,9 +440,9 @@ describe("ACP Registry probe", () => {
                 args: [mockAgentPath],
                 env: {
                   ...process.env,
-                  AC_ACP_V2_MANAGEMENT: "1",
-                  AC_ACP_REQUEST_LOG_PATH: requestLogPath,
-                  ...(deleteOutcome === "fails" ? { AC_ACP_FAIL_DELETE_SESSION: "1" } : {}),
+                  ANKIEL_ACP_V2_MANAGEMENT: "1",
+                  ANKIEL_ACP_REQUEST_LOG_PATH: requestLogPath,
+                  ...(deleteOutcome === "fails" ? { ANKIEL_ACP_FAIL_DELETE_SESSION: "1" } : {}),
                 },
               },
             }),

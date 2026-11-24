@@ -199,23 +199,25 @@ describe("scoreThreadSearch", () => {
   });
 
   it("finds a branch pasted with the app's worktree prefix", () => {
-    const subject = thread("Cmd+K search", { branch: "ac/cmdk-search-v2" });
-    expect(scoreThreadSearch(foldSearchQuery("ac/cmdk-search-v2"), subject, NOW)).not.toBeNull();
-    expect(scoreThreadSearch(foldSearchQuery("ac/cmdk"), subject, NOW)).not.toBeNull();
+    const subject = thread("Cmd+K search", { branch: "ankiel/cmdk-search-v2" });
+    expect(
+      scoreThreadSearch(foldSearchQuery("ankiel/cmdk-search-v2"), subject, NOW),
+    ).not.toBeNull();
+    expect(scoreThreadSearch(foldSearchQuery("ankiel/cmdk"), subject, NOW)).not.toBeNull();
   });
 
   it("ranks a title holding the words above the app's own branch prefix and project name", () => {
     const busy = { activityAt: NOW, opens: { openedAt: NOW, score: 6, picks: [] } };
     expect(
-      rankTitles("ac connect", [
+      rankTitles("ankiel connect", [
         thread("Diagnose Connect provisioning failures", {
           ...busy,
-          branch: "ac/diagnose-connect",
+          branch: "ankiel/diagnose-connect",
           projectTitle: "ankielcode",
         }),
-        thread("AC Connect Tunnel Lifecycle Review", { projectTitle: "ankielcode" }),
+        thread("Ankiel Connect Tunnel Lifecycle Review", { projectTitle: "ankielcode" }),
       ])[0],
-    ).toBe("AC Connect Tunnel Lifecycle Review");
+    ).toBe("Ankiel Connect Tunnel Lifecycle Review");
     expect(
       rankTitles("ankielcode", [
         thread("Fix sidebar lag", {
@@ -230,7 +232,7 @@ describe("scoreThreadSearch", () => {
 
   it("matches pull request numbers, branches, and projects with every token somewhere", () => {
     const subject = thread("Trim model lists", {
-      branch: "ac/trim-mcp-models",
+      branch: "ankiel/trim-mcp-models",
       projectTitle: "ankielcode",
       pullRequests: [{ number: 22889, title: "Smaller MCP payloads" }],
     });
@@ -321,7 +323,7 @@ describe("scoreThreadSearch beyond Latin text and titles", () => {
 
   it("says which field matched when the title does not", () => {
     const subject = thread("Trim model lists", {
-      branch: "ac/cleanup-payloads",
+      branch: "ankiel/cleanup-payloads",
       pullRequests: [{ number: 22889, title: "Smaller MCP payloads" }],
     });
     for (const query of ["#22889", "pr 22889", "pr22889", "pull request #22889"]) {
@@ -340,10 +342,10 @@ describe("scoreThreadSearch beyond Latin text and titles", () => {
       ranges: [{ start: 0, end: 7 }],
     });
     expect(scoreThreadSearch("trim", subject, NOW)?.explain?.()).toBeUndefined();
-    // Nor is it in the flat ac-<hex> form used when a `ac` branch blocks nested refs.
+    // Nor is it in the flat ankiel-<hex> form used when a `ankiel` branch blocks nested refs.
     const flat = thread("Add search", { branch: "ankiel-abcd1234" });
-    expect(scoreThreadSearch("ac", flat, NOW)).toBeNull();
-    expect(scoreThreadSearch("ac connect", flat, NOW)).toBeNull();
+    expect(scoreThreadSearch("ankiel", flat, NOW)).toBeNull();
+    expect(scoreThreadSearch("ankiel connect", flat, NOW)).toBeNull();
     expect(scoreThreadSearch("abcd1234", flat, NOW)).not.toBeNull();
     for (const query of ["ankiel-abcd", "ankiel-abcd1234 connect", "connect ankiel-abcd1234"]) {
       expect(scoreThreadSearch(query, { ...flat, projectTitle: "connect" }, NOW)).not.toBeNull();

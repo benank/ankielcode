@@ -514,7 +514,7 @@ describe("server browser element refs", () => {
     expect(tree.match(/\/url: data:text\/plain,…$/gm)).toHaveLength(8);
     expect(tree).toContain("/url: data:,…");
     expect(tree).toContain("/url: https://example.com/data:report,2026");
-    expect(tree).toMatch(/link "data:text\/plain,label" \[ref=ac-/);
+    expect(tree).toMatch(/link "data:text\/plain,label" \[ref=ankiel-/);
     expect(tree).not.toMatch(/PAYLOAD|tail|charset|\u2028/);
     expect(tree).toContain('/url: "\\"data:text/plain,relative"');
   });

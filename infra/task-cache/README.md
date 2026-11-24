@@ -19,7 +19,7 @@ The stack reads read-only credential digests from `~/.config/ankiel-task-cache/r
 
 The database’s `scopes` and `deployment` records control repository identity, push branch, quotas, and retention. `pull_requests` explicitly enables same-repository PR uploads targeting the configured `branch`; `writes_enabled` disables all artifact uploads, including those from maintainers. Provisioning a separate cache requires its own repository policy; a new empty database does not grant uploads.
 
-The CI read identity is named `ci-reader`. Its raw token belongs in the GitHub repository secret `AC_TASK_CACHE_READ_TOKEN`; `readers.json` maps that name to the token’s SHA-256 hex digest. To rotate it, replace that digest, deploy, then replace the GitHub secret. Keep the optional private `ci-reader.json` file as `{ "name": "ci-reader", "token": "…" }` for the smoke test to verify read-only restoration; without it, smoke uses the operator’s saved credential. Never commit these files. The read credential cannot upload artifacts.
+The CI read identity is named `ci-reader`. Its raw token belongs in the GitHub repository secret `ANKIEL_TASK_CACHE_READ_TOKEN`; `readers.json` maps that name to the token’s SHA-256 hex digest. To rotate it, replace that digest, deploy, then replace the GitHub secret. Keep the optional private `ci-reader.json` file as `{ "name": "ci-reader", "token": "…" }` for the smoke test to verify read-only restoration; without it, smoke uses the operator’s saved credential. Never commit these files. The read credential cannot upload artifacts.
 
 ## Add a contributor or machine
 
@@ -53,7 +53,7 @@ The smoke check uploads a unique fixture, restores its output into a cold second
 
 ## Native clients
 
-`/projects/ankielcode/native-clients/<platform>/<variant>/<expo-fingerprint>` stores simulator and emulator development clients for `scripts/mobile-native-client.ts` in a separate `-native-clients` R2 bucket with 30-day retention. Unlike Vite Task entries, the Expo fingerprint is portable, so a client built on any Mac or Linux machine serves every other one. The `Mobile Dev Client` workflow builds them in CI and uploads as the writer `ci-native-clients` (`node infra/task-cache/scripts/manage.ts add-writer ci-native-clients`, deploy, then put the token from the file it writes in the repository secret `AC_NATIVE_CLIENT_WRITE_TOKEN`); without that secret the workflow builds nothing. Readers download; writers upload through R2 multipart in 64 MB parts, because Workers cap request bodies. The uploader's bundle digest is stored as object metadata and checked by the client before it installs anything.
+`/projects/ankielcode/native-clients/<platform>/<variant>/<expo-fingerprint>` stores simulator and emulator development clients for `scripts/mobile-native-client.ts` in a separate `-native-clients` R2 bucket with 30-day retention. Unlike Vite Task entries, the Expo fingerprint is portable, so a client built on any Mac or Linux machine serves every other one. The `Mobile Dev Client` workflow builds them in CI and uploads as the writer `ci-native-clients` (`node infra/task-cache/scripts/manage.ts add-writer ci-native-clients`, deploy, then put the token from the file it writes in the repository secret `ANKIEL_NATIVE_CLIENT_WRITE_TOKEN`); without that secret the workflow builds nothing. Readers download; writers upload through R2 multipart in 64 MB parts, because Workers cap request bodies. The uploader's bundle digest is stored as object metadata and checked by the client before it installs anything.
 
 ## Current limits
 

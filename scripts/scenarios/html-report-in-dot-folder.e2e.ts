@@ -1,16 +1,16 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 test(
   "An explicitly opened HTML report in a dot-prefixed folder renders its contents",
   WEB,
-  async ({ ac, app, screen, browser }) => {
-    const project = await ac.project("demo", {
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("demo", {
       ".reports/report.html": "<!doctype html><html><body><h1>Quarterly report</h1></body></html>",
     });
-    const thread = await ac.thread({ project, title: "Review report", messages: ["Start"] });
-    await ac.open(thread);
+    const thread = await ankiel.thread({ project, title: "Review report", messages: ["Start"] });
+    await ankiel.open(thread);
     await expect(screen.getByText("fixture turn complete", { exact: false })).toBeVisible();
 
     await browser.keyboard.press("Control+p");

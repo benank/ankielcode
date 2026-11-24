@@ -90,7 +90,7 @@ export interface McpToolSession {
 
 /**
  * One initialized MCP session over Ankiel Code's HTTP endpoint, terminated when
- * the scope closes. Used by the ACP terminal fallback and `ac thread`.
+ * the scope closes. Used by the ACP terminal fallback and `ankiel thread`.
  */
 export const mcpToolSession = (
   options: McpToolSessionOptions,
@@ -366,10 +366,12 @@ export async function runAcpMcpCliFastPath(
   command: "acp-mcp-bridge" | "acp-mcp-call",
   args: ReadonlyArray<string>,
 ): Promise<void> {
-  const endpoint = process.env.AC_ACP_MCP_ENDPOINT;
-  const authorization = process.env.AC_ACP_MCP_AUTHORIZATION;
+  const endpoint = process.env.ANKIEL_ACP_MCP_ENDPOINT;
+  const authorization = process.env.ANKIEL_ACP_MCP_AUTHORIZATION;
   if (endpoint === undefined || authorization === undefined) {
-    process.stderr.write(`${command} requires AC_ACP_MCP_ENDPOINT and AC_ACP_MCP_AUTHORIZATION.\n`);
+    process.stderr.write(
+      `${command} requires ANKIEL_ACP_MCP_ENDPOINT and ANKIEL_ACP_MCP_AUTHORIZATION.\n`,
+    );
     process.exitCode = 2;
     return;
   }

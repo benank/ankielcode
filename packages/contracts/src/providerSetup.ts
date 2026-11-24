@@ -132,7 +132,7 @@ export const ProviderAuthState = Schema.Struct({
     ForwardCompatibleArray(ProviderAuthMethod).check(Schema.isMaxLength(32)),
   ),
   interaction: ForwardCompatibleOptional(Schema.NullOr(ProviderAuthInteraction)),
-  credentialOwner: ForwardCompatibleOptional(Schema.Literals(["provider", "ac"])),
+  credentialOwner: ForwardCompatibleOptional(Schema.Literals(["provider", "ankiel"])),
 });
 export type ProviderAuthState = typeof ProviderAuthState.Type;
 

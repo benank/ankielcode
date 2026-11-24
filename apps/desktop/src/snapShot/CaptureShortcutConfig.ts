@@ -235,7 +235,7 @@ export class CaptureShortcutConfig {
     const { preview, files } = pending;
     const root = files[0]!;
     const directory = NodePath.dirname(root.resolvedPath);
-    const temporary = NodePath.join(directory, `.ac-capture-${NodeCrypto.randomUUID()}.tmp`);
+    const temporary = NodePath.join(directory, `.ankiel-capture-${NodeCrypto.randomUUID()}.tmp`);
     let staged = false;
     try {
       const unchanged = async () => {
@@ -292,7 +292,7 @@ export class CaptureShortcutConfig {
         }
       }
       await unchanged();
-      const backupPath = `${root.resolvedPath}.ac-capture-backup-${NodeCrypto.randomUUID()}`;
+      const backupPath = `${root.resolvedPath}.ankiel-capture-backup-${NodeCrypto.randomUUID()}`;
       await NodeFSP.writeFile(backupPath, root.bytes, { flag: "wx", mode: 0o600 });
       await NodeFSP.rename(temporary, root.resolvedPath);
       staged = false;

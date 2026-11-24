@@ -1025,7 +1025,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
         const codexHomePath = yield* makeTempDir("ankielcode-codex-home-");
         const fileSystem = yield* FileSystem.FileSystem;
 
-        const worktreeCwd = path.join(claudeHomePath, ".ac", "worktrees", "ankielcode", "wt-1");
+        const worktreeCwd = path.join(claudeHomePath, ".ankiel", "worktrees", "ankielcode", "wt-1");
         yield* fileSystem.makeDirectory(worktreeCwd, { recursive: true });
         yield* writeTranscript({
           filePath: path.join(claudeHomePath, "projects", "-slug", "a.jsonl"),
@@ -1301,26 +1301,28 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
       }),
     );
 
-    it.effect("excludes sandboxes under the configured worktrees dir without .ac in the path", () =>
-      Effect.gen(function* () {
-        const path = yield* Path.Path;
-        const claudeHomePath = yield* makeTempDir("ankielcode-claude-home-");
-        const codexHomePath = yield* makeTempDir("ankielcode-codex-home-");
-        const configBaseDir = yield* makeTempDir("ankielcode-scanner-base-");
-        const fileSystem = yield* FileSystem.FileSystem;
+    it.effect(
+      "excludes sandboxes under the configured worktrees dir without .ankiel in the path",
+      () =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const claudeHomePath = yield* makeTempDir("ankielcode-claude-home-");
+          const codexHomePath = yield* makeTempDir("ankielcode-codex-home-");
+          const configBaseDir = yield* makeTempDir("ankielcode-scanner-base-");
+          const fileSystem = yield* FileSystem.FileSystem;
 
-        const worktreeCwd = path.join(configBaseDir, "worktrees", "ankielcode", "wt-2");
-        yield* fileSystem.makeDirectory(worktreeCwd, { recursive: true });
-        yield* writeTranscript({
-          filePath: path.join(claudeHomePath, "projects", "-slug", "a.jsonl"),
-          contents: claudeSessionLine(worktreeCwd),
-          mtimeMs: Date.parse("2026-01-01T00:00:00.000Z"),
-        });
+          const worktreeCwd = path.join(configBaseDir, "worktrees", "ankielcode", "wt-2");
+          yield* fileSystem.makeDirectory(worktreeCwd, { recursive: true });
+          yield* writeTranscript({
+            filePath: path.join(claudeHomePath, "projects", "-slug", "a.jsonl"),
+            contents: claudeSessionLine(worktreeCwd),
+            mtimeMs: Date.parse("2026-01-01T00:00:00.000Z"),
+          });
 
-        const result = yield* runScan({ claudeHomePath, codexHomePath, configBaseDir });
+          const result = yield* runScan({ claudeHomePath, codexHomePath, configBaseDir });
 
-        expect(result.candidates).toEqual([]);
-      }),
+          expect(result.candidates).toEqual([]);
+        }),
     );
 
     it.effect("excludes sandboxes reached through a symlink into the worktrees dir", () =>

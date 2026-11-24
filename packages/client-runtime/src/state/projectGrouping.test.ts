@@ -359,7 +359,7 @@ describe("buildProjectGroups", () => {
     const root = makeProject("NewCo", "/work/NewCo");
     const lowercasedClone = makeProject("NewCo", "/remote/NewCo", {
       environmentId: EnvironmentId.make("remote"),
-      repositoryIdentity: { ...repositoryIdentity, name: "ANKIELCODE", displayName: "ac code" },
+      repositoryIdentity: { ...repositoryIdentity, name: "ANKIELCODE", displayName: "ankiel code" },
     });
 
     const groups = buildProjectGroups({
@@ -385,7 +385,7 @@ describe("buildProjectGroups", () => {
             ...repositoryIdentity,
             rootPath: "/remote/ankielcode",
             name: "ANKIELCODE",
-            displayName: "ac code",
+            displayName: "ankiel code",
           },
         }),
         makeProject("ankielcode", "/work/ankielcode", { repositoryIdentity: localIdentity }),

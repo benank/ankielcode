@@ -60,7 +60,7 @@ The page names the agent and where its access goes:
 
 Only approve a sign-in you just started. On the environment's own page, enter a
 code from **Use Ankiel Code in another app (MCP)**, **Settings → Sharing & access**,
-or `ac auth pairing create` on the host. A browser already signed in to the
+or `ankiel auth pairing create` on the host. A browser already signed in to the
 environment with permission to manage access can approve without a code. On the
 web app, **Use a sign-in code instead** opens the environment's own page.
 
@@ -98,24 +98,24 @@ Ankiel Code.
 ## Claude Code
 
 ```sh
-claude mcp add --transport http ac https://<environment-address>/mcp
-claude mcp login ac
+claude mcp add --transport http ankiel https://<environment-address>/mcp
+claude mcp login ankiel
 ```
 
 `claude mcp login` opens the sign-in page in your browser. On a machine
 without a browser, add `--no-browser`, open the printed URL elsewhere, and
-paste the final URL back when asked. `claude mcp list` shows `ac` as connected
+paste the final URL back when asked. `claude mcp list` shows `ankiel` as connected
 once you approve.
 
 ## Codex
 
 ```sh
-codex mcp add ac --url https://<environment-address>/mcp
-codex mcp login ac
+codex mcp add ankiel --url https://<environment-address>/mcp
+codex mcp login ankiel
 ```
 
 `codex mcp login --no-browser` prints the sign-in URL instead of opening it.
-`codex mcp list` shows `ac` with OAuth once you approve.
+`codex mcp list` shows `ankiel` with OAuth once you approve.
 
 ## ChatGPT
 
@@ -147,20 +147,20 @@ away longer, or reconnects after a restart, is told some may be missing and
 should reread what it cares about. Webhooks go only to public `https` addresses,
 a subscription lasts at most an hour before the bot must renew it, and signing
 the bot out ends its subscriptions. To test with a receiver on your own machine
-or network, start the environment with `AC_MCP_WEBHOOK_ALLOWED_HOSTS` set to
+or network, start the environment with `ANKIEL_MCP_WEBHOOK_ALLOWED_HOSTS` set to
 its host names, for example `localhost,127.0.0.1`; those hosts may also use
 plain `http`.
 
 ## Scripts on the host
 
-On the machine that runs the environment, `ac thread` uses the same tools
+On the machine that runs the environment, `ankiel thread` uses the same tools
 without a sign-in:
 
 ```sh
-id=$(ac thread start . "Find why the tests are slow")
-ac thread send "$id" "Now fix it" --wait
-ac thread show "$id"
-ac thread list
+id=$(ankiel thread start . "Find why the tests are slow")
+ankiel thread send "$id" "Now fix it" --wait
+ankiel thread show "$id"
+ankiel thread list
 ```
 
 `.` means the project that contains the current folder, or a git worktree of

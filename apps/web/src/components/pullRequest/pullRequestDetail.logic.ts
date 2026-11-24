@@ -1670,8 +1670,8 @@ const pullRequestDetailSnapshotKey = (
   reference: PullRequestDetailSnapshotRef,
 ) =>
   reference.host
-    ? `ac.pullRequests.detail:${JSON.stringify([environmentId, reference.projectId, reference.host.toLowerCase(), reference.repository.toLowerCase(), reference.number])}`
-    : `ac.pullRequests.detail:${environmentId}:${reference.projectId}:${reference.repository}#${reference.number}`;
+    ? `ankiel.pullRequests.detail:${JSON.stringify([environmentId, reference.projectId, reference.host.toLowerCase(), reference.repository.toLowerCase(), reference.number])}`
+    : `ankiel.pullRequests.detail:${environmentId}:${reference.projectId}:${reference.repository}#${reference.number}`;
 
 const decodeDetailSnapshot = Schema.decodeUnknownOption(PullRequestDetail);
 
@@ -1698,7 +1698,7 @@ export function readPullRequestDetailSnapshot(
   }
 }
 
-const PULL_REQUEST_DETAIL_SNAPSHOT_INDEX_KEY = "ac.pullRequests.recentDetails";
+const PULL_REQUEST_DETAIL_SNAPSHOT_INDEX_KEY = "ankiel.pullRequests.recentDetails";
 const PULL_REQUEST_DETAIL_SNAPSHOT_LIMIT = 20;
 
 function readPullRequestDetailSnapshotIndex(storage: SnapshotStorage): string[] {

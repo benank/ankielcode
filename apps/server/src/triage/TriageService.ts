@@ -16,7 +16,7 @@ import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
 import { buildTriageAppPrompt, type TriageSourceClone } from "./triagePrompt.ts";
 import { triageSourceCacheDir, writeTriageSession } from "./triageSession.ts";
 
-const AC_REPOSITORY_URL = "https://github.com/benank/ankielcode";
+const ANKIEL_REPOSITORY_URL = "https://github.com/benank/ankielcode";
 
 // No tty: a credential prompt would hang until the timeout, so git must fail
 // instead. An empty GIT_ASKPASS also skips core.askPass and SSH_ASKPASS helpers.
@@ -27,7 +27,7 @@ const GIT_ENV = {
   LANGUAGE: "C",
 } satisfies NodeJS.ProcessEnv;
 
-/** Starts in-app triage sessions: the same files `ac triage` writes, plus a source clone. */
+/** Starts in-app triage sessions: the same files `ankiel triage` writes, plus a source clone. */
 export class TriageService extends Context.Service<
   TriageService,
   {
@@ -97,7 +97,7 @@ const make = Effect.gen(function* () {
       yield* runGit(
         "addSourceRemote",
         staging,
-        ["remote", "add", "origin", AC_REPOSITORY_URL],
+        ["remote", "add", "origin", ANKIEL_REPOSITORY_URL],
         10_000,
       );
       yield* runGit(
@@ -130,7 +130,7 @@ const make = Effect.gen(function* () {
     const listed = yield* runGit(
       "resolveSourceRef",
       sourceDir,
-      ["ls-remote", AC_REPOSITORY_URL, tag, `${tag}^{}`, "refs/heads/main"],
+      ["ls-remote", ANKIEL_REPOSITORY_URL, tag, `${tag}^{}`, "refs/heads/main"],
       // Triage still starts without source; a dead network should not stall it.
       5_000,
     );

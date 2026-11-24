@@ -8,7 +8,7 @@ import { resolveServerBackgroundActivitySettings } from "@ankielcode/shared/back
 import * as ServerSettings from "../serverSettings.ts";
 
 export class VcsAutomaticFetchInterval extends Context.Reference<Effect.Effect<Duration.Duration>>(
-  "ac/vcs/VcsAutomaticFetchInterval",
+  "ankiel/vcs/VcsAutomaticFetchInterval",
   { defaultValue: () => Effect.succeed(DEFAULT_AUTOMATIC_GIT_FETCH_INTERVAL) },
 ) {}
 

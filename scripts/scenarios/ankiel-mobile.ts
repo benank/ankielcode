@@ -1,4 +1,4 @@
-// `test` for iOS scenarios: e2e's mobile test plus `ac`, which seeds state like the web one and
+// `test` for iOS scenarios: e2e's mobile test plus `ankiel`, which seeds state like the web one and
 // opens the dev client paired with the scenario's server.
 import { test as base } from "@e2e-dev/mobile";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
@@ -7,9 +7,9 @@ import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { APP_DIR, MOBILE, MOBILE_AC_HOME } from "../e2e.config.ts";
+import { APP_DIR, MOBILE, MOBILE_ANKIEL_HOME } from "../e2e.config.ts";
 import { run, ScenarioError } from "./shell.ts";
-import { makeState, runPromise, type AnkielState } from "./ac.ts";
+import { makeState, runPromise, type AnkielState } from "./ankiel.ts";
 
 const APP_ID = "com.ankiel.ankielcode.dev";
 const SCHEME = "ankielcode-dev";
@@ -44,10 +44,10 @@ const devClientPath = Effect.gen(function* () {
 let installed = false;
 let paired = false;
 
-export const test = base.extend<{ ac: MobileAnkiel }>({
-  ac: async ({ device, screen }, use) => {
-    const { state, cli, cleanup } = makeState(MOBILE_AC_HOME, {
-      AC_PORT: String(MOBILE.serverPort),
+export const test = base.extend<{ ankiel: MobileAnkiel }>({
+  ankiel: async ({ device, screen }, use) => {
+    const { state, cli, cleanup } = makeState(MOBILE_ANKIEL_HOME, {
+      ANKIEL_PORT: String(MOBILE.serverPort),
     });
     const pairingUrl = Effect.gen(function* () {
       const origin = `http://${MOBILE.host}:${MOBILE.serverPort}`;

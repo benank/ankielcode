@@ -879,7 +879,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     title: msg("Submodules"),
     to: "/settings/worktrees",
     scope: "project-defaults",
-    searchTerms: [msg("git submodule init recursive top-level none worktree ac.json")],
+    searchTerms: [msg("git submodule init recursive top-level none worktree ankiel.json")],
   },
   {
     id: "start-from-origin",
@@ -962,7 +962,7 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "cli-command",
-    title: msg("ac command"),
+    title: msg("ankiel command"),
     to: "/settings/about",
     searchTerms: [msg("cli terminal shell path install command line")],
     desktopOnly: true,
@@ -1328,7 +1328,9 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "project-actions",
     title: msg("Actions"),
     to: "/settings/projects",
-    searchTerms: [msg("commands scripts setup run dev server checkout worktree ac.json import")],
+    searchTerms: [
+      msg("commands scripts setup run dev server checkout worktree ankiel.json import"),
+    ],
   },
   {
     id: "project-repositories",

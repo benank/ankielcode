@@ -78,7 +78,7 @@ export class DesktopDevelopmentBackendPortRequiredError extends Schema.TaggedErr
   {},
 ) {
   override get message(): string {
-    return "AC_PORT is required in desktop development.";
+    return "ANKIEL_PORT is required in desktop development.";
   }
 }
 
@@ -175,7 +175,7 @@ const stopAllPoolInstances = Effect.fn("desktop.app.stopAllPoolInstances")(
 
 // Spawns the local backend as soon as the protocol, IPC, and legacy storage that every window needs exist.
 /**
- * The server reads AC_FEATURE_FLAGS once at start, from the value cached at the last
+ * The server reads ANKIEL_FEATURE_FLAGS once at start, from the value cached at the last
  * discovery. When the login shell now sets different flags, restart it so they apply.
  */
 const restartOnFeatureFlagChange = Effect.fn("desktop.restartOnFeatureFlagChange")(function* (
@@ -183,15 +183,15 @@ const restartOnFeatureFlagChange = Effect.fn("desktop.restartOnFeatureFlagChange
 ) {
   const state = yield* DesktopState.DesktopState;
   const shellEnvironment = yield* DesktopShellEnvironment.DesktopShellEnvironment;
-  let startedWith = (yield* HostProcess.Environment).AC_FEATURE_FLAGS;
+  let startedWith = (yield* HostProcess.Environment).ANKIEL_FEATURE_FLAGS;
   yield* shellEnvironment.updates.pipe(
     Stream.filter((snapshot) => snapshot.discovered),
     Stream.runForEach(
       Effect.fnUntraced(function* (snapshot) {
-        const flags = snapshot.environment.AC_FEATURE_FLAGS ?? undefined;
+        const flags = snapshot.environment.ANKIEL_FEATURE_FLAGS ?? undefined;
         if (flags === startedWith || (yield* Ref.get(state.quitting))) return;
         startedWith = flags;
-        yield* logBootstrapInfo("restarting backend for changed AC_FEATURE_FLAGS");
+        yield* logBootstrapInfo("restarting backend for changed ANKIEL_FEATURE_FLAGS");
         yield* backend.stop();
         yield* backend.start;
       }),
@@ -321,7 +321,7 @@ const bootstrap = Effect.fn("desktop.bootstrap")(function* (backendStarted: bool
   }
 
   yield* snapShot.initialize;
-  // Only the user's own login shell PATH shows every ac a new terminal runs; a fresh install has
+  // Only the user's own login shell PATH shows every ankiel a new terminal runs; a fresh install has
   // no cached one. Without it, the command is left to Settings.
   const installCli = (yield* DesktopCliCommand.DesktopCliCommand).installOnFirstLaunch;
   yield* Effect.forkScoped(
@@ -329,7 +329,7 @@ const bootstrap = Effect.fn("desktop.bootstrap")(function* (backendStarted: bool
       Effect.flatMap((found) =>
         found || environment.platform === "win32"
           ? installCli
-          : logBootstrapInfo("skipped installing the ac command without the shell PATH"),
+          : logBootstrapInfo("skipped installing the ankiel command without the shell PATH"),
       ),
     ),
   );
@@ -340,7 +340,7 @@ const bootstrap = Effect.fn("desktop.bootstrap")(function* (backendStarted: bool
     if (!(yield* Ref.get(state.quitting))) {
       yield* desktopWindow.createMainIfBackendReady;
     }
-    // `ac <dir>` still reaches the renderer, which opens it on this machine's connected service.
+    // `ankiel <dir>` still reaches the renderer, which opens it on this machine's connected service.
     yield* startAppActivation;
     return;
   }

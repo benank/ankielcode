@@ -2,7 +2,7 @@ import { expect } from "e2e";
 import * as Schema from "effect/Schema";
 
 import { SECOND_HOME, startSecondServer } from "./second-server.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 const decodePairing = Schema.decodeEffect(
   Schema.fromJsonString(Schema.Struct({ credential: Schema.String })),
@@ -11,8 +11,8 @@ const decodePairing = Schema.decodeEffect(
 test(
   "Removing a connection clears its permission update notice",
   WEB,
-  async ({ ac, app, screen }) => {
-    await ac.project("demo");
+  async ({ ankiel, app, screen }) => {
+    await ankiel.project("demo");
     const server = startSecondServer(app.baseUrl ?? "");
     try {
       const { host } = await server.ready;
@@ -22,7 +22,7 @@ test(
       );
       const { credential } = await runPromise(decodePairing(issued.stdout));
 
-      await ac.open("/settings/connections");
+      await ankiel.open("/settings/connections");
       await screen.getByRole("button", "Add environment").tap();
       const dialog = screen.getByRole("dialog");
       await dialog.getByPlaceholder("backend.example.com").fill(host);

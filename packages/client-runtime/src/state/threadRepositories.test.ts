@@ -75,7 +75,7 @@ function checkpoint(
     parentCheckpointId: null,
     ordinalWithinScope: ordinal,
     appRunOrdinal: null,
-    ref: CheckpointRef.make(`refs/ac/${id}`),
+    ref: CheckpointRef.make(`refs/ankiel/${id}`),
     status: "ready",
     files: [],
     capturedAt: now,

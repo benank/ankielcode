@@ -59,7 +59,7 @@
     "testflight": {
       "extends": "production",
       "env": {
-        "AC_MOBILE_VERSION": "3.0.0"
+        "ANKIEL_MOBILE_VERSION": "3.0.0"
       }
     },
     "production": {

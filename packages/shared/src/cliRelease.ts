@@ -6,7 +6,7 @@ import { compareSemverVersions } from "./semver.ts";
 const CLI_RELEASE_REPOSITORY = "benank/ankielcode";
 export const CLI_RELEASES_PAGE_URL = `https://github.com/${CLI_RELEASE_REPOSITORY}/releases`;
 export const CLI_RELEASE_CHECKSUMS_FILE = "SHA256SUMS";
-export const CLI_RELEASE_BASE_URL_ENV = "AC_RELEASE_BASE_URL";
+export const CLI_RELEASE_BASE_URL_ENV = "ANKIEL_RELEASE_BASE_URL";
 
 // Keep archive keys aligned with the Linux matrix, Windows ARM64 build, and cli_archive rows in release.yml,
 // and with the SSH runner's host check in packages/ssh/src/tunnel.ts.
@@ -39,7 +39,7 @@ export function cliArchiveTarCommand(
 }
 
 export function cliArchiveFileName(version: string, platformKey: CliArchivePlatformKey): string {
-  return `ac-${version}-${platformKey}.${platformKey.startsWith("win32") ? "zip" : "tar.gz"}`;
+  return `ankiel-${version}-${platformKey}.${platformKey.startsWith("win32") ? "zip" : "tar.gz"}`;
 }
 
 const CLI_RELEASE_DEFAULT_BASE_URL = `https://github.com/${CLI_RELEASE_REPOSITORY}/releases/download`;
@@ -158,7 +158,7 @@ const NpmReleaseMigrationManifest = Schema.Struct({
 });
 const decodeNpmReleaseMigrationManifest = Schema.decodeUnknownOption(NpmReleaseMigrationManifest);
 
-/** Highest database migration a release's server knows, from its npm `ac` manifest. */
+/** Highest database migration a release's server knows, from its npm `ankiel` manifest. */
 export function npmReleaseDatabaseMigration(manifest: unknown): number | undefined {
   return Option.getOrUndefined(decodeNpmReleaseMigrationManifest(manifest))?.ankielcode
     .databaseMigration;

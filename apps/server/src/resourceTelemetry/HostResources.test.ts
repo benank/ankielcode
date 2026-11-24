@@ -39,9 +39,9 @@ const setup = (busy = 0) => {
 
 const GiB = 1024 ** 3;
 const MiB = 1024 ** 2;
-const cgroup = "/sys/fs/cgroup/ac.slice/server.scope";
+const cgroup = "/sys/fs/cgroup/ankiel.slice/server.scope";
 const unlimitedCgroup = {
-  "/proc/self/cgroup": ["0::/ac.slice/server.scope\n"],
+  "/proc/self/cgroup": ["0::/ankiel.slice/server.scope\n"],
   "/proc/meminfo": [`MemTotal: ${4 * 1024 * 1024} kB\nMemAvailable: ${2 * 1024 * 1024} kB\n`],
   [`${cgroup}/cpu.max`]: ["max 100000\n"],
   [`${cgroup}/cpu.stat`]: ["usage_usec 5000000\n"],

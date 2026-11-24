@@ -66,10 +66,10 @@ function outerDocument(src: string, allow: string, secret: string) {
 <body><iframe id="app" sandbox="allow-scripts allow-forms" allow="${attribute(allow)}"></iframe>
 <script>(function(){var frame=document.getElementById("app"),secret=${JSON.stringify(secret)},loads=0,live=true;
 var send=function(m){var u=navigator.userActivation;window.ReactNativeWebView.postMessage(JSON.stringify({secret:secret,active:!!(u&&u.isActive)&&document.activeElement===frame,message:m}));};
-frame.addEventListener("load",function(){loads+=1;if(loads>1&&live){live=false;send({ac:"navigated"});}});
+frame.addEventListener("load",function(){loads+=1;if(loads>1&&live){live=false;send({ankiel:"navigated"});}});
 var port=null,plain=false,unconfirmed=Object.create(null),waiting=0,probe=0;
 window.addEventListener("message",function(e){if(!live||e.source!==frame.contentWindow)return;
-if(!port&&!plain){if(e.data&&e.data.ac===${JSON.stringify(MCP_APP_DOCUMENT_MESSAGE)}&&e.ports[0]){port=e.ports[0];
+if(!port&&!plain){if(e.data&&e.data.ankiel===${JSON.stringify(MCP_APP_DOCUMENT_MESSAGE)}&&e.ports[0]){port=e.ports[0];
 port.onmessage=function(r){var k=r.data&&r.data.alive;if(live&&k in unconfirmed){var m=unconfirmed[k];delete unconfirmed[k];waiting-=1;send(m);}};return;}plain=true;}
 if(plain)send(e.data);else if(waiting<256){unconfirmed[probe]=e.data;waiting+=1;port.postMessage({alive:probe++});}});
 window.__ankielMcpAppReceive=function(m){if(!live)return;if(port)port.postMessage({message:m,origin:location.origin});else if(plain&&frame.contentWindow)frame.contentWindow.postMessage(m,"*");};
@@ -606,7 +606,7 @@ export function ThreadMcpApp(props: {
             }
             if (!Predicate.isObject(envelope) || envelope.secret !== secret) return;
             const message = envelope.message;
-            if (Predicate.isObject(message) && message.ac === "navigated") {
+            if (Predicate.isObject(message) && message.ankiel === "navigated") {
               host?.dispose();
               setNavigatedAway(true);
               return;

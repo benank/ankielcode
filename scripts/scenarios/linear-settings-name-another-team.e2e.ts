@@ -4,7 +4,7 @@ import * as NodeHttp from "node:http";
 import { expect } from "e2e";
 
 import { SCENARIO_LINEAR_PORT } from "./start-app.ts";
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 // Connecting reads only the viewer, the workspace and its teams.
 const VIEWER = {
@@ -29,15 +29,15 @@ const VIEWER = {
 test(
   "Linear settings say agents can file new issues in another bound team",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     const linear = NodeHttp.createServer((_request, response) => {
       response.writeHead(200, { "content-type": "application/json" });
       response.end(JSON.stringify(VIEWER));
     });
     await new Promise<void>((resolve) => linear.listen(SCENARIO_LINEAR_PORT, "127.0.0.1", resolve));
     try {
-      await ac.project("demo");
-      await ac.open("/settings/source-control");
+      await ankiel.project("demo");
+      await ankiel.open("/settings/source-control");
 
       await screen.getByRole("button", "Toggle Linear details").tap();
       await browser.locator('input[id^="issue-tracker-linear-"]').fill("lin_api_scenario");

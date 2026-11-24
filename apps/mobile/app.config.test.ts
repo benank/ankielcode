@@ -5,8 +5,8 @@ import { afterEach, expect, it, vi } from "vite-plus/test";
 vi.mock("../../scripts/lib/public-config.ts", () => ({
   loadRepoEnv: () =>
     Object.fromEntries(
-      ["APP_VARIANT", "AC_EAS_PROJECT_ID", "AC_EAS_OWNER", "AC_APPLE_TEAM_ID"].flatMap((key) =>
-        process.env[key] === undefined ? [] : [[key, process.env[key]]],
+      ["APP_VARIANT", "ANKIEL_EAS_PROJECT_ID", "ANKIEL_EAS_OWNER", "ANKIEL_APPLE_TEAM_ID"].flatMap(
+        (key) => (process.env[key] === undefined ? [] : [[key, process.env[key]]]),
       ),
     ),
 }));
@@ -53,9 +53,9 @@ it("carries no Expo or Apple account identifiers unless the environment sets the
 });
 
 it("derives updates and account identifiers from the environment", async () => {
-  vi.stubEnv("AC_EAS_PROJECT_ID", "00000000-0000-4000-8000-000000000000");
-  vi.stubEnv("AC_EAS_OWNER", "example-owner");
-  vi.stubEnv("AC_APPLE_TEAM_ID", "TEAM123456");
+  vi.stubEnv("ANKIEL_EAS_PROJECT_ID", "00000000-0000-4000-8000-000000000000");
+  vi.stubEnv("ANKIEL_EAS_OWNER", "example-owner");
+  vi.stubEnv("ANKIEL_APPLE_TEAM_ID", "TEAM123456");
   const config = await loadConfig(undefined);
   expect(config.owner).toBe("example-owner");
   expect(config.extra?.eas).toEqual({ projectId: "00000000-0000-4000-8000-000000000000" });

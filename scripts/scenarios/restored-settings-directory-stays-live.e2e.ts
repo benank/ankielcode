@@ -3,8 +3,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 const decodeSettings = Schema.decodeSync(
   Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown)),
@@ -13,12 +13,12 @@ const decodeSettings = Schema.decodeSync(
 test(
   "Maintenance reflects edits to a symlinked settings file after restoring its directory",
   WEB,
-  async ({ ac, app, screen }) => {
-    await ac.project("settings-restore");
-    const settingsPath = `${AC_HOME}/userdata/settings.json`;
-    const active = `${AC_HOME}/active-settings`;
-    const previous = `${AC_HOME}/old-settings`;
-    const restored = `${AC_HOME}/restored-settings`;
+  async ({ ankiel, app, screen }) => {
+    await ankiel.project("settings-restore");
+    const settingsPath = `${ANKIEL_HOME}/userdata/settings.json`;
+    const active = `${ANKIEL_HOME}/active-settings`;
+    const previous = `${ANKIEL_HOME}/old-settings`;
+    const restored = `${ANKIEL_HOME}/restored-settings`;
     const original = await runPromise(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -44,7 +44,7 @@ test(
       }),
     );
     try {
-      await ac.open("/settings/maintenance");
+      await ankiel.open("/settings/maintenance");
       const days = screen.getByLabel("Delete old rotated logs in days");
       await days.scrollIntoView();
       await expect(days).toHaveValue("5");

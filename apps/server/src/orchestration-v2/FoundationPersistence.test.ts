@@ -793,7 +793,7 @@ it.effect.each(
       Effect.withTracerEnabled(true),
       Effect.provideService(
         ConfigProvider.ConfigProvider,
-        ConfigProvider.fromUnknown({ AC_PROVIDER_COMMIT_BATCHING: true }),
+        ConfigProvider.fromUnknown({ ANKIEL_PROVIDER_COMMIT_BATCHING: true }),
       ),
     );
   },

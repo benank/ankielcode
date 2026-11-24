@@ -121,7 +121,7 @@ type PricedModel = keyof typeof PRICES;
 const PROXY_SHELL_MODELS = ["gpt-6-luna", "gpt-6.1-terra"] as const;
 type ShellModel = PricedModel | (typeof PROXY_SHELL_MODELS)[number];
 const isPricedModel = (model: ShellModel): model is PricedModel => model in PRICES;
-const AC_PREFIX = "mcp__ankiel-code__";
+const ANKIEL_PREFIX = "mcp__ankiel-code__";
 const RUNTIME_MARKER = "<runtime_info>";
 const TOOL_LOADED = "Tool loaded.";
 
@@ -451,7 +451,7 @@ const toolResult = (id: string, content: unknown): Block => ({
 const texts = (content: typeof Content.Type) =>
   typeof content === "string" ? [content] : content.flatMap((block) => block.text ?? []);
 const isAnkielName = (name: string) =>
-  name.startsWith(AC_PREFIX) || name.startsWith("mcp__ankiel_code__");
+  name.startsWith(ANKIEL_PREFIX) || name.startsWith("mcp__ankiel_code__");
 const hasTool = (tools: ReadonlyArray<ApiTool>, name: string) =>
   tools.some((tool) => tool.name === name);
 
@@ -470,7 +470,7 @@ const CODEX_NAMES: Readonly<Record<string, string>> = {
 export const normalizeToolName = (name: string) => {
   const bare = name.slice(name.lastIndexOf(".") + 1);
   return isAnkielName(bare)
-    ? bare.slice(AC_PREFIX.length)
+    ? bare.slice(ANKIEL_PREFIX.length)
     : (CODEX_NAMES[bare] ?? bare.slice(bare.lastIndexOf("_") + 1));
 };
 export const normalizeToolInput = (name: string, input: unknown) => {
@@ -511,7 +511,7 @@ const ankielInputDecoders = new Map(
   ]),
 );
 const ankielTools: ReadonlyArray<ApiTool> = ankielSourceTools.map((tool) => ({
-  name: `${AC_PREFIX}${tool.name}`,
+  name: `${ANKIEL_PREFIX}${tool.name}`,
   description: Tool.getDescription(tool) ?? "",
   input_schema: advertisedJsonSchema(tool),
 }));
@@ -529,7 +529,7 @@ const enabledWhen = (predicate: () => boolean) =>
       .filter(
         (tool) => Context.getOrUndefined(tool.annotations, McpSchema.EnabledWhen) === predicate,
       )
-      .map((tool) => `${AC_PREFIX}${tool.name}`),
+      .map((tool) => `${ANKIEL_PREFIX}${tool.name}`),
   );
 // Claude Code loads a tool whose `_meta` sets anthropic/alwaysLoad up front instead of deferring it.
 const alwaysLoaded = new Set(
@@ -538,12 +538,12 @@ const alwaysLoaded = new Set(
       const meta = Context.getOrUndefined(tool.annotations, Tool.Meta);
       return meta !== undefined && meta["anthropic/alwaysLoad"] === true;
     })
-    .map((tool) => `${AC_PREFIX}${tool.name}`),
+    .map((tool) => `${ANKIEL_PREFIX}${tool.name}`),
 );
 // Refs whose request_secret takes `value` save a secret the user already pasted, with no card.
 export const savesPastedSecrets = ankielTools.some(
   (tool) =>
-    tool.name === `${AC_PREFIX}request_secret` &&
+    tool.name === `${ANKIEL_PREFIX}request_secret` &&
     isRecord(tool.input_schema) &&
     isRecord(tool.input_schema.properties) &&
     "value" in tool.input_schema.properties,
@@ -565,7 +565,7 @@ export const ARMS = ["tools", "raw"] as const;
 export type Arm = (typeof ARMS)[number];
 const forgeToolNames = new Set(
   [PullRequestsToolkit, IssuesToolkit].flatMap((toolkit) =>
-    Object.values(toolkit.tools).map((tool: Tool.Any) => `${AC_PREFIX}${tool.name}`),
+    Object.values(toolkit.tools).map((tool: Tool.Any) => `${ANKIEL_PREFIX}${tool.name}`),
   ),
 );
 /** Ankiel's text for an arm: `raw` drops the PR linking block that names Ankiel's PR tools. */
@@ -705,7 +705,7 @@ export const buildBase = (
     readonly arm?: Arm;
   },
 ) => {
-  const ac = visibleAnkielTools(options);
+  const ankiel = visibleAnkielTools(options);
   const firstAssistant = template.messages.findIndex((message) => message.role === "assistant");
   const head = template.messages.slice(0, firstAssistant === -1 ? undefined : firstAssistant);
   const systemTexts = [
@@ -721,7 +721,7 @@ export const buildBase = (
   const nativeDeferred = deferredList.split("\n").filter((name) => name && !isAnkielName(name));
   const names = [
     ...nativeDeferred,
-    ...ac.filter((tool) => !alwaysLoaded.has(tool.name)).map((tool) => tool.name),
+    ...ankiel.filter((tool) => !alwaysLoaded.has(tool.name)).map((tool) => tool.name),
   ]
     .toSorted()
     .join("\n");
@@ -770,11 +770,11 @@ export const buildBase = (
     },
     nativeTools: [
       ...template.tools.filter((tool) => !isAnkielName(tool.name)),
-      ...ac.filter((tool) => alwaysLoaded.has(tool.name)),
+      ...ankiel.filter((tool) => alwaysLoaded.has(tool.name)),
     ],
     /** Tools ToolSearch loads: Ankiel tools from source, and native tools the template only names. */
-    ac,
-    deferred: [...ac, ...nativeDeferred.map((name) => ({ name, ...nativeSchema(name) }))],
+    ankiel,
+    deferred: [...ankiel, ...nativeDeferred.map((name) => ({ name, ...nativeSchema(name) }))],
   };
 };
 
@@ -801,7 +801,7 @@ const buildCodexBase = (
     readonly arm?: Arm;
   },
 ): Base => {
-  const ac = visibleAnkielTools(options);
+  const ankiel = visibleAnkielTools(options);
   const contentText = (item: Block) =>
     Array.isArray(item.content)
       ? item.content.map((block: Block) => valueText(block.text)).join("\n")
@@ -866,8 +866,8 @@ const buildCodexBase = (
       date: /<current_date>(.*?)<\/current_date>/.exec(joined)?.[1],
     },
     nativeTools,
-    ac,
-    deferred: [...ac],
+    ankiel,
+    deferred: [...ankiel],
     codex: { ...template, input, reasoning: { ...template.reasoning, effort } },
   };
 };
@@ -1672,7 +1672,7 @@ export const ankielDefault = (
         .slice(0, 32);
       const home =
         /^\/(?:home|Users)\/[^/]+/.exec(sample.base.environment.cwd)?.[0] ?? "/home/user";
-      const fileFor = (key: string) => `${home}/.ac/userdata/secrets/files/${key}`;
+      const fileFor = (key: string) => `${home}/.ankiel/userdata/secrets/files/${key}`;
       // A card with `fields` saves one file per field name.
       if (Array.isArray(input.fields) && !pastedSecret(name, input)) {
         const names = input.fields.flatMap((field) =>
@@ -2680,7 +2680,7 @@ export const executeCodex = async (
 };
 
 const codexCatalog = (base: Base) => [
-  ...base.ac.map((tool) => ({
+  ...base.ankiel.map((tool) => ({
     name: tool.name.replace("mcp__ankiel-code__", "mcp__ankiel_code__"),
     description: `${valueText(tool.description)}\nInput JSON schema: ${JSON.stringify(tool.input_schema)}`,
   })),
@@ -3189,7 +3189,7 @@ const main = Effect.gen(function* () {
   // The raw arm has no PR or issue tools, so a case whose prior turns call one cannot be replayed.
   const replaysForgeTool = (testCase: McpToolUseCase) =>
     (testCase.setup.priorTurns ?? []).some((turn) =>
-      (turn.toolCalls ?? []).some((call) => forgeToolNames.has(`${AC_PREFIX}${call.tool}`)),
+      (turn.toolCalls ?? []).some((call) => forgeToolNames.has(`${ANKIEL_PREFIX}${call.tool}`)),
     );
   const unreplayable =
     flags.arm === "raw" ? selectedCases.filter(replaysForgeTool).map(({ id }) => id) : [];

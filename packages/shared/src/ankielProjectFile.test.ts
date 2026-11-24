@@ -24,7 +24,7 @@ describe("parseAnkielProjectFile", () => {
   it("reads project defaults from JSONC with a URL in a block comment", () => {
     expect(
       parseAnkielProjectFile(`{
-        /* See https://code.ankiel.com/schema/ac.json */
+        /* See https://code.ankiel.com/schema/ankiel.json */
         "defaultThreadEnvMode": "worktree"
       }`),
     ).toEqual({ defaultThreadEnvMode: "worktree" });

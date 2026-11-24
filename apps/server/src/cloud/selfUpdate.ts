@@ -73,7 +73,7 @@ export class ServerSelfUpdate extends Context.Service<
 /**
  * A server starting from the runtime its launcher settled on means runtimes left by earlier
  * updates can go. The boot service says so through its IPC context. The SSH launcher and the
- * install script's `ac` start this home's pinned runtime directly, without one.
+ * install script's `ankiel` start this home's pinned runtime directly, without one.
  */
 export const pruneRuntimesOnStart = Effect.fn("cloud.server_self_update.prune_on_start")(
   function* (input: { readonly baseDir: string; readonly managed: boolean }) {
@@ -107,7 +107,7 @@ export const pruneRuntimesOnStart = Effect.fn("cloud.server_self_update.prune_on
       references,
     });
     if (removed.length > 0) {
-      yield* Effect.logInfo("Removed unused ac runtimes.", { versions: removed });
+      yield* Effect.logInfo("Removed unused ankiel runtimes.", { versions: removed });
     }
     return removed;
   },
@@ -198,7 +198,7 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
     const launcherProtocol = launcher.protocol;
     if (capability === null || launcherProtocol === undefined) {
       return yield* failWith(
-        "Remote updates require the Ankiel Code background service. Run `ac service install` on the server machine.",
+        "Remote updates require the Ankiel Code background service. Run `ankiel service install` on the server machine.",
       );
     }
 
@@ -206,7 +206,7 @@ export const make = Effect.fn("cloud.server_self_update.make")(function* () {
     if (unsafeCrossing !== null) return yield* failWith(unsafeCrossing);
     const targetVersion = input.targetVersion.trim();
     if (!isExactServiceVersion(targetVersion)) {
-      return yield* failWith(`'${targetVersion}' is not an exact ac version.`);
+      return yield* failWith(`'${targetVersion}' is not an exact ankiel version.`);
     }
     if (yield* Ref.getAndSet(inFlight, true)) {
       return yield* failWith("A server update is already in progress.");

@@ -66,7 +66,7 @@ export const findOwnedLauncher = Effect.fn("cli.uninstall.find_launcher")(functi
   return yield* findPosixLauncher({ launchedAs: input.launchedAs, versionsDir: input.versionsDir });
 });
 
-/** Whether `launcher` is a link, unedited `ac` script, or unedited `ac.cmd` into this home's runtime/versions. */
+/** Whether `launcher` is a link, unedited `ankiel` script, or unedited `ankiel.cmd` into this home's runtime/versions. */
 const ownsLauncher = Effect.fn("cli.uninstall.owns_launcher")(function* (
   launcher: string,
   versionsDir: string,
@@ -108,7 +108,7 @@ const ownsLauncher = Effect.fn("cli.uninstall.owns_launcher")(function* (
 });
 
 /**
- * Launchers recorded in `runtime/launchers` by the install scripts and `ac install` that still
+ * Launchers recorded in `runtime/launchers` by the install scripts and `ankiel install` that still
  * point into this home's runtime/versions. npx can run a different version than the installed
  * one, so the launcher this process started from does not always name them.
  */
@@ -128,7 +128,7 @@ export const findRecordedLaunchers = Effect.fn("cli.uninstall.find_recorded_laun
 });
 
 // cmd.exe needs verbatim quoting and literal paths, with delayed expansion disabled. The shell
-// starts in System32 and runs ping from there, whatever directory `ac uninstall` was run in.
+// starts in System32 and runs ping from there, whatever directory `ankiel uninstall` was run in.
 export function spawnWindowsRemoval(environment: NodeJS.ProcessEnv, dir: string) {
   const ping = windowsSystem32Path(environment, "ping.exe");
   return NodeChildProcess.spawn(
@@ -138,11 +138,11 @@ export function spawnWindowsRemoval(environment: NodeJS.ProcessEnv, dir: string)
       "/v:off",
       "/s",
       "/c",
-      '""%AC_UNINSTALL_PING%" -n 3 127.0.0.1 >nul & rmdir /s /q "%AC_UNINSTALL_RUNTIME%""',
+      '""%ANKIEL_UNINSTALL_PING%" -n 3 127.0.0.1 >nul & rmdir /s /q "%ANKIEL_UNINSTALL_RUNTIME%""',
     ],
     {
       cwd: NodePath.win32.dirname(ping),
-      env: { ...process.env, AC_UNINSTALL_PING: ping, AC_UNINSTALL_RUNTIME: dir },
+      env: { ...process.env, ANKIEL_UNINSTALL_PING: ping, ANKIEL_UNINSTALL_RUNTIME: dir },
       windowsVerbatimArguments: true,
       detached: true,
       stdio: "ignore",
@@ -194,7 +194,7 @@ export const uninstallCommand = Command.make("uninstall", {
   ),
 }).pipe(
   Command.withDescription(
-    "Remove ac from this machine: the background service, the launcher, and every downloaded version. Your projects and threads are kept.",
+    "Remove ankiel from this machine: the background service, the launcher, and every downloaded version. Your projects and threads are kept.",
   ),
   Command.withHandler((flags) =>
     Effect.gen(function* () {
@@ -225,10 +225,10 @@ const runUninstall = Effect.fn("cli.uninstall.run")(function* (input: {
   const plan = yield* planUninstall({ baseDir: input.baseDir });
 
   if (!plan.service && plan.launchers.length === 0 && plan.runtimeDir === undefined) {
-    yield* Console.log(`Nothing to remove: ac is not installed for ${input.baseDir}.`);
+    yield* Console.log(`Nothing to remove: ankiel is not installed for ${input.baseDir}.`);
     if (!(yield* HostProcess.IsExecutable)) {
       yield* Console.log(
-        "  This ac runs from a Node script, so it was installed by npm or built from source. Remove it the same way (`npm uninstall -g @ankielcode/cli`, or delete the checkout).",
+        "  This ankiel runs from a Node script, so it was installed by npm or built from source. Remove it the same way (`npm uninstall -g @ankielcode/cli`, or delete the checkout).",
       );
     }
     yield* logOtherHomeService(plan);
@@ -253,7 +253,7 @@ const runUninstall = Effect.fn("cli.uninstall.run")(function* (input: {
       });
     }
     const confirmed = yield* Prompt.run(
-      Prompt.Confirm({ message: "Remove ac from this machine?", initial: false }),
+      Prompt.Confirm({ message: "Remove ankiel from this machine?", initial: false }),
     ).pipe(Effect.catchTags({ QuitError: () => Effect.succeed(false) }));
     if (!confirmed) {
       yield* Console.log("Left as is.");
@@ -270,7 +270,7 @@ const runUninstall = Effect.fn("cli.uninstall.run")(function* (input: {
   }
   for (const launcher of plan.launchers) {
     if (!(yield* ownsLauncher(launcher, plan.versionsDir))) {
-      yield* Console.log(`Left ${launcher}: it no longer runs this ac.`);
+      yield* Console.log(`Left ${launcher}: it no longer runs this ankiel.`);
       continue;
     }
     yield* fs
@@ -293,7 +293,7 @@ const runUninstall = Effect.fn("cli.uninstall.run")(function* (input: {
       yield* awaitDetachedSpawn(() => spawnWindowsRemoval(environment, runtimeDir)).pipe(
         Effect.mapError(notScheduled),
       );
-      yield* Console.log(`${runtimeDir} will be removed once ac exits.`);
+      yield* Console.log(`${runtimeDir} will be removed once ankiel exits.`);
     } else {
       yield* fs
         .remove(plan.runtimeDir, { recursive: true, force: true })
@@ -306,6 +306,6 @@ const runUninstall = Effect.fn("cli.uninstall.run")(function* (input: {
     }
   }
   yield* Console.log("");
-  yield* Console.log("ac is uninstalled. Thanks for trying Ankiel Code.");
+  yield* Console.log("ankiel is uninstalled. Thanks for trying Ankiel Code.");
   yield* logOtherHomeService(plan);
 });

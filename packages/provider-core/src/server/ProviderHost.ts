@@ -24,7 +24,7 @@ export interface ProviderHostPaths {
 
 export interface ProviderCredentials {
   /** Instances whose bindings are equal share these credentials. */
-  readonly binding: { readonly owner: "ac"; readonly key: string };
+  readonly binding: { readonly owner: "ankiel"; readonly key: string };
   readonly get: Effect.Effect<Option.Option<Uint8Array>, ProviderCredentialError>;
   readonly set: (credentials: Uint8Array) => Effect.Effect<void, ProviderCredentialError>;
   readonly remove: Effect.Effect<void, ProviderCredentialError>;
@@ -52,7 +52,7 @@ export class ProviderHost extends Context.Service<
     readonly resolveExtractedTextPath?: (path: string) => Effect.Effect<string | undefined>;
     /**
      * Counts a running agent for local server discovery, so listeners carrying its
-     * AC_THREAD_ID show under its thread. Call the returned function when it stops.
+     * ANKIEL_THREAD_ID show under its thread. Call the returned function when it stops.
      */
     readonly trackAgent?: () => () => void;
     readonly credentials: (

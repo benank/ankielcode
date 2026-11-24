@@ -10,10 +10,11 @@ const load = (env: Record<string, string>) =>
   OtelEnvironment.load.pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env }))));
 
 const SPEC_OFF =
-  "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set AC_OTEL_SDK_DISABLED=false to export anyway";
-const AC_OFF = "AC_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it";
+  "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set ANKIEL_OTEL_SDK_DISABLED=false to export anyway";
+const ANKIEL_OFF =
+  "ANKIEL_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it";
 const specIgnored = (value: string) =>
-  `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or AC_OTEL_SDK_DISABLED to say it any other way`;
+  `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or ANKIEL_OTEL_SDK_DISABLED to say it any other way`;
 
 describe("OtelEnvironment", () => {
   it.effect.each([
@@ -25,18 +26,23 @@ describe("OtelEnvironment", () => {
       disabled: false,
       warnings: [specIgnored("1")],
     },
-    { name: "ac 1", env: { AC_OTEL_SDK_DISABLED: "1" }, disabled: true, warnings: [AC_OFF] },
     {
-      name: "ac false overrides spec true",
-      env: { AC_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "true" },
+      name: "ankiel 1",
+      env: { ANKIEL_OTEL_SDK_DISABLED: "1" },
+      disabled: true,
+      warnings: [ANKIEL_OFF],
+    },
+    {
+      name: "ankiel false overrides spec true",
+      env: { ANKIEL_OTEL_SDK_DISABLED: "false", OTEL_SDK_DISABLED: "true" },
       disabled: false,
       warnings: [],
     },
     {
-      name: "unreadable ac warns and falls through",
-      env: { AC_OTEL_SDK_DISABLED: "maybe", OTEL_SDK_DISABLED: "true" },
+      name: "unreadable ankiel warns and falls through",
+      env: { ANKIEL_OTEL_SDK_DISABLED: "maybe", OTEL_SDK_DISABLED: "true" },
       disabled: true,
-      warnings: ["AC_OTEL_SDK_DISABLED=maybe is not a yes or a no and was ignored", SPEC_OFF],
+      warnings: ["ANKIEL_OTEL_SDK_DISABLED=maybe is not a yes or a no and was ignored", SPEC_OFF],
     },
   ])("$name", ({ env, disabled, warnings }) =>
     Effect.gen(function* () {
@@ -141,13 +147,13 @@ describe("OtelEnvironment", () => {
       {
         name: "the kill switch wins outright over a valid endpoint",
         env: {
-          AC_OTEL_SDK_DISABLED: "true",
+          ANKIEL_OTEL_SDK_DISABLED: "true",
           OTEL_EXPORTER_OTLP_ENDPOINT: "https://collector:4318/base",
         },
         traces: "Unset",
         metrics: "Unset",
         logs: "Unset",
-        warnings: [AC_OFF],
+        warnings: [ANKIEL_OFF],
       },
       {
         name: "an exporter of none turns off only its signal",
@@ -240,7 +246,7 @@ describe("OtelEnvironment", () => {
   describe("resolveSignalEndpoint", () => {
     const ankielExport = {
       protocol: "http/json",
-      headers: { "x-key": "ac" },
+      headers: { "x-key": "ankiel" },
       exportIntervalMs: 5_000,
     } as const;
     const withLogs = (logs: OtelEnvironment.OtelSignal, disabled = false) => ({
@@ -256,14 +262,14 @@ describe("OtelEnvironment", () => {
     });
     it.each([
       {
-        name: "AC_OTLP_*_URL wins over a signal the OTEL variables turned off",
+        name: "ANKIEL_OTLP_*_URL wins over a signal the OTEL variables turned off",
         otel: withLogs(OtelEnvironment.OtelSignal.Off()),
-        ankielUrl: "http://ac:4318/v1/logs",
+        ankielUrl: "http://ankiel:4318/v1/logs",
         expected: {
-          url: "http://ac:4318/v1/logs",
+          url: "http://ankiel:4318/v1/logs",
           export: ankielExport,
           source: "environment" as const,
-          variable: "AC_OTLP_LOGS_URL",
+          variable: "ANKIEL_OTLP_LOGS_URL",
         },
       },
       {
@@ -335,19 +341,19 @@ describe("OtelEnvironment", () => {
   it.effect("an exporter of none keeps the Settings endpoint from re-enabling its signal", () =>
     Effect.gen(function* () {
       const otel = yield* load({ OTEL_LOGS_EXPORTER: "none" });
-      const ac = {
+      const ankiel = {
         url: undefined,
         export: { protocol: "http/json", headers: undefined, exportIntervalMs: 10_000 },
       } as const;
       assert.strictEqual(
-        OtelEnvironment.resolveSignalEndpoint(otel, "logs", ac, {
+        OtelEnvironment.resolveSignalEndpoint(otel, "logs", ankiel, {
           bootstrapUrl: undefined,
           settingsUrl: "http://settings:4318/v1/logs",
         }),
         undefined,
       );
       assert.strictEqual(
-        OtelEnvironment.resolveSignalEndpoint(otel, "traces", ac, {
+        OtelEnvironment.resolveSignalEndpoint(otel, "traces", ankiel, {
           bootstrapUrl: undefined,
           settingsUrl: "http://settings:4318/v1/traces",
         })?.url,
@@ -366,7 +372,7 @@ describe("OtelEnvironment", () => {
           ConfigProvider.fromEnv({ env: { OTEL_RESOURCE_ATTRIBUTES: raw } }),
         );
         const otel = yield* OtelEnvironment.load.pipe(Effect.provide(layerEnv));
-        const resource = yield* OtlpResource.fromConfig({ serviceName: "ac" }).pipe(
+        const resource = yield* OtlpResource.fromConfig({ serviceName: "ankiel" }).pipe(
           Effect.provide(
             Layer.provide(
               OtelEnvironment.layerResourceAttributes(otel.resourceAttributes),

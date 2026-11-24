@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 
 /** Where a backend launched without a control channel proves which launch it belongs to. */
-export const DESKTOP_READINESS_PROOF_PATH = "/.well-known/ac/desktop-readiness";
+export const DESKTOP_READINESS_PROOF_PATH = "/.well-known/ankiel/desktop-readiness";
 export const DESKTOP_READINESS_CHALLENGE_PARAM = "challenge";
 export const DESKTOP_READINESS_CHALLENGE_MAX_LENGTH = 128;
 

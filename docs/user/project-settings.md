@@ -73,7 +73,7 @@ A project on several machines must have every machine connected to pin or archiv
 
 In **Settings → Worktrees → Worktree branch naming**, choose a static prefix,
 a model-selected semantic prefix such as `feat/` or `fix/`, or custom instructions
-for the complete name. The static prefix defaults to `ac/`; a trailing slash is
+for the complete name. The static prefix defaults to `ankiel/`; a trailing slash is
 optional, and an empty prefix adds nothing. Invalid characters in a static prefix
 are replaced with hyphens. Custom instructions are appended to
 the naming prompt and can specify issue IDs, namespaces, and casing.
@@ -186,11 +186,11 @@ project crumb.
 The Projects category, under Code, holds the project's name, icon, actions,
 checkouts and removal. Actions belong to a project: editing them creates the project's own list
 on each selected environment, and reset returns to the environment's shared list. A project's
-`ac.json` actions can be imported there. When a project has several checkouts on one environment,
+`ankiel.json` actions can be imported there. When a project has several checkouts on one environment,
 choose one in the scope line at the top to see or change only that checkout's settings.
 
-Settings a repository can also declare in `ac.json`, such as the workspace for new threads,
-resolve in one order: a project override, then the environment setting, then `ac.json`, then the
+Settings a repository can also declare in `ankiel.json`, such as the workspace for new threads,
+resolve in one order: a project override, then the environment setting, then `ankiel.json`, then the
 built-in default. Leave a setting on **Inherit** to let the next tier decide.
 Browser access changes apply when an agent session next starts.
 
@@ -198,13 +198,13 @@ New worktrees initialize git submodules recursively. If that step is slow becaus
 declares many nested submodules, set **Submodules** in **Settings → Worktrees** under Advanced (with the project
 selected to override it there) to **Top level only** to stop at the ones the repository declares
 itself, or **Skip** to leave them for a setup script. It resolves in the same order as the
-workspace default: a `"worktreeSubmodules"` value in the `ac.json` of the branch being checked out
+workspace default: a `"worktreeSubmodules"` value in the `ankiel.json` of the branch being checked out
 applies when the project and environment are both on **Inherit**.
 
 New worktrees check out every file. For a large repository, set `"worktreeSparsePatternsPath"` in
-`ac.json` to a repository-relative file of git sparse-checkout patterns in non-cone syntax. New
+`ankiel.json` to a repository-relative file of git sparse-checkout patterns in non-cone syntax. New
 worktrees then check out only the matching files, before any other file is written. Both files are
-read from the branch being checked out, so the patterns can leave out `ac.json` and `.gitmodules`.
+read from the branch being checked out, so the patterns can leave out `ankiel.json` and `.gitmodules`.
 If the pattern file is missing, creating the worktree fails instead of checking out everything.
 Submodules still follow **Submodules** above, also under excluded paths; set it to **Skip** to leave
 them empty. The first sparse worktree turns on Git's `extensions.worktreeConfig` for the repository.

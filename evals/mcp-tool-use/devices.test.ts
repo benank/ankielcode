@@ -87,7 +87,7 @@ it.effect("answers device calls with Ankiel's handlers over the case's world", (
     );
     const opened = json((yield* tools.call("device_open", { hostId: MAC, deviceId: IPHONE })).text);
     const { command } = opened.agentDevice;
-    assert.match(command, /^\/home\/user\/\.ac\/userdata\/device\/.+\/agent-device$/);
+    assert.match(command, /^\/home\/user\/\.ankiel\/userdata\/device\/.+\/agent-device$/);
     assert.include(opened.quickStart, command);
     assert.deepEqual(tools.launchers, [command]);
     // The image never reaches the model; Ankiel's text result has the rest.
@@ -220,15 +220,15 @@ it("prints agent-device's own help for a lone help command on a returned launche
       ?.split("\n$ agent-device help")[0]
       ?.trimEnd();
   // Commands from the paired runs. The simulator once answered the first with a placeholder.
-  const launcher = "/home/user/.ac/userdata/device/bin/agent-device";
-  const target = `--platform ios --udid ${IPHONE} --config /home/user/.ac/userdata/device/hosts/303617b9730210ef3c86c52d.json --session ac-4c43aa31e607633b85e9ff2f`;
+  const launcher = "/home/user/.ankiel/userdata/device/bin/agent-device";
+  const target = `--platform ios --udid ${IPHONE} --config /home/user/.ankiel/userdata/device/hosts/303617b9730210ef3c86c52d.json --session ankiel-4c43aa31e607633b85e9ff2f`;
   const asked = (command: string) => launcherHelp([launcher], command);
   assert.match(help("") ?? "", /^agent-device <command> \[args\] \[--json\]\n/);
   assert.equal(asked(`${launcher} help ${target}`), help(""));
   assert.equal(asked(`${launcher} record --help ${target}`), help("record"));
   assert.equal(asked(`${launcher} help open ${target}`), help("open"));
   assert.equal(asked(`${launcher} --help 2>&1`), help(""));
-  assert.equal(asked(`${launcher} help settings --session=ac-1`), help("settings"));
+  assert.equal(asked(`${launcher} help settings --session=ankiel-1`), help("settings"));
   // A password reaches fill from stdin, so request_secret's file never enters argv.
   assert.equal(asked(`${launcher} fill --help ${target}`), help("fill"));
   assert.include(help("fill"), "fill <x y|@ref|selector> --text-stdin");
@@ -329,7 +329,7 @@ it.effect("answers the returned launcher as agent-device does before and after o
 );
 
 const shared = (session: string): LauncherTarget => ({
-  command: "/home/user/.ac/userdata/device/bin/agent-device",
+  command: "/home/user/.ankiel/userdata/device/bin/agent-device",
   session,
   bound: false,
   deviceId: IPHONE,
@@ -337,7 +337,7 @@ const shared = (session: string): LauncherTarget => ({
   iosSimulator: true,
 });
 const boundTarget: LauncherTarget = {
-  command: "/home/user/.ac/userdata/device/targets/ankiel-bound/agent-device",
+  command: "/home/user/.ankiel/userdata/device/targets/ankiel-bound/agent-device",
   session: "ankiel-bound",
   bound: true,
   deviceId: IPHONE,
@@ -356,7 +356,7 @@ const errorCode = (
 ) => agentDeviceSessionError(targets, agentDeviceSessions(targets, {}, history), command)?.code;
 
 it("names the session on either ref: the bound launcher's own, or the shared one's --session", () => {
-  const flags = `--platform ios --udid ${IPHONE} --config /home/user/.ac/userdata/device/hosts/x.json`;
+  const flags = `--platform ios --udid ${IPHONE} --config /home/user/.ankiel/userdata/device/hosts/x.json`;
   const sharedTargets = [shared("ankiel-a"), shared("ankiel-b")];
   // The shared launcher answers each session its flags name; without one, its own check (not
   // modelled) refuses before agent-device runs.
@@ -444,7 +444,7 @@ it("follows the session through aliases, compound calls, snapshots and whole-scr
 it("follows the shared launcher's session through flags held in a variable or an array", () => {
   // Forms Sonnet used with the shared launcher in a live sample.
   const target = shared("ankiel-a");
-  const flags = `--platform ios --udid ${IPHONE} --config /home/user/.ac/userdata/device/hosts/x.json --session ankiel-a`;
+  const flags = `--platform ios --udid ${IPHONE} --config /home/user/.ankiel/userdata/device/hosts/x.json --session ankiel-a`;
   const after = (history: ShellCall, targets = [target]) =>
     agentDeviceSessions(targets, {}, [history]).get("ankiel-a");
   const opened = bash(
@@ -539,7 +539,7 @@ it.effect(
 
 it("keeps a redirection's descriptor out of the app an open names, on either launcher", () => {
   // Sol R10 B1: `open 2>&1` once read as `open 2`, an app the real shell never passes.
-  const flags = `--platform ios --udid ${IPHONE} --config /home/user/.ac/userdata/device/hosts/x.json --session ankiel-a`;
+  const flags = `--platform ios --udid ${IPHONE} --config /home/user/.ankiel/userdata/device/hosts/x.json --session ankiel-a`;
   for (const [target, args] of [
     [shared("ankiel-a"), ` ${flags}`],
     [boundTarget, ""],

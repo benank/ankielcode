@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 import { expect } from "e2e";
 
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 const NOTE = "userdata/themes/nightfall.json/notes.txt";
 const BODY = "Notes for the original Nightfall palette";
@@ -9,8 +9,8 @@ const BODY = "Notes for the original Nightfall palette";
 test(
   "Publishing a theme preserves files in an existing directory under the same name",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("theme-workspace", {
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("theme-workspace", {
       [NOTE]: BODY,
       "nightfall.json": JSON.stringify({
         name: "Nightfall",
@@ -19,7 +19,7 @@ test(
         accent: "#7aa2f7",
       }),
     });
-    const thread = await ac.thread({
+    const thread = await ankiel.thread({
       project,
       title: "Theme notes",
       messages: [`See :codex-file-citation{path="${NOTE}" line_range_start="1"}`],
@@ -27,7 +27,7 @@ test(
     const { cli } = makeState(project);
     await runPromise(cli(["theme", "set", `${project}/nightfall.json`], [0, 1]));
 
-    await ac.open(thread);
+    await ankiel.open(thread);
     await screen.getByRole("button", /^Agent See/).tap();
     await screen.getByRole("link", /^notes\.txt/).tap();
 

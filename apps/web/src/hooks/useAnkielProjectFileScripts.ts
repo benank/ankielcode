@@ -1,5 +1,5 @@
 import {
-  AC_PROJECT_FILE_NAME,
+  ANKIEL_PROJECT_FILE_NAME,
   type EnvironmentId,
   type AnkielProjectFile,
   type AnkielProjectFileScript,
@@ -20,7 +20,12 @@ export function useAnkielProjectFileState(
   environmentId: EnvironmentId,
   cwd: string | null,
 ): AnkielProjectFileState {
-  const query = useProjectFileQuery(environmentId, cwd ?? "", AC_PROJECT_FILE_NAME, cwd !== null);
+  const query = useProjectFileQuery(
+    environmentId,
+    cwd ?? "",
+    ANKIEL_PROJECT_FILE_NAME,
+    cwd !== null,
+  );
   const contents = query.data && !query.data.truncated ? query.data.contents : null;
   const isPending = query.isPending;
   if (contents === null) {

@@ -26,7 +26,7 @@ export class CheckoutCloneError extends Schema.TaggedError<CheckoutCloneError>()
  */
 export const CheckoutCloner = Context.Reference<
   ((source: string, destination: string) => Effect.Effect<void, CheckoutCloneError>) | undefined
->("ac/vcs/CheckoutCloner", { defaultValue: () => undefined });
+>("ankiel/vcs/CheckoutCloner", { defaultValue: () => undefined });
 
 // A single-executable server resolves packages on disk only through `require`.
 const requireForFfi = NodeModule.createRequire(import.meta.url);

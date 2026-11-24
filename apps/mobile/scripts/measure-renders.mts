@@ -132,7 +132,7 @@ const connectServer = Effect.fn("measure.connectServer")(function* (options: Opt
     HttpClient.filterStatusOk,
   );
   const descriptor = yield* http
-    .get(`${options.server}/.well-known/ac/environment`)
+    .get(`${options.server}/.well-known/ankiel/environment`)
     .pipe(Effect.flatMap(HttpClientResponse.schemaBodyJson(ExecutionEnvironmentDescriptor)));
   const shell = yield* http
     .get(`${options.server}/api/orchestration/shell`)
@@ -348,7 +348,7 @@ const command = Command.make(
       Flag.withDefault(""),
     ),
     token: Flag.String("token").pipe(
-      Flag.withDescription("Bearer token from `ac auth session issue --token-only`."),
+      Flag.withDescription("Bearer token from `ankiel auth session issue --token-only`."),
       Flag.withDefault(""),
     ),
     route: Flag.String("route").pipe(

@@ -107,7 +107,7 @@ function tool(
 }
 
 // Codex registers "ankiel-code-direct" for Ankiel tools kept out of Code Mode.
-const AC_MCP_SERVER_ALIASES = new Set([
+const ANKIEL_MCP_SERVER_ALIASES = new Set([
   "ankiel-code",
   "ankiel_code",
   "ankielcode",
@@ -115,7 +115,7 @@ const AC_MCP_SERVER_ALIASES = new Set([
   "ankiel_code_direct",
 ]);
 
-const AC_MCP_TOOLS: Readonly<Record<string, AnkielMcpToolDefinition>> = {
+const ANKIEL_MCP_TOOLS: Readonly<Record<string, AnkielMcpToolDefinition>> = {
   link_pull_request: tool(
     ["Link", "Linking", "Linked", "a pull request"],
     "link-pr",
@@ -479,7 +479,7 @@ const AC_MCP_TOOLS: Readonly<Record<string, AnkielMcpToolDefinition>> = {
   send_to_user: tool(["Send", "Sending", "Sent", "a message"], "send-to-user"),
 };
 
-export const AC_MCP_TOOL_NAMES: ReadonlySet<string> = new Set(Object.keys(AC_MCP_TOOLS));
+export const ANKIEL_MCP_TOOL_NAMES: ReadonlySet<string> = new Set(Object.keys(ANKIEL_MCP_TOOLS));
 
 function normalizeAnkielMcpToolLabel(value: string): string {
   return value.replace(/\s+(?:complete|completed)\s*$/i, "").trim();
@@ -509,7 +509,7 @@ function parseAnkielMcpToolName(value: string): string | null {
     const { server, tool } = mcpMatch.groups;
     return server !== undefined &&
       tool !== undefined &&
-      AC_MCP_SERVER_ALIASES.has(server.toLowerCase())
+      ANKIEL_MCP_SERVER_ALIASES.has(server.toLowerCase())
       ? tool
       : null;
   }
@@ -524,11 +524,11 @@ function parseAnkielMcpToolName(value: string): string | null {
 
   const prefixed = /^(?:mcp[-_]{1,2})?ankiel[-_ ]?code(?:__|[-_.:/ ])(?<tool>.+)$/i.exec(label);
   const candidate = prefixed?.groups?.tool ?? label;
-  if (Object.hasOwn(AC_MCP_TOOLS, candidate)) return candidate;
+  if (Object.hasOwn(ANKIEL_MCP_TOOLS, candidate)) return candidate;
   // OpenCode 2 thread prefixes can contain underscores; choose the longest known tool-name suffix.
   if (!/^ankiel-code-/i.test(label)) return null;
   let longest: string | null = null;
-  for (const tool of Object.keys(AC_MCP_TOOLS)) {
+  for (const tool of Object.keys(ANKIEL_MCP_TOOLS)) {
     if (label.endsWith(`_${tool}`) && tool.length > (longest?.length ?? 0)) longest = tool;
   }
   return longest;
@@ -536,7 +536,7 @@ function parseAnkielMcpToolName(value: string): string | null {
 
 export function resolveAnkielMcpToolId(toolName: string | null | undefined): string | null {
   const name = toolName == null ? null : resolveAnkielMcpToolName(toolName);
-  return name !== null && Object.hasOwn(AC_MCP_TOOLS, name) ? name : null;
+  return name !== null && Object.hasOwn(ANKIEL_MCP_TOOLS, name) ? name : null;
 }
 
 type SummaryInput = Readonly<Record<string, unknown>>;
@@ -563,12 +563,12 @@ export function resolveAnkielMcpToolDefinition(
   input?: unknown,
 ): AnkielMcpToolDefinition | null {
   const name = toolName == null ? null : resolveAnkielMcpToolName(toolName);
-  if (name === null || !Object.hasOwn(AC_MCP_TOOLS, name)) return null;
+  if (name === null || !Object.hasOwn(ANKIEL_MCP_TOOLS, name)) return null;
   const action = asSummaryInput(input)?.action;
   const actionTool = typeof action === "string" ? ACTION_TOOLS[name]?.(action) : undefined;
-  return actionTool !== undefined && Object.hasOwn(AC_MCP_TOOLS, actionTool)
-    ? AC_MCP_TOOLS[actionTool]!
-    : AC_MCP_TOOLS[name]!;
+  return actionTool !== undefined && Object.hasOwn(ANKIEL_MCP_TOOLS, actionTool)
+    ? ANKIEL_MCP_TOOLS[actionTool]!
+    : ANKIEL_MCP_TOOLS[name]!;
 }
 
 /** Tools whose summary depends on which fields a call sets. */

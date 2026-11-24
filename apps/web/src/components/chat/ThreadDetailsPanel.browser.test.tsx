@@ -9,7 +9,7 @@ import { AsyncResult, Atom } from "effect/reactivity";
 import { expect, it, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser";
 
-const SCRATCH_ROOT = "/home/user/.ac/scratch";
+const SCRATCH_ROOT = "/home/user/.ankiel/scratch";
 
 const state = vi.hoisted(() => ({
   workspaceRoot: "",

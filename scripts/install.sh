@@ -5,21 +5,21 @@
 #   curl -fsSL https://code.ankiel.com/install.sh | sh
 #
 # Environment:
-#   AC_CHANNEL           release train to follow: stable, nightly, or preview
+#   ANKIEL_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
-#   AC_VERSION           exact version to install (overrides AC_CHANNEL)
-#   AC_HOME              Ankiel home directory (default: ~/.ac)
-#   AC_INSTALL_BIN_DIR   where the `ac` command goes (default: ~/.local/bin)
-#   AC_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
+#   ANKIEL_VERSION           exact version to install (overrides ANKIEL_CHANNEL)
+#   ANKIEL_HOME              Ankiel home directory (default: ~/.ankiel)
+#   ANKIEL_INSTALL_BIN_DIR   where the `ankiel` command goes (default: ~/.local/bin)
+#   ANKIEL_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
-# The archive is unpacked into $AC_HOME/runtime/versions/<version>, the
-# same layout `ac service install` uses, so the service reuses this download
+# The archive is unpacked into $ANKIEL_HOME/runtime/versions/<version>, the
+# same layout `ankiel service install` uses, so the service reuses this download
 # instead of fetching the release again.
 set -eu
 
 repo="benank/ankielcode"
-base_url="${AC_RELEASE_BASE_URL:-https://github.com/${repo}/releases/download}"
-ankiel_home="${AC_HOME:-$HOME/.ac}"
+base_url="${ANKIEL_RELEASE_BASE_URL:-https://github.com/${repo}/releases/download}"
+ankiel_home="${ANKIEL_HOME:-$HOME/.ankiel}"
 case "$ankiel_home" in
   /*) ;;
   *)
@@ -28,15 +28,15 @@ case "$ankiel_home" in
     ankiel_home="${ankiel_cwd%??}/$ankiel_home"
     ;;
 esac
-bin_dir="${AC_INSTALL_BIN_DIR:-$HOME/.local/bin}"
-# Trailing slashes would put `//` in the paths the ac command guard compares.
+bin_dir="${ANKIEL_INSTALL_BIN_DIR:-$HOME/.local/bin}"
+# Trailing slashes would put `//` in the paths the ankiel command guard compares.
 while [ "${ankiel_home%/}" != "$ankiel_home" ] && [ "$ankiel_home" != / ]; do ankiel_home="${ankiel_home%/}"; done
 while [ "${bin_dir%/}" != "$bin_dir" ] && [ "$bin_dir" != / ]; do bin_dir="${bin_dir%/}"; done
 # Absolute, so the PATH hint never adds a folder that changes with the working directory.
 case "$bin_dir" in /*) ;; *) bin_dir="$PWD/$bin_dir" ;; esac
 
 fail() {
-  printf '\nac install: %s\n' "$1" >&2
+  printf '\nankiel install: %s\n' "$1" >&2
   exit 1
 }
 
@@ -171,7 +171,7 @@ case "$(uname -m)" in
   *) fail "unsupported architecture $(uname -m)" ;;
 esac
 if [ "${platform}-${arch}" = darwin-x64 ]; then
-  fail "there is no ac CLI for Intel Macs. Install the desktop app from https://code.ankiel.com/download, or run a server from source: https://github.com/${repo}/blob/main/docs/user/install.md#intel-macs"
+  fail "there is no ankiel CLI for Intel Macs. Install the desktop app from https://code.ankiel.com/download, or run a server from source: https://github.com/${repo}/blob/main/docs/user/install.md#intel-macs"
 fi
 command -v tar >/dev/null 2>&1 || fail "tar is required"
 if command -v sha256sum >/dev/null 2>&1; then
@@ -182,13 +182,13 @@ else
   fail "sha256sum or shasum is required"
 fi
 
-channel="${AC_CHANNEL:-stable}"
-version="${AC_VERSION:-}"
+channel="${ANKIEL_CHANNEL:-stable}"
+version="${ANKIEL_VERSION:-}"
 if [ -z "$version" ]; then
   case "$channel" in
     stable) tag_pattern='v\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)' ;;
     nightly | preview) tag_pattern="v\([0-9][^\"]*-${channel}\.[0-9]*\.[0-9]*\)" ;;
-    *) fail "AC_CHANNEL must be stable, nightly, or preview" ;;
+    *) fail "ANKIEL_CHANNEL must be stable, nightly, or preview" ;;
   esac
   tmp_index="$(mktemp)"
   if [ "$channel" = stable ]; then
@@ -206,22 +206,22 @@ if [ -z "$version" ]; then
     done
   fi
   rm -f "$tmp_index"
-  [ -n "$version" ] || fail "could not find a ${channel} release; set AC_VERSION"
+  [ -n "$version" ] || fail "could not find a ${channel} release; set ANKIEL_VERSION"
 fi
 case "$version" in
   *-preview.*)
     printf '%s\n' \
-      "ac ${version} is a preview build." \
+      "ankiel ${version} is a preview build." \
       "  Preview builds are cut by maintainers from unreleased branches to exercise the release" \
       "  pipeline. They can be broken, receive no fixes, and are never offered as updates." \
-      "  Set AC_CHANNEL=stable (the default) for a supported build." >&2
-    if [ "$channel" != "preview" ] && [ -z "${AC_VERSION:-}" ]; then
+      "  Set ANKIEL_CHANNEL=stable (the default) for a supported build." >&2
+    if [ "$channel" != "preview" ] && [ -z "${ANKIEL_VERSION:-}" ]; then
       fail "refusing a preview build that was not explicitly requested"
     fi
     ;;
 esac
 
-stem="ac-${version}-${platform}-${arch}"
+stem="ankiel-${version}-${platform}-${arch}"
 archive="${stem}.tar.gz"
 versions_dir="${ankiel_home}/runtime/versions"
 target_dir="${versions_dir}/${version}"
@@ -242,12 +242,12 @@ else
   fetch_status=0
   fetch "${base_url}/v${version}/SHA256SUMS" "${staging}/SHA256SUMS" || fetch_status=$?
   if [ "$fetch_status" -eq 44 ]; then
-    fail "ac ${version} has no release archive for ${platform}-${arch}; releases before the self-contained CLI can only be installed with \`npm install -g @ankielcode/cli@${version}\`"
+    fail "ankiel ${version} has no release archive for ${platform}-${arch}; releases before the self-contained CLI can only be installed with \`npm install -g @ankielcode/cli@${version}\`"
   elif [ "$fetch_status" -ne 0 ]; then
     fail "could not download the release checksums"
   fi
   expected="$(grep " \*\{0,1\}${archive}\$" "${staging}/SHA256SUMS" | cut -d' ' -f1)"
-  [ -n "$expected" ] || fail "ac ${version} has no release archive for ${platform}-${arch}"
+  [ -n "$expected" ] || fail "ankiel ${version} has no release archive for ${platform}-${arch}"
   download "${base_url}/v${version}/${archive}" "${staging}/${archive}" || fail "could not download ${archive}"
 
   step "Verifying the download..."
@@ -257,7 +257,7 @@ else
   step "Extracting Ankiel Code..."
   tar -xzf "${staging}/${archive}" -C "$staging" --strip-components=1
   rm -f "${staging}/${archive}" "${staging}/SHA256SUMS"
-  "${staging}/ac" --version >/dev/null || fail "the downloaded executable does not run"
+  "${staging}/ankiel" --version >/dev/null || fail "the downloaded executable does not run"
   printf '%s\n' "$version" > "${staging}/.install-complete"
 
   rm -rf "$target_dir"
@@ -267,10 +267,10 @@ else
   trap - EXIT
 fi
 
-step "Setting up the ac command..."
+step "Setting up the ankiel command..."
 mkdir -p "$bin_dir"
 # Exec by absolute path: through a symlink, argv0 is the link, and the Cursor SDK looks for its
-# helpers beside it. ac update and ac install write the same script.
+# helpers beside it. ankiel update and ankiel install write the same script.
 nl='
 '
 launcher_head="#!/bin/sh${nl}exec '"
@@ -281,7 +281,7 @@ launcher_script() {
   printf '%s%s%s' "$launcher_head" "${quoted%x}" "$launcher_tail"
 }
 # The executable an unedited launcher script at $1 runs; a user's own wrapper prints nothing.
-script_ac() {
+script_ankiel() {
   [ -f "$1" ] && [ ! -L "$1" ] && [ "$(wc -c < "$1")" -le 4096 ] || return 0
   contents="$(cat "$1"; printf x)"
   contents="${contents%x}"
@@ -292,23 +292,23 @@ script_ac() {
   [ -n "$unquoted" ] && [ "$(launcher_script "$unquoted"; printf x)" = "${contents}x" ] && printf '%s' "$unquoted"
   return 0
 }
-# Replace only this home's own ac launchers: into its versions, or the desktop app's launcher.
+# Replace only this home's own ankiel launchers: into its versions, or the desktop app's launcher.
 # Anything else (a user's script, a copied binary) belongs to someone else.
-# Exactly <versions>/<version>/ac ($1 under $2), never another program inside a version.
-version_ac() {
+# Exactly <versions>/<version>/ankiel ($1 under $2), never another program inside a version.
+version_ankiel() {
   case "$1" in "$2"/*) ;; *) return 1 ;; esac
-  case "${1#"$2"/}" in */*/*) return 1 ;; */ac) return 0 ;; *) return 1 ;; esac
+  case "${1#"$2"/}" in */*/*) return 1 ;; */ankiel) return 0 ;; *) return 1 ;; esac
 }
 slot_empty=true
-if [ -e "${bin_dir}/ac" ] || [ -L "${bin_dir}/ac" ]; then
+if [ -e "${bin_dir}/ankiel" ] || [ -L "${bin_dir}/ankiel" ]; then
   slot_empty=false
   owned=false
   real_versions_dir="$(CDPATH='' cd -P -- "$versions_dir" && pwd)"
-  if [ -L "${bin_dir}/ac" ]; then
-    existing="$(readlink "${bin_dir}/ac" 2>/dev/null || true)"
+  if [ -L "${bin_dir}/ankiel" ]; then
+    existing="$(readlink "${bin_dir}/ankiel" 2>/dev/null || true)"
     case "$existing" in /*) ;; *) existing="${bin_dir}/${existing}" ;; esac
   else
-    existing="$(script_ac "${bin_dir}/ac")"
+    existing="$(script_ankiel "${bin_dir}/ankiel")"
   fi
   if [ -n "$existing" ]; then
     # Through a symlinked Ankiel home the path names the alias; resolve its folder to compare.
@@ -317,34 +317,34 @@ if [ -e "${bin_dir}/ac" ] || [ -L "${bin_dir}/ac" ]; then
     case "$existing" in
       */./* | */../* | */. | */..) ;;
       *)
-        if version_ac "$existing" "$versions_dir" || version_ac "$existing" "$real_versions_dir" ||
-          [ "$existing" = "${ankiel_home}/bin/ac" ]; then owned=true; fi
+        if version_ankiel "$existing" "$versions_dir" || version_ankiel "$existing" "$real_versions_dir" ||
+          [ "$existing" = "${ankiel_home}/bin/ankiel" ]; then owned=true; fi
         ;;
     esac
-    if [ -n "$existing_dir" ] && version_ac "${existing_dir}/${existing##*/}" "$real_versions_dir"; then
+    if [ -n "$existing_dir" ] && version_ankiel "${existing_dir}/${existing##*/}" "$real_versions_dir"; then
       owned=true
     fi
   fi
-  "$owned" || fail "another ac is already at ${bin_dir}/ac. Remove it and run this again, or run ${target_dir}/ac directly."
+  "$owned" || fail "another ankiel is already at ${bin_dir}/ankiel. Remove it and run this again, or run ${target_dir}/ankiel directly."
 fi
-launcher_tmp="$(mktemp "${bin_dir}/.ac.XXXXXX")"
+launcher_tmp="$(mktemp "${bin_dir}/.ankiel.XXXXXX")"
 trap 'rm -f "$launcher_tmp"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-launcher_script "${target_dir}/ac" > "$launcher_tmp"
+launcher_script "${target_dir}/ankiel" > "$launcher_tmp"
 chmod 755 "$launcher_tmp"
 # An empty spot is hard-linked without -f, so a file that appears after the check above is kept.
 if "$slot_empty"; then
-  ln "$launcher_tmp" "${bin_dir}/ac" || fail "could not write ${bin_dir}/ac; something else was created there."
+  ln "$launcher_tmp" "${bin_dir}/ankiel" || fail "could not write ${bin_dir}/ankiel; something else was created there."
 else
   # Known race, accepted: a file written here after the ownership check above is overwritten.
   # mv replaces a legacy symlink rather than writing through it.
-  mv -f "$launcher_tmp" "${bin_dir}/ac"
+  mv -f "$launcher_tmp" "${bin_dir}/ankiel"
 fi
 rm -f "$launcher_tmp"
 trap - EXIT
 # Pruning keeps what this launcher points at; a background service cannot see bin_dir otherwise.
-launcher="$(CDPATH='' cd -P -- "$bin_dir" && pwd)/ac"
+launcher="$(CDPATH='' cd -P -- "$bin_dir" && pwd)/ankiel"
 launchers="${ankiel_home}/runtime/launchers"
 grep -qxF "$launcher" "$launchers" 2>/dev/null || printf '%s\n' "$launcher" >> "$launchers"
 if "$interactive"; then printf '\r\033[2K' >&2; fi
@@ -357,7 +357,7 @@ read_from() {
     /*) case "$1" in *[!A-Za-z0-9_./-]*) ;; *) printf '%s' "$1" ;; esac ;;
   esac
 }
-# A command to paste for zsh, Linux bash, or fish, like `ac install` prints. macOS bash reads only
+# A command to paste for zsh, Linux bash, or fish, like `ankiel install` prints. macOS bash reads only
 # one of several startup files, so no single file is safe to change there.
 path_command=
 path_rest="$bin_dir"
@@ -365,7 +365,7 @@ path_prefix=
 case "$bin_dir" in "$HOME"/*) path_rest="${bin_dir#"$HOME"}" path_prefix='$HOME' ;; esac
 case "$path_rest" in *[!A-Za-z0-9_./-]*) path_rest= ;; esac
 if [ -n "$path_rest" ]; then
-  # Last on PATH, so it never shadows another ac.
+  # Last on PATH, so it never shadows another ankiel.
   path_line="export PATH=\"\$PATH:${path_prefix}${path_rest}\""
   shell_name="${SHELL:-}"
   case "${shell_name##*/}" in
@@ -381,12 +381,12 @@ if [ -n "$path_rest" ]; then
       [ -z "$config_dir" ] || path_command="mkdir -p ${fish_dir} && printf '\\n%s\\n' 'fish_add_path --append --path ${path_prefix}${path_rest}' >> ${fish_dir}/config.fish" ;;
   esac
 fi
-# An ac earlier on PATH runs instead; the PATH command adds this folder last.
-# A PATH entry with a trailing slash gives `dir//ac`.
-first_ac="$(command -v ac 2>/dev/null | tr -s / || true)"
-case "$first_ac" in "" | "${bin_dir}/ac") first_ac= ;; esac
-if [ -n "$first_ac" ]; then
-  printf '  Another ac at %s runs first, so run %s%s/ac%s to use this one.\n\n' "$first_ac" "$bold" "$bin_dir" "$reset"
+# An ankiel earlier on PATH runs instead; the PATH command adds this folder last.
+# A PATH entry with a trailing slash gives `dir//ankiel`.
+first_ankiel="$(command -v ankiel 2>/dev/null | tr -s / || true)"
+case "$first_ankiel" in "" | "${bin_dir}/ankiel") first_ankiel= ;; esac
+if [ -n "$first_ankiel" ]; then
+  printf '  Another ankiel at %s runs first, so run %s%s/ankiel%s to use this one.\n\n' "$first_ankiel" "$bold" "$bin_dir" "$reset"
 else
   case ":${PATH}:" in
     *":${bin_dir}:"* | *":${bin_dir}/:"*) printf '  Run %sac%s to use Ankiel Code here, or %sac up%s to use it from your other devices.\n\n' "$bold" "$reset" "$bold" "$reset" ;;

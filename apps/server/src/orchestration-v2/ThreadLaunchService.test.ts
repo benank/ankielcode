@@ -1265,7 +1265,7 @@ it.effect(
       );
       const projection = yield* preparationSettled(launched.threadId);
       assert.equal(projection.runs[0]?.status, "starting");
-      assert.match(projection.thread.branch!, /^ac\/[0-9a-f]{8}$/);
+      assert.match(projection.thread.branch!, /^ankiel\/[0-9a-f]{8}$/);
       assert.equal(harness.createWorktree.mock.calls[0]?.[0]?.newRefName, projection.thread.branch);
       assert.equal(harness.runSetup.mock.calls.length, 1);
       assert.equal(harness.renameBranch.mock.calls.length, 0);
@@ -3036,10 +3036,10 @@ it.live(
         yield* git.execute({ operation: "launch-test", cwd: shop, args });
       }
       yield* fileSystem.writeFileString(
-        path.join(shop, "ac.json"),
+        path.join(shop, "ankiel.json"),
         JSON.stringify({
           worktreeLayout: {
-            create: `echo create >> "${ran}" && git worktree add -q -b "$AC_WORKTREE_BRANCH" "$AC_WORKTREE_PROJECT_PATH"`,
+            create: `echo create >> "${ran}" && git worktree add -q -b "$ANKIEL_WORKTREE_BRANCH" "$ANKIEL_WORKTREE_PROJECT_PATH"`,
           },
         }),
       );
@@ -3728,10 +3728,10 @@ it.effect("leaves uncertain Git detection failures to workspace preparation", ()
 );
 
 it.effect.each([
-  { name: "is missing", baseRef: "ac/renamed", startFromOrigin: false, origin: true },
+  { name: "is missing", baseRef: "ankiel/renamed", startFromOrigin: false, origin: true },
   {
     name: "has no origin to come from",
-    baseRef: "ac/renamed",
+    baseRef: "ankiel/renamed",
     startFromOrigin: true,
     origin: false,
   },

@@ -154,7 +154,7 @@ export interface CreateWorktreeProgress {
   }) => Effect.Effect<void, never>;
   readonly onSubmodulesStarted?: () => Effect.Effect<void, never>;
   readonly onSubmodulesDisabled?: (input: {
-    source: "settings" | "ac.json";
+    source: "settings" | "ankiel.json";
   }) => Effect.Effect<void, never>;
   readonly onSubmoduleLine?: (line: string) => Effect.Effect<void, never>;
   readonly onSubmodulesFinished?: (input: {
@@ -165,7 +165,7 @@ export interface CreateWorktreeProgress {
 
 export interface CreateWorktreeOptions {
   readonly progress?: CreateWorktreeProgress;
-  /** Null or omitted defers to the checkout's ac.json. */
+  /** Null or omitted defers to the checkout's ankiel.json. */
   readonly submodules?: WorktreeSubmodules | null;
   readonly worktreesDirectory?: string;
   /** Clone the checkout from the macOS worktree checkout cache. */
@@ -347,12 +347,12 @@ export interface GitRemoteStatusOptions {
  * slow status fetch land. Its status read waits for a running fetch instead of using the last
  * fetched references after five seconds. The fetch keeps its own safety limit.
  */
-export const AwaitStatusFetch = Context.Reference<boolean>("ac/vcs/AwaitStatusFetch", {
+export const AwaitStatusFetch = Context.Reference<boolean>("ankiel/vcs/AwaitStatusFetch", {
   defaultValue: () => false,
 });
 
 /** Set by background discovery so its Git commands run in their own small lane, not the user's. */
-export const BackgroundGitWork = Context.Reference<boolean>("ac/vcs/BackgroundGitWork", {
+export const BackgroundGitWork = Context.Reference<boolean>("ankiel/vcs/BackgroundGitWork", {
   defaultValue: () => false,
 });
 
@@ -1813,7 +1813,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
                     "-p",
                     commit,
                     "-m",
-                    `ac checkpoint turn start ref=${input.checkpointRef}`,
+                    `ankiel checkpoint turn start ref=${input.checkpointRef}`,
                   ],
                   // listAuthoredPaths reads commits newer than the start as the turn's own.
                   env: { ...commitEnv, GIT_COMMITTER_DATE: `${capturedAt} +0000` },
@@ -1829,7 +1829,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
                 ),
               );
 
-        const message = `ac checkpoint ref=${input.checkpointRef}${
+        const message = `ankiel checkpoint ref=${input.checkpointRef}${
           headMark === undefined ? "" : `\n\n${HEAD_MARK_TRAILER}: ${headMark}`
         }`;
         // HEAD is the first parent so listAuthoredPaths can see how HEAD moved between checkpoints.
@@ -2049,7 +2049,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
             "-p",
             input.head,
             "-m",
-            `ac checkpoint ref=${input.checkpointRef}${
+            `ankiel checkpoint ref=${input.checkpointRef}${
               headMark === undefined ? "" : `\n\n${HEAD_MARK_TRAILER}: ${headMark}`
             }`,
           ],

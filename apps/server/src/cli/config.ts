@@ -45,7 +45,7 @@ const hostFlag = Flag.String("host").pipe(
 );
 export const baseDirFlag = Flag.String("base-dir").pipe(
   Flag.withDescription(
-    "Explicit Ankiel Code data directory; runtime state is stored under userdata (equivalent to AC_HOME).",
+    "Explicit Ankiel Code data directory; runtime state is stored under userdata (equivalent to ANKIEL_HOME).",
   ),
   Flag.optional,
 );
@@ -71,7 +71,7 @@ const autoBootstrapProjectFromCwdFlag = Flag.Boolean("auto-bootstrap-project-fro
 );
 const logWebSocketEventsFlag = Flag.Boolean("log-websocket-events").pipe(
   Flag.withDescription(
-    "Emit server-side logs for outbound WebSocket push traffic (equivalent to AC_LOG_WS_EVENTS).",
+    "Emit server-side logs for outbound WebSocket push traffic (equivalent to ANKIEL_LOG_WS_EVENTS).",
   ),
   Flag.withAlias("log-ws-events"),
   Flag.optional,
@@ -89,54 +89,58 @@ const tailscaleServePortFlag = Flag.Int("tailscale-serve-port").pipe(
 );
 const lanFlag = Flag.Boolean("lan").pipe(
   Flag.withDescription(
-    "Accept connections from your local network and tailnet, not only this machine (equivalent to AC_LAN).",
+    "Accept connections from your local network and tailnet, not only this machine (equivalent to ANKIEL_LAN).",
   ),
   Flag.optional,
 );
 
-export const traceFileConfig = Config.String("AC_TRACE_FILE").pipe(
+export const traceFileConfig = Config.String("ANKIEL_TRACE_FILE").pipe(
   Config.option,
   Config.map(Option.getOrUndefined),
 );
-export const traceMaxFilesConfig = Config.Int("AC_TRACE_MAX_FILES").pipe(Config.withDefault(10));
+export const traceMaxFilesConfig = Config.Int("ANKIEL_TRACE_MAX_FILES").pipe(
+  Config.withDefault(10),
+);
 
 const EnvServerConfig = Config.all({
-  logLevel: Config.LogLevel("AC_LOG_LEVEL").pipe(Config.withDefault("Info")),
-  traceMinLevel: Config.LogLevel("AC_TRACE_MIN_LEVEL").pipe(Config.withDefault("Info")),
-  traceTimingEnabled: Config.Boolean("AC_TRACE_TIMING_ENABLED").pipe(Config.withDefault(true)),
+  logLevel: Config.LogLevel("ANKIEL_LOG_LEVEL").pipe(Config.withDefault("Info")),
+  traceMinLevel: Config.LogLevel("ANKIEL_TRACE_MIN_LEVEL").pipe(Config.withDefault("Info")),
+  traceTimingEnabled: Config.Boolean("ANKIEL_TRACE_TIMING_ENABLED").pipe(Config.withDefault(true)),
   traceFile: traceFileConfig,
-  traceMaxBytes: Config.Int("AC_TRACE_MAX_BYTES").pipe(Config.withDefault(10 * 1024 * 1024)),
+  traceMaxBytes: Config.Int("ANKIEL_TRACE_MAX_BYTES").pipe(Config.withDefault(10 * 1024 * 1024)),
   traceMaxFiles: traceMaxFilesConfig,
-  traceBatchWindowMs: Config.Int("AC_TRACE_BATCH_WINDOW_MS").pipe(Config.withDefault(1_000)),
-  otlpTracesUrl: Config.String("AC_OTLP_TRACES_URL").pipe(
+  traceBatchWindowMs: Config.Int("ANKIEL_TRACE_BATCH_WINDOW_MS").pipe(Config.withDefault(1_000)),
+  otlpTracesUrl: Config.String("ANKIEL_OTLP_TRACES_URL").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  otlpMetricsUrl: Config.String("AC_OTLP_METRICS_URL").pipe(
+  otlpMetricsUrl: Config.String("ANKIEL_OTLP_METRICS_URL").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  otlpLogsUrl: Config.String("AC_OTLP_LOGS_URL").pipe(
+  otlpLogsUrl: Config.String("ANKIEL_OTLP_LOGS_URL").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  otlpExportIntervalMs: Config.Int("AC_OTLP_EXPORT_INTERVAL_MS").pipe(Config.withDefault(10_000)),
-  otlpHeaders: Config.schema(OtlpHeadersFromString, "AC_OTLP_HEADERS").pipe(
+  otlpExportIntervalMs: Config.Int("ANKIEL_OTLP_EXPORT_INTERVAL_MS").pipe(
+    Config.withDefault(10_000),
+  ),
+  otlpHeaders: Config.schema(OtlpHeadersFromString, "ANKIEL_OTLP_HEADERS").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  otlpProtocol: Config.schema(OtlpProtocol, "AC_OTLP_PROTOCOL").pipe(
+  otlpProtocol: Config.schema(OtlpProtocol, "ANKIEL_OTLP_PROTOCOL").pipe(
     Config.withDefault("http/json"),
   ),
-  mode: Config.schema(ServerConfig.RuntimeMode, "AC_MODE").pipe(
+  mode: Config.schema(ServerConfig.RuntimeMode, "ANKIEL_MODE").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  port: Config.Port("AC_PORT").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  host: Config.String("AC_HOST").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  ankielHome: Config.String("AC_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  port: Config.Port("ANKIEL_PORT").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  host: Config.String("ANKIEL_HOST").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  ankielHome: Config.String("ANKIEL_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
   devUrl: Config.URL("VITE_DEV_SERVER_URL").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  devAllowedOrigins: Config.String("AC_DEV_ALLOWED_ORIGINS").pipe(
+  devAllowedOrigins: Config.String("ANKIEL_DEV_ALLOWED_ORIGINS").pipe(
     Config.withDefault(""),
     Config.map((value) =>
       value
@@ -145,28 +149,34 @@ const EnvServerConfig = Config.all({
         .filter((entry) => entry.length > 0),
     ),
   ),
-  noBrowser: Config.Boolean("AC_NO_BROWSER").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  bootstrapFd: Config.Int("AC_BOOTSTRAP_FD").pipe(Config.option, Config.map(Option.getOrUndefined)),
-  autoBootstrapProjectFromCwd: Config.Boolean("AC_AUTO_BOOTSTRAP_PROJECT_FROM_CWD").pipe(
+  noBrowser: Config.Boolean("ANKIEL_NO_BROWSER").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  logWebSocketEvents: Config.Boolean("AC_LOG_WS_EVENTS").pipe(
+  bootstrapFd: Config.Int("ANKIEL_BOOTSTRAP_FD").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  tailscaleServeEnabled: Config.Boolean("AC_TAILSCALE_SERVE").pipe(
+  autoBootstrapProjectFromCwd: Config.Boolean("ANKIEL_AUTO_BOOTSTRAP_PROJECT_FROM_CWD").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  tailscaleServePort: Config.Port("AC_TAILSCALE_SERVE_PORT").pipe(
+  logWebSocketEvents: Config.Boolean("ANKIEL_LOG_WS_EVENTS").pipe(
     Config.option,
     Config.map(Option.getOrUndefined),
   ),
-  lan: Config.Boolean("AC_LAN").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  tailscaleServeEnabled: Config.Boolean("ANKIEL_TAILSCALE_SERVE").pipe(
+    Config.option,
+    Config.map(Option.getOrUndefined),
+  ),
+  tailscaleServePort: Config.Port("ANKIEL_TAILSCALE_SERVE_PORT").pipe(
+    Config.option,
+    Config.map(Option.getOrUndefined),
+  ),
+  lan: Config.Boolean("ANKIEL_LAN").pipe(Config.option, Config.map(Option.getOrUndefined)),
 });
 
-const DevAuthTokenConfig = Config.Redacted("AC_DEV_AUTH_TOKEN").pipe(
+const DevAuthTokenConfig = Config.Redacted("ANKIEL_DEV_AUTH_TOKEN").pipe(
   Config.map((token) => Redacted.make(Redacted.value(token).trim())),
   Config.mapEffect((token) =>
     Redacted.value(token).length === 0 || Redacted.value(token).length >= 32
@@ -175,7 +185,7 @@ const DevAuthTokenConfig = Config.Redacted("AC_DEV_AUTH_TOKEN").pipe(
           new Config.ConfigError(
             new Schema.SchemaError(
               new SchemaIssue.InvalidValue({
-                message: "AC_DEV_AUTH_TOKEN must contain at least 32 characters.",
+                message: "ANKIEL_DEV_AUTH_TOKEN must contain at least 32 characters.",
               }),
             ),
           ),
@@ -335,7 +345,7 @@ export const resolveServerConfig = Effect.fn("config.resolveServerConfig")(funct
       (runtime.value.ownerId === undefined ||
         isServerOwnershipHeld(derivedPaths.serverRuntimeStatePath))
     ) {
-      // Bare `ac pair` prefers a linked worktree's `.ac`, so always name this home.
+      // Bare `ankiel pair` prefers a linked worktree's `.ankiel`, so always name this home.
       const { command: pairCommand } = yield* resolveHostCliCommand("pair", [
         "--base-dir",
         baseDir,
@@ -411,8 +421,8 @@ export const resolveServerConfig = Effect.fn("config.resolveServerConfig")(funct
     Option.fromUndefinedOr(env.host),
     Option.fromUndefinedOr(bootstrap?.host),
   );
-  // Private networks only, so clients learn a LAN address. `ac service install` writes AC_LAN=false for a new
-  // service; one installed before AC_LAN existed keeps listening.
+  // Private networks only, so clients learn a LAN address. `ankiel service install` writes ANKIEL_LAN=false for a new
+  // service; one installed before ANKIEL_LAN existed keeps listening.
   const lan = resolveOptionPrecedence(normalizedFlags.lan, Option.fromUndefinedOr(env.lan));
   const privateNetworkOnly =
     Option.isNone(explicitHost) &&

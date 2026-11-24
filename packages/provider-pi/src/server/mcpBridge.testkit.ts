@@ -3,7 +3,7 @@ import * as NodeCrypto from "node:crypto";
 import * as NodeModule from "node:module";
 import * as NodePath from "node:path";
 import * as NodeVM from "node:vm";
-import { PI_AC_MCP_EXTENSION_SOURCE } from "./mcpExtensionSource.ts";
+import { PI_ANKIEL_MCP_EXTENSION_SOURCE } from "./mcpExtensionSource.ts";
 
 interface RegisteredTool {
   readonly name: string;
@@ -95,7 +95,7 @@ export async function loadMcpBridge(
     outputSchema: { type: "object", properties: { count: { type: "number" } } },
   }));
   const source = NodeModule.stripTypeScriptTypes(
-    PI_AC_MCP_EXTENSION_SOURCE.replace(/^import .*;$/gm, "").replace(
+    PI_ANKIEL_MCP_EXTENSION_SOURCE.replace(/^import .*;$/gm, "").replace(
       "export default async function",
       "async function",
     ),
@@ -103,10 +103,10 @@ export async function loadMcpBridge(
   await NodeVM.runInNewContext(`${source}\nankielMcpExtension(pi)`, {
     process: {
       env: {
-        AC_MCP_URL: "http://fixture.invalid/mcp",
-        AC_MCP_BEARER_TOKEN: "fixture-token",
-        AC_PI_MCP_EXTENSION_PATH: "/fixture/pi-ankiel-extension.ts",
-        AC_PI_RUNTIME_MODE: options.runtimeMode,
+        ANKIEL_MCP_URL: "http://fixture.invalid/mcp",
+        ANKIEL_MCP_BEARER_TOKEN: "fixture-token",
+        ANKIEL_PI_MCP_EXTENSION_PATH: "/fixture/pi-ankiel-extension.ts",
+        ANKIEL_PI_RUNTIME_MODE: options.runtimeMode,
       },
     },
     AbortSignal,

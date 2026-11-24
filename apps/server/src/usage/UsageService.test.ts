@@ -727,7 +727,7 @@ describe("UsageService", () => {
               home,
               settings,
               hostname,
-              environment: override === undefined ? {} : { AC_HOST_ID: override },
+              environment: override === undefined ? {} : { ANKIEL_HOST_ID: override },
             }),
           ),
         );

@@ -20,43 +20,43 @@ On Windows, in PowerShell:
 irm https://code.ankiel.com/install.ps1 | iex
 ```
 
-This installs the `ac` command to `~/.local/bin`. If that folder is not on your
+This installs the `ankiel` command to `~/.local/bin`. If that folder is not on your
 `PATH` yet, the installer says so and, for zsh, bash on Linux, and fish, prints
-a command to add it. On Windows, `ac` works in the same PowerShell window right
-away; add the folder to your `PATH` for new windows. If a `ac` that the
+a command to add it. On Windows, `ankiel` works in the same PowerShell window right
+away; add the folder to your `PATH` for new windows. If a `ankiel` that the
 installer or the desktop app did not create is already there, it leaves that
-one alone and stops. Set `AC_CHANNEL=nightly` to install the nightly train, or
-`AC_VERSION` to pin an exact version.
+one alone and stops. Set `ANKIEL_CHANNEL=nightly` to install the nightly train, or
+`ANKIEL_VERSION` to pin an exact version.
 
-| Task                                  | Command                                                                 |
-| ------------------------------------- | ----------------------------------------------------------------------- |
-| Start the server and open the web app | `ac`                                                                    |
-| Start the server without a browser    | `ac serve`                                                              |
-| Use it from your other devices        | `ac up` ([details](./remote-access.md))                                 |
-| Keep it running in the background     | `ac service install` ([details](./background-service.md))               |
-| Move to the newest release            | `ac update`                                                             |
-| Reclaim database space                | `ac doctor` ([details](./background-service.md#reclaim-database-space)) |
-| Remove it again                       | `ac uninstall`                                                          |
+| Task                                  | Command                                                                     |
+| ------------------------------------- | --------------------------------------------------------------------------- |
+| Start the server and open the web app | `ankiel`                                                                    |
+| Start the server without a browser    | `ankiel serve`                                                              |
+| Use it from your other devices        | `ankiel up` ([details](./remote-access.md))                                 |
+| Keep it running in the background     | `ankiel service install` ([details](./background-service.md))               |
+| Move to the newest release            | `ankiel update`                                                             |
+| Reclaim database space                | `ankiel doctor` ([details](./background-service.md#reclaim-database-space)) |
+| Remove it again                       | `ankiel uninstall`                                                          |
 
-Run `ac help` or `ac --help` for the full reference. To start in a new working
-directory, use an explicit path such as `ac ./my-project`. A bare directory name
+Run `ankiel help` or `ankiel --help` for the full reference. To start in a new working
+directory, use an explicit path such as `ankiel ./my-project`. A bare directory name
 is accepted only if it already exists.
 
-If `ac` or `ac start` reports an already running server, run the `ac pair`
+If `ankiel` or `ankiel start` reports an already running server, run the `ankiel pair`
 command it names and open the pairing URL to connect to that server. Stop it
 before starting a replacement, or use a different `--base-dir` for an
 independent server.
 
 To try Ankiel Code once without installing it, run `npx @ankielcode/cli@latest` instead (needs
-Node.js for `npx`). It offers to install the `ac` command first. If you say no,
+Node.js for `npx`). It offers to install the `ankiel` command first. If you say no,
 it asks again at the next minor release, and `npx @ankielcode/cli install` installs it later.
-`npx @ankielcode/cli` always runs the version npm picked, even when a `ac` is installed. On
-the nightly train, run your installed `ac` (for example `ac up`), not
+`npx @ankielcode/cli` always runs the version npm picked, even when a `ankiel` is installed. On
+the nightly train, run your installed `ankiel` (for example `ankiel up`), not
 `npx @ankielcode/cli`, which runs the latest stable release.
 
 ### Intel Macs
 
-There is no `ac` executable for Intel Macs (the desktop app is available). To
+There is no `ankiel` executable for Intel Macs (the desktop app is available). To
 run a server there, build it from source with `vp`, which provides the Node version it needs
 ([Install vp](../operations/00_development.md#first-checkout)):
 
@@ -66,7 +66,7 @@ cd ankielcode && vp i && vp run build:desktop
 node apps/server/dist/bin.mjs
 ```
 
-`ac update` and the background service do not apply to a server run this way;
+`ankiel update` and the background service do not apply to a server run this way;
 update it with `git pull` and a rebuild.
 
 ## Desktop app
@@ -94,16 +94,16 @@ The `.deb` updates itself like the other desktop builds. It asks for your
 password to install each update. If your desktop has no password prompt, the
 update fails. Download the new `.deb` and install it the same way.
 
-### The `ac` command
+### The `ankiel` command
 
-The desktop app includes the `ac` command-line tool. A new install sets it up
+The desktop app includes the `ankiel` command-line tool. A new install sets it up
 on first launch; after an update, or any time, choose **Install** next to
-**ac command** in **Settings → About**. On macOS and Linux it adds a `ac` link
+**ankiel command** in **Settings → About**. On macOS and Linux it adds a `ankiel` link
 in `~/.local/bin` (or `~/bin`); on Windows it adds the app's command folder to
 your `PATH`. Open a new terminal afterwards. If the folder is not on your
 `PATH`, **Add to PATH** on the Welcome page or in **Settings → About** adds one
 line to your shell's startup file. **Remove** takes it off, and the app does not
-add it again. If you already have another `ac`, it stays as it is.
+add it again. If you already have another `ankiel`, it stays as it is.
 
 ### Windows Subsystem for Linux
 
@@ -117,18 +117,18 @@ take longer.
 With the desktop app already running on the same machine:
 
 ```bash
-ac app
+ankiel app
 ```
 
 This opens a new thread for the current directory, adding the project if needed.
-Pass a path, such as `ac app ../my-project`, to open another directory. It requires
+Pass a path, such as `ankiel app ../my-project`, to open another directory. It requires
 the desktop app, so a standalone server or an SSH session is not enough. If the
 command cannot reach the app, start or update the desktop app and try again.
 
 ### Drop a folder on the sidebar
 
 Drag one or more folders from Finder, Explorer, or your file manager onto the
-sidebar. Each one opens as a project on this computer, the same as `ac app`.
+sidebar. Each one opens as a project on this computer, the same as `ankiel app`.
 Files dropped on a thread still attach to that thread. Browsers do not share
 folder paths, so in the web app use **Add project** instead.
 
@@ -213,13 +213,13 @@ allow more time in the Ankiel server's environment. For example, give Codex and
 Claude readiness checks 60 seconds:
 
 ```bash
-AC_CODEX_PROBE_TIMEOUT_MS=60000 AC_CLAUDE_PROBE_TIMEOUT_MS=60000 ac serve
+ANKIEL_CODEX_PROBE_TIMEOUT_MS=60000 ANKIEL_CLAUDE_PROBE_TIMEOUT_MS=60000 ankiel serve
 ```
 
 For a remote environment, set these on the machine running the Ankiel server.
 Keep them in your launcher or service configuration to retain them across
 updates, then restart the server. For systemd, add
-`Environment=AC_CODEX_PROBE_TIMEOUT_MS=60000` under `[Service]` in a service
+`Environment=ANKIEL_CODEX_PROBE_TIMEOUT_MS=60000` under `[Service]` in a service
 override, reload systemd, and restart the service. Provider instances can also
 set their own overrides in Settings → Providers.
 
@@ -228,19 +228,19 @@ default is already longer keeps its default. Providers with several phases can
 take longer than one deadline in total. Values must be whole milliseconds no
 greater than 2147483647; unset or invalid values keep the defaults.
 
-| Provider            | Environment variable               |
-| ------------------- | ---------------------------------- |
-| Codex               | `AC_CODEX_PROBE_TIMEOUT_MS`        |
-| Claude              | `AC_CLAUDE_PROBE_TIMEOUT_MS`       |
-| Cursor              | `AC_CURSOR_PROBE_TIMEOUT_MS`       |
-| Antigravity         | `AC_ANTIGRAVITY_PROBE_TIMEOUT_MS`  |
-| Grok                | `AC_GROK_PROBE_TIMEOUT_MS`         |
-| Kiro                | `AC_KIRO_PROBE_TIMEOUT_MS`         |
-| fx                  | `AC_FX_PROBE_TIMEOUT_MS`           |
-| Pi                  | `AC_PI_PROBE_TIMEOUT_MS`           |
-| Muse Code           | `AC_MUSE_PROBE_TIMEOUT_MS`         |
-| OpenCode            | `AC_OPENCODE_PROBE_TIMEOUT_MS`     |
-| ACP Registry agents | `AC_ACP_REGISTRY_PROBE_TIMEOUT_MS` |
+| Provider            | Environment variable                   |
+| ------------------- | -------------------------------------- |
+| Codex               | `ANKIEL_CODEX_PROBE_TIMEOUT_MS`        |
+| Claude              | `ANKIEL_CLAUDE_PROBE_TIMEOUT_MS`       |
+| Cursor              | `ANKIEL_CURSOR_PROBE_TIMEOUT_MS`       |
+| Antigravity         | `ANKIEL_ANTIGRAVITY_PROBE_TIMEOUT_MS`  |
+| Grok                | `ANKIEL_GROK_PROBE_TIMEOUT_MS`         |
+| Kiro                | `ANKIEL_KIRO_PROBE_TIMEOUT_MS`         |
+| fx                  | `ANKIEL_FX_PROBE_TIMEOUT_MS`           |
+| Pi                  | `ANKIEL_PI_PROBE_TIMEOUT_MS`           |
+| Muse Code           | `ANKIEL_MUSE_PROBE_TIMEOUT_MS`         |
+| OpenCode            | `ANKIEL_OPENCODE_PROBE_TIMEOUT_MS`     |
+| ACP Registry agents | `ANKIEL_ACP_REGISTRY_PROBE_TIMEOUT_MS` |
 
 Longer deadlines also take longer to report a stalled check. These overrides
 cover readiness and discovery, including OpenCode server startup. Usage and

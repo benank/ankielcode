@@ -6,9 +6,9 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { APP_DIR, AC_HOME } from "../e2e.config.ts";
+import { APP_DIR, ANKIEL_HOME } from "../e2e.config.ts";
 import { run } from "./shell.ts";
-import { runPromise, test, WEB } from "./ac.ts";
+import { runPromise, test, WEB } from "./ankiel.ts";
 
 const decodeRuntime = Schema.decodeUnknownEffect(
   Schema.fromJsonString(Schema.Struct({ pid: Schema.Int })),
@@ -20,7 +20,7 @@ const scenarioServerPid = Effect.gen(function* () {
   const path = yield* Path.Path;
   const runtime = yield* Effect.firstSuccessOf(
     ["userdata", "dev"].map((dir) =>
-      fs.readFileString(path.join(AC_HOME, dir, "server-runtime.json")),
+      fs.readFileString(path.join(ANKIEL_HOME, dir, "server-runtime.json")),
     ),
   );
   const { pid } = yield* decodeRuntime(runtime);
@@ -53,10 +53,10 @@ const exhaustFileDescriptors = Effect.fn("scenario.exhaustFileDescriptors")(func
 test(
   "A terminal whose shell cannot start says why, also after its drawer reopens",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Shell", messages: ["hello"] });
-    await ac.open(thread);
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Shell", messages: ["hello"] });
+    await ankiel.open(thread);
     const pid = await runPromise(scenarioServerPid);
 
     const toggle = screen.getByRole("button", "Toggle terminal drawer");

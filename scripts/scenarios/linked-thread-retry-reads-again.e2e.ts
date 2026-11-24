@@ -3,9 +3,9 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { AC_HOME } from "../e2e.config.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
 import { SECOND_HOME, startSecondServer } from "./second-server.ts";
-import { environmentId, makeState, rpcClient, runPromise, test, WEB } from "./ac.ts";
+import { environmentId, makeState, rpcClient, runPromise, test, WEB } from "./ankiel.ts";
 
 const decodePairing = Schema.decodeEffect(
   Schema.fromJsonString(Schema.Struct({ credential: Schema.String })),
@@ -14,15 +14,15 @@ const decodePairing = Schema.decodeEffect(
 test(
   "Try again immediately reads a linked thread once it is reachable",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    await ac.project("primary");
+  async ({ ankiel, app, browser, screen }) => {
+    await ankiel.project("primary");
     const origin = app.baseUrl ?? "";
     const server = startSecondServer(origin);
     try {
       const { host } = await server.ready;
       await runPromise(
         Effect.gen(function* () {
-          const primary = yield* rpcClient(AC_HOME, origin);
+          const primary = yield* rpcClient(ANKIEL_HOME, origin);
           const remote = yield* rpcClient(SECOND_HOME, host);
           for (const client of [primary, remote]) {
             yield* client["server.updateSettings"]({ patch: { linkedEnvironmentsEnabled: true } });
@@ -93,7 +93,7 @@ test(
         };
       });
 
-      await ac.open(`/linked/${via}/${linked}/${thread.threadId}`);
+      await ankiel.open(`/linked/${via}/${linked}/${thread.threadId}`);
       await screen.getByRole("button", "Try again", { exact: true }).tap();
       await app.screenshot("after-trying-again");
       // The automatic retry waits 15 seconds. This checks the user's explicit retry.

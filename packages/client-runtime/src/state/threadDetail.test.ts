@@ -365,7 +365,7 @@ describe("derived thread state through a streamed message", () => {
     parentCheckpointId: null,
     ordinalWithinScope: ordinal,
     appRunOrdinal: ordinal,
-    ref: CheckpointRef.make(`refs/ac/checkpoint-${ordinal}`),
+    ref: CheckpointRef.make(`refs/ankiel/checkpoint-${ordinal}`),
     status: "ready",
     files: [],
     capturedAt: v2Now,

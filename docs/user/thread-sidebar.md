@@ -35,7 +35,7 @@ list. It starts on your current machine; before sending, pick another machine
 from the machine menu to move it there. To move a draft into a project, pick the
 project in the heading.
 
-Each thread without a project works in its own folder under `~/.ac/scratch` (the
+Each thread without a project works in its own folder under `~/.ankiel/scratch` (the
 `scratch` folder of your Ankiel data directory), named after its date, the first words
 of its first message, and a short id, like
 `2026-09-25-convert-these-pngs-to-webp-a1b2c3d4`. Deleting a thread keeps its
@@ -173,13 +173,13 @@ sending an answer or restarting the agent. Settling also closes the thread's
 terminals that wait at an idle prompt, and keeps their output. A terminal that
 runs a command, such as a dev server, stays open unless its action has **Stop this action
 when the thread settles** enabled in Settings > Projects > Actions. You can also set
-`"stopOnSettle": true` on a `ac.json` action and import it there. Start the command through
+`"stopOnSettle": true` on a `ankiel.json` action and import it there. Start the command through
 that action so Ankiel can stop its terminal and child processes. Commands started through an
 agent's own shell tools are managed by the provider.
 
 To reclaim disk space from settled work, turn on **Run in the thread's worktree when the
 thread settles** for one of the project's actions, or set `"runOnSettle": true` on a
-`ac.json` script, for example `cargo clean`. It runs each time a thread in its own
+`ankiel.json` script, for example `cargo clean`. It runs each time a thread in its own
 worktree settles, manually or automatically, even if a terminal there still runs a
 command such as a dev server. Threads in the project's main checkout skip it. Its terminal
 closes when the command succeeds and stays open when it fails.
@@ -197,7 +197,7 @@ is waiting on prevent automatic settlement. An open pull request does not preven
 settlement unless you turn on **Keep threads with a PR** in **Settings → Threads**,
 but an old closed or merged pull request does not settle work you
 resumed after it closed. Your own messages count as resuming, and so does a
-message an agent sends with `ankiel_thread_send` or `ac thread send`. A turn that finished
+message an agent sends with `ankiel_thread_send` or `ankiel thread send`. A turn that finished
 background work or a pull request watch starts on its own does not.
 
 To keep one thread out of the settled shelf no matter how long it sits idle, open its menu,
@@ -258,7 +258,7 @@ you paste it and pastes into a composer as a thread chip (see
 [sharing a thread](./prompt-links.md#share-a-thread)). To copy the thread even
 when it has a PR, choose **Copy → Thread** from its context menu, or **Copy
 thread** from its long-press menu on mobile.
-**Thread ID** copies the bare ID for scripts and the `ac` CLI. See
+**Thread ID** copies the bare ID for scripts and the `ankiel` CLI. See
 [keybindings](./keybindings.md) for custom configuration.
 
 ## Inspect agent work

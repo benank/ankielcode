@@ -165,7 +165,7 @@ function makeLatestRun(overrides?: {
 }
 
 describe("withoutRemovedCheckout", () => {
-  const worktree = { branch: "ac/task", worktreePath: "/worktrees/task" };
+  const worktree = { branch: "ankiel/task", worktreePath: "/worktrees/task" };
   const local = { branch: "main", worktreePath: null };
   const removed = { branch: null, worktreePath: null };
   const tracking = { trackedFolders: [{ path: "/work/wrapper/api" }] };

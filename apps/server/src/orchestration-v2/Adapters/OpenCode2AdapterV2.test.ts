@@ -5977,7 +5977,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const attachmentsDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "ac oc2 #images-",
+        prefix: "ankiel oc2 #images-",
       });
       const image = (id: string, name: string, mimeType = "image/png") =>
         ChatImageAttachment.make({

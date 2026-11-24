@@ -68,7 +68,7 @@ it.effect("binds only the loopback address it approved when remote clients are n
       tailscaleServeEnabled: false,
       privateNetworkOnly: true,
     }).pipe(Effect.flip);
-    assert.include(service.message, "set AC_HOST=127.0.0.1 in its service.env");
+    assert.include(service.message, "set ANKIEL_HOST=127.0.0.1 in its service.env");
     assert.equal(yield* bind("localhost", { document: undefined }), "localhost");
     assert.equal(yield* bind(undefined, { document: undefined }), "127.0.0.1");
   }),
@@ -253,7 +253,7 @@ it.effect(
     return Effect.gen(function* () {
       // A route that shares the port with this server's stays, as does one to another loopback
       // address on the same port; a TCP forward here goes too.
-      for (const mount of ["/ac", "/"]) {
+      for (const mount of ["/ankiel", "/"]) {
         const web: Web = {
           "box.tailnet.ts.net:443": {
             [mount]: "http://127.0.0.1:3773",
@@ -327,8 +327,10 @@ it.effect(
             },
           },
           Services: {
-            "svc:ac": {
-              Web: { "ac:443": { Handlers: { "/ac": { Proxy: "http://127.0.0.1:3773" } } } },
+            "svc:ankiel": {
+              Web: {
+                "ankiel:443": { Handlers: { "/ankiel": { Proxy: "http://127.0.0.1:3773" } } },
+              },
             },
           },
         }),
@@ -340,7 +342,7 @@ it.effect(
       assert.include(owned.message, 'stop the "tailscale serve" command that runs it');
       assert.include(
         owned.message,
-        '"tailscale serve --service=svc:ac --https=443 --set-path=/ac off"',
+        '"tailscale serve --service=svc:ankiel --https=443 --set-path=/ankiel off"',
       );
       // An answer that cannot be read might hide a mapping, so the server does not start.
       const dialFailure = (reason: string) =>

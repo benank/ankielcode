@@ -392,7 +392,7 @@ export function MobileEnrichedMarkdownText(props: SelectableMarkdownTextProps) {
       htmlAttributes: {
         "data-ankiel-context-fragment": encodeURIComponent(props.contextClipboardFragment!),
       },
-      mimeTypes: { "app.ac.context-fragment": props.contextClipboardFragment! },
+      mimeTypes: { "app.ankiel.context-fragment": props.contextClipboardFragment! },
     };
   }, [props.contextClipboardFragment, props.markdown]);
   const { fontScale } = useWindowDimensions();

@@ -1,34 +1,38 @@
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
-test("Find in thread matches İstanbul with istanbul", WEB, async ({ ac, app, screen, browser }) => {
-  const project = await ac.project("demo");
-  const thread = await ac.thread({
-    project,
-    title: "Travel notes",
-    messages: ["Travel notes for İstanbul"],
-  });
-  await ac.open(thread);
-  await screen.getByRole("button", /^Agent Travel notes for İstanbul/).tap();
-  await browser
-    .locator("[data-user-message-body]")
-    .getByText("Travel notes for İstanbul", { exact: true })
-    .waitFor();
+test(
+  "Find in thread matches İstanbul with istanbul",
+  WEB,
+  async ({ ankiel, app, screen, browser }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({
+      project,
+      title: "Travel notes",
+      messages: ["Travel notes for İstanbul"],
+    });
+    await ankiel.open(thread);
+    await screen.getByRole("button", /^Agent Travel notes for İstanbul/).tap();
+    await browser
+      .locator("[data-user-message-body]")
+      .getByText("Travel notes for İstanbul", { exact: true })
+      .waitFor();
 
-  await browser.keyboard.press("Control+f");
-  await screen.getByRole("searchbox", "Find in thread").fill("istanbul");
-  try {
-    await expect
-      .poll(
-        () =>
-          browser.evaluate<string>(
-            'document.querySelector("[data-thread-find-bar] span[aria-hidden]")?.textContent ?? ""',
-          ),
-        { message: "Find in thread counts İstanbul as a match for istanbul" },
-      )
-      .toBe("1/1");
-  } finally {
-    await app.screenshot("istanbul-find-result");
-  }
-});
+    await browser.keyboard.press("Control+f");
+    await screen.getByRole("searchbox", "Find in thread").fill("istanbul");
+    try {
+      await expect
+        .poll(
+          () =>
+            browser.evaluate<string>(
+              'document.querySelector("[data-thread-find-bar] span[aria-hidden]")?.textContent ?? ""',
+            ),
+          { message: "Find in thread counts İstanbul as a match for istanbul" },
+        )
+        .toBe("1/1");
+    } finally {
+      await app.screenshot("istanbul-find-result");
+    }
+  },
+);

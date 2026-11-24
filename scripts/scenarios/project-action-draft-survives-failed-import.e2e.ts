@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 declare global {
   interface Window {
@@ -12,13 +12,13 @@ declare global {
 test(
   "A failed project action import preserves a manual action draft",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo", {
-      "ac.json": JSON.stringify({
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo", {
+      "ankiel.json": JSON.stringify({
         scripts: [{ name: "Shared build", command: "echo build" }],
       }),
     });
-    const thread = await ac.thread({ project, title: "Action import", messages: ["Start"] });
+    const thread = await ankiel.thread({ project, title: "Action import", messages: ["Start"] });
     await browser.setViewport({ width: 1920, height: 1000 });
 
     await browser.addInitScript(() => {
@@ -64,7 +64,7 @@ test(
       };
     });
 
-    await ac.open(thread);
+    await ankiel.open(thread);
     const actions = screen.getByRole("button", "Choose project action", { exact: true });
     await actions.tap();
     await screen.getByRole("menuitem", /Shared build/).tap();

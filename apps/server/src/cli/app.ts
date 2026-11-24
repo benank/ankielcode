@@ -37,7 +37,7 @@ export class DesktopAppSshUnsupportedError extends Schema.TaggedError<DesktopApp
   {},
 ) {
   override get message(): string {
-    return "`ac app` only controls a desktop app on the same machine. It cannot run over SSH.";
+    return "`ankiel app` only controls a desktop app on the same machine. It cannot run over SSH.";
   }
 }
 
@@ -46,7 +46,7 @@ export class DesktopAppPlatformUnsupportedError extends Schema.TaggedError<Deskt
   { platform: Schema.String },
 ) {
   override get message(): string {
-    return `\`ac app\` is not supported on ${this.platform}.`;
+    return `\`ankiel app\` is not supported on ${this.platform}.`;
   }
 }
 
@@ -60,7 +60,7 @@ export class DesktopAppUnreachableError extends Schema.TaggedError<DesktopAppUnr
   },
 ) {
   override get message(): string {
-    return "Could not reach the Ankiel Code desktop app. Start or update the desktop app on this machine, then run `ac app` again. A running Ankiel Code server is not enough.";
+    return "Could not reach the Ankiel Code desktop app. Start or update the desktop app on this machine, then run `ankiel app` again. A running Ankiel Code server is not enough.";
   }
 }
 
@@ -192,7 +192,7 @@ async function sendDesktopAppActivationRequest(input: {
 }
 
 const appEnvironment = Config.all({
-  ankielHome: Config.String("AC_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  ankielHome: Config.String("ANKIEL_HOME").pipe(Config.option, Config.map(Option.getOrUndefined)),
   sshConnection: Config.String("SSH_CONNECTION").pipe(Config.option),
   sshTty: Config.String("SSH_TTY").pipe(Config.option),
 });

@@ -96,7 +96,7 @@ export function cliArchivePlatformKey(platform: BuildPlatform, arch: BuildArch):
 }
 
 export function cliArchiveStem(version: string, platform: BuildPlatform, arch: BuildArch): string {
-  return `ac-${version}-${cliArchivePlatformKey(platform, arch)}`;
+  return `ankiel-${version}-${cliArchivePlatformKey(platform, arch)}`;
 }
 
 export function cliArchiveFileName(version: string, platform: BuildPlatform, arch: BuildArch) {
@@ -261,7 +261,7 @@ const stageWebClient = Effect.fn("stageWebClient")(function* (source: string, ta
   }
 });
 
-/** Node links libatomic.so.1, which Ubuntu server and container images lack, so ac carries its own. */
+/** Node links libatomic.so.1, which Ubuntu server and container images lack, so ankiel carries its own. */
 const bundleLinuxLibatomic = Effect.fn("bundleLinuxLibatomic")(function* (input: {
   readonly repoRoot: string;
   readonly contentDir: string;
@@ -325,7 +325,7 @@ const bundleLinuxLibatomic = Effect.fn("bundleLinuxLibatomic")(function* (input:
 });
 
 const MacSigningConfig = Config.all({
-  identity: Config.String("AC_CLI_MAC_SIGN_IDENTITY").pipe(Config.option),
+  identity: Config.String("ANKIEL_CLI_MAC_SIGN_IDENTITY").pipe(Config.option),
   appleApiKey: Config.String("APPLE_API_KEY").pipe(Config.option),
   appleApiKeyId: Config.String("APPLE_API_KEY_ID").pipe(Config.option),
   appleApiIssuer: Config.String("APPLE_API_ISSUER").pipe(Config.option),
@@ -408,7 +408,7 @@ const requireAccepted = Effect.fn("requireAccepted")(function* (
       status: submission.status ?? "without a status",
     });
   }
-  yield* Effect.log(`[cli-archive] Notarized ac (${submission.id}).`);
+  yield* Effect.log(`[cli-archive] Notarized ankiel (${submission.id}).`);
 });
 
 /** Apple Silicon requires signed binaries; notarization's hardened runtime also requires every native addon signed. */
@@ -450,7 +450,7 @@ export const signMacArchiveContents = Effect.fn("signMacArchiveContents")(functi
     );
   }
   if (identity === "-") {
-    yield* Effect.log("[cli-archive] Signed ad hoc (no AC_CLI_MAC_SIGN_IDENTITY).");
+    yield* Effect.log("[cli-archive] Signed ad hoc (no ANKIEL_CLI_MAC_SIGN_IDENTITY).");
     return;
   }
   if (Option.isNone(credentials)) {
@@ -460,7 +460,7 @@ export const signMacArchiveContents = Effect.fn("signMacArchiveContents")(functi
     return;
   }
   // notarytool requires an archive; bare executables rely on online tickets because they cannot be stapled.
-  const notarizeZip = path.join(path.dirname(input.executablePath), ".notarize-ac.zip");
+  const notarizeZip = path.join(path.dirname(input.executablePath), ".notarize-ankiel.zip");
   yield* runCommand(
     ChildProcess.make("ditto", ["-c", "-k", "--keepParent", input.executablePath, notarizeZip]),
     "ditto (notarization zip)",
@@ -476,7 +476,7 @@ export const signMacArchiveContents = Effect.fn("signMacArchiveContents")(functi
   // The ticket lives with Apple, not in the archive, so the archive bytes are final before approval.
   yield* fs.writeFileString(deferred, submission.id);
   yield* Effect.log(
-    `[cli-archive] Submitted ac for notarization (${submission.id}). Run await-notarization before publishing.`,
+    `[cli-archive] Submitted ankiel for notarization (${submission.id}). Run await-notarization before publishing.`,
   );
 });
 
@@ -490,7 +490,7 @@ export const awaitCliNotarization = Effect.fn("awaitCliNotarization")(function* 
   if (Option.isNone(credentials)) {
     if (submitted) {
       return yield* new CliArchiveInputMissingError({
-        inputPath: "AC_CLI_MAC_SIGN_IDENTITY and APPLE_API_KEY*",
+        inputPath: "ANKIEL_CLI_MAC_SIGN_IDENTITY and APPLE_API_KEY*",
         hint: `${submissionFile} names a submission, but its credentials are not set.`,
       });
     }
@@ -562,7 +562,7 @@ const signWindowsExecutable = Effect.fn("signWindowsExecutable")(function* (
   yield* stripStaleAuthenticodeEntry(executablePath);
   if ((yield* HostProcess.Platform) !== "win32") {
     yield* signWithJsign(executablePath);
-    yield* Effect.log("[cli-archive] Signed ac.exe (Azure Trusted Signing via jsign).");
+    yield* Effect.log("[cli-archive] Signed ankiel.exe (Azure Trusted Signing via jsign).");
     return;
   }
   const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
@@ -579,9 +579,9 @@ const signWindowsExecutable = Effect.fn("signWindowsExecutable")(function* (
   ].join(" ");
   yield* runCommand(
     ChildProcess.make("pwsh", ["-NoProfile", "-NonInteractive", "-Command", script]),
-    "Invoke-TrustedSigning ac.exe",
+    "Invoke-TrustedSigning ankiel.exe",
   );
-  yield* Effect.log("[cli-archive] Signed ac.exe (Azure Trusted Signing).");
+  yield* Effect.log("[cli-archive] Signed ankiel.exe (Azure Trusted Signing).");
 });
 
 const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
@@ -596,13 +596,13 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
   const path = yield* Path.Path;
   const repoRoot = yield* RepoRoot;
   const serverDir = path.join(repoRoot, "apps/server");
-  const executableName = input.platform === "win" ? "ac.exe" : "ac";
+  const executableName = input.platform === "win" ? "ankiel.exe" : "ankiel";
   // tsdown suffixes cross-built executables; prefer the exact target over the plain host build.
   const targetKey = `${input.platform === "mac" ? "darwin" : input.platform}-${input.arch}`;
   const targetExecutable = path.join(
     serverDir,
     "dist-exe",
-    `ac-${targetKey}${input.platform === "win" ? ".exe" : ""}`,
+    `ankiel-${targetKey}${input.platform === "win" ? ".exe" : ""}`,
   );
   // The unsuffixed executable is valid only for the host platform and architecture.
   const hostPlatform = yield* HostProcess.Platform;
@@ -737,7 +737,7 @@ const command = Command.make(
   },
   (input) => buildCliArchive(input).pipe(Effect.scoped),
 ).pipe(
-  Command.withDescription("Package the ac single-executable into a per-platform archive."),
+  Command.withDescription("Package the ankiel single-executable into a per-platform archive."),
   Command.withSubcommands([
     Command.make(
       "await-notarization",

@@ -4,8 +4,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { makeState, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { makeState, runPromise, test, WEB } from "./ankiel.ts";
 
 const SettingsJson = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
 const decodeSettings = Schema.decodeEffect(SettingsJson);
@@ -13,7 +13,7 @@ const encodeSettings = Schema.encodeEffect(SettingsJson);
 
 const threadRuntimeSettings = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const settingsPath = (yield* Path.Path).join(AC_HOME, "userdata/settings.json");
+  const settingsPath = (yield* Path.Path).join(ANKIEL_HOME, "userdata/settings.json");
   const original = yield* fs.readFileString(settingsPath);
   const settings = yield* decodeSettings(original);
   return {
@@ -28,20 +28,20 @@ const threadRuntimeSettings = Effect.gen(function* () {
 test(
   "A queued message runs with the model chosen while editing it",
   WEB,
-  async ({ ac, app, screen, browser }) => {
+  async ({ ankiel, app, screen, browser }) => {
     const settings = await runPromise(threadRuntimeSettings);
     try {
       await runPromise(settings.supervise);
-      const project = await ac.project("demo");
-      const thread = await ac.thread({
+      const project = await ankiel.project("demo");
+      const thread = await ankiel.thread({
         project,
         title: "Queued model",
         messages: ["Change the file"],
         model: "approval",
       });
-      const { cli } = makeState(AC_HOME);
+      const { cli } = makeState(ANKIEL_HOME);
       await runPromise(cli(["thread", "send", thread.threadId, "Queued message"]));
-      await ac.open(thread);
+      await ankiel.open(thread);
       await screen.getByRole("button", "Edit queued message").tap();
       await browser.locator("[data-chat-provider-model-picker-label]").first().tap();
       await browser.keyboard.type("Showcase");

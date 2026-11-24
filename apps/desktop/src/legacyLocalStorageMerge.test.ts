@@ -33,11 +33,11 @@ describe("mergeLegacyLocalStorage", () => {
     mergeLegacyLocalStorage(storage, {
       "ankielcode:theme": "dark",
       "ankielcode:prompt-stash:v2": stash("a"),
-      "ac.backgroundActivity.clientId": "v1-client",
+      "ankiel.backgroundActivity.clientId": "v1-client",
     });
     assert.equal(storage.getItem("ankielcode:theme"), "dark");
     assert.equal(storage.getItem("ankielcode:prompt-stash:v2"), stash("a"));
-    assert.equal(storage.getItem("ac.backgroundActivity.clientId"), null);
+    assert.equal(storage.getItem("ankiel.backgroundActivity.clientId"), null);
   });
 
   it("keeps V2 values for plain keys", () => {

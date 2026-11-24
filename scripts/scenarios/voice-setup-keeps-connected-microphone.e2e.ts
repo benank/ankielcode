@@ -2,7 +2,7 @@
 import type { EnvironmentSpeechModel, EnvironmentSpeechStatus } from "@ankielcode/contracts";
 import { expect } from "e2e";
 
-import { test, WEB } from "./ac.ts";
+import { test, WEB } from "./ankiel.ts";
 
 declare global {
   interface Window {
@@ -18,9 +18,9 @@ declare global {
 test(
   "Voice setup keeps the current microphone after an older refresh finishes",
   WEB,
-  async ({ ac, app, browser, screen }) => {
-    const project = await ac.project("demo");
-    const thread = await ac.thread({ project, title: "Voice notes", messages: ["first"] });
+  async ({ ankiel, app, browser, screen }) => {
+    const project = await ankiel.project("demo");
+    const thread = await ankiel.thread({ project, title: "Voice notes", messages: ["first"] });
 
     const model = {
       id: "scenario-speech",
@@ -103,7 +103,7 @@ test(
       };
     });
 
-    await ac.open(thread);
+    await ankiel.open(thread);
     const threadPath = new URL(await browser.url()).pathname;
     const voice = screen.getByRole("button", "Start voice input");
     await voice.tap();

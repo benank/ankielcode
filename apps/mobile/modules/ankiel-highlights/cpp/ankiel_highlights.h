@@ -1,5 +1,5 @@
-#ifndef AC_HIGHLIGHTS_H
-#define AC_HIGHLIGHTS_H
+#ifndef ANKIEL_HIGHLIGHTS_H
+#define ANKIEL_HIGHLIGHTS_H
 
 #include <stddef.h>
 #include <stdint.h>

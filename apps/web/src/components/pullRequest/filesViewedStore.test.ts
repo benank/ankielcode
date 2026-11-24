@@ -16,7 +16,7 @@ import {
 
 const reference = (number: number): PullRequestRef => ({
   projectId: ProjectId.make("project"),
-  repository: "ac/code",
+  repository: "ankiel/code",
   number,
 });
 

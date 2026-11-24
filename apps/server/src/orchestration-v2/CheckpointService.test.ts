@@ -706,7 +706,7 @@ it.effect("keeps the pre-rewind snapshot of a folder a failed rewind could not p
     scope: { id: CheckpointScopeId.make(`checkpoint-scope:rewind:${name}`), cwd: `/repo/${name}` },
     checkpoint: {
       ordinalWithinScope: 1,
-      ref: CheckpointRef.make(`refs/ac/test/rewind/${name}`),
+      ref: CheckpointRef.make(`refs/ankiel/test/rewind/${name}`),
       status: "ready" as const,
     },
   }));

@@ -1,7 +1,7 @@
 import { expect } from "e2e";
 
 import { run } from "./shell.ts";
-import { runPromise } from "./ac.ts";
+import { runPromise } from "./ankiel.ts";
 import { IOS, test } from "./ankiel-mobile.ts";
 
 // The Git menu shows 12 units, "…" and the last 11; each emoji straddles one cut.
@@ -10,13 +10,13 @@ const BRANCH = "feature/abc😀-long-branch-name-😀-for-menus";
 test(
   "The Git menu's branch title keeps whole characters at both cuts",
   IOS,
-  async ({ ac, app, screen }) => {
-    const project = await ac.project("demo");
+  async ({ ankiel, app, screen }) => {
+    const project = await ankiel.project("demo");
     await runPromise(run("git", ["checkout", "--quiet", "-b", BRANCH], { cwd: project }));
-    await ac.thread({ project, title: "Branch work", messages: ["first"] });
+    await ankiel.thread({ project, title: "Branch work", messages: ["first"] });
     // A local simulator keeps the last run's pairing.
     await app.clearState().catch(() => {});
-    await ac.open();
+    await ankiel.open();
 
     await screen.getByText("Branch work", { exact: false }).first().tap({ timeout: 120_000 });
     await screen.getByRole("button", "Git controls").tap({ timeout: 60_000 });

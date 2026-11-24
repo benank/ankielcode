@@ -174,11 +174,11 @@ describe("DesktopStartupLinks", () => {
 
       return Effect.gen(function* () {
         const startupLinks = yield* DesktopStartupLinks.DesktopStartupLinks;
-        if (entry === "before configure") listeners.get("second-instance")?.({}, ["ac"]);
+        if (entry === "before configure") listeners.get("second-instance")?.({}, ["ankiel"]);
         yield* startupLinks.configure;
 
         assert.equal(quit.mock.calls.length, 0);
-        if (entry === "after configure") listeners.get("second-instance")!({}, ["ac"]);
+        if (entry === "after configure") listeners.get("second-instance")!({}, ["ankiel"]);
         assert.strictEqual(yield* Effect.promise(() => revealed.promise), window);
       }).pipe(
         Effect.scoped,
@@ -210,13 +210,13 @@ describe("DesktopStartupLinks", () => {
 
     return Effect.gen(function* () {
       const startupLinks = yield* DesktopStartupLinks.DesktopStartupLinks;
-      listeners.get("second-instance")?.({}, ["ac", first]);
-      listeners.get("second-instance")?.({}, ["ac", second]);
+      listeners.get("second-instance")?.({}, ["ankiel", first]);
+      listeners.get("second-instance")?.({}, ["ankiel", second]);
       listeners.get("open-url")?.({ preventDefault: () => undefined }, launchPair);
       assert.deepEqual(received, []);
 
       yield* startupLinks.configure;
-      listeners.get("second-instance")!({}, ["ac", later]);
+      listeners.get("second-instance")!({}, ["ankiel", later]);
       yield* Effect.promise(() => delivered.promise);
 
       assert.deepEqual(received, [launchPair, first, second, later]);
@@ -295,7 +295,7 @@ it.effect(
       assert.equal(loadURL.mock.calls.length, 0);
       assert.equal(event.preventDefault.mock.calls.length, 0);
       listeners.get("second-instance")!({}, [
-        "ac",
+        "ankiel",
         "ankielcode-dev://app/settings/providers?instanceId=work&code=never-forward",
       ]);
       yield* Effect.promise(() => revealed.promise);
@@ -372,7 +372,7 @@ it.effect.each(["startup", "open-url", "early-second-instance"] as const)(
       yield* Effect.gen(function* () {
         const startupLinks = yield* DesktopStartupLinks.DesktopStartupLinks;
         if (entry === "early-second-instance") {
-          listeners.get("second-instance")?.({}, ["ac", link]);
+          listeners.get("second-instance")?.({}, ["ankiel", link]);
         }
         yield* startupLinks.configure;
         if (entry === "open-url") {
@@ -387,7 +387,10 @@ it.effect.each(["startup", "open-url", "early-second-instance"] as const)(
         assert.strictEqual(delivery?.returnUrl, request.returnUrl);
       }).pipe(
         Effect.provide(layerDesktopStartupLinks(true, [], "darwin", undefined, shell, listeners)),
-        Effect.provideService(HostProcess.Arguments, entry === "startup" ? ["ac", link] : ["ac"]),
+        Effect.provideService(
+          HostProcess.Arguments,
+          entry === "startup" ? ["ankiel", link] : ["ankiel"],
+        ),
         Effect.provideService(ElectronApp.ElectronApp, electronApp),
         Effect.provideService(
           ElectronWindow.ElectronWindow,
@@ -436,7 +439,7 @@ it.effect("hands web and app links to the renderer and leaves other links alone"
       ]);
     }).pipe(
       Effect.provide(layerDesktopStartupLinks(true, [], "darwin", undefined, undefined, listeners)),
-      Effect.provideService(HostProcess.Arguments, ["ac"]),
+      Effect.provideService(HostProcess.Arguments, ["ankiel"]),
       Effect.provideService(ElectronApp.ElectronApp, electronApp),
       Effect.provideService(
         ElectronWindow.ElectronWindow,

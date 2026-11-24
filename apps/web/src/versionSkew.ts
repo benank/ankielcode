@@ -110,7 +110,7 @@ export function manualServerUpdateCommand(
     return `npm install --global --prefix ${quote(installation.prefix)} @ankielcode/cli@${targetVersion}`;
   }
   if (installation?.kind === "ankiel-launcher") {
-    // An inherited AC_HOME would otherwise send the update to a home the launcher is not in.
+    // An inherited ANKIEL_HOME would otherwise send the update to a home the launcher is not in.
     return `${quote(installation.launcher)} update --base-dir ${quote(installation.baseDir)} ${targetVersion}`;
   }
   const runner =

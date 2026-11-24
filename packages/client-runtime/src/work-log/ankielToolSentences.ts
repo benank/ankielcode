@@ -11,10 +11,10 @@ export interface AnkielToolSentence {
 }
 
 export function ankielToolSentence(labels: ReadonlyArray<string>): AnkielToolSentence | undefined {
-  return AC_TOOL_SENTENCES.get(labels.join("\n"));
+  return ANKIEL_TOOL_SENTENCES.get(labels.join("\n"));
 }
 
-const AC_TOOL_SENTENCES: ReadonlyMap<string, AnkielToolSentence> = new Map<
+const ANKIEL_TOOL_SENTENCES: ReadonlyMap<string, AnkielToolSentence> = new Map<
   string,
   AnkielToolSentence
 >([

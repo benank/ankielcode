@@ -162,7 +162,7 @@ const makeSharedWorktree = Effect.gen(function* () {
     "-m",
     "initial",
   ]);
-  yield* command(repo, ["worktree", "add", "-b", "ac/abcd1234", worktreePath]);
+  yield* command(repo, ["worktree", "add", "-b", "ankiel/abcd1234", worktreePath]);
   return { repo, worktreePath, command };
 });
 const modelSelection = {
@@ -705,7 +705,7 @@ layer("ProviderEventIngestorV2", (it) => {
                     parentCheckpointId: null,
                     ordinalWithinScope: input.ordinal,
                     appRunOrdinal: input.ordinal,
-                    ref: CheckpointRef.make(`refs/ac/checkpoints/rewound/${input.ordinal}`),
+                    ref: CheckpointRef.make(`refs/ankiel/checkpoints/rewound/${input.ordinal}`),
                     status: "ready" as const,
                     files: [],
                     capturedAt: now,
@@ -783,7 +783,7 @@ layer("ProviderEventIngestorV2", (it) => {
             createdAt: now,
             updatedAt: now,
           },
-          retainedNativeTurnIds: ["turn-started-outside-ac", "kept-turn"],
+          retainedNativeTurnIds: ["turn-started-outside-ankiel", "kept-turn"],
         },
       });
 
@@ -1885,17 +1885,17 @@ layer("ProviderEventIngestorV2", (it) => {
   );
 
   it.effect.each([
-    { parentMoved: false, failure: null, temporaryBranch: "ac/abcd1234" },
-    { parentMoved: true, failure: null, temporaryBranch: "ac/abcd1234" },
-    { parentMoved: false, failure: "write", temporaryBranch: "ac/abcd1234" },
-    { parentMoved: false, failure: "git", temporaryBranch: "ac/abcd1234" },
+    { parentMoved: false, failure: null, temporaryBranch: "ankiel/abcd1234" },
+    { parentMoved: true, failure: null, temporaryBranch: "ankiel/abcd1234" },
+    { parentMoved: false, failure: "write", temporaryBranch: "ankiel/abcd1234" },
+    { parentMoved: false, failure: "git", temporaryBranch: "ankiel/abcd1234" },
     { parentMoved: false, failure: null, temporaryBranch: "my-prefix/abcd1234" },
   ])(
     "rechecks a pending native child's branch after the rename scan: %j",
     ({ parentMoved, failure, temporaryBranch }) =>
       Effect.gen(function* () {
         const { worktreePath, command } = yield* makeSharedWorktree;
-        if (temporaryBranch !== "ac/abcd1234")
+        if (temporaryBranch !== "ankiel/abcd1234")
           yield* command(worktreePath, ["branch", "-m", temporaryBranch]);
         const git = yield* GitVcsDriver.GitVcsDriver;
         const now = yield* DateTime.now;
@@ -2027,7 +2027,7 @@ layer("ProviderEventIngestorV2", (it) => {
       Effect.gen(function* () {
         const { worktreePath, command } = yield* makeSharedWorktree;
         const git = yield* GitVcsDriver.GitVcsDriver;
-        const branch = scenario === "explicit" ? "child-feature" : "ac/abcd1234";
+        const branch = scenario === "explicit" ? "child-feature" : "ankiel/abcd1234";
         if (scenario === "explicit") yield* command(worktreePath, ["branch", "-m", branch]);
         if (scenario === "detached") yield* command(worktreePath, ["checkout", "--detach"]);
         const now = yield* DateTime.now;

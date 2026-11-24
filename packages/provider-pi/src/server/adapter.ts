@@ -79,7 +79,7 @@ import {
   materializePiAnkielMcpExtension,
   resolvePiLaunchArgs,
 } from "./mcpInjection.ts";
-import { PI_FILE_CHANGE_TOOLS, PI_AC_SERVICE_TIER_COMMAND } from "./mcpExtensionSource.ts";
+import { PI_FILE_CHANGE_TOOLS, PI_ANKIEL_SERVICE_TIER_COMMAND } from "./mcpExtensionSource.ts";
 import { PI_STANDARD_SERVICE_TIER } from "./modelCapabilities.ts";
 
 export const PI_PROVIDER = ProviderDriverKind.make("pi");
@@ -545,7 +545,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           const launch = buildPiRpcLaunch({
             launchArgs: resolvedLaunchArgs.args,
             // PortScanner.AGENT_THREAD_ENV, as a literal because this package cannot reach apps/server.
-            environment: { ...options.environment, AC_THREAD_ID: input.threadId },
+            environment: { ...options.environment, ANKIEL_THREAD_ID: input.threadId },
             mcpSession,
             extensionPath,
             sessionPath,
@@ -571,7 +571,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             cwd,
             env: launch.env,
           });
-          // Its tools carry AC_THREAD_ID, so port discovery must scan while Pi runs.
+          // Its tools carry ANKIEL_THREAD_ID, so port discovery must scan while Pi runs.
           const trackAgent = host.trackAgent;
           if (trackAgent !== undefined) {
             yield* Effect.acquireRelease(Effect.sync(trackAgent), (release) =>
@@ -724,7 +724,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           heldPrompts.push(prompt);
           return;
         }
-        const id = `ac-prompt-${nextPromptId++}`;
+        const id = `ankiel-prompt-${nextPromptId++}`;
         yield* connection.send({ ...prompt.record, id });
         pendingPromptResponsesDrained ??= yield* Deferred.make<
           void,
@@ -975,7 +975,10 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           return yield* Effect.gen(function* () {
             // RPC responses bypass the pump. Reset after all earlier native notifications.
             if (
-              !(yield* Queue.offer(connection.events, { type: "ac.extension_status_reset", reset }))
+              !(yield* Queue.offer(connection.events, {
+                type: "ankiel.extension_status_reset",
+                reset,
+              }))
             )
               return yield* protocolError("Pi transport closed during status reset");
             yield* Deferred.await(reset.ready);
@@ -1994,7 +1997,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           ).pipe(
             Effect.andThen(
               Queue.offer(connection.events, {
-                type: "ac.ui_request_expired",
+                type: "ankiel.ui_request_expired",
                 requestId: String(requestId),
                 pending,
               }),
@@ -2233,7 +2236,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           Effect.matchEffect({
             onSuccess: (data) =>
               Queue.offer(connection.events, {
-                type: "ac.settle_probe",
+                type: "ankiel.settle_probe",
                 providerTurnId,
                 settleAfterAgentActivity,
                 settleProbeGeneration,
@@ -2243,7 +2246,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             // Failed probes must reach the pump; command-only turns emit no agent events to settle them.
             onFailure: () =>
               Queue.offer(connection.events, {
-                type: "ac.settle_probe",
+                type: "ankiel.settle_probe",
                 providerTurnId,
                 settleAfterAgentActivity,
                 settleProbeGeneration,
@@ -2265,7 +2268,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
       });
 
       const handleSessionEvent = Effect.fnUntraced(function* (event: PiRpcRecord) {
-        if (event["type"] === "ac.extension_status_reset") {
+        if (event["type"] === "ankiel.extension_status_reset") {
           const reset = extensionStatusReset;
           if (reset !== null && event["reset"] === reset) {
             reset.previous = sessionEntity.extensionStatuses ?? [];
@@ -2288,7 +2291,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           threadState?.activeTurn === null &&
           pendingWake !== null &&
           !interactiveUiRequest &&
-          !String(event["type"]).startsWith("ac.") &&
+          !String(event["type"]).startsWith("ankiel.") &&
           event["type"] !== "response"
         ) {
           pendingWake.events.push(event);
@@ -2755,7 +2758,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             }
             return;
           }
-          case "ac.ui_request_expired": {
+          case "ankiel.ui_request_expired": {
             const requestId = recordString(event, "requestId");
             if (requestId === undefined) return;
             const pending = pendingPrompts.get(requestId);
@@ -2764,18 +2767,18 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             yield* cancelPrompt(pending, yield* DateTime.now);
             return;
           }
-          case "ac.flush_extension_errors": {
+          case "ankiel.flush_extension_errors": {
             for (const extensionError of outOfTurnExtensionErrors.splice(0)) {
               yield* emitExtensionError(extensionError);
             }
             return;
           }
-          case "ac.rollback_barrier": {
+          case "ankiel.rollback_barrier": {
             if (rollbackBarrier !== null && event["barrier"] === rollbackBarrier)
               yield* Deferred.succeed(rollbackBarrier, undefined);
             return;
           }
-          case "ac.settle_probe": {
+          case "ankiel.settle_probe": {
             const data = event["data"];
             const probeFailed = event["probeFailed"] === true;
             const settleAfterAgentActivity = event["settleAfterAgentActivity"] === true;
@@ -3343,7 +3346,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           serviceTierMayBeSet = true;
           const result = yield* request({
             type: "prompt",
-            message: `/${PI_AC_SERVICE_TIER_COMMAND} ${serviceTier ?? ""}`.trimEnd(),
+            message: `/${PI_ANKIEL_SERVICE_TIER_COMMAND} ${serviceTier ?? ""}`.trimEnd(),
           });
           // Pi before 0.99 acknowledges a handled extension command without a disposition.
           const disposition = recordString(result, "disposition");
@@ -3615,7 +3618,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
                   yield* finalizeTurn(state);
                 }
                 if (outOfTurnExtensionErrors.length > 0) {
-                  yield* Queue.offer(connection.events, { type: "ac.flush_extension_errors" });
+                  yield* Queue.offer(connection.events, { type: "ankiel.flush_extension_errors" });
                 }
                 return null;
               }).pipe(
@@ -4007,7 +4010,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
                   const leafId = recordString(entriesData, "leafId") ?? null;
                   // RPC responses bypass the pump; drain prior native events before replacing their binding.
                   const queued = yield* Queue.offer(connection.events, {
-                    type: "ac.rollback_barrier",
+                    type: "ankiel.rollback_barrier",
                     barrier,
                   });
                   if (!queued) return yield* protocolError("Pi transport closed during rollback");

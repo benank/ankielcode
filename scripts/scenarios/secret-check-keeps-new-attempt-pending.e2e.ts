@@ -4,8 +4,8 @@ import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 
-import { AC_HOME } from "../e2e.config.ts";
-import { environmentId, rpcClient, runPromise, test, WEB } from "./ac.ts";
+import { ANKIEL_HOME } from "../e2e.config.ts";
+import { environmentId, rpcClient, runPromise, test, WEB } from "./ankiel.ts";
 
 const PROVIDER = SecretProviderId.make("scenario");
 const REFERENCE_A = "op://Scenario/GitHub/first";
@@ -23,16 +23,16 @@ declare global {
 test(
   "An earlier check of the same reference leaves the new check pending",
   WEB,
-  async ({ ac, app, browser, screen }) => {
+  async ({ ankiel, app, browser, screen }) => {
     const origin = app.baseUrl ?? "";
     const environment = await runPromise(environmentId(origin));
-    await ac.project("demo");
+    await ankiel.project("demo");
     await runPromise(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.writeFileString(`${AC_HOME}/bin/op`, "#!/bin/sh\nexit 1\n");
-        yield* fs.chmod(`${AC_HOME}/bin/op`, 0o755);
-        const client = yield* rpcClient(AC_HOME, origin);
+        yield* fs.writeFileString(`${ANKIEL_HOME}/bin/op`, "#!/bin/sh\nexit 1\n");
+        yield* fs.chmod(`${ANKIEL_HOME}/bin/op`, 0o755);
+        const client = yield* rpcClient(ANKIEL_HOME, origin);
         yield* client["server.updateSettings"]({
           patch: {
             secretProviders: {
@@ -101,7 +101,7 @@ test(
       };
     });
 
-    await ac.open(`/settings/source-control?machine=${encodeURIComponent(environment)}`);
+    await ankiel.open(`/settings/source-control?machine=${encodeURIComponent(environment)}`);
     await screen.getByRole("button", "Toggle GitHub details", { exact: true }).tap();
     const input = screen.getByRole("textbox", "GitHub token reference", { exact: true });
     const check = screen.getByRole("button", "Check GitHub token", { exact: true });

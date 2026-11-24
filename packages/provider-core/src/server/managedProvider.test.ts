@@ -108,10 +108,10 @@ function layerProviderHost(input: {
       compatibility: () => Effect.undefined,
       paths: {
         cwd: process.cwd(),
-        baseDir: "/ac",
-        stateDir: "/ac/userdata",
-        providerStatusCacheDir: "/ac/caches",
-        attachmentsDir: "/ac/userdata/attachments",
+        baseDir: "/ankiel",
+        stateDir: "/ankiel/userdata",
+        providerStatusCacheDir: "/ankiel/caches",
+        attachmentsDir: "/ankiel/userdata/attachments",
       },
       settings: input.settings ?? {
         get: Effect.succeed(DEFAULT_SERVER_SETTINGS),
@@ -527,7 +527,7 @@ describe("makeManagedServerProvider", () => {
                 : count === 2
                   ? Effect.fail(
                       new ServerSettingsError({
-                        settingsPath: "/ac/userdata/settings.json",
+                        settingsPath: "/ankiel/userdata/settings.json",
                         operation: "read-file",
                       }),
                     )

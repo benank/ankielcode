@@ -87,7 +87,7 @@ jobs:
       - name: Setup Vite+
         uses: ./.github/actions/setup-ci-deps
         with:
-          task-cache-read-token: ${{ secrets.AC_TASK_CACHE_READ_TOKEN }}
+          task-cache-read-token: ${{ secrets.ANKIEL_TASK_CACHE_READ_TOKEN }}
 
       # electron's install.js (run by ensure:electron) reads this cache before it
       # downloads from GitHub. The key changes only with the Electron version.
@@ -162,7 +162,7 @@ jobs:
       - name: Setup Vite+
         uses: ./.github/actions/setup-ci-deps
         with:
-          task-cache-read-token: ${{ secrets.AC_TASK_CACHE_READ_TOKEN }}
+          task-cache-read-token: ${{ secrets.ANKIEL_TASK_CACHE_READ_TOKEN }}
 
       # electron's install.js (run by ensure:electron) reads this cache before it
       # downloads from GitHub. The key changes only with the Electron version.
@@ -211,7 +211,7 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           node apps/server/scripts/cli.ts build-exe
-          apps/server/dist-exe/ac --version
+          apps/server/dist-exe/ankiel --version
 
       # The release launch check, run unpackaged against the same old-state fixture, for
       # startup and sidebar changes. Packaging and signing stay release-only.
@@ -275,7 +275,7 @@ jobs:
           cat "$RUNNER_TEMP/typecheck.log"
           exit "$(cat "$RUNNER_TEMP/typecheck-status")"
 
-  # Everything except `ac` (apps/server) and the web app, which has its own job
+  # Everything except `ankiel` (apps/server) and the web app, which has its own job
   # below. `--parallel` drops the package dependency ordering that `vp run`
   # applies by default: these `test` tasks declare no `dependsOn` and resolve
   # workspace deps from source, so ordering only bought us idle runners between
@@ -322,7 +322,7 @@ jobs:
       - name: Setup Vite+
         uses: ./.github/actions/setup-ci-deps
         with:
-          task-cache-read-token: ${{ secrets.AC_TASK_CACHE_READ_TOKEN }}
+          task-cache-read-token: ${{ secrets.ANKIEL_TASK_CACHE_READ_TOKEN }}
 
       # electron's install.js (run by ensure:electron) reads this cache before it
       # downloads from GitHub. The key changes only with the Electron version.
@@ -354,7 +354,7 @@ jobs:
           TEST_PACKAGES: ${{ needs.changes.outputs.test_packages }}
         run: |
           set -o pipefail
-          filters=(--filter '!ac' --filter '!@ankielcode/monorepo' --filter '!@ankielcode/web')
+          filters=(--filter '!ankiel' --filter '!@ankielcode/monorepo' --filter '!@ankielcode/web')
           if [[ -n "$TEST_PACKAGES" ]]; then
             filters=()
             for package in $TEST_PACKAGES; do filters+=(--filter "$package"); done
@@ -397,7 +397,7 @@ jobs:
       - name: Setup Vite+
         uses: ./.github/actions/setup-ci-deps
         with:
-          task-cache-read-token: ${{ secrets.AC_TASK_CACHE_READ_TOKEN }}
+          task-cache-read-token: ${{ secrets.ANKIEL_TASK_CACHE_READ_TOKEN }}
 
       # The browser project runs React tests in headless Chromium. Same cache key as
       # test_server, so both jobs share one downloaded browser.
@@ -468,9 +468,9 @@ jobs:
         if: steps.changes.outputs.test_server != 'false'
         uses: ./.github/actions/setup-ci-deps
         with:
-          task-cache-read-token: ${{ secrets.AC_TASK_CACHE_READ_TOKEN }}
+          task-cache-read-token: ${{ secrets.ANKIEL_TASK_CACHE_READ_TOKEN }}
 
-      # No Electron setup here: `ac` (apps/server) has no Electron dependency
+      # No Electron setup here: `ankiel` (apps/server) has no Electron dependency
       # and none of its tests touch the runtime. Only the non-server `test`
       # job, which covers @ankielcode/desktop, needs the download.
       # Cache the pinned browser and skip apt unless shared libraries are missing.
@@ -514,9 +514,9 @@ jobs:
       - name: Test
         if: steps.changes.outputs.test_server != 'false'
         env:
-          AC_TRANSFER_BUDGET_REPORT_PATH: ${{ runner.temp }}/ankielcode-transfer-budget.md
-          AC_TRANSFER_BUDGET_RESULT_PATH: ${{ runner.temp }}/thread-transfer-result.json
-          AC_TRANSFER_BUDGET_SCENARIOS_PATH: ${{ runner.temp }}/thread-transfer-scenarios.json
+          ANKIEL_TRANSFER_BUDGET_REPORT_PATH: ${{ runner.temp }}/ankielcode-transfer-budget.md
+          ANKIEL_TRANSFER_BUDGET_RESULT_PATH: ${{ runner.temp }}/thread-transfer-result.json
+          ANKIEL_TRANSFER_BUDGET_SCENARIOS_PATH: ${{ runner.temp }}/thread-transfer-scenarios.json
         # One process per file spends ~2s starting before its tests run; one file per vCPU overlaps that.
         run: >-
           vp run test:cached -- --shard ${{ matrix.shard }}/${{ strategy.job-total }} --concurrency 4
@@ -652,7 +652,7 @@ jobs:
       - name: Setup Vite+
         uses: ./.github/actions/setup-ci-deps
         with:
-          task-cache-read-token: ${{ secrets.AC_TASK_CACHE_READ_TOKEN }}
+          task-cache-read-token: ${{ secrets.ANKIEL_TASK_CACHE_READ_TOKEN }}
 
       - name: Exercise release-only workflow steps
         run: node scripts/release-smoke.ts

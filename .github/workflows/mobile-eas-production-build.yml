@@ -33,9 +33,9 @@ permissions:
   contents: read
 
 env:
-  AC_EAS_PROJECT_ID: ${{ vars.AC_EAS_PROJECT_ID }}
-  AC_EAS_OWNER: ${{ vars.AC_EAS_OWNER }}
-  AC_APPLE_TEAM_ID: ${{ vars.AC_APPLE_TEAM_ID }}
+  ANKIEL_EAS_PROJECT_ID: ${{ vars.ANKIEL_EAS_PROJECT_ID }}
+  ANKIEL_EAS_OWNER: ${{ vars.ANKIEL_EAS_OWNER }}
+  ANKIEL_APPLE_TEAM_ID: ${{ vars.ANKIEL_APPLE_TEAM_ID }}
 
 jobs:
   # ARM-only, without release lint (see the production profile in eas.json),

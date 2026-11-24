@@ -1799,7 +1799,7 @@ function OpenCommandPaletteDialog(props: {
         "grouping",
         "checkout",
         "remove",
-        "ac.json",
+        "ankiel.json",
       ],
       title: gt("Project settings"),
       description: contextualProjectGroup.displayName,

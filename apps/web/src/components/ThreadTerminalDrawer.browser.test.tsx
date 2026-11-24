@@ -386,7 +386,7 @@ it("only activates terminal paths confirmed to exist on their environment", asyn
     act(() => fixture.surfaceOptions.at(-1)!.onLinkHover!(text));
 
   expect(canActivate("https://example.com")).toBe(true);
-  for (const branch of ["ac/fix-html-image-details", "ac/fix-html-…mage-details"]) {
+  for (const branch of ["ankiel/fix-html-image-details", "ankiel/fix-html-…mage-details"]) {
     const candidates = extractTerminalLinks(branch);
     expect(candidates.length).toBeGreaterThan(0);
     for (const candidate of candidates) {

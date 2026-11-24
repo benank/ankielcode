@@ -79,12 +79,12 @@ function joinSshAskpassPath(
 const ASKPASS_POSIX_SCRIPT = `#!/bin/sh
 # Invoked by ssh via SSH_ASKPASS when Ankiel Code re-runs ssh with a cached password
 # from the renderer's in-app prompt. We never expose a native dialog here - if
-# AC_SSH_AUTH_SECRET is missing, that's a caller bug and we fail loudly.
-if [ "\${AC_SSH_AUTH_SECRET+x}" = "x" ]; then
-  printf "%s\\n" "$AC_SSH_AUTH_SECRET"
+# ANKIEL_SSH_AUTH_SECRET is missing, that's a caller bug and we fail loudly.
+if [ "\${ANKIEL_SSH_AUTH_SECRET+x}" = "x" ]; then
+  printf "%s\\n" "$ANKIEL_SSH_AUTH_SECRET"
   exit 0
 fi
-printf 'Ankiel Code ssh-askpass invoked without AC_SSH_AUTH_SECRET.\\n' >&2
+printf 'Ankiel Code ssh-askpass invoked without ANKIEL_SSH_AUTH_SECRET.\\n' >&2
 exit 1
 `;
 
@@ -92,14 +92,14 @@ exit 1
 // directly; Cygwin/MSYS ssh (Git for Windows) execs ssh-askpass.sh through its own sh. Either
 // way ssh appends the prompt as a plain trailing argument, which the helpers never read.
 const ASKPASS_WINDOWS_NODE_SCRIPT = `// Invoked by ssh via SSH_ASKPASS when Ankiel Code re-runs ssh with a cached password
-// from the renderer's in-app prompt. Answers from AC_SSH_AUTH_SECRET only and
+// from the renderer's in-app prompt. Answers from ANKIEL_SSH_AUTH_SECRET only and
 // never reads its arguments; if the secret is missing, that's a caller bug and
 // we fail loudly.
-if ("AC_SSH_AUTH_SECRET" in process.env) {
-  process.stdout.write((process.env.AC_SSH_AUTH_SECRET || "") + "\\n");
+if ("ANKIEL_SSH_AUTH_SECRET" in process.env) {
+  process.stdout.write((process.env.ANKIEL_SSH_AUTH_SECRET || "") + "\\n");
   process.exit(0);
 }
-process.stderr.write("Ankiel Code ssh-askpass invoked without AC_SSH_AUTH_SECRET.\\n");
+process.stderr.write("Ankiel Code ssh-askpass invoked without ANKIEL_SSH_AUTH_SECRET.\\n");
 process.exit(1);
 `;
 
@@ -238,7 +238,7 @@ export const buildSshChildEnvironment = Effect.fn("ssh/auth.buildSshChildEnviron
       : yield* ensureSshAskpassHelpers({ directory: input.askpassDirectory });
 
   const authSecretEnv =
-    input.authSecret === undefined ? {} : { AC_SSH_AUTH_SECRET: input.authSecret ?? "" };
+    input.authSecret === undefined ? {} : { ANKIEL_SSH_AUTH_SECRET: input.authSecret ?? "" };
 
   if (platform === "win32") {
     if (!(yield* isWin32OpenSsh())) {
@@ -250,7 +250,7 @@ export const buildSshChildEnvironment = Effect.fn("ssh/auth.buildSshChildEnviron
       };
     }
     // Win32-OpenSSH uses a value that starts with a quote as the command line as written; an
-    // unquoted one is split after a lower-case ".exe" only. The single-executable ac.exe ignores
+    // unquoted one is split after a lower-case ".exe" only. The single-executable ankiel.exe ignores
     // a script argument, so it loads the helper through NODE_OPTIONS instead.
     const execPath = yield* HostProcess.ExecutablePath;
     const preload = (yield* HostProcess.IsExecutable)

@@ -120,7 +120,7 @@ export function WelcomePage({
     environments.find((environment) => environment.environmentId === environmentId)?.label ??
     gt("this computer");
   const agentReady = useWelcomeAgents(environmentId).readyCount > 0;
-  // `ac` on PATH belongs to the primary computer, so only it offers it.
+  // `ankiel` on PATH belongs to the primary computer, so only it offers it.
   const isPrimary = usePrimaryEnvironmentId() === environmentId;
   const scans = useProjectScans([environmentId]);
   const [storedSelection, storeSelection] = useLocalStorage(
@@ -1782,7 +1782,7 @@ function ImportRowMeta({
   );
 }
 
-/** The desktop app links `ac` on a fresh install; this puts its folder on PATH when it is not. */
+/** The desktop app links `ankiel` on a fresh install; this puts its folder on PATH when it is not. */
 function CliPathSetup() {
   const { state, busy, run } = useDesktopCliCommand();
   const setup = state?.pathSetup;
@@ -1796,11 +1796,11 @@ function CliPathSetup() {
         {setup.added ? (
           <T>
             Added to <Var>{setup.file}</Var>. Open a new terminal to use{" "}
-            <code className="font-mono">ac</code>.
+            <code className="font-mono">ankiel</code>.
           </T>
         ) : (
           <T>
-            Use <code className="font-mono">ac</code> from any terminal. Adds one line to{" "}
+            Use <code className="font-mono">ankiel</code> from any terminal. Adds one line to{" "}
             <Var>{setup.file}</Var>.
           </T>
         )}

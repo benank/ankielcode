@@ -2,7 +2,7 @@
 
 ## Choose a shell
 
-Set `AC_TERMINAL_SHELL` in the environment that launches the Ankiel Code server
+Set `ANKIEL_TERMINAL_SHELL` in the environment that launches the Ankiel Code server
 to choose the executable used for new terminals. Use an executable name or its
 full path, without surrounding quotes or command-line arguments. An unset or
 blank value keeps the platform default. If the executable cannot be started,
@@ -12,7 +12,7 @@ On Windows, to use Git Bash from a standard Git for Windows installation, run
 this in PowerShell:
 
 ```powershell
-[Environment]::SetEnvironmentVariable('AC_TERMINAL_SHELL', 'C:\Program Files\Git\bin\bash.exe', 'User')
+[Environment]::SetEnvironmentVariable('ANKIEL_TERMINAL_SHELL', 'C:\Program Files\Git\bin\bash.exe', 'User')
 ```
 
 Fully quit Ankiel Code, then reopen it from the Start menu and create a new terminal.

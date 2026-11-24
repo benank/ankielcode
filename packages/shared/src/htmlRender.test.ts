@@ -136,7 +136,7 @@ describe("readHtmlRenderImageRequest", () => {
   it("accepts http(s) and inline image URLs in an open-image notification", () => {
     const image = (params: unknown) => ({
       jsonrpc: "2.0",
-      method: "ac/notifications/open-image",
+      method: "ankiel/notifications/open-image",
       params,
     });
     expect(
@@ -166,7 +166,7 @@ describe("readHtmlRenderImageRequest", () => {
     const request = (overrides: object) =>
       readHtmlRenderImageRequest({
         jsonrpc: "2.0",
-        method: "ac/notifications/open-image",
+        method: "ankiel/notifications/open-image",
         params: { ...params, ...overrides },
       });
     expect(request({})).toEqual({
