@@ -12,7 +12,6 @@ import { useAtomValue } from "@effect/atom-react";
 import { normalizeProviderAccentColor } from "@ankielcode/client-runtime/state/provider-instance-display";
 import {
   type LimitPace,
-  paceOf,
   paceRemainingPercent,
   remainingPercent,
   type ResetCreditChoice,
@@ -135,7 +134,6 @@ function WindowBar({
   const m = useMessages();
   const remaining = remainingPercent(window);
   const timeLeft = paceRemainingPercent(window, now);
-  const [barRef, paceMark] = usePaceMark(timeLeft);
   const resetsIn = formatResetsIn(window, now, m);
   const resetsAt = window.resetsAt
     ? formatUpcomingTimestamp(window.resetsAt, timestampFormat, now, undefined, m)
@@ -164,7 +162,6 @@ function WindowBar({
       <TooltipTrigger
         render={
           <div
-            ref={barRef}
             role="img"
             aria-label={summary}
             tabIndex={0}
@@ -172,21 +169,11 @@ function WindowBar({
           />
         }
       >
-        {/* Clip both layers so the gap exposes even a translucent composer surface. */}
-        <div className="absolute inset-0" style={paceMark?.gap}>
-          <div className="absolute inset-x-0 inset-y-1.5 rounded-full bg-muted" />
-          {remaining > 0 ? (
-            <div
-              className="absolute inset-y-1.5 left-0 rounded-full"
-              style={{ width: `${remaining}%`, backgroundColor: color }}
-            />
-          ) : null}
-        </div>
-        {paceMark ? (
-          <span
-            aria-hidden
-            className="absolute inset-y-1 w-0.5 -translate-x-1/2 rounded-full bg-foreground"
-            style={paceMark.tick}
+        <div className="absolute inset-x-0 inset-y-1.5 rounded-[3px] bg-muted-foreground/25" />
+        {remaining > 0 ? (
+          <div
+            className="absolute inset-y-1.5 left-0 rounded-[3px]"
+            style={{ width: `${remaining}%`, backgroundColor: color }}
           />
         ) : null}
       </TooltipTrigger>
@@ -197,11 +184,6 @@ function WindowBar({
               ? gt("{remaining}% left · {timeLeft}% of the window left", { remaining, timeLeft })
               : gt("{remaining}% left", { remaining })}
           </span>
-          {timeLeft !== null ? (
-            <span className="text-muted-foreground">
-              <T>The line is where even spending would be.</T>
-            </span>
-          ) : null}
           {resetsAt ? (
             <span className="text-muted-foreground">
               {resetsIn
@@ -240,7 +222,6 @@ export function LimitWindows({
       }
     >
       {windows.map((window) => {
-        const pace = paceOf(window, now);
         const resetsIn = formatResetsIn(window, now, m);
         return (
           <Fragment key={window.id}>
@@ -251,9 +232,8 @@ export function LimitWindows({
               </span>
             </span>
             <WindowBar color={color} window={window} now={now} />
-            <span className="flex items-center gap-2 text-xs whitespace-nowrap text-muted-foreground tabular-nums">
-              {pace ? <PaceIcon pace={pace} /> : null}
-              <span className="ms-auto shrink-0">{resetsIn ?? ""}</span>
+            <span className="text-end text-xs whitespace-nowrap text-muted-foreground tabular-nums">
+              {resetsIn ?? ""}
             </span>
           </Fragment>
         );

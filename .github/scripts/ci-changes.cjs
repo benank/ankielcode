@@ -48,11 +48,10 @@ const TEST_ONLY_DEPS = {
 const BUILD_ONLY_DEPS = { ankiel: ["@ankielcode/web"] };
 
 const MOBILE_NATIVE =
-  /^apps\/mobile\/.*\.(swift|kt|kts)$|^apps\/mobile\/(\.swiftlint\.yml|detekt\.yml|\.editorconfig|Brewfile)$|^scripts\/mobile-native-static-check\.ts$|^package\.json$|^\.github\/workflows\/ci\.yml$|^\.github\/scripts\/ci-changes\.cjs$|^\.github\/actions\/ci-changes\//;
+  /^apps\/mobile\/.*\.(swift|kt|kts)$|^apps\/mobile\/(\.swiftlint\.yml|detekt\.yml|\.editorconfig|Brewfile)$|^scripts\/mobile-native-static-check\.ts$|^package\.json$|^\.github\/workflows\/mobile-native-lint\.yml$/;
 
 // Startup, migration, settlement, and sidebar paths that decide whether an upgraded user's
-// threads show after launch. Build runs scripts/smoke-desktop-app.ts for them, so they do not
-// first fail in the release launch check.
+// threads show after launch. Release checks run scripts/smoke-desktop-app.ts for them.
 const DESKTOP_LAUNCH = [
   /^apps\/desktop\/src\/((main|boot|compileCache|serverCompileCache)\.ts$|(app|backend|window)\/)/,
   /^apps\/desktop\/src\/electron\/(ElectronApp|ElectronProtocol|ElectronWindow)\.ts$/,

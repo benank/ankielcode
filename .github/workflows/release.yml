@@ -375,9 +375,79 @@ jobs:
           if-no-files-found: error
           compression-level: 0
 
+  # Checks that only matter for shipping, run against the release commit while
+  # the installers build. Publishing waits for them.
+  release_checks:
+    name: Release checks
+    needs: [preflight]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preflight.outputs.ref }}
+          sparse-checkout: |
+            /*
+            !/.repos/
+            !/apps/mobile/modules/ankiel-terminal/Vendor/**/*.a
+          sparse-checkout-cone-mode: false
+
+      - uses: ./.github/actions/setup-apt-mirrors
+
+      - name: Install browser secret helper build libraries and Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev pkg-config xvfb
+
+      - name: Setup dependencies
+        uses: ./.github/actions/setup-ci-deps
+
+      - name: Ensure Electron runtime is installed
+        run: vp run --filter @ankielcode/desktop ensure:electron
+
+      - name: Exercise release-only workflow steps
+        run: node scripts/release-smoke.ts
+
+      - name: Build desktop pipeline
+        run: vp run build:desktop
+
+      - name: Verify preload bundle output
+        run: node apps/desktop/scripts/verify-preload-bundle.mjs
+
+      # build-exe rejects imports a single-executable cannot resolve.
+      - name: Build CLI single-executable
+        run: |
+          node apps/server/scripts/cli.ts build-exe
+          apps/server/dist-exe/ankiel --version
+
+      - name: Open the seeded thread in the built desktop app
+        id: desktop_launch
+        timeout-minutes: 4
+        run: |
+          electron=$(node -p "require('./apps/desktop/node_modules/electron')")
+          xvfb-run -a node scripts/smoke-desktop-app.ts --executable "$electron" --app apps/desktop \
+            --artifacts-dir "$RUNNER_TEMP/desktop-launch-check"
+
+      - name: Upload desktop launch check
+        if: ${{ failure() && steps.desktop_launch.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-launch-check
+          path: ${{ runner.temp }}/desktop-launch-check
+          if-no-files-found: ignore
+
+      # Browser tests run source modules; this boots the production chunk graph.
+      - name: Install Chromium for the built web client boot check
+        run: node apps/web/node_modules/playwright/cli.js install --with-deps --only-shell chromium
+
+      - name: Boot the built web client
+        timeout-minutes: 3
+        run: node apps/web/scripts/verify-built-boot.ts
+
   publish_release:
     name: Upload assets & publish release
-    needs: [preflight, package_desktop]
+    needs: [preflight, package_desktop, release_checks]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
