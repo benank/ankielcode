@@ -25,21 +25,73 @@ function jsonError(error: string, status: number): Response {
   return withCors(Response.json({ error }, { status }));
 }
 
+function extractSubdomainHostId(hostname: string): string | null {
+  const labels = hostname.toLowerCase().split(".");
+  if (labels.length < 3) return null;
+  const candidate = labels[0];
+  return candidate && isValidHostId(candidate) ? candidate : null;
+}
+
+function extractPathPrefixTunnel(
+  pathname: string,
+): { readonly hostId: string; readonly innerPath: string } | null {
+  const match = /^\/h\/([a-z2-7]{26})(\/.*)?$/.exec(pathname);
+  if (!match) return null;
+  return {
+    hostId: match[1]!,
+    innerPath: match[2] || "/",
+  };
+}
+
+function checkAllowlist(env: RelayEnv, hostId: string): Response | null {
+  const allowlist = parseAllowedHostIds(env.ALLOWED_HOST_IDS);
+  if (allowlist && !allowlist.has(hostId)) {
+    return jsonError("host_not_allowed", 403);
+  }
+  return null;
+}
+
 export default {
   async fetch(request: Request, env: RelayEnv): Promise<Response> {
+    const url = new URL(request.url);
+
+    // 1. Subdomain reverse tunnel: https://<hostId>.relay.example.com/<path>
+    const subdomainHostId = extractSubdomainHostId(url.hostname);
+    if (subdomainHostId) {
+      const denied = checkAllowlist(env, subdomainHostId);
+      if (denied) return denied;
+      const stub = env.RELAY_ROOM.get(env.RELAY_ROOM.idFromName(subdomainHostId));
+      const internalUrl = new URL("https://relay-room/tunnel");
+      internalUrl.searchParams.set("hostId", subdomainHostId);
+      internalUrl.searchParams.set("path", `${url.pathname}${url.search}`);
+      return stub.fetch(new Request(internalUrl.toString(), request));
+    }
+
+    // 2. Path-prefix reverse tunnel (free *.workers.dev friendly): https://<worker>/h/<hostId>/<path>
+    const pathPrefix = extractPathPrefixTunnel(url.pathname);
+    if (pathPrefix) {
+      const denied = checkAllowlist(env, pathPrefix.hostId);
+      if (denied) return denied;
+      const stub = env.RELAY_ROOM.get(env.RELAY_ROOM.idFromName(pathPrefix.hostId));
+      const internalUrl = new URL("https://relay-room/tunnel");
+      internalUrl.searchParams.set("hostId", pathPrefix.hostId);
+      internalUrl.searchParams.set("path", `${pathPrefix.innerPath}${url.search}`);
+      return stub.fetch(new Request(internalUrl.toString(), request));
+    }
+
+    // 3. Control endpoints (health, host tunnel registration, direct client WS, status)
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
-
-    const url = new URL(request.url);
 
     if (url.pathname === "/health" && request.method === "GET") {
       return withCors(
         Response.json({
           ok: true,
           service: "ankiel-relay",
-          version: "0.1.0",
-          restricted: parseAllowedHostIds(env.ALLOWED_HOST_IDS) !== null,
+          version: "0.2.0",
+          requiresSecret: Boolean(env.RELAY_SECRET?.trim()),
+          restrictedHosts: parseAllowedHostIds(env.ALLOWED_HOST_IDS) !== null,
         }),
       );
     }
@@ -49,15 +101,14 @@ export default {
       return jsonError("not_found", 404);
     }
 
-    const [, route, hostId] = match as [string, "host" | "client" | "status", string];
+    const route = match[1] as "host" | "client" | "status";
+    const hostId = match[2]!;
     if (!isValidHostId(hostId)) {
       return jsonError("invalid_host_id", 400);
     }
 
-    const allowlist = parseAllowedHostIds(env.ALLOWED_HOST_IDS);
-    if (allowlist && !allowlist.has(hostId)) {
-      return jsonError("host_not_allowed", 403);
-    }
+    const denied = checkAllowlist(env, hostId);
+    if (denied) return denied;
 
     const stub = env.RELAY_ROOM.get(env.RELAY_ROOM.idFromName(hostId));
     const internalUrl = new URL(`https://relay-room/${route}`);

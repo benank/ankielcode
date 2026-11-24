@@ -2,15 +2,23 @@ import { DurableObject } from "cloudflare:workers";
 
 import { randomNonce, verifyHostAuth } from "./crypto.ts";
 import {
-  decodeBinaryRelayFrame,
-  encodeBinaryRelayFrame,
+  BINARY_FRAME_HTTP_REQ_BODY,
+  BINARY_FRAME_HTTP_RES_BODY,
+  BINARY_FRAME_WS_DATA,
+  buildResponseHeaders,
+  decodeBinaryFrame,
+  encodeBinaryFrame,
+  filterRequestHeaders,
+  filterWsUpgradeHeaders,
   parseHostControlMessage,
+  type HeaderEntries,
   type RelayToClientMessage,
   type RelayToHostMessage,
 } from "./protocol.ts";
 
 export interface RelayEnv {
   readonly RELAY_ROOM: DurableObjectNamespace;
+  readonly RELAY_SECRET?: string;
   readonly ALLOWED_HOST_IDS?: string;
   readonly MAX_CLIENTS_PER_HOST?: string;
 }
@@ -31,9 +39,20 @@ type SocketAttachment =
       readonly role: "client";
       readonly hostId: string;
       readonly connId: string;
+      readonly rawTunnel: boolean;
     };
 
+interface PendingHttpRequest {
+  readonly reqId: string;
+  readonly resolveResponse: (response: Response) => void;
+  readonly timer: ReturnType<typeof setTimeout>;
+  resolved: boolean;
+  bodyController: ReadableStreamDefaultController<Uint8Array> | null;
+}
+
 const AUTH_TIMEOUT_MS = 15_000;
+const HTTP_RESPONSE_START_TIMEOUT_MS = 30_000;
+const HTTP_CHUNK_BYTES = 64 * 1024;
 const DEFAULT_MAX_CLIENTS = 32;
 
 const CLOSE_AUTH_FAILED = 4401;
@@ -72,6 +91,9 @@ function sanitizeCloseCode(code: number | undefined): number {
 }
 
 export class RelayRoom extends DurableObject<RelayEnv> {
+  // In-flight HTTP requests keep the DO awake until resolved/closed, so in-memory tracking is safe.
+  private readonly pendingHttp = new Map<string, PendingHttpRequest>();
+
   private getAttachment(ws: WebSocket): SocketAttachment | null {
     return (ws.deserializeAttachment() as SocketAttachment | null) ?? null;
   }
@@ -96,6 +118,10 @@ export class RelayRoom extends DurableObject<RelayEnv> {
     return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_CLIENTS;
   }
 
+  private requiresRelaySecret(): boolean {
+    return Boolean(this.env.RELAY_SECRET?.trim());
+  }
+
   override async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const hostId = url.searchParams.get("hostId") ?? "";
@@ -110,16 +136,32 @@ export class RelayRoom extends DurableObject<RelayEnv> {
       });
     }
 
-    if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
-      return Response.json({ error: "upgrade_required" }, { status: 426 });
-    }
-
     if (url.pathname === "/host") {
+      if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
+        return Response.json({ error: "upgrade_required" }, { status: 426 });
+      }
       return this.handleHostUpgrade(hostId);
     }
 
     if (url.pathname === "/client") {
-      return this.handleClientUpgrade(hostId);
+      if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
+        return Response.json({ error: "upgrade_required" }, { status: 426 });
+      }
+      return this.handleClientUpgrade(hostId, request, {
+        path: url.searchParams.get("path") ?? "/ws",
+        sendConnectedControlFrame: true,
+      });
+    }
+
+    if (url.pathname === "/tunnel") {
+      const targetPath = url.searchParams.get("path") ?? "/";
+      if (request.headers.get("Upgrade")?.toLowerCase() === "websocket") {
+        return this.handleClientUpgrade(hostId, request, {
+          path: targetPath,
+          sendConnectedControlFrame: false,
+        });
+      }
+      return this.handleHttpTunnel(hostId, targetPath, request);
     }
 
     return Response.json({ error: "not_found" }, { status: 404 });
@@ -140,12 +182,24 @@ export class RelayRoom extends DurableObject<RelayEnv> {
     } satisfies SocketAttachment);
 
     await this.ctx.storage.setAlarm(timestamp + AUTH_TIMEOUT_MS);
-    sendHostJson(server, { type: "challenge", nonce, timestamp });
+    sendHostJson(server, {
+      type: "challenge",
+      nonce,
+      timestamp,
+      requiresSecret: this.requiresRelaySecret(),
+    });
 
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  private handleClientUpgrade(hostId: string): Response {
+  private handleClientUpgrade(
+    hostId: string,
+    request: Request,
+    options: {
+      readonly path: string;
+      readonly sendConnectedControlFrame: boolean;
+    },
+  ): Response {
     const host = this.getAuthenticatedHost();
     if (!host) {
       return Response.json({ error: "host_offline", hostId }, { status: 503 });
@@ -165,12 +219,192 @@ export class RelayRoom extends DurableObject<RelayEnv> {
       role: "client",
       hostId,
       connId,
+      rawTunnel: !options.sendConnectedControlFrame,
     } satisfies SocketAttachment);
 
-    sendHostJson(host, { type: "client_open", connId });
-    sendClientJson(server, { type: "connected", connId, hostId });
+    sendHostJson(host, {
+      type: "client_open",
+      connId,
+      path: options.path,
+      headers: filterWsUpgradeHeaders(request.headers),
+    });
+
+    if (options.sendConnectedControlFrame) {
+      sendClientJson(server, { type: "connected", connId, hostId });
+    }
 
     return new Response(null, { status: 101, webSocket: client });
+  }
+
+  private async handleHttpTunnel(
+    hostId: string,
+    targetPath: string,
+    request: Request,
+  ): Promise<Response> {
+    const host = this.getAuthenticatedHost();
+    if (!host) {
+      return Response.json({ error: "host_offline", hostId }, { status: 503 });
+    }
+
+    const reqId = crypto.randomUUID();
+    const method = request.method.toUpperCase();
+    const hasBody = method !== "GET" && method !== "HEAD" && request.body !== null;
+
+    const responsePromise = new Promise<Response>((resolve) => {
+      const timer = setTimeout(() => {
+        const entry = this.pendingHttp.get(reqId);
+        if (!entry) return;
+        this.pendingHttp.delete(reqId);
+        if (!entry.resolved) {
+          entry.resolved = true;
+          resolve(Response.json({ error: "host_timeout", reqId }, { status: 504 }));
+        } else if (entry.bodyController) {
+          try {
+            entry.bodyController.error(new Error("Host response stream timed out"));
+          } catch {
+            // Stream already closed.
+          }
+        }
+      }, HTTP_RESPONSE_START_TIMEOUT_MS);
+
+      this.pendingHttp.set(reqId, {
+        reqId,
+        resolveResponse: resolve,
+        timer,
+        resolved: false,
+        bodyController: null,
+      });
+    });
+
+    try {
+      sendHostJson(host, {
+        type: "http_request",
+        reqId,
+        method,
+        path: targetPath,
+        headers: filterRequestHeaders(request.headers),
+        hasBody,
+      });
+
+      if (hasBody && request.body) {
+        const reader = request.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (!value || value.byteLength === 0) continue;
+          for (let offset = 0; offset < value.byteLength; offset += HTTP_CHUNK_BYTES) {
+            const slice = value.subarray(
+              offset,
+              Math.min(offset + HTTP_CHUNK_BYTES, value.byteLength),
+            );
+            host.send(encodeBinaryFrame(BINARY_FRAME_HTTP_REQ_BODY, reqId, slice));
+          }
+        }
+        sendHostJson(host, { type: "http_request_end", reqId });
+      }
+    } catch {
+      this.failPendingHttp(reqId, 502, "Failed to forward request to host.");
+    }
+
+    return responsePromise;
+  }
+
+  private startPendingHttpResponse(
+    reqId: string,
+    status: number,
+    statusText: string | undefined,
+    headers: HeaderEntries,
+  ): void {
+    const entry = this.pendingHttp.get(reqId);
+    if (!entry || entry.resolved) return;
+
+    clearTimeout(entry.timer);
+    entry.resolved = true;
+
+    const responseHeaders = buildResponseHeaders(headers);
+    const noBodyStatus = status === 101 || status === 204 || status === 205 || status === 304;
+    if (noBodyStatus) {
+      this.pendingHttp.delete(reqId);
+      entry.resolveResponse(
+        new Response(null, {
+          status,
+          ...(statusText ? { statusText } : {}),
+          headers: responseHeaders,
+        }),
+      );
+      return;
+    }
+
+    const stream = new ReadableStream<Uint8Array>({
+      start: (controller) => {
+        entry.bodyController = controller;
+      },
+      cancel: () => {
+        this.pendingHttp.delete(reqId);
+      },
+    });
+
+    entry.resolveResponse(
+      new Response(stream, {
+        status,
+        ...(statusText ? { statusText } : {}),
+        headers: responseHeaders,
+      }),
+    );
+  }
+
+  private pushPendingHttpChunk(reqId: string, chunk: Uint8Array): void {
+    const entry = this.pendingHttp.get(reqId);
+    if (!entry?.bodyController) return;
+    try {
+      entry.bodyController.enqueue(chunk.slice());
+    } catch {
+      this.pendingHttp.delete(reqId);
+    }
+  }
+
+  private finishPendingHttp(reqId: string): void {
+    const entry = this.pendingHttp.get(reqId);
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    this.pendingHttp.delete(reqId);
+    if (!entry.resolved) {
+      entry.resolved = true;
+      entry.resolveResponse(new Response(null, { status: 502 }));
+      return;
+    }
+    if (entry.bodyController) {
+      try {
+        entry.bodyController.close();
+      } catch {
+        // Already closed.
+      }
+    }
+  }
+
+  private failPendingHttp(reqId: string, status: number, message: string): void {
+    const entry = this.pendingHttp.get(reqId);
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    this.pendingHttp.delete(reqId);
+    if (!entry.resolved) {
+      entry.resolved = true;
+      entry.resolveResponse(Response.json({ error: "bad_gateway", message }, { status }));
+      return;
+    }
+    if (entry.bodyController) {
+      try {
+        entry.bodyController.error(new Error(message));
+      } catch {
+        // Already errored/closed.
+      }
+    }
+  }
+
+  private failAllPendingHttp(message: string): void {
+    for (const reqId of [...this.pendingHttp.keys()]) {
+      this.failPendingHttp(reqId, 502, message);
+    }
   }
 
   override async alarm(): Promise<void> {
@@ -250,6 +484,8 @@ export class RelayRoom extends DurableObject<RelayEnv> {
       expectedTimestamp: attachment.timestamp,
       publicKeyBase64Url: parsed.publicKey,
       signatureBase64Url: parsed.signature,
+      relaySecret: this.env.RELAY_SECRET,
+      secretProofBase64Url: parsed.secretProof,
     });
 
     if (!verification.ok) {
@@ -282,7 +518,7 @@ export class RelayRoom extends DurableObject<RelayEnv> {
 
   private handleAuthenticatedHostMessage(ws: WebSocket, message: string | ArrayBuffer): void {
     if (typeof message !== "string") {
-      const decoded = decodeBinaryRelayFrame(message);
+      const decoded = decodeBinaryFrame(message);
       if (!decoded) {
         sendHostJson(ws, {
           type: "error",
@@ -291,15 +527,21 @@ export class RelayRoom extends DurableObject<RelayEnv> {
         });
         return;
       }
-      const client = this.getClientSocket(decoded.connId);
-      if (!client) {
-        sendHostJson(ws, { type: "client_close", connId: decoded.connId, reason: "not_found" });
+      if (decoded.kind === BINARY_FRAME_HTTP_RES_BODY) {
+        this.pushPendingHttpChunk(decoded.id, decoded.payload);
         return;
       }
-      try {
-        client.send(decoded.payload);
-      } catch {
-        safeClose(client, 1011, "send_failed");
+      if (decoded.kind === BINARY_FRAME_WS_DATA) {
+        const client = this.getClientSocket(decoded.id);
+        if (!client) {
+          sendHostJson(ws, { type: "client_close", connId: decoded.id, reason: "not_found" });
+          return;
+        }
+        try {
+          client.send(decoded.payload);
+        } catch {
+          safeClose(client, 1011, "send_failed");
+        }
       }
       return;
     }
@@ -338,6 +580,20 @@ export class RelayRoom extends DurableObject<RelayEnv> {
         }
         return;
       }
+      case "http_response_start":
+        this.startPendingHttpResponse(
+          parsed.reqId,
+          parsed.status,
+          parsed.statusText,
+          parsed.headers,
+        );
+        return;
+      case "http_response_end":
+        this.finishPendingHttp(parsed.reqId);
+        return;
+      case "http_response_error":
+        this.failPendingHttp(parsed.reqId, parsed.status ?? 502, parsed.message);
+        return;
       case "auth":
         sendHostJson(ws, { type: "ready", hostId: this.getAttachment(ws)?.hostId ?? "" });
         return;
@@ -360,7 +616,7 @@ export class RelayRoom extends DurableObject<RelayEnv> {
     }
 
     try {
-      host.send(encodeBinaryRelayFrame(connId, message));
+      host.send(encodeBinaryFrame(BINARY_FRAME_WS_DATA, connId, message));
     } catch {
       safeClose(host, 1011, "host_send_failed");
     }
@@ -392,12 +648,12 @@ export class RelayRoom extends DurableObject<RelayEnv> {
     }
 
     if (attachment.role === "host") {
-      // Only disconnect clients if no newer authenticated host has already taken over.
       const replacement = this.ctx.getWebSockets("host").find((other) => {
         if (other === ws) return false;
         return this.getAttachment(other)?.role === "host";
       });
       if (!replacement) {
+        this.failAllPendingHttp("Host disconnected during request.");
         for (const client of this.ctx.getWebSockets("client")) {
           safeClose(client, CLOSE_HOST_DISCONNECTED, "host_disconnected");
         }

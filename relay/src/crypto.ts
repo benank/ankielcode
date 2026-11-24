@@ -2,6 +2,7 @@ const BASE32_ALPHABET = "abcdefghijklmnopqrstuvwxyz234567";
 const HOST_ID_LENGTH = 26;
 const HOST_ID_PATTERN = /^[a-z2-7]{26}$/;
 const CHALLENGE_DOMAIN = "ankiel-relay-host-v1";
+const SECRET_DOMAIN = "ankiel-relay-secret-v1";
 const MAX_CLOCK_SKEW_MS = 60_000;
 
 export function isValidHostId(value: string): boolean {
@@ -36,7 +37,8 @@ export function encodeBase64Url(bytes: Uint8Array): string {
 
 export function decodeBase64Url(input: string): Uint8Array | null {
   if (!/^[A-Za-z0-9_-]+$/.test(input)) return null;
-  const padded = input.replaceAll("-", "+").replaceAll("_", "/") + "=".repeat((4 - (input.length % 4)) % 4);
+  const padded =
+    input.replaceAll("-", "+").replaceAll("_", "/") + "=".repeat((4 - (input.length % 4)) % 4);
   try {
     const binary = atob(padded);
     const bytes = new Uint8Array(binary.length);
@@ -71,12 +73,72 @@ export function buildHostChallengeMessage(
   return new TextEncoder().encode(`${CHALLENGE_DOMAIN}\n${hostId}\n${nonce}\n${timestamp}`);
 }
 
+export function buildRelaySecretMessage(
+  hostId: string,
+  nonce: string,
+  timestamp: number,
+): Uint8Array {
+  return new TextEncoder().encode(`${SECRET_DOMAIN}\n${hostId}\n${nonce}\n${timestamp}`);
+}
+
+export async function signRelaySecret(
+  secret: string,
+  hostId: string,
+  nonce: string,
+  timestamp: number,
+): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const mac = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    buildRelaySecretMessage(hostId, nonce, timestamp),
+  );
+  return encodeBase64Url(new Uint8Array(mac));
+}
+
+export async function verifyRelaySecretProof(input: {
+  readonly secret: string;
+  readonly hostId: string;
+  readonly nonce: string;
+  readonly timestamp: number;
+  readonly secretProofBase64Url: string | undefined;
+}): Promise<boolean> {
+  if (!input.secretProofBase64Url) return false;
+  const provided = decodeBase64Url(input.secretProofBase64Url);
+  if (!provided || provided.byteLength !== 32) return false;
+  try {
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(input.secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"],
+    );
+    return await crypto.subtle.verify(
+      "HMAC",
+      key,
+      provided,
+      buildRelaySecretMessage(input.hostId, input.nonce, input.timestamp),
+    );
+  } catch {
+    return false;
+  }
+}
+
 export interface VerifyHostAuthInput {
   readonly expectedHostId: string;
   readonly expectedNonce: string;
   readonly expectedTimestamp: number;
   readonly publicKeyBase64Url: string;
   readonly signatureBase64Url: string;
+  readonly relaySecret?: string;
+  readonly secretProofBase64Url?: string;
   readonly nowMs?: number;
 }
 
@@ -88,6 +150,20 @@ export async function verifyHostAuth(input: VerifyHostAuthInput): Promise<Verify
   const nowMs = input.nowMs ?? Date.now();
   if (Math.abs(nowMs - input.expectedTimestamp) > MAX_CLOCK_SKEW_MS) {
     return { ok: false, reason: "challenge_expired" };
+  }
+
+  const trimmedSecret = input.relaySecret?.trim();
+  if (trimmedSecret) {
+    const validSecret = await verifyRelaySecretProof({
+      secret: trimmedSecret,
+      hostId: input.expectedHostId,
+      nonce: input.expectedNonce,
+      timestamp: input.expectedTimestamp,
+      secretProofBase64Url: input.secretProofBase64Url,
+    });
+    if (!validSecret) {
+      return { ok: false, reason: "invalid_relay_secret" };
+    }
   }
 
   const rawPublicKey = decodeBase64Url(input.publicKeyBase64Url);
