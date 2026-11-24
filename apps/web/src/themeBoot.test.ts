@@ -10,7 +10,7 @@ import {
   isKnownThemePreference,
   publishedThemeDefinitions,
   resolveThemeAppearance,
-  ANKIEL_CHAT_THEME,
+  ORCHID_THEME,
   EMBER_THEME,
   GROVE_THEME,
   IRIS_THEME,
@@ -155,14 +155,14 @@ describe("index.html boot script", () => {
   }> = [
     { name: "no stored preference on a dark OS", storage: {}, prefersDark: true },
     {
-      name: "Ankiel Chat follows a dark OS",
-      storage: { [THEME_STORAGE_KEY]: "ankiel-chat", [THEME_FOLLOW_SYSTEM_STORAGE_KEY]: "true" },
+      name: "Orchid follows a dark OS",
+      storage: { [THEME_STORAGE_KEY]: "orchid", [THEME_FOLLOW_SYSTEM_STORAGE_KEY]: "true" },
       prefersDark: true,
     },
     {
-      name: "an explicit global dark mode applies to Ankiel Chat",
+      name: "an explicit global dark mode applies to Orchid",
       storage: {
-        [THEME_STORAGE_KEY]: "ankiel-chat",
+        [THEME_STORAGE_KEY]: "orchid",
         [THEME_APPEARANCE_MODE_STORAGE_KEY]: "dark",
         [THEME_FOLLOW_SYSTEM_STORAGE_KEY]: "false",
       },
@@ -194,8 +194,8 @@ describe("index.html boot script", () => {
       prefersDark: true,
     },
     {
-      name: "legacy ankiel-chat-dark resolves to dark Ankiel Chat",
-      storage: { [THEME_STORAGE_KEY]: "ankiel-chat-dark" },
+      name: "legacy orchid-dark resolves to dark Orchid",
+      storage: { [THEME_STORAGE_KEY]: "orchid-dark" },
       prefersDark: true,
     },
     {
@@ -310,7 +310,7 @@ describe("index.html boot script", () => {
   });
 
   it("keeps every built-in boot splash in sync with the real palettes", () => {
-    for (const theme of [ANKIEL_CHAT_THEME, GROVE_THEME, OCEAN_THEME, EMBER_THEME, IRIS_THEME]) {
+    for (const theme of [ORCHID_THEME, GROVE_THEME, OCEAN_THEME, EMBER_THEME, IRIS_THEME]) {
       expect(theme.appearance).toBe("light");
       for (const mode of ["light", "dark"] as const) {
         const colors = getThemeColorsForMode(theme, mode);
@@ -335,7 +335,7 @@ describe("index.html boot script", () => {
 
   it("applies the matching half of an automatic mix to the splash", () => {
     const storage = {
-      [THEME_STORAGE_KEY]: "ankiel-chat",
+      [THEME_STORAGE_KEY]: "orchid",
       [THEME_APPEARANCE_MODE_STORAGE_KEY]: "system",
       "ankielcode:theme-halves:v1": JSON.stringify({ dark: GROVE_THEME.id }),
     };
@@ -349,9 +349,9 @@ describe("index.html boot script", () => {
 
     const light = runBootScript({ storage, prefersDark: false });
     expect(light.isDark).toBe(false);
-    expect(light.themeId).toBe("ankiel-chat");
+    expect(light.themeId).toBe("orchid");
     expect(light.bootVariables["--boot-background"]).toBe(
-      getThemeColorsForMode(ANKIEL_CHAT_THEME, "light")!.canvas,
+      getThemeColorsForMode(ORCHID_THEME, "light")!.canvas,
     );
   });
 

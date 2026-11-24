@@ -7,10 +7,10 @@ import {
   type MobileThemeVariables,
 } from "./mobileTheme";
 
-import { ANKIEL_CHAT_THEME } from "@ankielcode/shared/themePalettes";
+import { ORCHID_THEME } from "@ankielcode/shared/themePalettes";
 
 const MOBILE_THEME_VARIABLE_NAMES = Object.keys(
-  createMobileThemeVariables(ANKIEL_CHAT_THEME.colors, "light"),
+  createMobileThemeVariables(ORCHID_THEME.colors, "light"),
 ) as ReadonlyArray<MobileThemeVariable>;
 
 export function readDefaultMobileThemeVariables(

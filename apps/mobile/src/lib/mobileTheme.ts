@@ -1,6 +1,6 @@
 import {
   BUILT_IN_THEMES,
-  ANKIEL_CHAT_THEME,
+  ORCHID_THEME,
   ANKIEL_CODE_LIGHT_THEME_COLORS,
   ANKIEL_CODE_DARK_THEME_COLORS,
   getThemeColorsForAppearance,
@@ -455,7 +455,7 @@ export function getMobileThemeColors(
   if (themeId === DEFAULT_MOBILE_THEME_ID) {
     return appearance === "dark" ? ANKIEL_CODE_DARK_THEME_COLORS : ANKIEL_CODE_LIGHT_THEME_COLORS;
   }
-  const theme = BUILT_IN_THEMES.find((candidate) => candidate.id === themeId) ?? ANKIEL_CHAT_THEME;
+  const theme = BUILT_IN_THEMES.find((candidate) => candidate.id === themeId) ?? ORCHID_THEME;
   return getThemeColorsForAppearance(theme, appearance) ?? theme.colors;
 }
 
@@ -470,7 +470,7 @@ export function getMobileThemeVariables(
       ? appearance === "light"
         ? colors.toolbarControlHover
         : colors.sidebarRowActive
-      : themeId === "ankiel-chat"
+      : themeId === "orchid"
         ? appearance === "light"
           ? colors.toolbarControl
           : colors.surface
@@ -492,9 +492,9 @@ export function getMobileThemeVariables(
     mobileColors,
     appearance,
     groupedCard,
-    themeId === "ankiel-chat" && appearance === "dark"
+    themeId === "orchid" && appearance === "dark"
       ? [colors.messageActionForeground, colors.messageAction]
-      : themeId !== DEFAULT_MOBILE_THEME_ID && themeId !== "ankiel-chat"
+      : themeId !== DEFAULT_MOBILE_THEME_ID && themeId !== "orchid"
         ? [colors.messageAction, colors.messageActionForeground]
         : undefined,
   );
@@ -508,7 +508,7 @@ export function getMobileThemePreviewColors(
 ): ThemePreviewColors {
   if (themeId === DEFAULT_MOBILE_THEME_ID || themeId === "material-you")
     return STANDARD_THEME_PREVIEW_COLORS[appearance];
-  const theme = BUILT_IN_THEMES.find((candidate) => candidate.id === themeId) ?? ANKIEL_CHAT_THEME;
+  const theme = BUILT_IN_THEMES.find((candidate) => candidate.id === themeId) ?? ORCHID_THEME;
   const colors = getThemeColorsForAppearance(theme, appearance) ?? theme.colors;
   return {
     canvas: themeColorToNativeColor(colors.canvas),

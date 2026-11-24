@@ -110,7 +110,7 @@ const WHOLE_TEXT_NAMES = new Set([
 // Names shown as-is in every language. Removed from the text before looking for words.
 const PROPER_NOUNS = [
   "Ankiel Code",
-  "Ankiel Chat",
+  "Orchid",
   "Ankiel",
   "GitHub",
   "GitLab",

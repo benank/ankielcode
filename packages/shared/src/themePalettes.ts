@@ -1,4 +1,4 @@
-export const BUILT_IN_THEME_IDS = ["ankiel-chat", "grove", "ocean", "ember", "iris"] as const;
+export const BUILT_IN_THEME_IDS = ["orchid", "grove", "ocean", "ember", "iris"] as const;
 
 export const MOBILE_DEFAULT_THEME_ID = "ankiel-code";
 
@@ -10,7 +10,7 @@ export const RESERVED_THEME_IDS: ReadonlySet<string> = new Set([
   "light",
   "dark",
   ...BUILT_IN_THEME_IDS,
-  "ankiel-chat-dark",
+  "orchid-dark",
   "ankiel-grove",
   "ankiel-ocean",
   "ankiel-ember",
@@ -235,9 +235,9 @@ export const ANKIEL_CODE_DARK_THEME_COLORS: ThemeColors = {
   terminalScrollbarHover: "#363636",
 };
 
-export const ANKIEL_CHAT_THEME: ThemeDefinition = {
-  id: "ankiel-chat",
-  label: "Ankiel Chat",
+export const ORCHID_THEME: ThemeDefinition = {
+  id: "orchid",
+  label: "Orchid",
   appearance: "light",
   colors: {
     canvas: "oklch(0.982446 0.010114 325.653)",
@@ -911,7 +911,7 @@ export const IRIS_THEME: ThemeDefinition = {
 };
 
 export const BUILT_IN_THEMES: ReadonlyArray<ThemeDefinition> = [
-  ANKIEL_CHAT_THEME,
+  ORCHID_THEME,
   GROVE_THEME,
   OCEAN_THEME,
   EMBER_THEME,

@@ -52,7 +52,7 @@
         // Keep this small boot-time copy in sync with the built-in palettes so
         // the selected theme is visible before the app has mounted.
         const BUILT_IN_THEME_PALETTES = {
-          "ankiel-chat": {
+          orchid: {
             light: {
               background: "oklch(0.982446 0.010114 325.653)",
               foreground: "oklch(0.325698 0.116116 325.037)",
@@ -133,12 +133,12 @@
           "system",
           "light",
           "dark",
-          "ankiel-chat",
+          "orchid",
           "grove",
           "ocean",
           "ember",
           "iris",
-          "ankiel-chat-dark",
+          "orchid-dark",
           "ankiel-grove",
           "ankiel-ocean",
           "ankiel-ember",
@@ -222,16 +222,16 @@
           const storedTheme = window.localStorage.getItem("ankielcode:theme");
           const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
           const LEGACY_THEME_IDS = {
-            "ankiel-chat-dark": "ankiel-chat",
+            "orchid-dark": "orchid",
             "ankiel-grove": "grove",
             "ankiel-ocean": "ocean",
             "ankiel-ember": "ember",
             "ankiel-iris": "iris",
           };
-          const isLegacyAnkielChatDark = storedTheme === "ankiel-chat-dark";
+          const isLegacyOrchidDark = storedTheme === "orchid-dark";
           const themeId =
             storedTheme === null ? "" : (LEGACY_THEME_IDS[storedTheme] ?? storedTheme);
-          const legacyMode = isLegacyAnkielChatDark ? "dark" : null;
+          const legacyMode = isLegacyOrchidDark ? "dark" : null;
           const builtInModes = BUILT_IN_THEME_MODES[themeId] ?? null;
           const customTheme = builtInModes ? null : findCustomTheme(themeId);
           const themeModes =

@@ -28,7 +28,7 @@ on:
         type: choice
         options:
           - ankiel-code
-          - ankiel-chat
+          - orchid
           - grove
           - ocean
           - ember

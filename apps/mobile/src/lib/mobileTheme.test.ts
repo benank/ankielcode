@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import {
   BUILT_IN_THEME_IDS,
   BUILT_IN_THEMES,
-  ANKIEL_CHAT_THEME,
+  ORCHID_THEME,
   ANKIEL_CODE_LIGHT_THEME_COLORS,
   ANKIEL_CODE_DARK_THEME_COLORS,
   MOBILE_THEME_IDS,
@@ -58,7 +58,7 @@ function compositeOver(overlay: string, background: string): string {
 
 describe("mobile themes", () => {
   it("declares every runtime theme variable in the static stylesheet", () => {
-    const generatedVariables = createMobileThemeVariables(ANKIEL_CHAT_THEME.colors, "light");
+    const generatedVariables = createMobileThemeVariables(ORCHID_THEME.colors, "light");
     expect(Object.keys(readDefaultMobileThemeVariables("light")).sort()).toEqual(
       Object.keys(generatedVariables).sort(),
     );
@@ -239,11 +239,11 @@ describe("mobile themes", () => {
   });
 
   it("changes either theme without switching the active appearance", () => {
-    const themeIds = { light: "ankiel-chat", dark: "grove" } as const;
+    const themeIds = { light: "orchid", dark: "grove" } as const;
     expect(createMobileThemeSelectionPatch(themeIds, "light", "dark", "ocean")).toEqual({
-      lightThemeId: "ankiel-chat",
+      lightThemeId: "orchid",
       darkThemeId: "ocean",
-      themeId: "ankiel-chat",
+      themeId: "orchid",
     });
     expect(createMobileThemeSelectionPatch(themeIds, "light", "light", "iris")).toEqual({
       lightThemeId: "iris",
