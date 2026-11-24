@@ -209,9 +209,8 @@ const lockTargets = (encoded: unknown, entry: Entry): ReadonlyArray<Segments> =>
 };
 
 /**
- * A user's stored default runtime mode can sit above a ceiling deployed after it was chosen, and
- * the built-in default is the broadest mode. Every new thread would then be refused, so the
- * effective default is the ceiling instead. The stored value is untouched and returns with the
+ * A default runtime mode can sit above a managed ceiling. New threads inherit the ceiling in
+ * that case. The stored value is untouched and returns with the
  * policy's removal; existing threads keep their modes and are refused turns instead.
  */
 const clampDefaultRuntimeModes = (

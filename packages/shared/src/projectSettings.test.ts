@@ -41,18 +41,30 @@ describe("resolveProjectSettings", () => {
     const resolved = resolveProjectSettings(
       {
         ...DEFAULT_SERVER_SETTINGS,
-        defaultRuntimeMode: "full-access",
-        projectSettingsOverrides: { [projectId]: { defaultRuntimeMode: undefined } as never },
+        defaultAutoPull: true,
+        projectSettingsOverrides: { [projectId]: { defaultAutoPull: undefined } as never },
       },
       projectId,
     );
-    expect(resolved.settings.defaultRuntimeMode).toBe("full-access");
-    expect(resolved.sources.defaultRuntimeMode).toBe("environment");
+    expect(resolved.settings.defaultAutoPull).toBe(true);
+    expect(resolved.sources.defaultAutoPull).toBe("environment");
     expect(
       hasProjectSettingsOverrides({
-        projectSettingsOverrides: { [projectId]: { defaultRuntimeMode: undefined } as never },
+        projectSettingsOverrides: { [projectId]: { defaultAutoPull: undefined } as never },
       }),
     ).toBe(false);
+  });
+
+  it("uses the environment permission mode for new chats even with a legacy project override", () => {
+    const settings = applyServerSettingsPatch(DEFAULT_SERVER_SETTINGS, {
+      defaultRuntimeMode: "auto-accept-edits",
+      projectSettingsOverrides: {
+        [projectId]: { defaultRuntimeMode: "approval-required" },
+      },
+    });
+    expect(resolveProjectSettings(settings, projectId).settings.defaultRuntimeMode).toBe(
+      "auto-accept-edits",
+    );
   });
 
   it("applies overrides per key and reports their source", () => {

@@ -367,6 +367,13 @@ describe("provider enabled defaults", () => {
   });
 });
 
+it("defaults permissions to Auto and retains a saved mode", () => {
+  expect(decodeServerSettings({}).defaultRuntimeMode).toBe("auto");
+  expect(decodeServerSettings({ defaultRuntimeMode: "full-access" }).defaultRuntimeMode).toBe(
+    "full-access",
+  );
+});
+
 describe("ServerSettings worktree defaults", () => {
   it("defaults the thread env mode to inherit and keeps stored values", () => {
     expect(decodeServerSettings({}).defaultThreadEnvMode).toBeNull();

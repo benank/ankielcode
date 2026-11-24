@@ -327,7 +327,8 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "default-permissions",
     title: msg("Permissions"),
     to: "/settings/threads",
-    scope: "project-defaults",
+    scope: "environment-defaults",
+    environmentOnly: true,
     searchTerms: [
       msg("new thread default runtime mode supervised approvals auto accept edits full access"),
     ],

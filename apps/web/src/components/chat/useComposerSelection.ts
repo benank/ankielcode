@@ -1,5 +1,6 @@
 import type { EnvironmentThreadShell } from "@ankielcode/client-runtime/state/shell";
 import type { UnifiedSettings } from "@ankielcode/contracts";
+import { RegistryContext } from "@effect/atom-react";
 import { useMessages } from "gt-react";
 import type { Dispatch } from "react";
 import type { ComposerThreadTarget, DraftSessionState } from "../../composerDraftStore";
@@ -14,8 +15,10 @@ import {
   RuntimeMode,
 } from "@ankielcode/contracts";
 import type { deriveThreadStructureRuntime } from "@ankielcode/client-runtime/state/thread-execution";
-import { type SetStateAction } from "react";
+import { useContext, type SetStateAction } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { serverEnvironment } from "../../state/server";
+import { useAtomCommand } from "../../state/use-atom-command";
 import { toastManager } from "../ui/toast";
 import { resolveAppModelSelectionForInstance } from "../../modelSelection";
 import {
@@ -94,6 +97,8 @@ export function useComposerSelection(input: ComposerSelectionInput) {
   const setComposerDraftRuntimeMode = useComposerDraftStore((store) => store.setRuntimeMode);
   const setDraftThreadContext = useComposerDraftStore((store) => store.setDraftThreadContext);
   const applyThreadModelPick = useApplyThreadModelPick();
+  const registry = useContext(RegistryContext);
+  const saveSettings = useAtomCommand(serverEnvironment.updateSettings);
 
   const handleRuntimeModeChange = (mode: RuntimeMode) => {
     if (mode === runtimeMode) return;
@@ -101,6 +106,9 @@ export function useComposerSelection(input: ComposerSelectionInput) {
     setComposerDraftRuntimeMode(composerDraftTarget, mode);
     if (isLocalDraftThread) {
       setDraftThreadContext(composerDraftTarget, { runtimeMode: mode });
+    }
+    if (registry.get(serverEnvironment.updateSettings.permissionAtom(environmentId))) {
+      void saveSettings({ environmentId, input: { patch: { defaultRuntimeMode: mode } } });
     }
     scheduleComposerFocus();
   };

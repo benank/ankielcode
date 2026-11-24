@@ -370,11 +370,6 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
             settingKeys={["defaultRuntimeMode"]}
             mixed={mixedPermissions}
             {...searchableSetting("default-permissions")}
-            description={
-              isProjectScope
-                ? gt("Permissions for new threads in this project.")
-                : gt("Default permissions for new threads. Projects can override them.")
-            }
             resetAction={
               settings.defaultRuntimeMode !== DEFAULT_SERVER_SETTINGS.defaultRuntimeMode ? (
                 <SettingResetButton

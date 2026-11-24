@@ -18,7 +18,6 @@ import {
   AuthOrchestrationOperateScope,
   CommandId,
   DEFAULT_PROVIDER_INTERACTION_MODE,
-  DEFAULT_RUNTIME_MODE,
   MessageId,
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   type EnvironmentId,
@@ -1074,7 +1073,7 @@ export function createThreadOutboxDelivery(): {
       queuedMessage,
       {
         modelSelection,
-        runtimeMode: DEFAULT_RUNTIME_MODE,
+        runtimeMode: serverConfig.settings.defaultRuntimeMode,
         interactionMode: DEFAULT_PROVIDER_INTERACTION_MODE,
       },
       serverConfig.providers,

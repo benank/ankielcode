@@ -393,6 +393,7 @@ function ThreadSettingsSessionProvider(
     favorites: legacyFavorites,
   }).favorites;
   const saveSettings = useAtomCommand(serverEnvironment.updateSettings, "model favorites update");
+  const saveDefaultPermission = useAtomCommand(serverEnvironment.updateSettings);
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- writes the one-time legacy model favorites migration to server settings once per connection
   useEffect(() => {
     if (
@@ -646,7 +647,19 @@ function ThreadSettingsSessionProvider(
     pendingHiddenKeys,
     runtimeMode: compatibleRuntimeMode,
     runtimeModeChoices,
-    onUpdateRuntimeMode: props.onUpdateRuntimeMode,
+    onUpdateRuntimeMode: (mode: RuntimeMode) => {
+      if (mode === props.runtimeMode) return;
+      props.onUpdateRuntimeMode(mode);
+      if (
+        environmentId &&
+        registry.get(serverEnvironment.updateSettings.permissionAtom(environmentId))
+      ) {
+        void saveDefaultPermission({
+          environmentId,
+          input: { patch: { defaultRuntimeMode: mode } },
+        });
+      }
+    },
     displayedDescriptors,
     promptTraits,
     displayedModelSelection: pendingModel?.selection ?? props.selectedModel,

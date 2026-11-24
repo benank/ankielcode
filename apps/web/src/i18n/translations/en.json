@@ -8445,8 +8445,6 @@
   "ebcfd96d4b112b4e": "None",
   "9db5fe9e87e35e10": "Fallback model not saved",
   "b0c77717b7d7b4a3": "New threads",
-  "3dee662c2b837a30": "Permissions for new threads in this project.",
-  "b886096e397a9d88": "Default permissions for new threads. Projects can override them.",
   "367269c9abaa3d2c": "Reset default permissions to default",
   "369554d95bf3fc1e": "Default permissions",
   "abe5615aea30066d": "Automatically pull",

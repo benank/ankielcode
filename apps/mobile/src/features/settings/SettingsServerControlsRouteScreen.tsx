@@ -58,7 +58,6 @@ const PAGE_TITLES: Record<SettingsPage, string> = {
 const PAGE_PROJECT_KEYS: Record<SettingsPage, readonly ProjectScopedServerSettingKey[]> = {
   threads: [
     "defaultThreadEnvMode",
-    "defaultRuntimeMode",
     "responseStreamingMode",
     "enableAgentBrowserAccess",
     "sidebarAutoSettleOnMerge",
