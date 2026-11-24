@@ -9,20 +9,6 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
-function formatDate(iso: string | null): string | null {
-  if (!iso) return null;
-  const parsed = Date.parse(iso);
-  if (Number.isNaN(parsed)) return null;
-  return new Date(parsed)
-    .toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      timeZone: "UTC",
-    })
-    .toUpperCase();
-}
-
 // Matches ankiel.com/public/favicon.svg.
 export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#161615"/><path transform="translate(7.45 7) scale(.09) translate(-40 -40)" d="M122.2 40h25.6l3.63 8.84L72.87 240H40ZM122.2 40h25.6L230 240h-32.87L118.57 48.84Z" fill="#f2f2ee"/></svg>`;
 
@@ -43,10 +29,6 @@ export function renderLandingPage(repo: string, release: ReleaseSummary | null):
   const hasMac = Boolean(release?.downloads.macArm64Dmg);
   const hasWin = Boolean(release?.downloads.winX64Exe);
   const hasAnyDownload = hasMac || hasWin;
-  const publishedDate = formatDate(release?.publishedAt ?? null);
-  const releaseTagLabel = release
-    ? `v${escapeHtml(release.version)}${publishedDate ? ` &middot; ${escapeHtml(publishedDate)}` : ""}`
-    : "INITIAL BUILD IN PROGRESS";
 
   const macHref = hasMac ? "/download/mac" : allReleasesUrl;
   const winHref = hasWin ? "/download/win" : allReleasesUrl;
@@ -57,25 +39,20 @@ export function renderLandingPage(repo: string, release: ReleaseSummary | null):
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#080808" />
-  <title>ANKIEL CODE — Self-Hosted Agent Orchestration</title>
-  <meta name="description" content="Self-hosted orchestration for all your coding agents. Syncs with your phone. Open source for macOS and Windows." />
+  <meta name="theme-color" content="#030508" />
+  <title>ANKIEL CODE — All your agents in one spot.</title>
+  <meta name="description" content="Use Claude Code, Codex, and every other coding harness in a single interface. Free and open source with self hosted sync for your phone." />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <style>
     :root {
       color-scheme: dark;
-      --paper: #080808;
-      --surface: #0d0d0d;
-      --ink: #f2f2ee;
-      --muted: #8a8982;
-      --faint: #55544f;
-      --rule: rgba(242, 242, 238, 0.1);
-      --rule-strong: rgba(242, 242, 238, 0.22);
-      --ember: #d95d26;
-      --amber: #e2964a;
-      --steel: #3b7ea8;
+      --bg: #030508;
+      --ink: #f5f8fc;
+      --muted: rgba(226, 236, 248, 0.58);
+      --faint: rgba(226, 236, 248, 0.34);
+      --rule: rgba(226, 236, 248, 0.1);
       --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      --sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Inter", "Segoe UI", sans-serif;
+      --sans: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
     }
 
     * { box-sizing: border-box; }
@@ -83,8 +60,7 @@ export function renderLandingPage(repo: string, release: ReleaseSummary | null):
     html, body {
       margin: 0;
       padding: 0;
-      min-height: 100%;
-      background-color: var(--paper);
+      background: var(--bg);
       color: var(--ink);
       font-family: var(--sans);
       -webkit-font-smoothing: antialiased;
@@ -92,58 +68,49 @@ export function renderLandingPage(repo: string, release: ReleaseSummary | null):
       overflow-x: hidden;
     }
 
-    /* Subtle atmospheric burnt-horizon glow + micro halftone dot matrix */
-    .atmosphere {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
-
-    .atmosphere::before {
-      content: "";
-      position: absolute;
-      inset: -12% -10% auto -10%;
-      height: 520px;
-      background:
-        radial-gradient(58% 42% at 78% 10%, rgba(59, 126, 168, 0.22) 0%, rgba(59, 126, 168, 0.06) 45%, transparent 72%),
-        radial-gradient(46% 24% at 68% 25%, rgba(217, 93, 38, 0.22) 0%, rgba(226, 150, 74, 0.08) 44%, transparent 76%),
-        radial-gradient(38% 18% at 86% 32%, rgba(217, 68, 24, 0.14) 0%, transparent 70%);
-      filter: blur(28px);
-      transform: rotate(-7deg);
-    }
-
-    .atmosphere::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(rgba(242, 242, 238, 0.065) 0.75px, transparent 0.75px);
-      background-size: 4px 4px;
-      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.22) 55%, rgba(0, 0, 0, 0.05) 100%);
-      -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.22) 55%, rgba(0, 0, 0, 0.05) 100%);
-    }
-
     a { color: inherit; text-decoration: none; }
 
-    .frame {
+    .hero {
       position: relative;
-      z-index: 1;
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 28px 28px 64px;
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
+      padding: 34px 56px 56px;
+      overflow: hidden;
+      background: var(--bg);
     }
 
-    header {
+    canvas#canopy {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Soft atmospheric fade dissolving the burnt canopy cleanly into obsidian */
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(3, 5, 8, 0) 0%,
+        rgba(3, 5, 8, 0) 46%,
+        rgba(3, 5, 8, 0.84) 76%,
+        var(--bg) 100%
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .brand-bar {
+      position: relative;
+      z-index: 3;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      padding-bottom: 22px;
-      border-bottom: 1px solid var(--rule);
     }
 
     .brand {
@@ -153,397 +120,403 @@ export function renderLandingPage(repo: string, release: ReleaseSummary | null):
     }
 
     .brand svg {
-      height: 13px;
+      height: 12px;
       width: auto;
       display: block;
+      color: #ffffff;
     }
 
-    .brand-tag {
+    .brand span {
       font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.22em;
+      font-size: 10px;
+      letter-spacing: 0.28em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: rgba(235, 246, 255, 0.72);
       padding-left: 12px;
-      border-left: 1px solid var(--rule-strong);
+      border-left: 1px solid rgba(255, 255, 255, 0.22);
       line-height: 1;
     }
 
-    nav {
+    .hero-bottom {
+      position: relative;
+      z-index: 3;
       display: flex;
-      align-items: center;
-      gap: 22px;
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 56px;
+      margin-top: auto;
+      padding-top: 240px;
+    }
+
+    .hero-left {
+      max-width: 640px;
+    }
+
+    h1 {
+      margin: 0 0 22px;
+      font-size: clamp(44px, 5.2vw, 68px);
+      font-weight: 400;
+      line-height: 1.02;
+      letter-spacing: -0.042em;
+      color: #f7faff;
+    }
+
+    .sub {
+      margin: 0;
+      max-width: 560px;
+      font-size: clamp(16px, 1.55vw, 19px);
+      font-weight: 300;
+      line-height: 1.55;
+      letter-spacing: -0.01em;
       color: var(--muted);
     }
 
-    nav a { transition: color 0.16s ease; }
-    nav a:hover { color: var(--ink); }
-
-    main {
-      flex: 1;
+    .download-col {
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      padding: 76px 0 56px;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
       gap: 10px;
-      width: fit-content;
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 32px;
-      transition: color 0.16s ease;
+      width: 310px;
+      flex-shrink: 0;
     }
 
-    .eyebrow:hover { color: var(--ink); }
-
-    .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, var(--amber), var(--ember));
-      box-shadow: 0 0 10px rgba(217, 93, 38, 0.75);
-    }
-
-    .lockup {
+    .btn-glass {
       display: flex;
-      align-items: baseline;
-      flex-wrap: wrap;
-      gap: 18px 22px;
-      margin: 0 0 28px;
-    }
-
-    .lockup svg {
-      height: clamp(30px, 5.2vw, 52px);
-      width: auto;
-      display: block;
-    }
-
-    .lockup-sub {
-      font-family: var(--mono);
-      font-size: clamp(13px, 1.8vw, 17px);
-      font-weight: 400;
-      letter-spacing: 0.34em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    .statement {
-      margin: 0 0 42px;
-      max-width: 560px;
-      font-size: clamp(18px, 2.4vw, 22px);
-      font-weight: 300;
-      line-height: 1.5;
-      letter-spacing: -0.015em;
-      color: #d7d6d0;
-    }
-
-    .statement span {
-      color: var(--muted);
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 22px;
+      justify-content: space-between;
+      gap: 14px;
+      width: 100%;
+      padding: 14px 20px;
+      background: rgba(242, 248, 255, 0.06);
+      border: 1px solid rgba(220, 240, 255, 0.16);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: #f6faff;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
     }
 
-    .btn {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      padding: 13px 20px;
-      font-family: var(--mono);
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      border: 1px solid var(--rule-strong);
-      background: rgba(13, 13, 13, 0.82);
-      color: var(--ink);
-      transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+    .btn-glass:hover {
+      background: rgba(242, 248, 255, 0.12);
+      border-color: rgba(145, 232, 255, 0.48);
+      box-shadow: 0 0 30px -6px rgba(56, 214, 255, 0.35);
     }
 
-    .btn .arch {
-      color: var(--muted);
-      font-size: 11px;
-      letter-spacing: 0.08em;
+    .btn-glass.primary {
+      background: #f6faff;
+      color: #04070d;
+      border-color: #f6faff;
+      box-shadow: 0 0 38px -8px rgba(86, 220, 255, 0.52);
     }
 
-    .btn:hover {
-      border-color: rgba(226, 150, 74, 0.55);
-      background: rgba(20, 19, 18, 0.94);
-      box-shadow: 0 0 28px -8px rgba(217, 93, 38, 0.32);
-    }
-
-    .btn-primary {
-      background: var(--ink);
-      color: #0b0b0a;
-      border-color: var(--ink);
-      box-shadow: 0 0 32px -10px rgba(217, 93, 38, 0.45);
-    }
-
-    .btn-primary .arch {
-      color: #54534e;
-    }
-
-    .btn-primary:hover {
+    .btn-glass.primary:hover {
       background: #ffffff;
-      color: #080808;
       border-color: #ffffff;
-      box-shadow: 0 0 38px -6px rgba(217, 93, 38, 0.58), 0 0 18px -6px rgba(59, 126, 168, 0.35);
+      box-shadow: 0 0 44px -6px rgba(112, 232, 255, 0.68);
     }
 
-    .links-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px 18px;
+    .btn-glass .tag {
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.58;
+    }
+
+    .dl-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 2px 0;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--faint);
     }
 
-    .links-row a {
+    .dl-meta a {
       color: var(--muted);
-      transition: color 0.16s ease;
+      transition: color 0.15s ease;
     }
 
-    .links-row a:hover { color: var(--ink); }
+    .dl-meta a:hover { color: #ffffff; }
 
-    .horizon-rule {
-      height: 1px;
-      width: 100%;
-      margin: 64px 0 36px;
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        var(--rule) 12%,
-        rgba(59, 126, 168, 0.42) 52%,
-        rgba(217, 93, 38, 0.48) 76%,
-        var(--rule) 92%,
-        transparent 100%
-      );
+    /* Ultra-dark lower section */
+    .below {
+      background: var(--bg);
+      padding: 72px 56px 56px;
+      border-top: 1px solid var(--rule);
     }
 
-    .specs {
+    .below-inner {
+      max-width: 1328px;
+      margin: 0 auto;
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 32px 36px;
+      gap: 48px;
     }
 
-    .spec-index {
+    .col-kicker {
       font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.18em;
+      font-size: 10px;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
+      color: #62d8f8;
+      margin-bottom: 12px;
     }
 
-    .spec-index em {
-      font-style: normal;
-      color: var(--amber);
-      margin-right: 6px;
-    }
-
-    .spec p {
+    .col-text {
       margin: 0;
-      font-size: 14px;
+      font-size: 15px;
       line-height: 1.65;
-      color: var(--muted);
       font-weight: 300;
+      color: var(--muted);
     }
 
-    .spec strong {
+    .col-text strong {
       color: var(--ink);
       font-weight: 400;
     }
 
     .note {
-      margin-top: 40px;
-      padding: 14px 16px;
-      border-left: 1px solid rgba(217, 93, 38, 0.55);
-      background: rgba(242, 242, 238, 0.02);
+      max-width: 1328px;
+      margin: 48px auto 0;
+      padding-top: 24px;
+      border-top: 1px solid var(--rule);
       font-family: var(--mono);
       font-size: 11px;
       line-height: 1.7;
-      color: var(--muted);
+      color: var(--faint);
     }
 
     .note strong {
-      color: var(--ink);
+      color: var(--muted);
       font-weight: 500;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
     .note code {
-      color: #ebd0b5;
-      background: rgba(242, 242, 238, 0.06);
-      padding: 1px 5px;
+      color: #b7efff;
+      background: rgba(242, 248, 255, 0.06);
+      padding: 1px 6px;
     }
 
     footer {
-      margin-top: auto;
-      padding-top: 22px;
+      background: var(--bg);
+      padding: 24px 56px 36px;
       border-top: 1px solid var(--rule);
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
       justify-content: space-between;
       gap: 12px;
       font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.14em;
+      font-size: 10px;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--faint);
     }
 
     footer a {
       color: var(--muted);
-      transition: color 0.16s ease;
+      transition: color 0.15s ease;
     }
 
-    footer a:hover { color: var(--ink); }
+    footer a:hover { color: #ffffff; }
 
-    @media (max-width: 720px) {
-      .frame { padding: 22px 20px 44px; }
-      header { flex-wrap: wrap; }
-      nav { gap: 16px; }
-      main { padding: 52px 0 40px; }
-      .specs { grid-template-columns: 1fr; gap: 26px; }
-      .btn { width: 100%; justify-content: space-between; }
+    @media (max-width: 900px) {
+      .hero { padding: 26px 24px 44px; }
+      .hero-bottom {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 36px;
+        padding-top: 180px;
+      }
+      .download-col { width: 100%; max-width: 380px; }
+      .below { padding: 52px 24px 44px; }
+      .below-inner { grid-template-columns: 1fr; gap: 32px; }
+      footer { padding: 20px 24px 32px; }
     }
   </style>
 </head>
 <body>
-  <div class="atmosphere" aria-hidden="true"></div>
+  <section class="hero">
+    <canvas id="canopy" aria-hidden="true"></canvas>
 
-  <div class="frame">
-    <header>
+    <div class="brand-bar">
       <a class="brand" href="/">
         ${ANKIEL_WORDMARK_SVG}
-        <span class="brand-tag">Code</span>
+        <span>Code</span>
       </a>
-      <nav>
-        <a href="${escapeHtml(allReleasesUrl)}">Releases</a>
-        <a href="${escapeHtml(relayGuideUrl)}">Relay</a>
-        <a href="${escapeHtml(repoUrl)}">GitHub</a>
-        <a href="https://ankiel.com">Ankiel</a>
-      </nav>
-    </header>
+    </div>
 
-    <main>
-      <a class="eyebrow" href="${escapeHtml(notesHref)}">
-        <span class="dot" aria-hidden="true"></span>
-        <span>${releaseTagLabel}</span>
-      </a>
-
-      <h1 class="lockup">
-        <span class="sr-only">Ankiel Code</span>
-        ${ANKIEL_WORDMARK_SVG}
-        <span class="lockup-sub">Code</span>
-      </h1>
-
-      <p class="statement">
-        Self-hosted orchestration for all your coding agents.
-        <span>Syncs with your phone. Runs locally on your machines.</span>
-      </p>
-
-      <div class="actions" id="download-buttons">
-        <a class="btn btn-primary" id="btn-mac" href="${escapeHtml(macHref)}">
-          <span>${hasMac ? "Download macOS" : "macOS Releases"}</span>
-          <span class="arch">ARM64 &middot; .DMG</span>
-        </a>
-        <a class="btn" id="btn-win" href="${escapeHtml(winHref)}">
-          <span>${hasWin ? "Download Windows" : "Windows Releases"}</span>
-          <span class="arch">X64 &middot; .EXE</span>
-        </a>
+    <div class="hero-bottom">
+      <div class="hero-left">
+        <h1>All your agents<br/>in one spot.</h1>
+        <p class="sub">Use Claude Code, Codex, and every other coding harness in a single interface. Free and open source with self hosted sync for your phone.</p>
       </div>
 
-      <div class="links-row">
-        <a href="${escapeHtml(notesHref)}">${release ? `Release notes (${escapeHtml(release.tag)})` : "View GitHub Releases"}</a>
-        ${release?.downloads.checksums ? '<span>/</span><a href="/download/checksums">SHA256SUMS.txt</a>' : ""}
-        <span>/</span>
-        <a href="${escapeHtml(repoUrl)}">Source on GitHub</a>
+      <div class="download-col" id="download-buttons">
+        <a class="btn-glass primary" id="btn-mac" href="${escapeHtml(macHref)}">
+          <span>${hasMac ? "Download for macOS" : "macOS Releases"}</span>
+          <span class="tag">ARM64 &middot; .DMG</span>
+        </a>
+        <a class="btn-glass" id="btn-win" href="${escapeHtml(winHref)}">
+          <span>${hasWin ? "Download for Windows" : "Windows Releases"}</span>
+          <span class="tag">X64 &middot; .EXE</span>
+        </a>
+        <a class="btn-glass" href="${escapeHtml(repoUrl)}">
+          <span>GitHub</span>
+          <span class="tag">SOURCE &rarr;</span>
+        </a>
+        <div class="dl-meta">
+          <a href="${escapeHtml(notesHref)}">${release ? `v${escapeHtml(release.version)} notes` : "Releases"}</a>
+          ${release?.downloads.checksums ? '<a href="/download/checksums">SHA256SUMS</a>' : `<a href="${escapeHtml(relayGuideUrl)}">Self-host relay</a>`}
+        </div>
       </div>
+    </div>
+  </section>
 
-      <div class="horizon-rule" aria-hidden="true"></div>
+  <section class="below">
+    <div class="below-inner">
+      <div>
+        <div class="col-kicker">01 &mdash; Orchestrate</div>
+        <p class="col-text"><strong>Every harness, one desk.</strong> Run Claude Code, Codex, Cursor, and OpenCode locally on your existing subscriptions.</p>
+      </div>
+      <div>
+        <div class="col-kicker">02 &mdash; Phone Sync</div>
+        <p class="col-text"><strong>Control from anywhere.</strong> Pair your phone by QR over a self-hosted <a href="${escapeHtml(relayGuideUrl)}" style="text-decoration:underline;text-underline-offset:3px;">Cloudflare relay</a> with zero accounts.</p>
+      </div>
+      <div>
+        <div class="col-kicker">03 &mdash; Sovereign</div>
+        <p class="col-text"><strong>Zero telemetry, direct updates.</strong> Local state on your machine with automatic updates straight from GitHub Releases.</p>
+      </div>
+    </div>
 
-      <section class="specs" aria-label="Architecture">
-        <div class="spec">
-          <div class="spec-index"><em>01</em> Orchestrate</div>
-          <p><strong>One terminal-grade desk for every agent.</strong> Drive Claude Code, Codex, Cursor, OpenCode, and more with your own subscriptions.</p>
-        </div>
-        <div class="spec">
-          <div class="spec-index"><em>02</em> Phone Sync</div>
-          <p><strong>Carry every workstation in your pocket.</strong> Pair your phone by QR over a self-hosted Cloudflare Durable Objects relay—no accounts or sign-in.</p>
-        </div>
-        <div class="spec">
-          <div class="spec-index"><em>03</em> Self-Hosted</div>
-          <p><strong>Zero telemetry, direct updates.</strong> Local state, cryptographic host keys, and automatic desktop updates straight from GitHub Releases.</p>
-        </div>
-      </section>
+    ${
+      hasAnyDownload
+        ? `<div class="note">
+      <strong>Unsigned preview:</strong>
+      macOS &mdash; System Settings &rarr; Privacy &amp; Security &rarr; Open Anyway (or <code>xattr -cr "/Applications/Ankiel Code.app"</code>).
+      Windows &mdash; More info &rarr; Run anyway.
+    </div>`
+        : `<div class="note">
+      <strong>First release coming soon:</strong>
+      Direct installers for macOS (Apple Silicon) and Windows (x64) appear here automatically once the first GitHub Release is published.
+    </div>`
+    }
+  </section>
 
-      ${
-        hasAnyDownload
-          ? `<div class="note">
-        <strong>Unsigned preview:</strong>
-        macOS — System Settings &rarr; Privacy &amp; Security &rarr; Open Anyway (or <code>xattr -cr "/Applications/Ankiel Code.app"</code>).
-        Windows — More info &rarr; Run anyway.
-      </div>`
-          : `<div class="note">
-        <strong>First release coming soon:</strong>
-        Installers for macOS (Apple Silicon) and Windows (x64) link here automatically once the first GitHub Release is published.
-      </div>`
-      }
-    </main>
-
-    <footer>
-      <span>ANKIEL CODE &middot; MIT</span>
-      <span><a href="${escapeHtml(repoUrl)}">${escapeHtml(repo)}</a> &middot; <a href="https://ankiel.com">ankiel.com</a></span>
-    </footer>
-  </div>
+  <footer>
+    <span>ANKIEL CODE &middot; MIT</span>
+    <span><a href="${escapeHtml(allReleasesUrl)}">Releases</a> &middot; <a href="${escapeHtml(repoUrl)}">${escapeHtml(repo)}</a> &middot; <a href="https://ankiel.com">ankiel.com</a></span>
+  </footer>
 
   <script>
     (function () {
       var ua = navigator.userAgent || "";
-      var isWin = /Windows/i.test(ua);
-      var macBtn = document.getElementById("btn-mac");
-      var winBtn = document.getElementById("btn-win");
-      var container = document.getElementById("download-buttons");
-      if (isWin && macBtn && winBtn && container) {
-        macBtn.classList.remove("btn-primary");
-        winBtn.classList.add("btn-primary");
-        container.insertBefore(winBtn, macBtn);
+      if (/Windows/i.test(ua)) {
+        var macBtn = document.getElementById("btn-mac");
+        var winBtn = document.getElementById("btn-win");
+        var container = document.getElementById("download-buttons");
+        if (macBtn && winBtn && container) {
+          macBtn.classList.remove("primary");
+          winBtn.classList.add("primary");
+          container.insertBefore(winBtn, macBtn);
+        }
       }
+
+      var canvas = document.getElementById("canopy");
+      if (!canvas || !canvas.getContext) return;
+      var ctx = canvas.getContext("2d");
+
+      function hash(x, y) {
+        var n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+        return n - Math.floor(n);
+      }
+
+      function renderCanopy() {
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var w = canvas.clientWidth;
+        var h = canvas.clientHeight;
+        if (!w || !h) return;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        ctx.fillStyle = "#030508";
+        ctx.fillRect(0, 0, w, h);
+
+        // 1. Parabolic burnt white -> glacier cyan -> deep sapphire canopy
+        var deep = ctx.createRadialGradient(w * 0.5, -h * 0.18, h * 0.05, w * 0.5, h * 0.02, w * 0.68);
+        deep.addColorStop(0.0, "rgba(255, 255, 255, 0.96)");
+        deep.addColorStop(0.16, "rgba(195, 248, 255, 0.92)");
+        deep.addColorStop(0.32, "rgba(42, 206, 245, 0.78)");
+        deep.addColorStop(0.54, "rgba(16, 86, 204, 0.52)");
+        deep.addColorStop(0.76, "rgba(6, 22, 72, 0.24)");
+        deep.addColorStop(1.0, "rgba(3, 5, 8, 0)");
+        ctx.fillStyle = deep;
+        ctx.fillRect(0, 0, w, h);
+
+        // 2. Asymmetric burnt white-hot crown highlight
+        var flare = ctx.createRadialGradient(w * 0.62, h * 0.04, 10, w * 0.56, h * 0.08, w * 0.42);
+        flare.addColorStop(0.0, "rgba(255, 255, 255, 0.92)");
+        flare.addColorStop(0.24, "rgba(130, 242, 255, 0.55)");
+        flare.addColorStop(0.58, "rgba(14, 114, 224, 0.22)");
+        flare.addColorStop(1.0, "rgba(3, 5, 8, 0)");
+        ctx.fillStyle = flare;
+        ctx.fillRect(0, 0, w, h);
+
+        // 3. Secondary deep cobalt left wing
+        var leftWing = ctx.createRadialGradient(w * 0.22, h * 0.14, 10, w * 0.24, h * 0.18, w * 0.45);
+        leftWing.addColorStop(0.0, "rgba(32, 182, 236, 0.48)");
+        leftWing.addColorStop(0.45, "rgba(12, 58, 168, 0.34)");
+        leftWing.addColorStop(1.0, "rgba(3, 5, 8, 0)");
+        ctx.fillStyle = leftWing;
+        ctx.fillRect(0, 0, w, h);
+
+        // 4. Static ASCII/glyph dither modulated by luminance
+        var cellW = 10;
+        var cellH = 14;
+        var glyphs = [" ", ".", ":", "+", "x", "0", "8", "#", "A", "N", "K"];
+        ctx.font = '500 10px ui-monospace, "SF Mono", Menlo, monospace';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        for (var y = 8; y < h * 0.72; y += cellH) {
+          for (var x = 6; x < w; x += cellW) {
+            var nx = (x - w * 0.5) / (w * 0.54);
+            var ny = (y + h * 0.08) / (h * 0.64);
+            var dist = Math.sqrt(nx * nx * 0.82 + ny * ny * 1.18);
+            var baseLum = Math.max(0, 1 - dist);
+            if (baseLum <= 0.04) continue;
+
+            var lum = Math.max(0, Math.min(1, baseLum + (hash(x, y) - 0.5) * 0.24));
+            if (lum < 0.08) continue;
+
+            var ch = glyphs[Math.min(glyphs.length - 1, Math.floor(lum * glyphs.length))];
+            if (ch === " ") continue;
+
+            var alpha = Math.min(0.42, lum * 0.44);
+            ctx.fillStyle = lum > 0.72
+              ? "rgba(255, 255, 255, " + alpha + ")"
+              : lum > 0.42
+                ? "rgba(170, 244, 255, " + alpha + ")"
+                : "rgba(82, 168, 255, " + (alpha * 0.85) + ")";
+            ctx.fillText(ch, x, y);
+          }
+        }
+      }
+
+      renderCanopy();
+      var resizeTimer = 0;
+      window.addEventListener("resize", function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(renderCanopy, 120);
+      });
     })();
   </script>
 </body>
