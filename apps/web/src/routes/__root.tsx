@@ -43,7 +43,6 @@ import {
   selectProjectGroupingSettings,
 } from "@ankielcode/client-runtime/state/project-grouping";
 import { useUiStateStore } from "../uiStateStore";
-import { configureClientTracing } from "../observability/clientTracing";
 import { resolveInitialServerAuthGateState } from "../environments/primary";
 import { hasHostedPairingRequest, isHostedStaticApp } from "../hostedPairing";
 import { useHostedPromptLinkLanding } from "../components/promptLinks/HostedPromptLinkLanding";
@@ -75,10 +74,6 @@ export const Route = createRootRoute({
     }
 
     const authGateState = await resolveInitialServerAuthGateState();
-    if (authGateState.status === "authenticated") {
-      // Idempotent, so every navigation can ask for it.
-      void configureClientTracing();
-    }
     if (
       authGateState.status === "authenticated" &&
       getDesktopSnapShotBridge() &&
