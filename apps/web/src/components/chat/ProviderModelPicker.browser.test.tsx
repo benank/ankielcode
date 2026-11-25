@@ -154,6 +154,8 @@ it("opens thinking first and keeps the full picker open after choosing a model",
         triggerAriaLabel="Choose model"
         reasoningLevel={levels[model]?.at(-1) ?? null}
         onInstanceModelChange={(_, selected) => setModel(selected)}
+        leadingControl={<button type="button">Fast</button>}
+        trailingControl={<button type="button">Permissions</button>}
         effortControls={<PickerThinkingSlider value={levels[model]?.at(-1)} />}
       />
     );
@@ -170,12 +172,25 @@ it("opens thinking first and keeps the full picker open after choosing a model",
   await expect.element(modelList).not.toBeInTheDocument();
   const popup = slider.element().closest<HTMLElement>('[data-slot="popover-popup"]');
   const compactWidth = popup?.offsetWidth ?? 0;
+  const fast = page.getByRole("button", { name: "Fast", exact: true });
+  const permissions = page.getByRole("button", { name: "Permissions", exact: true });
+  expect(fast.element().getBoundingClientRect().right).toBeLessThan(
+    changeModel.element().getBoundingClientRect().left,
+  );
+  await expect.element(permissions).not.toBeInTheDocument();
 
   await changeModel.click();
   await expect.element(modelList).toHaveFocus();
   await expect.element(search).not.toBeInTheDocument();
   await expect.element(slider).not.toBeInTheDocument();
   await vi.waitFor(() => expect(popup?.offsetWidth).toBeGreaterThan(compactWidth));
+  const fullHeader = page.getByRole("button", { name: "Back to thinking level" }).element();
+  expect(fullHeader.getBoundingClientRect().right).toBeLessThan(
+    permissions.element().getBoundingClientRect().left,
+  );
+  expect(permissions.element().getBoundingClientRect().bottom).toBeLessThan(
+    modelList.element().getBoundingClientRect().top,
+  );
   const viewport = modelList.element().closest('[data-slot="popover-viewport"]');
   expect(viewport && getComputedStyle(viewport).overflowX).toBe("hidden");
   await userEvent.keyboard("{ArrowDown}");

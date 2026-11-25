@@ -28,6 +28,7 @@ import {
   ComposerEffortControls,
   ComposerFastToggle,
   ComposerPickerFooter,
+  ComposerPickerPermissions,
   describeComposerEffort,
 } from "./ComposerModelEffort";
 import type { useComposerProviderModel } from "./useComposerProviderModel";
@@ -228,14 +229,14 @@ export function ComposerControlsBar(props: {
       }
       leadingControl={traitsInput ? <ComposerFastToggle traits={traitsInput} /> : null}
       effortControls={<ComposerEffortControls traits={traitsInput} />}
-      footer={
-        <ComposerPickerFooter
-          traits={traitsInput}
+      trailingControl={
+        <ComposerPickerPermissions
           runtimeMode={compatibleRuntimeMode}
-          runtimeModeOptions={compatibleRuntimeModeOptions}
-          onRuntimeModeChange={handleRuntimeModeChange}
+          options={compatibleRuntimeModeOptions}
+          onChange={handleRuntimeModeChange}
         />
       }
+      footer={traitsInput ? <ComposerPickerFooter traits={traitsInput} /> : null}
       terminalOpen={terminalOpen}
       open={modelPickerOpen}
       instanceIndicatorBackground={

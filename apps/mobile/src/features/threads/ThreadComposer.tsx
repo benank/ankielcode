@@ -125,6 +125,10 @@ import {
 } from "../voice-input/ComposerDictationControl";
 import { useVoiceInputController } from "../voice-input/useVoiceInputController";
 import { resolveVoiceComposerPresentation } from "../voice-input/voiceInputPresentation";
+import {
+  compatibleRuntimeModeForChoices,
+  runtimeModeChoicesForSupportedModes,
+} from "./thread-settings-options";
 import type { ExistingThreadSettingsRouteParams } from "./ThreadSettingsSheet";
 import {
   useThreadSettingsSheetPresentation,
@@ -279,19 +283,23 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
   const [pendingNativeImageCount, setPendingNativeImageCount] = useState(0);
   const [pendingPastedTextAttachmentCount, setPendingPastedTextAttachmentCount] = useState(0);
   const settingsRoutePresentedRef = useRef(false);
+  const settingsInitialPageRef = useRef<"runtime" | undefined>(undefined);
   const settingsSheetPresentation = useThreadSettingsSheetPresentation({
     editorRef: inputRef,
     onPresent: () => {
       if (settingsRoutePresentedRef.current) return;
       settingsRoutePresentedRef.current = true;
+      const initialPage = settingsInitialPageRef.current;
+      const settingsPage = initialPage ? { initialPage } : {};
       // The draft composer edits the new-task flow, which owns its own settings route.
       navigation.dispatch(
         props.isDraft
-          ? StackActions.push("NewTaskThreadSettings")
+          ? StackActions.push("NewTaskThreadSettings", settingsPage)
           : StackActions.push("ThreadSettingsSheet", {
               environmentId: props.environmentId,
               threadId: props.selectedThread.id,
               draftKey: composerDraftKey,
+              ...settingsPage,
             } satisfies ExistingThreadSettingsRouteParams),
       );
     },
@@ -614,7 +622,19 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
         option.selection.instanceId === currentModelSelection.instanceId &&
         option.selection.model === currentModelSelection.model,
     ) ?? null;
-  const openSettings = () => {
+  const choosePermissions = runtimeModeChoicesForSupportedModes(
+    currentModelOption?.supportedRuntimeModes,
+  );
+  const shownPermission = compatibleRuntimeModeForChoices(
+    props.selectedThread.runtimeMode,
+    choosePermissions,
+  );
+  const permissionsLabel = choosePermissions.find(
+    (choice) => choice.mode === shownPermission,
+  )?.label;
+  const openSettings = (page?: "runtime") => {
+    if (settingsSheetPresentation.isActive) return;
+    settingsInitialPageRef.current = page;
     settingsSheetPresentation.open();
   };
 
@@ -738,6 +758,7 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
             );
           }
         }}
+        permissionsLabel={permissionsLabel === undefined ? undefined : messages(permissionsLabel)}
         onOpenSettings={openSettings}
       />
     </View>
@@ -833,7 +854,7 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
           <Button
             label={gt("Model unavailable. Open model settings.")}
             tone="text"
-            onPress={openSettings}
+            onPress={() => openSettings()}
           />
         ) : null}
 

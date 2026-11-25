@@ -9,6 +9,8 @@ import { useState } from "react";
 import { expect, it } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
 
+import "~/index.css";
+
 import { render } from "../../../test/render";
 import {
   ComposerEffortControls,
@@ -155,8 +157,14 @@ it("toggles the service tier with one bolt button", async () => {
   await using screen = await render(<Column compact />, { router: false }); // no routes involved
   const toggle = screen.getByRole("button", { name: "Fast mode" });
   await expect.element(toggle).toHaveAttribute("aria-pressed", "false");
+  const icon = toggle.element().querySelector("svg");
+  expect(icon && getComputedStyle(icon).fill).toBe("none");
+  expect(icon?.getBoundingClientRect().width).toBe(24);
+  const buttonWidth = toggle.element().getBoundingClientRect().width;
   await toggle.click();
   await expect.element(toggle).toHaveAttribute("aria-pressed", "true");
+  expect(icon && getComputedStyle(icon).fill).not.toBe("none");
+  expect(toggle.element().getBoundingClientRect().width).toBe(buttonWidth);
   await toggle.click();
   await expect.element(toggle).toHaveAttribute("aria-pressed", "false");
 });

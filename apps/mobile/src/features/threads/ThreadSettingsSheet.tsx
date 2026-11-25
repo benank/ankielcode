@@ -314,6 +314,7 @@ export type ExistingThreadSettingsRouteParams = {
   readonly environmentId: EnvironmentId;
   readonly threadId: ThreadId;
   readonly draftKey: string;
+  readonly initialPage?: "runtime";
 };
 
 type ThreadSettingsSessionValue = {
@@ -1561,6 +1562,7 @@ type ThreadSettingsPickerStackParams = {
 
 type ThreadSettingsPickerPresentation = {
   readonly onClose: () => void;
+  readonly initialPage?: "runtime";
 };
 
 const ThreadSettingsPickerStack = createNativeStackNavigator<ThreadSettingsPickerStackParams>();
@@ -1683,17 +1685,21 @@ function ThreadSettingsModelsScreen() {
 }
 
 function ThreadSettingsChoiceScreen() {
+  const presentation = useThreadSettingsPickerPresentation();
   const navigation = useNavigation<NativeStackNavigationProp<ThreadSettingsPickerStackParams>>();
   const route = useRoute<RouteProp<ThreadSettingsPickerStackParams, "ThreadSettingsChoice">>();
+  const direct = presentation.initialPage === "runtime";
+  const onDone = direct ? presentation.onClose : () => navigation.goBack();
 
   return (
     <>
-      <AppBar title={route.params.title} onBack={() => navigation.goBack()} hideBottomBorder />
+      <AppBar
+        title={route.params.title}
+        {...(direct ? { onClose: onDone } : { onBack: onDone })}
+        hideBottomBorder
+      />
       <ScreenContent>
-        <ThreadSettingsChoiceContent
-          submenu={route.params}
-          onSelected={() => navigation.goBack()}
-        />
+        <ThreadSettingsChoiceContent submenu={route.params} onSelected={onDone} />
       </ScreenContent>
     </>
   );
@@ -1702,14 +1708,13 @@ function ThreadSettingsChoiceScreen() {
 function ThreadSettingsPickerNavigator(props: ThreadSettingsPickerPresentation) {
   const screenOptions = useSheetStackOptions();
   const gt = useGT();
-  const presentation = {
-    onClose: props.onClose,
-  };
+  const direct = props.initialPage === "runtime";
+  const runtimeTitle = gt("Runtime", { $context: "agent permission mode setting" });
 
   return (
-    <ThreadSettingsPickerPresentationContext.Provider value={presentation}>
+    <ThreadSettingsPickerPresentationContext.Provider value={props}>
       <ThreadSettingsPickerStack.Navigator
-        initialRouteName="ThreadSettingsModels"
+        initialRouteName={direct ? "ThreadSettingsChoice" : "ThreadSettingsModels"}
         screenOptions={screenOptions}
       >
         <ThreadSettingsPickerStack.Screen
@@ -1720,6 +1725,7 @@ function ThreadSettingsPickerNavigator(props: ThreadSettingsPickerPresentation) 
         <ThreadSettingsPickerStack.Screen
           name="ThreadSettingsChoice"
           component={ThreadSettingsChoiceScreen}
+          {...(direct ? { initialParams: { kind: "runtime" as const, title: runtimeTitle } } : {})}
           options={({ route }) => ({ title: route.params.title })}
         />
       </ThreadSettingsPickerStack.Navigator>
@@ -1728,11 +1734,14 @@ function ThreadSettingsPickerNavigator(props: ThreadSettingsPickerPresentation) 
 }
 
 export function ThreadSettingsPickerScreen(
-  props: ThreadSettingsSessionProps & { readonly onClose: () => void },
+  props: ThreadSettingsSessionProps & ThreadSettingsPickerPresentation,
 ) {
   return (
     <ThreadSettingsSessionProvider {...props}>
-      <ThreadSettingsPickerNavigator onClose={props.onClose} />
+      <ThreadSettingsPickerNavigator
+        onClose={props.onClose}
+        {...(props.initialPage ? { initialPage: props.initialPage } : {})}
+      />
     </ThreadSettingsSessionProvider>
   );
 }
@@ -1795,6 +1804,7 @@ export function ExistingThreadSettingsRouteScreen({
       {...(lockedProviderInstanceId ? { lockedProviderInstanceId } : {})}
       providerGroups={groupByProvider(modelOptions)}
       selectedModel={modelSelection}
+      {...(route.params.initialPage ? { initialPage: route.params.initialPage } : {})}
       prompt={prompt}
       onPromptChange={(text) => setComposerDraftText(draftKey, text)}
       reportedModelSelection={reportedModelSelection}
@@ -1816,7 +1826,9 @@ export function ExistingThreadSettingsRouteScreen({
 }
 
 /** RNS owns nested sheet dismissal; Reasoning and Runtime remain ordinary pushes. */
-export function NewTaskThreadSettingsRouteScreen() {
+export function NewTaskThreadSettingsRouteScreen({
+  route,
+}: StaticScreenProps<{ readonly initialPage?: "runtime" } | undefined>) {
   const flow = useNewTaskFlow();
   const navigation = useNavigation<NativeStackNavigationProp<Record<string, object | undefined>>>();
   const optionDescriptors = resolveProviderOptionDescriptors({
@@ -1832,6 +1844,7 @@ export function NewTaskThreadSettingsRouteScreen() {
       {...(flow.selectedModel ? { providerInstanceId: flow.selectedModel.instanceId } : {})}
       providerGroups={flow.providerGroups}
       selectedModel={flow.selectedModel}
+      {...(route.params?.initialPage ? { initialPage: route.params.initialPage } : {})}
       prompt={flow.prompt}
       onPromptChange={flow.setPrompt}
       onSelectModel={(option) => flow.setSelectedModelKey(option.key, option.selection.options)}

@@ -33,6 +33,8 @@ import Animated, {
   ReduceMotion,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import Svg, { Path } from "react-native-svg";
+import { withUniwind } from "uniwind";
 import { useKeyboardState } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -83,10 +85,12 @@ type PickerProps = {
     options: ReadonlyArray<ProviderOptionSelection>,
     prompt: string,
   ) => void;
-  readonly onOpenSettings: () => void;
+  readonly permissionsLabel: string | undefined;
+  readonly onOpenSettings: (page?: "runtime") => void;
 };
 
 type Frame = { x: number; y: number; width: number; height: number };
+const ThemedSvg = withUniwind(Svg);
 const MENU_EASE = Easing.bezier(0.23, 1, 0.32, 1);
 const MENU_ENTER = FadeIn.duration(150).easing(MENU_EASE).reduceMotion(ReduceMotion.System);
 const MENU_RESIZE = LinearTransition.duration(180)
@@ -189,56 +193,98 @@ function ComposerModelPickerPanel(props: PickerProps & { maxHeight: number }) {
       style={{ maxHeight: props.maxHeight, borderRadius: modelsPage ? 24 : 20 }}
       className="px-2 pt-2"
     >
-      <View className="shrink-0">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={gt("{label}, {value}", {
-            label: modelsPage ? gt("Back to thinking level") : gt("Change model"),
-            value: modelLabel,
-          })}
-          accessibilityState={{ expanded: modelsPage }}
-          className="min-h-11 shrink-0 flex-row items-center justify-center gap-2 rounded-xl px-11 py-1 active:bg-subtle"
-          onPress={() => props.onPageChange(modelsPage ? "thinking" : "models")}
-        >
-          <ComposerModelIcon option={props.currentOption} surfaceColor={props.surfaceColor} />
-          <View className="min-w-0 shrink flex-row items-baseline gap-1">
-            <Text className="shrink text-sm font-ankiel-semibold text-foreground" numberOfLines={1}>
-              {modelLabel}
-            </Text>
-            {!modelsPage && level ? (
-              <Text className="shrink text-sm text-foreground-muted" numberOfLines={1}>
-                {level}
-              </Text>
-            ) : null}
-          </View>
-          <SymbolView
-            name={modelsPage ? "chevron.down" : "chevron.right"}
-            size={11}
-            tintColorClassName="accent-icon-muted"
-          />
-        </Pressable>
-        {fast ? (
+      <View className="shrink-0 flex-row items-center gap-1">
+        <View className="w-11">
+          {fast ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={gt("Fast mode")}
+              accessibilityState={{ selected: fast.enabled, disabled: optionsDisabled }}
+              disabled={optionsDisabled}
+              className="size-11 items-center justify-center rounded-xl active:bg-subtle disabled:opacity-50"
+              onPress={() => {
+                const options = applyProviderOptionSelection(descriptors, {
+                  id: fast.descriptor.id,
+                  value: fast.value,
+                });
+                if (options) props.onChangeOptions(options, props.prompt);
+              }}
+            >
+              <ThemedSvg
+                width={30}
+                height={30}
+                viewBox="0 0 24 24"
+                accessible={false}
+                colorClassName={fast.enabled ? "text-foreground" : "text-foreground-muted"}
+              >
+                <Path
+                  d="M13 2 3 14h8l-1 8 11-12h-8l1-8Z"
+                  fill={fast.enabled ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinejoin="round"
+                />
+              </ThemedSvg>
+            </Pressable>
+          ) : null}
+        </View>
+        <View className="min-w-0 flex-1 items-center">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={gt("Fast mode")}
-            accessibilityState={{ selected: fast.enabled, disabled: optionsDisabled }}
-            disabled={optionsDisabled}
-            className="absolute inset-y-0 left-0 min-h-11 min-w-11 items-center justify-center rounded-xl active:bg-subtle disabled:opacity-50"
-            onPress={() => {
-              const options = applyProviderOptionSelection(descriptors, {
-                id: fast.descriptor.id,
-                value: fast.value,
-              });
-              if (options) props.onChangeOptions(options, props.prompt);
-            }}
+            accessibilityLabel={gt("{label}, {value}", {
+              label: modelsPage ? gt("Back to thinking level") : gt("Change model"),
+              value: modelLabel,
+            })}
+            accessibilityState={{ expanded: modelsPage }}
+            className="min-h-11 max-w-full flex-row items-center justify-center gap-2 rounded-xl px-2 py-1 active:bg-subtle"
+            onPress={() => props.onPageChange(modelsPage ? "thinking" : "models")}
           >
+            <ComposerModelIcon option={props.currentOption} surfaceColor={props.surfaceColor} />
+            <View className="min-w-0 shrink flex-row items-baseline gap-1">
+              <Text
+                className="shrink text-sm font-ankiel-semibold text-foreground"
+                numberOfLines={1}
+              >
+                {modelLabel}
+              </Text>
+              {!modelsPage && level ? (
+                <Text className="shrink text-sm text-foreground-muted" numberOfLines={1}>
+                  {level}
+                </Text>
+              ) : null}
+            </View>
             <SymbolView
-              name={{ ios: fast.enabled ? "bolt.fill" : "bolt", android: "bolt" }}
-              size={15}
-              tintColorClassName={fast.enabled ? "accent-icon" : "accent-icon-muted"}
+              name={modelsPage ? "chevron.down" : "chevron.right"}
+              size={11}
+              tintColorClassName="accent-icon-muted"
             />
           </Pressable>
-        ) : null}
+        </View>
+        {modelsPage && props.permissionsLabel ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={gt("{label}, {value}", {
+              label: gt("Runtime", { $context: "agent permission mode setting" }),
+              value: props.permissionsLabel,
+            })}
+            className="min-h-11 max-w-[35%] flex-row items-center gap-1.5 rounded-xl px-2 active:bg-subtle"
+            onPress={() => props.onOpenSettings("runtime")}
+          >
+            <SymbolView
+              name={{ ios: "lock", android: "lock" }}
+              size={14}
+              tintColorClassName="accent-icon-muted"
+            />
+            <Text
+              className="shrink text-xs font-ankiel-medium text-foreground-muted"
+              numberOfLines={1}
+            >
+              {props.permissionsLabel}
+            </Text>
+          </Pressable>
+        ) : (
+          <View className="w-11" />
+        )}
       </View>
       {modelsPage ? (
         <>
@@ -381,7 +427,7 @@ function ComposerModelPickerPanel(props: PickerProps & { maxHeight: number }) {
         {modelsPage ? (
           <Pressable
             accessibilityRole="button"
-            onPress={props.onOpenSettings}
+            onPress={() => props.onOpenSettings()}
             className="mt-1 min-h-11 flex-row items-center justify-between gap-2 rounded-xl px-2 active:bg-subtle"
           >
             <Text className="text-xs font-ankiel-medium text-foreground-muted">
@@ -483,9 +529,9 @@ export function ComposerModelPicker(props: PickerProps) {
             hinge={hinge}
             onExit={() => setAnchor((current) => (current === anchor ? null : current))}
             onPageChange={changePage}
-            onOpenSettings={() => {
+            onOpenSettings={(page) => {
               close();
-              props.onOpenSettings();
+              props.onOpenSettings(page);
             }}
           />
         </OverlayPortal>

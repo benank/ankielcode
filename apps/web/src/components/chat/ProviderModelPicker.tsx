@@ -122,6 +122,7 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
   triggerDetail?: string | null;
   reasoningLevel?: string | null;
   leadingControl?: ReactNode;
+  trailingControl?: ReactNode;
   /** Composer shortcuts this trigger answers besides the picker's own. */
   triggerShortcuts?: string;
   effortControls?: ReactNode;
@@ -492,18 +493,21 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
               compactMenu ? "w-68" : "w-94",
             )}
           >
-            <div className="relative shrink-0 px-2 pt-2">
-              {props.leadingControl ? (
-                <div className="absolute inset-s-2 inset-y-0 flex items-center pt-2">
-                  {props.leadingControl}
-                </div>
-              ) : null}
+            <div
+              className={cn(
+                "grid shrink-0 items-center gap-1 px-2 pt-2",
+                compactMenu
+                  ? "grid-cols-[2rem_minmax(0,1fr)_2rem]"
+                  : "grid-cols-[auto_minmax(0,1fr)_auto]",
+              )}
+            >
+              <div className="min-w-8">{props.leadingControl}</div>
               <button
                 ref={menuHeaderRef}
                 type="button"
                 aria-label={compactMenu ? gt("Change model") : gt("Back to thinking level")}
                 aria-expanded={!compactMenu}
-                className="flex w-full min-w-0 items-center justify-center gap-2 rounded-xl px-9 py-2 text-sm font-medium hover:bg-foreground/8 focus-visible:bg-foreground/8 focus-visible:outline-none"
+                className="flex min-w-0 max-w-full items-center justify-center gap-2 justify-self-center rounded-xl px-2 py-2 text-sm font-medium hover:bg-foreground/8 focus-visible:bg-foreground/8 focus-visible:outline-none"
                 onClick={() => {
                   setCompactMenu(!compactMenu);
                   if (!isCoarsePointer) {
@@ -539,6 +543,7 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
                   <ChevronDownIcon className="size-3.5 shrink-0 text-muted-foreground" />
                 )}
               </button>
+              <div className="justify-self-end">{compactMenu ? null : props.trailingControl}</div>
             </div>
             {!compactMenu ? picker : null}
             <div

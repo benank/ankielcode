@@ -9,7 +9,7 @@ import type { ProviderOptionDescriptor, RuntimeMode } from "@ankielcode/contract
 import type { EffortDisplay } from "@ankielcode/contracts/settings";
 import { getProviderOptionCurrentLabel } from "@ankielcode/shared/model";
 import { msg, T, useGT, useMessages } from "gt-react";
-import { ChevronRightIcon, ChevronUpIcon, WorkflowIcon } from "lucide-react";
+import { ChevronRightIcon, WorkflowIcon, ZapIcon } from "lucide-react";
 import { type KeyboardEvent, type ReactNode, use, useRef, useState } from "react";
 
 import { m, type MessageResolver } from "~/i18n/messages";
@@ -536,7 +536,11 @@ export function ComposerFastToggle(props: { traits: TraitsSelectionInput }) {
               }
             }}
           >
-            <FastBolt ultra={false} />
+            <ZapIcon
+              aria-hidden="true"
+              className="size-6"
+              fill={fast.enabled ? "currentColor" : "none"}
+            />
           </button>
         }
       />
@@ -551,7 +555,7 @@ function UltracodeControl(props: { traits: TraitsSelectionInput }) {
   if (traits.modelIsUnavailable || !ultracodeToggle) return null;
   const on = ultracodeToggle.currentValue === true;
   return (
-    <div className="flex rounded-lg bg-input/40 p-0.5">
+    <div className="flex border-t border-border/70 px-3 py-2">
       <button
         type="button"
         aria-pressed={on}
@@ -566,8 +570,7 @@ function UltracodeControl(props: { traits: TraitsSelectionInput }) {
   );
 }
 
-/** Permissions change rarely, so the footer names the mode and nests the choice in a menu. */
-function PermissionsMenu(props: {
+export function ComposerPickerPermissions(props: {
   runtimeMode: RuntimeMode;
   options: ReadonlyArray<RuntimeModeOption>;
   onChange: (mode: RuntimeMode) => void;
@@ -590,15 +593,14 @@ function PermissionsMenu(props: {
             type="button"
             data-composer-permissions-trigger
             aria-label={gt("Permissions: {mode}", { mode: current.label })}
-            className="ms-auto flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2 text-muted-foreground text-xs outline-none hover:bg-foreground/[0.09] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-foreground/[0.09] data-popup-open:text-foreground"
+            className="flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-muted-foreground text-xs outline-none hover:bg-foreground/[0.09] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-foreground/[0.09] data-popup-open:text-foreground"
           />
         }
       >
         <CurrentIcon aria-hidden="true" className="size-3.5" />
         {current.label}
-        <ChevronUpIcon aria-hidden="true" className="size-3" />
       </MenuTrigger>
-      <MenuPopup side="top" align="end" {...composerFloatingLayerProps}>
+      <MenuPopup side="bottom" align="end" {...composerFloatingLayerProps}>
         <ComposerPermissionsSection
           runtimeMode={props.runtimeMode}
           runtimeModeOptions={props.options}
@@ -609,21 +611,6 @@ function PermissionsMenu(props: {
   );
 }
 
-/** The full model picker keeps its permissions and workflow controls together. */
-export function ComposerPickerFooter(props: {
-  traits: TraitsSelectionInput | null;
-  runtimeMode: RuntimeMode;
-  runtimeModeOptions: ReadonlyArray<RuntimeModeOption>;
-  onRuntimeModeChange: (mode: RuntimeMode) => void;
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-2 border-t border-border/70 bg-muted/40 px-3 py-2">
-      {props.traits ? <UltracodeControl traits={props.traits} /> : null}
-      <PermissionsMenu
-        runtimeMode={props.runtimeMode}
-        options={props.runtimeModeOptions}
-        onChange={props.onRuntimeModeChange}
-      />
-    </div>
-  );
+export function ComposerPickerFooter(props: { traits: TraitsSelectionInput }) {
+  return <UltracodeControl traits={props.traits} />;
 }
