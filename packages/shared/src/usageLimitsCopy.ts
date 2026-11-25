@@ -76,7 +76,21 @@ export function limitsNotice(
   if (limits.unavailable?.reason === "probeFailed") {
     return limits.unavailable.message ?? resolve(msg("Could not read limits."));
   }
-  return limits.windows.length === 0 ? resolve(msg("No limits reported.")) : null;
+  return limits.windows.length === 0 && limits.colabComputeUnits === undefined
+    ? resolve(msg("No limits reported."))
+    : null;
+}
+
+export const COLAB_NAME = "Colab";
+
+/** @public */
+export function formatColabBalance(count: number, resolve: MFunctionType = mFallback) {
+  return resolve(
+    msg(
+      "{count, plural, one {{count, number} compute unit} other {{count, number} compute units}}",
+      { count },
+    ),
+  );
 }
 
 /** @public */

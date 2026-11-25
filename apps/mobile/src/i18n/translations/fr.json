@@ -1152,6 +1152,7 @@
   "bb34eaf6ddc55a72": "Ce compte n’a pas de limites d’abonnement.",
   "42a2622893a6bced": "Impossible de lire les limites.",
   "4897e228d3185c96": "Aucune limite signalée.",
+  "483897b4dba03359": "{count, plural, one {{count, number} unité de calcul} other {{count, number} unités de calcul}}",
   "e27d2cb964df5dd5": "{source} : aucun compte signalé.",
   "1b503134018285f4": "{days} j {hours} h",
   "164c674cf062933a": "{label} · {count} restants · expire dans {expires}",

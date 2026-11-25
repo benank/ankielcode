@@ -10,6 +10,7 @@ import { formatUpcomingTimestamp } from "../../timestampFormat";
 import { Button } from "../ui/button";
 import { providerClients } from "../settings/providerDriverMeta";
 import { RedactedSensitiveText } from "../settings/RedactedSensitiveText";
+import { ColabBalanceRow } from "../usage/ColabBalanceRow";
 import { LimitWindows, ResetCredits } from "../usage/UsageLimits";
 import { ComposerBanner } from "./ComposerBanner";
 import type { ComposerBannerStackItem } from "./ComposerBannerStack";
@@ -162,6 +163,11 @@ function UsageLimitsBannerBody({
                   now={now}
                 />
               )}
+              {account.limits.colabComputeUnits !== undefined ? (
+                <div className="text-xs">
+                  <ColabBalanceRow balance={account.limits.colabComputeUnits} />
+                </div>
+              ) : null}
               {externalUsage ? (
                 <Button
                   size="sm"

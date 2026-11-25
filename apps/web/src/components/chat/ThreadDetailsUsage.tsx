@@ -12,7 +12,12 @@ import {
   paceRemainingPercent,
   remainingPercent,
 } from "@ankielcode/shared/usageLimits";
-import { formatDuration, limitsNotice } from "@ankielcode/shared/usageLimitsCopy";
+import {
+  COLAB_NAME,
+  formatColabBalance,
+  formatDuration,
+  limitsNotice,
+} from "@ankielcode/shared/usageLimitsCopy";
 import { Link } from "@tanstack/react-router";
 import { msg, useGT, useLocale, useMessages } from "gt-react";
 import type { ReactNode } from "react";
@@ -90,19 +95,36 @@ function InstanceRows({
   const gt = useGT();
   const m = useMessages();
   const notice = limitsNotice(limits, m);
-  if (notice) {
-    return (
-      <UsageRow
-        label={gt("Limits", { $context: "usage limits row label" })}
-        fill={null}
-        tone={null}
-        value={gt("Unavailable")}
-        tooltip={<span className="text-foreground">{notice}</span>}
-        opensUsage
-      />
-    );
-  }
-  return limits.windows.map((window) => <LimitRow key={window.id} window={window} now={now} />);
+  const colab =
+    limits.colabComputeUnits !== undefined
+      ? formatColabBalance(limits.colabComputeUnits, m)
+      : undefined;
+  return (
+    <>
+      {notice ? (
+        <UsageRow
+          label={gt("Limits", { $context: "usage limits row label" })}
+          fill={null}
+          tone={null}
+          value={gt("Unavailable")}
+          tooltip={<span className="text-foreground">{notice}</span>}
+          opensUsage
+        />
+      ) : (
+        limits.windows.map((window) => <LimitRow key={window.id} window={window} now={now} />)
+      )}
+      {colab !== undefined ? (
+        <UsageRow
+          label={COLAB_NAME}
+          fill={null}
+          tone={null}
+          value={colab}
+          tooltip={colab}
+          opensUsage
+        />
+      ) : null}
+    </>
+  );
 }
 
 /** The thread's context window. The bar fills as context is used; the tick marks auto-compaction. */

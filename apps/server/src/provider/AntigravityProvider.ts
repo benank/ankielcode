@@ -166,6 +166,7 @@ interface AntigravityProviderOptions {
   >;
   readonly supportsTextGeneration: Effect.Effect<boolean>;
   readonly probeUsage?: Effect.Effect<ServerProviderUsageLimits>;
+  readonly probeColabUsage?: Effect.Effect<number | undefined>;
   readonly clearUsage?: Effect.Effect<void>;
   readonly maintenanceCapabilities?: ProviderMaintenanceCapabilities;
   readonly auth?: { readonly type: string; readonly label: string };
@@ -197,10 +198,18 @@ const SessionTierMeta = Schema.Struct({
 const decodeSessionTierMeta = Schema.decodeUnknownOption(SessionTierMeta);
 
 /** The plan `agy acp` reports in a session result's `_meta`, such as "Google AI Pro". */
-export function antigravitySessionTier(result: { readonly _meta?: unknown }) {
+function antigravitySessionTier(result: { readonly _meta?: unknown }) {
   return decodeSessionTierMeta(result._meta).pipe(
     Option.map((meta) => meta.antigravity.tier.name.trim()),
     Option.filter((name) => name.length > 0),
+  );
+}
+
+function hasGoogleAiSubscription(auth: ServerProvider["auth"]) {
+  return (
+    auth.status === "authenticated" &&
+    (auth.type === "oauth-personal" || auth.type === "oauth-business") &&
+    /^Google AI (?:Plus|Pro|Ultra)\b/i.test(auth.label ?? "")
   );
 }
 
@@ -271,28 +280,41 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
     Effect.flatMap((state) => options.stampIdentity(state.draft)),
   );
 
-  // The quota read can take 30 seconds, so it never blocks readiness or a session start.
+  // CLI quota reads never block readiness or a session start.
   // One read runs at a time; sign-in and sign-out interrupt it so a stale account never lands.
   const usageRead = yield* FiberHandle.make();
   const republish = yield* Deferred.make<Effect.Effect<ServerProvider>>();
   const scope = yield* Effect.scope;
   const refreshUsage = Effect.fn("AntigravityProvider.refreshUsage")(function* () {
-    if (!options.probeUsage || (yield* PublishingUsage)) return;
+    const { probeUsage, probeColabUsage } = options;
+    if (!probeUsage || (yield* PublishingUsage)) return;
     yield* FiberHandle.run(
       usageRead,
-      options.probeUsage.pipe(
-        Effect.flatMap((probed) =>
-          SubscriptionRef.update(metadata, (state) => ({
+      Effect.gen(function* () {
+        const probed = yield* probeUsage;
+        const { draft } = yield* SubscriptionRef.get(metadata);
+        const colabComputeUnits =
+          probeColabUsage && hasGoogleAiSubscription(draft.auth)
+            ? yield* probeColabUsage
+            : undefined;
+        yield* SubscriptionRef.update(metadata, (state) => {
+          const limits = resolveUsageLimitsAfterProbe({
+            published: state.draft.usageLimits,
+            probed,
+          });
+          const balance = hasGoogleAiSubscription(state.draft.auth) ? colabComputeUnits : undefined;
+          return {
             ...state,
             draft: {
               ...state.draft,
-              usageLimits: resolveUsageLimitsAfterProbe({
-                published: state.draft.usageLimits,
-                probed,
-              }),
+              usageLimits:
+                limits && limits.colabComputeUnits !== balance
+                  ? { ...limits, colabComputeUnits: balance }
+                  : limits,
             },
-          })),
-        ),
+          };
+        });
+      }).pipe(
         // Enrichment cannot change published limits; a health check publishes them.
         Effect.andThen(
           Deferred.await(republish).pipe(
@@ -422,16 +444,29 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
     const supportsTextGeneration = yield* options.supportsTextGeneration;
     const updatedAt = DateTime.formatIso(yield* DateTime.now);
     const supportedRuntimeModes = antigravityRuntimeModes(started.sessionSetupResult);
-    const previousModes = yield* SubscriptionRef.modify(metadata, (state) => {
+    const [previousModes, gainedSubscription] = yield* SubscriptionRef.modify(metadata, (state) => {
       if (
         state.authRevision !== before.authRevision &&
         state.draft.auth.status === "unauthenticated"
       ) {
-        return [supportedRuntimeModes, state] as const;
+        return [[supportedRuntimeModes, false] as const, state] as const;
       }
       const { message: _previousMessage, ...draft } = state.draft;
       const workspaces = draft.workspaceSnapshots ?? [];
       const workspace = cwd ? workspaces.find((entry) => entry.cwd === cwd) : undefined;
+      const auth = {
+        status: "authenticated",
+        type: options.auth?.type ?? "oauth-personal",
+        // Loaded sessions may omit the tier, so keep the one an earlier session reported.
+        label: Option.getOrElse(
+          antigravitySessionTier(started.sessionSetupResult),
+          () =>
+            (draft.auth.status === "authenticated" ? draft.auth.label : undefined) ??
+            options.auth?.label ??
+            "Google account",
+        ),
+      } satisfies ServerProvider["auth"];
+      const subscribed = hasGoogleAiSubscription(auth);
       const next = {
         authRevision: state.authRevision + 1,
         draft: {
@@ -439,18 +474,11 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
           installed: true,
           status: "ready",
           version: started.initializeResult.agentInfo?.version || draft.version,
-          auth: {
-            status: "authenticated",
-            type: options.auth?.type ?? "oauth-personal",
-            // Loaded sessions may omit the tier, so keep the one an earlier session reported.
-            label: Option.getOrElse(
-              antigravitySessionTier(started.sessionSetupResult),
-              () =>
-                (draft.auth.status === "authenticated" ? draft.auth.label : undefined) ??
-                options.auth?.label ??
-                "Google account",
-            ),
-          },
+          auth,
+          usageLimits:
+            !subscribed && draft.usageLimits?.colabComputeUnits !== undefined
+              ? { ...draft.usageLimits, colabComputeUnits: undefined }
+              : draft.usageLimits,
           checkedAt: updatedAt,
           models: buildAntigravityModelsFromSession(started.sessionSetupResult, thinkingLevels),
           supportedRuntimeModes,
@@ -470,10 +498,15 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
             : {}),
         },
       } satisfies AntigravityProviderState;
-      return [draft.supportedRuntimeModes, next] as const;
+      return [
+        [draft.supportedRuntimeModes, subscribed && !hasGoogleAiSubscription(draft.auth)],
+        next,
+      ] as const;
     });
     yield* rememberRuntimeModes(previousModes, supportedRuntimeModes);
-    if (!before.draft.usageLimits || before.draft.usageLimits.unavailable) yield* refreshUsage();
+    if (gainedSubscription || !before.draft.usageLimits || before.draft.usageLimits.unavailable) {
+      yield* refreshUsage();
+    }
   });
 
   const onConfigOptionsUpdated = Effect.fn("AntigravityProvider.onConfigOptionsUpdated")(function* (
@@ -593,7 +626,7 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
       Effect.andThen(
         SubscriptionRef.update(metadata, (state) => {
           const { usageLimits: _previousAccount, ...draft } = state.draft;
-          return { ...state, draft };
+          return { ...state, draft: { ...draft, auth: initialDraft.auth } };
         }),
       ),
       Effect.andThen(

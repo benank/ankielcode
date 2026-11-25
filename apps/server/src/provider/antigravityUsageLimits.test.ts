@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as PlatformError from "effect/PlatformError";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as TestClock from "effect/testing/TestClock";
 
@@ -62,32 +63,38 @@ const usage = {
   },
 };
 
-/** A fake `agy` on PATH; `answer` returns stdout, or undefined when it is not installed. */
-function fakeAgy(answer: (args: ReadonlyArray<string>) => string | undefined) {
+function fakeAgy(
+  answer: (args: ReadonlyArray<string>) => string | undefined,
+  colab?: (args: ReadonlyArray<string>) => { stdout: string; code: number } | undefined,
+) {
   const calls: Array<ReadonlyArray<string>> = [];
+  const colabCalls: Array<ReadonlyArray<string>> = [];
   const spawner = ChildProcessSpawner.make((command) => {
-    const { args } = command as unknown as { readonly args: ReadonlyArray<string> };
-    calls.push(args);
-    const stdout = answer(args);
-    if (stdout === undefined) {
+    if (!ChildProcess.isStandardCommand(command)) throw new Error("Expected a standard command");
+    const args = command.args.map(String);
+    const isColab = command.command === "colab";
+    (isColab ? colabCalls : calls).push(args);
+    if (isColab) expect(command.options.stdin).toBe("ignore");
+    const result = isColab ? colab?.(args) : { stdout: answer(args), code: 0 };
+    if (result?.stdout === undefined) {
       return Effect.fail(
         PlatformError.systemError({
           _tag: "NotFound",
           module: "ChildProcess",
           method: "spawn",
-          pathOrDescriptor: "agy",
+          pathOrDescriptor: command.command,
         }),
       );
     }
     return Effect.succeed(
       ChildProcessSpawner.makeHandle({
         pid: ChildProcessSpawner.ProcessId(1),
-        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(result.code)),
         isRunning: Effect.succeed(false),
         kill: () => Effect.void,
         unref: Effect.succeed(Effect.void),
         stdin: Sink.drain,
-        stdout: Stream.encodeText(Stream.make(stdout)),
+        stdout: Stream.encodeText(Stream.make(result.stdout)),
         stderr: Stream.empty,
         all: Stream.empty,
         getInputFd: () => Sink.drain,
@@ -95,7 +102,7 @@ function fakeAgy(answer: (args: ReadonlyArray<string>) => string | undefined) {
       }),
     );
   });
-  return { calls, spawner };
+  return { calls, colabCalls, spawner };
 }
 
 const makeProbe = (
@@ -204,6 +211,50 @@ describe("Antigravity subscription limits", () => {
       const limits = yield* (yield* makeProbe(agy, "gemini-api-key")).probe;
       expect(agy.calls).toEqual([]);
       expect(limits.unavailable?.reason).toBe("unsupported");
+    }).pipe(Effect.provideService(HostProcess.Platform, "linux")),
+  );
+
+  it.effect("reads the Colab balance and caches it until the next quota refresh", () =>
+    Effect.gen(function* () {
+      let balance = "200.25";
+      const cli = fakeAgy(
+        () => undefined,
+        ([command]) => ({
+          code: 0,
+          stdout:
+            command === "version"
+              ? "Version: 0.8.0\n"
+              : `Current balance: ${balance} compute units\nUsage rate: 1.25/hr\nActive assignments: 1\n`,
+        }),
+      );
+      const { probeColab, clear } = yield* makeProbe(cli);
+      expect(yield* probeColab).toBe(200.25);
+      balance = "0.00";
+      expect(yield* probeColab).toBe(200.25);
+      expect(cli.colabCalls).toEqual([["version"], ["usage"]]);
+      yield* clear;
+      expect(yield* probeColab).toBe(0);
+      expect(cli.colabCalls).toHaveLength(4);
+    }).pipe(Effect.provideService(HostProcess.Platform, "linux")),
+  );
+
+  it.effect("omits Colab when the CLI is missing, signed out, or returns no balance", () =>
+    Effect.gen(function* () {
+      const missing = fakeAgy(() => undefined);
+      expect(yield* (yield* makeProbe(missing)).probeColab).toBeUndefined();
+      expect(missing.colabCalls).toEqual([["version"]]);
+
+      for (const code of [0, 1]) {
+        const cli = fakeAgy(
+          () => undefined,
+          ([command]) =>
+            command === "version"
+              ? { code: 0, stdout: "Version: 0.8.0\n" }
+              : { code, stdout: "Enter the authorization code: " },
+        );
+        expect(yield* (yield* makeProbe(cli)).probeColab).toBeUndefined();
+        expect(cli.colabCalls).toEqual([["version"], ["usage"]]);
+      }
     }).pipe(Effect.provideService(HostProcess.Platform, "linux")),
   );
 });

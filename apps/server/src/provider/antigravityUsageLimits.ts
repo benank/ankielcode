@@ -5,6 +5,7 @@ import type {
 } from "@ankielcode/contracts";
 import {
   parseGenericCliVersion,
+  providerProbeEnvironment,
   spawnAndCollect,
 } from "@ankielcode/provider-core/server/snapshotProbe";
 import { compareSemverVersions } from "@ankielcode/shared/semver";
@@ -94,21 +95,23 @@ export const makeAntigravityUsageProbe = Effect.fn("makeAntigravityUsageProbe")(
 }) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   let cached: { readonly at: number; readonly limits: ServerProviderUsageLimits } | undefined;
+  let colabCached: { readonly at: number; readonly balance: number | undefined } | undefined;
 
-  const agy = Effect.fn("AntigravityUsageProbe.agy")(
-    function* (args: ReadonlyArray<string>, _timeout: Duration.Input) {
-      const spawn = yield* resolveSpawnCommand("agy", args, { env: input.environment });
+  const run = Effect.fn("AntigravityUsageProbe.run")(
+    function* (binary: "agy" | "colab", args: ReadonlyArray<string>, _timeout: Duration.Input) {
+      const env = providerProbeEnvironment(input.environment);
+      const spawn = yield* resolveSpawnCommand(binary, args, { env });
       return yield* spawnAndCollect(
-        "agy",
+        binary,
         ChildProcess.make(spawn.command, spawn.args, {
-          env: input.environment,
+          env,
           shell: spawn.shell,
-          // Signed out, the CLI waits for a pasted sign-in code instead of exiting.
+          // Either CLI can ask for a pasted sign-in code. Close stdin so it cannot wait for one.
           stdin: "ignore",
         }),
       );
     },
-    (effect, _args, timeout) =>
+    (effect, _binary, _args, timeout) =>
       effect.pipe(
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
         Effect.timeout(timeout),
@@ -124,7 +127,7 @@ export const makeAntigravityUsageProbe = Effect.fn("makeAntigravityUsageProbe")(
     const now = yield* Clock.currentTimeMillis;
     if (cached && now - cached.at < REUSE_MS) return cached.limits;
 
-    const version = Option.flatMap(yield* agy(["--version"], "10 seconds"), (result) =>
+    const version = Option.flatMap(yield* run("agy", ["--version"], "10 seconds"), (result) =>
       Option.fromNullishOr(result.code === 0 ? parseGenericCliVersion(result.stdout) : null),
     );
     if (Option.isNone(version) || compareSemverVersions(version.value, MIN_USAGE_VERSION) < 0) {
@@ -134,7 +137,7 @@ export const makeAntigravityUsageProbe = Effect.fn("makeAntigravityUsageProbe")(
         message: UNAVAILABLE_MESSAGE,
       });
     }
-    const usage = yield* agy(["-p", "/usage", "--output-format", "json"], "20 seconds");
+    const usage = yield* run("agy", ["-p", "/usage", "--output-format", "json"], "20 seconds");
     const windows = yield* Option.match(usage, {
       onNone: () => Effect.succeed([]),
       onSome: (result) =>
@@ -160,10 +163,31 @@ export const makeAntigravityUsageProbe = Effect.fn("makeAntigravityUsageProbe")(
     return limits;
   });
 
+  const readColab = Effect.fn("AntigravityUsageProbe.readColab")(function* () {
+    const now = yield* Clock.currentTimeMillis;
+    if (colabCached && now - colabCached.at < REUSE_MS) return colabCached.balance;
+
+    const version = Option.getOrUndefined(yield* run("colab", ["version"], "5 seconds"));
+    const usage =
+      version?.code === 0
+        ? Option.getOrUndefined(yield* run("colab", ["usage"], "10 seconds"))
+        : undefined;
+    const amount =
+      usage?.code === 0
+        ? /^Current balance: (-?\d+(?:\.\d+)?) compute units\s*$/m.exec(usage.stdout)?.[1]
+        : undefined;
+    const parsed = Number(amount);
+    const balance = Number.isFinite(parsed) ? parsed : undefined;
+    colabCached = { at: now, balance };
+    return balance;
+  });
+
   return {
     probe: read,
+    probeColab: readColab(),
     clear: Effect.sync(() => {
       cached = undefined;
+      colabCached = undefined;
     }),
   };
 });

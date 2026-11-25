@@ -140,6 +140,7 @@ const makeHarness = Effect.fn("makeAntigravityProviderHarness")(function* (
     readonly enabled?: boolean;
     readonly safe?: boolean;
     readonly probeUsage?: Effect.Effect<ServerProviderUsageLimits>;
+    readonly probeColabUsage?: Effect.Effect<number | undefined>;
     readonly rememberedRuntimeModes?: ReadonlyArray<RuntimeMode>;
   } = {},
 ) {
@@ -157,6 +158,7 @@ const makeHarness = Effect.fn("makeAntigravityProviderHarness")(function* (
       stampIdentity: (snapshot) => Effect.succeed({ ...snapshot, instanceId, driver }),
       ...(options.auth ? { auth: options.auth } : {}),
       ...(options.probeUsage ? { probeUsage: options.probeUsage } : {}),
+      ...(options.probeColabUsage ? { probeColabUsage: options.probeColabUsage } : {}),
       ...(options.rememberedRuntimeModes
         ? { rememberedRuntimeModes: options.rememberedRuntimeModes }
         : {}),
@@ -889,6 +891,39 @@ it.layer(layerTest)("Antigravity provider snapshots", (it) => {
         yield* harness.provider.snapshot.refresh;
         expect((yield* unsupported)?.usageLimits?.windows).toEqual([]);
       }),
+  );
+
+  it.effect("includes the Colab balance only after Antigravity reports a paid Google AI plan", () =>
+    Effect.gen(function* () {
+      const limits = {
+        checkedAt: "2026-10-09T12:00:00.000Z",
+        windows: [{ id: "gemini-5h", kind: "session", label: "Gemini · 5-hour", usedPercent: 10 }],
+      } satisfies ServerProviderUsageLimits;
+      const colabReads = yield* Ref.make(0);
+      const harness = yield* makeHarness({
+        probeUsage: Effect.succeed(limits),
+        probeColabUsage: Ref.update(colabReads, (count) => count + 1).pipe(Effect.as(200)),
+      });
+      const published = yield* harness.nextPublish((snapshot) => !!snapshot.usageLimits);
+      yield* harness.initialize;
+      expect((yield* published)?.usageLimits).toEqual(limits);
+      expect(yield* Ref.get(colabReads)).toBe(0);
+
+      const withTier = (name: string) => ({
+        ...started,
+        sessionSetupResult: {
+          ...started.sessionSetupResult,
+          _meta: { antigravity: { tier: { name } } },
+        },
+      });
+      const paid = yield* harness.nextPublish(
+        (snapshot) => snapshot.usageLimits?.colabComputeUnits !== undefined,
+      );
+      yield* harness.provider.onSessionStarted(withTier("Google AI Pro"));
+      expect((yield* paid)?.usageLimits).toEqual({ ...limits, colabComputeUnits: 200 });
+      yield* harness.provider.onSessionStarted(withTier("Free"));
+      expect((yield* harness.provider.snapshot.getSnapshot).usageLimits).toEqual(limits);
+    }),
   );
 
   it.effect("a quota read finishing after sign-out cannot restore account limits", () =>

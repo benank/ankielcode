@@ -19,6 +19,7 @@ import { providerClients } from "../settings/providerDriverMeta";
 import { Button } from "../ui/button";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "../ui/popover";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
+import { ColabBalanceRow } from "./ColabBalanceRow";
 import { LimitWindows } from "./UsageLimits";
 
 export function TitlebarUsageLimits() {
@@ -163,6 +164,11 @@ function UsageLimitsBreakdown({
                 windows={account.limits.windows}
                 now={now}
               />
+              {account.limits.colabComputeUnits !== undefined ? (
+                <div className="col-span-3 text-xs">
+                  <ColabBalanceRow balance={account.limits.colabComputeUnits} />
+                </div>
+              ) : null}
             </section>
           );
         })}
