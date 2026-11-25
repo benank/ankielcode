@@ -2,14 +2,14 @@ name: Release
 
 on:
   release:
-    # Draft-triggered flow: save a Draft release in GitHub with a tag (e.g. v0.2.0).
-    # This workflow builds macOS arm64 + Windows x64, attaches all installers,
-    # checksums, and electron-updater manifests, then publishes the draft atomically.
-    types: [created]
+    # Publish-triggered flow: publish a release in GitHub with a tag (e.g. v0.2.0).
+    # This workflow builds macOS arm64 + Windows x64, then attaches all installers,
+    # checksums, and electron-updater manifests to the published release.
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to build (e.g. v0.2.0). Reuses an existing draft with this tag or creates a new draft."
+        description: "Release tag to build (e.g. v0.2.0). Reuses an existing release with this tag or creates a new draft."
         required: true
         type: string
       publish_draft:
@@ -28,7 +28,7 @@ permissions:
 jobs:
   preflight:
     name: Preflight
-    if: github.event_name == 'workflow_dispatch' || github.event.release.draft == true
+    if: github.event_name == 'workflow_dispatch' || github.event.release.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -41,7 +41,7 @@ jobs:
       publish_draft: ${{ steps.resolve.outputs.publish_draft }}
     steps:
       - id: resolve
-        name: Resolve draft release and target commit
+        name: Resolve release and target commit
         uses: actions/github-script@v7
         env:
           INPUT_TAG: ${{ inputs.tag }}
@@ -57,14 +57,14 @@ jobs:
 
             if (context.eventName === 'release') {
               const release = context.payload.release;
-              if (!release || !release.draft) {
-                core.setFailed('Only draft releases trigger automated builds.');
+              if (!release || release.draft) {
+                core.setFailed('Only published releases trigger automated builds.');
                 return;
               }
               releaseId = String(release.id);
               tag = (release.tag_name || '').trim();
-              targetCommitish = (release.target_commitish || context.payload.repository.default_branch || 'main').trim();
-              publishDraft = 'true';
+              targetCommitish = tag || (release.target_commitish || context.payload.repository.default_branch || 'main').trim();
+              publishDraft = 'false';
             } else {
               tag = (process.env.INPUT_TAG || '').trim();
               targetCommitish = context.sha;
@@ -498,7 +498,7 @@ jobs:
           sha256sum "${installers[@]}" > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - name: Upload assets to draft release and publish
+      - name: Upload assets to release
         uses: actions/github-script@v7
         env:
           RELEASE_ID: ${{ needs.preflight.outputs.release_id }}
@@ -575,5 +575,5 @@ jobs:
                 target_commitish: process.env.PINNED_REF,
               });
             } else {
-              core.info(`Uploaded all assets to draft release #${releaseId} (left as draft).`);
+              core.info(`Uploaded all assets to release #${releaseId}.`);
             }
