@@ -24,15 +24,7 @@ import {
   type ScrollViewInstance,
   type ViewInstance,
 } from "react-native";
-import { LegendList } from "@legendapp/list/react-native";
-import Animated, {
-  Easing,
-  FadeIn,
-  FadeOut,
-  LinearTransition,
-  ReduceMotion,
-} from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
+import Animated, { Easing, FadeIn, ReduceMotion } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { withUniwind } from "uniwind";
 import { useKeyboardState } from "react-native-keyboard-controller";
@@ -93,9 +85,6 @@ type Frame = { x: number; y: number; width: number; height: number };
 const ThemedSvg = withUniwind(Svg);
 const MENU_EASE = Easing.bezier(0.23, 1, 0.32, 1);
 const MENU_ENTER = FadeIn.duration(150).easing(MENU_EASE).reduceMotion(ReduceMotion.System);
-const MENU_RESIZE = LinearTransition.duration(180)
-  .easing(MENU_EASE)
-  .reduceMotion(ReduceMotion.System);
 
 function ModelPickerCatalogScan(props: {
   environmentId: EnvironmentId;
@@ -215,7 +204,7 @@ function ComposerModelPickerPanel(props: PickerProps & { maxHeight: number }) {
                 height={22.5}
                 viewBox="0 0 24 24"
                 accessible={false}
-                colorClassName={fast.enabled ? "text-foreground" : "text-foreground-muted"}
+                colorClassName={fast.enabled ? "accent-foreground" : "accent-foreground-muted"}
               >
                 <Path
                   d="M13 2 3 14h8l-1 8 11-12h-8l1-8Z"
@@ -343,56 +332,49 @@ function ComposerModelPickerPanel(props: PickerProps & { maxHeight: number }) {
               })}
             </ScrollView>
           </View>
-          {/* oxlint-disable-next-line ankielcode/require-registered-list-scroll -- the anchored picker scrolls independently of the thread header */}
-          <LegendList
+          <ScrollView
             key={group?.providerKey}
-            data={group?.models ?? []}
-            keyExtractor={(option) => option.key}
-            estimatedItemSize={46}
-            extraData={{
-              selection: props.selection,
-              disabled: props.disabled,
-              surfaceColor: props.surfaceColor,
-              onSelectModel: props.onSelectModel,
-            }}
             style={{
-              height: Math.min(240, (group?.models.length || 1) * 46 + 12),
+              maxHeight: 240,
               flexGrow: 0,
               flexShrink: 1,
             }}
             contentContainerClassName="gap-0.5 py-1.5"
             keyboardShouldPersistTaps="always"
-            ListEmptyComponent={
+          >
+            {group?.models.length ? (
+              group.models.map((item) => {
+                const selected =
+                  item.selection.instanceId === props.selection.instanceId &&
+                  item.selection.model === props.selection.model;
+                const disabled = props.disabled || item.isUnavailable === true;
+                return (
+                  <Pressable
+                    key={item.key}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected, disabled }}
+                    disabled={disabled}
+                    onPress={() => {
+                      if (!selected) props.onSelectModel(item);
+                    }}
+                    className={cn(
+                      "min-h-11 flex-row items-center gap-3 rounded-xl px-3 py-1.5 active:bg-subtle",
+                      selected && "bg-subtle",
+                      disabled && "opacity-50",
+                    )}
+                  >
+                    <ComposerModelIcon option={item} surfaceColor={props.surfaceColor} />
+                    <Text className="min-w-0 flex-1 text-sm text-foreground">{item.label}</Text>
+                    {selected ? (
+                      <SymbolView name="checkmark" size={16} tintColorClassName="accent-icon" />
+                    ) : null}
+                  </Pressable>
+                );
+              })
+            ) : (
               <Text className="p-3 text-sm text-foreground-muted">{gt("No models found")}</Text>
-            }
-            renderItem={({ item }) => {
-              const selected =
-                item.selection.instanceId === props.selection.instanceId &&
-                item.selection.model === props.selection.model;
-              const disabled = props.disabled || item.isUnavailable === true;
-              return (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ selected, disabled }}
-                  disabled={disabled}
-                  onPress={() => {
-                    if (!selected) props.onSelectModel(item);
-                  }}
-                  className={cn(
-                    "min-h-11 flex-row items-center gap-3 rounded-xl px-3 py-1.5 active:bg-subtle",
-                    selected && "bg-subtle",
-                    disabled && "opacity-50",
-                  )}
-                >
-                  <ComposerModelIcon option={item} surfaceColor={props.surfaceColor} />
-                  <Text className="min-w-0 flex-1 text-sm text-foreground">{item.label}</Text>
-                  {selected ? (
-                    <SymbolView name="checkmark" size={16} tintColorClassName="accent-icon" />
-                  ) : null}
-                </Pressable>
-              );
-            }}
-          />
+            )}
+          </ScrollView>
         </>
       ) : null}
       <View className={cn("shrink-0 px-2 pb-2", modelsPage && "border-t border-border pt-2")}>
@@ -519,7 +501,7 @@ export function ComposerModelPicker(props: PickerProps) {
           onPress={() => changePage("thinking")}
         />
       </View>
-      {focused && anchor ? (
+      {open && anchor ? (
         <OverlayPortal>
           <ComposerModelPickerOverlay
             {...props}
@@ -527,7 +509,6 @@ export function ComposerModelPicker(props: PickerProps) {
             keyboardHeight={keyboardHeight}
             insets={insets}
             hinge={hinge}
-            onExit={() => setAnchor((current) => (current === anchor ? null : current))}
             onPageChange={changePage}
             onOpenSettings={(page) => {
               close();
@@ -546,19 +527,11 @@ function ComposerModelPickerOverlay(
     keyboardHeight: number;
     insets: ReturnType<typeof useSafeAreaInsets>;
     hinge: React.ContextType<typeof WindowHingeContext>;
-    onExit: () => void;
   },
 ) {
   const overlayRef = useRef<ViewInstance>(null);
   const [frame, setFrame] = useState<Frame | null>(null);
   const gt = useGT();
-  const { onExit } = props;
-  const exit = FadeOut.duration(125)
-    .easing(MENU_EASE)
-    .reduceMotion(ReduceMotion.System)
-    .withCallback((finished) => {
-      if (finished) scheduleOnRN(onExit);
-    });
   const measure = () =>
     overlayRef.current?.measureInWindow((x, y, width, height) => {
       setFrame({ x, y, width, height });
@@ -570,11 +543,12 @@ function ComposerModelPickerOverlay(
     if (!frame) return null;
     const originX = frame.x + props.insets.left;
     const originY = frame.y + props.insets.top;
+    const overlayWidth = frame.width - props.insets.left - props.insets.right;
     const { left, width } = deriveMenuHorizontalPlacement({
       anchorX: props.anchor.x - originX,
       anchorWidth: props.anchor.width,
-      overlayWidth: frame.width - props.insets.left - props.insets.right,
-      desiredWidth: modelsPage ? 376 : 272,
+      overlayWidth,
+      desiredWidth: overlayWidth,
       margin: gap,
       hinge: props.hinge && { ...props.hinge, x: props.hinge.x - originX },
     });
@@ -606,21 +580,14 @@ function ComposerModelPickerOverlay(
       className="absolute inset-0"
       onLayout={measure}
     >
-      {props.page ? (
-        <Pressable
-          className="absolute inset-0"
-          accessibilityRole="button"
-          accessibilityLabel={gt("Close model picker")}
-          onPress={() => props.onPageChange(null)}
-        />
-      ) : null}
-      {props.page && panelPosition ? (
-        <Animated.View
-          entering={MENU_ENTER}
-          exiting={exit}
-          layout={MENU_RESIZE}
-          style={{ position: "absolute", ...panelPosition }}
-        >
+      <Pressable
+        className="absolute inset-0"
+        accessibilityRole="button"
+        accessibilityLabel={gt("Close model picker")}
+        onPress={() => props.onPageChange(null)}
+      />
+      {panelPosition ? (
+        <Animated.View entering={MENU_ENTER} style={{ position: "absolute", ...panelPosition }}>
           <ComposerModelPickerPanel {...props} maxHeight={panelPosition.maxHeight} />
         </Animated.View>
       ) : null}
