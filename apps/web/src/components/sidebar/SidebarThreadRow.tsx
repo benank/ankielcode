@@ -1334,18 +1334,18 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
             {branch.ancestorGuides.map(({ key, continues }) => (
               <span
                 key={key}
-                className={cn("w-3.5", continues && "border-s border-sidebar-border")}
+                className={cn("w-3.5", continues && "border-s border-sidebar-foreground/30")}
               />
             ))}
             <span
               className={cn(
                 "relative w-3.5",
-                branch.hasNextSibling && "border-s border-sidebar-border",
+                branch.hasNextSibling && "border-s border-sidebar-foreground/30",
               )}
             >
               <span
                 className={cn(
-                  "absolute inset-x-0 top-0 h-1/2 border-b border-sidebar-border",
+                  "absolute inset-x-0 top-0 h-1/2 border-b border-sidebar-foreground/30",
                   !branch.hasNextSibling && "rounded-es-sm border-s",
                 )}
               />
@@ -1391,7 +1391,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
           >
             {/* `contents` keeps one-line rows a single flex row. */}
             <div className={multiline ? "flex h-6 min-w-0 items-center gap-2.5" : "contents"}>
-              {inFolder ? null : (
+              {inFolder || branch ? null : (
                 <span
                   className={cn(
                     "flex shrink-0 items-center transition-opacity",

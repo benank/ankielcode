@@ -1717,7 +1717,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
             sidebarPane && "px-3",
           )}
         >
-          {props.project ? (
+          {!branch && props.project ? (
             <View className="opacity-40">
               <ProjectFavicon
                 environmentId={thread.environmentId}
@@ -1840,12 +1840,12 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
     <View className="flex-row ps-2.5">
       <View accessible={false} pointerEvents="none" className="flex-row self-stretch">
         {branch.ancestorGuides.map(({ key, continues }) => (
-          <View key={key} className={cn("w-3.5", continues && "border-s border-border-subtle")} />
+          <View key={key} className={cn("w-3.5", continues && "border-s border-foreground/30")} />
         ))}
-        <View className={cn("w-3.5", branch.hasNextSibling && "border-s border-border-subtle")}>
+        <View className={cn("w-3.5", branch.hasNextSibling && "border-s border-foreground/30")}>
           <View
             className={cn(
-              "h-1/2 border-b border-border-subtle",
+              "h-1/2 border-b border-foreground/30",
               !branch.hasNextSibling && "border-s",
             )}
           />
