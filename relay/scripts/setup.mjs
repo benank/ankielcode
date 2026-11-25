@@ -1,21 +1,16 @@
 #!/usr/bin/env node
-/**
- * One-command Cloudflare Relay setup tool:
- * 1. Ensures Wrangler is authenticated (`wrangler whoami` -> `wrangler login`).
- * 2. Deploys the Worker + Durable Object (unless `--skip-deploy`).
- * 3. Generates a 256-bit `RELAY_SECRET` and uploads it via stdin (`wrangler secret put`).
- * 4. Copies `ankiel-relay://<host>#<secret>` to the clipboard.
- * 5. Optionally configures this computer's local Ankiel Code state dir (`relay.json` + 0600 `secrets/relay-secret`).
- */
 import * as NodeChildProcess from "node:child_process";
 import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
-import * as NodeReadline from "node:readline/promises";
+import * as NodeReadlinePromises from "node:readline/promises";
 import * as NodeURL from "node:url";
 
 const relayDir = NodePath.dirname(NodePath.dirname(NodeURL.fileURLToPath(import.meta.url)));
+const defaultLocalStateDir = NodePath.join(NodeOS.homedir(), ".ankiel", "userdata");
+// oxlint-disable-next-line ankielcode/no-global-process-runtime -- Standalone relay setup has no Effect runtime.
+const platform = process.platform;
 
 function parseArgs(argv) {
   const args = {
@@ -52,7 +47,7 @@ function parseArgs(argv) {
 Options:
   --domain <host>          Custom domain (e.g. relay.ankiel.com) instead of *.workers.dev
   --skip-deploy            Skip wrangler deploy (e.g. the Worker is already deployed)
-  --connect-local [dir]    Write relay.json + 0600 secrets/relay-secret to local state dir
+  --connect-local [dir]    Write relay.json + 0600 secrets/relay-secret (default: ~/.ankiel/userdata)
   --no-clipboard           Do not copy the setup string to clipboard
   --yes, -y                Skip interactive prompts
   --dry-run                Generate & print a local dry-run setup string without calling Cloudflare
@@ -68,7 +63,7 @@ function resolveWranglerBin() {
     relayDir,
     "node_modules",
     ".bin",
-    process.platform === "win32" ? "wrangler.cmd" : "wrangler",
+    platform === "win32" ? "wrangler.cmd" : "wrangler",
   );
   return NodeFS.existsSync(localBin) ? localBin : "wrangler";
 }
@@ -85,9 +80,9 @@ function runWrangler(wranglerArgs, options = {}) {
 
 function copyToClipboard(text) {
   const candidates =
-    process.platform === "darwin"
+    platform === "darwin"
       ? [["pbcopy", []]]
-      : process.platform === "win32"
+      : platform === "win32"
         ? [["clip", []]]
         : [
             ["wl-copy", []],
@@ -104,18 +99,6 @@ function copyToClipboard(text) {
     if (result.status === 0) return true;
   }
   return false;
-}
-
-function detectLocalStateDir() {
-  const home = NodeOS.homedir();
-  const candidates = [
-    NodePath.join(home, ".ankielcode", "userdata"),
-    NodePath.join(home, ".t3", "userdata"),
-  ];
-  for (const dir of candidates) {
-    if (NodeFS.existsSync(dir)) return dir;
-  }
-  return candidates[0];
 }
 
 function saveLocalRelayConfig(stateDir, relayHost, secret) {
@@ -158,7 +141,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const rl =
     !args.yes && process.stdin.isTTY
-      ? NodeReadline.createInterface({ input: process.stdin, output: process.stdout })
+      ? NodeReadlinePromises.createInterface({ input: process.stdin, output: process.stdout })
       : null;
 
   try {
@@ -226,17 +209,18 @@ async function main() {
 
     let localSaved = null;
     if (args.connectLocal) {
-      const targetDir = args.connectLocal === "auto" ? detectLocalStateDir() : args.connectLocal;
+      const targetDir = args.connectLocal === "auto" ? defaultLocalStateDir : args.connectLocal;
       localSaved = saveLocalRelayConfig(targetDir, relayHost, secret);
     } else if (rl) {
-      const defaultDir = detectLocalStateDir();
       const answer = (
-        await rl.question(`Configure this computer automatically in ${defaultDir}? [Y/n] `)
+        await rl.question(
+          `Configure this computer automatically in ${defaultLocalStateDir}? [Y/n] `,
+        )
       )
         .trim()
         .toLowerCase();
       if (answer === "" || answer === "y" || answer === "yes") {
-        localSaved = saveLocalRelayConfig(defaultDir, relayHost, secret);
+        localSaved = saveLocalRelayConfig(defaultLocalStateDir, relayHost, secret);
       }
     }
 

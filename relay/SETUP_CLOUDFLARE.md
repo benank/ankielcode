@@ -26,7 +26,9 @@ npm run setup
 2. Deploys the Worker + Durable Object (`wrangler deploy`).
 3. Generates a 256-bit random `RELAY_SECRET` and uploads it directly via stdin (never hits shell history).
 4. Copies your `ankiel-relay://<host>#<secret>` setup string to your clipboard.
-5. Offers to configure your local computer immediately (`relay.json` + `0600` `secrets/relay-secret`).
+5. Offers to configure your local computer in `~/.ankiel/userdata` (`relay.json` and
+   `secrets/relay-secret` with mode `0600`). For a custom state directory, pass
+   `--connect-local <dir>`.
 
 Already deployed? Skip the deploy step and just generate + upload your secret and configure your computer:
 
