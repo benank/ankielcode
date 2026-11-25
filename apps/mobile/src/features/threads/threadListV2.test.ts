@@ -1974,4 +1974,47 @@ describe("project folders", () => {
     ]);
     expect(items[0]).toMatchObject({ collapsed: true, count: 2 });
   });
+
+  it("groups settled rows separately from active rows and keeps their settlement order", () => {
+    const settle = (id: string, project: string, activity: number, settlement: number) =>
+      makeThread({
+        ...thread(id, project, activity),
+        settledOverride: "settled",
+        settledAt: at(settlement),
+      });
+    const layout = buildThreadListV2Items({
+      threads: [
+        thread("active", "alpha", 1),
+        settle("a-latest", "alpha", 2, 10),
+        settle("b", "beta", 5, 9),
+        settle("a-earlier", "alpha", 8, 8),
+      ],
+      environmentId: null,
+      searchQuery: "",
+      now: NOW,
+    });
+    const items = buildThreadListV2ListItems({
+      items: layout.items,
+      pendingTasks: [],
+      settledCount: layout.settledCount,
+      settledShelfHeaderIndex: layout.settledShelfHeaderIndex,
+      projectFolders: {
+        collapsedKeys: new Set([`${environmentId}:alpha`]),
+        selectedThreadKey: null,
+      },
+    });
+
+    expect(items.map((entry) => entry.key)).toEqual([
+      `v2-project-folder:${environmentId}:alpha`,
+      "v2-settled-shelf",
+      `v2-project-folder:settled:${environmentId}:alpha`,
+      `v2-thread:${environmentId}:a-latest`,
+      `v2-thread:${environmentId}:a-earlier`,
+      `v2-project-folder:settled:${environmentId}:beta`,
+      `v2-thread:${environmentId}:b`,
+    ]);
+    expect(
+      items.filter((entry) => entry.type === "v2-thread").map((entry) => entry.inFolder),
+    ).toEqual([true, true, true]);
+  });
 });

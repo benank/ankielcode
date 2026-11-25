@@ -515,6 +515,7 @@ export interface ThreadListV2ProjectFolderListItem {
   readonly key: string;
   readonly environmentId: EnvironmentId;
   readonly projectId: ProjectId;
+  readonly folderKey: string;
   readonly count: number;
   readonly collapsed: boolean;
   /** The most urgent light among the threads a closed folder hides. */
@@ -667,7 +668,6 @@ export function buildThreadListV2ListItems(input: {
   readonly queuedThreadKeys?: ReadonlySet<string>;
   readonly moveAvailability?: ReadonlyMap<string, ThreadMoveAvailability>;
   readonly shelfPreferencesLoading?: boolean;
-  /** Groups active rows into project folders, newest activity first, as the web sidebar does. */
   readonly projectFolders?: {
     readonly collapsedKeys: ReadonlySet<string>;
     readonly selectedThreadKey: string | null;
@@ -729,7 +729,7 @@ export function buildThreadListV2ListItems(input: {
   const result: ThreadListV2ListItem[] = [
     ...pendingItems,
     ...(input.projectFolders
-      ? groupIntoProjectFolders(activeItems, input.projectFolders, input.tree)
+      ? groupIntoProjectFolders(activeItems, input.projectFolders, input.tree, "active")
       : activeItems),
   ];
   const shelfDisabled = input.shelfPreferencesLoading === true;
@@ -761,7 +761,12 @@ export function buildThreadListV2ListItems(input: {
       expanded: input.settledShelfExpanded !== false,
       disabled: shelfDisabled,
     });
-    result.push(...threadItems.slice(settledShelfHeaderIndex));
+    const settledItems = threadItems.slice(settledShelfHeaderIndex);
+    result.push(
+      ...(input.projectFolders
+        ? groupIntoProjectFolders(settledItems, input.projectFolders, input.tree, "settled")
+        : settledItems),
+    );
   }
   const nestedResult = input.tree?.rowsByRoot.size
     ? result.flatMap<ThreadListV2ListItem>((entry) => {
@@ -814,14 +819,11 @@ function threadActivityMs(thread: EnvironmentThreadShell): number {
   );
 }
 
-/**
- * Pinned rows stay on top; the rest fall into a folder per project. Folders and their rows
- * run newest activity first, a subagent's work counting for its parent.
- */
 function groupIntoProjectFolders(
   items: ReadonlyArray<ThreadListV2ThreadListItem>,
   folders: NonNullable<Parameters<typeof buildThreadListV2ListItems>[0]["projectFolders"]>,
   tree: ThreadListV2Tree | undefined,
+  section: "active" | "settled",
 ): ThreadListV2ListItem[] {
   const activity = (thread: EnvironmentThreadShell) => {
     let latest = threadActivityMs(thread);
@@ -838,21 +840,29 @@ function groupIntoProjectFolders(
     const key = `${thread.environmentId}:${thread.projectId}`;
     const folder = byProject.get(key) ?? { items: [], latest: 0 };
     folder.items.push(entry);
-    folder.latest = Math.max(folder.latest, activity(thread));
+    if (section === "active") folder.latest = Math.max(folder.latest, activity(thread));
     byProject.set(key, folder);
   }
   const result: ThreadListV2ListItem[] = [...pinned];
-  const ordered = [...byProject].sort(
-    ([leftKey, left], [rightKey, right]) =>
-      right.latest - left.latest || leftKey.localeCompare(rightKey),
-  );
-  for (const [key, folder] of ordered) {
-    const rows = [...folder.items].sort(
-      (left, right) =>
-        activity(right.item.thread) - activity(left.item.thread) ||
-        left.key.localeCompare(right.key),
+  const ordered = [...byProject];
+  if (section === "active") {
+    ordered.sort(
+      ([leftKey, left], [rightKey, right]) =>
+        right.latest - left.latest || leftKey.localeCompare(rightKey),
     );
-    const collapsed = folders.collapsedKeys.has(key);
+  }
+  for (const [key, folder] of ordered) {
+    // The settled shelf already sorts by settlement before applying its visible limit.
+    const rows = folder.items;
+    if (section === "active") {
+      rows.sort(
+        (left, right) =>
+          activity(right.item.thread) - activity(left.item.thread) ||
+          left.key.localeCompare(right.key),
+      );
+    }
+    const folderKey = section === "settled" ? `settled:${key}` : key;
+    const collapsed = folders.collapsedKeys.has(folderKey);
     const shown = collapsed
       ? rows.filter(
           (entry) =>
@@ -876,9 +886,10 @@ function groupIntoProjectFolders(
     const { thread } = rows[0]!.item;
     result.push({
       type: "v2-project-folder",
-      key: `v2-project-folder:${key}`,
+      key: `v2-project-folder:${folderKey}`,
       environmentId: thread.environmentId,
       projectId: thread.projectId,
+      folderKey,
       count: rows.length,
       collapsed,
       hiddenStatus,

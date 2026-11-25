@@ -398,14 +398,13 @@ export const ThreadListV2ProjectFolderHeader = memo(
     readonly item: ThreadListV2ProjectFolderListItem;
     readonly project: EnvironmentProject | null;
     readonly pane?: "screen" | "sidebar";
-    readonly onToggle: (projectKey: string) => void;
+    readonly onToggle: (folderKey: string) => void;
   }) {
     const gt = useGT();
     const m = useMessages();
     const sidebarPane = props.pane === "sidebar";
     const { item } = props;
     const title = props.project?.title ?? gt("Project");
-    const projectKey = `${item.environmentId}:${item.projectId}`;
     return (
       <Pressable
         accessibilityRole="button"
@@ -413,7 +412,7 @@ export const ThreadListV2ProjectFolderHeader = memo(
         accessibilityState={{ expanded: !item.collapsed }}
         onPress={() => {
           playSelectionHaptic();
-          props.onToggle(projectKey);
+          props.onToggle(item.folderKey);
         }}
         className={cn(
           "mt-2 min-h-[40px] flex-row items-center gap-2.5 rounded-[10px] px-3",
