@@ -131,7 +131,7 @@ function message(
   text: string,
   overrides: Partial<Extract<Entry, { kind: "message" }>["message"]> = {},
   id = "message-1",
-): Entry {
+): Extract<Entry, { kind: "message" }> {
   return {
     id: `entry-${id}`,
     kind: "message",
