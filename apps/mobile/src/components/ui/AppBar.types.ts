@@ -1,10 +1,18 @@
 import type { ReactNode } from "react";
-import type { ColorValue } from "react-native";
+import type { ColorValue, ImageSourcePropType } from "react-native";
 import type { AppSymbolName } from "./AppSymbol";
+
+export type AppBarImageIcon = {
+  readonly type: "image";
+  readonly source: ImageSourcePropType;
+  readonly tinted?: boolean;
+};
 
 export interface AppBarAction {
   readonly accessibilityLabel: string;
   readonly icon: AppSymbolName;
+  /** iOS: replaces `icon` with a native bar-button image (for dynamic icons like the usage ring). */
+  readonly iosImageIcon?: AppBarImageIcon;
   readonly onPress: () => void;
   readonly disabled?: boolean;
   readonly loading?: boolean;

@@ -261,7 +261,7 @@ export function AppBar(props: AppBarProps) {
       props.confirm ||
       closeInspector ? (
         <Toolbar placement="right">
-          {actions.map(({ loading, ...action }) =>
+          {actions.map(({ loading, iosImageIcon, ...action }) =>
             loading ? (
               <Toolbar.Custom key={action.accessibilityLabel}>
                 <View
@@ -275,7 +275,7 @@ export function AppBar(props: AppBarProps) {
               <ScreenHeaderButton
                 key={action.accessibilityLabel}
                 {...action}
-                icon={iosIcon(action.icon)}
+                icon={iosImageIcon ?? iosIcon(action.icon)}
                 separateBackground={action.separateBackground ?? true}
               />
             ),

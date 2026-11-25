@@ -1,7 +1,7 @@
 import { useGT, useMessages } from "gt-react-native";
 
 import { AppBar } from "../../components/ui/AppBar";
-import type { AppBarAction, AppBarMenu } from "../../components/ui/AppBar.types";
+import type { AppBarMenu, AppBarMenuItem } from "../../components/ui/AppBar.types";
 import {
   useAdaptiveWorkspaceLayout,
   useWorkspacePaneState,
@@ -13,7 +13,7 @@ import {
   useThreadGitMenuDefinition,
   type ThreadGitControlsProps,
 } from "./ThreadGitControls";
-import { HeaderUsageLimitsButton } from "../usage/HeaderUsageLimits";
+import { useHeaderUsageLimitsControl } from "../usage/useHeaderUsageLimitsControl";
 
 export function ThreadHeader(props: {
   readonly title: string;
@@ -32,20 +32,47 @@ export function ThreadHeader(props: {
   const { panes } = useWorkspacePaneState();
   const gitMenu = useThreadGitMenuDefinition(props.gitControls);
   const terminalMenu = threadTerminalMenu(props.gitControls, m);
+  const usageControl = useHeaderUsageLimitsControl();
   const filesVisible = props.inspectorMode === "files" && panes.auxiliaryPaneVisible;
-  const actions: AppBarAction[] = props.hasThreadCwd
-    ? [
-        {
-          accessibilityLabel: filesVisible ? gt("Close files") : gt("Open files"),
-          icon: "folder",
-          selected: filesVisible,
-          disabled: !props.gitControls.canOpenFiles,
-          separateBackground: false,
-          onPress: filesVisible ? toggleAuxiliaryPane : props.onOpenFilesInspector,
-        },
-      ]
-    : [];
-  const menus = [gitMenu, terminalMenu].filter((menu): menu is AppBarMenu => menu !== null);
+
+  const menuItems: AppBarMenuItem[] = [];
+  if (props.hasThreadCwd) {
+    menuItems.push({
+      id: "files",
+      title: filesVisible ? gt("Close files") : gt("Open files"),
+      icon: "folder",
+      selected: filesVisible,
+      disabled: !props.gitControls.canOpenFiles,
+      onPress: filesVisible ? toggleAuxiliaryPane : props.onOpenFilesInspector,
+    });
+  }
+  if (gitMenu !== null) {
+    menuItems.push({
+      id: "git-menu",
+      title: gitMenu.title,
+      icon: typeof gitMenu.icon === "string" ? gitMenu.icon : gitMenu.icon.ios,
+      items: gitMenu.items,
+    });
+  }
+  if (terminalMenu !== null) {
+    menuItems.push({
+      id: "terminal-menu",
+      title: terminalMenu.title,
+      icon: typeof terminalMenu.icon === "string" ? terminalMenu.icon : terminalMenu.icon.ios,
+      items: terminalMenu.items,
+    });
+  }
+  const menus: AppBarMenu[] =
+    menuItems.length > 0
+      ? [
+          {
+            title: gt("More actions"),
+            icon: "ellipsis",
+            separateBackground: false,
+            items: menuItems,
+          },
+        ]
+      : [];
 
   return (
     <AppBar
@@ -62,9 +89,9 @@ export function ThreadHeader(props: {
             }
           : undefined
       }
-      actions={actions}
+      actions={usageControl.action ? [usageControl.action] : undefined}
       menus={menus}
-      trailing={<HeaderUsageLimitsButton />}
+      trailing={usageControl.trailing}
       hideBottomBorder
     />
   );
