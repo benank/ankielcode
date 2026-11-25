@@ -676,7 +676,8 @@ export interface ProjectionStoreV2Shape {
     };
   }) => Effect.Effect<
     ReadonlyArray<
-      ProjectionLimitRecoveryCandidate & Pick<OrchestrationV2Run, "providerInstanceId" | "modelSelection">
+      ProjectionLimitRecoveryCandidate &
+        Pick<OrchestrationV2Run, "providerInstanceId" | "modelSelection">
     >,
     ProjectionStoreV2Error
   >;
@@ -5040,20 +5041,23 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             AND json_extract(item.payload_json, '$.failure.class') = 'usage_limit'
             AND json_extract(item.payload_json, '$.failure.resetAt') IS NOT NULL
             AND julianday(json_extract(item.payload_json, '$.failure.resetAt')) > julianday(COALESCE(r.completed_at, json_extract(t.payload_json, '$.updatedAt')))
-            ${options.creditReset
-              ? sql`AND t.provider_instance_id IN ${sql.in(options.creditReset.instanceIds)}
+            ${
+              options.creditReset
+                ? sql`AND t.provider_instance_id IN ${sql.in(options.creditReset.instanceIds)}
                     AND t.provider_instance_id = json_extract(r.payload_json, '$.providerInstanceId')
                     AND r.completed_at <= ${DateTime.formatIso(options.creditReset.afterFailureAt)}
                     AND julianday(json_extract(item.payload_json, '$.failure.resetAt')) > julianday(${now})`
-              : sql``}
+                : sql``
+            }
             AND (
               (
                 json_extract(t.payload_json, '$.limitRecovery.runId') IS r.run_id
                 AND json_extract(t.payload_json, '$.limitRecovery.resetAt') IS json_extract(item.payload_json, '$.failure.resetAt')
                 AND json_extract(t.payload_json, '$.limitRecovery.autoResume') = 1
-                AND ${options.creditReset
-                  ? sql`json_extract(t.payload_json, '$.limitRecovery.creditApplied') IS NOT 1`
-                  : sql`(
+                AND ${
+                  options.creditReset
+                    ? sql`json_extract(t.payload_json, '$.limitRecovery.creditApplied') IS NOT 1`
+                    : sql`(
                       (
                         json_extract(t.payload_json, '$.limitRecovery.creditApplied') = 1
                         OR julianday(json_extract(item.payload_json, '$.failure.resetAt')) <= julianday(${now})
@@ -5062,7 +5066,8 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                         json_extract(t.payload_json, '$.snoozedUntil') IS NULL
                         OR julianday(json_extract(t.payload_json, '$.snoozedUntil')) <= julianday(${now})
                       )
-                    )`}
+                    )`
+                }
               )
               OR (
                 (
@@ -5093,7 +5098,8 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           ORDER BY t.thread_id
         `;
         const candidates: Array<
-          ProjectionLimitRecoveryCandidate & Pick<OrchestrationV2Run, "providerInstanceId" | "modelSelection">
+          ProjectionLimitRecoveryCandidate &
+            Pick<OrchestrationV2Run, "providerInstanceId" | "modelSelection">
         > = [];
         for (const row of rows) {
           const thread = yield* decodeThreadPayload(row.payload_json);

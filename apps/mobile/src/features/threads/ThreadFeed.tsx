@@ -1697,15 +1697,28 @@ function OpenSenderThreadButton(props: {
   );
 }
 
+type ReceiptProjectedItem = {
+  readonly item: { readonly threadId: ThreadId; readonly runId: RunId | null };
+};
+
 function UserMessageReceipt({
   status,
   tintColor,
+  environmentId,
+  projectedItem,
+  messageId,
 }: {
   readonly status: ReturnType<typeof resolveUserMessageReceipt>;
   readonly tintColor: ColorValue;
+  readonly environmentId: EnvironmentId;
+  readonly projectedItem: ReceiptProjectedItem | undefined;
+  readonly messageId: MessageId;
 }) {
   const gt = useGT();
+  const sendNow = useAtomCommand(threadEnvironment.sendSteeredMessageNow, "send message now");
+  const [sending, setSending] = useState(false);
   if (status === null) return null;
+  const item = projectedItem?.item;
   return (
     <View className="flex-row items-center gap-1">
       <View
@@ -1725,6 +1738,28 @@ function UserMessageReceipt({
           ? gt("Read", { $context: "message receipt, read by the agent" })
           : gt("Sent", { $context: "message receipt, sent to the agent" })}
       </Text>
+      {status === "sent" && item !== undefined && item.runId !== null ? (
+        <Pressable
+          accessibilityRole="button"
+          className="mx-1"
+          hitSlop={6}
+          disabled={sending}
+          onPress={() => {
+            const targetRunId = item.runId;
+            if (targetRunId === null) return;
+            setSending(true);
+            void Haptics.selectionAsync();
+            void sendNow({
+              environmentId,
+              input: { threadId: item.threadId, targetRunId, messageId },
+            }).finally(() => setSending(false));
+          }}
+        >
+          <Text className="font-ankiel-medium text-2xs text-foreground-secondary">
+            <T>Send now</T>
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -1737,6 +1772,8 @@ function ThreadAutomationMessageRow(props: {
   readonly scheduledTaskId: ScheduledTaskId | undefined;
   readonly timestampLabel: string;
   readonly receipt: ReturnType<typeof resolveUserMessageReceipt>;
+  readonly projectedItem: ReceiptProjectedItem | undefined;
+  readonly messageId: MessageId;
   readonly expanded: boolean;
   readonly onToggle: () => void;
   readonly bubbleColor: ColorValue;
@@ -1824,7 +1861,13 @@ function ThreadAutomationMessageRow(props: {
       </View>
       {props.expanded || props.receipt ? (
         <View className="mt-1 flex-row items-center justify-end gap-2 pr-0.5">
-          <UserMessageReceipt status={props.receipt} tintColor={props.iconSubtleColor} />
+          <UserMessageReceipt
+            status={props.receipt}
+            tintColor={props.iconSubtleColor}
+            environmentId={props.environmentId}
+            projectedItem={props.projectedItem}
+            messageId={props.messageId}
+          />
           {props.expanded && props.scheduledTaskId ? (
             <Pressable
               accessibilityRole="link"
@@ -2321,6 +2364,8 @@ function renderFeedEntry(
             message.inputIntent,
             message.projectedItem?.item.status,
           )}
+          projectedItem={message.projectedItem}
+          messageId={message.id}
           expanded={props.expandedWorkRows[rowId] ?? false}
           onToggle={() => props.onToggleWorkRow(rowId, entry.id)}
           bubbleColor={userBubbleColor}
@@ -2578,7 +2623,13 @@ function renderFeedEntry(
           ) : null}
           {bubbleBodyVisible || receipt ? (
             <View className="mt-1 flex-row items-center justify-end gap-1 pr-0.5">
-              <UserMessageReceipt status={receipt} tintColor={iconSubtleColor} />
+              <UserMessageReceipt
+                status={receipt}
+                tintColor={iconSubtleColor}
+                environmentId={props.environmentId}
+                projectedItem={message.projectedItem}
+                messageId={message.id}
+              />
               {bubbleBodyVisible ? (
                 <>
                   {foldRowId !== null && senderRef ? (

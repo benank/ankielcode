@@ -672,6 +672,7 @@ function commandThreadId(command: OrchestrationV2ServerCommand): ThreadId {
     case "run.interrupt":
     case "run.output.submit":
     case "queued-message.promote-to-steer":
+    case "steered-message.send-now":
     case "queued-run.start":
     case "queue.resume":
     case "queued-run.reorder":
@@ -685,6 +686,7 @@ function commandThreadId(command: OrchestrationV2ServerCommand): ThreadId {
     case "thread.background-work.settle":
     case "thread.interrupt.unresponsive":
     case "thread.stop":
+    case "thread.limit-recovery.credit-applied":
     case "provider.switch":
       return command.threadId;
     case "delegated_task.request":
@@ -6298,7 +6300,12 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
   const ensureSteeringMessage = Effect.fn("Orchestrator.ensureSteeringMessage")(function* (
     command: Extract<
       OrchestrationV2Command,
-      { readonly type: "message.dispatch" | "queued-message.promote-to-steer" }
+      {
+        readonly type:
+          | "message.dispatch"
+          | "queued-message.promote-to-steer"
+          | "steered-message.send-now";
+      }
     >,
     message: Pick<OrchestrationV2ConversationMessage, "text" | "attachments" | "context">,
   ) {
@@ -6334,7 +6341,12 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
   const dispatchSteerIntoRun = Effect.fn("Orchestrator.dispatchSteerIntoRun")(function* (input: {
     readonly command: Extract<
       OrchestrationV2Command,
-      { readonly type: "message.dispatch" | "queued-message.promote-to-steer" }
+      {
+        readonly type:
+          | "message.dispatch"
+          | "queued-message.promote-to-steer"
+          | "steered-message.send-now";
+      }
     >;
     readonly events: Ref.Ref<Array<OrchestrationV2DomainEvent>>;
     readonly effects: Ref.Ref<Array<PendingOrchestrationEffectV2>>;
@@ -6365,6 +6377,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
     readonly idleCompaction?: OrchestrationV2ConversationMessage["idleCompaction"];
     readonly delegatedCompletion?: OrchestrationV2ConversationMessage["delegatedCompletion"];
     readonly notification?: OrchestrationV2ConversationMessage["notification"];
+    readonly inputIntent?: "steer" | "promoted_queued_to_steer";
     readonly forceRestart: boolean;
   }) {
     const targetRun = input.projection.runs.find((candidate) => candidate.id === input.targetRunId);
@@ -6556,9 +6569,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           type: "user_message",
           messageId: input.messageId,
           inputIntent:
-            input.command.type === "queued-message.promote-to-steer"
+            input.inputIntent ??
+            (input.command.type === "queued-message.promote-to-steer"
               ? "promoted_queued_to_steer"
-              : "steer",
+              : "steer"),
           text: input.text,
           attachments: input.attachments,
           ...(input.context ? { context: input.context } : {}),
@@ -12143,6 +12157,100 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
     });
   });
 
+  const dispatchSteeredMessageSendNow = Effect.fn("Orchestrator.dispatchSteeredMessageSendNow")(
+    function* (
+      command: Extract<OrchestrationV2Command, { readonly type: "steered-message.send-now" }>,
+      events: Ref.Ref<Array<OrchestrationV2DomainEvent>>,
+      effects: Ref.Ref<Array<PendingOrchestrationEffectV2>>,
+    ) {
+      const projection = yield* loadProjectionForCommand(
+        command,
+        [
+          "runs",
+          "nodes",
+          "attempts",
+          "messages",
+          "providerThreads",
+          "providerTurns",
+          "providerSessions",
+          "turnItems",
+          "runtimeRequests",
+          "subagents",
+        ],
+        { turnItemTypes: ["user_message"], messageRoles: ["user"], omitSettledLeafNodes: true },
+      );
+      if (projection.thread.archivedAt !== null || projection.thread.deletedAt !== null) {
+        return yield* new OrchestratorDispatchError({
+          commandId: command.commandId,
+          commandType: command.type,
+          cause: `Thread ${command.threadId} is not active.`,
+        });
+      }
+      const turnItem = projection.turnItems.find(
+        (candidate) =>
+          candidate.type === "user_message" &&
+          candidate.runId === command.targetRunId &&
+          candidate.messageId === command.messageId,
+      );
+      if (
+        turnItem === undefined ||
+        turnItem.type !== "user_message" ||
+        (turnItem.inputIntent !== "steer" && turnItem.inputIntent !== "promoted_queued_to_steer")
+      ) {
+        return yield* new OrchestratorDispatchError({
+          commandId: command.commandId,
+          commandType: command.type,
+          cause: `Message ${command.messageId} is not a steering message on run ${command.targetRunId}.`,
+        });
+      }
+      if (turnItem.status !== "pending") {
+        return;
+      }
+      const targetRun = projection.runs.find((candidate) => candidate.id === command.targetRunId);
+      if (targetRun === undefined) {
+        return yield* new OrchestratorDispatchError({
+          commandId: command.commandId,
+          commandType: command.type,
+          cause: `Target run ${command.targetRunId} was not found.`,
+        });
+      }
+      const message = projection.messages.find((candidate) => candidate.id === command.messageId);
+      if (message === undefined) {
+        return yield* new OrchestratorDispatchError({
+          commandId: command.commandId,
+          commandType: command.type,
+          cause: `Message ${command.messageId} was not found.`,
+        });
+      }
+      yield* dispatchSteerIntoRun({
+        command,
+        events,
+        effects,
+        projection,
+        modelSelection: targetRun.modelSelection,
+        targetRunId: command.targetRunId,
+        messageId: message.id,
+        text: message.text,
+        attachments: message.attachments,
+        ...(message.context ? { context: message.context } : {}),
+        createdBy: message.createdBy,
+        creationSource: message.creationSource,
+        ...(message.scheduledTaskId === undefined
+          ? {}
+          : { scheduledTaskId: message.scheduledTaskId }),
+        ...(message.senderThreadId === undefined ? {} : { senderThreadId: message.senderThreadId }),
+        ...(message.linkedSender === undefined ? {} : { linkedSender: message.linkedSender }),
+        ...(message.idleCompaction === undefined ? {} : { idleCompaction: message.idleCompaction }),
+        ...(message.delegatedCompletion === undefined
+          ? {}
+          : { delegatedCompletion: message.delegatedCompletion }),
+        ...(message.notification === undefined ? {} : { notification: message.notification }),
+        inputIntent: turnItem.inputIntent,
+        forceRestart: true,
+      });
+    },
+  );
+
   const dispatchQueuedRunReorder = Effect.fn("Orchestrator.dispatchQueuedRunReorder")(function* (
     command: Extract<OrchestrationV2Command, { readonly type: "queued-run.reorder" }>,
     events: Ref.Ref<Array<OrchestrationV2DomainEvent>>,
@@ -16049,6 +16157,9 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
           effects,
         );
         break;
+      case "steered-message.send-now":
+        cancelUnsettledEffects = yield* dispatchSteeredMessageSendNow(command, events, effects);
+        break;
       case "queued-run.start":
       case "queue.resume": {
         const projection = yield* loadProjectionForCommand(
@@ -16513,7 +16624,8 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       command.type === "notification.delivery.accept" ||
       // A steer restart that settled a wake can reserve the next one for its siblings.
       ((command.type === "message.dispatch" ||
-        command.type === "queued-message.promote-to-steer") &&
+        command.type === "queued-message.promote-to-steer" ||
+        command.type === "steered-message.send-now") &&
         committed.storedEvents.some(
           ({ event }) =>
             event.type === "subagent.updated" &&

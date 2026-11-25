@@ -3651,6 +3651,13 @@ export const OrchestrationV2Command = Schema.Union([
     targetRunId: RunId,
   }),
   Schema.Struct({
+    type: Schema.Literal("steered-message.send-now"),
+    commandId: CommandId,
+    threadId: ThreadId,
+    targetRunId: RunId,
+    messageId: MessageId,
+  }),
+  Schema.Struct({
     type: Schema.Literal("queue.resume"),
     commandId: CommandId,
     threadId: ThreadId,

@@ -2,7 +2,15 @@ import { copySnapshot as copySnapshotToClipboard } from "./copySnapshot";
 import { InlineAudioPreview } from "../files/InlineAudioPreview";
 import { filePreviewKind } from "@ankielcode/shared/filePreview";
 import type { MarkdownExtensions } from "~/markdown/wordsHast";
-import { T, useGT, useMessages, Var } from "gt-react";
+import { msg, T, useGT, useMessages, Var } from "gt-react";
+import { thrownErrorMessage } from "@ankielcode/client-runtime/errors";
+import {
+  isAtomCommandInterrupted,
+  squashAtomCommandFailure,
+} from "@ankielcode/client-runtime/state/runtime";
+import { threadEnvironment } from "../../state/threads";
+import { useAtomCommand } from "../../state/use-atom-command";
+import { toastManager } from "../ui/toast";
 import { findRevealRef } from "./markdownFindContext";
 import {
   type EnvironmentId,
@@ -354,7 +362,7 @@ function AutomationMessageRow({ row }: { row: Extract<TimelineRow, { kind: "mess
       <UserMessageProjectedStatus row={row} />
       {expanded || receipt ? (
         <div className={cn(MESSAGE_FOOTER_CLASS_NAME, ACTIONS_REVEAL_CLASS_NAME)}>
-          <UserMessageReceipt status={receipt} />
+          <UserMessageReceipt status={receipt} row={row} />
           {expanded ? (
             <div className="flex shrink-0 items-center gap-2">
               {scheduledTaskId ? (
@@ -1109,7 +1117,7 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
             ACTIONS_REVEAL_CLASS_NAME,
           )}
         >
-          <UserMessageReceipt status={receipt} />
+          <UserMessageReceipt status={receipt} row={row} />
           {showActionsBelow &&
             (floatActions ? (
               <div className="@min-[37rem]:hidden">{messageActions}</div>
@@ -1128,18 +1136,57 @@ const MESSAGE_FOOTER_CLASS_NAME = "flex w-full max-w-[80%] flex-wrap justify-end
 
 function UserMessageReceipt({
   status,
+  row,
 }: {
   readonly status: ReturnType<typeof resolveUserMessageReceipt>;
+  readonly row: Extract<TimelineRow, { kind: "message" }>;
 }) {
+  const ctx = use(TimelineRowCtx);
   const gt = useGT();
+  const m = useMessages();
+  const sendNow = useAtomCommand(threadEnvironment.sendSteeredMessageNow);
+  const [sending, setSending] = useState(false);
   if (status === null) return null;
   const Icon = status === "read" ? CheckCheckIcon : CheckIcon;
+  const item = row.projectedItem?.item;
+  const sendMessageNow = async () => {
+    if (item === undefined || item.runId === null || sending) return;
+    setSending(true);
+    const result = await sendNow({
+      environmentId: ctx.activeThreadEnvironmentId,
+      input: { threadId: item.threadId, targetRunId: item.runId, messageId: row.message.id },
+    });
+    setSending(false);
+    if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
+      const error = squashAtomCommandFailure(result);
+      toastManager.add({
+        type: "error",
+        title: m(msg("Could not send message now")),
+        description:
+          error instanceof Error
+            ? (thrownErrorMessage(error, m) ?? error.message)
+            : m(msg("An error occurred.")),
+      });
+    }
+  };
   return (
     <span className="inline-flex shrink-0 items-center gap-1 text-2xs text-muted-foreground">
       <Icon aria-hidden="true" className="size-3" />
       {status === "read"
         ? gt("Read", { $context: "message receipt, read by the agent" })
         : gt("Sent", { $context: "message receipt, sent to the agent" })}
+      {status === "sent" && item !== undefined ? (
+        <Button
+          type="button"
+          size="xs"
+          variant="ghost"
+          className="mx-1"
+          disabled={sending}
+          onClick={() => void sendMessageNow()}
+        >
+          <T>Send now</T>
+        </Button>
+      ) : null}
     </span>
   );
 }

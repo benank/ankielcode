@@ -1016,7 +1016,7 @@ it.layer(layerTest)("Antigravity provider snapshots", (it) => {
             { id: "gemini-5h", kind: "session", label: "Gemini · 5-hour", usedPercent: 10 },
           ],
         }),
-        probeColabUsage: Effect.succeed(undefined),
+        probeColabUsage: Effect.undefined,
         loadPlan: Ref.update(loads, (count) => count + 1),
       });
       const published = yield* harness.nextPublish((snapshot) => !!snapshot.usageLimits);

@@ -34,6 +34,7 @@ import {
   markThreadUnread,
   mergeThreadBack,
   promoteQueuedRun,
+  sendSteeredMessageNow,
   resumeThreadQueue,
   retryWorkspacePreparation,
   linkThreadPullRequest,
@@ -415,6 +416,12 @@ export function createThreadEnvironmentAtoms<R, E>(
     promoteQueuedRun: createEnvironmentCommand(runtime, {
       label: "environment-data:commands:thread:promote-queued-run",
       execute: promoteQueuedRun,
+      scheduler,
+      concurrency,
+    }),
+    sendSteeredMessageNow: createEnvironmentCommand(runtime, {
+      label: "environment-data:commands:thread:send-steered-message-now",
+      execute: sendSteeredMessageNow,
       scheduler,
       concurrency,
     }),

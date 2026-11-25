@@ -273,6 +273,11 @@ export interface PromoteQueuedRunInput extends ThreadCommandInput {
   readonly targetRunId: RunId;
 }
 
+export interface SendSteeredMessageNowInput extends ThreadCommandInput {
+  readonly targetRunId: RunId;
+  readonly messageId: MessageId;
+}
+
 export interface CancelQueuedRunInput extends ThreadCommandInput {
   readonly runId: RunId;
 }
@@ -1146,6 +1151,20 @@ export const promoteQueuedRun = Effect.fn("EnvironmentCommands.promoteQueuedRun"
     }),
   );
 });
+
+export const sendSteeredMessageNow = Effect.fn("EnvironmentCommands.sendSteeredMessageNow")(
+  function* (input: SendSteeredMessageNowInput) {
+    return yield* resendAfterSocketLoss(
+      dispatch({
+        type: "steered-message.send-now",
+        commandId: yield* allocateCommandId(input),
+        threadId: input.threadId,
+        targetRunId: input.targetRunId,
+        messageId: input.messageId,
+      }),
+    );
+  },
+);
 
 export const cancelQueuedRun = Effect.fn("EnvironmentCommands.cancelQueuedRun")(function* (
   input: CancelQueuedRunInput,
