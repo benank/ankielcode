@@ -203,12 +203,15 @@ export function LimitWindows({
   windows,
   now,
   compact = false,
+  subgrid = false,
 }: {
   readonly driver: ServerProvider["driver"];
   readonly accentColor?: string | undefined;
   readonly windows: ReadonlyArray<ServerProviderUsageWindow>;
   readonly now: number;
   readonly compact?: boolean;
+  /** Fills three columns of a parent grid, so several lists share one label width. */
+  readonly subgrid?: boolean;
 }) {
   const color = normalizeProviderAccentColor(accentColor) ?? barColor(driver);
   const gt = useGT();
@@ -216,9 +219,11 @@ export function LimitWindows({
   return (
     <div
       className={
-        compact
-          ? "grid grid-cols-[minmax(0,15rem)_minmax(3rem,1fr)_auto] gap-x-3 gap-y-0.5"
-          : "grid grid-cols-[11rem_minmax(0,1fr)_7rem] gap-x-4 gap-y-1"
+        subgrid
+          ? "col-span-3 grid grid-cols-subgrid gap-y-0.5"
+          : compact
+            ? "grid grid-cols-[minmax(0,15rem)_minmax(3rem,1fr)_auto] gap-x-3 gap-y-0.5"
+            : "grid grid-cols-[11rem_minmax(0,1fr)_7rem] gap-x-4 gap-y-1"
       }
     >
       {windows.map((window) => {

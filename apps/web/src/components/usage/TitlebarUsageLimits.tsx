@@ -121,40 +121,47 @@ function UsageLimitsBreakdown({
   return (
     <div className="flex flex-col gap-3 py-1">
       <PopoverTitle>{gt("Provider usage limits")}</PopoverTitle>
-      {accounts.map((account) => {
-        const name =
-          account.displayName ?? providerClients.get(account.driver)?.label ?? account.driver;
-        return (
-          <section key={account.key} className="flex flex-col gap-1 border-t border-border/60 pt-2">
-            <h3 className="flex min-w-0 items-center gap-2 text-xs font-medium">
-              <ProviderInstanceIcon
-                driverKind={account.driver}
-                displayName={name}
-                accentColor={account.accentColor}
-                className="size-4 shrink-0"
-                iconClassName="size-3.5"
-              />
-              <span className="truncate">{name}</span>
-              {account.displayName === null && account.email ? (
-                <RedactedSensitiveText
-                  value={account.email}
-                  ariaLabel={gt("Toggle account email visibility")}
-                  revealTooltip={gt("Click to reveal email")}
-                  hideTooltip={gt("Click to hide email")}
-                  className="truncate"
+      {/* One grid for every provider, so labels size to the longest one and bars line up. */}
+      <div className="grid grid-cols-[auto_minmax(3rem,1fr)_auto] gap-x-3 gap-y-3 empty:hidden">
+        {accounts.map((account) => {
+          const name =
+            account.displayName ?? providerClients.get(account.driver)?.label ?? account.driver;
+          return (
+            <section
+              key={account.key}
+              className="col-span-3 grid grid-cols-subgrid gap-y-1 border-t border-border/60 pt-2"
+            >
+              <h3 className="col-span-3 flex min-w-0 items-center gap-2 text-xs font-medium">
+                <ProviderInstanceIcon
+                  driverKind={account.driver}
+                  displayName={name}
+                  accentColor={account.accentColor}
+                  className="size-4 shrink-0"
+                  iconClassName="size-3.5"
                 />
-              ) : null}
-            </h3>
-            <LimitWindows
-              compact
-              driver={account.driver}
-              accentColor={account.accentColor}
-              windows={account.limits.windows}
-              now={now}
-            />
-          </section>
-        );
-      })}
+                <span className="truncate">{name}</span>
+                {account.displayName === null && account.email ? (
+                  <RedactedSensitiveText
+                    value={account.email}
+                    ariaLabel={gt("Toggle account email visibility")}
+                    revealTooltip={gt("Click to reveal email")}
+                    hideTooltip={gt("Click to hide email")}
+                    className="truncate"
+                  />
+                ) : null}
+              </h3>
+              <LimitWindows
+                compact
+                subgrid
+                driver={account.driver}
+                accentColor={account.accentColor}
+                windows={account.limits.windows}
+                now={now}
+              />
+            </section>
+          );
+        })}
+      </div>
       {externalLinks.map((link) => (
         <div
           key={link.url}
