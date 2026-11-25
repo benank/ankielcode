@@ -247,6 +247,7 @@ export const AuthAccessTokenResult = Schema.Struct({
   token_type: Schema.Literals(["Bearer", "DPoP"]),
   expires_in: Schema.Number,
   scope: TrimmedNonEmptyString,
+  environment_label: Schema.optionalKey(TrimmedNonEmptyString),
 });
 export type AuthAccessTokenResult = typeof AuthAccessTokenResult.Type;
 

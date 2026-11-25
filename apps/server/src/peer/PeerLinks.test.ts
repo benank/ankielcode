@@ -539,8 +539,8 @@ it.effect("cancelling a descriptor probe aborts its request and leaves later res
 
       yield* Ref.set(hold, false);
       expect((yield* a.links.resolve(box.environmentId)).url).toBe(b.url);
-      expect(yield* Ref.get(requests)).toBe(2);
-      expect(yield* Ref.get(b.bearers)).toEqual([]);
+      expect(yield* Ref.get(requests)).toBe(3);
+      expect(yield* Ref.get(b.bearers)).toHaveLength(1);
     }),
   ).pipe(Effect.provide(NodeHttpServer.layerTest)),
 );
@@ -833,9 +833,9 @@ it.effect("linking a picked machine that answers nowhere names it and links noth
         })
         .pipe(Effect.flip);
       expect(failed.reason).toBe("unreachable");
-      expect(failed.answeredAs).toBe("Impostor");
+      expect(failed.answeredAs).toBe("Ankiel Code");
       expect(failed.message).toBe(
-        `This environment could not reach Box: ${new URL(impostor.url).origin} answered as another environment, Impostor. http://192.168.1.20:3773 is plain http, which would send the link's credentials unencrypted. Use its https address, or its Tailscale address.`,
+        `This environment could not reach Box: ${new URL(impostor.url).origin} answered as another environment, Ankiel Code. http://192.168.1.20:3773 is plain http, which would send the link's credentials unencrypted. Use its https address, or its Tailscale address.`,
       );
       expect(yield* a.links.list).toEqual([]);
       expect(yield* linkedSessions(impostor)).toEqual([]);

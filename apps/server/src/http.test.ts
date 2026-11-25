@@ -25,7 +25,16 @@ import {
   injectMcpAppThemeBootstrap,
   MCP_APP_MAX_HTML_BYTES,
 } from "@ankielcode/shared/mcpApp";
-import { ORCHESTRATION_PROTOCOL_HEADER } from "@ankielcode/contracts";
+import {
+  EnvironmentHttpApi,
+  EnvironmentId,
+  ORCHESTRATION_PROTOCOL_HEADER,
+} from "@ankielcode/contracts";
+import * as HttpApi from "effect/http-api/HttpApi";
+import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
+import * as ServerEnvironment from "./environment/ServerEnvironment.ts";
+import * as EnvironmentAuth from "./auth/EnvironmentAuth.ts";
+import { layerEnvironmentAuth } from "./peer/PeerLinks.testkit.ts";
 import {
   DESKTOP_READINESS_PROOF_PATH,
   isValidDesktopReadinessProof,
@@ -1011,4 +1020,94 @@ describe("downloadContentDisposition", () => {
       `attachment; filename="bad_name.pdf"; filename*=UTF-8''bad%EF%BF%BDname.pdf`,
     );
   });
+});
+
+describe("environment descriptor redaction", () => {
+  it.live(
+    "redacts computer label and platform for unauthenticated requests and returns them when authenticated",
+    () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          class MetadataApi extends HttpApi.make("environment").add(
+            EnvironmentHttpApi.groups.metadata,
+          ) {}
+          const authContext = yield* Layer.build(layerEnvironmentAuth("ankiel-descriptor-test-"));
+          const auth = Context.get(authContext, EnvironmentAuth.EnvironmentAuth);
+          const layerEnv = Layer.succeed(ServerEnvironment.ServerEnvironment, {
+            getEnvironmentId: Effect.succeed(EnvironmentId.make("env-secret-box")),
+            getDescriptor: Effect.succeed({
+              environmentId: EnvironmentId.make("env-secret-box"),
+              label: "Hyperspeed",
+              platform: { os: "darwin", arch: "arm64", machine: "mac-mini" },
+              serverVersion: "0.1.11",
+              orchestrationProtocolVersion: 2,
+              capabilities: { repositoryIdentity: true },
+            }),
+          });
+          const routes = HttpApiBuilder.layer(MetadataApi).pipe(
+            Layer.provide(ServerHttp.layerServerEnvironmentHttpApi),
+            Layer.provide(layerEnv),
+            Layer.provide(Layer.succeedContext(authContext)),
+          );
+          const { handler, dispose } = HttpRouter.toWebHandler(routes);
+          yield* Effect.addFinalizer(() => Effect.promise(dispose));
+
+          const unauthRes = yield* Effect.promise(() =>
+            handler(new Request("http://127.0.0.1/.well-known/ankiel/environment")),
+          );
+          expect(unauthRes.status).toBe(200);
+          const unauthJson = yield* Effect.promise(() => unauthRes.json());
+          expect(unauthJson).toMatchObject({
+            environmentId: "env-secret-box",
+            label: "Ankiel Code",
+            platform: { os: "unknown", arch: "other" },
+            serverVersion: "0.1.11",
+            orchestrationProtocolVersion: 2,
+            capabilities: { repositoryIdentity: true },
+          });
+          expect(unauthJson.platform.machine).toBeUndefined();
+
+          const pairing = yield* auth.issuePairingCredential();
+          const token = yield* auth.exchangeBootstrapCredentialForAccessToken(
+            pairing.credential,
+            undefined,
+            { label: "Test", deviceType: "desktop" },
+          );
+          const authRes = yield* Effect.promise(() =>
+            handler(
+              new Request("http://127.0.0.1/.well-known/ankiel/environment", {
+                headers: { Authorization: `Bearer ${token.access_token}` },
+              }),
+            ),
+          );
+          expect(authRes.status).toBe(200);
+          const authJson = yield* Effect.promise(() => authRes.json());
+          expect(authJson).toMatchObject({
+            environmentId: "env-secret-box",
+            label: "Hyperspeed",
+            platform: { os: "darwin", arch: "arm64", machine: "mac-mini" },
+          });
+
+          const mcp = yield* auth.issueMcpClientSession({
+            label: "Peer",
+            access: "auto",
+            peerLink: true,
+          });
+          const mcpRes = yield* Effect.promise(() =>
+            handler(
+              new Request("http://127.0.0.1/.well-known/ankiel/environment", {
+                headers: { Authorization: `Bearer ${mcp.token}` },
+              }),
+            ),
+          );
+          expect(mcpRes.status).toBe(200);
+          const mcpJson = yield* Effect.promise(() => mcpRes.json());
+          expect(mcpJson).toMatchObject({
+            environmentId: "env-secret-box",
+            label: "Hyperspeed",
+            platform: { os: "darwin", arch: "arm64", machine: "mac-mini" },
+          });
+        }),
+      ),
+  );
 });

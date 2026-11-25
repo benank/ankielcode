@@ -181,8 +181,20 @@ export const preparePairingRegistration = Effect.fn(
       clientMetadata: presentation.metadata,
       dpopProof: dpopProof.value,
     }).pipe(Effect.mapError(mapRemoteEnvironmentError));
+    const label = access.environment_label ?? descriptor.label;
     return new BearerConnectionRegistration({
-      ...route,
+      target: new BearerConnectionTarget({
+        environmentId: descriptor.environmentId,
+        label,
+        connectionId,
+      }),
+      profile: new BearerConnectionProfile({
+        connectionId,
+        environmentId: descriptor.environmentId,
+        label,
+        httpBaseUrl: target.httpBaseUrl,
+        wsBaseUrl: target.wsBaseUrl,
+      }),
       credential: new DpopConnectionCredential({
         accessToken: access.access_token,
         expiresAtEpochMs: (yield* Clock.currentTimeMillis) + access.expires_in * 1_000,
@@ -194,9 +206,21 @@ export const preparePairingRegistration = Effect.fn(
     credential: target.credential,
     clientMetadata: presentation.metadata,
   }).pipe(Effect.mapError(mapRemoteEnvironmentError));
+  const label = access.environment_label ?? descriptor.label;
 
   return new BearerConnectionRegistration({
-    ...route,
+    target: new BearerConnectionTarget({
+      environmentId: descriptor.environmentId,
+      label,
+      connectionId,
+    }),
+    profile: new BearerConnectionProfile({
+      connectionId,
+      environmentId: descriptor.environmentId,
+      label,
+      httpBaseUrl: target.httpBaseUrl,
+      wsBaseUrl: target.wsBaseUrl,
+    }),
     credential: new BearerConnectionCredential({
       token: access.access_token,
     }),

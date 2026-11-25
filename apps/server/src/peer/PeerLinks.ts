@@ -33,6 +33,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpApi from "effect/http-api/HttpApi";
 import * as HttpApiClient from "effect/http-api/HttpApiClient";
 import { isLocalLoopbackHost, isTailnetHost } from "@ankielcode/shared/hostClassification";
@@ -268,15 +269,20 @@ const make = Effect.gen(function* () {
     Effect.provideService(response, FetchHttpClient.RequestInit, { redirect: "manual" }),
   );
 
-  const clientFor = (origin: string) =>
+  const clientFor = (origin: string, bearerToken?: string) =>
     HttpApiClient.make(PeerHttpApi, { baseUrl: origin }).pipe(
-      Effect.provideService(HttpClient.HttpClient, peerHttpClient),
+      Effect.provideService(
+        HttpClient.HttpClient,
+        bearerToken === undefined
+          ? peerHttpClient
+          : peerHttpClient.pipe(HttpClient.mapRequest(HttpClientRequest.bearerToken(bearerToken))),
+      ),
     );
 
   /** The environment answering at `origin`, or why nothing there answers as Ankiel Code. */
-  const probe = (origin: string) => {
+  const probe = (origin: string, bearerToken?: string) => {
     const timeout = probeTimeout(origin);
-    return clientFor(origin).pipe(
+    return clientFor(origin, bearerToken).pipe(
       Effect.flatMap((client) => client.metadata.descriptor()),
       // A brief network drop must not list a live peer as down; the timeout still bounds both tries.
       Effect.retry({
@@ -558,10 +564,15 @@ const make = Effect.gen(function* () {
       });
     }
     const issued = yield* signIn(primary, input, `${LINK_CLIENT_NAME_PREFIX}${self.label}`);
+    const authenticatedPeer = yield* probe(primary, issued.access_token).pipe(Effect.option);
+    const label = Option.match(authenticatedPeer, {
+      onNone: () => peer.label,
+      onSome: (described) => described.label,
+    });
     const now = yield* DateTime.now;
     const linked: PeerLink = {
       environmentId: peer.environmentId,
-      label: peer.label,
+      label,
       urls: origins,
       access: input.access,
       linkedAt: now,
@@ -624,6 +635,7 @@ const make = Effect.gen(function* () {
         `.pipe(Effect.ignoreCause({ log: true }), Effect.as({ ...link, label }));
 
   const statusOf = Effect.fn("PeerLinks.statusOf")(function* (
+    row: PeerLinkRow,
     link: PeerLink,
     now: DateTime.Utc,
   ): Effect.fn.Return<PeerLinkSummary> {
@@ -632,17 +644,34 @@ const make = Effect.gen(function* () {
     if (link.urls.length === 0) return { ...link, status: "unreachable" };
     const answered = yield* Effect.raceAll(
       link.urls.map((url) =>
-        answersAs(url, link.environmentId).pipe(Effect.flatMap(Effect.fromOption)),
+        answersAs(url, link.environmentId).pipe(
+          Effect.flatMap(Effect.fromOption),
+          Effect.map((peer) => ({ url, peer })),
+        ),
       ),
     ).pipe(Effect.timeoutOption(LIST_PROBE_TIMEOUT), Effect.orElseSucceed(Option.none));
     if (Option.isNone(answered)) return { ...link, status: "unreachable" };
-    return { ...(yield* withLabel(link, answered.value.label)), status: "reachable" };
+    const stored = yield* secrets.get(row.secret_name).pipe(Effect.orElseSucceed(Option.none));
+    const refreshedLabel = Option.isSome(stored)
+      ? yield* probe(answered.value.url, new TextDecoder().decode(stored.value)).pipe(
+          Effect.timeoutOption(LIST_PROBE_TIMEOUT),
+          Effect.map(Option.map((described) => described.label)),
+          Effect.orElseSucceed(Option.none),
+        )
+      : Option.none<string>();
+    const updated = Option.isSome(refreshedLabel)
+      ? yield* withLabel(link, refreshedLabel.value)
+      : link;
+    return { ...updated, status: "reachable" };
   });
 
   const list: PeerLinks["Service"]["list"] = Effect.gen(function* () {
-    const links = yield* Effect.forEach(yield* readRows, toLink);
+    const rows = yield* readRows;
+    const pairs = yield* Effect.forEach(rows, (row) =>
+      toLink(row).pipe(Effect.map((link) => ({ row, link }))),
+    );
     const now = yield* DateTime.now;
-    return yield* Effect.forEach(links, (link) => statusOf(link, now), {
+    return yield* Effect.forEach(pairs, ({ row, link }) => statusOf(row, link, now), {
       concurrency: "unbounded",
     });
   });
@@ -780,8 +809,13 @@ const make = Effect.gen(function* () {
           message: `${link.label} runs an Ankiel Code version that cannot keep a linked agent's limits. Update it, then link again.`,
         });
       }
+      const bearerToken = new TextDecoder().decode(stored.value);
+      const refreshed = yield* probe(url, bearerToken).pipe(Effect.option);
+      const updatedLink = Option.isSome(refreshed)
+        ? yield* withLabel(link, refreshed.value.label)
+        : link;
       return {
-        link: yield* withLabel(link, peer.label),
+        link: updatedLink,
         url,
         token: new TextDecoder().decode(stored.value),
         capabilities: peer.capabilities,

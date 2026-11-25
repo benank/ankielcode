@@ -397,16 +397,42 @@ const authenticateRawRouteWithScope =
     }
   });
 
+const REDACTED_ENVIRONMENT_LABEL = "Ankiel Code";
+
 export const layerServerEnvironmentHttpApi = HttpApiBuilder.group(
   EnvironmentHttpApi,
   "metadata",
   Effect.fnUntraced(function* (handlers) {
     const serverEnvironment = yield* ServerEnvironment.ServerEnvironment;
+    const serverAuth = yield* Effect.serviceOption(EnvironmentAuth.EnvironmentAuth);
     return handlers.handle(
       "descriptor",
       Effect.fn("environment.metadata.descriptor")(function* (args) {
         yield* annotateEnvironmentRequest(args.endpoint.name);
-        return yield* serverEnvironment.getDescriptor;
+        const descriptor = yield* serverEnvironment.getDescriptor;
+        const request = yield* HttpServerRequest.HttpServerRequest;
+        const authenticated = Option.isSome(serverAuth)
+          ? yield* serverAuth.value.authenticateHttpRequest(request).pipe(
+              Effect.as(true),
+              Effect.catch(() =>
+                serverAuth.value.authenticateMcpClient(request).pipe(
+                  Effect.as(true),
+                  Effect.orElseSucceed(() => false),
+                ),
+              ),
+            )
+          : false;
+        if (authenticated) {
+          return descriptor;
+        }
+        return {
+          ...descriptor,
+          label: REDACTED_ENVIRONMENT_LABEL,
+          platform: {
+            os: "unknown" as const,
+            arch: "other" as const,
+          },
+        };
       }),
     );
   }),

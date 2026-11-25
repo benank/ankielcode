@@ -37,6 +37,7 @@ import * as EnvironmentAuth from "./EnvironmentAuth.ts";
 import * as SessionStore from "./SessionStore.ts";
 import { deriveAuthClientMetadata } from "./utils.ts";
 import { checkRequestDpopProof } from "./dpop.ts";
+import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
 import { requestUrl } from "../requestUrl.ts";
 
 const CREDENTIAL_RESPONSE_HEADERS = {
@@ -281,6 +282,15 @@ export const layer = HttpApiBuilder.group(
   Effect.fnUntraced(function* (handlers) {
     const serverAuth = yield* EnvironmentAuth.EnvironmentAuth;
     const sessions = yield* SessionStore.SessionStore;
+    const serverEnvironment = yield* Effect.serviceOption(ServerEnvironment.ServerEnvironment);
+
+    const withEnvironmentLabel = Effect.fnUntraced(function* <T extends object>(result: T) {
+      if (Option.isNone(serverEnvironment)) {
+        return result;
+      }
+      const descriptor = yield* serverEnvironment.value.getDescriptor;
+      return { ...result, environment_label: descriptor.label };
+    });
 
     return handlers
       .handle(
@@ -409,13 +419,14 @@ export const layer = HttpApiBuilder.group(
                 yield* appendDpopChallengeHeader;
                 return yield* failEnvironmentAuthInvalid("invalid_credential");
               }
-              return yield* serverAuth.renewAccessToken(
+              const renewed = yield* serverAuth.renewAccessToken(
                 args.payload.subject_token,
                 proof.thumbprint,
                 proof.consume,
               );
+              return yield* withEnvironmentLabel(renewed);
             }
-            return yield* serverAuth.exchangeBootstrapCredentialForAccessToken(
+            const issued = yield* serverAuth.exchangeBootstrapCredentialForAccessToken(
               args.payload.subject_token,
               requestedScopes,
               deriveAuthClientMetadata({
@@ -430,6 +441,7 @@ export const layer = HttpApiBuilder.group(
               }),
               proof ? { proofKeyThumbprint: proof.thumbprint } : undefined,
             );
+            return yield* withEnvironmentLabel(issued);
           },
           Effect.catchIf(EnvironmentAuth.isServerAuthCredentialError, (error) =>
             failEnvironmentAuthInvalid(
