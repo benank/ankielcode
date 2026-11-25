@@ -21,7 +21,7 @@ const sidebarRowThreadKeyAtom = Atom.family((openThreadKey: string) =>
   }),
 );
 
-/** An open subagent, side chat or delegated task has no row; its listed ancestor's row is selected. */
+/** Keeps the top-level row visible when one of its child threads is open. */
 export function useSidebarRowThreadKey(openThreadKey: string | null): string | null {
   return useAtomValue(
     openThreadKey === null ? NULL_ROW_KEY_ATOM : sidebarRowThreadKeyAtom(openThreadKey),

@@ -14,6 +14,10 @@ import {
   type SnoozePreset,
 } from "@ankielcode/client-runtime/state/thread-settled";
 import type { EnvironmentThreadShell } from "@ankielcode/client-runtime/state/shell";
+import type {
+  buildThreadNavigationTree,
+  ThreadNavigationBranch,
+} from "@ankielcode/client-runtime/state/threads";
 import { resolveThreadProviderStack } from "@ankielcode/client-runtime/state/models";
 import {
   threadSearchMatchKey,
@@ -413,7 +417,10 @@ export interface ThreadListV2Item {
   readonly pinned: boolean;
   readonly wokeAt: string | null;
   readonly isLast: boolean;
+  readonly branch?: ThreadNavigationBranch;
 }
+
+export type ThreadListV2Tree = ReturnType<typeof buildThreadNavigationTree<EnvironmentThreadShell>>;
 
 export interface ThreadListV2Layout {
   readonly items: ThreadListV2Item[];
@@ -513,6 +520,7 @@ export function threadListV2ListItemsAreEqual(
         previous.item.snoozed === item.item.snoozed &&
         previous.item.pinned === item.item.pinned &&
         previous.item.wokeAt === item.item.wokeAt &&
+        sameBranch(previous.item.branch, item.item.branch) &&
         previous.snoozeWakeLabelText === item.snoozeWakeLabelText &&
         previous.timeLabel === item.timeLabel &&
         previous.snoozePresetMinute === item.snoozePresetMinute &&
@@ -553,6 +561,25 @@ export function threadListV2ListItemsAreEqual(
   }
 }
 
+function sameBranch(
+  left: ThreadNavigationBranch | undefined,
+  right: ThreadNavigationBranch | undefined,
+) {
+  return (
+    left === right ||
+    (left !== undefined &&
+      right !== undefined &&
+      left.parentKey === right.parentKey &&
+      left.hasNextSibling === right.hasNextSibling &&
+      left.ancestorGuides.length === right.ancestorGuides.length &&
+      left.ancestorGuides.every(
+        ({ key, continues }, index) =>
+          key === right.ancestorGuides[index]?.key &&
+          continues === right.ancestorGuides[index]?.continues,
+      ))
+  );
+}
+
 function resolveThreadListV2ItemTimeLabel(
   item: ThreadListV2Item,
   showSnoozeWakeLabel: boolean,
@@ -578,6 +605,7 @@ function resolveThreadListV2ItemTimeLabel(
 
 export function buildThreadListV2ListItems(input: {
   readonly items: ReadonlyArray<ThreadListV2Item>;
+  readonly tree?: ThreadListV2Tree;
   readonly pendingTasks: ReadonlyArray<PendingNewTask>;
   readonly workingCount?: number;
   readonly workingShelfExpanded?: boolean;
@@ -597,13 +625,14 @@ export function buildThreadListV2ListItems(input: {
 }): ThreadListV2ListItem[] {
   const resolve = input.resolve ?? m;
   const queuedThreadKeys = input.queuedThreadKeys?.size ? input.queuedThreadKeys : undefined;
-  const threadItems = input.items.map((item): ThreadListV2ListItem => {
+  const buildThreadItem = (item: ThreadListV2Item): ThreadListV2ThreadListItem => {
     const snoozeWakeLabelText =
       item.snoozed && item.thread.snoozedUntil != null && input.snoozeLabelNow !== undefined
         ? snoozeWakeLabel(item.thread.snoozedUntil, { now: input.snoozeLabelNow }, resolve)
         : undefined;
     // Put the clock on items so recycler equality limits ticks to rows displaying snooze preset times.
     const snoozePresetMinute =
+      !item.branch &&
       !item.snoozed &&
       input.snoozeLabelNow !== undefined &&
       (input.snoozeEnvironmentIds?.has(item.thread.environmentId) ?? true) &&
@@ -627,7 +656,8 @@ export function buildThreadListV2ListItems(input: {
       canMoveUp: move?.canMoveUp === true,
       canMoveDown: move?.canMoveDown === true,
     };
-  });
+  };
+  const threadItems = input.items.map(buildThreadItem);
   const pendingItems = input.pendingTasks.map((pendingTask, index): ThreadListV2ListItem => ({
     type: "v2-pending",
     key: `v2-${pendingTask.key}`,
@@ -676,11 +706,35 @@ export function buildThreadListV2ListItems(input: {
     });
     result.push(...threadItems.slice(settledShelfHeaderIndex));
   }
-  return result.map((entry, index) => {
+  const nestedResult = input.tree?.rowsByRoot.size
+    ? result.flatMap<ThreadListV2ListItem>((entry) => {
+        if (entry.type !== "v2-thread") return [entry];
+        const { thread } = entry.item;
+        const children = input.tree?.rowsByRoot.get(`${thread.environmentId}:${thread.id}`);
+        return children
+          ? [
+              entry,
+              ...children.map((child) =>
+                buildThreadItem({
+                  thread: child.thread,
+                  branch: child.branch,
+                  variant: "slim",
+                  snoozed: false,
+                  pinned: false,
+                  wokeAt: null,
+                  isLast: false,
+                }),
+              ),
+            ]
+          : [entry];
+      })
+    : result;
+  return nestedResult.map((entry, index) => {
     if (entry.type !== "v2-thread" && entry.type !== "v2-pending") return entry;
-    const next = result[index + 1];
+    const next = nestedResult[index + 1];
     const showTrailingDivider =
-      next?.type === "v2-thread" || (next?.type === "v2-pending" && !next.showPendingDivider);
+      (next?.type === "v2-thread" && next.item.branch === undefined) ||
+      (next?.type === "v2-pending" && !next.showPendingDivider);
     return showTrailingDivider === entry.showTrailingDivider
       ? entry
       : { ...entry, showTrailingDivider };

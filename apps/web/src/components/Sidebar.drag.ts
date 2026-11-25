@@ -100,6 +100,7 @@ export function createSidebarSortingStrategy(input: {
   snoozedThreadCount?: number;
   cardHeight?: number;
   slimHeight?: number;
+  childCount?: (key: string) => number;
   boundaryLabelHeight?: number;
 }): SortingStrategy {
   if (input.enabled === false) return () => stationary;
@@ -132,9 +133,11 @@ export function createSidebarSortingStrategy(input: {
         }
         continue;
       }
-      if (item.section === "pinned" || item.section === "active" || item.section === "working")
-        cardHeight ??= rects[index]?.height;
-      else slimHeight ??= rects[index]?.height;
+      if (!input.childCount?.(item.key)) {
+        if (item.section === "pinned" || item.section === "active" || item.section === "working")
+          cardHeight ??= rects[index]?.height;
+        else slimHeight ??= rects[index]?.height;
+      }
       if (item.key !== active.key) groups[item.section].push(item);
     }
     const scale =
@@ -199,14 +202,16 @@ export function createSidebarSortingStrategy(input: {
           ? cardHeight
           : slimHeight;
       const moved = item.kind === "thread" && item.key === active.key;
+      const childHeight =
+        item.kind === "thread" ? (input.childCount?.(item.key) ?? 0) * (slimHeight + 1) : 0;
       return item.kind === "marker" &&
         (item.marker === "pinned-header" || item.marker === "pinned-divider")
         ? labelHeight
         : item.kind === "marker" && item.marker.endsWith("placeholder")
           ? slimHeight
           : moved
-            ? fallback
-            : (rect?.height ?? fallback);
+            ? fallback + childHeight
+            : (rect?.height ?? fallback + childHeight);
     });
     const firstShelf = items.findIndex(isShelfHeader);
     const shelfRect = rects[firstShelf];

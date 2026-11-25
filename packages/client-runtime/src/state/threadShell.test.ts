@@ -17,6 +17,7 @@ import { v2Now, v2ShellSnapshot, v2ThreadShell } from "./orchestrationV2TestFixt
 import { applyShellStreamEvent } from "./shellReducer.ts";
 import { isThreadWorking } from "./threadInbox.ts";
 import {
+  buildThreadNavigationTree,
   childThreadInputsTitle,
   createEnvironmentThreadShellAtoms,
   resolveListedAncestorThreadRef,
@@ -61,6 +62,71 @@ function makeHarness(environmentIds: ReadonlyArray<EnvironmentId> = [environment
 }
 
 describe("v2 thread shell lists", () => {
+  it("groups visible children across environments without promoting hidden or archived branches", () => {
+    const { registry, threads, snapshotAtom } = makeHarness([environmentId, remoteEnvironmentId]);
+    const root = v2ThreadShell;
+    const child = {
+      ...root,
+      id: ThreadId.make("agent"),
+      lineage: {
+        ...root.lineage,
+        parentThreadId: root.id,
+        relationshipToParent: "subagent" as const,
+      },
+    };
+    const nested = {
+      ...child,
+      id: ThreadId.make("nested"),
+      lineage: { ...child.lineage, parentThreadId: child.id },
+    };
+    const side = {
+      ...child,
+      id: ThreadId.make("side"),
+      lineage: { ...child.lineage, relationshipToParent: "fork" as const, sideChat: true },
+    };
+    const fork = {
+      ...side,
+      id: ThreadId.make("fork"),
+      lineage: { ...side.lineage, sideChat: false },
+    };
+    const remote = {
+      ...root,
+      id: child.id,
+      delegatedFrom: { environmentId, threadId: root.id, title: root.title },
+    };
+    registry.set(snapshotAtom(environmentId), {
+      ...v2ShellSnapshot,
+      threads: [
+        nested,
+        side,
+        root,
+        child,
+        fork,
+        { ...side, id: ThreadId.make("archived"), archivedAt: v2Now },
+      ],
+    });
+    registry.set(snapshotAtom(remoteEnvironmentId), { ...v2ShellSnapshot, threads: [remote] });
+
+    const rootKey = `${environmentId}:${root.id}`;
+    const tree = buildThreadNavigationTree(registry.get(threads.quietThreadShellsAtom));
+    const rows = tree.rowsByRoot.get(rootKey);
+    expect(
+      rows?.map(({ key, branch }) => [
+        key,
+        branch.parentKey,
+        branch.ancestorGuides.map((guide) => guide.continues),
+        branch.hasNextSibling,
+      ]),
+    ).toEqual([
+      [`${environmentId}:agent`, rootKey, [], true],
+      [`${environmentId}:nested`, `${environmentId}:agent`, [true], false],
+      [`${environmentId}:side`, rootKey, [], true],
+      [`${remoteEnvironmentId}:agent`, rootKey, [], false],
+    ]);
+    expect(tree.rootByChild.get(`${environmentId}:nested`)).toBe(rootKey);
+    registry.dispose();
+  });
+
   it("builds no child index while no child asks for input", () => {
     const { registry, threads, snapshotAtom } = makeHarness();
     let parentIdReads = 0;

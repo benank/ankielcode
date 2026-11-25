@@ -21,6 +21,7 @@ import type {
   EnvironmentThreadShell,
 } from "@ankielcode/client-runtime/state/shell";
 import type { EnvironmentThreadSearchMatch } from "@ankielcode/client-runtime/state/thread-search";
+import type { ThreadNavigationBranch } from "@ankielcode/client-runtime/state/threads";
 import {
   formatWorkingDurationLabel,
   resolveThreadWorkingStartedAt,
@@ -769,6 +770,7 @@ export const ThreadListV2PendingRow = memo(function ThreadListV2PendingRow(props
 export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   readonly thread: EnvironmentThreadShell;
   readonly variant: "card" | "slim";
+  readonly branch?: ThreadNavigationBranch | undefined;
   readonly hasQueuedMessages?: boolean;
   readonly snoozed?: boolean;
   readonly pinned?: boolean;
@@ -838,6 +840,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   const {
     thread,
     variant,
+    branch,
     onSelectThread,
     onOpenThreadPullRequests,
     onDeleteThread,
@@ -854,6 +857,11 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
     onSetThreadAutoSettle,
     onMoveThread,
   } = props;
+  const settlementSupported = branch === undefined && props.settlementSupported;
+  const snoozeSupported = branch === undefined && props.snoozeSupported;
+  const pinningSupported = branch === undefined && props.pinningSupported;
+  const autoSettleOptOutSupported = branch === undefined && props.autoSettleOptOutSupported;
+  const reorderSupported = branch === undefined && props.reorderSupported === true;
   const snoozedRow = props.snoozed === true;
   const pinnedRow = props.pinned === true;
   const dormant = useSwipeRowDormant(props.activationKey);
@@ -994,7 +1002,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   // The gate's only time-dependent edge is the queued-turn grace window, so its
   // expiry is known without a clock: evaluate at the message's own timestamp.
   // A gate held by runtime status has no expiry, and no clock tick opens it.
-  const snoozeGateExpiryMs = props.snoozeSupported
+  const snoozeGateExpiryMs = snoozeSupported
     ? resolveThreadListV2SnoozeGateExpiryMs(thread, { now: thread.latestUserMessageAt ?? "" })
     : null;
   // The window is inclusive, so wake just past it.
@@ -1002,8 +1010,8 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   const snoozeGateNow = new Date(snoozeGateNowMs).toISOString();
   const swipeActions = resolveThreadListV2SwipeActions({
     variant,
-    settlementSupported: props.settlementSupported,
-    snoozeSupported: props.snoozeSupported,
+    settlementSupported,
+    snoozeSupported,
     snoozable: canSnooze(thread, { now: snoozeGateNow }),
     snoozed: snoozedRow,
   });
@@ -1028,7 +1036,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   );
   const reorderMenuItems = useMemo<MenuAction[]>(
     () =>
-      props.reorderSupported === true
+      reorderSupported
         ? [
             { id: "arrange", title: gt("Arrange threads…"), image: "line.3.horizontal" },
             {
@@ -1045,11 +1053,11 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
             } satisfies MenuAction,
           ]
         : [],
-    [gt, props.canMoveDown, props.canMoveUp, props.reorderSupported],
+    [gt, props.canMoveDown, props.canMoveUp, reorderSupported],
   );
   const pinMenuItems = useMemo<MenuAction[]>(
     () =>
-      props.pinningSupported
+      pinningSupported
         ? [
             thread.pinnedAt != null
               ? {
@@ -1060,11 +1068,11 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
               : { id: "pin", title: gt("Pin", { $context: "verb, thread action" }), image: "pin" },
           ]
         : [],
-    [gt, props.pinningSupported, thread.pinnedAt],
+    [gt, pinningSupported, thread.pinnedAt],
   );
   const autoSettleMenuItems = useMemo<MenuAction[]>(
     () =>
-      props.autoSettleOptOutSupported
+      autoSettleOptOutSupported
         ? [
             {
               id: "auto-settle",
@@ -1085,7 +1093,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
             } satisfies MenuAction,
           ]
         : [],
-    [gt, props.autoSettleOptOutSupported, thread.autoSettleDisabledAt],
+    [gt, autoSettleOptOutSupported, thread.autoSettleDisabledAt],
   );
   const canTurnIntoProject = canTurnThreadIntoProject(thread);
   const titleMenuItems = useMemo<MenuAction[]>(
@@ -1159,7 +1167,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         m,
       );
     }
-    if (!props.settlementSupported) {
+    if (!settlementSupported) {
       return layoutThreadListV2RowMenuActions(
         {
           nested,
@@ -1222,7 +1230,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
     autoSettleMenuItems,
     canUnsettle,
     pinMenuItems,
-    props.settlementSupported,
+    settlementSupported,
     reorderMenuItems,
     snoozePresetActions,
     snoozedRow,
@@ -1758,27 +1766,37 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
             ) : null}
           </View>
           {props.hasQueuedMessages ? <QueuedMessageIcon selected={selected} /> : null}
-          <Text
-            className={cn(
-              "text-sm tabular-nums",
-              selected
-                ? selectedThreadRowColors.mutedForegroundClassName
-                : snoozedRow
-                  ? rowAppearance.mutedForegroundClassName
-                  : rowAppearance.tertiaryForegroundClassName,
-            )}
-            style={{ fontFamily: MONO_FONT }}
-          >
-            {snoozedRow && snoozeWakeLabelText !== undefined ? snoozeWakeLabelText : timeLabel}
-          </Text>
+          {branch && statusLabel ? (
+            <SymbolView
+              name={statusLabel.icon}
+              size={13}
+              tintColorClassName={
+                selected ? selectedThreadRowColors.iconTintClassName : statusLabel.iconTintClassName
+              }
+              type="monochrome"
+              weight="semibold"
+            />
+          ) : (
+            <Text
+              className={cn(
+                "text-sm tabular-nums",
+                selected
+                  ? selectedThreadRowColors.mutedForegroundClassName
+                  : snoozedRow
+                    ? rowAppearance.mutedForegroundClassName
+                    : rowAppearance.tertiaryForegroundClassName,
+              )}
+              style={{ fontFamily: MONO_FONT }}
+            >
+              {snoozedRow && snoozeWakeLabelText !== undefined ? snoozeWakeLabelText : timeLabel}
+            </Text>
+          )}
         </View>
       </RowPressable>
     );
 
-  if (!canOperateThread)
-    return <View style={rowAppearance.swipeContainerStyle}>{rowContent(() => {})}</View>;
-
-  return (
+  const branchInset = branch === undefined ? 0 : 10 + (branch.ancestorGuides.length + 1) * 14;
+  const row = canOperateThread ? (
     <View collapsable={false}>
       {customSnoozeOpen && (
         <CustomSnoozeSheet onClose={() => setCustomSnoozeOpen(false)} onSnooze={handleSnooze} />
@@ -1791,7 +1809,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         containerStyle={rowAppearance.swipeContainerStyle}
         enableTrackpadSwipe
         fullSwipeAction="primary"
-        fullSwipeWidth={props.fullSwipeWidth ?? windowWidth - 32}
+        fullSwipeWidth={(props.fullSwipeWidth ?? windowWidth - 32) - branchInset}
         listAnimatesLayout
         onDelete={handleDelete}
         onSwipeableClose={props.onSwipeableClose}
@@ -1813,6 +1831,27 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
           </ThreadRowMenu>
         )}
       </ThreadSwipeable>
+    </View>
+  ) : (
+    <View style={rowAppearance.swipeContainerStyle}>{rowContent(() => {})}</View>
+  );
+  if (branch === undefined) return row;
+  return (
+    <View className="flex-row ps-2.5">
+      <View accessible={false} pointerEvents="none" className="flex-row self-stretch">
+        {branch.ancestorGuides.map(({ key, continues }) => (
+          <View key={key} className={cn("w-3.5", continues && "border-s border-border-subtle")} />
+        ))}
+        <View className={cn("w-3.5", branch.hasNextSibling && "border-s border-border-subtle")}>
+          <View
+            className={cn(
+              "h-1/2 border-b border-border-subtle",
+              !branch.hasNextSibling && "border-s",
+            )}
+          />
+        </View>
+      </View>
+      <View className="min-w-0 flex-1">{row}</View>
     </View>
   );
 });

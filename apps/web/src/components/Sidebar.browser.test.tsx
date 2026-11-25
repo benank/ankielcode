@@ -391,6 +391,50 @@ describe("sidebar thread rename", () => {
 });
 
 describe("sidebar thread click", () => {
+  it("opens a nested side chat in the main thread route from the sidebar tree", async () => {
+    const activeProject = project("active");
+    const parent = threadShell(activeProject.id, 0);
+    const side = {
+      ...threadShell(activeProject.id, 1),
+      title: "Side question",
+      lineage: {
+        rootThreadId: parent.id,
+        parentThreadId: parent.id,
+        relationshipToParent: "fork" as const,
+        sideChat: true,
+      },
+    };
+    const threadRef = scopeThreadRef(parent.environmentId, parent.id);
+    vi.mocked(useProjects).mockReturnValue([activeProject]);
+    vi.mocked(useQuietThreadShells).mockReturnValue([side, parent]);
+    vi.mocked(useThreadRouteTarget).mockReturnValue({ kind: "server", threadRef });
+    vi.mocked(useHandleNewThread).mockReturnValue({
+      activeDraftThread: null,
+      activeThread: null,
+      defaultProjectRef: scopeProjectRef(parent.environmentId, activeProject.id),
+      defaultProjectFallbackReady: true,
+      handleNewThread: vi.fn().mockResolvedValue(null),
+      routeDraftId: null,
+      routeThreadRef: threadRef,
+    });
+    await using screen = await render(
+      <SidebarProvider>
+        <Sidebar routeReveal={{ observedKey: null, pendingKey: null }} />
+      </SidebarProvider>,
+      { router: "/local/thread-0" },
+    );
+    const parentRow = screen.container.querySelector<HTMLElement>(
+      '[data-sidebar-row="local:thread-0"]',
+    )!;
+    const sideRow = screen.getByTestId("sidebar-row-child");
+    await expect.element(sideRow).toBeVisible();
+    parentRow.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect.element(sideRow).toHaveFocus();
+    await userEvent.click(sideRow);
+    await vi.waitFor(() => expect(screen.router!.state.location.pathname).toBe("/local/thread-1"));
+  });
+
   // regression: #40715 macOS counts quick clicks on different rows, so the next row got detail 2 and was ignored
   it("opens another thread when the click arrives with a double-click count", async () => {
     const activeProject = project("active");

@@ -32,12 +32,14 @@ function layout(
   over: string,
   scale = 1,
   cardHeight = 82,
+  childCount?: (key: string) => number,
 ) {
   let top = 100;
   const rects = items.map((item) => {
     const height =
       item.kind === "thread"
-        ? (item.section === "pinned" || item.section === "active" ? cardHeight : 36) * scale
+        ? (item.section === "pinned" || item.section === "active" ? cardHeight : 36) * scale +
+          (childCount?.(item.key) ?? 0) * (36 * scale + 1)
         : item.marker === "pinned-header" || item.marker === "pinned-divider"
           ? 0
           : (item.marker.endsWith("placeholder") ? 0 : 32) * scale;
@@ -62,7 +64,7 @@ function preview(
   scale = 1,
 ) {
   const strategy = createSidebarSortingStrategy(input);
-  const args = layout(input.items, active, over, scale);
+  const args = layout(input.items, active, over, scale, undefined, input.childCount);
   return new Map(
     input.items.map((item, index) => [sidebarListItemId(item), strategy({ ...args, index })]),
   );
@@ -432,7 +434,7 @@ describe("sidebar drag projection", () => {
     },
   );
 
-  it("uses the canonical settled rank and the destination's slim height", () => {
+  it.each([0, 2])("uses the destination height and settled rank with %s children", (children) => {
     const items = [
       pinnedHeader,
       thread("p", "pinned"),
@@ -443,12 +445,17 @@ describe("sidebar drag projection", () => {
       thread("s2", "settled"),
     ];
     const result = preview(
-      { items, settledOrder: ["s1", "a", "s2"], settledExpanded: true },
+      {
+        items,
+        settledOrder: ["s1", "a", "s2"],
+        settledExpanded: true,
+        childCount: (key) => (key === "a" ? children : 0),
+      },
       "a",
       "s2",
     );
-    expect(result.get(sidebarMarkerId("settled-header"))?.y).toBe(-46);
-    expect(result.get("s1")?.y).toBe(-46);
+    expect(result.get(sidebarMarkerId("settled-header"))?.y).toBe(-46 - 37 * children);
+    expect(result.get("s1")?.y).toBe(-46 - 37 * children);
     expect(result.get("s2")?.y).toBe(-9);
   });
 

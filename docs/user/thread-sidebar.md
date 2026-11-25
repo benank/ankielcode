@@ -286,6 +286,10 @@ the snooze. Enable **Snooze until limits reset** in thread behavior settings to
 snooze limit stops by default. Providers without a reset time offer manual
 retry and the normal snooze choices.
 
+Active subagents, delegated threads, and unarchived side chats appear below
+their parent in the thread list. Choose a child row to open its
+conversation in the main view.
+
 On web and desktop, use **Agents** to follow work delegated to subagents. Click
 a subagent there or on its conversation card to open it in the right panel,
 beside the thread you are in. See
@@ -349,8 +353,8 @@ with what the thread knows, and the thread keeps working while you ask.
 
 On web and desktop, start a message with `/side` or `/btw`, then your question.
 You can also choose **Side chat** from the **+** menu in the right panel. The side
-chat opens as a tab there, with its own composer. Side chats do not show in the
-sidebar. Find one again under **Side chats** in thread details, where it opens
+chat opens as a tab there, with its own composer. Find it under its parent in
+the thread list or under **Side chats** in thread details, where it opens
 [like a subagent does](#open-a-thread-beside-the-one-you-are-in).
 
 A side chat works in the same folder as the thread and starts with the permissions,

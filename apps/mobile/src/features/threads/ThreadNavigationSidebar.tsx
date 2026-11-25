@@ -26,7 +26,10 @@ import { AppText as Text } from "../../components/ui/AppText";
 import { Button } from "../../components/ui/Button";
 import { scopedProjectKey, scopedThreadKey } from "../../lib/scopedEntities";
 import { useProjects } from "../../state/entities";
-import { steadyNavigationThreadShellsAtom } from "../../state/threads";
+import {
+  steadyNavigationThreadShellsAtom,
+  steadyThreadNavigationTreeAtom,
+} from "../../state/threads";
 import { useThreadSearch } from "../../state/queries";
 import { useThreadListV2ShelfPreferences } from "./use-thread-list-v2-shelf-preferences";
 import { useThreadListNow } from "./use-thread-list-now";
@@ -131,7 +134,14 @@ function ThreadNavigationSidebarPane(props: ThreadNavigationSidebarProps) {
   const { fabClearance, fabSize } = useAndroidControlSizing();
   const projects = useProjects();
   const threads = useAtomValue(steadyNavigationThreadShellsAtom);
-  const selectedThreadKey = useSidebarRowThreadKey(props.selectedThreadKey);
+  const threadTree = useAtomValue(steadyThreadNavigationTreeAtom);
+  const sidebarRootThreadKey = useSidebarRowThreadKey(props.selectedThreadKey);
+  const selectedThreadKey =
+    props.selectedThreadKey !== null &&
+    props.searchQuery.trim() === "" &&
+    threadTree.rootByChild.has(props.selectedThreadKey)
+      ? props.selectedThreadKey
+      : sidebarRootThreadKey;
   const { environments: workspaceEnvironments, state: catalogState } = useWorkspaceState();
   const { savedConnectionsById } = useSavedRemoteConnections();
   const openSwipeableRef = useRef<SwipeableMethods | null>(null);
@@ -278,6 +288,7 @@ function ThreadNavigationSidebarPane(props: ThreadNavigationSidebarProps) {
     olderSettledShelf,
   } = useThreadListV2({
     threads: launchingThreads,
+    tree: threadTree,
     pendingTasks,
     environmentId: options.selectedEnvironmentId,
     projectRefs: selectedProjectScope === null ? null : selectedProjectScope.projectRefs,
@@ -296,7 +307,7 @@ function ThreadNavigationSidebarPane(props: ThreadNavigationSidebarProps) {
     workingShelfExpanded,
     snoozedShelfExpanded,
     settledShelfExpanded,
-    selectedThreadKey,
+    selectedThreadKey: sidebarRootThreadKey,
   });
   const listItems: readonly SidebarListItem[] =
     settledShelfExpanded && threadListV2Layout.hiddenSettledCount > 0
@@ -421,6 +432,7 @@ function ThreadNavigationSidebarPane(props: ThreadNavigationSidebarProps) {
             onNewThreadOnBranch={props.onNewThreadOnBranch}
             thread={thread}
             variant={item.item.variant}
+            branch={item.item.branch}
             hasQueuedMessages={item.hasQueuedMessages}
             snoozed={item.item.snoozed}
             pinned={item.item.pinned}

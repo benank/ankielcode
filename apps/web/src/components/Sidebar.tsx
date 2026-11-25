@@ -67,8 +67,10 @@ import {
   type ThreadId,
 } from "@ankielcode/contracts";
 import {
+  buildThreadNavigationTree,
   resolveListedAncestorThreadRef,
   type OlderSettledScope,
+  type ThreadNavigationBranch,
 } from "@ankielcode/client-runtime/state/threads";
 
 import {
@@ -1124,6 +1126,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
           ),
         );
   const threads = useQuietThreadShells();
+  const threadTree = buildThreadNavigationTree(threads);
   const promotingDraftThreadKeys = usePromotingDraftThreadKeys();
   const listedThreads =
     promotingDraftThreadKeys.length === 0
@@ -1138,6 +1141,10 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
       ? null
       : scopedThreadKey(resolveListedAncestorThreadRef(routeThreadRef, threads));
   const isSearchingThreads = threadSearchQuery.trim().length > 0;
+  const activeSidebarThreadKey =
+    routeThreadKey !== null && !isSearchingThreads && threadTree.rootByChild.has(routeThreadKey)
+      ? routeThreadKey
+      : routeRowThreadKey;
   // The open draft's first send names its thread in place; a finalized draft reached by
   // navigation resolves through its redirect instead, and still reveals.
   const routeKeyInPlace = routeDraftThread?.promotedTo != null;
@@ -1148,12 +1155,15 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
   // already lists the row; the active row's ref callback scrolls to it.
   const { widensScope: revealWidensScope } = resolveSidebarRouteReveal({
     reveal: routeReveal,
-    routeKey: routeRowThreadKey,
+    routeKey: activeSidebarThreadKey,
     routeKeyInPlace,
     isSearching: isSearchingThreads,
     scopedProjectKeys: chosenScopeProjectKeys,
     delegatedUnderParent,
-    findThread: (key) => threads.find((candidate) => threadShellKey(candidate) === key),
+    findThread: (key) => {
+      const rootKey = threadTree.rootByChild.get(key) ?? key;
+      return threads.find((candidate) => threadShellKey(candidate) === rootKey);
+    },
   });
   const projectScopeKeys = revealWidensScope ? [] : chosenProjectScopeKeys;
   const projectScopeKey = projectScopeKeys.length === 0 ? null : projectScopeKeys.join("\n");
@@ -1173,7 +1183,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
     clearSelection();
     setPersistedProjectScopeKeys([]);
   }, [clearSelection, revealWidensScope, setPersistedProjectScopeKeys]);
-  const revealActiveRow = useActiveRowReveal(routeReveal, routeRowThreadKey, routeKeyInPlace);
+  const revealActiveRow = useActiveRowReveal(routeReveal, activeSidebarThreadKey, routeKeyInPlace);
   const [departingThreadKey, setDepartingThreadKey] = useState<string | null>(null);
   if (departingThreadKey !== null && departingThreadKey !== routeThreadKey) {
     setDepartingThreadKey(null);
@@ -1472,9 +1482,19 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
   // Search hides them, so they drop out while it is open.
   const listedDraftIds = isSearchingThreads ? EMPTY_DRAFT_IDS : draftIds;
   const draftIdByRowKey = new Map<string, DraftId>(listedDraftIds.map((id) => [`draft:${id}`, id]));
-  const orderedRowKeys = [...draftIdByRowKey.keys(), ...orderedThreadKeys];
+  const orderedRowKeys = [
+    ...draftIdByRowKey.keys(),
+    ...(isSearchingThreads
+      ? orderedThreadKeys
+      : orderedThreadKeys.flatMap((key) => [
+          key,
+          ...(threadTree.rowsByRoot.get(key)?.map((row) => row.key) ?? []),
+        ])),
+  ];
   const routeDraftRowKey = `draft:${routeDraftIdForRows}`;
-  const routeRowKey = draftIdByRowKey.has(routeDraftRowKey) ? routeDraftRowKey : routeRowThreadKey;
+  const routeRowKey = draftIdByRowKey.has(routeDraftRowKey)
+    ? routeDraftRowKey
+    : activeSidebarThreadKey;
 
   const jumpLabelByKey = (() => {
     const mapping = new Map<string, string>();
@@ -1614,6 +1634,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
     const isMac = isMacPlatform(navigator.platform);
     const isModClick = isMac ? event.metaKey : event.ctrlKey;
     const threadKey = scopedThreadKey(threadRef);
+    if (threadTree.rootByChild.has(threadKey) && (isModClick || event.shiftKey)) return;
     if (isModClick) {
       event.preventDefault();
       toggleThreadSelection(threadKey);
@@ -2106,6 +2127,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
     settledVisibleCount,
     routeThreadKey: routeRowThreadKey,
     snoozedThreadCount: snoozedThreads.length,
+    childCount: (key) => threadTree.rowsByRoot.get(key)?.length ?? 0,
   });
   const draggedThreadKey = dragState?.activeKey;
   const draggedFromSection = dragState?.activeSection;
@@ -2680,13 +2702,15 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
         // Search results also reach threads in collapsed shelves, which are not rendered rows.
         const thread =
           threadByKeyRef.current.get(threadKey) ??
-          searchableThreads.find((candidate) => threadShellKey(candidate) === threadKey);
+          searchableThreads.find((candidate) => threadShellKey(candidate) === threadKey) ??
+          (threadTree.rootByChild.has(threadKey) ? readThreadShell(threadRef) : null);
         if (!thread) return;
         const threadWorkspacePath =
           thread.worktreePath ??
           projectByKey.get(`${thread.environmentId}:${thread.projectId}`)?.workspaceRoot ??
           null;
         const configLoaded = serverConfigs.has(thread.environmentId);
+        const hasShelfActions = configLoaded && !threadTree.rootByChild.has(threadKey);
         const supportsAutoSettleOptOut =
           serverConfigs.get(thread.environmentId)?.environment.capabilities
             .threadAutoSettleOptOut === true;
@@ -2734,10 +2758,10 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
               canTurnIntoProject: canTurnThreadIntoProject(threadRef),
               canRename: !fromSearch,
               supports: {
-                settlement: configLoaded,
-                autoSettleOptOut: supportsAutoSettleOptOut,
-                snooze: configLoaded,
-                pinning: configLoaded,
+                settlement: hasShelfActions,
+                autoSettleOptOut: hasShelfActions && supportsAutoSettleOptOut,
+                snooze: hasShelfActions,
+                pinning: hasShelfActions,
                 titleRegeneration: configLoaded,
               },
               snoozePresets,
@@ -2974,13 +2998,12 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
       const navigateToRowKey = (targetRowKey: string | null) => {
         if (!targetRowKey) return false;
         const targetDraftId = draftIdByRowKey.get(targetRowKey);
-        const targetThread = threadByKey.get(targetRowKey);
+        const targetThread = parseScopedThreadKey(targetRowKey);
         if (targetDraftId === undefined && !targetThread) return false;
         event.preventDefault();
         event.stopPropagation();
         if (targetDraftId !== undefined) navigateToDraft(targetDraftId);
-        else if (targetThread)
-          navigateToThread(scopeThreadRef(targetThread.environmentId, targetThread.id));
+        else if (targetThread) navigateToThread(targetThread);
         return true;
       };
       const traversalDirection = threadTraversalDirectionFromCommand(command);
@@ -3008,7 +3031,6 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
     orderedRowKeys,
     routeRowKey,
     routeThreadRef,
-    threadByKey,
   ]);
 
   const showJumpHints = useThreadJumpHintsVisible(keybindings, routeThreadRef);
@@ -3495,19 +3517,23 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                         section: SidebarSection,
                         // The tree row of the project folder this row sits in.
                         folderRow?: string,
+                        branch?: ThreadNavigationBranch,
+                        children?: ReactNode,
                       ) => {
                         const threadKey = scopedThreadKey(
                           scopeThreadRef(thread.environmentId, thread.id),
                         );
                         const isCard =
                           section === "active" || section === "pinned" || section === "working";
-                        const rowVariant = folderRow
-                          ? folderRowsMultiline
-                            ? "folder-multiline"
-                            : "folder"
-                          : isCard
-                            ? "card"
-                            : "slim";
+                        const rowVariant = branch
+                          ? "slim"
+                          : folderRow
+                            ? folderRowsMultiline
+                              ? "folder-multiline"
+                              : "folder"
+                            : isCard
+                              ? "card"
+                              : "slim";
                         return (
                           <SortableThreadRow
                             key={threadKey}
@@ -3520,6 +3546,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                             }
                             thread={thread}
                             variant={rowVariant}
+                            branch={branch}
                             navigationParent={
                               folderRow ??
                               (section === "working" ||
@@ -3529,16 +3556,18 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                                 : undefined)
                             }
                             variantAction={
-                              section === "snoozed"
-                                ? "unsnooze"
-                                : section === "settled"
-                                  ? "unsettle"
-                                  : "settle"
+                              branch
+                                ? "settle"
+                                : section === "snoozed"
+                                  ? "unsnooze"
+                                  : section === "settled"
+                                    ? "unsettle"
+                                    : "settle"
                             }
-                            settlementSupported={serverConfigs.has(thread.environmentId)}
-                            snoozeSupported={serverConfigs.has(thread.environmentId)}
-                            pinningSupported={serverConfigs.has(thread.environmentId)}
-                            isPinned={thread.pinnedAt != null}
+                            settlementSupported={!branch && serverConfigs.has(thread.environmentId)}
+                            snoozeSupported={!branch && serverConfigs.has(thread.environmentId)}
+                            pinningSupported={!branch && serverConfigs.has(thread.environmentId)}
+                            isPinned={!branch && thread.pinnedAt != null}
                             dropVerb={
                               dragState?.activeKey === threadKey
                                 ? resolveSidebarDropVerb(dragState.activeSection, dragTargetSection)
@@ -3560,9 +3589,9 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                                 : null
                             }
                             wokeAt={threadWokeAt(thread, { now: snoozeNow })}
-                            isActive={routeRowThreadKey === threadKey}
+                            isActive={activeSidebarThreadKey === threadKey}
                             revealRef={
-                              routeRowThreadKey === threadKey ? revealActiveRow : undefined
+                              activeSidebarThreadKey === threadKey ? revealActiveRow : undefined
                             }
                             isRouteThread={routeThreadKey === threadKey}
                             readOpensPullRequestsInRightPanel={readOpensPullRequestsInRightPanel}
@@ -3606,7 +3635,29 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                             onUnpin={attemptUnpin}
                             onAcknowledgeWoke={acknowledgeWoke}
                             onFileDropThreads={handleThreadFileDrop}
-                          />
+                          >
+                            {children}
+                          </SortableThreadRow>
+                        );
+                      };
+                      const renderThreadGroup = (
+                        thread: EnvironmentThreadShell,
+                        section: SidebarSection,
+                        folderRow?: string,
+                      ) => {
+                        const children = threadTree.rowsByRoot.get(threadShellKey(thread));
+                        return renderThreadRow(
+                          thread,
+                          section,
+                          folderRow,
+                          undefined,
+                          children && (
+                            <ul role="presentation" className="flex flex-col gap-px pt-px">
+                              {children.map((child) =>
+                                renderThreadRow(child.thread, section, undefined, child.branch),
+                              )}
+                            </ul>
+                          ),
                         );
                       };
                       const from = isContextDrag ? null : (dragState?.activeSection ?? null);
@@ -3628,7 +3679,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                         if (item.kind === "thread") {
                           // Folders draw active rows in their own place below.
                           if (projectFolders !== null && item.section === "active") continue;
-                          items.push(renderThreadRow(threadByKey.get(item.key)!, item.section));
+                          items.push(renderThreadGroup(threadByKey.get(item.key)!, item.section));
                           continue;
                         }
                         if (projectFolders !== null && item.marker === "active-placeholder") {
@@ -3646,7 +3697,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                             );
                             for (const thread of folder.threads) {
                               items.push(
-                                renderThreadRow(
+                                renderThreadGroup(
                                   thread,
                                   "active",
                                   sidebarFolderRowId(folder.group.projectKey),

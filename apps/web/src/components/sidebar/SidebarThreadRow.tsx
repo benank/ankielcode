@@ -1,5 +1,6 @@
 import { useAtomMount } from "@effect/atom-react";
 import { asLaunchingThread } from "@ankielcode/client-runtime/state/thread-inbox";
+import type { ThreadNavigationBranch } from "@ankielcode/client-runtime/state/threads";
 import { ThreadHoverCard, ThreadHoverCardPopup } from "../ThreadHoverCard";
 import { ThreadTerminalStatusButton } from "../ThreadStatusIndicators";
 import { discardComposerDraft } from "../../lib/discardComposerDraft";
@@ -485,13 +486,19 @@ const SIDEBAR_SORTABLE_DRAG_ENABLED = { draggable: false } as const;
 // Takes the row's props rather than a render function: a closure from the
 // sidebar body is new on every sidebar render, which rebuilt the bag and
 // re-rendered every memoized row with it.
-export function SortableThreadRow(
-  props: Omit<SidebarThreadRowProps, "sortable"> & {
-    sortableId: string;
-    sortableDisabled: boolean;
-    contextDrag: boolean;
-  },
-) {
+type SortableThreadRowProps = Omit<SidebarThreadRowProps, "sortable"> & {
+  sortableId: string;
+  sortableDisabled: boolean;
+  contextDrag: boolean;
+};
+
+export function SortableThreadRow(props: SortableThreadRowProps) {
+  if (props.branch === undefined) return <DraggableThreadRow {...props} />;
+  const { sortableId: _id, sortableDisabled: _disabled, contextDrag: _drag, ...rowProps } = props;
+  return <LiveSidebarThreadRow {...rowProps} />;
+}
+
+function DraggableThreadRow(props: SortableThreadRowProps) {
   const { sortableId, sortableDisabled, contextDrag, ...rowProps } = props;
   const canOperateThread = useEnvironmentScope(
     rowProps.thread.environmentId,
@@ -514,20 +521,22 @@ export function SortableThreadRow(
     transition: contextDrag && isDragging ? "transform 150ms ease-out" : transition,
     isDragging: isDragging && !contextDrag,
   };
+  return <LiveSidebarThreadRow {...rowProps} sortable={bag} />;
+}
+
+function LiveSidebarThreadRow(props: SidebarThreadRowProps) {
   // The sidebar arranges rows from quiet shells, which hold still while a
   // thread streams; reading the live shell here re-renders only this row.
-  const liveThread = useThreadShell(
-    scopeThreadRef(rowProps.thread.environmentId, rowProps.thread.id),
-  );
+  const liveThread = useThreadShell(scopeThreadRef(props.thread.environmentId, props.thread.id));
   // A runtime on the arranged copy but not the run-less live shell is the list's launch overlay.
   const thread =
     liveThread === null
-      ? rowProps.thread
-      : rowProps.thread.runtime !== null
+      ? props.thread
+      : props.thread.runtime !== null
         ? asLaunchingThread(liveThread)
         : liveThread;
   // Keyed by variant so a card/slim switch remounts the row.
-  return <SidebarThreadRow key={rowProps.variant} {...rowProps} thread={thread} sortable={bag} />;
+  return <SidebarThreadRow key={props.variant} {...props} thread={thread} />;
 }
 export type SidebarSweepAction = "settle" | "unsettle" | "unsnooze";
 const dropVerbBadge: Record<SidebarDropVerb, ReactNode> = {
@@ -584,6 +593,8 @@ type SidebarThreadRowProps = {
   // "folder-multiline" adds the card's environment and PR line under it.
   variant: "card" | "slim" | "folder" | "folder-multiline";
   navigationParent?: string | undefined;
+  branch?: ThreadNavigationBranch | undefined;
+  children?: ReactNode;
   variantAction: SidebarSweepAction;
   settlementSupported: boolean;
   snoozeSupported: boolean;
@@ -1038,7 +1049,6 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
               ? ("hidden" as const)
               : undefined,
         },
-        ...sortable.listeners,
       }
     : {};
   const destinationVerb = sortable?.isDragging
@@ -1305,17 +1315,43 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
   if (variant !== "card") {
     const multiline = variant === "folder-multiline";
     const inFolder = variant === "folder" || multiline;
+    const { branch } = props;
     return (
       <li
-        data-thread-item={threadKey}
+        data-thread-item={branch ? undefined : threadKey}
         {...sortableRootProps}
-        {...(fileDropHandlers ?? {})}
+        {...(!props.children && fileDropHandlers)}
         className={cn(
-          "list-none [content-visibility:auto] [contain-intrinsic-size:auto_--spacing(9)]",
+          "list-none",
+          !props.children && "[content-visibility:auto] [contain-intrinsic-size:auto_--spacing(9)]",
           metaLine !== null && multiline && "[contain-intrinsic-size:auto_--spacing(13.5)]",
+          branch && "flex ps-2.5",
           sortable?.isDragging && "relative z-20",
         )}
       >
+        {branch ? (
+          <span aria-hidden className="pointer-events-none -mt-px flex shrink-0 self-stretch">
+            {branch.ancestorGuides.map(({ key, continues }) => (
+              <span
+                key={key}
+                className={cn("w-3.5", continues && "border-s border-sidebar-border")}
+              />
+            ))}
+            <span
+              className={cn(
+                "relative w-3.5",
+                branch.hasNextSibling && "border-s border-sidebar-border",
+              )}
+            >
+              <span
+                className={cn(
+                  "absolute inset-x-0 top-0 h-1/2 border-b border-sidebar-border",
+                  !branch.hasNextSibling && "rounded-es-sm border-s",
+                )}
+              />
+            </span>
+          </span>
+        ) : null}
         <Tooltip disabled={isRenaming || sortable?.isDragging}>
           <TooltipTrigger
             render={
@@ -1324,10 +1360,16 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                 role="button"
                 tabIndex={0}
                 data-sidebar-row={threadKey}
-                data-sidebar-parent={props.navigationParent}
+                data-sidebar-parent={branch?.parentKey ?? props.navigationParent}
                 aria-label={accessibility.label}
                 aria-current={accessibility.current}
-                data-testid={inFolder ? "sidebar-row-folder" : "sidebar-row-slim"}
+                data-testid={
+                  branch
+                    ? "sidebar-row-child"
+                    : inFolder
+                      ? "sidebar-row-folder"
+                      : "sidebar-row-slim"
+                }
                 aria-busy={isRegeneratingTitle || undefined}
                 className={cn(
                   rowSurfaceClassName,
@@ -1336,7 +1378,10 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                     : "flex h-9 items-center gap-2.5 px-2.5",
                   // Lines titles up with the folder name, past its chevron and icon.
                   inFolder && "ps-9",
+                  branch && "min-w-0",
                 )}
+                {...sortable?.listeners}
+                {...(props.children && fileDropHandlers)}
                 onClick={handleClick}
                 onDoubleClick={handleDoubleClick}
                 onKeyDown={handleKeyDown}
@@ -1413,7 +1458,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                           <T>Dismiss Woke notification</T>
                         </TooltipPopup>
                       </Tooltip>
-                    ) : inFolder && topStatus ? (
+                    ) : (inFolder || branch) && topStatus ? (
                       // Folder rows have no status line, so the status takes the time slot.
                       <span
                         className={cn(
@@ -1505,6 +1550,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
           </TooltipTrigger>
           {detailsTooltip}
         </Tooltip>
+        {props.children}
       </li>
     );
   }
@@ -1513,11 +1559,12 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
     <li
       data-thread-item={threadKey}
       {...sortableRootProps}
-      {...(fileDropHandlers ?? {})}
+      {...(!props.children && fileDropHandlers)}
       // The hints are the rendered heights inside py-0.5. Revealing the open thread measures rows
       // that have not rendered yet, so a hint off by a pixel lands it a pixel short per row above.
       className={cn(
-        "list-none py-0.5 [content-visibility:auto] [contain-intrinsic-size:auto_78px]",
+        "list-none py-0.5",
+        !props.children && "[content-visibility:auto] [contain-intrinsic-size:auto_78px]",
         metaLineEmpty && "[contain-intrinsic-size:auto_60px]",
         sortable?.isDragging && "relative z-20",
       )}
@@ -1536,6 +1583,8 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
               data-testid="sidebar-row-card"
               aria-busy={isRegeneratingTitle || undefined}
               className={rowSurfaceClassName}
+              {...sortable?.listeners}
+              {...(props.children && fileDropHandlers)}
               onClick={handleClick}
               onDoubleClick={handleDoubleClick}
               onKeyDown={handleKeyDown}
@@ -1720,6 +1769,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
         </TooltipTrigger>
         {detailsTooltip}
       </Tooltip>
+      {props.children}
     </li>
   );
 });

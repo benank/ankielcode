@@ -65,6 +65,8 @@ import { requestThreadMessageJump } from "../threads/threadMessageJump";
 import { useThreadListSearchMatches } from "../threads/useThreadListSearchMatches";
 import { useThreadListV2 } from "../threads/useThreadListV2";
 import { useSidebarRowThreadKey } from "../threads/useSidebarRowThreadKey";
+import { steadyThreadNavigationTreeAtom } from "../../state/threads";
+import { useAtomValueWhileVisible } from "./home-route-visibility";
 import { useThreadListNow } from "../threads/use-thread-list-now";
 import { useSearchScrollRestoration } from "../layout/workspace/useSearchScrollRestoration";
 import { useThreadJumpShortcuts } from "../keyboard/threadKeyboardShortcuts";
@@ -208,8 +210,15 @@ export function HomeScreen(props: HomeScreenProps) {
   );
   const columnMetrics = useNativeColumnLayoutMetrics();
   const activeNewTask = useActiveNewTask();
-  const sidebarRowThreadKey = useSidebarRowThreadKey(primaryColumn?.selectedThreadKey ?? null);
-  const selectedThreadKey = activeNewTask ? null : sidebarRowThreadKey;
+  const openThreadKey = activeNewTask ? null : (primaryColumn?.selectedThreadKey ?? null);
+  const sidebarRootThreadKey = useSidebarRowThreadKey(openThreadKey);
+  const threadTree = useAtomValueWhileVisible(steadyThreadNavigationTreeAtom, props.visible);
+  const selectedThreadKey =
+    openThreadKey !== null &&
+    props.searchQuery.trim() === "" &&
+    threadTree.rootByChild.has(openThreadKey)
+      ? openThreadKey
+      : sidebarRootThreadKey;
   const fullSwipeWidth = primaryColumn && columnMetrics ? columnMetrics.width - 20 : undefined;
   const queuedThreadKeys = useQueuedThreadKeys();
   const openSwipeableRef = useRef<SwipeableMethods | null>(null);
@@ -420,6 +429,7 @@ export function HomeScreen(props: HomeScreenProps) {
     olderSettledShelf,
   } = useThreadListV2({
     threads: props.threads,
+    tree: threadTree,
     pendingTasks: props.pendingTasks,
     environmentId: props.selectedEnvironmentId,
     projectRefs: v2ScopedProjectGroup === null ? null : v2ScopedProjectGroup.projectRefs,
@@ -438,7 +448,7 @@ export function HomeScreen(props: HomeScreenProps) {
     workingShelfExpanded,
     snoozedShelfExpanded,
     settledShelfExpanded,
-    selectedThreadKey,
+    selectedThreadKey: sidebarRootThreadKey,
   });
   // Called as `props.onSelectThread(...)`, the compiler would cache this handler on the whole
   // props object, which is new on every render of Home's parent.
@@ -536,6 +546,7 @@ export function HomeScreen(props: HomeScreenProps) {
         onNewThreadOnBranch={props.onNewThreadOnBranch}
         thread={thread}
         variant={item.item.variant}
+        branch={item.item.branch}
         hasQueuedMessages={item.hasQueuedMessages}
         snoozed={item.item.snoozed}
         pinned={item.item.pinned}

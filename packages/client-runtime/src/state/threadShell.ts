@@ -15,6 +15,7 @@ import {
 } from "@ankielcode/contracts";
 import * as Schema from "effect/Schema";
 import { Atom } from "effect/reactivity";
+import { scopedThreadKey } from "../environment/scoped.ts";
 
 import type { EnvironmentThreadShell, PendingSubagentRequest } from "./models.ts";
 import { presentThreadShell, threadRuntimeIsActive } from "./models.ts";
@@ -58,7 +59,7 @@ const isChildRunLive = (
       thread.status === "waiting";
 
 /**
- * Whether a thread shows under its parent rather than in thread lists: a
+ * Whether a thread belongs under its parent in navigation: a
  * subagent, a side chat, or a task a linked environment delegated here whose parent the
  * client lists (`delegatedUnderParent`, by thread key). A task whose parent
  * the client cannot list stays in the lists, so its work is never out of reach.
@@ -71,9 +72,80 @@ export function isShownUnderParent(
   return !isListedThreadLineage(lineage) || delegatedUnderParent.has(threadKey(ref));
 }
 
-// Subagents, side chats and tasks delegated from a listed parent have no list row,
-// so an open one is represented by its nearest listed ancestor. A broken chain
-// (missing or archived parent, cycle) resolves to the thread itself, which then matches no row.
+export interface ThreadNavigationBranch {
+  readonly parentKey: string;
+  readonly ancestorGuides: ReadonlyArray<{ readonly key: string; readonly continues: boolean }>;
+  readonly hasNextSibling: boolean;
+}
+
+export function buildThreadNavigationTree<
+  T extends Pick<
+    EnvironmentThreadShell,
+    "id" | "environmentId" | "lineage" | "delegatedFrom" | "archivedAt" | "createdAt"
+  >,
+>(threads: readonly T[]) {
+  const byKey = new Map<string, T>();
+  for (const thread of threads) {
+    if (thread.archivedAt === null) {
+      byKey.set(
+        scopedThreadKey({ environmentId: thread.environmentId, threadId: thread.id }),
+        thread,
+      );
+    }
+  }
+  const childrenByParent = new Map<string, Array<{ key: string; thread: T }>>();
+  const roots: string[] = [];
+  for (const [key, thread] of byKey) {
+    const { lineage } = thread;
+    const listed = isListedThreadLineage(lineage);
+    const parent = listed
+      ? (thread.delegatedFrom ?? null)
+      : lineage.parentThreadId === null
+        ? null
+        : { environmentId: thread.environmentId, threadId: lineage.parentThreadId };
+    const parentKey = parent === null ? null : scopedThreadKey(parent);
+    if (parentKey !== null && byKey.has(parentKey)) {
+      const child = { key, thread };
+      const siblings = childrenByParent.get(parentKey);
+      if (siblings === undefined) childrenByParent.set(parentKey, [child]);
+      else siblings.push(child);
+    } else if (listed) {
+      roots.push(key);
+    }
+  }
+
+  const rowsByRoot = new Map<
+    string,
+    ReadonlyArray<{ key: string; thread: T; branch: ThreadNavigationBranch }>
+  >();
+  const rootByChild = new Map<string, string>();
+  for (const root of roots) {
+    if (!childrenByParent.has(root)) continue;
+    const rows: Array<{ key: string; thread: T; branch: ThreadNavigationBranch }> = [];
+    const visit = (parentKey: string, ancestorGuides: ThreadNavigationBranch["ancestorGuides"]) => {
+      const children = childrenByParent.get(parentKey);
+      if (children === undefined) return;
+      children.sort(
+        (a, b) =>
+          a.thread.createdAt.localeCompare(b.thread.createdAt) || a.key.localeCompare(b.key),
+      );
+      for (const [index, child] of children.entries()) {
+        const hasNextSibling = index < children.length - 1;
+        rootByChild.set(child.key, root);
+        rows.push({ ...child, branch: { parentKey, ancestorGuides, hasNextSibling } });
+        visit(
+          child.key,
+          [...ancestorGuides, { key: child.key, continues: hasNextSibling }].slice(-3),
+        );
+      }
+    };
+    visit(root, []);
+    rowsByRoot.set(root, rows);
+  }
+  return { rowsByRoot, rootByChild };
+}
+
+// Shelves and project scopes reveal the top-level row when one of its descendants opens.
 export function resolveListedAncestorThreadRef(
   ref: ScopedThreadRef,
   threads: readonly Pick<

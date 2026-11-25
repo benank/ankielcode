@@ -1,6 +1,7 @@
 import { createChildThreadApprovalsAtom } from "@ankielcode/client-runtime/state/thread-requests";
 import { useAtomValue } from "@effect/atom-react";
 import {
+  buildThreadNavigationTree,
   createEnvironmentThreadDetailAtoms,
   createEnvironmentThreadShellAtoms,
   createEnvironmentThreadStateAtoms,
@@ -59,11 +60,15 @@ const steadyShells = createSteadyShellAtoms({
  * changes once when environments connect, not once per environment.
  */
 export const steadyShellsHoldingAtom = steadyShells.holdingAtom;
-export const steadyNavigationThreadShellsAtom = createEnvironmentThreadShellAtoms({
+const steadyThreadShells = createEnvironmentThreadShellAtoms({
   catalogValueAtom: environmentCatalog.catalogValueAtom,
   snapshotAtom: steadyShells.snapshotAtom,
   hiddenThreadTagsAtom: serverEnvironment.hiddenThreadTagsAtom,
-}).navigationThreadShellsAtom;
+});
+export const steadyNavigationThreadShellsAtom = steadyThreadShells.navigationThreadShellsAtom;
+export const steadyThreadNavigationTreeAtom = Atom.make((get) =>
+  buildThreadNavigationTree(get(steadyThreadShells.quietThreadShellsAtom)),
+);
 export const childThreadApprovalsAtom = createChildThreadApprovalsAtom({
   childThreadInputsAtom: environmentThreadShells.childThreadInputsAtom,
   pendingRequestsAtom: environmentThreadDetails.pendingRequestsAtom,

@@ -12,6 +12,7 @@ import {
   getThreadListV2OrderedSection,
   threadListInboxReturns,
   threadListV2LayoutTime,
+  type ThreadListV2Tree,
 } from "./threadListV2";
 import { computeThreadMoveAvailability } from "./threadOrder";
 
@@ -46,6 +47,7 @@ function observeInbox(
  */
 export function useThreadListV2(input: {
   readonly threads: LayoutInput["threads"];
+  readonly tree?: ThreadListV2Tree;
   readonly pendingTasks: ReadonlyArray<PendingNewTask>;
   readonly environmentId: EnvironmentId | null;
   readonly projectRefs: LayoutInput["projectRefs"];
@@ -68,6 +70,7 @@ export function useThreadListV2(input: {
   readonly selectedThreadKey: string | null;
 }) {
   const { threads, workingShelfEnabled } = input;
+  const tree = input.searchQuery.trim().length === 0 ? input.tree : undefined;
   const layoutTime = useMemo(
     () => threadListV2LayoutTime({ threads, now: input.now, searchQuery: input.searchQuery }),
     [threads, input.now, input.searchQuery],
@@ -214,6 +217,7 @@ export function useThreadListV2(input: {
     () =>
       buildThreadListV2ListItems({
         items: layout.items,
+        ...(tree === undefined ? {} : { tree }),
         pendingTasks,
         workingCount: layout.workingCount,
         workingShelfExpanded: input.workingShelfExpanded,
@@ -233,6 +237,7 @@ export function useThreadListV2(input: {
       }),
     [
       layout,
+      tree,
       pendingTasks,
       input.workingShelfExpanded,
       input.snoozedShelfExpanded,

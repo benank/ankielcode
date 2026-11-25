@@ -4,6 +4,7 @@ import { presentThreadShell } from "@ankielcode/client-runtime/state/models";
 import * as DateTime from "effect/DateTime";
 import * as Schema from "effect/Schema";
 import { planPinnedReorder } from "@ankielcode/client-runtime/state/thread-sort";
+import { buildThreadNavigationTree } from "@ankielcode/client-runtime/state/threads";
 import {
   createPendingThreadOrder,
   createThreadMovePlanner,
@@ -835,6 +836,41 @@ describe("buildThreadListV2ListItems", () => {
     environmentId: null,
     searchQuery: "",
     now: NOW,
+  });
+
+  it("keeps a side chat with its parent in the settled shelf and in shortcut order", () => {
+    const parent = layout.items[1]!.thread;
+    const child = makeThread({
+      id: ThreadId.make("child"),
+      title: "Side chat",
+      lineage: {
+        rootThreadId: parent.id,
+        parentThreadId: parent.id,
+        relationshipToParent: "fork",
+        sideChat: true,
+      },
+    });
+    const buildItems = (rootItems: typeof layout.items) =>
+      buildThreadListV2ListItems({
+        items: rootItems,
+        tree: buildThreadNavigationTree([parent, child]),
+        pendingTasks: [],
+        settledCount: layout.settledCount,
+        settledShelfHeaderIndex: layout.settledShelfHeaderIndex,
+      });
+
+    const items = buildItems(layout.items);
+    expect(items.map((item) => item.type)).toEqual([
+      "v2-thread",
+      "v2-settled-shelf",
+      "v2-thread",
+      "v2-thread",
+    ]);
+    expect(threadJumpTarget(items, "thread.jump.3")).toMatchObject({ item: { thread: child } });
+    expect(buildItems(layout.items.slice(0, 1)).map((item) => item.type)).toEqual([
+      "v2-thread",
+      "v2-settled-shelf",
+    ]);
   });
 
   it("leads the list with unsent drafts and queued tasks, preserving section dividers", () => {
