@@ -5,6 +5,7 @@ import {
   type OrchestrationV2Actor,
   type OrchestrationV2CreationSource,
   type OrchestrationV2IdleCompaction,
+  type OrchestrationV2TurnItemStatus,
   type OrchestrationV2UserMessageInputIntent,
   ScheduledTaskId,
 } from "@ankielcode/contracts";
@@ -104,9 +105,17 @@ export function resolveUserMessagePresentation(message: {
   };
 }
 
-type GroupableUserMessage = Parameters<typeof resolveUserMessagePresentation>[0] & {
-  readonly inputIntent?: OrchestrationV2UserMessageInputIntent;
-};
+export function resolveUserMessageReceipt(
+  intent: OrchestrationV2UserMessageInputIntent | undefined,
+  status: OrchestrationV2TurnItemStatus | undefined,
+): "sent" | "read" | null {
+  if (intent !== "steer" && intent !== "promoted_queued_to_steer") return null;
+  if (status === "pending") return "sent";
+  if (status === "completed") return "read";
+  return null;
+}
+
+type GroupableUserMessage = Parameters<typeof resolveUserMessagePresentation>[0];
 
 export function resolveUserMessageGrouping(
   message: GroupableUserMessage | undefined,
@@ -115,12 +124,8 @@ export function resolveUserMessageGrouping(
 ) {
   const isOwnMessage = (value: GroupableUserMessage | undefined) =>
     value?.role === "user" && resolveUserMessagePresentation(value).attribution === null;
-  const isSteer = (value: GroupableUserMessage | undefined) =>
-    value?.inputIntent === "steer" || value?.inputIntent === "promoted_queued_to_steer";
-  const groupedWithPrevious = isOwnMessage(message) && isOwnMessage(previous);
   return {
-    groupedWithPrevious,
+    groupedWithPrevious: isOwnMessage(message) && isOwnMessage(previous),
     groupedWithNext: isOwnMessage(message) && isOwnMessage(next),
-    continuesSteer: groupedWithPrevious && isSteer(message) && isSteer(previous),
   };
 }

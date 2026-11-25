@@ -60,6 +60,7 @@ import {
   IDLE_COMPACTING_LABELS,
   resolveUserMessageFileCards,
   resolveUserMessagePresentation,
+  resolveUserMessageReceipt,
 } from "@ankielcode/client-runtime/user-message";
 import { canForkProjectedAssistantItem } from "@ankielcode/client-runtime/state/thread-workflows";
 import type { WorkflowOpening } from "@ankielcode/client-runtime/state/subagentRuntime";
@@ -320,7 +321,6 @@ import {
   resolveWorkspaceRelativeFilePath,
 } from "../files/filePath";
 import { waitForThreadShell } from "./threadForkNavigation";
-import { resolveUserMessageIntentBadge } from "./userMessageIntentBadge";
 import { fileChipClipboardPath, fileChipMenu, resolveFileChipTarget } from "./fileChipMenu";
 import { useFileChipShare } from "./useFileChipShare";
 import { useOpenLinkedThread } from "./useOpenLinkedThread";
@@ -1697,6 +1697,38 @@ function OpenSenderThreadButton(props: {
   );
 }
 
+function UserMessageReceipt({
+  status,
+  tintColor,
+}: {
+  readonly status: ReturnType<typeof resolveUserMessageReceipt>;
+  readonly tintColor: ColorValue;
+}) {
+  const gt = useGT();
+  if (status === null) return null;
+  return (
+    <View className="flex-row items-center gap-1">
+      <View
+        className="flex-row items-center"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <SymbolView name="checkmark" size={11} tintColor={tintColor} />
+        {status === "read" ? (
+          <View className="-ms-1.5">
+            <SymbolView name="checkmark" size={11} tintColor={tintColor} />
+          </View>
+        ) : null}
+      </View>
+      <Text className="text-2xs text-foreground-secondary">
+        {status === "read"
+          ? gt("Read", { $context: "message receipt, read by the agent" })
+          : gt("Sent", { $context: "message receipt, sent to the agent" })}
+      </Text>
+    </View>
+  );
+}
+
 /** Automation prompts are long, repeated runbooks; a folded bubble keeps them out of the way. */
 function ThreadAutomationMessageRow(props: {
   readonly environmentId: EnvironmentId;
@@ -1704,6 +1736,7 @@ function ThreadAutomationMessageRow(props: {
   readonly context?: OrchestrationMessageContext;
   readonly scheduledTaskId: ScheduledTaskId | undefined;
   readonly timestampLabel: string;
+  readonly receipt: ReturnType<typeof resolveUserMessageReceipt>;
   readonly expanded: boolean;
   readonly onToggle: () => void;
   readonly bubbleColor: ColorValue;
@@ -1789,9 +1822,10 @@ function ThreadAutomationMessageRow(props: {
           </View>
         ) : null}
       </View>
-      {props.expanded ? (
+      {props.expanded || props.receipt ? (
         <View className="mt-1 flex-row items-center justify-end gap-2 pr-0.5">
-          {props.scheduledTaskId ? (
+          <UserMessageReceipt status={props.receipt} tintColor={props.iconSubtleColor} />
+          {props.expanded && props.scheduledTaskId ? (
             <Pressable
               accessibilityRole="link"
               hitSlop={6}
@@ -1802,14 +1836,18 @@ function ThreadAutomationMessageRow(props: {
               </Text>
             </Pressable>
           ) : null}
-          <Text className="font-ankiel-medium text-xs tabular-nums text-foreground-secondary">
-            {props.timestampLabel}
-          </Text>
-          <UserMessageCopyButton
-            text={props.text}
-            onCopy={undefined}
-            tintColor={props.iconSubtleColor}
-          />
+          {props.expanded ? (
+            <>
+              <Text className="font-ankiel-medium text-xs tabular-nums text-foreground-secondary">
+                {props.timestampLabel}
+              </Text>
+              <UserMessageCopyButton
+                text={props.text}
+                onCopy={undefined}
+                tintColor={props.iconSubtleColor}
+              />
+            </>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -2279,6 +2317,10 @@ function renderFeedEntry(
           context={message.context}
           scheduledTaskId={presentation.scheduledTaskId}
           timestampLabel={timestampLabel}
+          receipt={resolveUserMessageReceipt(
+            message.inputIntent,
+            message.projectedItem?.item.status,
+          )}
           expanded={props.expandedWorkRows[rowId] ?? false}
           onToggle={() => props.onToggleWorkRow(rowId, entry.id)}
           bubbleColor={userBubbleColor}
@@ -2304,13 +2346,10 @@ function renderFeedEntry(
           : null);
       const foldExpanded = foldRowId !== null && (props.expandedWorkRows[foldRowId] ?? false);
       const bubbleBodyVisible = foldRowId === null || foldExpanded;
-      const intentBadge = props.userMessageGrouping.continuesSteer
-        ? null
-        : resolveUserMessageIntentBadge(
-            message.inputIntent,
-            message.projectedItem?.item.status === "pending",
-            props.m,
-          );
+      const receipt = resolveUserMessageReceipt(
+        message.inputIntent,
+        message.projectedItem?.item.status,
+      );
       const referenceIds = new Set(
         collectComposerContextReferences(message.text).map((reference) => reference.contextId),
       );
@@ -2537,78 +2576,64 @@ function renderFeedEntry(
               ) : null}
             </View>
           ) : null}
-          {bubbleBodyVisible ? (
+          {bubbleBodyVisible || receipt ? (
             <View className="mt-1 flex-row items-center justify-end gap-1 pr-0.5">
-              {foldRowId !== null && senderRef ? (
-                <OpenSenderThreadButton
-                  environmentId={senderRef.environmentId}
-                  senderThreadId={senderRef.threadId}
-                  linked={message.linkedSender !== undefined}
-                />
-              ) : null}
-              {intentBadge ? (
-                <View
-                  accessible
-                  accessibilityLabel={intentBadge.accessibilityLabel}
-                  className="flex-row items-center gap-1"
-                >
-                  <SymbolView name="arrow.uturn.forward" size={12} tintColor={iconSubtleColor} />
-                  <Text className="font-ankiel-medium text-xs text-foreground-secondary">
-                    {intentBadge.label}
+              <UserMessageReceipt status={receipt} tintColor={iconSubtleColor} />
+              {bubbleBodyVisible ? (
+                <>
+                  {foldRowId !== null && senderRef ? (
+                    <OpenSenderThreadButton
+                      environmentId={senderRef.environmentId}
+                      senderThreadId={senderRef.threadId}
+                      linked={message.linkedSender !== undefined}
+                    />
+                  ) : null}
+                  <Text className="font-ankiel-medium text-xs tabular-nums text-foreground-secondary">
+                    {entry.pendingMessage &&
+                    !entry.acknowledged &&
+                    entry.id !== props.pendingFoldMessageId
+                      ? m(msg("Pending", { $context: "message not yet sent" }))
+                      : timestampLabel}
                   </Text>
-                </View>
-              ) : null}
-              {intentBadge ? (
-                <Text
-                  accessible={false}
-                  accessibilityElementsHidden
-                  importantForAccessibility="no"
-                  className="font-ankiel-medium text-xs text-foreground-secondary"
-                >
-                  ·
-                </Text>
-              ) : null}
-              <Text className="font-ankiel-medium text-xs tabular-nums text-foreground-secondary">
-                {entry.pendingMessage &&
-                !entry.acknowledged &&
-                entry.id !== props.pendingFoldMessageId
-                  ? m(msg("Pending", { $context: "message not yet sent" }))
-                  : timestampLabel}
-              </Text>
-              {props.onEditPendingMessage !== null &&
-              entry.pendingMessage &&
-              !entry.acknowledged &&
-              !entry.pendingMessage.creation &&
-              entry.pendingMessage.messageId !== props.dispatchingMessageId ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={m(msg("Edit pending message"))}
-                  hitSlop={8}
-                  className="size-7 items-center justify-center"
-                  onPress={() => {
-                    if (entry.pendingMessage && props.onEditPendingMessage) {
-                      props.onEditPendingMessage(entry.pendingMessage);
-                    }
-                  }}
-                >
-                  <SymbolView name="pencil" size={14} tintColor={iconSubtleColor} />
-                </Pressable>
-              ) : null}
-              {presentation.text.trim().length > 0 ? (
-                <UserMessageCopyButton
-                  text={presentation.text}
-                  onCopy={
-                    message.context
-                      ? () =>
-                          writeComposerContextClipboard(message.text, {
-                            version: 1,
-                            source: { environmentId: props.environmentId, messageId: message.id },
-                            records: message.context!.records,
-                          })
-                      : undefined
-                  }
-                  tintColor={iconSubtleColor}
-                />
+                  {props.onEditPendingMessage !== null &&
+                  entry.pendingMessage &&
+                  !entry.acknowledged &&
+                  !entry.pendingMessage.creation &&
+                  entry.pendingMessage.messageId !== props.dispatchingMessageId ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={m(msg("Edit pending message"))}
+                      hitSlop={8}
+                      className="size-7 items-center justify-center"
+                      onPress={() => {
+                        if (entry.pendingMessage && props.onEditPendingMessage) {
+                          props.onEditPendingMessage(entry.pendingMessage);
+                        }
+                      }}
+                    >
+                      <SymbolView name="pencil" size={14} tintColor={iconSubtleColor} />
+                    </Pressable>
+                  ) : null}
+                  {presentation.text.trim().length > 0 ? (
+                    <UserMessageCopyButton
+                      text={presentation.text}
+                      onCopy={
+                        message.context
+                          ? () =>
+                              writeComposerContextClipboard(message.text, {
+                                version: 1,
+                                source: {
+                                  environmentId: props.environmentId,
+                                  messageId: message.id,
+                                },
+                                records: message.context!.records,
+                              })
+                          : undefined
+                      }
+                      tintColor={iconSubtleColor}
+                    />
+                  ) : null}
+                </>
               ) : null}
             </View>
           ) : null}

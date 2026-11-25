@@ -7,6 +7,7 @@ import {
   resolveUserMessageFileCards,
   resolveUserMessageGrouping,
   resolveUserMessagePresentation,
+  resolveUserMessageReceipt,
 } from "./userMessage.ts";
 
 describe("resolveUserMessageGrouping", () => {
@@ -16,7 +17,6 @@ describe("resolveUserMessageGrouping", () => {
     expect(resolveUserMessageGrouping(own, own, own)).toEqual({
       groupedWithPrevious: true,
       groupedWithNext: true,
-      continuesSteer: false,
     });
     expect(resolveUserMessageGrouping(own, undefined, own)).toMatchObject({
       groupedWithPrevious: false,
@@ -32,33 +32,25 @@ describe("resolveUserMessageGrouping", () => {
       expect(resolveUserMessageGrouping(own, boundary, boundary)).toEqual({
         groupedWithPrevious: false,
         groupedWithNext: false,
-        continuesSteer: false,
       });
       expect(resolveUserMessageGrouping(boundary, own, own)).toEqual({
         groupedWithPrevious: false,
         groupedWithNext: false,
-        continuesSteer: false,
       });
     }
   });
+});
 
-  it("shows one label for consecutive steers, including promoted queued messages", () => {
-    for (const inputIntent of ["steer", "promoted_queued_to_steer"] as const) {
-      const steer = { ...own, inputIntent };
-      expect(
-        resolveUserMessageGrouping(steer, { ...own, inputIntent: "steer" }, undefined)
-          .continuesSteer,
-      ).toBe(true);
-      expect(
-        resolveUserMessageGrouping(
-          steer,
-          { ...own, inputIntent: "promoted_queued_to_steer" },
-          undefined,
-        ).continuesSteer,
-      ).toBe(true);
-      expect(resolveUserMessageGrouping(steer, own, undefined).continuesSteer).toBe(false);
-      expect(resolveUserMessageGrouping(own, steer, undefined).continuesSteer).toBe(false);
+describe("resolveUserMessageReceipt", () => {
+  it("distinguishes pending steering messages from those the agent has read", () => {
+    for (const intent of ["steer", "promoted_queued_to_steer"] as const) {
+      expect(resolveUserMessageReceipt(intent, "pending")).toBe("sent");
+      expect(resolveUserMessageReceipt(intent, "completed")).toBe("read");
+      expect(resolveUserMessageReceipt(intent, "cancelled")).toBeNull();
+      expect(resolveUserMessageReceipt(intent, undefined)).toBeNull();
     }
+    expect(resolveUserMessageReceipt("queued_turn", "pending")).toBeNull();
+    expect(resolveUserMessageReceipt("turn_start", "completed")).toBeNull();
   });
 });
 

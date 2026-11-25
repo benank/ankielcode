@@ -12,7 +12,10 @@ import {
   ThreadId,
 } from "@ankielcode/contracts";
 import { scopeThreadRef } from "@ankielcode/client-runtime/environment";
-import { resolveUserMessagePresentation } from "@ankielcode/client-runtime/user-message";
+import {
+  resolveUserMessagePresentation,
+  resolveUserMessageReceipt,
+} from "@ankielcode/client-runtime/user-message";
 import { Link } from "@tanstack/react-router";
 import { useQuietThreadShell } from "../../state/entities";
 import { useEnvironment } from "../../state/environments";
@@ -33,12 +36,13 @@ import {
 import ChatMarkdown from "../ChatMarkdown";
 import {
   CalendarClockIcon,
+  CheckCheckIcon,
+  CheckIcon,
   ChevronDownIcon,
   DownloadIcon,
   EyeIcon,
   type LucideIcon,
   MessagesSquareIcon,
-  Redo2Icon,
   PencilIcon,
   LinkIcon,
 } from "lucide-react";
@@ -311,16 +315,13 @@ function AutomationMessageRow({ row }: { row: Extract<TimelineRow, { kind: "mess
   const promptLink = promptLinkFor(text);
   // Find reads the DOM, so a folded prompt stays mounted but hidden while find is open.
   const bodyMounted = expanded || ctx.findActive;
+  const receipt = resolveUserMessageReceipt(
+    row.message.inputIntent,
+    row.projectedItem?.item.status,
+  );
 
   return (
     <div className="group flex flex-col items-end gap-1" data-user-message-attribution="automation">
-      {row.message.inputIntent === "steer" ||
-      row.message.inputIntent === "promoted_queued_to_steer" ? (
-        <UserMessageIntentMarker
-          intent={row.message.inputIntent}
-          unread={row.projectedItem?.item.status === "pending"}
-        />
-      ) : null}
       <div
         className={cn(
           "min-w-0 max-w-[80%] rounded-2xl bg-message text-message-foreground",
@@ -351,38 +352,41 @@ function AutomationMessageRow({ row }: { row: Extract<TimelineRow, { kind: "mess
         ) : null}
       </div>
       <UserMessageProjectedStatus row={row} />
-      {expanded ? (
-        <div className="flex w-full max-w-[80%] items-center justify-end pe-1 text-xs tabular-nums opacity-0 transition-opacity duration-200 pointer-coarse:opacity-100 focus-within:opacity-100 group-hover:opacity-100">
-          <div className="flex shrink-0 items-center gap-2">
-            {scheduledTaskId ? (
-              <Link
-                to="/settings/scheduled-tasks"
-                search={{ environmentId: ctx.activeThreadEnvironmentId, taskId: scheduledTaskId }}
-                className="rounded-sm text-xs text-muted-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                <T>Open automation</T>
-              </Link>
-            ) : null}
-            <TimelineRowTimestamp
-              createdAt={row.message.createdAt}
-              timestampFormat={ctx.timestampFormat}
-              alwaysVisible
-            />
-            <div className="flex items-center gap-0.5">
-              {typeof revertTurnCount === "number" && (
-                <RevertUserMessageButton turnCount={revertTurnCount} messageId={row.message.id} />
-              )}
-              <MessageCopyButton text={text} variant="ghost" />
-              {promptLink !== null && (
-                <MessageCopyButton
-                  text={promptLink}
-                  label={gt("Copy prompt link")}
-                  icon={LinkIcon}
-                  variant="ghost"
-                />
-              )}
+      {expanded || receipt ? (
+        <div className={cn(MESSAGE_FOOTER_CLASS_NAME, ACTIONS_REVEAL_CLASS_NAME)}>
+          <UserMessageReceipt status={receipt} />
+          {expanded ? (
+            <div className="flex shrink-0 items-center gap-2">
+              {scheduledTaskId ? (
+                <Link
+                  to="/settings/scheduled-tasks"
+                  search={{ environmentId: ctx.activeThreadEnvironmentId, taskId: scheduledTaskId }}
+                  className="rounded-sm text-xs text-muted-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  <T>Open automation</T>
+                </Link>
+              ) : null}
+              <TimelineRowTimestamp
+                createdAt={row.message.createdAt}
+                timestampFormat={ctx.timestampFormat}
+                alwaysVisible
+              />
+              <div className="flex items-center gap-0.5">
+                {typeof revertTurnCount === "number" && (
+                  <RevertUserMessageButton turnCount={revertTurnCount} messageId={row.message.id} />
+                )}
+                <MessageCopyButton text={text} variant="ghost" />
+                {promptLink !== null && (
+                  <MessageCopyButton
+                    text={promptLink}
+                    label={gt("Copy prompt link")}
+                    icon={LinkIcon}
+                    variant="ghost"
+                  />
+                )}
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -835,6 +839,11 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
   // Touch shows actions all the time, and narrow lanes have no room beside the
   // bubble, so both keep the actions on their own line.
   const floatActions = row.groupedWithNext === true && !coarsePointer;
+  const showActionsBelow = !folded || expanded;
+  const receipt = resolveUserMessageReceipt(
+    row.message.inputIntent,
+    row.projectedItem?.item.status,
+  );
   const messageActions = (
     <div
       className={cn(
@@ -904,14 +913,6 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
         >
           <T>Sent by Ankiel Code</T>
         </p>
-      ) : null}
-      {(row.message.inputIntent === "steer" ||
-        row.message.inputIntent === "promoted_queued_to_steer") &&
-      !row.continuesSteer ? (
-        <UserMessageIntentMarker
-          intent={row.message.inputIntent}
-          unread={row.projectedItem?.item.status === "pending"}
-        />
       ) : null}
       {mediaAboveText ? (
         <div className="flex max-w-[80%] justify-end">
@@ -1100,15 +1101,21 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
         ) : null}
       </div>
       <UserMessageProjectedStatus row={row} />
-      {!folded || expanded ? (
+      {showActionsBelow || receipt ? (
         <div
           className={cn(
-            "flex w-full max-w-[80%] justify-end pe-1",
-            floatActions && "@min-[37rem]:hidden",
+            MESSAGE_FOOTER_CLASS_NAME,
+            floatActions && !receipt && "@min-[37rem]:hidden",
             ACTIONS_REVEAL_CLASS_NAME,
           )}
         >
-          {messageActions}
+          <UserMessageReceipt status={receipt} />
+          {showActionsBelow &&
+            (floatActions ? (
+              <div className="@min-[37rem]:hidden">{messageActions}</div>
+            ) : (
+              messageActions
+            ))}
         </div>
       ) : null}
     </div>
@@ -1116,41 +1123,24 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
 }
 
 const ACTIONS_REVEAL_CLASS_NAME =
-  "items-center text-xs tabular-nums opacity-0 transition-opacity duration-200 pointer-coarse:opacity-100 focus-within:opacity-100 group-hover:opacity-100";
+  "items-center text-xs tabular-nums opacity-0 transition-opacity duration-200 pointer-coarse:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100";
+const MESSAGE_FOOTER_CLASS_NAME = "flex w-full max-w-[80%] flex-wrap justify-end gap-x-2 pe-1";
 
-function UserMessageIntentMarker({
-  intent,
-  unread,
+function UserMessageReceipt({
+  status,
 }: {
-  readonly intent: "steer" | "promoted_queued_to_steer";
-  readonly unread: boolean;
+  readonly status: ReturnType<typeof resolveUserMessageReceipt>;
 }) {
   const gt = useGT();
+  if (status === null) return null;
+  const Icon = status === "read" ? CheckCheckIcon : CheckIcon;
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <div
-            className="me-1 flex items-center justify-end gap-1 text-xs leading-none text-muted-foreground"
-            data-user-message-intent={intent}
-          />
-        }
-      >
-        <Redo2Icon aria-hidden="true" className="size-3" />
-        {unread
-          ? gt("Steer · waiting to be read")
-          : gt("Steer", { $context: "noun, a message that steers the running turn" })}
-      </TooltipTrigger>
-      <TooltipPopup side="top">
-        {unread
-          ? gt(
-              "Waiting for the agent to read this. It reads steers between steps, after a running command finishes.",
-            )
-          : intent === "promoted_queued_to_steer"
-            ? gt("Originally queued, then promoted to steer the active turn")
-            : gt("Steered the active turn")}
-      </TooltipPopup>
-    </Tooltip>
+    <span className="inline-flex shrink-0 items-center gap-1 text-2xs text-muted-foreground">
+      <Icon aria-hidden="true" className="size-3" />
+      {status === "read"
+        ? gt("Read", { $context: "message receipt, read by the agent" })
+        : gt("Sent", { $context: "message receipt, sent to the agent" })}
+    </span>
   );
 }
 

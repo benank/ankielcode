@@ -212,6 +212,40 @@ function renderTimeline(entries: ReadonlyArray<Entry>, props: Partial<TimelinePr
   );
 }
 
+it("reveals a steering message receipt below its bubble and updates it when read", async () => {
+  const props = baseProps();
+  const timeline = (status: "pending" | "completed") => (
+    <MessagesTimeline
+      {...props}
+      timelineEntries={[
+        {
+          ...message("Check the tests too", { inputIntent: "steer" }),
+          projectedItem: v2Item("user_message", {
+            status,
+            inputIntent: "steer",
+            messageId: "message-1",
+            text: "Check the tests too",
+            attachments: [],
+          }),
+        },
+      ]}
+    />
+  );
+  await using screen = await renderElement(timeline("pending"));
+  const bubbleText = screen.getByText("Check the tests too", { exact: true });
+  const sent = screen.getByText("Sent", { exact: true });
+  const footer = () => sent.element().parentElement!;
+  await expect.poll(() => getComputedStyle(footer()).opacity).toBe("0");
+  await bubbleText.hover();
+  await expect.poll(() => getComputedStyle(footer()).opacity).toBe("1");
+  expect(sent.element().getBoundingClientRect().top).toBeGreaterThan(
+    bubbleText.element().getBoundingClientRect().bottom,
+  );
+  await screen.rerender(timeline("completed"));
+  await expect.element(screen.getByText("Read", { exact: true })).toBeVisible();
+  await expect.element(sent).not.toBeInTheDocument();
+});
+
 async function click(element: HTMLElement) {
   await act(async () => element.click());
 }

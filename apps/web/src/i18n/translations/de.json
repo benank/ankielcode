@@ -4173,11 +4173,8 @@
   "f8dfafaf42c3a957": "Agent",
   "0647cef26e3b1fa5": "Der Snapshot ist zu groß zum Kopieren.",
   "c036ab3d20c54b5b": "Du",
-  "d1d1fed744318218": "Umlenkung · wartet darauf, gelesen zu werden",
-  "75948010e112a8f4": "Umlenkung",
-  "1ccc41732907ca74": "Wartet darauf, dass der Agent dies liest. Er liest Umlenkungen zwischen Schritten, nachdem ein laufender Befehl beendet ist.",
-  "ae3f487ebde9db74": "Zuerst eingereiht, dann zum Umlenken der aktiven Runde vorgezogen",
-  "4f2ec8c81b4efb22": "Hat die aktive Runde umgelenkt",
+  "3683cfb13ae9d989": "Gelesen",
+  "96227937ff609cb8": "Gesendet",
   "d201a2c11fc08817": "Ab hier bearbeiten",
   "5b30ae788fdc4fd0": "Wird gesendet…",
   "b8e1cd0265566143": [
