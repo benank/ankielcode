@@ -12,13 +12,13 @@ const DEFAULT_STAGE_LABEL =
     ? msg("Dev", { $context: "app release stage badge" })
     : appVariant === "preview"
       ? msg("Preview", { $context: "app release stage badge" })
-      : msg("Beta", { $context: "app release stage badge" });
+      : null;
 
-export function BrandMark(props: { readonly compact?: boolean; readonly stageLabel?: string }) {
+export function BrandMark(props: { readonly compact?: boolean }) {
   const m = useMessages();
   const compact = props.compact ?? false;
   const iconSize = compact ? 32 : 44;
-  const stageLabel = props.stageLabel ?? m(DEFAULT_STAGE_LABEL);
+  const stageLabel = DEFAULT_STAGE_LABEL === null ? null : m(DEFAULT_STAGE_LABEL);
 
   return (
     <View className="flex-row items-center gap-3">
@@ -36,11 +36,13 @@ export function BrandMark(props: { readonly compact?: boolean; readonly stageLab
           <Text className="text-lg font-ankiel-bold tracking-[-0.4px] text-foreground">
             Ankiel Code
           </Text>
-          <View className="rounded-full bg-subtle px-2 py-1">
-            <Text className="text-3xs font-ankiel-bold tracking-[1.1px] uppercase text-foreground-muted">
-              {stageLabel}
-            </Text>
-          </View>
+          {stageLabel !== null ? (
+            <View className="rounded-full bg-subtle px-2 py-1">
+              <Text className="text-3xs font-ankiel-bold tracking-[1.1px] uppercase text-foreground-muted">
+                {stageLabel}
+              </Text>
+            </View>
+          ) : null}
         </View>
         {!compact ? (
           <Text className="text-xs font-medium text-foreground-muted">

@@ -170,7 +170,7 @@ describe("DesktopPreReadyPlatform", () => {
         const identity = yield* Effect.promise(() => portalIdentity);
         assert.equal(identity.desktopName, "com.ankiel.AnkielCode.desktop");
         assert.include(identity.desktopEntry ?? "", "Exec=/Applications/current.AppImage %U");
-        assert.include(identity.desktopEntry ?? "", "Name=Ankiel Code (Beta)");
+        assert.include(identity.desktopEntry ?? "", "Name=Ankiel Code\n");
         assert.include(identity.desktopEntry ?? "", "MimeType=x-scheme-handler/ankielcode;");
         assert.include(
           identity.desktopEntry ?? "",

@@ -26,7 +26,7 @@ Give a feature a bullet only when it lets users do something they could not do b
 
 Lead with new capabilities. Give a bug fix its own bullet only when the source shows lost work or a core workflow that users could not complete in normal use. Leave isolated failures, cosmetic polish, and routine fixes in the count. Skip internal work, docs, tests, and dependency bumps. Group commits only when they deliver the same user outcome. Seven is a ceiling. Stop when the qualifying changes run out, even if that leaves zero bullets.
 
-Each bullet has a short feature name and one sentence of at most 20 words. Say what the user can do or what now works. Use product names people see in the app and leave out protocol or implementation details. Describe the shipped behavior at the end of the range. Mark user-accessible Labs or beta features "(beta)". Skip dev-only features. No title, headings, introduction, example prompts, hype, PR numbers, or em dashes.
+Each bullet has a short feature name and one sentence of at most 20 words. Say what the user can do or what now works. Use product names people see in the app and leave out protocol or implementation details. Describe the shipped behavior at the end of the range. Skip dev-only features. No title, headings, introduction, example prompts, hype, PR numbers, or em dashes.
 
 Return JSON with a "highlights" array. For each highlight, give "label" (plain text, no final period), "detail" (one sentence), and "commits" (the bracketed input numbers of all commits it covers). Use the subjects and PR descriptions as source material. The release script adds the formatting, count of remaining fixes and performance improvements, and contributor credit.`;
 

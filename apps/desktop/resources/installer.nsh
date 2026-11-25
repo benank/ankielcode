@@ -12,13 +12,16 @@
   Push $1
   ${If} $IsPowerShellAvailable == 0
     System::Call 'kernel32::SetEnvironmentVariable(t "ANKIEL_INSTALL_DIR", t "$INSTDIR")'
-    nsExec::ExecToStack `"$PowerShellPath" -NoProfile -NonInteractive -C "Get-CimInstance -ClassName Win32_Process | Where-Object { $$_.ExecutablePath -and [IO.Path]::GetDirectoryName($$_.ExecutablePath) -eq $$env:ANKIEL_INSTALL_DIR } | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($$_.ExecutablePath) } | Where-Object { $$_ -in 'Ankiel Code (Alpha)', 'Ankiel Code (Beta)', 'Ankiel Code (Nightly)' } | Select-Object -First 1 | ForEach-Object { [Console]::Write($$_) }"`
+    nsExec::ExecToStack `"$PowerShellPath" -NoProfile -NonInteractive -C "Get-CimInstance -ClassName Win32_Process | Where-Object { $$_.ExecutablePath -and [IO.Path]::GetDirectoryName($$_.ExecutablePath) -eq $$env:ANKIEL_INSTALL_DIR } | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($$_.ExecutablePath) } | Where-Object { $$_ -in 'Ankiel Code', 'Ankiel Code (Alpha)', 'Ankiel Code (Beta)', 'Ankiel Code (Nightly)' } | Select-Object -First 1 | ForEach-Object { [Console]::Write($$_) }"`
     Pop $0
     Pop $1
     System::Call 'kernel32::SetEnvironmentVariable(t "ANKIEL_INSTALL_DIR", p 0)'
     ${If} $0 == 0
-      ${If} $1 == "Ankiel Code (Alpha)"
-      ${OrIf} $1 == "Ankiel Code (Beta)"
+      ${If} $1 == "Ankiel Code (Beta)"
+        StrCpy $1 "Ankiel Code"
+      ${EndIf}
+      ${If} $1 == "Ankiel Code"
+      ${OrIf} $1 == "Ankiel Code (Alpha)"
       ${OrIf} $1 == "Ankiel Code (Nightly)"
         ${AnkielStrRep} $appRunningMessage $appRunningMessage "${PRODUCT_NAME}" $1
         ${AnkielStrRep} $appClosingMessage $appClosingMessage "${PRODUCT_NAME}" $1

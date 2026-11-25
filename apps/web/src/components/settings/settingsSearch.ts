@@ -511,7 +511,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "boring-sidebar",
     title: msg("Boring sidebar (group by project)"),
     to: "/settings/labs",
-    searchTerms: [msg("beta folders project tree classic sidebar")],
+    searchTerms: [msg("folders project tree classic sidebar")],
   },
   {
     id: "boring-sidebar-multiline",
@@ -519,7 +519,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     to: "/settings/labs",
     // Shown inside the boring sidebar row only while it is on, so search lands on the parent.
     targetId: "boring-sidebar",
-    searchTerms: [msg("beta boring sidebar folder rows multiline branch pull request details")],
+    searchTerms: [msg("boring sidebar folder rows multiline branch pull request details")],
   },
 
   {
@@ -557,30 +557,28 @@ export const SETTINGS_SEARCH_ITEMS = [
     title: msg("Linked environments"),
     to: "/settings/labs",
     scope: "environment",
-    searchTerms: [msg("beta link another machine vps peer agents work there delegate")],
+    searchTerms: [msg("link another machine vps peer agents work there delegate")],
   },
   {
     id: "workflows-beta",
     title: msg("Workflows"),
     to: "/settings/labs",
     scope: "environment",
-    searchTerms: [msg("beta workflow durable runs automation steps schedule webhook folder")],
+    searchTerms: [msg("workflow durable runs automation steps schedule webhook folder")],
   },
   {
     id: "prompt-suggestions-beta",
     title: msg("Suggest next prompt"),
     to: "/settings/labs",
     scope: "environment",
-    searchTerms: [msg("beta tab autocomplete predict next message claude codex ghost text")],
+    searchTerms: [msg("tab autocomplete predict next message claude codex ghost text")],
   },
   {
     id: "simlock-hosts",
     title: msg("Simlock device hosts (alpha)"),
     to: "/settings/labs",
     scope: "environment",
-    searchTerms: [
-      msg("beta alpha simlock callstack simulator emulator ios android pool lease gateway"),
-    ],
+    searchTerms: [msg("alpha simlock callstack simulator emulator ios android pool lease gateway")],
   },
   {
     id: "worktree-fast-checkout",
@@ -588,7 +586,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     to: "/settings/labs",
     scope: "environment",
     fastWorktreeCheckoutOnly: true,
-    searchTerms: [msg("beta fast worktree checkout clone apfs copy-on-write cache macos speed")],
+    searchTerms: [msg("fast worktree checkout clone apfs copy-on-write cache macos speed")],
   },
   {
     id: "voice-transcription-destination",
@@ -1307,9 +1305,9 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "review-guides",
-    title: msg("Review guides (beta)"),
+    title: msg("Review guides"),
     to: "/settings/source-control",
-    searchTerms: [msg("pull request pr guided review guide tour beta experimental")],
+    searchTerms: [msg("pull request pr guided review guide tour experimental")],
     environmentOnly: true,
   },
   {

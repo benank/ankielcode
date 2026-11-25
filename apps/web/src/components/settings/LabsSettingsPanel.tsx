@@ -13,7 +13,7 @@ export function LabsSettingsPanel() {
   const gt = useGT();
   return (
     <SettingsPageContainer>
-      <SettingsSection id="beta" title={gt("Beta")}>
+      <SettingsSection id="beta" title={gt("Labs")} hideTitle>
         <BoringSidebarRow />
         <LinkedEnvironmentsRow />
         <WorkflowsRow />

@@ -141,17 +141,16 @@ Only one server can use an Ankiel home directory at a time. If startup reports t
 another server owns it, stop that server before retrying, or use a separate home
 directory and pair with the running server.
 
-### macOS app does not reopen after an Alpha update
+### macOS app does not reopen after an update
 
-Updating an older **Ankiel Code (Alpha)** installation can replace it with
-**Ankiel Code (Beta)** without reopening the app. Open **Ankiel Code (Beta)** from
-Applications, or run:
+An update from an older installation can replace the app without reopening it.
+Open **Ankiel Code** from Applications, or run the following command.
 
 ```sh
-open "/Applications/Ankiel Code (Beta).app"
+open "/Applications/Ankiel Code.app"
 ```
 
-If an old Dock shortcut no longer opens the app, remove it and add the Beta app
+If an old Dock shortcut no longer opens the app, remove it and add **Ankiel Code**
 from Applications again.
 
 ## If the desktop app does not start

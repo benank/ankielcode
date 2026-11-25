@@ -45,7 +45,7 @@ export function SettingsLabsRouteScreen() {
         contentContainerClassName="gap-6 px-5 pt-4"
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) + 18 }}
       >
-        <MachineBetaSection
+        <MachineLabSection
           title={gt("Linked environments")}
           icon="link"
           capability="peerLinks"
@@ -54,7 +54,7 @@ export function SettingsLabsRouteScreen() {
             "Let agents on a machine work on your other machines, and theirs on it. Turn it on for each machine. While off, nothing new starts over a link; running tasks finish.",
           )}
         />
-        <MachineBetaSection
+        <MachineLabSection
           title={gt("Fast worktree checkout")}
           icon="bolt.circle"
           capability="fastWorktreeCheckout"
@@ -261,10 +261,9 @@ export function NewThreadSettingsSection() {
   );
 }
 
-type MachineBetaSetting = "linkedEnvironmentsEnabled" | "fastWorktreeCheckout";
+type MachineLabSetting = "linkedEnvironmentsEnabled" | "fastWorktreeCheckout";
 
-/** One switch per connected machine that offers the beta, since each machine's own setting decides. */
-function MachineBetaSection({
+function MachineLabSection({
   title,
   icon,
   capability,
@@ -274,7 +273,7 @@ function MachineBetaSection({
   readonly title: string;
   readonly icon: ComponentProps<typeof SettingsSwitchRow>["icon"];
   readonly capability: "peerLinks" | "fastWorktreeCheckout";
-  readonly setting: MachineBetaSetting;
+  readonly setting: MachineLabSetting;
   readonly description: string;
 }) {
   const gt = useGT();
@@ -286,13 +285,13 @@ function MachineBetaSection({
   );
   const writable = useEnvironmentsWithScope(supported, AuthSettingsWriteScope);
   const updateSettings = useAtomCommand(serverEnvironment.updateSettings, {
-    label: `${setting} beta update`,
+    label: `${setting} update`,
     reportFailure: true,
   });
   if (supported.length === 0) return null;
   return (
     <View className="gap-3">
-      <SettingsSection title={gt("Beta: {feature}", { feature: title })}>
+      <SettingsSection title={title}>
         {supported.map((environment) => {
           const policy = environment.serverConfig?.managedPolicy;
           const managed = isManagedSettingPath(policy, setting);
