@@ -1,4 +1,5 @@
 import { msg } from "gt-react-native";
+import type { Preferences } from "../../../persistence/mobile-preferences";
 
 export const NAVIGATION_TAB_ORDER = ["threads", "pullRequests", "issues", "usage"] as const;
 /** Built, but left out of the tab bar while workflows are a soft launch on web. */
@@ -16,9 +17,23 @@ export function isSharedSlotTab(value: unknown): value is SharedSlotTab {
  * Pull requests and issues share one slot in the tab bar. The open one holds it, or else the one
  * opened last; this returns the other, which the bar leaves out.
  */
-export function sharedSlotAbsentee(selected: NavigationTab, last: unknown): SharedSlotTab {
+function sharedSlotAbsentee(selected: NavigationTab, last: unknown): SharedSlotTab {
   const holder = isSharedSlotTab(selected) ? selected : last === "issues" ? last : "pullRequests";
   return holder === "issues" ? "pullRequests" : "issues";
+}
+
+export function workspaceHiddenNavigationTabs(
+  selected: NavigationTab,
+  preferences?: Preferences,
+): readonly NavigationTab[] {
+  return [
+    ...(navigationCustomizationAvailable()
+      ? resolveHiddenNavigationTabs(preferences?.hiddenNavigationTabs)
+      : []),
+    preferences?.pullRequestTabEnabled === true
+      ? sharedSlotAbsentee(selected, preferences.sharedSlotTab)
+      : "pullRequests",
+  ];
 }
 
 export function navigationCustomizationAvailable(

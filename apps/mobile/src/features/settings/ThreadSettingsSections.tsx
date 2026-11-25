@@ -18,6 +18,7 @@ import { DEFAULT_SERVER_SETTINGS } from "@ankielcode/contracts";
 import { supportsSharedSettingsSync } from "@ankielcode/client-runtime/state/shared-settings";
 import { AppText as Text } from "../../components/ui/AppText";
 import { useEnvironments } from "../../state/environments";
+import { PullRequestGlyph } from "../pull-requests/pullRequestGlyphs";
 import { mobilePreferencesAtom, saveMobilePreferences } from "../../state/preferences";
 import { serverEnvironment } from "../../state/server";
 import { useAtomCommand } from "../../state/use-atom-command";
@@ -35,6 +36,8 @@ import {
 export function SettingsLabsRouteScreen() {
   const gt = useGT();
   const insets = useSafeAreaInsets();
+  const preferences = useAtomValue(mobilePreferencesAtom);
+  const savePreferences = useAtomCommand(saveMobilePreferences);
 
   return (
     <SettingsScreen title={gt("Labs")}>
@@ -45,6 +48,20 @@ export function SettingsLabsRouteScreen() {
         contentContainerClassName="gap-6 px-5 pt-4"
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) + 18 }}
       >
+        <SettingsSection title={gt("Navigation")}>
+          <SettingsSwitchRow
+            icon={PullRequestGlyph.pullRequest}
+            label={gt("Show pull requests tab")}
+            subtitle={gt(
+              "Show the pull requests list in workspace navigation. Saved on this device.",
+            )}
+            value={
+              AsyncResult.isSuccess(preferences) && preferences.value.pullRequestTabEnabled === true
+            }
+            disabled={!AsyncResult.isSuccess(preferences)}
+            onValueChange={(value) => void savePreferences({ pullRequestTabEnabled: value })}
+          />
+        </SettingsSection>
         <MachineBetaSection
           title={gt("Linked environments")}
           icon="link"

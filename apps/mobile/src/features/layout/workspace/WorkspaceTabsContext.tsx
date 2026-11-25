@@ -6,9 +6,7 @@ import { mobilePreferencesAtom, saveMobilePreferences } from "../../../state/pre
 import { useAtomCommand } from "../../../state/use-atom-command";
 import {
   isSharedSlotTab,
-  sharedSlotAbsentee,
-  navigationCustomizationAvailable,
-  resolveHiddenNavigationTabs,
+  workspaceHiddenNavigationTabs,
   resolveSelectedNavigationTab,
 } from "./navigation-tab-order";
 import {
@@ -46,12 +44,7 @@ function resolveWorkspaceTabsSelection(
 ): WorkspaceTabsState {
   const saved = AsyncResult.isSuccess(preferences) ? preferences.value : undefined;
   const order = resolveWorkspaceTabOrder(saved?.navigationTabOrder);
-  const hidden = [
-    ...(navigationCustomizationAvailable()
-      ? resolveHiddenNavigationTabs(saved?.hiddenNavigationTabs)
-      : []),
-    sharedSlotAbsentee(state.selectedTab, saved?.sharedSlotTab),
-  ];
+  const hidden = workspaceHiddenNavigationTabs(state.selectedTab, saved);
   const selected = resolveSelectedNavigationTab(order, hidden, state.selectedTab);
   return selected && selected !== state.selectedTab
     ? workspaceTabsReducer(state, { type: "select", tab: selected })

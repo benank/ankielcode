@@ -5,7 +5,7 @@ import {
   moveNavigationTab,
   overflowNavigationTabs,
   enabledNavigationTabs,
-  sharedSlotAbsentee,
+  workspaceHiddenNavigationTabs,
   toggleNavigationTabVisibility,
   resolveSelectedNavigationTab,
   resolveNavigationTabOrder,
@@ -30,10 +30,28 @@ describe("navigation tab order", () => {
   });
 
   it("gives the shared slot to the open list, or else the one opened last", () => {
-    expect(sharedSlotAbsentee("issues", "pullRequests")).toBe("pullRequests");
-    expect(sharedSlotAbsentee("pullRequests", "issues")).toBe("issues");
-    expect(sharedSlotAbsentee("threads", "issues")).toBe("pullRequests");
-    expect(sharedSlotAbsentee("usage", undefined)).toBe("issues");
+    const enabled = { pullRequestTabEnabled: true };
+    expect(
+      workspaceHiddenNavigationTabs("issues", { ...enabled, sharedSlotTab: "pullRequests" }),
+    ).toEqual(["pullRequests"]);
+    expect(
+      workspaceHiddenNavigationTabs("pullRequests", { ...enabled, sharedSlotTab: "issues" }),
+    ).toEqual(["issues"]);
+    expect(
+      workspaceHiddenNavigationTabs("threads", { ...enabled, sharedSlotTab: "issues" }),
+    ).toEqual(["pullRequests"]);
+    expect(workspaceHiddenNavigationTabs("usage", enabled)).toEqual(["issues"]);
+  });
+
+  it("keeps Issues available when Pull Requests is disabled or the setting is missing", () => {
+    for (const pullRequestTabEnabled of [false, undefined]) {
+      const hidden = workspaceHiddenNavigationTabs("pullRequests", {
+        sharedSlotTab: "pullRequests",
+        ...(pullRequestTabEnabled === undefined ? {} : { pullRequestTabEnabled }),
+      });
+      expect(visibleNavigationTabs(undefined, hidden)).toEqual(["threads", "issues", "usage"]);
+      expect(resolveSelectedNavigationTab(undefined, hidden, "pullRequests")).toBe("threads");
+    }
   });
 
   it("moves a section without changing the relative order of the others", () => {

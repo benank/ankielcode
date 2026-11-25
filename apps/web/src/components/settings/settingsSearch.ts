@@ -508,6 +508,12 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: [msg("beta folders project tree classic sidebar")],
   },
   {
+    id: "pull-request-tab",
+    title: msg("Show pull requests tab"),
+    to: "/settings/labs",
+    searchTerms: [msg("show hide pull requests pr tab sidebar navigation")],
+  },
+  {
     id: "boring-sidebar-multiline",
     title: msg("Two-line folder rows"),
     to: "/settings/labs",

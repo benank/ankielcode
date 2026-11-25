@@ -6,6 +6,7 @@ import { AppText as Text } from "../../../components/ui/AppText";
 import { Menu } from "../../../components/ui/Menu";
 import { useAndroidControlSizing } from "../../../components/ui/useAndroidControlSizing";
 import { isSharedSlotTab, type SharedSlotTab } from "./navigation-tab-order";
+import { usePullRequestTabEnabled } from "./navigation-tabs";
 import { useSelectWorkspaceTab } from "./useSelectWorkspaceTab";
 
 const TITLES = {
@@ -18,7 +19,20 @@ export function SharedSlotTitle(props: { readonly tab: SharedSlotTab }) {
   const gt = useGT();
   const messages = useMessages();
   const selectTab = useSelectWorkspaceTab();
+  const pullRequestTabEnabled = usePullRequestTabEnabled();
   const { scale } = useAndroidControlSizing();
+  const title = (
+    <Text
+      allowFontScaling={Platform.OS === "ios"}
+      maxFontSizeMultiplier={1.4}
+      numberOfLines={1}
+      className="font-ankiel-bold text-foreground"
+      style={{ fontSize: 20 * scale, letterSpacing: -0.4 * scale }}
+    >
+      {messages(TITLES[props.tab])}
+    </Text>
+  );
+  if (!pullRequestTabEnabled) return title;
   return (
     <Menu
       actions={Object.entries(TITLES).map(([id, title]) => ({
@@ -37,15 +51,7 @@ export function SharedSlotTitle(props: { readonly tab: SharedSlotTab }) {
         hitSlop={8}
         className="flex-row items-center gap-1.5"
       >
-        <Text
-          allowFontScaling={Platform.OS === "ios"}
-          maxFontSizeMultiplier={1.4}
-          numberOfLines={1}
-          className="font-ankiel-bold text-foreground"
-          style={{ fontSize: 20 * scale, letterSpacing: -0.4 * scale }}
-        >
-          {messages(TITLES[props.tab])}
-        </Text>
+        {title}
         <SymbolView
           name="chevron.down"
           size={Math.round(12 * scale)}

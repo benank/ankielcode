@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { T, useGT } from "gt-react";
 
+import { updateClientSettings, useClientSettings } from "../../hooks/useSettings";
 import { Switch } from "../ui/switch";
 import { ScopedSwitch } from "./ScopedSwitch";
 import { SettingsPageContainer, SettingsRow, SettingsSection } from "./settingsLayout";
@@ -15,6 +16,7 @@ export function LabsSettingsPanel() {
     <SettingsPageContainer>
       <SettingsSection id="beta" title={gt("Beta")}>
         <BoringSidebarRow />
+        <PullRequestTabRow />
         <LinkedEnvironmentsRow />
         <WorkflowsRow />
         <PromptSuggestionsRow />
@@ -22,6 +24,27 @@ export function LabsSettingsPanel() {
         <FastWorktreeCheckoutRow />
       </SettingsSection>
     </SettingsPageContainer>
+  );
+}
+
+function PullRequestTabRow() {
+  const gt = useGT();
+  const setting = useSearchableSetting();
+  const enabled = useClientSettings((settings) => settings.pullRequestTabEnabled);
+  return (
+    <SettingsRow
+      {...setting("pull-request-tab")}
+      description={gt("Show the pull requests list in workspace navigation. Saved on this device.")}
+      control={
+        <Switch
+          checked={enabled}
+          onCheckedChange={(checked) =>
+            void updateClientSettings({ pullRequestTabEnabled: checked })
+          }
+          aria-label={gt("Show pull requests tab")}
+        />
+      }
+    />
   );
 }
 

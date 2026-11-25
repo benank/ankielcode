@@ -228,8 +228,11 @@ instructions to commits and pull requests.
 
 ## Review and merge
 
-Open **Pull requests** to review changes and comments, request reviewers, check out a branch,
-or merge. You can edit review titles and descriptions and your own comments where the host allows it.
+Turn on **Show pull requests tab** in **Settings → Labs** to add the list to workspace
+navigation on this device. On mobile, use the list title to switch between **Issues** and
+**Pull requests**. Open **Pull requests** to review changes and comments, request reviewers,
+check out a branch, or merge. You can edit review titles and descriptions and your own comments
+where the host allows it.
 Where you can edit a description, you can also tick its checkboxes from the Summary tab
 (the Overview tab on mobile).
 GitLab calls these merge requests.
