@@ -159,7 +159,7 @@ it("toggles the service tier with one bolt button", async () => {
   await expect.element(toggle).toHaveAttribute("aria-pressed", "false");
   const icon = toggle.element().querySelector("svg");
   expect(icon && getComputedStyle(icon).fill).toBe("none");
-  expect(icon?.getBoundingClientRect().width).toBe(24);
+  expect(icon?.getBoundingClientRect().width).toBe(18);
   const buttonWidth = toggle.element().getBoundingClientRect().width;
   await toggle.click();
   await expect.element(toggle).toHaveAttribute("aria-pressed", "true");

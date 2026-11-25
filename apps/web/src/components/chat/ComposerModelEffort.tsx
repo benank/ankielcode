@@ -538,7 +538,7 @@ export function ComposerFastToggle(props: { traits: TraitsSelectionInput }) {
           >
             <ZapIcon
               aria-hidden="true"
-              className="size-6"
+              className="size-4.5"
               fill={fast.enabled ? "currentColor" : "none"}
             />
           </button>

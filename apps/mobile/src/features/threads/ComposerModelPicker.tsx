@@ -211,8 +211,8 @@ function ComposerModelPickerPanel(props: PickerProps & { maxHeight: number }) {
               }}
             >
               <ThemedSvg
-                width={30}
-                height={30}
+                width={22.5}
+                height={22.5}
                 viewBox="0 0 24 24"
                 accessible={false}
                 colorClassName={fast.enabled ? "text-foreground" : "text-foreground-muted"}
