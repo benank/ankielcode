@@ -9924,6 +9924,9 @@
   "c69a143ba3383658": "Kunde inte genomsöka servermiljön",
   "6985d8cfe8f3f2f2": "Inget har identifierats än",
   "5b17411e32ec9ee8": "Installera Git på servern, lägg till valfria värdintegrationer eller autentiseringsuppgifter som din arbetsyta behöver och sök sedan igen.",
+  "28a45948473da7f8": "GitHub",
+  "e9299508047698d6": "Låt Ankiel Code läsa och hantera ärenden och pull requests på GitHub i den här miljön.",
+  "c603786366d31b03": "GitHub-integrering",
   "52f500fa58827159": "Genomsök servermiljön igen",
   "3bd42b40bd62ca11": "Leverantörer av versionshantering",
   "d6738114d4de6d92": [
@@ -11035,6 +11038,7 @@
   "12abd0fe135419bc": "automatisk pull standardgren aktuell utcheckning fast-forward upstream",
   "a22700a2aa679898": "Standardmetod för merge",
   "c4548ce84893201b": "pull request merge squash rebase senast vald",
+  "614e4568ab7ad66d": "github ärenden pull requests automatisering",
   "f6c5ffe0b40ce8e2": "linear jira ärenden ärendehanterare team api-nyckel anslut koppla projekt issues",
   "a4380762611c94e4": "Versionshantering",
   "2f251b69a6c324f3": "Intervall för Git-fetch",

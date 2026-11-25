@@ -42,6 +42,7 @@ import { TestClock } from "effect/testing";
 import * as GitManager from "../git/GitManager.ts";
 import * as ProcessRunner from "../processRunner.ts";
 import * as PullRequestService from "../pullRequest/PullRequestService.ts";
+import { ServerSettingsService } from "../serverSettings.ts";
 import * as ServerActivation from "../serverActivation.ts";
 import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as Orchestrator from "./Orchestrator.ts";
@@ -305,7 +306,14 @@ const makeHarness = Effect.fn("makePullRequestSyncHarness")(function* (options: 
     stackCalls,
     domainEvents,
     stateChanges,
-    layer: PullRequestSyncReactor.layer.pipe(Layer.provide(layerDependencies)),
+    layer: PullRequestSyncReactor.layer.pipe(
+      Layer.provide(
+        Layer.merge(
+          layerDependencies,
+          ServerSettingsService.layerTest({ githubIntegrationEnabled: true }),
+        ),
+      ),
+    ),
   };
 });
 

@@ -745,7 +745,9 @@ const layerRuntimeDependencies = layerRuntimeCoreDependencies.pipe(
   Layer.provideMerge(ThreadViewers.layer),
   Layer.provideMerge(layerResourceDiagnostics),
   Layer.provideMerge(TraceDiagnostics.layer),
-  Layer.provideMerge(TriageService.layer.pipe(Layer.provide(GitVcsDriver.layer))),
+  Layer.provideMerge(
+    TriageService.layer.pipe(Layer.provide(Layer.merge(GitVcsDriver.layer, layerServerSettings))),
+  ),
   Layer.provideMerge(ExternalLauncher.layer),
   Layer.provideMerge(RemoteOpenTargets.layer),
   Layer.provideMerge(DirectEndpoints.layer.pipe(Layer.provide(layerServerEnvironment))),

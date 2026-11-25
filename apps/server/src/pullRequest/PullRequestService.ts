@@ -100,6 +100,7 @@ import {
   PullRequestProviderError,
 } from "@ankielcode/source-control-core/server/PullRequestProvider";
 import * as PullRequestReadCache from "./PullRequestReadCache.ts";
+import { githubIntegrationEnabled } from "../sourceControl/githubIntegrationEnabled.ts";
 import * as PullRequestProviderRegistry from "./PullRequestProviderRegistry.ts";
 import * as ViewedFiles from "./pullRequestViewedFiles.ts";
 import { toChangeBreakdown } from "./pullRequestChangeBreakdown.ts";
@@ -778,6 +779,7 @@ export const make = Effect.gen(function* () {
   const pullRequestRefreshes = yield* SubscriptionRef.make(0);
   const linkedThreadRefreshes = yield* SubscriptionRef.make(0);
   const registry = yield* PullRequestProviderRegistry.PullRequestProviderRegistry;
+  const githubEnabled = yield* githubIntegrationEnabled;
   const requirementOf: UnavailableRequirementOf = (kind) =>
     registry.get(kind)?.unavailableRequirement;
   const toPullRequestError = toPullRequestErrorWith(requirementOf);
@@ -975,10 +977,12 @@ export const make = Effect.gen(function* () {
       ),
       Effect.flatMap((projects) =>
         resolveRemoteHosts(projects, filter).pipe(
-          Effect.map((remoteHosts) => ({ remoteHosts, projects })),
+          Effect.flatMap((remoteHosts) =>
+            Effect.map(githubEnabled, (enabled) => ({ remoteHosts, projects, enabled })),
+          ),
         ),
       ),
-      Effect.map(({ remoteHosts, projects }) => {
+      Effect.map(({ remoteHosts, projects, enabled }) => {
         const supported: SupportedProject[] = [];
         const unimplemented = new Map<
           string,
@@ -1002,6 +1006,7 @@ export const make = Effect.gen(function* () {
               ? undefined
               : remoteHosts.get(remoteHostKey(recognized, identity.locator.remoteUrl));
           kind = remote?.kind ?? kind;
+          if (!enabled && kind === "github") continue;
           const host = remote?.host ?? sourceControlDefinitions.changeRequestHost(identity, kind);
           if (filter.host !== undefined && host !== filter.host.toLowerCase()) {
             continue;
@@ -1094,7 +1099,10 @@ export const make = Effect.gen(function* () {
             if (route === undefined) {
               return Effect.gen(function* () {
                 const publicHost = sourceControlDefinitions.findByPublicHost(host);
-                const api = publicHost === undefined ? null : registry.get(publicHost.kind);
+                const enabled = yield* githubEnabled;
+                const providerFor = (kind: SourceControlProviderKind) =>
+                  !enabled && kind === "github" ? null : registry.get(kind);
+                const api = publicHost === undefined ? null : providerFor(publicHost.kind);
                 if (publicHost !== undefined && api?.readsPublicHostWithoutCheckout) {
                   const selected = yield* projects.getShell(ref.projectId).pipe(
                     Effect.mapError(
@@ -1123,7 +1131,7 @@ export const make = Effect.gen(function* () {
                 }
                 const owner =
                   publicHost ?? sourceControlDefinitions.findByRepositoryKey(referenceKey);
-                const readable = owner === undefined ? null : registry.get(owner.kind);
+                const readable = owner === undefined ? null : providerFor(owner.kind);
                 if (
                   readable !== null &&
                   !readable.readsPublicHostWithoutCheckout &&
@@ -1189,19 +1197,34 @@ export const make = Effect.gen(function* () {
 
   const changes: PullRequestService["Service"]["changes"] = (input) =>
     Stream.unwrap(
-      requireProject(input).pipe(
-        Effect.map((project) =>
-          project.api.changeRequestEvents === undefined
-            ? Stream.empty
-            : project.api.changeRequestEvents({
-                cwd: project.project.workspaceRoot,
-                repository: project.repository,
-                host: project.host,
-                number: input.number,
-              }),
-        ),
-        Effect.orElseSucceed(() => Stream.empty),
-      ),
+      Effect.gen(function* () {
+        const settingsChanges = yield* serverSettings.subscribeChanges;
+        return yield* requireProject(input).pipe(
+          Effect.map((project) =>
+            project.api.changeRequestEvents === undefined
+              ? Stream.empty
+              : project.api
+                  .changeRequestEvents({
+                    cwd: project.project.workspaceRoot,
+                    repository: project.repository,
+                    host: project.host,
+                    number: input.number,
+                  })
+                  .pipe(
+                    Stream.interruptWhen(
+                      settingsChanges.pipe(
+                        Stream.filter(
+                          (settings) =>
+                            project.kind === "github" && !settings.githubIntegrationEnabled,
+                        ),
+                        Stream.runHead,
+                      ),
+                    ),
+                  ),
+          ),
+          Effect.orElseSucceed(() => Stream.empty),
+        );
+      }),
     );
 
   // Access can change after page load; recheck every write.
@@ -3290,7 +3313,7 @@ export const make = Effect.gen(function* () {
         query,
         cursorEntries,
       ] = JSON.parse(key) as [
-        number,
+        ReadonlyArray<number | boolean>,
         string,
         string | null,
         ReadonlyArray<string | ReadonlyArray<string> | null> | null,
@@ -3318,9 +3341,9 @@ export const make = Effect.gen(function* () {
       timeToLive: (exit) => (Exit.isSuccess(exit) ? LIST_CACHE_TTL : Duration.zero),
     },
   );
-  const list: PullRequestService["Service"]["list"] = (input) => {
-    const key = JSON.stringify([
-      listingsEpoch,
+  const listKey = (input: PullRequestListInput, enabled: boolean) =>
+    JSON.stringify([
+      [listingsEpoch, enabled],
       input.state,
       input.involvement ?? null,
       input.filters === undefined
@@ -3342,14 +3365,19 @@ export const make = Effect.gen(function* () {
         ? null
         : Object.entries(input.cursors).toSorted(([left], [right]) => left.localeCompare(right)),
     ]);
-    // A replacement reader can join a lookup still finishing its previous reader's cancellation.
-    return Cache.get(listCache, key).pipe(
-      Effect.catchCauseIf(
-        (cause) => Cause.hasInterruptsOnly(cause),
-        (_cause) => Cache.get(listCache, key),
-      ),
+  const list: PullRequestService["Service"]["list"] = (input) =>
+    githubEnabled.pipe(
+      Effect.flatMap((enabled) => {
+        const key = listKey(input, enabled);
+        // A replacement reader can join a lookup still finishing its previous reader's cancellation.
+        return Cache.get(listCache, key).pipe(
+          Effect.catchCauseIf(
+            (cause) => Cause.hasInterruptsOnly(cause),
+            (_cause) => Cache.get(listCache, key),
+          ),
+        );
+      }),
     );
-  };
 
   const checksCache = yield* Cache.makeWith(
     (key: string) => {

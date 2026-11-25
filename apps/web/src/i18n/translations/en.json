@@ -9926,6 +9926,9 @@
   "c69a143ba3383658": "Could not scan the server environment",
   "6985d8cfe8f3f2f2": "Nothing detected yet",
   "5b17411e32ec9ee8": "Install Git on the server, add optional hosting integrations or credentials your workspace needs, then rescan.",
+  "28a45948473da7f8": "GitHub",
+  "e9299508047698d6": "Allow Ankiel Code to read and manage GitHub issues and pull requests on this environment.",
+  "c603786366d31b03": "GitHub integration",
   "52f500fa58827159": "Rescan server environment",
   "3bd42b40bd62ca11": "Source control providers",
   "d6738114d4de6d92": [
@@ -11037,6 +11040,7 @@
   "12abd0fe135419bc": "auto pull default branch current checkout fast forward upstream",
   "a22700a2aa679898": "Default merge method",
   "c4548ce84893201b": "pull request merge squash rebase last selected",
+  "614e4568ab7ad66d": "github issues pull requests automation",
   "f6c5ffe0b40ce8e2": "linear jira issues tracker team api key connect bind project",
   "a4380762611c94e4": "Source control",
   "2f251b69a6c324f3": "Git fetch interval",

@@ -9919,6 +9919,9 @@
   "c69a143ba3383658": "Server-Umgebung konnte nicht gescannt werden",
   "6985d8cfe8f3f2f2": "Noch nichts erkannt",
   "5b17411e32ec9ee8": "Installiere Git auf dem Server, füge optionale Hosting-Integrationen oder Anmeldedaten hinzu, die dein Arbeitsbereich braucht, und scanne dann erneut.",
+  "28a45948473da7f8": "GitHub",
+  "e9299508047698d6": "Ankiel Code darf in dieser Umgebung GitHub-Issues und Pull Requests lesen und verwalten.",
+  "c603786366d31b03": "GitHub-Integration",
   "52f500fa58827159": "Server-Umgebung erneut scannen",
   "3bd42b40bd62ca11": "Versionskontrollanbieter",
   "d6738114d4de6d92": [
@@ -11030,6 +11033,7 @@
   "12abd0fe135419bc": "automatisch pullen standard-branch aktueller checkout fast forward upstream",
   "a22700a2aa679898": "Standard-Merge-Methode",
   "c4548ce84893201b": "pull request merge squash rebase zuletzt gewählt",
+  "614e4568ab7ad66d": "github issues pull requests automatisierung",
   "f6c5ffe0b40ce8e2": "linear jira issues tracker team api-schlüssel verbinden zuordnen projekt",
   "a4380762611c94e4": "Versionskontrolle",
   "2f251b69a6c324f3": "Git-Fetch-Intervall",

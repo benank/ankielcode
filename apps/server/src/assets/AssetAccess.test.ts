@@ -40,6 +40,7 @@ import * as NativeAppIconResolver from "./NativeAppIconResolver.ts";
 import * as RepositoryIdentityResolver from "../project/RepositoryIdentityResolver.ts";
 import { symlinksSupported } from "@ankielcode/shared/testing/symlinks";
 import { fakeSourceControlDriverInstance } from "@ankielcode/source-control-testing/fakeSourceControlDriver";
+import * as ServerSettings from "../serverSettings.ts";
 import * as BuiltInDrivers from "../sourceControl/builtInDrivers.ts";
 import { sourceControlDefinitions } from "../sourceControl/sourceControlDefinitions.ts";
 import { sourceControlMediaResponse } from "./sourceControlMediaResponse.ts";
@@ -1973,7 +1974,16 @@ describe("AssetAccess", () => {
       // A pull request's own repository wins over the checkout it is shown in.
       yield* sourceControlMediaResponse({ ...asset, repository: "enterprise/private" }, {});
       expect(fetched.at(-1)?.repository).toBe("enterprise/private");
-    }).pipe(Effect.provide(Layer.mergeAll(layerTest, layerDrivers, layerIdentities)));
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(
+          layerTest,
+          layerDrivers,
+          layerIdentities,
+          ServerSettings.ServerSettingsService.layerTest({ githubIntegrationEnabled: true }),
+        ),
+      ),
+    );
   });
 
   it.effect("refuses media no host keeps behind a credential, without echoing the URL", () =>

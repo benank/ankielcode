@@ -327,15 +327,18 @@ export function createEnvironmentSummaryAtoms(input: {
   const pullRequestsSupportedAtom = Atom.make((get) =>
     get(environmentIdsAtom).some(
       (environmentId) =>
-        (get(input.presentationAtom(environmentId))?.serverConfig ?? null) !== null,
+        get(input.presentationAtom(environmentId))?.serverConfig?.settings
+          .githubIntegrationEnabled === true,
     ),
   );
   const issuesSupportedAtom = Atom.make((get) =>
-    get(environmentIdsAtom).some(
-      (environmentId) =>
-        get(input.presentationAtom(environmentId))?.serverConfig?.environment.capabilities
-          .issues === true,
-    ),
+    get(environmentIdsAtom).some((environmentId) => {
+      const config = get(input.presentationAtom(environmentId))?.serverConfig;
+      return (
+        config?.settings.githubIntegrationEnabled === true &&
+        config.environment.capabilities.issues === true
+      );
+    }),
   );
   return {
     environmentIdsAtom,

@@ -25,7 +25,9 @@ function sharedSlotAbsentee(selected: NavigationTab, last: unknown): SharedSlotT
 export function workspaceHiddenNavigationTabs(
   selected: NavigationTab,
   preferences?: Preferences,
+  githubEnabled = true,
 ): readonly NavigationTab[] {
+  if (!githubEnabled) return SHARED_SLOT_TABS;
   return [
     ...(navigationCustomizationAvailable()
       ? resolveHiddenNavigationTabs(preferences?.hiddenNavigationTabs)

@@ -131,6 +131,7 @@ const SETTINGS_SEARCH_TERMS = {
     msg("auth", { $context: "settings search keyword" }),
   ],
   SettingsEnvironmentSourceControl: [
+    msg("GitHub integration"),
     "git",
     msg("pull requests", { $context: "settings search keyword" }),
     msg("co-authors", { $context: "settings search keyword" }),

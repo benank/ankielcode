@@ -27,6 +27,7 @@ import * as SourceControlHost from "@ankielcode/source-control-core/server/Sourc
 
 import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
+import { githubIntegrationEnabled } from "./githubIntegrationEnabled.ts";
 import * as VcsDriverRegistry from "../vcs/VcsDriverRegistry.ts";
 
 const PROVIDER_DETECTION_CACHE_CAPACITY = 2_048;
@@ -71,6 +72,7 @@ export class SourceControlProviderRegistry extends Context.Service<
 
 function unsupportedProvider(
   kind: SourceControlProviderKind,
+  detail = `No ${kind} source control provider is registered.`,
 ): SourceControlProvider.SourceControlProvider["Service"] {
   // Binding context does not create a second provider-operation span.
   return SourceControlProvider.SourceControlProvider.of({
@@ -86,7 +88,7 @@ function unsupportedProvider(
         operation: "getChangeRequest",
         cwd: input.cwd,
         reference: SourceControlProvider.transportSafeSourceControlErrorValue(input.reference),
-        detail: `No ${kind} source control provider is registered.`,
+        detail,
       }),
     createChangeRequest: (input) =>
       new SourceControlProviderError({
@@ -94,7 +96,7 @@ function unsupportedProvider(
         operation: "createChangeRequest",
         cwd: input.cwd,
         reference: SourceControlProvider.transportSafeSourceControlErrorValue(input.headSelector),
-        detail: `No ${kind} source control provider is registered.`,
+        detail,
       }),
     getRepositoryCloneUrls: (input) =>
       new SourceControlProviderError({
@@ -102,7 +104,7 @@ function unsupportedProvider(
         operation: "getRepositoryCloneUrls",
         cwd: input.cwd,
         repository: SourceControlProvider.transportSafeSourceControlErrorValue(input.repository),
-        detail: `No ${kind} source control provider is registered.`,
+        detail,
       }),
     createRepository: (input) =>
       new SourceControlProviderError({
@@ -110,14 +112,14 @@ function unsupportedProvider(
         operation: "createRepository",
         cwd: input.cwd,
         repository: SourceControlProvider.transportSafeSourceControlErrorValue(input.repository),
-        detail: `No ${kind} source control provider is registered.`,
+        detail,
       }),
     getDefaultBranch: (input) =>
       new SourceControlProviderError({
         provider: kind,
         operation: "getDefaultBranch",
         cwd: input.cwd,
-        detail: `No ${kind} source control provider is registered.`,
+        detail,
       }),
     checkoutChangeRequest: (input) =>
       new SourceControlProviderError({
@@ -125,7 +127,7 @@ function unsupportedProvider(
         operation: "checkoutChangeRequest",
         cwd: input.cwd,
         reference: SourceControlProvider.transportSafeSourceControlErrorValue(input.reference),
-        detail: `No ${kind} source control provider is registered.`,
+        detail,
       }),
   });
 }
@@ -257,7 +259,10 @@ function bindProviderContext(
 
 /** @public */
 export const makeWithProviders = Effect.fn("makeSourceControlProviderRegistryWithProviders")(
-  function* (registrations: ReadonlyArray<SourceControlProviderRegistration>) {
+  function* (
+    registrations: ReadonlyArray<SourceControlProviderRegistration>,
+    githubEnabled: Effect.Effect<boolean> = Effect.succeed(true),
+  ) {
     const config = yield* ServerConfig.ServerConfig;
     const serverSettings = yield* ServerSettings.ServerSettingsService;
     const { process } = yield* SourceControlHost.SourceControlHost;
@@ -266,10 +271,24 @@ export const makeWithProviders = Effect.fn("makeSourceControlProviderRegistryWit
       SourceControlProviderKind,
       SourceControlProvider.SourceControlProvider["Service"]
     >(registrations.map((registration) => [registration.kind, registration.provider]));
-    const discoverySpecs = registrations.map((registration) => registration.discovery);
+    const discoverySpecs = githubEnabled.pipe(
+      Effect.map((enabled) =>
+        registrations
+          .filter(({ kind }) => enabled || kind !== "github")
+          .map(({ discovery }) => discovery),
+      ),
+    );
 
     const get: SourceControlProviderRegistry["Service"]["get"] = (kind) =>
-      Effect.succeed(providers.get(kind) ?? unsupportedProvider(kind));
+      kind === "github"
+        ? githubEnabled.pipe(
+            Effect.map((enabled) =>
+              enabled
+                ? (providers.get(kind) ?? unsupportedProvider(kind))
+                : unsupportedProvider(kind, "Enable GitHub integration in Settings."),
+            ),
+          )
+        : Effect.succeed(providers.get(kind) ?? unsupportedProvider(kind));
 
     const unknownRemoteCache = yield* Cache.makeWith(
       (request: UnknownRemoteLookup) => request.lookup,
@@ -279,11 +298,6 @@ export const makeWithProviders = Effect.fn("makeSourceControlProviderRegistryWit
           Exit.isSuccess(exit) && exit.value.settled ? UNKNOWN_REMOTE_CACHE_TTL : Duration.zero,
       },
     );
-    const settingsChanges = yield* serverSettings.subscribeChanges;
-    yield* Stream.runForEach(settingsChanges, () => Cache.invalidateAll(unknownRemoteCache)).pipe(
-      Effect.forkScoped,
-    );
-
     let lastDiscovery: string | undefined;
 
     const refineContext = (
@@ -296,7 +310,11 @@ export const makeWithProviders = Effect.fn("makeSourceControlProviderRegistryWit
             unknownRemoteCache,
             new UnknownRemoteLookup(
               context,
-              refineUnknownRemoteProvider({ specs: discoverySpecs, process, cwd, context }),
+              discoverySpecs.pipe(
+                Effect.flatMap((specs) =>
+                  refineUnknownRemoteProvider({ specs, process, cwd, context }),
+                ),
+              ),
             ),
           ).pipe(Effect.map(({ provider }) => (provider ? { ...context, provider } : context)));
 
@@ -339,19 +357,27 @@ export const makeWithProviders = Effect.fn("makeSourceControlProviderRegistryWit
       timeToLive: (exit) => (Exit.isSuccess(exit) ? PROVIDER_DETECTION_CACHE_TTL : Duration.zero),
     });
 
+    const settingsChanges = yield* serverSettings.subscribeChanges;
+    yield* Stream.runForEach(settingsChanges, () =>
+      Effect.all([
+        Cache.invalidateAll(unknownRemoteCache),
+        Cache.invalidateAll(providerContextCache),
+      ]),
+    ).pipe(Effect.forkScoped);
+
     const resolveHandle: SourceControlProviderRegistry["Service"]["resolveHandle"] = (input) =>
       (input.context === undefined
         ? Cache.get(providerContextCache, input.cwd)
         : refineContext(input.cwd, input.context)
       ).pipe(
-        Effect.map((context) => {
-          const kind = context?.provider.kind ?? SourceControlProviderKind.make("unknown");
-          const provider = providers.get(kind) ?? unsupportedProvider(kind);
-          return {
-            provider: bindProviderContext(provider, context),
-            context,
-          } satisfies SourceControlProviderHandle;
-        }),
+        Effect.flatMap((context) =>
+          get(context?.provider.kind ?? SourceControlProviderKind.make("unknown")).pipe(
+            Effect.map((provider) => ({
+              provider: bindProviderContext(provider, context),
+              context,
+            })),
+          ),
+        ),
       );
 
     return SourceControlProviderRegistry.of({
@@ -360,23 +386,37 @@ export const makeWithProviders = Effect.fn("makeSourceControlProviderRegistryWit
           return undefined;
         }
         const kind = sourceControlDefinitions.recognizeRemote(input.url.href)?.kind;
-        return kind ? providers.get(kind)?.resolveLink?.(input) : undefined;
+        const lookup = kind ? providers.get(kind)?.resolveLink?.(input) : undefined;
+        return kind === "github" && lookup !== undefined
+          ? githubEnabled.pipe(
+              Effect.flatMap((enabled) =>
+                enabled
+                  ? lookup
+                  : Effect.fail(
+                      new SourceControlProviderError({
+                        provider: kind,
+                        operation: "resolveLink",
+                        cwd: input.cwd,
+                        detail: "Enable GitHub integration in Settings.",
+                      }),
+                    ),
+              ),
+            )
+          : lookup;
       },
       get,
       resolveHandle,
       resolve: Effect.fn("SourceControlProviderRegistry.resolve")(function (input) {
         return resolveHandle(input).pipe(Effect.map((handle) => handle.provider));
       }),
-      discover: Effect.forEach(
-        discoverySpecs,
-        (spec) =>
-          probeSourceControlProvider({
-            spec,
-            process,
-            cwd: config.cwd,
-          }),
-        { concurrency: "unbounded" },
-      ).pipe(
+      discover: discoverySpecs.pipe(
+        Effect.flatMap((specs) =>
+          Effect.forEach(
+            specs,
+            (spec) => probeSourceControlProvider({ spec, process, cwd: config.cwd }),
+            { concurrency: "unbounded" },
+          ),
+        ),
         // A CLI installed or signed in since the last check may claim a remote no forge claimed.
         Effect.tap((items) => {
           const fingerprint = discoveryFingerprint(items);
@@ -398,6 +438,7 @@ const make = Effect.gen(function* () {
       provider: instance.sourceControl,
       discovery: instance.discovery,
     })),
+    yield* githubIntegrationEnabled,
   );
 });
 

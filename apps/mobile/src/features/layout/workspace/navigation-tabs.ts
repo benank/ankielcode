@@ -9,6 +9,7 @@ import {
   type NavigationTab,
 } from "./navigation-tab-order";
 import type { AppSymbolName } from "../../../components/ui/AppSymbol";
+import { pullRequestsSupportedAtom } from "../../../state/presentation";
 import { mobilePreferencesAtom } from "../../../state/preferences";
 import { PullRequestGlyph } from "../../pull-requests/pullRequestGlyphs";
 import { useWorkspaceTabs } from "./WorkspaceTabsContext";
@@ -44,12 +45,18 @@ export function useHiddenNavigationTabs() {
   const preferences = useAtomValue(mobilePreferencesAtom);
   const selected = useWorkspaceTabs()?.state.selectedTab ?? "threads";
   const saved = AsyncResult.isSuccess(preferences) ? preferences.value : undefined;
-  return workspaceHiddenNavigationTabs(selected, saved);
+  const githubEnabled = useAtomValue(pullRequestsSupportedAtom);
+  return workspaceHiddenNavigationTabs(selected, saved, githubEnabled);
 }
 
 export function usePullRequestTabEnabled() {
   const preferences = useAtomValue(mobilePreferencesAtom);
-  return AsyncResult.isSuccess(preferences) && preferences.value.pullRequestTabEnabled === true;
+  const githubEnabled = useAtomValue(pullRequestsSupportedAtom);
+  return (
+    githubEnabled &&
+    AsyncResult.isSuccess(preferences) &&
+    preferences.value.pullRequestTabEnabled === true
+  );
 }
 
 export function useEnabledNavigationTabs() {

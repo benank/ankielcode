@@ -9,6 +9,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as PubSub from "effect/PubSub";
+import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
@@ -89,6 +90,7 @@ function makeRegistry(input: {
     readonly url: string;
   }>;
   readonly discovery?: ReadonlyArray<SourceControlProviderDiscoverySpec>;
+  readonly githubEnabled?: Effect.Effect<boolean>;
   readonly run?: SourceControlHost.SourceControlHost["Service"]["process"]["run"];
   readonly settings?: Partial<ServerSettings.ServerSettingsService["Service"]>;
 }) {
@@ -126,6 +128,7 @@ function makeRegistry(input: {
         }),
       },
     })),
+    input.githubEnabled,
   ).pipe(
     Effect.provide(
       Layer.mergeAll(
@@ -530,4 +533,41 @@ it.effect("answers discovery without waiting on a hosting API that stalls", () =
     assert.strictEqual(bitbucket?.auth.status, "unknown");
     assert.strictEqual(items.find((item) => item.kind === "gitlab")?.status, "available");
   }),
+);
+
+it.effect(
+  "keeps GitHub discovery and link lookups off until enabled and stops them when disabled",
+  () =>
+    Effect.gen(function* () {
+      const enabled = yield* Ref.make(DEFAULT_SERVER_SETTINGS.githubIntegrationEnabled);
+      const registry = yield* makeRegistry({
+        remotes: [{ name: "origin", url: "https://github.com/acme/project.git" }],
+        githubEnabled: Ref.get(enabled),
+        discovery: [claimingCli("github")],
+      });
+      const input = { cwd: "/repo", url: new URL("https://github.com/acme/project/pull/42") };
+      const lookup = registry.resolveLink(input)!;
+      const discoverGitHub = registry.discover.pipe(
+        Effect.map((items) => items.some((item) => item.kind === "github")),
+      );
+      const rejected = yield* Effect.flip(lookup);
+      assert.include(rejected.detail, "Enable GitHub integration");
+      assert.isFalse(yield* discoverGitHub);
+      const disabledPrProvider = yield* registry.resolve({ cwd: "/repo" });
+      assert.isEmpty(
+        yield* disabledPrProvider.listChangeRequests({
+          cwd: "/repo",
+          headSelector: "feature",
+          state: "all",
+        }),
+      );
+
+      yield* Ref.set(enabled, true);
+      assert.isTrue(yield* discoverGitHub);
+      assert.isDefined(yield* lookup);
+
+      yield* Ref.set(enabled, false);
+      assert.isFalse(yield* discoverGitHub);
+      assert.include((yield* Effect.flip(lookup)).detail, "Enable GitHub integration");
+    }),
 );

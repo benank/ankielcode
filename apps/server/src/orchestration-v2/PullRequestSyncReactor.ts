@@ -27,6 +27,7 @@ import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { githubIntegrationEnabled } from "../sourceControl/githubIntegrationEnabled.ts";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as Schedule from "effect/Schedule";
@@ -356,6 +357,7 @@ export class PullRequestSyncReactor extends Context.Service<
 
 /** @public */
 export const make = Effect.gen(function* () {
+  const githubEnabled = yield* githubIntegrationEnabled;
   const engine = yield* Orchestrator.OrchestratorV2;
   const projections = yield* ProjectionStore.ProjectionStoreV2;
   const pullRequests = yield* PullRequestService.PullRequestService;
@@ -410,6 +412,10 @@ export const make = Effect.gen(function* () {
       Cause.hasInterruptsOnly(cause) ? Effect.failCause(cause) : Effect.logWarning(message, fields);
 
   const sweep = Effect.fn("PullRequestSyncReactor.sweep")(function* (scope: "all" | "requested") {
+    if (!(yield* githubEnabled)) {
+      pendingRequests.clear();
+      return;
+    }
     const threads = yield* projections.getThreadsWithPullRequests();
     const now = yield* DateTime.now;
     const nowMs = DateTime.toEpochMillis(now);
@@ -763,7 +769,7 @@ export const make = Effect.gen(function* () {
   // An agent that opens a pull request from a shell gets it linked as link_pull_request would.
   const linkCreatedChangeRequests = Effect.fn("PullRequestSyncReactor.linkCreatedChangeRequests")(
     function* (threadId: ThreadId, item: CommandExecution) {
-      if (isOrchestrationV2WorkActive(item.status)) return;
+      if (isOrchestrationV2WorkActive(item.status) || !(yield* githubEnabled)) return;
       yield* Effect.forEach(
         changeRequestsCreatedBy(item.input, item.output ?? ""),
         (created) =>
@@ -793,7 +799,12 @@ export const make = Effect.gen(function* () {
   // thread never shows as done in between.
   const reopenWatchedChecks = Effect.fn("PullRequestSyncReactor.reopenWatchedChecks")(
     function* (threadId: ThreadId, item: CommandExecution) {
-      if (isOrchestrationV2WorkActive(item.status) || !isPushCommand(item.input)) return;
+      if (
+        isOrchestrationV2WorkActive(item.status) ||
+        !isPushCommand(item.input) ||
+        !(yield* githubEnabled)
+      )
+        return;
       const threads = yield* projections.getThreadsWithPullRequests(threadId);
       const answered = threads.some((thread) =>
         (thread.pullRequests ?? []).some((link) => link.watch?.checksPending !== undefined),

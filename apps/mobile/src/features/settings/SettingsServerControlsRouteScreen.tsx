@@ -413,6 +413,23 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
             {props.page === "source-control" ? (
               <>
                 {projectSelected ? null : (
+                  <SettingsSection title={gt("GitHub integration")}>
+                    <SettingsSwitchRow
+                      icon={PullRequestGlyph.pullRequest}
+                      label={gt("GitHub integration")}
+                      subtitle={managedSubtitle(
+                        "githubIntegrationEnabled",
+                        gt(
+                          "Allow Ankiel Code to read and manage GitHub issues and pull requests on this environment.",
+                        ),
+                      )}
+                      value={uniform("githubIntegrationEnabled")}
+                      disabled={disabledFor("githubIntegrationEnabled")}
+                      onValueChange={(value) => write({ githubIntegrationEnabled: value })}
+                    />
+                  </SettingsSection>
+                )}
+                {projectSelected ? null : (
                   <SourceControlProvidersSection
                     environments={selectedTargets}
                     canWrite={(environmentId) => writableEnvironments.has(environmentId)}

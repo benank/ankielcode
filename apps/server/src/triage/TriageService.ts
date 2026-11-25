@@ -12,6 +12,7 @@ import * as Path from "effect/Path";
 
 import packageJson from "../../package.json" with { type: "json" };
 import * as ServerConfig from "../config.ts";
+import { githubIntegrationEnabled } from "../sourceControl/githubIntegrationEnabled.ts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
 import { buildTriageAppPrompt, type TriageSourceClone } from "./triagePrompt.ts";
 import { triageSourceCacheDir, writeTriageSession } from "./triageSession.ts";
@@ -65,6 +66,7 @@ export const pickSourceRef = (lsRemoteOutput: string, version: string) => {
 };
 
 const make = Effect.gen(function* () {
+  const githubEnabled = yield* githubIntegrationEnabled;
   const config = yield* ServerConfig.ServerConfig;
   const git = yield* GitVcsDriver.GitVcsDriver;
   const fs = yield* FileSystem.FileSystem;
@@ -186,6 +188,9 @@ const make = Effect.gen(function* () {
 
   const prepare: TriageService["Service"]["prepare"] = Effect.fn("TriageService.prepare")(
     function* (input) {
+      if (!(yield* githubEnabled)) {
+        return yield* new ServerPrepareTriageError({ githubIntegrationDisabled: true });
+      }
       const sourceClone = yield* startSourceClone().pipe(
         Effect.catch((error) =>
           Effect.succeed<TriageSourceClone>({

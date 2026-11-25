@@ -11,6 +11,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { githubIntegrationEnabled } from "./githubIntegrationEnabled.ts";
 import * as SourceControlBuiltInDrivers from "./builtInDrivers.ts";
 
 /** Signs the server in to a forge through the forge's own app, and reads what its account did. */
@@ -35,19 +36,28 @@ export class SourceControlSignIn extends Context.Service<
 const make = Effect.gen(function* () {
   const drivers = yield* SourceControlBuiltInDrivers.SourceControlDrivers;
 
-  const signInFor = (input: SourceControlSignInInput) => {
-    const signIn = drivers.find(({ driver }) => driver.kind === input.provider)?.instance.signIn;
+  const githubEnabled = yield* githubIntegrationEnabled;
+  const driverFor = (provider: SourceControlSignInInput["provider"]) =>
+    (provider === "github" ? githubEnabled : Effect.succeed(true)).pipe(
+      Effect.map((enabled) =>
+        enabled ? drivers.find(({ driver }) => driver.kind === provider)?.instance : undefined,
+      ),
+    );
+
+  const signInFor = Effect.fnUntraced(function* (input: SourceControlSignInInput) {
+    const signIn = (yield* driverFor(input.provider))?.signIn;
     return signIn === undefined
-      ? Effect.fail(
-          new SourceControlSignInError({
-            provider: input.provider,
-            host: input.host,
-            reason: "unsupported",
-            detail: `This server cannot sign in to ${input.provider}. Use a token or the host's CLI.`,
-          }),
-        )
-      : Effect.succeed(signIn);
-  };
+      ? yield* new SourceControlSignInError({
+          provider: input.provider,
+          host: input.host,
+          reason: "unsupported",
+          detail:
+            input.provider === "github"
+              ? "Enable GitHub integration in Settings."
+              : `This server cannot sign in to ${input.provider}. Use a token or the host's CLI.`,
+        })
+      : signIn;
+  });
 
   return SourceControlSignIn.of({
     start: Effect.fn("SourceControlSignIn.start")(function* (input) {
@@ -60,20 +70,18 @@ const make = Effect.gen(function* () {
       return yield* (yield* signInFor(input)).cancel(input.host);
     }),
     access: Effect.fn("SourceControlSignIn.access")(function* (input) {
-      const signIn = drivers.find(({ driver }) => driver.kind === input.provider)?.instance.signIn;
+      const signIn = (yield* driverFor(input.provider))?.signIn;
       return {
         status:
           signIn === undefined ? "signed-out" : yield* signIn.access(input.host, input.repository),
       } satisfies SourceControlAppAccess;
     }),
     starred: Effect.fn("SourceControlSignIn.starred")(function* (input) {
-      const isStarred = drivers.find(({ driver }) => driver.kind === input.provider)?.instance
-        .isRepositoryStarred;
+      const isStarred = (yield* driverFor(input.provider))?.isRepositoryStarred;
       return isStarred === undefined ? false : yield* isStarred(input.host, input.repository);
     }),
     star: Effect.fn("SourceControlSignIn.star")(function* (input) {
-      const star = drivers.find(({ driver }) => driver.kind === input.provider)?.instance
-        .starRepository;
+      const star = (yield* driverFor(input.provider))?.starRepository;
       return star === undefined ? false : yield* star(input.host, input.repository);
     }),
   });

@@ -11,6 +11,7 @@ import { ChildProcessSpawner } from "effect/process";
 
 import packageJson from "../../package.json" with { type: "json" };
 import * as ServerConfig from "../config.ts";
+import { ServerSettingsService } from "../serverSettings.ts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
 import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as TriageService from "./TriageService.ts";
@@ -38,6 +39,7 @@ it("falls back to main when the server's version has no tag", () => {
 });
 
 const TestLayer = GitVcsDriver.layer.pipe(
+  Layer.provideMerge(ServerSettingsService.layerTest({ githubIntegrationEnabled: true })),
   Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix: "ankiel-triage-service-" })),
   Layer.provideMerge(VcsProcess.layer),
   Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)),
@@ -88,6 +90,18 @@ const readContext = Effect.gen(function* () {
   const [session] = yield* fs.readDirectory(sessions);
   return yield* fs.readFileString(`${sessions}/${session}/context.md`);
 });
+
+it.effect("requires GitHub integration before contacting GitHub for triage", () =>
+  Effect.gen(function* () {
+    const { triage, commands } = yield* makeTriage();
+    const settings = yield* ServerSettingsService;
+    yield* settings.updateSettings({ githubIntegrationEnabled: false });
+
+    const rejected = yield* Effect.flip(triage.prepare({ client: {} }));
+    assert.isTrue(rejected.githubIntegrationDisabled);
+    assert.deepEqual(commands, []);
+  }).pipe(Effect.provide(TestLayer)),
+);
 
 it.effect("sessions started during a clone share it, and a release tag is looked up once", () =>
   Effect.gen(function* () {

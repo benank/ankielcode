@@ -10,6 +10,8 @@ import type {
   VcsDriverKind,
   VcsDiscoveryItem,
 } from "@ankielcode/contracts";
+import { ScopedSwitch } from "./ScopedSwitch";
+import { useScopedSettings, useUpdateScopedSettings } from "./useScopedSettings";
 import { useSettingsScope } from "./SettingsScopeContext";
 import { ProjectDefaultsSettings } from "./ProjectDefaultsSettings";
 import { useLiveRefresh } from "../../hooks/useLiveRefresh";
@@ -46,6 +48,7 @@ import { SourceControlWritingSettingsSection } from "./SourceControlWritingSetti
 import {
   SettingsPageContainer,
   SettingsSearchTarget,
+  SettingsRow,
   SettingsSection,
   useSettingsSearchTargetId,
 } from "./settingsLayout";
@@ -458,6 +461,35 @@ function EmptySourceControlDiscovery({
   );
 }
 
+function GitHubIntegrationSetting() {
+  const gt = useGT();
+  const searchableSetting = useSearchableSetting();
+  const settings = useScopedSettings();
+  const updateSettings = useUpdateScopedSettings();
+  return (
+    <SettingsSection title={gt("GitHub integration")} hideTitle>
+      <SettingsRow
+        serverScoped
+        {...searchableSetting("github-integration")}
+        settingKeys={["githubIntegrationEnabled"]}
+        description={gt(
+          "Allow Ankiel Code to read and manage GitHub issues and pull requests on this environment.",
+        )}
+        control={
+          <ScopedSwitch
+            settingKeys={["githubIntegrationEnabled"]}
+            checked={settings.githubIntegrationEnabled}
+            onCheckedChange={(checked) =>
+              updateSettings({ githubIntegrationEnabled: Boolean(checked) })
+            }
+            aria-label={gt("GitHub integration")}
+          />
+        }
+      />
+    </SettingsSection>
+  );
+}
+
 export function SourceControlSettingsPanel() {
   const searchableSetting = useSearchableSetting();
   const gt = useGT();
@@ -476,9 +508,13 @@ export function SourceControlSettingsPanel() {
         }),
     useMessages(),
   );
+  const githubEnabled = environment?.serverConfig?.settings.githubIntegrationEnabled === true;
   const result = discovery.data ?? EMPTY_DISCOVERY_RESULT;
+  const providerItems = result.sourceControlProviders.filter(
+    (item) => item.kind !== "github" || githubEnabled,
+  );
   const hasVersionControlSystems = result.versionControlSystems.length > 0;
-  const hasDiscoveryItems = hasVersionControlSystems || result.sourceControlProviders.length > 0;
+  const hasDiscoveryItems = hasVersionControlSystems || providerItems.length > 0;
   const isInitialScanPending = discovery.isPending && discovery.data === null;
   const handleScan = () => {
     discovery.refresh();
@@ -582,6 +618,7 @@ export function SourceControlSettingsPanel() {
 
   return (
     <SettingsPageContainer>
+      <GitHubIntegrationSetting />
       <ProjectDefaultsSettings category="source-control" />
       {environmentId === null ? (
         <SettingsSection
@@ -616,7 +653,7 @@ export function SourceControlSettingsPanel() {
             </SettingsSection>
           ) : null}
 
-          {result.sourceControlProviders.length > 0 ? (
+          {providerItems.length > 0 ? (
             <SettingsSection
               id={hasVersionControlSystems ? undefined : searchableSetting("source-control").id}
               title={
@@ -626,7 +663,7 @@ export function SourceControlSettingsPanel() {
               }
               headerAction={hasVersionControlSystems ? null : scanButton}
             >
-              {result.sourceControlProviders.map((item) => (
+              {providerItems.map((item) => (
                 <DiscoveryItemRow
                   key={`provider:${item.kind}`}
                   item={item}

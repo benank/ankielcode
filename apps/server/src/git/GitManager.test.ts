@@ -672,7 +672,10 @@ function makeManager(input?: {
     prefix: "ankiel-git-manager-test-",
   });
 
-  const layerServerSettings = ServerSettings.ServerSettingsService.layerTest(input?.serverSettings);
+  const layerServerSettings = ServerSettings.ServerSettingsService.layerTest({
+    githubIntegrationEnabled: true,
+    ...input?.serverSettings,
+  });
 
   const gitCommands = input?.gitCommands;
   const gitSpawnGate = input?.gitSpawnGate;
@@ -5007,6 +5010,27 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
           ),
         ).toBe(true);
       }),
+  );
+
+  it.effect("rejects GitHub PR creation before Git can push any commits while disabled", () =>
+    Effect.gen(function* () {
+      const gitCommands: string[] = [];
+      const { manager, providerCalls } = yield* makeManager({
+        serverSettings: { githubIntegrationEnabled: false },
+        gitCommands,
+      });
+      const result = yield* Effect.flip(
+        manager.createPullRequest({
+          cwd: "/unused",
+          projectId: ProjectId.make("project-1"),
+          title: "Feature",
+          body: "Body",
+        }),
+      );
+      expect(result.message).toContain("Enable GitHub integration");
+      expect(gitCommands).toEqual([]);
+      expect(providerCalls).toEqual([]);
+    }),
   );
 
   it.effect("createPullRequest pushes the branch before opening its PR", () =>

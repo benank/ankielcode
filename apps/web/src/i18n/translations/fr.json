@@ -9916,6 +9916,9 @@
   "c69a143ba3383658": "Impossible d’analyser l’environnement serveur",
   "6985d8cfe8f3f2f2": "Rien de détecté pour l’instant",
   "5b17411e32ec9ee8": "Installez Git sur le serveur, ajoutez les intégrations d’hébergement ou identifiants facultatifs dont votre espace de travail a besoin, puis relancez l’analyse.",
+  "28a45948473da7f8": "GitHub",
+  "e9299508047698d6": "Autorise Ankiel Code à lire et à gérer les tickets et les pull requests GitHub dans cet environnement.",
+  "c603786366d31b03": "Intégration GitHub",
   "52f500fa58827159": "Analyser à nouveau l’environnement serveur",
   "3bd42b40bd62ca11": "Fournisseurs de gestion de versions",
   "d6738114d4de6d92": [
@@ -11027,6 +11030,7 @@
   "12abd0fe135419bc": "pull automatique branche par défaut extraction actuelle fast forward upstream",
   "a22700a2aa679898": "Méthode de fusion par défaut",
   "c4548ce84893201b": "pull request fusion squash rebase dernière sélection",
+  "614e4568ab7ad66d": "github tickets pull requests automatisation",
   "f6c5ffe0b40ce8e2": "linear jira tickets gestionnaire équipe clé api connecter lier projet",
   "a4380762611c94e4": "Gestion de versions",
   "2f251b69a6c324f3": "Intervalle de git fetch",

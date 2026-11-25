@@ -27,6 +27,7 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
+import { githubIntegrationEnabled } from "../sourceControl/githubIntegrationEnabled.ts";
 import * as Exit from "effect/Exit";
 import * as FiberMap from "effect/FiberMap";
 import * as Layer from "effect/Layer";
@@ -244,6 +245,7 @@ export class PullRequestWatchReactor extends Context.Service<
 
 /** @public */
 export const make = Effect.gen(function* () {
+  const githubEnabled = yield* githubIntegrationEnabled;
   const engine = yield* Orchestrator.OrchestratorV2;
   const projections = yield* ProjectionStore.ProjectionStoreV2;
   const pullRequests = yield* PullRequestService.PullRequestService;
@@ -781,6 +783,10 @@ export const make = Effect.gen(function* () {
   // The sweep and change reads each name their own span.
   const pass = Effect.fnUntraced(function* (changed: string | undefined) {
     held = [];
+    if (!(yield* githubEnabled)) {
+      currentGroups = [];
+      return;
+    }
     const threads = yield* projections.getThreadsWithPullRequests();
     const targets = threads.flatMap((thread) =>
       visibleThreadPullRequests(thread.pullRequests ?? []).flatMap((link) =>

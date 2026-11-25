@@ -816,6 +816,29 @@ export const make = Effect.gen(function* () {
     );
   });
   const serverSettingsService = yield* ServerSettings.ServerSettingsService;
+  const requirePullRequestIntegration = Effect.fnUntraced(function* (
+    cwd: string,
+    operation: string,
+  ) {
+    const settings = yield* serverSettingsService.getSettings.pipe(
+      Effect.mapError(
+        (cause) =>
+          new GitManagerError({
+            cwd,
+            operation,
+            detail: "Could not read GitHub integration settings.",
+            cause,
+          }),
+      ),
+    );
+    if (!settings.githubIntegrationEnabled) {
+      return yield* new GitManagerError({
+        cwd,
+        operation,
+        detail: "Enable GitHub integration in Settings.",
+      });
+    }
+  });
   const pullRequests = yield* PullRequestService.PullRequestService;
   const threads = yield* ProjectionStore.ProjectionStoreV2;
   const projects = yield* ProjectStore.ProjectStoreV2;
@@ -3118,6 +3141,7 @@ export const make = Effect.gen(function* () {
   const createPullRequest: GitManager["Service"]["createPullRequest"] = Effect.fn(
     "GitManager.createPullRequest",
   )(function* (input) {
+    yield* requirePullRequestIntegration(input.cwd, "createPullRequest");
     const result =
       input.private === true
         ? yield* openPrivatePullRequest(input)
@@ -4105,6 +4129,8 @@ export const make = Effect.gen(function* () {
         GitRunStackedActionResult,
         GitManagerServiceError
       > {
+        const wantsPr = input.action === "create_pr" || input.action === "commit_push_pr";
+        if (wantsPr) yield* requirePullRequestIntegration(input.cwd, "runStackedAction");
         const initialStatus = yield* gitCore.statusDetails(input.cwd);
         const wantsCommit = isCommitAction(input.action);
         const wantsPush =
@@ -4113,7 +4139,6 @@ export const make = Effect.gen(function* () {
           input.action === "commit_push_pr" ||
           (input.action === "create_pr" &&
             (!initialStatus.hasUpstream || (yield* createPrNeedsPush(input.cwd, initialStatus))));
-        const wantsPr = input.action === "create_pr" || input.action === "commit_push_pr";
 
         if (input.featureBranch && !wantsCommit) {
           return yield* new GitManagerError({

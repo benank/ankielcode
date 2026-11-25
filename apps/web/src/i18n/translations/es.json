@@ -9912,6 +9912,9 @@
   "c69a143ba3383658": "No se pudo escanear el entorno del servidor",
   "6985d8cfe8f3f2f2": "Aún no se ha detectado nada",
   "5b17411e32ec9ee8": "Instala Git en el servidor, añade las integraciones de hosting opcionales o las credenciales que necesite tu espacio de trabajo y vuelve a escanear.",
+  "28a45948473da7f8": "GitHub",
+  "e9299508047698d6": "Permite que Ankiel Code lea y gestione incidencias y solicitudes de incorporación de cambios de GitHub en este entorno.",
+  "c603786366d31b03": "Integración con GitHub",
   "52f500fa58827159": "Volver a escanear el entorno del servidor",
   "3bd42b40bd62ca11": "Proveedores de control de versiones",
   "d6738114d4de6d92": [
@@ -11022,6 +11025,7 @@
   "12abd0fe135419bc": "pull automático rama predeterminada checkout actual fast forward upstream",
   "a22700a2aa679898": "Método de merge predeterminado",
   "c4548ce84893201b": "pull request fusionar squash rebase último seleccionado",
+  "614e4568ab7ad66d": "github incidencias pull requests automatización",
   "f6c5ffe0b40ce8e2": "linear jira issues gestor equipo clave api conectar vincular proyecto",
   "a4380762611c94e4": "Control de versiones",
   "2f251b69a6c324f3": "Intervalo de git fetch",

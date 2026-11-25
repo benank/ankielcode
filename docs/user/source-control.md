@@ -42,6 +42,10 @@ and choose **Rescan**.
 
 ### GitHub
 
+GitHub integration is off by default. To enable issue and pull request features, turn on
+**GitHub integration** in **Settings → Source control & issues** for the environment you want to
+connect. Turning it off pauses automatic pull request discovery and watches.
+
 Ankiel Code talks to GitHub's API directly and only needs a token. Any of these works, in this
 order of precedence:
 

@@ -5284,4 +5284,6 @@
   "3328503592789bed": "Zen",
   "856812e7e1fc445e": "Tool calls in chat",
   "8d545d54c0a9e950": "Hide the commands, edits, and searches agents run. Hide successful keeps failures. Zen shows only final answers. Approvals, questions, and errors always show.",
+  "c603786366d31b03": "GitHub integration",
+  "e9299508047698d6": "Allow Ankiel Code to read and manage GitHub issues and pull requests on this environment."
 }

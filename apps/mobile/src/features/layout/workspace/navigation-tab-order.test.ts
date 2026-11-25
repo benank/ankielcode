@@ -29,6 +29,12 @@ describe("navigation tab order", () => {
     expect(resolveNavigationTabOrder()).toEqual(NAVIGATION_TAB_ORDER);
   });
 
+  it("hides Issues and Pull Requests when GitHub integration is off", () => {
+    const hidden = workspaceHiddenNavigationTabs("issues", { pullRequestTabEnabled: true }, false);
+    expect(visibleNavigationTabs(undefined, hidden)).toEqual(["threads", "usage"]);
+    expect(resolveSelectedNavigationTab(undefined, hidden, "issues")).toBe("threads");
+  });
+
   it("gives the shared slot to the open list, or else the one opened last", () => {
     const enabled = { pullRequestTabEnabled: true };
     expect(

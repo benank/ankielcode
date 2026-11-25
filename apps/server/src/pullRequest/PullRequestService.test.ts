@@ -10,6 +10,7 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import type {
@@ -322,6 +323,7 @@ const sshAliasHost = {
 
 function makeService(input: {
   readonly settings?: ServerSettings;
+  readonly githubEnabled?: Effect.Effect<boolean>;
   readonly projects: ReadonlyArray<OrchestrationProjectShell>;
   readonly providers: ReadonlyArray<PullRequestProviderApi>;
   readonly resolveHandle?: SourceControlProviderRegistry.SourceControlProviderRegistry["Service"]["resolveHandle"];
@@ -333,7 +335,13 @@ function makeService(input: {
     Layer.build(
       Layer.mergeAll(
         Layer.mock(ServerSettingsService.ServerSettingsService)({
-          getSettings: Effect.succeed(input.settings ?? DEFAULT_SERVER_SETTINGS),
+          getSettings: (input.githubEnabled ?? Effect.succeed(true)).pipe(
+            Effect.map((githubIntegrationEnabled) => ({
+              ...(input.settings ?? DEFAULT_SERVER_SETTINGS),
+              githubIntegrationEnabled,
+            })),
+          ),
+          subscribeChanges: Effect.succeed(Stream.empty),
         }),
         Layer.succeed(
           PullRequestProviderRegistry.PullRequestProviderRegistry,
@@ -376,6 +384,46 @@ function makeService(input: {
     (context) => Effect.provideContext(PullRequestService.make, context),
   );
 }
+
+it.effect("does not read GitHub pull requests or return a cached list while disabled", () =>
+  Effect.gen(function* () {
+    const enabled = yield* Ref.make(false);
+    const workspace = project({
+      id: "p1",
+      title: "Web",
+      workspaceRoot: "/w/web",
+      repository: "acme/web",
+    });
+    let readCount = 0;
+    const service = yield* makeService({
+      projects: [workspace],
+      githubEnabled: Ref.get(enabled),
+      providers: [
+        fakePullRequestProvider(SourceControlProviderKind.make("github"), {
+          getViewer: () =>
+            Effect.sync(() => {
+              readCount++;
+              return "alex";
+            }),
+        }),
+      ],
+    });
+    const list = service.list({ state: "open" });
+    assert.isEmpty((yield* list).entries);
+    const ref = { projectId: workspace.id, repository: "acme/web", number: 1 };
+    const unavailable = yield* Effect.flip(service.summary(ref));
+    assert.strictEqual(unavailable.reason, "provider-unsupported");
+    assert.strictEqual(readCount, 0);
+
+    yield* Ref.set(enabled, true);
+    yield* list;
+    assert.strictEqual(readCount, 1);
+
+    yield* Ref.set(enabled, false);
+    assert.isEmpty((yield* list).entries);
+    assert.strictEqual(readCount, 1);
+  }),
+);
 
 it.effect("lists GitHub Enterprise PRs for a stored unknown repository after host discovery", () =>
   Effect.gen(function* () {

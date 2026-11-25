@@ -1595,7 +1595,9 @@ function OpenCommandPaletteDialog(props: {
 
   if (
     pullRequestTabEnabled &&
-    environments.some((environment) => environment.serverConfig !== null)
+    environments.some(
+      (environment) => environment.serverConfig?.settings.githubIntegrationEnabled === true,
+    )
   ) {
     actionItems.push({
       kind: "action",
@@ -1626,7 +1628,9 @@ function OpenCommandPaletteDialog(props: {
 
   if (
     environments.some(
-      (environment) => environment.serverConfig?.environment.capabilities.issues === true,
+      (environment) =>
+        environment.serverConfig?.settings.githubIntegrationEnabled === true &&
+        environment.serverConfig.environment.capabilities.issues === true,
     )
   ) {
     actionItems.push({

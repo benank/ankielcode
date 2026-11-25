@@ -2,4 +2,9 @@ import { createSourceControlEnvironmentAtoms } from "@ankielcode/client-runtime/
 
 import { connectionAtomRuntime } from "../connection/runtime";
 
-export const sourceControlEnvironment = createSourceControlEnvironmentAtoms(connectionAtomRuntime);
+import { serverEnvironment } from "./server";
+
+export const sourceControlEnvironment = createSourceControlEnvironmentAtoms(
+  connectionAtomRuntime,
+  serverEnvironment.configValueAtom,
+);

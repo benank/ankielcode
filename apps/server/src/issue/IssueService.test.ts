@@ -25,6 +25,7 @@ import { normalizeGitRemoteUrl } from "@ankielcode/shared/git";
 
 import * as ProjectService from "../project/ProjectService.ts";
 import * as RepositoryIdentityResolver from "../project/RepositoryIdentityResolver.ts";
+import * as ServerSettings from "../serverSettings.ts";
 import * as IssueService from "./IssueService.ts";
 import * as IssueTrackerRegistry from "./IssueTrackerRegistry.ts";
 
@@ -158,6 +159,7 @@ function fakeTracker(overrides: Partial<IssueTrackerApi> = {}): IssueTrackerApi 
 function makeService(input: {
   readonly projects: ReadonlyArray<OrchestrationProjectShell>;
   readonly trackers: ReadonlyArray<IssueTrackerApi>;
+  readonly githubEnabled?: boolean;
   readonly bindings?: Record<string, IssueTrackerProjectBinding>;
   readonly readBindings?: ReturnType<
     IssueTrackerBindings.IssueTrackerBindingsRepository["Service"]["list"]
@@ -168,6 +170,9 @@ function makeService(input: {
       IssueService.layer.pipe(
         Layer.provide(
           Layer.mergeAll(
+            ServerSettings.ServerSettingsService.layerTest({
+              githubIntegrationEnabled: input.githubEnabled ?? true,
+            }),
             Layer.mock(IssueTrackerBindings.IssueTrackerBindingsRepository)({
               list: () =>
                 input.readBindings ??
@@ -202,6 +207,28 @@ function makeService(input: {
 }
 
 describe("IssueService", () => {
+  it.effect("skips GitHub projects and issue links when GitHub integration is off", () =>
+    Effect.gen(function* () {
+      const service = yield* makeService({
+        projects: [project({ id: "web", repository: "acme/web" })],
+        trackers: [
+          fakeTracker({
+            kind: GITHUB,
+            listIssues: () => Effect.die("GitHub issues should not be listed"),
+            getIssue: () => Effect.die("GitHub issues should not be read"),
+          }),
+        ],
+        githubEnabled: false,
+      });
+      expect((yield* service.list({ state: "open" })).entries).toEqual([]);
+      expect(
+        yield* Effect.flip(service.resolveUrl("https://github.com/acme/web/issues/1")),
+      ).toMatchObject({
+        operation: "resolveUrl",
+      });
+    }),
+  );
+
   it.effect("places a project where its host keeps its issues", () =>
     Effect.gen(function* () {
       const azure = IssueTrackerKind.make("azure-devops");

@@ -5282,4 +5282,6 @@
   "3328503592789bed": "Zen",
   "856812e7e1fc445e": "Verktygsanrop i chatten",
   "8d545d54c0a9e950": "Dölj kommandon, redigeringar och sökningar som agenter kör. Dölj lyckade behåller misslyckanden. Zen visar bara slutliga svar. Godkännanden, frågor och fel visas alltid.",
+  "c603786366d31b03": "GitHub-integrering",
+  "e9299508047698d6": "Låt Ankiel Code läsa och hantera ärenden och pull requests på GitHub i den här miljön."
 }

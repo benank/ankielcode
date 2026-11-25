@@ -1216,6 +1216,13 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: [msg("pull request merge squash rebase last selected")],
   },
   {
+    id: "github-integration",
+    title: msg("GitHub integration"),
+    to: "/settings/source-control",
+    scope: "environment-defaults",
+    searchTerms: [msg("github issues pull requests automation")],
+  },
+  {
     id: "issue-trackers",
     title: msg("Issue trackers"),
     to: "/settings/source-control",

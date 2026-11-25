@@ -13,6 +13,7 @@ import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { githubIntegrationEnabled } from "../sourceControl/githubIntegrationEnabled.ts";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
@@ -120,6 +121,7 @@ interface RefreshRequest {
 }
 
 export const make = Effect.gen(function* () {
+  const githubEnabled = yield* githubIntegrationEnabled;
   const orchestrator = yield* Orchestrator.OrchestratorV2;
   const projectStore = yield* ProjectStore.ProjectStoreV2;
   const git = yield* GitManager.GitManager;
@@ -224,6 +226,7 @@ export const make = Effect.gen(function* () {
   const synchronize = Effect.fn("ThreadPullRequestServiceV2.synchronize")(function* (
     request: RefreshRequest,
   ) {
+    if (!(yield* githubEnabled)) return;
     const [threadSnapshot, projectShells] = yield* Effect.all([
       readThreadSnapshot(request),
       projectStore.listShells(),

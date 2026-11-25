@@ -13,6 +13,7 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import { ServerSettingsService } from "../serverSettings.ts";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -34,6 +35,10 @@ import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import { EventId } from "@ankielcode/contracts";
 import * as Orchestrator from "./Orchestrator.ts";
 import * as ThreadPullRequestService from "./ThreadPullRequestService.ts";
+
+const makeEnabledReactor = ThreadPullRequestService.make.pipe(
+  Effect.provide(ServerSettingsService.layerTest({ githubIntegrationEnabled: true })),
+);
 
 describe("ThreadPullRequestServiceV2 project guard", () => {
   it("rejects a pull-request result when the project root changes before dispatch", () => {
@@ -160,7 +165,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
         Path.layer,
       );
       yield* Effect.gen(function* () {
-        const service = yield* ThreadPullRequestService.make;
+        const service = yield* makeEnabledReactor;
         yield* service.start();
         yield* Deferred.succeed(activation, undefined);
 
@@ -233,7 +238,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
         Path.layer,
       );
       yield* Effect.gen(function* () {
-        const service = yield* ThreadPullRequestService.make;
+        const service = yield* makeEnabledReactor;
         yield* service.start();
 
         yield* Queue.offerAll(domainEvents, [linked("a"), linked("b"), activity("a", 1)]);
@@ -370,7 +375,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
         Path.layer,
       );
       yield* Effect.gen(function* () {
-        const service = yield* ThreadPullRequestService.make;
+        const service = yield* makeEnabledReactor;
         yield* service.start();
         yield* Deferred.succeed(activation, undefined);
         yield* Deferred.await(followUpQueued);
@@ -501,7 +506,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
           Path.layer,
         );
         yield* Effect.gen(function* () {
-          const service = yield* ThreadPullRequestService.make;
+          const service = yield* makeEnabledReactor;
           yield* service.start();
           yield* Deferred.succeed(activation, undefined);
           yield* Deferred.await(sweepStarted);
@@ -621,7 +626,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
             Path.layer,
           );
           yield* Effect.gen(function* () {
-            const service = yield* ThreadPullRequestService.make;
+            const service = yield* makeEnabledReactor;
             yield* service.start();
             yield* Deferred.succeed(activation, undefined);
             // The startup sweep asks no repository.
@@ -765,7 +770,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
         Path.layer,
       );
       yield* Effect.gen(function* () {
-        const service = yield* ThreadPullRequestService.make;
+        const service = yield* makeEnabledReactor;
         yield* service.start();
         yield* Deferred.succeed(activation, undefined);
 
@@ -884,7 +889,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
         Path.layer,
       );
       yield* Effect.gen(function* () {
-        const service = yield* ThreadPullRequestService.make;
+        const service = yield* makeEnabledReactor;
         yield* service.start();
         yield* Deferred.succeed(activation, undefined);
 
@@ -1001,7 +1006,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
           Path.layer,
         );
         yield* Effect.gen(function* () {
-          const service = yield* ThreadPullRequestService.make;
+          const service = yield* makeEnabledReactor;
           yield* service.start();
           yield* Deferred.succeed(activation, undefined);
           yield* Deferred.await(sweepStarted);
@@ -1142,7 +1147,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
           Path.layer,
         );
         yield* Effect.gen(function* () {
-          const service = yield* ThreadPullRequestService.make;
+          const service = yield* makeEnabledReactor;
           yield* service.start();
           yield* Deferred.succeed(activation, undefined);
           yield* Deferred.await(sweepStarted);
@@ -1269,7 +1274,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
         Path.layer,
       );
       yield* Effect.gen(function* () {
-        const service = yield* ThreadPullRequestService.make;
+        const service = yield* makeEnabledReactor;
         yield* service.start();
         yield* Deferred.succeed(activation, undefined);
         yield* Queue.take(sweeps);
@@ -1392,7 +1397,7 @@ describe("ThreadPullRequestServiceV2 reads", () => {
         Path.layer,
       );
       yield* Effect.gen(function* () {
-        const service = yield* ThreadPullRequestService.make;
+        const service = yield* makeEnabledReactor;
         yield* service.start();
         yield* Deferred.succeed(activation, undefined);
         yield* Queue.take(sweeps);

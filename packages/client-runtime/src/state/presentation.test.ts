@@ -25,10 +25,11 @@ function entry(environmentId: EnvironmentId, label = environmentId as string) {
     profile: Option.none(),
   };
 }
-function config(cwd = "/workspace"): ServerConfig {
+function config(cwd = "/workspace", githubIntegrationEnabled = true): ServerConfig {
   return {
     cwd,
-    environment: { capabilities: {}, platform: { machine: "desktop" } },
+    environment: { capabilities: { issues: true }, platform: { machine: "desktop" } },
+    settings: { githubIntegrationEnabled },
   } as ServerConfig;
 }
 function harness() {
@@ -61,7 +62,11 @@ describe("environment summary subscriptions", () => {
       h.registry.set(h.configs(FIRST), null);
       h.registry.set(h.configs(SECOND), null);
       expect(h.registry.get(h.pullRequestsSupportedAtom)).toBe(false);
+      h.registry.set(h.configs(FIRST), config("/workspace", false));
+      expect(h.registry.get(h.pullRequestsSupportedAtom)).toBe(false);
+      expect(h.registry.get(h.issuesSupportedAtom)).toBe(false);
       h.registry.set(h.configs(FIRST), config());
+      expect(h.registry.get(h.issuesSupportedAtom)).toBe(true);
       expect(h.registry.get(h.pullRequestsSupportedAtom)).toBe(true);
       h.registry.set(h.configs(SECOND), config());
       h.registry.set(h.configs(FIRST), null);

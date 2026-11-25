@@ -21,6 +21,7 @@ import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 import type { Tool } from "effect/ai";
 
+import { ServerSettingsService } from "../../../serverSettings.ts";
 import * as IssueService from "../../../issue/IssueService.ts";
 import * as IssueTrackerRegistry from "../../../issue/IssueTrackerRegistry.ts";
 import * as Orchestrator from "../../../orchestration-v2/Orchestrator.ts";
@@ -258,6 +259,7 @@ describe("issue toolkit handlers", () => {
       const issueLayer = IssueService.layer.pipe(
         Layer.provide(
           Layer.mergeAll(
+            ServerSettingsService.layerTest().pipe(Layer.orDie),
             projectLayer,
             Layer.mock(RepositoryIdentityResolver.RepositoryIdentityResolver)({}),
             Layer.mock(IssueTrackerBindings.IssueTrackerBindingsRepository)({
@@ -312,6 +314,7 @@ describe("issue toolkit handlers", () => {
       const issueLayer = IssueService.layer.pipe(
         Layer.provide(
           Layer.mergeAll(
+            ServerSettingsService.layerTest().pipe(Layer.orDie),
             projectLayer,
             Layer.mock(RepositoryIdentityResolver.RepositoryIdentityResolver)({}),
             Layer.mock(IssueTrackerBindings.IssueTrackerBindingsRepository)({

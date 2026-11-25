@@ -52,6 +52,7 @@ import * as IssueTrackerBindings from "../persistence/IssueTrackerBindings.ts";
 import * as ProjectService from "../project/ProjectService.ts";
 import * as RepositoryIdentityResolver from "../project/RepositoryIdentityResolver.ts";
 import { sourceControlDefinitions } from "../sourceControl/sourceControlDefinitions.ts";
+import { githubIntegrationEnabled } from "../sourceControl/githubIntegrationEnabled.ts";
 import * as IssueTrackerRegistry from "./IssueTrackerRegistry.ts";
 
 const DEFAULT_LIST_LIMIT = 50;
@@ -205,6 +206,7 @@ export class IssueService extends Context.Service<
 
 const make = Effect.gen(function* () {
   const registry = yield* IssueTrackerRegistry.IssueTrackerRegistry;
+  const githubEnabled = yield* githubIntegrationEnabled;
   const projects = yield* ProjectService.ProjectService;
   const repositoryIdentities = yield* RepositoryIdentityResolver.RepositoryIdentityResolver;
   const bindings = yield* IssueTrackerBindings.IssueTrackerBindingsRepository;
@@ -292,7 +294,8 @@ const make = Effect.gen(function* () {
           );
         }),
       ),
-      Effect.map((bound) => {
+      Effect.flatMap((bound) => Effect.map(githubEnabled, (enabled) => ({ bound, enabled }))),
+      Effect.map(({ bound, enabled }) => {
         const host = filter.host?.trim().toLowerCase();
         const supported: SupportedProject[] = [];
         const unimplemented = new Map<
@@ -300,6 +303,7 @@ const make = Effect.gen(function* () {
           { tracker: IssueTrackerKind; projectIds: Set<ProjectId> }
         >();
         for (const candidate of bound.flat()) {
+          if (!enabled && candidate.tracker === "github") continue;
           if (host !== undefined && candidate.host !== host && candidate.host !== filter.authority)
             continue;
           const api = registry.get(candidate.tracker);
@@ -313,7 +317,10 @@ const make = Effect.gen(function* () {
             else counted.projectIds.add(candidate.project.id);
             continue;
           }
-          supported.push({ ...candidate, api: asIssueTrackerAccount(api, candidate.accountId) });
+          supported.push({
+            ...candidate,
+            api: asIssueTrackerAccount(api, candidate.accountId),
+          });
         }
         return { supported, unimplemented };
       }),
@@ -787,6 +794,12 @@ const make = Effect.gen(function* () {
         });
       }
       const { tracker, link } = parsed;
+      if (tracker === "github" && !(yield* githubEnabled)) {
+        return yield* new IssueOperationError({
+          operation: "resolveUrl",
+          detail: "Enable GitHub integration in Settings.",
+        });
+      }
       // A link names its server's port; a binding does only when its remote or web URL did.
       const authority = new URL(url).host.toLowerCase();
       const { supported } = yield* listProjects({ host: link.host, authority });

@@ -1,4 +1,10 @@
-import { SourceControlSignInError, type SourceControlProviderKind } from "@ankielcode/contracts";
+import {
+  SourceControlSignInError,
+  VcsProcessSpawnError,
+  GitCommandError,
+  type SourceControlProviderKind,
+} from "@ankielcode/contracts";
+import * as SourceControlHost from "@ankielcode/source-control-core/server/SourceControlHost";
 import {
   defineSourceControlDriver,
   withOwnServices,
@@ -6,7 +12,7 @@ import {
 } from "@ankielcode/source-control-core/server/driver";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { HttpClient } from "effect/http";
+import { HttpClient, HttpClientError } from "effect/http";
 
 import { definition } from "../shared/definition.ts";
 
@@ -99,7 +105,69 @@ export const makeStarRepository = Effect.gen(function* () {
 });
 
 const makeInstance = Effect.gen(function* () {
-  const mediaHttpClient = yield* HttpClient.HttpClient;
+  const host = yield* SourceControlHost.SourceControlHost;
+  const httpClient = yield* HttpClient.HttpClient;
+  const enabled = host.settings.get.pipe(
+    Effect.map((settings) => settings.githubIntegrationEnabled),
+    Effect.orElseSucceed(() => false),
+  );
+  const disabled = "Enable GitHub integration in Settings.";
+  const guardedHttpClient = httpClient.pipe(
+    HttpClient.mapRequestEffect((request) =>
+      enabled.pipe(
+        Effect.flatMap((on) =>
+          on
+            ? Effect.succeed(request)
+            : Effect.fail(
+                new HttpClientError.HttpClientError({
+                  reason: new HttpClientError.TransportError({
+                    request,
+                    cause: new Error(disabled),
+                  }),
+                }),
+              ),
+        ),
+      ),
+    ),
+  );
+  const guardedHost = SourceControlHost.SourceControlHost.of({
+    ...host,
+    process: {
+      run: (input) =>
+        enabled.pipe(
+          Effect.flatMap((on) =>
+            on
+              ? host.process.run(input)
+              : Effect.fail(
+                  new VcsProcessSpawnError({
+                    operation: input.operation,
+                    cwd: input.cwd,
+                    command: input.command,
+                    cause: new Error(disabled),
+                  }),
+                ),
+          ),
+        ),
+    },
+    git: {
+      ...host.git,
+      execute: (input) =>
+        enabled.pipe(
+          Effect.flatMap((on) =>
+            on
+              ? host.git.execute(input)
+              : Effect.fail(
+                  new GitCommandError({
+                    operation: input.operation,
+                    cwd: input.cwd,
+                    command: "git",
+                    detail: disabled,
+                  }),
+                ),
+          ),
+        ),
+    },
+  });
   return yield* withOwnServices(
     Effect.all({
       sourceControl: GitHubSourceControlProvider.make,
@@ -107,13 +175,16 @@ const makeInstance = Effect.gen(function* () {
       pullRequests: GitHubPullRequestProvider.make,
       issues: GitHubIssueTracker.make,
       fetchMedia: GitHubMediaFetch.make.pipe(
-        Effect.provideService(HttpClient.HttpClient, mediaHttpClient),
+        Effect.provideService(HttpClient.HttpClient, guardedHttpClient),
       ),
       signIn: makeSignIn,
       isRepositoryStarred: makeIsRepositoryStarred,
       starRepository: makeStarRepository,
     }),
     services,
+  ).pipe(
+    Effect.provideService(SourceControlHost.SourceControlHost, guardedHost),
+    Effect.provideService(HttpClient.HttpClient, guardedHttpClient),
   );
 });
 

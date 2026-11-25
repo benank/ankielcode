@@ -129,7 +129,9 @@ function EnvironmentProviders(props: {
     label: "save source control providers",
   });
   const navigation = useNavigation();
-  const items = discovery.data?.sourceControlProviders ?? [];
+  const items = (discovery.data?.sourceControlProviders ?? []).filter(
+    (item) => item.kind !== "github" || environment.serverConfig.settings.githubIntegrationEnabled,
+  );
   const offered = environment.serverConfig.settings.offeredSourceControlProviders;
   const disabled = props.disabled || !canUpdate;
   if (items.length === 0) {

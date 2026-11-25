@@ -5,6 +5,7 @@ import * as Option from "effect/Option";
 import { HttpServerResponse } from "effect/http";
 
 import * as RepositoryIdentityResolver from "../project/RepositoryIdentityResolver.ts";
+import { githubIntegrationEnabled } from "../sourceControl/githubIntegrationEnabled.ts";
 import * as BuiltInDrivers from "../sourceControl/builtInDrivers.ts";
 import { sourceControlDefinitions } from "../sourceControl/sourceControlDefinitions.ts";
 
@@ -41,10 +42,16 @@ export const sourceControlMediaResponse = Effect.fn(
     "x-content-type-options": "nosniff",
   };
   const media = sourceControlDefinitions.mediaUrl(asset.url);
+  if (
+    media === null ||
+    (media.definition.kind === "github" && !(yield* yield* githubIntegrationEnabled))
+  ) {
+    return HttpServerResponse.empty({ status: 404, headers });
+  }
   const drivers = yield* BuiltInDrivers.SourceControlDrivers;
   const fetchMedia = drivers.find(({ driver }) => driver.kind === media?.definition.kind)?.instance
     .fetchMedia;
-  if (media === null || fetchMedia === undefined) {
+  if (fetchMedia === undefined) {
     return HttpServerResponse.empty({ status: 404, headers });
   }
   const forwarded: Record<string, string> = {};

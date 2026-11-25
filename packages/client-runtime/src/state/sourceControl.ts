@@ -1,4 +1,4 @@
-import { WS_METHODS } from "@ankielcode/contracts";
+import { WS_METHODS, type EnvironmentId, type ServerConfig } from "@ankielcode/contracts";
 import { Atom } from "effect/reactivity";
 
 import {
@@ -14,12 +14,18 @@ import { invalidateCachedVcsRefs } from "./vcsRefInvalidation.ts";
 
 export function createSourceControlEnvironmentAtoms<R, E>(
   runtime: Atom.AtomRuntime<EnvironmentRegistry | Persistence.EnvironmentCacheStore | R, E>,
+  serverConfigValueAtom: (environmentId: EnvironmentId) => Atom.Atom<ServerConfig | null>,
 ) {
   const commandScheduler = createAtomCommandScheduler();
   return {
     discovery: createEnvironmentRpcQueryAtomFamily(runtime, {
       label: "environment-data:server:source-control-discovery",
       tag: WS_METHODS.serverDiscoverSourceControl,
+      refreshTrigger: ({ environmentId }) =>
+        Atom.make(
+          (get) =>
+            get(serverConfigValueAtom(environmentId))?.settings.githubIntegrationEnabled === true,
+        ),
     }),
     appAccess: createEnvironmentRpcQueryAtomFamily(runtime, {
       label: "environment-data:source-control:app-access",
