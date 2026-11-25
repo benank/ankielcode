@@ -115,6 +115,7 @@ export function RenderFailureView(
         <Button label={gt("Try again")} onPress={props.retry} tone="primary" fullWidth />
         <Button
           label={gt("Copy details")}
+          haptics={false}
           onPress={() => copyTextWithHaptic(props.details, { target: "error details" })}
           fullWidth
         />

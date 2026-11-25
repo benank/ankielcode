@@ -36,7 +36,7 @@ import { canSnooze } from "@ankielcode/client-runtime/state/thread-settled";
 import { threadChipCopyTarget } from "@ankielcode/client-runtime/thread-reference";
 import type { MenuAction } from "@react-native-menu/menu";
 import { msg, T, useGT, useMessages } from "gt-react-native";
-import { memo, useCallback, useMemo, useState, type ComponentProps } from "react";
+import { memo, useCallback, useMemo, useState, type ComponentProps, type ReactNode } from "react";
 import { Platform, Pressable, Text as RNText, useWindowDimensions, View } from "react-native";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 
@@ -55,6 +55,7 @@ import { useNowAfter } from "../../lib/clock";
 import { cn } from "../../lib/cn";
 import { copyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 import { copyThreadReference } from "../../lib/copyThreadReference";
+import { playSelectionHaptic } from "../../lib/playSelectionHaptic";
 import { useUniwindTheme } from "../../lib/useUniwindTheme";
 import { useEnvironmentScope } from "../../state/session";
 import type { PendingNewTask } from "../../state/use-pending-new-tasks";
@@ -291,7 +292,10 @@ function ThreadListV2Section(props: {
       }}
       className={className}
       disabled={props.disclosure.disabled}
-      onPress={props.disclosure.onToggle}
+      onPress={() => {
+        playSelectionHaptic();
+        props.disclosure?.onToggle();
+      }}
       style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
     >
       {content}
@@ -409,8 +413,11 @@ export const ThreadListV2ShowMoreRow = memo(function ThreadListV2ShowMoreRow(pro
           : label
       }
       disabled={props.state === "loading"}
-      onPress={props.onPress}
-      className="mx-4 mt-2 items-center rounded-lg border border-dashed border-border py-2.5"
+      onPress={() => {
+        playSelectionHaptic();
+        props.onPress();
+      }}
+      className="mx-4 mt-2 items-center justify-center rounded-lg border border-dashed border-border py-2.5 ios:min-h-[44px]"
       style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
     >
       <Text
@@ -443,6 +450,25 @@ const DRAFT_TASK_MENU_ACTIONS: MenuAction[] = [
     attributes: { destructive: true },
   },
 ];
+
+function ThreadRowMenu({
+  children,
+  ...props
+}: Pick<ComponentProps<typeof Menu>, "accessibilityLabel" | "actions" | "onPressAction"> & {
+  readonly children: (highlighted: boolean) => ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Menu
+      {...props}
+      shouldOpenOnLongPress
+      onOpenMenu={() => setOpen(true)}
+      onCloseMenu={() => setOpen(false)}
+    >
+      {children(open)}
+    </Menu>
+  );
+}
 
 export const ThreadListV2PendingRow = memo(function ThreadListV2PendingRow(props: {
   readonly pendingTask: PendingNewTask;
@@ -688,7 +714,8 @@ export const ThreadListV2PendingRow = memo(function ThreadListV2PendingRow(props
         threadTitle={pendingTask.title}
       >
         {() => (
-          <Menu
+          <ThreadRowMenu
+            key={pendingTask.key}
             actions={(isDraft ? DRAFT_TASK_MENU_ACTIONS : PENDING_TASK_MENU_ACTIONS).map(
               (action) => ({
                 ...action,
@@ -696,38 +723,43 @@ export const ThreadListV2PendingRow = memo(function ThreadListV2PendingRow(props
               }),
             )}
             onPressAction={handleMenuAction}
-            shouldOpenOnLongPress
           >
-            <RowPressable
-              accessibilityHint={
-                isDraft
-                  ? gt("Opens the draft in the new task composer. Swipe left to discard.")
-                  : gt(
-                      "Sends when the environment reconnects. Opens the task for editing. Swipe left to delete.",
-                    )
-              }
-              accessibilityLabel={pendingTask.title}
-              accessibilityRole="button"
-              accessibilityState={{ selected: props.selected ?? false }}
-              key={pendingTask.key}
-              className={rowAppearance.className}
-              interactionClassName={rowAppearance.interactionClassName}
-              interactionOpacity={rowAppearance.interactionOpacity}
-              onPress={() => onSelectPendingTask(pendingTask)}
-              style={rowAppearance.cardStyle}
-            >
-              {sidebarPane ? (
-                rowContent
-              ) : (
-                <View>
-                  <View className={THREAD_LIST_V2_ROW_CONTENT_CLASS_NAME}>{rowContent}</View>
-                  {THREAD_LIST_V2_ROW_DIVIDERS && props.showTrailingDivider !== false ? (
-                    <View className="ml-5 h-px bg-border-subtle" />
-                  ) : null}
-                </View>
-              )}
-            </RowPressable>
-          </Menu>
+            {(highlighted) => (
+              <RowPressable
+                accessibilityHint={
+                  isDraft
+                    ? gt("Opens the draft in the new task composer. Swipe left to discard.")
+                    : gt(
+                        "Sends when the environment reconnects. Opens the task for editing. Swipe left to delete.",
+                      )
+                }
+                accessibilityLabel={pendingTask.title}
+                accessibilityRole="button"
+                accessibilityState={{ selected: props.selected ?? false }}
+                key={pendingTask.key}
+                className={rowAppearance.className}
+                interactionClassName={rowAppearance.interactionClassName}
+                interactionOpacity={rowAppearance.interactionOpacity}
+                highlighted={highlighted}
+                onPress={() => {
+                  playSelectionHaptic();
+                  onSelectPendingTask(pendingTask);
+                }}
+                style={rowAppearance.cardStyle}
+              >
+                {sidebarPane ? (
+                  rowContent
+                ) : (
+                  <View>
+                    <View className={THREAD_LIST_V2_ROW_CONTENT_CLASS_NAME}>{rowContent}</View>
+                    {THREAD_LIST_V2_ROW_DIVIDERS && props.showTrailingDivider !== false ? (
+                      <View className="ml-5 h-px bg-border-subtle" />
+                    ) : null}
+                  </View>
+                )}
+              </RowPressable>
+            )}
+          </ThreadRowMenu>
         )}
       </ThreadSwipeable>
     </>
@@ -826,7 +858,10 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   const pinnedRow = props.pinned === true;
   const dormant = useSwipeRowDormant(props.activationKey);
 
-  const selectThread = () => onSelectThread(thread);
+  const selectThread = () => {
+    playSelectionHaptic();
+    onSelectThread(thread);
+  };
   const { providerDrivers, providerIconUrl } = useMemo(() => {
     const provider = props.providers?.find(
       (candidate) =>
@@ -851,7 +886,10 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   const pr = useThreadPr(thread);
   const prBadgeLabel = pr ? resolveThreadPrBadgeAction(pr, m).accessibilityLabel : null;
   const handleOpenPullRequests = useCallback(() => {
-    if (pr) onOpenThreadPullRequests(thread, pr);
+    if (pr) {
+      playSelectionHaptic();
+      onOpenThreadPullRequests(thread, pr);
+    }
   }, [onOpenThreadPullRequests, pr, thread]);
 
   const theme = useUniwindTheme();
@@ -1613,10 +1651,11 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
     cardContent
   );
 
-  const rowContent = (close: () => void) =>
+  const rowContent = (close: () => void, highlighted = false) =>
     variant === "card" ? (
       <RowPressable
         key={`${thread.environmentId}:${thread.id}`}
+        highlighted={highlighted}
         interactionClassName={rowAppearance.interactionClassName}
         interactionOpacity={rowAppearance.interactionOpacity}
         className={rowAppearance.className}
@@ -1649,6 +1688,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
     ) : (
       <RowPressable
         key={`${thread.environmentId}:${thread.id}`}
+        highlighted={highlighted}
         interactionClassName={rowAppearance.interactionClassName}
         interactionOpacity={rowAppearance.interactionOpacity}
         accessibilityHint={swipeAccessibilityHint}
@@ -1763,14 +1803,14 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         threadTitle={thread.title}
       >
         {(close) => (
-          <Menu
+          <ThreadRowMenu
+            key={`${thread.environmentId}:${thread.id}`}
             accessibilityLabel={rowAccessibilityLabel}
             actions={menuActions}
             onPressAction={handleMenuAction}
-            shouldOpenOnLongPress
           >
-            {rowContent(close)}
-          </Menu>
+            {(highlighted) => rowContent(close, highlighted)}
+          </ThreadRowMenu>
         )}
       </ThreadSwipeable>
     </View>

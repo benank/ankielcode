@@ -3,6 +3,7 @@ import { Pressable } from "react-native";
 import { AppActivityIndicator } from "./AppActivityIndicator";
 import { AppText } from "./AppText";
 import { cn } from "../../lib/cn";
+import { playSelectionHaptic } from "../../lib/playSelectionHaptic";
 
 export interface ButtonProps {
   readonly label: string;
@@ -12,6 +13,7 @@ export interface ButtonProps {
   readonly disabled?: boolean;
   readonly accessibilityHint?: string;
   readonly loading?: boolean;
+  readonly haptics?: boolean;
   readonly tone?: "primary" | "secondary" | "danger" | "text" | "contrast";
   readonly fullWidth?: boolean;
   readonly size?: "default" | "compact";
@@ -35,10 +37,13 @@ export function Button(props: ButtonProps) {
       accessibilityHint={props.accessibilityHint}
       accessibilityState={{ disabled, busy: Boolean(props.loading) }}
       disabled={disabled}
-      onPress={props.onPress}
+      onPress={() => {
+        if (props.haptics !== false) playSelectionHaptic();
+        props.onPress();
+      }}
       className={cn(
-        "flex-row items-center justify-center gap-2 rounded-full active:opacity-70",
-        props.size === "compact" ? "min-h-10 px-5" : "min-h-[44px] px-6 android:min-h-[48px]",
+        "min-h-[44px] flex-row items-center justify-center gap-2 rounded-full active:opacity-70",
+        props.size === "compact" ? "px-5" : "px-6",
         props.fullWidth ? "w-full" : "self-start",
         disabled ? "bg-subtle-strong" : containerClassName,
       )}

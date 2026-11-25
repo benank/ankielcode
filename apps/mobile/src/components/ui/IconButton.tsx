@@ -1,5 +1,6 @@
 import type { IconButtonProps } from "./IconButton.types";
 import { cn } from "../../lib/cn";
+import { playSelectionHaptic } from "../../lib/playSelectionHaptic";
 import { Pressable } from "react-native";
 
 import { SymbolView } from "./AppSymbol";
@@ -16,13 +17,19 @@ export function IconButton(props: IconButtonProps) {
   const [containerClassName, iconTintClassName] = VARIANT_CLASS_NAMES[variant];
   return (
     <Pressable
-      onPress={props.onPress}
+      onPress={
+        props.onPress &&
+        (() => {
+          playSelectionHaptic();
+          props.onPress?.();
+        })
+      }
       disabled={props.disabled}
       accessibilityLabel={props.accessibilityLabel}
       accessibilityRole="button"
       accessibilityState={{ disabled: Boolean(props.disabled), selected: props.selected }}
       className={cn(
-        "size-12 items-center justify-center",
+        "size-12 items-center justify-center active:opacity-70",
         props.disabled && variant !== "standard"
           ? "rounded-full bg-subtle-strong"
           : containerClassName,
