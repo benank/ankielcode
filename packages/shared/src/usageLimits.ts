@@ -320,6 +320,11 @@ export interface LimitAccount {
   readonly limits: ServerProviderUsageLimits;
 }
 
+// Antigravity's auth label names its sign-in method ("Google account"), not a plan.
+function providerPlan(provider: ServerProvider) {
+  return provider.driver === "antigravity" ? undefined : provider.auth.label;
+}
+
 export function collectLimitAccounts(presentations: LimitPresentations): readonly LimitAccount[] {
   const accounts = new Map<string, LimitAccount>();
   const creditSources = new Map<string, LimitAccount>();
@@ -403,7 +408,7 @@ export function collectLimitAccounts(presentations: LimitPresentations): readonl
         driver: provider.driver,
         displayName: provider.displayName?.trim() || null,
         email: provider.auth.email,
-        plan: provider.auth.label,
+        plan: providerPlan(provider),
         accentColor: provider.accentColor,
         environments: [{ environmentId, label }],
         sourceLabel: null,
@@ -1044,11 +1049,12 @@ export function collectProviderUsageLimits(
     const shownCredits = showHubCredits
       ? hubCredits.account.usageLimits.resetCredits
       : credits?.limits.resetCredits;
+    const plan = providerPlan(provider);
     accounts.push({
       id: provider.instanceId,
       driver: provider.driver,
       label: `${provider.displayName?.trim() || String(provider.driver)} [${provider.instanceId}]`,
-      ...(provider.auth.label ? { plan: provider.auth.label } : {}),
+      ...(plan ? { plan } : {}),
       instanceId: provider.instanceId,
       resetCreditInput:
         hubCreditId && hubCredits
