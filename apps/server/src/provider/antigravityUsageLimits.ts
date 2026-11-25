@@ -18,10 +18,7 @@ import * as Schema from "effect/Schema";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import {
-  makeUnavailableUsageLimits,
-  makeUsageLimits,
-} from "@ankielcode/provider-core/server/usageLimits";
+import { makeUnavailableUsageLimits } from "@ankielcode/provider-core/server/usageLimits";
 
 // Older CLIs treat `/usage` as a prompt and run a paid agent turn.
 const MIN_USAGE_VERSION = "1.1.11";
@@ -154,7 +151,11 @@ export const makeAntigravityUsageProbe = Effect.fn("makeAntigravityUsageProbe")(
           "Could not read limits from the Antigravity CLI. Run `agy` in a terminal to check it is signed in, then refresh.",
       });
     }
-    const limits = makeUsageLimits({ checkedAt, windows });
+    // By label, so each model group's 5-hour and weekly windows sit together.
+    const limits: ServerProviderUsageLimits = {
+      checkedAt,
+      windows: windows.toSorted((left, right) => left.label.localeCompare(right.label)),
+    };
     cached = { at: now, limits };
     return limits;
   });

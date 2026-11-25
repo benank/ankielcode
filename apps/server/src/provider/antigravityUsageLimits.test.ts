@@ -144,11 +144,12 @@ describe("Antigravity subscription limits", () => {
           },
         ]),
       );
-      expect(limits.windows.map((window) => window.id).toSorted()).toEqual([
-        "3p-5h",
-        "3p-weekly",
-        "gemini-5h",
-        "gemini-weekly",
+      // Each group's windows sit together, ordered by label.
+      expect(limits.windows.map((window) => window.label)).toEqual([
+        "Claude and GPT models · 5-hour",
+        "Claude and GPT models · Weekly",
+        "Gemini Models · 5-hour",
+        "Gemini Models · Weekly",
       ]);
     }).pipe(Effect.provideService(HostProcess.Platform, "linux")),
   );

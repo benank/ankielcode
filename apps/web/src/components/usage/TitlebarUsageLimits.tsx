@@ -99,7 +99,7 @@ export function TitlebarUsageLimits() {
         </TooltipTrigger>
         <TooltipPopup side="bottom">{summary}</TooltipPopup>
       </Tooltip>
-      <PopoverPopup width="lg" padding="compact" align="end">
+      <PopoverPopup width="xl" padding="compact" align="end">
         <UsageLimitsBreakdown presentations={presentations} accounts={accounts} />
       </PopoverPopup>
     </Popover>
