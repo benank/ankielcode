@@ -70,7 +70,6 @@ import {
   type ThreadListV2Status,
 } from "./threadListV2";
 import { QueuedMessageIcon } from "./queued-message-icon";
-import { shouldRecedeThreadRow } from "./thread-row-emphasis";
 import { ThreadSearchMatchExcerpt } from "./thread-search-match";
 
 interface StatusLabel {
@@ -822,7 +821,6 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
     ...statusEntry,
     label: statusEntry.label === null ? null : m(statusEntry.label),
   };
-  const recede = shouldRecedeThreadRow({ status, selected });
   const isRegeneratingTitle = thread.titleRegeneration != null;
   // List items keep marked text so they stay the same objects across a language switch.
   const timeLabel = props.timeLabel && m(props.timeLabel);
@@ -1350,10 +1348,10 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
           <Text
             className={cn(
               "text-base",
-              !recede && variant === "card" && "font-ankiel-medium",
+              variant === "card" && "font-ankiel-medium",
               selected
                 ? selectedThreadRowColors.foregroundClassName
-                : recede || variant === "slim"
+                : variant === "slim"
                   ? rowAppearance.mutedForegroundClassName
                   : rowAppearance.foregroundClassName,
               isRegeneratingTitle && "opacity-55",
