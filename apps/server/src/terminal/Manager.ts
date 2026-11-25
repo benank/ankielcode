@@ -43,6 +43,7 @@ import { makeKeyedCoalescingWorker } from "@ankielcode/shared/KeyedCoalescingWor
 import * as KeyedLock from "@ankielcode/shared/KeyedLock";
 import { AgentScope } from "@ankielcode/shared/AgentScope";
 import { stripAppImageRuntimeEnv } from "@ankielcode/shared/appImageRuntimeEnv";
+import { applyGitCommitHooksEnvironment } from "@ankielcode/shared/gitCommitHooksEnv";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { SpawnExecutableResolution, mergePathEntries } from "@ankielcode/shared/shell";
 
@@ -1696,7 +1697,7 @@ function createTerminalSpawnEnv(
   if (!fishFeatures?.includes("query-term")) {
     spawnEnv[fishFeaturesKey] = fishFeatures ? `${fishFeatures},no-query-term` : "no-query-term";
   }
-  return stripAppImageRuntimeEnv(spawnEnv);
+  return applyGitCommitHooksEnvironment(stripAppImageRuntimeEnv(spawnEnv));
 }
 
 function normalizedRuntimeEnv(

@@ -132,6 +132,7 @@ import {
 } from "../../provider/EventNdjsonLogger.ts";
 import * as ProviderEventLoggers from "@ankielcode/provider-core/server/ProviderEventLoggers";
 import { codexAppServerArgs, resolveCodexLaunchArgs } from "../../provider/codexLaunchArgs.ts";
+import { gitCommitHooksShellEnvEntries } from "@ankielcode/shared/gitCommitHooksEnv";
 import { mergeProviderInstanceEnvironment } from "@ankielcode/provider-core/server/instanceEnvironment";
 import * as McpProviderSession from "@ankielcode/provider-core/server/mcpSession";
 import * as McpProviderSessions from "@ankielcode/provider-core/server/McpProviderSessions";
@@ -1720,6 +1721,12 @@ function codexThreadRuntimeParams(input: {
     ...(input.modelSelection === undefined ? {} : { model: input.modelSelection.model }),
     config: {
       ...CODEX_THREAD_CONFIG,
+      ...Object.fromEntries(
+        Object.entries(gitCommitHooksShellEnvEntries(process.env)).map(([key, value]) => [
+          `shell_environment_policy.set.${key}`,
+          value,
+        ]),
+      ),
       // One app-server serves many threads, so the id goes in per-thread shell config, not its env.
       ...(input.threadId === null
         ? {}

@@ -13,6 +13,7 @@ import * as EffectAcpErrors from "effect-acp/errors";
 import type * as EffectAcpSchema from "effect-acp/compat";
 import * as NodeBuffer from "node:buffer";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
+import { applyGitCommitHooksEnvironment } from "@ankielcode/shared/gitCommitHooksEnv";
 import { gitForWindowsBash, SpawnExecutableResolution } from "@ankielcode/shared/shell";
 
 const MAX_LIVE_TERMINALS = 16;
@@ -255,11 +256,13 @@ export const makeAcpClientTerminals = Effect.fn("makeAcpClientTerminals")(functi
             ),
           );
           const sessionEnvironment = options.environmentForSession?.(request.sessionId);
-          const environment = mergeEnvironments(isWindows, [
-            Object.entries(inheritedEnvironment),
-            Object.entries(sessionEnvironment ?? {}),
-            (request.env ?? []).map((variable) => [variable.name, variable.value] as const),
-          ]);
+          const environment = applyGitCommitHooksEnvironment(
+            mergeEnvironments(isWindows, [
+              Object.entries(inheritedEnvironment),
+              Object.entries(sessionEnvironment ?? {}),
+              (request.env ?? []).map((variable) => [variable.name, variable.value] as const),
+            ]),
+          );
           // Agents that send shell source write bash; Node's shell on Windows is cmd.exe.
           const gitExecutable =
             isWindows && options.shellCommands === true

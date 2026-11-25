@@ -1,5 +1,6 @@
 import type { ProviderInstanceEnvironment } from "@ankielcode/contracts";
 import { stripAppImageRuntimeEnv } from "@ankielcode/shared/appImageRuntimeEnv";
+import { applyGitCommitHooksEnvironment } from "@ankielcode/shared/gitCommitHooksEnv";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import * as Effect from "effect/Effect";
 
@@ -12,7 +13,7 @@ export const mergeProviderInstanceEnvironment = Effect.fn(function* (
   // Commands the agent runs inherit this env; the AppImage mount's libraries would shadow the system's.
   const hostEnv = stripAppImageRuntimeEnv(baseEnv);
   if (!environment || environment.length === 0) {
-    return hostEnv;
+    return applyGitCommitHooksEnvironment(hostEnv);
   }
 
   const home = yield* HostProcess.HomeDirectory;
@@ -32,5 +33,5 @@ export const mergeProviderInstanceEnvironment = Effect.fn(function* (
     }
     next[name] = expandHomeVariable(name, variable.value, home);
   }
-  return next;
+  return applyGitCommitHooksEnvironment(next);
 });

@@ -108,6 +108,7 @@ import * as ServerBrowserStream from "./preview/ServerBrowserStream.ts";
 import * as PreviewBrowser from "./preview/PreviewBrowser.ts";
 import * as ProcessRunner from "./processRunner.ts";
 import * as GitManager from "./git/GitManager.ts";
+import * as CommitMessageHooks from "./git/CommitMessageHooks.ts";
 import * as EnvironmentTheme from "./environmentTheme.ts";
 import * as Keybindings from "./keybindings.ts";
 import * as ServerRuntimeStartup from "./serverRuntimeStartup.ts";
@@ -860,6 +861,16 @@ const layerMakeServer = Layer.unwrap(
     // fixPath rewrites PATH, so pin the launcher the shell chose before it does.
     const invokedAs = (yield* resolveLauncherPath) ?? (yield* HostProcess.InvokedAs);
     yield* fixPath({ shellEnvironmentPrepared: config.shellEnvironmentPrepared });
+    yield* CommitMessageHooks.ensureGitCommitHooks(config.baseDir).pipe(
+      Effect.tap((hooksConfig) =>
+        Effect.sync(() => {
+          CommitMessageHooks.publishGitCommitHooksToProcessEnv(hooksConfig);
+        }),
+      ),
+      Effect.catchCause((cause) =>
+        Effect.logWarning("Failed to prepare git commit message hooks", { cause }),
+      ),
+    );
 
     const layerHttpListening = Layer.effectDiscard(
       Effect.gen(function* () {

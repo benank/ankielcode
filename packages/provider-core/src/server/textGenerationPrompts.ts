@@ -40,6 +40,7 @@ export function buildCommitMessagePrompt(input: CommitMessagePromptInput) {
       ? ["- branch must be a short semantic git branch fragment for this change"]
       : []),
     "- capture the primary user-visible or developer-visible change",
+    "- never include Co-Authored-By trailers or mention any AI, model, agent, or harness",
     ...policyInstruction(input.policy?.commitInstructions),
     "",
     `Branch: ${input.branch ?? "(detached)"}`,

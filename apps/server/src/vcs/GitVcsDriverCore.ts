@@ -37,6 +37,7 @@ import {
   trimAsciiWhitespace,
   type VcsRef,
 } from "@ankielcode/contracts";
+import { removeAgentCredits } from "@ankielcode/shared/commitMessage";
 import { dedupeRemoteBranchesWithLocalMatches } from "@ankielcode/shared/git";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { compactTraceAttributes } from "@ankielcode/shared/observability";
@@ -3608,7 +3609,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       }
     }
     const args = ["commit", "-m", subject];
-    const trimmedBody = body.trim();
+    const trimmedBody = removeAgentCredits(body).trim();
     if (trimmedBody.length > 0) {
       args.push("-m", trimmedBody);
     }

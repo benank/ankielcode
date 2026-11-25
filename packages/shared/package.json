@@ -75,6 +75,14 @@
       "types": "./src/git.ts",
       "import": "./src/git.ts"
     },
+    "./commitMessage": {
+      "types": "./src/commitMessage.ts",
+      "import": "./src/commitMessage.ts"
+    },
+    "./gitCommitHooksEnv": {
+      "types": "./src/gitCommitHooksEnv.ts",
+      "import": "./src/gitCommitHooksEnv.ts"
+    },
     "./sourceControl": {
       "types": "./src/sourceControl.ts",
       "import": "./src/sourceControl.ts"

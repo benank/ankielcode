@@ -51,6 +51,7 @@ import {
   hasProjectSettingsOverrides,
   resolveProjectSettings,
 } from "@ankielcode/shared/projectSettings";
+import { removeAgentCredits } from "@ankielcode/shared/commitMessage";
 import {
   mergeGitStatusParts,
   resolveAutoFeatureBranchName,
@@ -634,7 +635,7 @@ function sanitizeCommitMessage(
   const safeSubject = subject.length > 0 ? subject.slice(0, 72).trimEnd() : "Update project files";
   return {
     subject: safeSubject,
-    body: generated.body.trim(),
+    body: removeAgentCredits(generated.body.trim()).trim(),
     ...(generated.branch !== undefined ? { branch: generated.branch } : {}),
   };
 }
@@ -685,7 +686,7 @@ function parseCustomCommitMessage(raw: string): { subject: string; body: string 
 
   return {
     subject,
-    body: rest.join("\n").trim(),
+    body: removeAgentCredits(rest.join("\n").trim()).trim(),
   };
 }
 

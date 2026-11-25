@@ -94,7 +94,7 @@ See [00_development.md](docs/operations/00_development.md) for setup, ports, see
 - Never commit secrets, or files that another in-progress session or agent owns.
 - `origin` is GitHub (`github.com/benank/ankielcode`); use `gh`.
 - Conventional commit titles, plain language: `fix(web): new threads no longer spike CPU`.
-- Body: the problem in a sentence or two, then how you fixed it. End with the model and harness that did the work.
+- Body: the problem in a sentence or two, then how you fixed it. Never add AI, model, harness, or Co-Authored-By attribution.
 
 When the developer does ask for a PR:
 
