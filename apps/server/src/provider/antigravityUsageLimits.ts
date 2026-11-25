@@ -58,7 +58,7 @@ const UsageOutput = Schema.Struct({
 const decodeUsageOutput = Schema.decodeEffect(Schema.fromJsonString(UsageOutput));
 
 /** Windows from `agy -p "/usage" --output-format json`, read at `checkedAt`. */
-export function antigravityUsageWindows(
+function antigravityUsageWindows(
   output: typeof UsageOutput.Type,
   checkedAt: number,
 ): ServerProviderUsageWindow[] {
