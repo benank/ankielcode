@@ -203,7 +203,7 @@ describe("searchSettings", () => {
         "welcome page",
         filterAvailableSettingsSearchItems({ ...availability, hasPrimaryEnvironment }),
       ).map((item) => item.id);
-    // Hosted web reaches remote computers but has no primary one to set up.
+    // Without a primary environment there is no local computer to set up.
     expect(ids(false)).not.toContain("welcome-page");
     expect(ids(true)).toContain("welcome-page");
   });
