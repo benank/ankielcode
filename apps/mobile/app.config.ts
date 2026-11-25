@@ -255,9 +255,9 @@ const config: ExpoConfig = {
     bundleIdentifier: iosBundleIdentifier,
     // Avoid Personal Team fallback: it cannot sign App Groups, Apple sign-in or push entitlements.
     ...(appleTeamId ? { appleTeamId } : {}),
-    associatedDomains: [`applinks:${HOSTED_APP_HOST}`],
+    ...(!isIosPersonalTeamBuild ? { associatedDomains: [`applinks:${HOSTED_APP_HOST}`] } : {}),
     entitlements: {
-      "keychain-access-groups": [`$(AppIdentifierPrefix)${variant.iosBundleIdentifier}`],
+      "keychain-access-groups": [`$(AppIdentifierPrefix)${iosBundleIdentifier}`],
     },
     infoPlist: {
       UISupportedInterfaceOrientations: [
@@ -361,6 +361,7 @@ const config: ExpoConfig = {
         icon: variant.assets.androidNotificationIcon,
         color: variant.assets.androidNotificationColor,
         mode: APP_VARIANT === "development" ? "development" : "production",
+        enableRemoteNotifications: !isIosPersonalTeamBuild,
       },
     ],
     "expo-web-browser",
@@ -446,6 +447,7 @@ const config: ExpoConfig = {
       },
     ],
     "./plugins/withIosCocoaPodsUuidCache.cjs",
+    "./plugins/withIosDevLauncherPhaseAlwaysRuns.cjs",
     // Compile out the unused pedometer to avoid an iOS motion purpose string.
     ["expo-sensors", { motionPermission: false }],
     // Mods run in reverse order; expo-widgets must create and wipe the target before assets are added.
