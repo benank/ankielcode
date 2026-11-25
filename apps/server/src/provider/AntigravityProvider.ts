@@ -173,6 +173,11 @@ interface AntigravityProviderOptions {
   /** Modes the last session advertised, saved because initialize alone does not report them. */
   readonly rememberedRuntimeModes?: ReadonlyArray<RuntimeMode>;
   readonly rememberRuntimeModes?: (modes: ReadonlyArray<RuntimeMode>) => Effect.Effect<void>;
+  /** The Google AI plan the last session reported, saved so Colab shows before a session starts. */
+  readonly rememberedPlan?: string;
+  readonly rememberPlan?: (plan: string | undefined) => Effect.Effect<void>;
+  /** Starts a prompt-free session so agy reports the plan, for when none is known yet. */
+  readonly loadPlan?: Effect.Effect<void>;
 }
 
 const RUNTIME_MODES_WITHOUT_AUTO = [
@@ -205,11 +210,14 @@ function antigravitySessionTier(result: { readonly _meta?: unknown }) {
   );
 }
 
+const isGoogleAiPlan = (label: string | undefined) =>
+  /^Google AI (?:Plus|Pro|Ultra)\b/i.test(label ?? "");
+
 function hasGoogleAiSubscription(auth: ServerProvider["auth"]) {
   return (
     auth.status === "authenticated" &&
     (auth.type === "oauth-personal" || auth.type === "oauth-business") &&
-    /^Google AI (?:Plus|Pro|Ultra)\b/i.test(auth.label ?? "")
+    isGoogleAiPlan(auth.label)
   );
 }
 
@@ -276,6 +284,18 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
       yield* options.rememberRuntimeModes(next);
     }
   });
+  let rememberedPlan = options.rememberedPlan;
+  let planLoadStarted = false;
+  const rememberPlan = Effect.fn("AntigravityProvider.rememberPlan")(function* (
+    plan: string | undefined,
+  ) {
+    if (plan === rememberedPlan) return;
+    rememberedPlan = plan;
+    if (options.rememberPlan) yield* options.rememberPlan(plan);
+  });
+  // Until a session reports the plan after a restart, trust the last one it reported.
+  const showsColab = (auth: ServerProvider["auth"]) =>
+    hasGoogleAiSubscription(auth) || (auth.status === "unknown" && isGoogleAiPlan(rememberedPlan));
   const getSnapshot = SubscriptionRef.get(metadata).pipe(
     Effect.flatMap((state) => options.stampIdentity(state.draft)),
   );
@@ -293,16 +313,28 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
       Effect.gen(function* () {
         const probed = yield* probeUsage;
         const { draft } = yield* SubscriptionRef.get(metadata);
+        const planUnknown = draft.auth.status === "unknown" && rememberedPlan === undefined;
         const colabComputeUnits =
-          probeColabUsage && hasGoogleAiSubscription(draft.auth)
+          probeColabUsage && (showsColab(draft.auth) || planUnknown)
             ? yield* probeColabUsage
             : undefined;
+        // Only a session reports the plan. Load it once, and only for a signed-in Colab user.
+        if (
+          planUnknown &&
+          colabComputeUnits !== undefined &&
+          !probed.unavailable &&
+          options.loadPlan &&
+          !planLoadStarted
+        ) {
+          planLoadStarted = true;
+          yield* options.loadPlan.pipe(Effect.ignoreCause({ log: true }), Effect.forkIn(scope));
+        }
         yield* SubscriptionRef.update(metadata, (state) => {
           const limits = resolveUsageLimitsAfterProbe({
             published: state.draft.usageLimits,
             probed,
           });
-          const balance = hasGoogleAiSubscription(state.draft.auth) ? colabComputeUnits : undefined;
+          const balance = showsColab(state.draft.auth) ? colabComputeUnits : undefined;
           return {
             ...state,
             draft: {
@@ -444,66 +476,74 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
     const supportsTextGeneration = yield* options.supportsTextGeneration;
     const updatedAt = DateTime.formatIso(yield* DateTime.now);
     const supportedRuntimeModes = antigravityRuntimeModes(started.sessionSetupResult);
-    const [previousModes, gainedSubscription] = yield* SubscriptionRef.modify(metadata, (state) => {
-      if (
-        state.authRevision !== before.authRevision &&
-        state.draft.auth.status === "unauthenticated"
-      ) {
-        return [[supportedRuntimeModes, false] as const, state] as const;
-      }
-      const { message: _previousMessage, ...draft } = state.draft;
-      const workspaces = draft.workspaceSnapshots ?? [];
-      const workspace = cwd ? workspaces.find((entry) => entry.cwd === cwd) : undefined;
-      const auth = {
-        status: "authenticated",
-        type: options.auth?.type ?? "oauth-personal",
-        // Loaded sessions may omit the tier, so keep the one an earlier session reported.
-        label: Option.getOrElse(
-          antigravitySessionTier(started.sessionSetupResult),
-          () =>
-            (draft.auth.status === "authenticated" ? draft.auth.label : undefined) ??
-            options.auth?.label ??
-            "Google account",
-        ),
-      } satisfies ServerProvider["auth"];
-      const subscribed = hasGoogleAiSubscription(auth);
-      const next = {
-        authRevision: state.authRevision + 1,
-        draft: {
-          ...draft,
-          installed: true,
-          status: "ready",
-          version: started.initializeResult.agentInfo?.version || draft.version,
-          auth,
-          usageLimits:
-            !subscribed && draft.usageLimits?.colabComputeUnits !== undefined
-              ? { ...draft.usageLimits, colabComputeUnits: undefined }
-              : draft.usageLimits,
-          checkedAt: updatedAt,
-          models: buildAntigravityModelsFromSession(started.sessionSetupResult, thinkingLevels),
-          supportedRuntimeModes,
-          supportsTextGeneration,
-          ...(cwd
-            ? {
-                workspaceSnapshots: [
-                  ...workspaces.filter((entry) => entry.cwd !== cwd),
-                  {
-                    cwd,
-                    checkedAt: updatedAt,
-                    slashCommands: workspace?.slashCommands ?? draft.slashCommands,
-                    skills: workspace?.skills ?? discoveredSkills.get(cwd) ?? [],
-                  },
-                ].slice(-MAX_WORKSPACE_SNAPSHOTS),
-              }
-            : {}),
-        },
-      } satisfies AntigravityProviderState;
-      return [
-        [draft.supportedRuntimeModes, subscribed && !hasGoogleAiSubscription(draft.auth)],
-        next,
-      ] as const;
-    });
+    const [previousModes, gainedSubscription, plan] = yield* SubscriptionRef.modify(
+      metadata,
+      (state) => {
+        if (
+          state.authRevision !== before.authRevision &&
+          state.draft.auth.status === "unauthenticated"
+        ) {
+          return [[supportedRuntimeModes, false, undefined] as const, state] as const;
+        }
+        const { message: _previousMessage, ...draft } = state.draft;
+        const workspaces = draft.workspaceSnapshots ?? [];
+        const workspace = cwd ? workspaces.find((entry) => entry.cwd === cwd) : undefined;
+        const auth = {
+          status: "authenticated",
+          type: options.auth?.type ?? "oauth-personal",
+          // Loaded sessions may omit the tier, so keep the one an earlier session reported.
+          label: Option.getOrElse(
+            antigravitySessionTier(started.sessionSetupResult),
+            () =>
+              (draft.auth.status === "authenticated" ? draft.auth.label : undefined) ??
+              options.auth?.label ??
+              "Google account",
+          ),
+        } satisfies ServerProvider["auth"];
+        const subscribed = hasGoogleAiSubscription(auth);
+        const next = {
+          authRevision: state.authRevision + 1,
+          draft: {
+            ...draft,
+            installed: true,
+            status: "ready",
+            version: started.initializeResult.agentInfo?.version || draft.version,
+            auth,
+            usageLimits:
+              !subscribed && draft.usageLimits?.colabComputeUnits !== undefined
+                ? { ...draft.usageLimits, colabComputeUnits: undefined }
+                : draft.usageLimits,
+            checkedAt: updatedAt,
+            models: buildAntigravityModelsFromSession(started.sessionSetupResult, thinkingLevels),
+            supportedRuntimeModes,
+            supportsTextGeneration,
+            ...(cwd
+              ? {
+                  workspaceSnapshots: [
+                    ...workspaces.filter((entry) => entry.cwd !== cwd),
+                    {
+                      cwd,
+                      checkedAt: updatedAt,
+                      slashCommands: workspace?.slashCommands ?? draft.slashCommands,
+                      skills: workspace?.skills ?? discoveredSkills.get(cwd) ?? [],
+                    },
+                  ].slice(-MAX_WORKSPACE_SNAPSHOTS),
+                }
+              : {}),
+          },
+        } satisfies AntigravityProviderState;
+        return [
+          [
+            draft.supportedRuntimeModes,
+            subscribed && !showsColab(draft.auth),
+            Option.getOrUndefined(antigravitySessionTier(started.sessionSetupResult)),
+          ] as const,
+          next,
+        ] as const;
+      },
+    );
     yield* rememberRuntimeModes(previousModes, supportedRuntimeModes);
+    if (plan !== undefined) yield* rememberPlan(plan);
     if (gainedSubscription || !before.draft.usageLimits || before.draft.usageLimits.unavailable) {
       yield* refreshUsage();
     }
@@ -583,6 +623,7 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
       } satisfies AntigravityProviderState,
     ]);
     yield* rememberRuntimeModes(previousModes, RUNTIME_MODES_WITHOUT_AUTO);
+    yield* rememberPlan(undefined);
     discoveredSkills.clear();
     thinkingLevels.clear();
   });
@@ -623,6 +664,7 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
     // The new sign-in may be another account. Clear and republish its limits so a failed read
     // cannot fall back to them; the session start then reads the new account's limits.
     onSignedIn: resetUsage.pipe(
+      Effect.andThen(rememberPlan(undefined)),
       Effect.andThen(
         SubscriptionRef.update(metadata, (state) => {
           const { usageLimits: _previousAccount, ...draft } = state.draft;

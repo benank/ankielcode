@@ -94,6 +94,11 @@ const RememberedRuntimeModes = Schema.fromJsonString(
 );
 const decodeRememberedRuntimeModes = Schema.decodeUnknownOption(RememberedRuntimeModes);
 const encodeRememberedRuntimeModes = Schema.encodeSync(RememberedRuntimeModes);
+const RememberedPlan = Schema.fromJsonString(
+  Schema.Struct({ authMethod: Schema.String, plan: Schema.optional(Schema.String) }),
+);
+const decodeRememberedPlan = Schema.decodeUnknownOption(RememberedPlan);
+const encodeRememberedPlan = Schema.encodeSync(RememberedPlan);
 const REFRESH_FAILED =
   "Could not refresh Antigravity models. The previous model list is unchanged.";
 const PYTHON_SOCKS_REQUIRED = "python-socks is required to use a SOCKS proxy";
@@ -191,6 +196,17 @@ export const AntigravityDriver: ProviderDriver<
         decodeRememberedRuntimeModes(contents).pipe(
           Option.filter((saved) => saved.authMethod === auth.authMethod),
           Option.map((saved) => saved.modes),
+          Option.getOrUndefined,
+        ),
+      ),
+      Effect.orElseSucceed(() => undefined),
+    );
+    const planPath = path.join(profileDirectory, "ankiel-plan.json");
+    const rememberedPlan = yield* fileSystem.readFileString(planPath).pipe(
+      Effect.map((contents) =>
+        decodeRememberedPlan(contents).pipe(
+          Option.filter((saved) => saved.authMethod === auth.authMethod),
+          Option.flatMapNullishOr((saved) => saved.plan),
           Option.getOrUndefined,
         ),
       ),
@@ -581,6 +597,8 @@ export const AntigravityDriver: ProviderDriver<
         AGY_CLI_DISABLE_AUTO_UPDATE: "1",
       },
     }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+    // The model refresh needs the provider, so it is handed over once both exist.
+    const planLoader = yield* Deferred.make<Effect.Effect<void>>();
     const provider = yield* makeAntigravityProvider(settings, {
       environment: processEnvironment,
       stampIdentity: classifyModels,
@@ -598,6 +616,20 @@ export const AntigravityDriver: ProviderDriver<
           Effect.provideService(FileSystem.FileSystem, fileSystem),
           Effect.provideService(Path.Path, path),
           Effect.catch(() => Effect.logWarning("Could not save Antigravity permission modes.")),
+        ),
+      ...(rememberedPlan ? { rememberedPlan } : {}),
+      loadPlan: Deferred.await(planLoader).pipe(Effect.flatten),
+      rememberPlan: (plan) =>
+        writeFileStringAtomically({
+          filePath: planPath,
+          contents: encodeRememberedPlan({
+            authMethod: auth.authMethod,
+            ...(plan === undefined ? {} : { plan }),
+          }),
+        }).pipe(
+          Effect.provideService(FileSystem.FileSystem, fileSystem),
+          Effect.provideService(Path.Path, path),
+          Effect.catch(() => Effect.logWarning("Could not save the Antigravity plan.")),
         ),
       supportsTextGeneration: isAntigravityTextGenerationAvailable(profileDirectory).pipe(
         Effect.provideService(FileSystem.FileSystem, fileSystem),
@@ -707,6 +739,7 @@ export const AntigravityDriver: ProviderDriver<
             }),
       ),
     );
+    yield* Deferred.succeed(planLoader, refreshModels().pipe(Effect.ignore({ log: true })));
 
     return {
       instanceId,

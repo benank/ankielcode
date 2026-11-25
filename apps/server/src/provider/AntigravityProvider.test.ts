@@ -142,9 +142,12 @@ const makeHarness = Effect.fn("makeAntigravityProviderHarness")(function* (
     readonly probeUsage?: Effect.Effect<ServerProviderUsageLimits>;
     readonly probeColabUsage?: Effect.Effect<number | undefined>;
     readonly rememberedRuntimeModes?: ReadonlyArray<RuntimeMode>;
+    readonly rememberedPlan?: string;
+    readonly loadPlan?: Effect.Effect<void>;
   } = {},
 ) {
   const savedRuntimeModes = yield* Ref.make<ReadonlyArray<ReadonlyArray<RuntimeMode>>>([]);
+  const savedPlans = yield* Ref.make<ReadonlyArray<string | undefined>>([]);
   const initialProbe = yield* Deferred.make<EffectAcpSchema.InitializeResponse, ProbeError>();
   const probeCalls = yield* Ref.make(0);
   const safetyCalls = yield* Ref.make(0);
@@ -163,6 +166,9 @@ const makeHarness = Effect.fn("makeAntigravityProviderHarness")(function* (
         ? { rememberedRuntimeModes: options.rememberedRuntimeModes }
         : {}),
       rememberRuntimeModes: (modes) => Ref.update(savedRuntimeModes, (saved) => [...saved, modes]),
+      ...(options.rememberedPlan ? { rememberedPlan: options.rememberedPlan } : {}),
+      ...(options.loadPlan ? { loadPlan: options.loadPlan } : {}),
+      rememberPlan: (plan) => Ref.update(savedPlans, (saved) => [...saved, plan]),
       probe: Ref.update(probeCalls, (count) => count + 1).pipe(
         Effect.andThen(Ref.get(probe)),
         Effect.flatten,
@@ -198,6 +204,7 @@ const makeHarness = Effect.fn("makeAntigravityProviderHarness")(function* (
     initialize,
     nextPublish,
     savedRuntimeModes,
+    savedPlans,
   };
 });
 
@@ -907,7 +914,7 @@ it.layer(layerTest)("Antigravity provider snapshots", (it) => {
       const published = yield* harness.nextPublish((snapshot) => !!snapshot.usageLimits);
       yield* harness.initialize;
       expect((yield* published)?.usageLimits).toEqual(limits);
-      expect(yield* Ref.get(colabReads)).toBe(0);
+      expect(yield* Ref.get(colabReads)).toBe(1);
 
       const withTier = (name: string) => ({
         ...started,
@@ -921,8 +928,86 @@ it.layer(layerTest)("Antigravity provider snapshots", (it) => {
       );
       yield* harness.provider.onSessionStarted(withTier("Google AI Pro"));
       expect((yield* paid)?.usageLimits).toEqual({ ...limits, colabComputeUnits: 200 });
+      expect(yield* Ref.get(harness.savedPlans)).toEqual(["Google AI Pro"]);
       yield* harness.provider.onSessionStarted(withTier("Free"));
       expect((yield* harness.provider.snapshot.getSnapshot).usageLimits).toEqual(limits);
+    }),
+  );
+
+  it.effect("shows the Colab balance after a restart from the plan the last session reported", () =>
+    Effect.gen(function* () {
+      const limits = {
+        checkedAt: "2026-10-09T12:00:00.000Z",
+        windows: [{ id: "gemini-5h", kind: "session", label: "Gemini · 5-hour", usedPercent: 10 }],
+      } satisfies ServerProviderUsageLimits;
+      const harness = yield* makeHarness({
+        probeUsage: Effect.succeed(limits),
+        probeColabUsage: Effect.succeed(200),
+        rememberedPlan: "Google AI Pro",
+      });
+      const published = yield* harness.nextPublish(
+        (snapshot) => snapshot.usageLimits?.colabComputeUnits !== undefined,
+      );
+      yield* harness.initialize;
+      expect((yield* published)?.usageLimits).toEqual({ ...limits, colabComputeUnits: 200 });
+
+      yield* harness.provider.onSignedOut;
+      expect(yield* Ref.get(harness.savedPlans)).toEqual([undefined]);
+    }),
+  );
+
+  it.effect("loads the plan once when it is unknown and Colab reports a balance", () =>
+    Effect.gen(function* () {
+      const limits = {
+        checkedAt: "2026-10-09T12:00:00.000Z",
+        windows: [{ id: "gemini-5h", kind: "session", label: "Gemini · 5-hour", usedPercent: 10 }],
+      } satisfies ServerProviderUsageLimits;
+      const loads = yield* Ref.make(0);
+      const loadStarted = yield* Deferred.make<void>();
+      const harness = yield* makeHarness({
+        probeUsage: Effect.succeed(limits),
+        probeColabUsage: Effect.succeed(200),
+        loadPlan: Ref.update(loads, (count) => count + 1).pipe(
+          Effect.andThen(Deferred.succeed(loadStarted, undefined)),
+        ),
+      });
+      yield* harness.initialize;
+      yield* Deferred.await(loadStarted);
+      expect((yield* harness.provider.snapshot.getSnapshot).usageLimits).toEqual(limits);
+
+      const paid = yield* harness.nextPublish(
+        (snapshot) => snapshot.usageLimits?.colabComputeUnits !== undefined,
+      );
+      yield* harness.provider.onSessionStarted({
+        ...started,
+        sessionSetupResult: {
+          ...started.sessionSetupResult,
+          _meta: { antigravity: { tier: { name: "Google AI Pro" } } },
+        },
+      });
+      expect((yield* paid)?.usageLimits).toEqual({ ...limits, colabComputeUnits: 200 });
+      yield* harness.provider.snapshot.refresh;
+      expect(yield* Ref.get(loads)).toBe(1);
+    }),
+  );
+
+  it.effect("does not load the plan without a Colab balance", () =>
+    Effect.gen(function* () {
+      const loads = yield* Ref.make(0);
+      const harness = yield* makeHarness({
+        probeUsage: Effect.succeed({
+          checkedAt: "2026-10-09T12:00:00.000Z",
+          windows: [
+            { id: "gemini-5h", kind: "session", label: "Gemini · 5-hour", usedPercent: 10 },
+          ],
+        }),
+        probeColabUsage: Effect.succeed(undefined),
+        loadPlan: Ref.update(loads, (count) => count + 1),
+      });
+      const published = yield* harness.nextPublish((snapshot) => !!snapshot.usageLimits);
+      yield* harness.initialize;
+      yield* published;
+      expect(yield* Ref.get(loads)).toBe(0);
     }),
   );
 
