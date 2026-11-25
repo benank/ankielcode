@@ -30,24 +30,6 @@ function projectMonogram(projectName: string): string {
   return Array.from(`${first}${second}`.toUpperCase()).slice(0, 2).join("");
 }
 
-function projectMonogramColor(projectName: string): ProjectIconColor {
-  const seed = projectName.normalize("NFKC").trim().toLocaleLowerCase("en-US") || "project";
-  let index = 0;
-  for (const glyph of seed) {
-    index = (index * 31 + (glyph.codePointAt(0) ?? 0)) % ProjectIconColor.literals.length;
-  }
-  return ProjectIconColor.literals[index] ?? "blue";
-}
-
-export function projectAutoMonogram(projectTitle: string): ProjectIconGlyph | null {
-  if (!projectTitle.trim()) return null;
-  return {
-    kind: "monogram",
-    text: projectMonogram(projectTitle),
-    color: projectMonogramColor(projectTitle),
-  };
-}
-
 export function resolveProjectIconGlyph(
   projectIcon: ProjectIconOverride | null | undefined,
   projectTitle: string,
@@ -92,7 +74,7 @@ export function resolveProjectChipIcon(
   if (glyph) return glyph;
   const url = faviconUrl();
   if (url && !isProjectFaviconFallbackUrl(url)) return { kind: "favicon", uri: url };
-  return projectAutoMonogram(project.title);
+  return null;
 }
 
 const PROJECT_ICON_COLOR_CLASSES: Record<

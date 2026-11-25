@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useAtomValue } from "@effect/atom-react";
 import { AsyncResult } from "effect/reactivity";
 
@@ -12,7 +13,8 @@ export function useThreadListV2ShelfPreferences() {
     loaded && preferencesResult.value.threadListSnoozedShelfExpanded === true;
   const settledShelfExpanded =
     loaded && preferencesResult.value.threadListSettledShelfExpanded === true;
-  const workingShelfEnabled = loaded && preferencesResult.value.workingShelfEnabled !== false;
+  // Project folders already separate the work, as on the web sidebar.
+  const workingShelfEnabled = false;
   const workingShelfExpanded =
     loaded && preferencesResult.value.threadListWorkingShelfExpanded === true;
 
@@ -33,6 +35,23 @@ export function useThreadListV2ShelfPreferences() {
       }),
     });
   };
+  const collapsedProjectKeys = useMemo(
+    () => new Set(loaded ? (preferencesResult.value.collapsedProjectGroups ?? []) : []),
+    [loaded, preferencesResult],
+  );
+  const toggleProjectFolder = (projectKey: string) => {
+    if (!loaded) return;
+    void savePreferences({
+      transform: (current) => {
+        const collapsed = current.collapsedProjectGroups ?? [];
+        return {
+          collapsedProjectGroups: collapsed.includes(projectKey)
+            ? collapsed.filter((key) => key !== projectKey)
+            : [...collapsed, projectKey],
+        };
+      },
+    });
+  };
   const toggleWorkingShelf = () => {
     if (!loaded) return;
     void savePreferences({
@@ -51,5 +70,7 @@ export function useThreadListV2ShelfPreferences() {
     toggleSettledShelf,
     toggleSnoozedShelf,
     toggleWorkingShelf,
+    collapsedProjectKeys,
+    toggleProjectFolder,
   } as const;
 }

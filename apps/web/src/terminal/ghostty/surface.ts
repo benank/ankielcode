@@ -1681,7 +1681,7 @@ export class GhosttyTerminalSurface {
       previous?.range.start.y === link?.range.start.y &&
       previous?.range.end.x === link?.range.end.x &&
       previous?.range.end.y === link?.range.end.y;
-    this.canvas.style.cursor = link ? "pointer" : "";
+    this.canvas.style.cursor = link ? "var(--app-interactive-cursor, pointer)" : "";
     if (unchanged) return;
     this.hoveredLink = link;
     this.forceFullRender = true;

@@ -169,10 +169,10 @@ function WindowBar({
           />
         }
       >
-        <div className="absolute inset-x-0 inset-y-1.5 rounded-[3px] bg-muted-foreground/25" />
+        <div className="absolute inset-x-0 inset-y-1.5 rounded-xs bg-muted-foreground/25" />
         {remaining > 0 ? (
           <div
-            className="absolute inset-y-1.5 left-0 rounded-[3px]"
+            className="absolute inset-y-1.5 left-0 rounded-xs"
             style={{ width: `${remaining}%`, backgroundColor: color }}
           />
         ) : null}

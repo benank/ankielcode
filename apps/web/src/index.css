@@ -1,6 +1,16 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss";
 
+@utility cursor-pointer {
+  cursor: var(--app-interactive-cursor, pointer);
+}
+
+@layer base {
+  :where(html[data-desktop]) :any-link {
+    cursor: default;
+  }
+}
+
 @custom-variant dark (&:is(.dark, .dark *));
 @custom-variant light (&:not(.dark, .dark *));
 /* Window Controls Overlay: active when Electron exposes native titlebar control geometry. */
@@ -677,6 +687,31 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
   }
 }
 
+@keyframes pixel-status {
+  to {
+    transform: translateY(var(--pixel-end));
+  }
+}
+
+/* Slides a PixelStatus sprite strip by whole frames; transform only, paused off screen. */
+@utility pixel-status-strip {
+  animation: pixel-status var(--pixel-duration) steps(var(--pixel-frames), jump-none)
+    var(--pixel-iterations) both;
+  animation-play-state: var(--visible-animation-state, paused);
+  will-change: var(--visible-animation-will-change, auto);
+
+  @media (prefers-reduced-motion: reduce), (forced-colors: active) {
+    animation: none;
+    transform: translateY(var(--pixel-rest));
+    will-change: auto;
+  }
+}
+
+/* An unfocused window holds its pixels still. */
+:root[data-window-blurred] .pixel-status-strip {
+  animation-play-state: paused;
+}
+
 @utility live-activity-focus-aligned {
   width: calc(100% - var(--live-activity-focus-width) - var(--live-activity-focus-width));
   margin-inline-start: var(--live-activity-focus-width);
@@ -998,7 +1033,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
     appearance: none;
     height: 1.5rem;
     background: transparent;
-    cursor: pointer;
+    cursor: var(--app-interactive-cursor, pointer);
   }
 
   .settings-slider::-webkit-slider-runnable-track {
@@ -2624,7 +2659,7 @@ code {
   align-items: center;
   flex: none;
   height: 1lh;
-  cursor: pointer;
+  cursor: var(--app-interactive-cursor, pointer);
 }
 
 .composer-tiptap li[data-checked] > label input[type="checkbox"] {
@@ -2632,7 +2667,7 @@ code {
   margin: 0;
   width: 0.95rem;
   height: 0.95rem;
-  cursor: pointer;
+  cursor: var(--app-interactive-cursor, pointer);
 }
 
 .composer-tiptap li[data-checked] > div {

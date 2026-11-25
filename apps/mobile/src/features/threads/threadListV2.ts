@@ -42,6 +42,7 @@ import {
   sortSettledThreads,
 } from "@ankielcode/client-runtime/state/thread-sort";
 import { isListedThreadLineage, type EnvironmentId, type ProjectId } from "@ankielcode/contracts";
+import type { PixelStatusKind } from "@ankielcode/shared/pixelStatus";
 import type { SnoozePresetSetting } from "@ankielcode/contracts/settings";
 import type { MenuAction } from "@react-native-menu/menu";
 
@@ -355,6 +356,27 @@ export function resolveThreadListV2RowStatus(
   return hasUnseenRunFailure(thread) ? status : "ready";
 }
 
+/** The pixel light a row shows, as on the web sidebar; none while nothing needs a look. */
+export function resolveThreadListV2PixelKind(
+  thread: Parameters<typeof resolveThreadListV2RowStatus>[0],
+  wokeAt: string | null,
+): PixelStatusKind | null {
+  switch (resolveThreadListV2RowStatus(thread)) {
+    case "working":
+      return "working";
+    case "waiting":
+      return "waiting";
+    case "approval":
+    case "input":
+    case "limited":
+      return "attention";
+    case "failed":
+      return "failed";
+    case "ready":
+      return wokeAt !== null ? "attention" : threadHasUnseenCompletion(thread) ? "done" : null;
+  }
+}
+
 function parseTimestampMs(isoDate: string): number {
   const parsed = Date.parse(isoDate);
   return Number.isNaN(parsed) ? 0 : parsed;
@@ -451,6 +473,8 @@ export interface ThreadListV2ThreadListItem {
   readonly hasQueuedMessages: boolean;
   readonly canMoveUp: boolean;
   readonly canMoveDown: boolean;
+  /** Its project folder already names the project, so the row drops the icon. */
+  readonly inFolder?: boolean;
 }
 
 export interface ThreadListV2PendingListItem {
@@ -486,7 +510,19 @@ export interface ThreadListV2SettledShelfListItem {
   readonly disabled: boolean;
 }
 
+export interface ThreadListV2ProjectFolderListItem {
+  readonly type: "v2-project-folder";
+  readonly key: string;
+  readonly environmentId: EnvironmentId;
+  readonly projectId: ProjectId;
+  readonly count: number;
+  readonly collapsed: boolean;
+  /** The most urgent light among the threads a closed folder hides. */
+  readonly hiddenStatus: PixelStatusKind | null;
+}
+
 export type ThreadListV2ListItem =
+  | ThreadListV2ProjectFolderListItem
   | ThreadListV2ThreadListItem
   | ThreadListV2PendingListItem
   | ThreadListV2WorkingShelfListItem
@@ -498,6 +534,7 @@ export function isThreadListV2ListItem(value: {
 }): value is ThreadListV2ListItem {
   return (
     value.type === "v2-thread" ||
+    value.type === "v2-project-folder" ||
     value.type === "v2-pending" ||
     value.type === "v2-working-shelf" ||
     value.type === "v2-snoozed-shelf" ||
@@ -527,7 +564,16 @@ export function threadListV2ListItemsAreEqual(
         previous.showTrailingDivider === item.showTrailingDivider &&
         previous.hasQueuedMessages === item.hasQueuedMessages &&
         previous.canMoveUp === item.canMoveUp &&
-        previous.canMoveDown === item.canMoveDown
+        previous.canMoveDown === item.canMoveDown &&
+        previous.inFolder === item.inFolder
+      );
+    case "v2-project-folder":
+      return (
+        previous.type === "v2-project-folder" &&
+        previous.key === item.key &&
+        previous.count === item.count &&
+        previous.collapsed === item.collapsed &&
+        previous.hiddenStatus === item.hiddenStatus
       );
     case "v2-pending":
       return (
@@ -621,6 +667,11 @@ export function buildThreadListV2ListItems(input: {
   readonly queuedThreadKeys?: ReadonlySet<string>;
   readonly moveAvailability?: ReadonlyMap<string, ThreadMoveAvailability>;
   readonly shelfPreferencesLoading?: boolean;
+  /** Groups active rows into project folders, newest activity first, as the web sidebar does. */
+  readonly projectFolders?: {
+    readonly collapsedKeys: ReadonlySet<string>;
+    readonly selectedThreadKey: string | null;
+  };
   readonly resolve?: MessageResolver;
 }): ThreadListV2ListItem[] {
   const resolve = input.resolve ?? m;
@@ -674,7 +725,13 @@ export function buildThreadListV2ListItems(input: {
   const snoozedEnd = settledShelfHeaderIndex ?? threadItems.length;
   const workingEnd = snoozedShelfHeaderIndex ?? snoozedEnd;
   const activeEnd = workingShelfHeaderIndex ?? workingEnd;
-  const result: ThreadListV2ListItem[] = [...pendingItems, ...threadItems.slice(0, activeEnd)];
+  const activeItems = threadItems.slice(0, activeEnd);
+  const result: ThreadListV2ListItem[] = [
+    ...pendingItems,
+    ...(input.projectFolders
+      ? groupIntoProjectFolders(activeItems, input.projectFolders, input.tree)
+      : activeItems),
+  ];
   const shelfDisabled = input.shelfPreferencesLoading === true;
   if (workingShelfHeaderIndex !== null && workingCount > 0) {
     result.push({
@@ -739,6 +796,96 @@ export function buildThreadListV2ListItems(input: {
       ? entry
       : { ...entry, showTrailingDivider };
   });
+}
+
+const PIXEL_URGENCY: Record<PixelStatusKind, number> = {
+  attention: 5,
+  failed: 4,
+  done: 3,
+  working: 2,
+  thinking: 2,
+  waiting: 1,
+};
+
+function threadActivityMs(thread: EnvironmentThreadShell): number {
+  return Math.max(
+    parseTimestampMs(thread.createdAt),
+    parseTimestampMs(resolveThreadActivityTimestamp(thread) ?? ""),
+  );
+}
+
+/**
+ * Pinned rows stay on top; the rest fall into a folder per project. Folders and their rows
+ * run newest activity first, a subagent's work counting for its parent.
+ */
+function groupIntoProjectFolders(
+  items: ReadonlyArray<ThreadListV2ThreadListItem>,
+  folders: NonNullable<Parameters<typeof buildThreadListV2ListItems>[0]["projectFolders"]>,
+  tree: ThreadListV2Tree | undefined,
+): ThreadListV2ListItem[] {
+  const activity = (thread: EnvironmentThreadShell) => {
+    let latest = threadActivityMs(thread);
+    for (const row of tree?.rowsByRoot.get(`${thread.environmentId}:${thread.id}`) ?? []) {
+      latest = Math.max(latest, threadActivityMs(row.thread));
+    }
+    return latest;
+  };
+  const pinned = items.filter((entry) => entry.item.pinned);
+  const byProject = new Map<string, { items: ThreadListV2ThreadListItem[]; latest: number }>();
+  for (const entry of items) {
+    if (entry.item.pinned) continue;
+    const { thread } = entry.item;
+    const key = `${thread.environmentId}:${thread.projectId}`;
+    const folder = byProject.get(key) ?? { items: [], latest: 0 };
+    folder.items.push(entry);
+    folder.latest = Math.max(folder.latest, activity(thread));
+    byProject.set(key, folder);
+  }
+  const result: ThreadListV2ListItem[] = [...pinned];
+  const ordered = [...byProject].sort(
+    ([leftKey, left], [rightKey, right]) =>
+      right.latest - left.latest || leftKey.localeCompare(rightKey),
+  );
+  for (const [key, folder] of ordered) {
+    const rows = [...folder.items].sort(
+      (left, right) =>
+        activity(right.item.thread) - activity(left.item.thread) ||
+        left.key.localeCompare(right.key),
+    );
+    const collapsed = folders.collapsedKeys.has(key);
+    const shown = collapsed
+      ? rows.filter(
+          (entry) =>
+            `${entry.item.thread.environmentId}:${entry.item.thread.id}` ===
+            folders.selectedThreadKey,
+        )
+      : rows;
+    let hiddenStatus: PixelStatusKind | null = null;
+    if (collapsed) {
+      for (const entry of rows) {
+        if (shown.includes(entry)) continue;
+        const kind = resolveThreadListV2PixelKind(entry.item.thread, entry.item.wokeAt);
+        if (
+          kind !== null &&
+          (hiddenStatus === null || PIXEL_URGENCY[kind] > PIXEL_URGENCY[hiddenStatus])
+        ) {
+          hiddenStatus = kind;
+        }
+      }
+    }
+    const { thread } = rows[0]!.item;
+    result.push({
+      type: "v2-project-folder",
+      key: `v2-project-folder:${key}`,
+      environmentId: thread.environmentId,
+      projectId: thread.projectId,
+      count: rows.length,
+      collapsed,
+      hiddenStatus,
+    });
+    result.push(...shown.map((entry) => ({ ...entry, inFolder: true })));
+  }
+  return result;
 }
 
 // Immutable shells and field-only sorting make element-identical inputs produce identical output.

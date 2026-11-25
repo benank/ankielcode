@@ -51,6 +51,10 @@
       "types": "./src/textDirection.ts",
       "import": "./src/textDirection.ts"
     },
+    "./pixelStatus": {
+      "types": "./src/pixelStatus.ts",
+      "import": "./src/pixelStatus.ts"
+    },
     "./projectFavicon": {
       "types": "./src/projectFavicon.ts",
       "import": "./src/projectFavicon.ts"

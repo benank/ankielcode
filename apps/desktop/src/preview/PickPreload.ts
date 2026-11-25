@@ -511,7 +511,7 @@ function createButton(label: string, title: string): HTMLButtonElement {
   button.textContent = label;
   button.title = title;
   button.className =
-    "inline-flex h-7 cursor-pointer items-center justify-center rounded-md border border-transparent px-2 font-sans text-xs font-medium text-foreground outline-none hover:bg-accent disabled:pointer-events-none disabled:opacity-60";
+    "inline-flex h-7 items-center justify-center rounded-md border border-transparent px-2 font-sans text-xs font-medium text-foreground outline-none hover:bg-accent disabled:pointer-events-none disabled:opacity-60";
   return button;
 }
 
@@ -1087,7 +1087,7 @@ function startAnnotation(
     color.type = "color";
     color.setAttribute("aria-label", labelText);
     color.style.cssText =
-      "width:20px;height:20px;padding:0;border:0;border-radius:5px;overflow:hidden;background:transparent;cursor:pointer";
+      "width:20px;height:20px;padding:0;border:0;border-radius:5px;overflow:hidden;background:transparent";
     const text = document.createElement("input");
     text.type = "text";
     text.setAttribute("aria-label", `${labelText} value`);

@@ -12,6 +12,10 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <script>
       (() => {
+        if (window.desktopBridge !== undefined) {
+          document.documentElement.dataset.desktop = "";
+        }
+
         const LIGHT_BACKGROUND = "#ffffff";
         const DARK_BACKGROUND = "#000000";
         const CUSTOM_THEMES_STORAGE_KEY = "ankielcode:themes:v1";
@@ -401,6 +405,10 @@
         margin: 0;
       }
 
+      html[data-desktop] {
+        --app-interactive-cursor: default;
+      }
+
       body {
         background: #ffffff;
         color: #262626;
@@ -498,6 +506,7 @@
       }
 
       #boot-error a {
+        cursor: var(--app-interactive-cursor, pointer);
         color: inherit;
         text-decoration-line: underline;
         text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
@@ -517,7 +526,7 @@
         color: inherit;
         font: inherit;
         font-weight: 500;
-        cursor: pointer;
+        cursor: var(--app-interactive-cursor, pointer);
       }
 
       #boot-error button[aria-disabled="true"] {
@@ -565,7 +574,7 @@
         border-radius: 4px;
         list-style: none;
         opacity: 0.7;
-        cursor: pointer;
+        cursor: var(--app-interactive-cursor, pointer);
       }
 
       #boot-error summary::-webkit-details-marker {

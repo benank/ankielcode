@@ -15,7 +15,7 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Queue from "effect/Queue";
 import * as Tracer from "effect/Tracer";
-import { HttpClient, HttpClientRequest, HttpRouter, HttpServerResponse } from "effect/http";
+import { Etag, HttpClient, HttpClientRequest, HttpRouter, HttpServerResponse } from "effect/http";
 import { openMediaFile } from "./assets/MediaFile.ts";
 
 import {
@@ -1038,7 +1038,7 @@ describe("environment descriptor redaction", () => {
             getDescriptor: Effect.succeed({
               environmentId: EnvironmentId.make("env-secret-box"),
               label: "Hyperspeed",
-              platform: { os: "darwin", arch: "arm64", machine: "mac-mini" },
+              platform: { os: "darwin", arch: "arm64", machine: "mac-mini" } as const,
               serverVersion: "0.1.11",
               orchestrationProtocolVersion: 2,
               capabilities: { repositoryIdentity: true },
@@ -1048,6 +1048,8 @@ describe("environment descriptor redaction", () => {
             Layer.provide(ServerHttp.layerServerEnvironmentHttpApi),
             Layer.provide(layerEnv),
             Layer.provide(Layer.succeedContext(authContext)),
+            Layer.provide(NodeHttpPlatform.layer),
+            Layer.provide(Etag.layerWeak),
           );
           const { handler, dispose } = HttpRouter.toWebHandler(routes);
           yield* Effect.addFinalizer(() => Effect.promise(dispose));
@@ -1065,7 +1067,7 @@ describe("environment descriptor redaction", () => {
             orchestrationProtocolVersion: 2,
             capabilities: { repositoryIdentity: true },
           });
-          expect(unauthJson.platform.machine).toBeUndefined();
+          expect(unauthJson).not.toHaveProperty("platform.machine");
 
           const pairing = yield* auth.issuePairingCredential();
           const token = yield* auth.exchangeBootstrapCredentialForAccessToken(
@@ -1092,6 +1094,7 @@ describe("environment descriptor redaction", () => {
             label: "Peer",
             access: "auto",
             peerLink: true,
+            client: { deviceType: "desktop" },
           });
           const mcpRes = yield* Effect.promise(() =>
             handler(

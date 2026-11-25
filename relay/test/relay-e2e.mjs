@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import * as NodeAssert from "node:assert/strict";
 
 import {
   buildHostChallengeMessage,
@@ -75,11 +75,11 @@ async function openSocket(url) {
 async function run() {
   // 1. Health check
   const healthRes = await fetch(`${baseUrl}/health`);
-  assert.equal(healthRes.status, 200);
+  NodeAssert.equal(healthRes.status, 200);
   const health = await healthRes.json();
-  assert.equal(health.ok, true);
-  assert.equal(health.service, "ankiel-relay");
-  assert.equal(health.configured, true);
+  NodeAssert.equal(health.ok, true);
+  NodeAssert.equal(health.service, "ankiel-relay");
+  NodeAssert.equal(health.configured, true);
 
   // Generate ephemeral Ed25519 host identity
   const keyPair = await crypto.subtle.generateKey("Ed25519", true, ["sign", "verify"]);
@@ -88,18 +88,18 @@ async function run() {
 
   // Status should never expose connected client counts
   const statusRes = await fetch(`${baseUrl}/relay/status/${hostId}`);
-  assert.equal(statusRes.status, 200);
+  NodeAssert.equal(statusRes.status, 200);
   const statusJson = await statusRes.json();
-  assert.deepEqual(statusJson, { hostId, online: false });
+  NodeAssert.deepEqual(statusJson, { hostId, online: false });
 
   // 2. Offline HTTP request returns 503
   const offlineHttp = await fetch(`${baseUrl}/h/${hostId}/api/ping`);
-  assert.equal(offlineHttp.status, 503);
+  NodeAssert.equal(offlineHttp.status, 503);
 
   // 3. Invalid host signature rejected with 4401
   const badHost = await openSocket(`${wsBaseUrl}/relay/host/${hostId}`);
   const badChallenge = JSON.parse(await nextMessage(badHost));
-  assert.equal(badChallenge.type, "challenge");
+  NodeAssert.equal(badChallenge.type, "challenge");
   const badClosePromise = nextClose(badHost);
   badHost.send(
     JSON.stringify({
@@ -108,12 +108,12 @@ async function run() {
       signature: encodeBase64Url(new Uint8Array(64)),
     }),
   );
-  assert.equal((await badClosePromise).code, 4401);
+  NodeAssert.equal((await badClosePromise).code, 4401);
 
   // 4. Valid host auth (Ed25519 + optional RELAY_SECRET HMAC)
   const hostWs = await openSocket(`${wsBaseUrl}/relay/host/${hostId}`);
   const challenge = JSON.parse(await nextMessage(hostWs));
-  assert.equal(challenge.type, "challenge");
+  NodeAssert.equal(challenge.type, "challenge");
   const challengeBytes = buildHostChallengeMessage(hostId, challenge.nonce, challenge.timestamp);
   const signature = new Uint8Array(
     await crypto.subtle.sign("Ed25519", keyPair.privateKey, challengeBytes),
@@ -129,7 +129,7 @@ async function run() {
       ...(secretProof ? { secretProof } : {}),
     }),
   );
-  assert.deepEqual(JSON.parse(await nextMessage(hostWs)), { type: "ready", hostId });
+  NodeAssert.deepEqual(JSON.parse(await nextMessage(hostWs)), { type: "ready", hostId });
 
   // 5. Full HTTP POST tunnel via /h/<hostId>/api/echo?x=1 (request body + response streaming)
   const httpBodies = new Map();
@@ -189,9 +189,9 @@ async function run() {
     },
     body: "hello-tunneled-http",
   });
-  assert.equal(postRes.status, 201);
-  assert.equal(postRes.headers.get("x-tunneled"), "yes");
-  assert.deepEqual(await postRes.json(), {
+  NodeAssert.equal(postRes.status, 201);
+  NodeAssert.equal(postRes.headers.get("x-tunneled"), "yes");
+  NodeAssert.deepEqual(await postRes.json(), {
     method: "POST",
     path: "/api/echo?x=1",
     authHeader: "DPoP my-token",
@@ -200,8 +200,8 @@ async function run() {
 
   // 6. GET request with no body via path prefix
   const getRes = await fetch(`${baseUrl}/h/${hostId}/api/health?ok=true`);
-  assert.equal(getRes.status, 201);
-  assert.deepEqual(await getRes.json(), {
+  NodeAssert.equal(getRes.status, 201);
+  NodeAssert.deepEqual(await getRes.json(), {
     method: "GET",
     path: "/api/health?ok=true",
     authHeader: null,
@@ -214,14 +214,14 @@ async function run() {
   const hostOpenPromise = nextMessage(hostWs);
   const wsClient = await openSocket(`${wsBaseUrl}/h/${hostId}/ws?ticket=abc`);
   const hostOpen = JSON.parse(await hostOpenPromise);
-  assert.equal(hostOpen.type, "client_open");
-  assert.equal(hostOpen.path, "/ws?ticket=abc");
+  NodeAssert.equal(hostOpen.type, "client_open");
+  NodeAssert.equal(hostOpen.path, "/ws?ticket=abc");
   const connId = hostOpen.connId;
 
   // Client -> Host text
   const hostTextPromise = nextMessage(hostWs);
   wsClient.send(JSON.stringify({ rpc: "ping" }));
-  assert.deepEqual(JSON.parse(await hostTextPromise), {
+  NodeAssert.deepEqual(JSON.parse(await hostTextPromise), {
     type: "frame",
     connId,
     data: JSON.stringify({ rpc: "ping" }),
@@ -230,27 +230,27 @@ async function run() {
   // Host -> Client text (arrives directly as first message on raw client tunnel!)
   const clientTextPromise = nextMessage(wsClient);
   hostWs.send(JSON.stringify({ type: "frame", connId, data: JSON.stringify({ rpc: "pong" }) }));
-  assert.equal(await clientTextPromise, JSON.stringify({ rpc: "pong" }));
+  NodeAssert.equal(await clientTextPromise, JSON.stringify({ rpc: "pong" }));
 
   // Client -> Host binary & Host -> Client binary
   const sampleBin = new Uint8Array([1, 2, 3, 4, 255]);
   const hostBinPromise = nextMessage(hostWs);
   wsClient.send(sampleBin);
   const decodedBin = decodeBinaryFrame(await hostBinPromise);
-  assert.ok(decodedBin);
-  assert.equal(decodedBin.kind, BINARY_FRAME_WS_DATA);
-  assert.equal(decodedBin.id, connId);
-  assert.deepEqual(decodedBin.payload, sampleBin);
+  NodeAssert.ok(decodedBin);
+  NodeAssert.equal(decodedBin.kind, BINARY_FRAME_WS_DATA);
+  NodeAssert.equal(decodedBin.id, connId);
+  NodeAssert.deepEqual(decodedBin.payload, sampleBin);
 
   const replyBin = new Uint8Array([99, 98, 97]);
   const clientBinPromise = nextMessage(wsClient);
   hostWs.send(encodeBinaryFrame(BINARY_FRAME_WS_DATA, connId, replyBin));
-  assert.deepEqual(new Uint8Array(await clientBinPromise), replyBin);
+  NodeAssert.deepEqual(new Uint8Array(await clientBinPromise), replyBin);
 
   // 8. Host disconnect closes tunneled WS client with 4503
   const clientClosePromise = nextClose(wsClient);
   hostWs.close(1000, "shutdown");
-  assert.equal((await clientClosePromise).code, 4503);
+  NodeAssert.equal((await clientClosePromise).code, 4503);
 
   console.log(`All full HTTP+WS relay E2E checks passed against ${baseUrl} (hostId=${hostId})`);
 }

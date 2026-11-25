@@ -1917,3 +1917,61 @@ describe("queued messages keep a settled thread active", () => {
     expect(layout.settledCount).toBe(1);
   });
 });
+
+describe("project folders", () => {
+  const item = (thread: EnvironmentThreadShell, pinned = false) => ({
+    thread,
+    variant: "card" as const,
+    snoozed: false,
+    pinned,
+    wokeAt: null,
+    isLast: false,
+  });
+  const at = (minute: number) => `2026-06-01T00:${String(minute).padStart(2, "0")}:00.000Z`;
+  const thread = (id: string, project: string, minute: number) =>
+    makeThread({
+      id: ThreadId.make(id),
+      title: id,
+      projectId: ProjectId.make(project),
+      createdAt: at(minute),
+      latestUserMessageAt: at(minute),
+    });
+
+  it("folds active rows under their project, newest activity first, and keeps pins on top", () => {
+    const pin = thread("pin", "alpha", 1);
+    const items = buildThreadListV2ListItems({
+      items: [
+        item(pin, true),
+        item(thread("a-old", "alpha", 2)),
+        item(thread("b", "beta", 9)),
+        item(thread("a-new", "alpha", 5)),
+      ],
+      pendingTasks: [],
+      projectFolders: { collapsedKeys: new Set(), selectedThreadKey: null },
+    });
+    expect(items.map((entry) => entry.key)).toEqual([
+      `v2-thread:${environmentId}:pin`,
+      `v2-project-folder:${environmentId}:beta`,
+      `v2-thread:${environmentId}:b`,
+      `v2-project-folder:${environmentId}:alpha`,
+      `v2-thread:${environmentId}:a-new`,
+      `v2-thread:${environmentId}:a-old`,
+    ]);
+  });
+
+  it("hides a closed folder's rows but keeps the open thread", () => {
+    const items = buildThreadListV2ListItems({
+      items: [item(thread("a", "alpha", 2)), item(thread("b", "alpha", 3))],
+      pendingTasks: [],
+      projectFolders: {
+        collapsedKeys: new Set([`${environmentId}:alpha`]),
+        selectedThreadKey: `${environmentId}:a`,
+      },
+    });
+    expect(items.map((entry) => entry.key)).toEqual([
+      `v2-project-folder:${environmentId}:alpha`,
+      `v2-thread:${environmentId}:a`,
+    ]);
+    expect(items[0]).toMatchObject({ collapsed: true, count: 2 });
+  });
+});

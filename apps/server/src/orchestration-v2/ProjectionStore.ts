@@ -670,7 +670,16 @@ export interface ProjectionStoreV2Shape {
     readonly now: DateTime.Utc;
     readonly autoResume: boolean;
     readonly snooze: boolean;
-  }) => Effect.Effect<ReadonlyArray<ProjectionLimitRecoveryCandidate>, ProjectionStoreV2Error>;
+    readonly creditReset?: {
+      readonly afterFailureAt: DateTime.Utc;
+      readonly instanceIds: ReadonlyArray<ProviderInstanceId>;
+    };
+  }) => Effect.Effect<
+    ReadonlyArray<
+      ProjectionLimitRecoveryCandidate & Pick<OrchestrationV2Run, "providerInstanceId" | "modelSelection">
+    >,
+    ProjectionStoreV2Error
+  >;
   /** Epoch ms of the next armed reset or snooze end after `now`, when a waiting thread becomes a candidate. */
   readonly getLimitRecoveryWakeAt: (
     now: DateTime.Utc,
@@ -4969,14 +4978,16 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
 
     const getLimitRecoveryCandidates = Effect.fn("ProjectionStore.getLimitRecoveryCandidates")(
       function* (options: Parameters<ProjectionStoreV2Shape["getLimitRecoveryCandidates"]>[0]) {
+        const now = DateTime.formatIso(options.now);
         const rows = yield* sql<{
           readonly payload_json: string;
           readonly run_id: string;
+          readonly run_payload_json: string;
           readonly completed_at: string | null;
           readonly failure_payload_json: string;
           readonly last_error: string | null;
         }>`
-          SELECT t.payload_json, r.run_id, r.completed_at,
+          SELECT t.payload_json, r.run_id, r.completed_at, r.payload_json AS run_payload_json,
             item.payload_json AS failure_payload_json,
             (
               SELECT json_extract(session.payload_json, '$.lastError')
@@ -5029,16 +5040,29 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             AND json_extract(item.payload_json, '$.failure.class') = 'usage_limit'
             AND json_extract(item.payload_json, '$.failure.resetAt') IS NOT NULL
             AND julianday(json_extract(item.payload_json, '$.failure.resetAt')) > julianday(COALESCE(r.completed_at, json_extract(t.payload_json, '$.updatedAt')))
+            ${options.creditReset
+              ? sql`AND t.provider_instance_id IN ${sql.in(options.creditReset.instanceIds)}
+                    AND t.provider_instance_id = json_extract(r.payload_json, '$.providerInstanceId')
+                    AND r.completed_at <= ${DateTime.formatIso(options.creditReset.afterFailureAt)}
+                    AND julianday(json_extract(item.payload_json, '$.failure.resetAt')) > julianday(${now})`
+              : sql``}
             AND (
               (
                 json_extract(t.payload_json, '$.limitRecovery.runId') IS r.run_id
                 AND json_extract(t.payload_json, '$.limitRecovery.resetAt') IS json_extract(item.payload_json, '$.failure.resetAt')
                 AND json_extract(t.payload_json, '$.limitRecovery.autoResume') = 1
-                AND julianday(json_extract(item.payload_json, '$.failure.resetAt')) <= julianday(${DateTime.formatIso(options.now)})
-                AND (
-                  json_extract(t.payload_json, '$.snoozedUntil') IS NULL
-                  OR julianday(json_extract(t.payload_json, '$.snoozedUntil')) <= julianday(${DateTime.formatIso(options.now)})
-                )
+                AND ${options.creditReset
+                  ? sql`json_extract(t.payload_json, '$.limitRecovery.creditApplied') IS NOT 1`
+                  : sql`(
+                      (
+                        json_extract(t.payload_json, '$.limitRecovery.creditApplied') = 1
+                        OR julianday(json_extract(item.payload_json, '$.failure.resetAt')) <= julianday(${now})
+                      )
+                      AND (
+                        json_extract(t.payload_json, '$.snoozedUntil') IS NULL
+                        OR julianday(json_extract(t.payload_json, '$.snoozedUntil')) <= julianday(${now})
+                      )
+                    )`}
               )
               OR (
                 (
@@ -5047,7 +5071,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                 )
                 AND (
                   ${booleanInt(options.autoResume)}
-                  OR (${booleanInt(options.snooze)} AND julianday(json_extract(item.payload_json, '$.failure.resetAt')) > julianday(${DateTime.formatIso(options.now)}))
+                  OR (${booleanInt(options.snooze)} AND julianday(json_extract(item.payload_json, '$.failure.resetAt')) > julianday(${now}))
                 )
                 -- A subagent of a settled, archived or deleted parent is abandoned work.
                 AND NOT EXISTS (
@@ -5068,7 +5092,9 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             )
           ORDER BY t.thread_id
         `;
-        const candidates: Array<ProjectionLimitRecoveryCandidate> = [];
+        const candidates: Array<
+          ProjectionLimitRecoveryCandidate & Pick<OrchestrationV2Run, "providerInstanceId" | "modelSelection">
+        > = [];
         for (const row of rows) {
           const thread = yield* decodeThreadPayload(row.payload_json);
           const item = yield* decodeTurnItemPayload(row.failure_payload_json);
@@ -5077,7 +5103,10 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             row.last_error,
           );
           if (summary.lastErrorClass !== "usage_limit") continue;
+          const run = yield* decodeRunPayload(row.run_payload_json);
           candidates.push({
+            providerInstanceId: run.providerInstanceId,
+            modelSelection: run.modelSelection,
             id: thread.id,
             status: "failed",
             lastErrorClass: summary.lastErrorClass,
@@ -5111,7 +5140,8 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
             MIN(CASE WHEN julianday(snoozed_until) > julianday(${nowIso})
               THEN (julianday(snoozed_until) - 2440587.5) * 86400000 END) AS snooze_ms
           FROM (
-            SELECT json_extract(payload_json, '$.limitRecovery.resetAt') AS reset_at,
+            SELECT CASE WHEN json_extract(payload_json, '$.limitRecovery.creditApplied') IS NOT 1
+              THEN json_extract(payload_json, '$.limitRecovery.resetAt') END AS reset_at,
               json_extract(payload_json, '$.snoozedUntil') AS snoozed_until
             FROM orchestration_v2_projection_threads
             WHERE deleted_at IS NULL

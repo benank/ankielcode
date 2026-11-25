@@ -7,13 +7,11 @@ branch, so Ankiel Code refuses a branch switch there while one of them is workin
 ## Start a thread
 
 On web and desktop, **New thread** opens the project picker when you have more than one
-open project in the default or project-grouped sidebar. Archived projects don't count. **Shift-click** to start in
+open project. Archived projects don't count. **Shift-click** to start in
 the current project, or use a project's own new-thread action. A new thread carries
 your model and mode selections, unless the destination project has its own model default.
 Its branch and workspace mode come from your configured defaults. To continue in
 an existing worktree, use **New thread in this worktree** from the branch toolbar.
-While the sidebar is filtered to one project, the sidebar's **New thread** button
-starts the thread in that project instead of asking which project to use.
 
 On mobile, **New thread** starts in the current thread's project, or else in the
 project the thread list is filtered to, or else in the last project you opened
@@ -134,34 +132,27 @@ rename a thread, regenerate its title, or link and unlink a pull request. These 
 appear on web, desktop, and mobile without requiring the originating browser to remain
 open.
 
-### Fold working threads (beta)
+### Threads by project
 
-Threads that are working or waiting on work they will resume from move into a collapsed
-**Working** section below the active list.
-That includes subagents, watched pull requests with checks still running, Claude monitors and
-`sleep` timers, and background commands or other monitors the agent says it is waiting on. A dev server or other process an agent leaves running does not keep a thread
-there. A thread returns to the top of the active list when it finishes, fails, or needs an approval or
-answer. The Working section lists the thread you last sent work to first. Pinned threads stay in
-the pinned section.
+On web, desktop, and mobile, active threads sit in a folder for each project. Each row is just the
+thread's title; hover it for the project, branch, model, and other details. A small animated
+light left of the title shows what the thread is doing: blue while it works, yellow when it
+needs an approval, an answer, or your attention, red when it failed, and a steady green when
+it finished and you have not opened it yet. A thread with nothing going on shows no light.
+The lights hold still while the window is in the background.
 
-This is on by default. Turn it off with **Settings → General → Working section** on web and desktop,
-or **Settings → General → Working section** on iOS and Android. Each device keeps its own
-choice.
+Inside a folder, the thread with the newest activity comes first: your messages, the agent's
+runs, and work by its subagents all count. On web and desktop, rows wait a few seconds before
+moving and then slide into place, so the list does not jump under your pointer. Tap a folder on
+mobile to open or close it.
 
-While this is on, the active list is ordered by when each thread last came back to you, so you
-cannot drag or move threads within it. Your saved order returns when you turn it off.
-
-### Group threads by project (beta)
-
-Turn on **Settings → Labs → Boring sidebar (group by project)** on web and desktop to put active
-threads in a folder for each project. Pinned projects come first. A project with no active
-threads has no folder unless it is pinned or you pick it in the project filter. An archived
-project's folder comes last and shows only while it has active threads. Click a folder to open or
-close it. A closed folder shows how many threads it holds, and a dot when one of them
-needs you. Use the pen button on a folder, or right-click it, to start a thread in that project.
-Pinned threads stay above the folders, and Snoozed and Settled stay below them. In this mode you
-can drag a thread onto the composer to mention it, but not within the sidebar, and the Working
-section is off. Each device keeps its own choice.
+Pinned projects come first. A project with no active threads has no folder unless it is pinned
+or you pick it in the project filter. An archived project's folder comes last and shows only
+while it has active threads. Click a folder to open or close it. A closed folder shows how many
+threads it holds, and a dot when one of them needs you. Use the pen button on a folder, or
+right-click it, to start a thread in that project. Pinned threads stay above the folders, and
+Snoozed and Settled stay below them. You can drag a thread onto the composer to mention it, but
+not reorder it within a folder.
 
 ## Settle finished work
 

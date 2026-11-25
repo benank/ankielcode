@@ -9188,6 +9188,20 @@ it.layer(layerTest)("ProjectionStoreV2", (it) => {
           (row) => row.id === threadId,
         ),
       );
+      yield* sql`UPDATE orchestration_v2_projection_threads
+        SET payload_json = json_set(payload_json, '$.limitRecovery.creditApplied', json('true'))
+        WHERE thread_id = ${threadId}`;
+      const refilled = (yield* store.getLimitRecoveryCandidates(recoveryOptions)).find(
+        (row) => row.id === threadId,
+      );
+      assert.isDefined(refilled, "a credit makes the armed run due before its scheduled reset");
+      assert.strictEqual(
+        limitRecoveryCommand(refilled!, false, DateTime.toEpochMillis(now))?.type,
+        "message.dispatch",
+      );
+      yield* sql`UPDATE orchestration_v2_projection_threads
+        SET payload_json = json_remove(payload_json, '$.limitRecovery.creditApplied')
+        WHERE thread_id = ${threadId}`;
       assert.strictEqual(yield* store.getLimitRecoveryWakeAt(now), DateTime.toEpochMillis(reset));
       assert.isNull(yield* store.getLimitRecoveryWakeAt(reset));
       const due = (yield* store.getLimitRecoveryCandidates({

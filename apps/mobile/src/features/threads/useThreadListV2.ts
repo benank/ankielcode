@@ -68,6 +68,7 @@ export function useThreadListV2(input: {
   readonly snoozedShelfExpanded: boolean;
   readonly settledShelfExpanded: boolean;
   readonly selectedThreadKey: string | null;
+  readonly collapsedProjectKeys: ReadonlySet<string>;
 }) {
   const { threads, workingShelfEnabled } = input;
   const tree = input.searchQuery.trim().length === 0 ? input.tree : undefined;
@@ -233,6 +234,15 @@ export function useThreadListV2(input: {
         queuedThreadKeys: input.queuedThreadKeys,
         moveAvailability,
         shelfPreferencesLoading: !input.shelfPreferencesLoaded,
+        // A search lists matches by rank, so folders would scatter them.
+        ...(input.searchQuery.trim().length === 0
+          ? {
+              projectFolders: {
+                collapsedKeys: input.collapsedProjectKeys,
+                selectedThreadKey: input.selectedThreadKey,
+              },
+            }
+          : {}),
         resolve: keepMarked,
       }),
     [
@@ -247,6 +257,9 @@ export function useThreadListV2(input: {
       input.queuedThreadKeys,
       moveAvailability,
       input.shelfPreferencesLoaded,
+      input.searchQuery,
+      input.collapsedProjectKeys,
+      input.selectedThreadKey,
     ],
   );
   return { layout, items, contentOnlyThreadKeys, olderSettledShelf };

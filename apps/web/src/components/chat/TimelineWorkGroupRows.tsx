@@ -42,6 +42,7 @@ import {
 } from "./timelineRowContext";
 import { ProviderStartingIcon } from "./ProviderStartingIcon";
 import { TimelineRowTimestamp, ActivityShimmerOverlay } from "./TimelineRowParts";
+import { PixelStatus } from "../PixelStatus";
 import {
   failedToolIconClassName,
   toolIconAcceptsTint,
@@ -451,6 +452,7 @@ export function ThinkingTimelineRow({ row }: { row: Extract<TimelineRow, { kind:
         gt("Thinking")
       }
       iconName="brain"
+      thinkingPixel={providerStarting === null}
       iconNode={
         providerStarting === null ? undefined : (
           <ProviderStartingIcon
@@ -486,6 +488,7 @@ function LiveActivityRow({
   failed = false,
   active = false,
   shimmer = false,
+  thinkingPixel = false,
 }: {
   label: ReactNode;
   iconName?: WorkEntryIconName;
@@ -495,9 +498,12 @@ function LiveActivityRow({
   failed?: boolean;
   active?: boolean;
   shimmer?: boolean;
+  /** While active, the thinking pixels stand in for the icon. */
+  thinkingPixel?: boolean;
 }) {
   const animated = active && !failed;
   const showShimmer = animated && shimmer;
+  const pixel = animated && thinkingPixel;
   return (
     <div
       ref={animated ? observeVisibleAnimation : undefined}
@@ -511,6 +517,7 @@ function LiveActivityRow({
         failed={failed}
         announceFailure={failed}
         active={animated && !shimmer}
+        pixel={pixel ? "live" : undefined}
       />
       {showShimmer ? (
         <ActivityShimmerOverlay>
@@ -520,6 +527,7 @@ function LiveActivityRow({
             iconNode={iconNode}
             toolIcon={toolIcon}
             highlighted
+            pixel={pixel ? "spacer" : undefined}
           />
         </ActivityShimmerOverlay>
       ) : null}
@@ -536,6 +544,7 @@ function LiveActivityContent({
   announceFailure = false,
   active = false,
   highlighted = false,
+  pixel,
 }: {
   label: ReactNode;
   iconName: WorkEntryIconName | undefined;
@@ -545,6 +554,8 @@ function LiveActivityContent({
   announceFailure?: boolean;
   active?: boolean;
   highlighted?: boolean;
+  // The shimmer copy holds the pixels' place, so only one copy animates.
+  pixel?: "live" | "spacer" | undefined;
 }) {
   const gt = useGT();
   const showTrailingFailureMark =
@@ -553,7 +564,11 @@ function LiveActivityContent({
   return (
     <WorkLogRow
       icon={
-        iconName ? (
+        pixel === "live" ? (
+          <PixelStatus kind="thinking" />
+        ) : pixel === "spacer" ? (
+          <span className="block size-4" />
+        ) : iconName ? (
           <span
             className={cn(
               "flex size-4 items-center justify-center",
@@ -695,6 +710,7 @@ export function LiveWorkEntryTimelineRow({
         toolIcon={row.entry.toolIcon ?? row.entry.toolSource?.icon}
         failed={failed}
         active={row.active}
+        thinkingPixel={row.entry.itemType === "reasoning"}
       />
     </button>
   );

@@ -330,7 +330,20 @@ export function buildFileDiffEntries(files: ReadonlyArray<FileDiffMetadata>) {
   });
 }
 
+export const DIFF_SURFACE_CURSOR_CSS = `
+[data-interactive-lines] [data-line],
+[data-interactive-line-numbers] [data-column-number],
+[data-expand-index] [data-separator-content]:hover,
+[data-expand-button],
+[data-merge-conflict-action],
+[data-utility-button],
+[data-search-icon] {
+  cursor: var(--app-interactive-cursor, revert-layer);
+}
+`;
+
 export const DIFF_SURFACE_THEME_UNSAFE_CSS = `
+${DIFF_SURFACE_CURSOR_CSS}
 [data-diffs-header],
 [data-diff],
 [data-file],
