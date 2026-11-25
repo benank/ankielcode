@@ -140,6 +140,11 @@ function UsageLimitsBreakdown({
                   iconClassName="size-3.5"
                 />
                 <span className="truncate">{name}</span>
+                {account.plan ? (
+                  <span className="shrink-0 font-normal text-muted-foreground">
+                    {shortPlanLabel(account.plan)}
+                  </span>
+                ) : null}
                 {account.displayName === null && account.email ? (
                   <RedactedSensitiveText
                     value={account.email}
@@ -191,4 +196,9 @@ function UsageLimitsBreakdown({
       ) : null}
     </div>
   );
+}
+
+// Plan labels repeat the product the provider name already shows, e.g. "ChatGPT Pro 200 Subscription".
+function shortPlanLabel(plan: string) {
+  return plan.replace(/^(ChatGPT|Claude)\s+/i, "").replace(/\s+Subscription$/i, "");
 }
