@@ -17,6 +17,8 @@ const SETTINGS_SEARCH_TERMS = {
     msg("pair", { $context: "settings search keyword" }),
     msg("add environment", { $context: "settings search keyword" }),
     msg("remote", { $context: "settings search keyword" }),
+    msg("relay", { $context: "settings search keyword" }),
+    "cloudflare",
     "tailscale",
   ],
   SettingsAppearance: [

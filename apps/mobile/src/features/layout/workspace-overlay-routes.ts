@@ -33,6 +33,7 @@ const LISTED_OVERLAY_ROUTES: ReadonlySet<string> = new Set([
   "ThreadDevicePreview",
   "ThreadBrowserPreview",
   "ThreadSettingsSheet",
+  "UsageLimits",
   "WorkflowStep",
 ]);
 

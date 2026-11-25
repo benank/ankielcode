@@ -281,7 +281,11 @@ export function AppBar(props: AppBarProps) {
             ),
           )}
           {visibleMenus.map(createNativeHeaderMenu)}
-          {props.trailing}
+          {props.trailing ? (
+            <Toolbar.Custom>
+              <View>{props.trailing}</View>
+            </Toolbar.Custom>
+          ) : null}
           {props.confirm?.loading ? (
             <Toolbar.Custom>
               <View

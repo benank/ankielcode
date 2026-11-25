@@ -3071,6 +3071,32 @@
   "2538822db1093509": "제공자로 돌아가기",
   "7c19d25484218384": "클라우드 제공자",
   "a2f4d7c36423bbe5": "일치하는 받아쓰기 모델이 없습니다.",
+  "4d592d6b252f40db": "Paste a relay setup string to continue.",
+  "5d423d6385ad8d65": "Remote relay connected.",
+  "6c294e313be5b3a6": "Remote relay saved.",
+  "22e821af23fd0c01": "Could not configure remote relay.",
+  "32958956a9067528": "Remote relay disconnected.",
+  "25e355a56de6124c": "Could not disconnect remote relay.",
+  "69ed3c7ae73ced7e": "Disconnect remote relay?",
+  "82037aa779881805": "This stops the outbound relay tunnel and removes the saved relay secret from this machine. Devices connected through the relay will lose access until you reconnect.",
+  "c291bdeadbb22b96": "연결 끊기",
+  "f55f84bd7238f27e": "Connecting to remote relay…",
+  "b7adb3023659cf87": "Connect a self-hosted Cloudflare Relay for remote and mobile access.",
+  "957a25088181c39e": "Remote relay",
+  "0472f9b6a2735737": "Relay setup string",
+  "445511757fcd365a": "Connecting…",
+  "8c4f4ec4de08ed72": "연결",
+  "65e5f76d149f97ef": "Copy relay URL",
+  "3411444ece213410": "Change remote relay",
+  "e5310759121ff0f8": "Connect remote relay",
+  "0d25770eb8667e0f": "Disconnecting…",
+  "cb0be1fccc12888e": "Disconnect remote relay",
+  "140233f2c835f752": "Cloudflare Relay",
+  "b347a2c875600696": "Connecting to relay…",
+  "51fbd1e595d503d2": "Configured via environment variables.",
+  "67c8d6364a655d2b": "Change remote relay",
+  "b9e076cb7ab4142b": "Connect remote relay",
+  "62b350bb6f36c415": "Paste the setup string printed by your self-hosted Cloudflare Relay setup script (run npm run setup in the relay/ directory).",
   "a0e02b39c140831e": "{route}을(를) 제거할까요?",
   "987c5623ba70f390": "경로",
   "192bed196981e02d": "내 권한",
@@ -3279,7 +3305,6 @@
   "7bda1645f4263c4e": "{provider}에 로그인",
   "7d527a0de1c5b074": "로그인 방법",
   "4681c4c9541539a4": "로그인",
-  "8c4f4ec4de08ed72": "연결",
   "c9b1961fbf464304": "{provider}에 연결",
   "98ff18f7ade284b1": "터미널 응답",
   "9bddbcbdf144ddac": "응답 보내기",
@@ -3658,6 +3683,7 @@
   "07c893e2d8eee280": "페어링",
   "79cd805496a8aef2": "환경 추가",
   "870dededaa1731b4": "원격",
+  "2080cd392202cc12": "relay",
   "f126597faa33cd41": "테마",
   "4fa31dd2bd519dca": "다크 모드",
   "fff6cd202a9e089f": "라이트 모드",
@@ -4708,6 +4734,20 @@
     },
     ". 연결한 계정으로 ChatGPT를 여세요."
   ],
+  "e0558a82e8059d27": "Provider usage limits",
+  "4acffc5cda91aea2": "Provider usage limits · highest usage {percent}%",
+  "55a38e69338c54ee": "계정 이메일 숨기기",
+  "0d3e9f1f27c0e780": "계정 이메일 표시",
+  "2f8b30e62d27093a": "Refresh usage limits",
+  "412e3b93454812aa": [
+    {
+      "i": 1,
+      "k": "_gt_value_1",
+      "v": "v"
+    },
+    "% 남음"
+  ],
+  "a436751fedd547ef": "No provider limits reported.",
   "a3d040c4ef4fc6e9": "예상보다 빠름",
   "b16fdf56b16d99c9": "예상대로",
   "90f977e97ae8b6c6": "예상보다 느림",
@@ -4721,8 +4761,6 @@
   "d2d071e45a2d6b89": "한도를 보려면 환경을 선택하세요.",
   "f411a8cef140a5ea": "선택한 환경에 구독 한도를 보고하는 제공자가 없습니다.",
   "b29a752dd8ee9aa7": "계정",
-  "55a38e69338c54ee": "계정 이메일 숨기기",
-  "0d3e9f1f27c0e780": "계정 이메일 표시",
   "9217e0c91cee3cf8": "로그인됨",
   "5f12a194d158f9b1": "소스",
   "65a7507ffde6d3f8": [
@@ -4750,14 +4788,6 @@
     "에서 한도를 새로 고칠 수 없습니다. 마지막으로 확인된 값을 표시합니다."
   ],
   "726ece0c7139ce8a": "이 계정은 선택한 환경에서 더 이상 한도를 보고하지 않습니다.",
-  "412e3b93454812aa": [
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    "% 남음"
-  ],
   "82d204e1a9e7da17": [
     {
       "i": 1,
@@ -5082,7 +5112,6 @@
   "dbce00d60f9f5e09": "요청에 실패했습니다.",
   "c1674782108dd4a6": "저장됨. 바꾸려면 새 값을 입력하세요",
   "f59e4c1e47b2f064": "새로 만들기",
-  "c291bdeadbb22b96": "연결 끊기",
   "8fe91c5063bb0822": "바꾸기",
   "b701d8862eab52d6": "연결",
   "19c2d5e81ff8f89a": "{project}의 {tracker} {scope}",

@@ -13,6 +13,7 @@ import {
   useThreadGitMenuDefinition,
   type ThreadGitControlsProps,
 } from "./ThreadGitControls";
+import { HeaderUsageLimitsButton } from "../usage/HeaderUsageLimits";
 
 export function ThreadHeader(props: {
   readonly title: string;
@@ -63,6 +64,7 @@ export function ThreadHeader(props: {
       }
       actions={actions}
       menus={menus}
+      trailing={<HeaderUsageLimitsButton />}
       hideBottomBorder
     />
   );

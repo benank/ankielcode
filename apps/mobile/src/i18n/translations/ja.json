@@ -3067,6 +3067,32 @@
   "2538822db1093509": "プロバイダーに戻る",
   "7c19d25484218384": "クラウドプロバイダー",
   "a2f4d7c36423bbe5": "一致する文字起こしモデルはありません。",
+  "4d592d6b252f40db": "Paste a relay setup string to continue.",
+  "5d423d6385ad8d65": "Remote relay connected.",
+  "6c294e313be5b3a6": "Remote relay saved.",
+  "22e821af23fd0c01": "Could not configure remote relay.",
+  "32958956a9067528": "Remote relay disconnected.",
+  "25e355a56de6124c": "Could not disconnect remote relay.",
+  "69ed3c7ae73ced7e": "Disconnect remote relay?",
+  "82037aa779881805": "This stops the outbound relay tunnel and removes the saved relay secret from this machine. Devices connected through the relay will lose access until you reconnect.",
+  "c291bdeadbb22b96": "切断",
+  "f55f84bd7238f27e": "Connecting to remote relay…",
+  "b7adb3023659cf87": "Connect a self-hosted Cloudflare Relay for remote and mobile access.",
+  "957a25088181c39e": "Remote relay",
+  "0472f9b6a2735737": "Relay setup string",
+  "445511757fcd365a": "Connecting…",
+  "8c4f4ec4de08ed72": "接続",
+  "65e5f76d149f97ef": "Copy relay URL",
+  "3411444ece213410": "Change remote relay",
+  "e5310759121ff0f8": "Connect remote relay",
+  "0d25770eb8667e0f": "Disconnecting…",
+  "cb0be1fccc12888e": "Disconnect remote relay",
+  "140233f2c835f752": "Cloudflare Relay",
+  "b347a2c875600696": "Connecting to relay…",
+  "51fbd1e595d503d2": "Configured via environment variables.",
+  "67c8d6364a655d2b": "Change remote relay",
+  "b9e076cb7ab4142b": "Connect remote relay",
+  "62b350bb6f36c415": "Paste the setup string printed by your self-hosted Cloudflare Relay setup script (run npm run setup in the relay/ directory).",
   "a0e02b39c140831e": "{route} を削除しますか？",
   "987c5623ba70f390": "ルート",
   "192bed196981e02d": "あなたの権限",
@@ -3275,7 +3301,6 @@
   "7bda1645f4263c4e": "{provider} にサインイン",
   "7d527a0de1c5b074": "サインイン方法",
   "4681c4c9541539a4": "サインイン",
-  "8c4f4ec4de08ed72": "接続",
   "c9b1961fbf464304": "{provider} に接続",
   "98ff18f7ade284b1": "ターミナルへの応答",
   "9bddbcbdf144ddac": "応答を送信",
@@ -3654,6 +3679,7 @@
   "07c893e2d8eee280": "ペアリング",
   "79cd805496a8aef2": "環境を追加",
   "870dededaa1731b4": "リモート",
+  "2080cd392202cc12": "relay",
   "f126597faa33cd41": "テーマ",
   "4fa31dd2bd519dca": "ダークモード",
   "fff6cd202a9e089f": "ライトモード",
@@ -4703,6 +4729,21 @@
     },
     "。接続したアカウントで ChatGPT を開いてください。"
   ],
+  "e0558a82e8059d27": "Provider usage limits",
+  "4acffc5cda91aea2": "Provider usage limits · highest usage {percent}%",
+  "55a38e69338c54ee": "アカウントのメールアドレスを非表示",
+  "0d3e9f1f27c0e780": "アカウントのメールアドレスを表示",
+  "2f8b30e62d27093a": "Refresh usage limits",
+  "412e3b93454812aa": [
+    "残り ",
+    {
+      "i": 1,
+      "k": "_gt_value_1",
+      "v": "v"
+    },
+    "%"
+  ],
+  "a436751fedd547ef": "No provider limits reported.",
   "a3d040c4ef4fc6e9": "ペースより速い",
   "b16fdf56b16d99c9": "ペースどおり",
   "90f977e97ae8b6c6": "ペースより遅い",
@@ -4716,8 +4757,6 @@
   "d2d071e45a2d6b89": "上限を表示するには環境を選択してください。",
   "f411a8cef140a5ea": "選択した環境には、サブスクリプションの上限を報告するプロバイダーがありません。",
   "b29a752dd8ee9aa7": "アカウント",
-  "55a38e69338c54ee": "アカウントのメールアドレスを非表示",
-  "0d3e9f1f27c0e780": "アカウントのメールアドレスを表示",
   "9217e0c91cee3cf8": "サインイン済み",
   "5f12a194d158f9b1": "取得元",
   "65a7507ffde6d3f8": [
@@ -4745,15 +4784,6 @@
     " は上限を更新できませんでした。最後に取得した値を表示しています。"
   ],
   "726ece0c7139ce8a": "このアカウントは、選択した環境で上限を報告しなくなりました。",
-  "412e3b93454812aa": [
-    "残り ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    "%"
-  ],
   "82d204e1a9e7da17": [
     {
       "i": 1,
@@ -5076,7 +5106,6 @@
   "dbce00d60f9f5e09": "リクエストに失敗しました。",
   "c1674782108dd4a6": "保存済み。置き換えるには新しい値を入力",
   "f59e4c1e47b2f064": "作成する",
-  "c291bdeadbb22b96": "切断",
   "8fe91c5063bb0822": "置き換え",
   "b701d8862eab52d6": "接続",
   "19c2d5e81ff8f89a": "{project} の {tracker} {scope}",
