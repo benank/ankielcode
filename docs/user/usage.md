@@ -177,10 +177,10 @@ Antigravity reports its five-hour and weekly windows for Google sign-ins through
 The limits are those of the account `agy` is signed in with, so sign in to `agy` in a terminal with
 the same Google account you use in Ankiel. Readings refresh at most every five minutes.
 
-For Google AI subscribers, the Antigravity section also shows the Colab compute-unit balance
-after Antigravity detects your plan. Install the Colab CLI on the Ankiel server's `PATH` and
-run `colab usage` in a terminal to sign in with the same Google account. Colab's CLI does
-not report a refill date.
+For Google AI subscribers, the Antigravity section also shows a Colab row with your compute-unit
+balance. Install the Colab CLI on the Ankiel server's `PATH` and run `colab usage` in a terminal to
+sign in with the same Google account. Colab reports only the balance, so the bar measures it
+against the highest balance Ankiel has seen for the account, and there is no refill date.
 
 Muse Code reports its session and weekly windows and its tier once the Muse CLI has run in a thread.
 Until then it shows no limits. Readings are not kept across a server restart.

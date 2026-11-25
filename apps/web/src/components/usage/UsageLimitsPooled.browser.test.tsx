@@ -102,35 +102,3 @@ describe("UsageLimitsPooled next refill", () => {
     await expect.element(screen.getByText(/^↻ \+\d+%$/)).not.toBeInTheDocument();
   });
 });
-
-it("shows the Colab balance in Antigravity even when agy cannot report its windows", async () => {
-  const presentations = new Map([
-    [
-      EnvironmentId.make("desk"),
-      {
-        entry: { target: { label: "Desk" } },
-        serverConfig: {
-          providers: [
-            {
-              ...managedChatGpt("antigravity", "Antigravity"),
-              driver: ProviderDriverKind.make("antigravity"),
-              auth: { status: "authenticated", type: "oauth-personal", label: "Google AI Pro" },
-              usageLimits: {
-                checkedAt,
-                windows: [],
-                unavailable: { reason: "probeFailed" },
-                colabComputeUnits: 200,
-              },
-            },
-          ] satisfies ServerProvider[],
-        },
-      },
-    ],
-  ]);
-  await using screen = await render(
-    <UsageLimitsPooled presentations={presentations} now={Date.parse(checkedAt)} />,
-  );
-  const section = screen.getByRole("heading", { name: "Antigravity", exact: true });
-  await expect.element(section).toBeVisible();
-  await expect.element(screen.getByText("200 compute units", { exact: true })).toBeVisible();
-});

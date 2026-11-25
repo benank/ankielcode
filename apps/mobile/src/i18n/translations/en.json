@@ -1152,7 +1152,6 @@
   "bb34eaf6ddc55a72": "This account has no subscription limits.",
   "42a2622893a6bced": "Could not read limits.",
   "4897e228d3185c96": "No limits reported.",
-  "483897b4dba03359": "{count, plural, one {{count, number} compute unit} other {{count, number} compute units}}",
   "e27d2cb964df5dd5": "{source}: No accounts reported.",
   "1b503134018285f4": "{days}d {hours}h",
   "164c674cf062933a": "{label} · {count} left · expires in {expires}",

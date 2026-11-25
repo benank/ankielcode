@@ -19,8 +19,6 @@ import {
   resetCountdown,
 } from "@ankielcode/shared/usageLimits";
 import {
-  COLAB_NAME,
-  formatColabBalance,
   formatDuration,
   limitsNotice,
   resetCreditChoices,
@@ -176,25 +174,6 @@ function AccountInstanceLabel({ value }: { readonly value: string }) {
   );
 }
 
-export function ColabBalanceRow({
-  balance,
-  source,
-}: {
-  readonly balance: number;
-  readonly source?: string | undefined;
-}) {
-  const m = useMessages();
-  const label = source ? `${COLAB_NAME} · ${source}` : COLAB_NAME;
-  return (
-    <View className="flex-row items-baseline justify-between gap-2">
-      <Text className="min-w-0 shrink text-sm text-foreground-muted">{label}</Text>
-      <Text className="shrink-0 text-sm font-ankiel-medium text-foreground tabular-nums">
-        {formatColabBalance(balance, m)}
-      </Text>
-    </View>
-  );
-}
-
 export function AccountLimits(props: {
   readonly driver: Driver;
   readonly accentColor?: string | undefined;
@@ -246,9 +225,6 @@ export function AccountLimits(props: {
           ))}
         </View>
       )}
-      {limits.colabComputeUnits !== undefined ? (
-        <ColabBalanceRow balance={limits.colabComputeUnits} />
-      ) : null}
       {externalUsage ? (
         <Pressable
           accessibilityRole="link"

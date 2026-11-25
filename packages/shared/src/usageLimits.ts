@@ -407,12 +407,7 @@ export function collectLimitAccounts(presentations: LimitPresentations): readonl
   for (const [environmentId, presentation] of presentations) {
     const label = presentation.entry.target.label;
     for (const provider of providersWithLimits(presentation.serverConfig?.providers ?? [])) {
-      if (
-        !provider.usageLimits ||
-        (limitsNotice(provider.usageLimits) !== null &&
-          provider.usageLimits.colabComputeUnits === undefined)
-      )
-        continue;
+      if (!provider.usageLimits || limitsNotice(provider.usageLimits) !== null) continue;
       merge(nativeRowKey(resolveKey, environmentId, provider), {
         key: `${environmentId}:${provider.instanceId}`,
         driver: provider.driver,
@@ -527,24 +522,6 @@ export interface LimitPool {
   readonly driver: ServerProvider["driver"];
   readonly accounts: readonly LimitAccount[];
   readonly windows: readonly LimitPoolWindow[];
-}
-
-export function colabBalanceRows(pool: LimitPool) {
-  const rows = pool.accounts.flatMap((account) => {
-    const balance = account.limits.colabComputeUnits;
-    return balance === undefined
-      ? []
-      : [
-          {
-            key: account.key,
-            balance,
-            source: [account.displayName, ...account.environments.map(({ label }) => label)]
-              .filter(Boolean)
-              .join(" · "),
-          },
-        ];
-  });
-  return rows.length === 1 ? [{ ...rows[0]!, source: undefined }] : rows;
 }
 
 function hasDuplicateCursorTotal(pool: LimitPool): boolean {
@@ -780,9 +757,7 @@ function limitsNotice(limits: ServerProviderUsageLimits): string | null {
   if (limits.unavailable?.reason === "probeFailed") {
     return limits.unavailable.message ?? "Could not read limits.";
   }
-  return limits.windows.length === 0 && limits.colabComputeUnits === undefined
-    ? "No limits reported."
-    : null;
+  return limits.windows.length === 0 ? "No limits reported." : null;
 }
 
 export function remainingPercent(window: ServerProviderUsageWindow): number {

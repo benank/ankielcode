@@ -30,7 +30,7 @@ import {
   highestUsagePercent,
   shortPlanLabel,
 } from "./headerUsageLimits.logic";
-import { ColabBalanceRow, resetLabels, useRefreshLimits } from "./UsageLimitsSection";
+import { resetLabels, useRefreshLimits } from "./UsageLimitsSection";
 import { usageProviderKind, useProviderColors } from "./usageProviders";
 
 const RING_RADIUS = 7.5;
@@ -199,9 +199,6 @@ function CompactAccountCard({
         {account.limits.windows.map((window) => (
           <CompactWindowRow key={window.id} window={window} color={color} now={now} />
         ))}
-        {account.limits.colabComputeUnits !== undefined ? (
-          <ColabBalanceRow balance={account.limits.colabComputeUnits} />
-        ) : null}
       </View>
     </View>
   );

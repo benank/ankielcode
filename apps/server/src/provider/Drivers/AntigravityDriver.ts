@@ -94,11 +94,15 @@ const RememberedRuntimeModes = Schema.fromJsonString(
 );
 const decodeRememberedRuntimeModes = Schema.decodeUnknownOption(RememberedRuntimeModes);
 const encodeRememberedRuntimeModes = Schema.encodeSync(RememberedRuntimeModes);
-const RememberedPlan = Schema.fromJsonString(
-  Schema.Struct({ authMethod: Schema.String, plan: Schema.optional(Schema.String) }),
+const RememberedAccount = Schema.fromJsonString(
+  Schema.Struct({
+    authMethod: Schema.String,
+    plan: Schema.optional(Schema.String),
+    colabMax: Schema.optional(Schema.Finite),
+  }),
 );
-const decodeRememberedPlan = Schema.decodeUnknownOption(RememberedPlan);
-const encodeRememberedPlan = Schema.encodeSync(RememberedPlan);
+const decodeRememberedAccount = Schema.decodeUnknownOption(RememberedAccount);
+const encodeRememberedAccount = Schema.encodeSync(RememberedAccount);
 const REFRESH_FAILED =
   "Could not refresh Antigravity models. The previous model list is unchanged.";
 const PYTHON_SOCKS_REQUIRED = "python-socks is required to use a SOCKS proxy";
@@ -202,11 +206,11 @@ export const AntigravityDriver: ProviderDriver<
       Effect.orElseSucceed(() => undefined),
     );
     const planPath = path.join(profileDirectory, "ankiel-plan.json");
-    const rememberedPlan = yield* fileSystem.readFileString(planPath).pipe(
+    const rememberedAccount = yield* fileSystem.readFileString(planPath).pipe(
       Effect.map((contents) =>
-        decodeRememberedPlan(contents).pipe(
+        decodeRememberedAccount(contents).pipe(
           Option.filter((saved) => saved.authMethod === auth.authMethod),
-          Option.flatMapNullishOr((saved) => saved.plan),
+          Option.map(({ authMethod: _authMethod, ...account }) => account),
           Option.getOrUndefined,
         ),
       ),
@@ -617,14 +621,15 @@ export const AntigravityDriver: ProviderDriver<
           Effect.provideService(Path.Path, path),
           Effect.catch(() => Effect.logWarning("Could not save Antigravity permission modes.")),
         ),
-      ...(rememberedPlan ? { rememberedPlan } : {}),
+      ...(rememberedAccount ? { rememberedAccount } : {}),
       loadPlan: Deferred.await(planLoader).pipe(Effect.flatten),
-      rememberPlan: (plan) =>
+      rememberAccount: ({ plan, colabMax }) =>
         writeFileStringAtomically({
           filePath: planPath,
-          contents: encodeRememberedPlan({
+          contents: encodeRememberedAccount({
             authMethod: auth.authMethod,
             ...(plan === undefined ? {} : { plan }),
+            ...(colabMax === undefined ? {} : { colabMax }),
           }),
         }).pipe(
           Effect.provideService(FileSystem.FileSystem, fileSystem),

@@ -173,9 +173,9 @@ interface AntigravityProviderOptions {
   /** Modes the last session advertised, saved because initialize alone does not report them. */
   readonly rememberedRuntimeModes?: ReadonlyArray<RuntimeMode>;
   readonly rememberRuntimeModes?: (modes: ReadonlyArray<RuntimeMode>) => Effect.Effect<void>;
-  /** The Google AI plan the last session reported, saved so Colab shows before a session starts. */
-  readonly rememberedPlan?: string;
-  readonly rememberPlan?: (plan: string | undefined) => Effect.Effect<void>;
+  /** Saved across restarts: the plan the last session reported, and the highest Colab balance seen. */
+  readonly rememberedAccount?: AntigravityRememberedAccount;
+  readonly rememberAccount?: (account: AntigravityRememberedAccount) => Effect.Effect<void>;
   /** Starts a prompt-free session so agy reports the plan, for when none is known yet. */
   readonly loadPlan?: Effect.Effect<void>;
 }
@@ -208,6 +208,38 @@ function antigravitySessionTier(result: { readonly _meta?: unknown }) {
     Option.map((meta) => meta.antigravity.tier.name.trim()),
     Option.filter((name) => name.length > 0),
   );
+}
+
+export interface AntigravityRememberedAccount {
+  readonly plan?: string | undefined;
+  /** Colab reports only a balance, so the highest one seen stands in for a full allotment. */
+  readonly colabMax?: number | undefined;
+}
+
+const COLAB_WINDOW_ID = "colab";
+
+function withColabWindow(
+  limits: ServerProviderUsageLimits,
+  balance: number | undefined,
+  max: number,
+): ServerProviderUsageLimits {
+  const windows = limits.windows.filter((window) => window.id !== COLAB_WINDOW_ID);
+  if (balance === undefined) {
+    return windows.length === limits.windows.length ? limits : { ...limits, windows };
+  }
+  const usedPercent = max > 0 ? (Math.max(0, Math.min(max, max - balance)) / max) * 100 : 0;
+  return {
+    ...limits,
+    windows: [
+      ...windows,
+      {
+        id: COLAB_WINDOW_ID,
+        kind: "monthly",
+        label: `Colab · Monthly ${Number(balance.toFixed(2))}`,
+        usedPercent,
+      },
+    ],
+  };
 }
 
 const isGoogleAiPlan = (label: string | undefined) =>
@@ -284,18 +316,20 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
       yield* options.rememberRuntimeModes(next);
     }
   });
-  let rememberedPlan = options.rememberedPlan;
+  let remembered: AntigravityRememberedAccount = options.rememberedAccount ?? {};
   let planLoadStarted = false;
-  const rememberPlan = Effect.fn("AntigravityProvider.rememberPlan")(function* (
-    plan: string | undefined,
+  const remember = Effect.fn("AntigravityProvider.remember")(function* (
+    next: AntigravityRememberedAccount,
   ) {
-    if (plan === rememberedPlan) return;
-    rememberedPlan = plan;
-    if (options.rememberPlan) yield* options.rememberPlan(plan);
+    if (next.plan === remembered.plan && next.colabMax === remembered.colabMax) return;
+    remembered = next;
+    if (options.rememberAccount) yield* options.rememberAccount(next);
   });
+  const rememberPlan = (plan: string | undefined) =>
+    remember(plan === undefined ? {} : { ...remembered, plan });
   // Until a session reports the plan after a restart, trust the last one it reported.
   const showsColab = (auth: ServerProvider["auth"]) =>
-    hasGoogleAiSubscription(auth) || (auth.status === "unknown" && isGoogleAiPlan(rememberedPlan));
+    hasGoogleAiSubscription(auth) || (auth.status === "unknown" && isGoogleAiPlan(remembered.plan));
   const getSnapshot = SubscriptionRef.get(metadata).pipe(
     Effect.flatMap((state) => options.stampIdentity(state.draft)),
   );
@@ -313,7 +347,7 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
       Effect.gen(function* () {
         const probed = yield* probeUsage;
         const { draft } = yield* SubscriptionRef.get(metadata);
-        const planUnknown = draft.auth.status === "unknown" && rememberedPlan === undefined;
+        const planUnknown = draft.auth.status === "unknown" && remembered.plan === undefined;
         const colabComputeUnits =
           probeColabUsage && (showsColab(draft.auth) || planUnknown)
             ? yield* probeColabUsage
@@ -329,6 +363,10 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
           planLoadStarted = true;
           yield* options.loadPlan.pipe(Effect.ignoreCause({ log: true }), Effect.forkIn(scope));
         }
+        if (colabComputeUnits !== undefined && colabComputeUnits > (remembered.colabMax ?? 0)) {
+          yield* remember({ ...remembered, colabMax: colabComputeUnits });
+        }
+        const colabMax = remembered.colabMax ?? 0;
         yield* SubscriptionRef.update(metadata, (state) => {
           const limits = resolveUsageLimitsAfterProbe({
             published: state.draft.usageLimits,
@@ -339,10 +377,7 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
             ...state,
             draft: {
               ...state.draft,
-              usageLimits:
-                limits && limits.colabComputeUnits !== balance
-                  ? { ...limits, colabComputeUnits: balance }
-                  : limits,
+              usageLimits: limits && withColabWindow(limits, balance, colabMax),
             },
           };
         });
@@ -510,8 +545,8 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
             version: started.initializeResult.agentInfo?.version || draft.version,
             auth,
             usageLimits:
-              !subscribed && draft.usageLimits?.colabComputeUnits !== undefined
-                ? { ...draft.usageLimits, colabComputeUnits: undefined }
+              !subscribed && draft.usageLimits
+                ? withColabWindow(draft.usageLimits, undefined, 0)
                 : draft.usageLimits,
             checkedAt: updatedAt,
             models: buildAntigravityModelsFromSession(started.sessionSetupResult, thinkingLevels),

@@ -4,7 +4,6 @@ import { EnvironmentId } from "@ankielcode/contracts";
 import { providerClients } from "@ankielcode/client-runtime/provider-clients";
 import { normalizeProviderAccentColor } from "@ankielcode/client-runtime/state/provider-instance-display";
 import {
-  colabBalanceRows,
   collectLimitAccounts,
   collectLimitPools,
   displayLimitWindows,
@@ -33,7 +32,7 @@ import { ProviderIcon } from "../../components/ProviderIcon";
 import type { MessageResolver } from "../../i18n/messages";
 import { SettingsScreen } from "../settings/components/SettingsScreen";
 import { environmentPresentations } from "../../state/presentation";
-import { ColabBalanceRow, refillLabel, ResetCredits, resetLabels } from "./UsageLimitsSection";
+import { refillLabel, ResetCredits, resetLabels } from "./UsageLimitsSection";
 import { usageProviderKind, useProviderColors } from "./usageProviders";
 
 const PACE_LABEL = {
@@ -504,7 +503,6 @@ export function UsageLimitsSection({
       ) : null}
       {pools.map((pool) => {
         const windows = displayLimitWindows(pool);
-        const colab = colabBalanceRows(pool);
         return (
           <Fragment key={pool.driver}>
             <View className="gap-3">
@@ -534,13 +532,6 @@ export function UsageLimitsSection({
                   />
                 );
               })}
-              {colab.length > 0 ? (
-                <View className="gap-2 rounded-xl border border-border-subtle px-4 py-3">
-                  {colab.map(({ key, balance, source }) => (
-                    <ColabBalanceRow key={key} balance={balance} source={source} />
-                  ))}
-                </View>
-              ) : null}
             </View>
           </Fragment>
         );

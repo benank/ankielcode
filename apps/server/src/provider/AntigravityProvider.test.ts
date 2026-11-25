@@ -31,6 +31,7 @@ import type { ServerProvider } from "@ankielcode/contracts";
 import {
   buildAntigravityModelsFromSession,
   makeAntigravityProvider,
+  type AntigravityRememberedAccount,
 } from "./AntigravityProvider.ts";
 import { mergeProviderSnapshot } from "./ProviderRegistry.ts";
 
@@ -134,6 +135,14 @@ const layerTest = makeLayerTest(false);
 
 type ProbeError = EffectAcpErrors.AcpError | ProviderSetupError;
 
+const withColab = (limits: ServerProviderUsageLimits, balance: number, usedPercent: number) => ({
+  ...limits,
+  windows: [
+    ...limits.windows,
+    { id: "colab", kind: "monthly", label: `Colab · Monthly ${balance}`, usedPercent },
+  ],
+});
+
 const makeHarness = Effect.fn("makeAntigravityProviderHarness")(function* (
   options: {
     readonly auth?: { readonly type: string; readonly label: string };
@@ -142,12 +151,12 @@ const makeHarness = Effect.fn("makeAntigravityProviderHarness")(function* (
     readonly probeUsage?: Effect.Effect<ServerProviderUsageLimits>;
     readonly probeColabUsage?: Effect.Effect<number | undefined>;
     readonly rememberedRuntimeModes?: ReadonlyArray<RuntimeMode>;
-    readonly rememberedPlan?: string;
+    readonly rememberedAccount?: AntigravityRememberedAccount;
     readonly loadPlan?: Effect.Effect<void>;
   } = {},
 ) {
   const savedRuntimeModes = yield* Ref.make<ReadonlyArray<ReadonlyArray<RuntimeMode>>>([]);
-  const savedPlans = yield* Ref.make<ReadonlyArray<string | undefined>>([]);
+  const savedAccounts = yield* Ref.make<ReadonlyArray<AntigravityRememberedAccount>>([]);
   const initialProbe = yield* Deferred.make<EffectAcpSchema.InitializeResponse, ProbeError>();
   const probeCalls = yield* Ref.make(0);
   const safetyCalls = yield* Ref.make(0);
@@ -166,9 +175,9 @@ const makeHarness = Effect.fn("makeAntigravityProviderHarness")(function* (
         ? { rememberedRuntimeModes: options.rememberedRuntimeModes }
         : {}),
       rememberRuntimeModes: (modes) => Ref.update(savedRuntimeModes, (saved) => [...saved, modes]),
-      ...(options.rememberedPlan ? { rememberedPlan: options.rememberedPlan } : {}),
+      ...(options.rememberedAccount ? { rememberedAccount: options.rememberedAccount } : {}),
       ...(options.loadPlan ? { loadPlan: options.loadPlan } : {}),
-      rememberPlan: (plan) => Ref.update(savedPlans, (saved) => [...saved, plan]),
+      rememberAccount: (account) => Ref.update(savedAccounts, (saved) => [...saved, account]),
       probe: Ref.update(probeCalls, (count) => count + 1).pipe(
         Effect.andThen(Ref.get(probe)),
         Effect.flatten,
@@ -204,7 +213,7 @@ const makeHarness = Effect.fn("makeAntigravityProviderHarness")(function* (
     initialize,
     nextPublish,
     savedRuntimeModes,
-    savedPlans,
+    savedAccounts,
   };
 });
 
@@ -924,11 +933,15 @@ it.layer(layerTest)("Antigravity provider snapshots", (it) => {
         },
       });
       const paid = yield* harness.nextPublish(
-        (snapshot) => snapshot.usageLimits?.colabComputeUnits !== undefined,
+        (snapshot) =>
+          snapshot.usageLimits?.windows.some((window) => window.id === "colab") === true,
       );
       yield* harness.provider.onSessionStarted(withTier("Google AI Pro"));
-      expect((yield* paid)?.usageLimits).toEqual({ ...limits, colabComputeUnits: 200 });
-      expect(yield* Ref.get(harness.savedPlans)).toEqual(["Google AI Pro"]);
+      expect((yield* paid)?.usageLimits).toEqual(withColab(limits, 200, 0));
+      expect(yield* Ref.get(harness.savedAccounts)).toEqual([
+        { colabMax: 200 },
+        { colabMax: 200, plan: "Google AI Pro" },
+      ]);
       yield* harness.provider.onSessionStarted(withTier("Free"));
       expect((yield* harness.provider.snapshot.getSnapshot).usageLimits).toEqual(limits);
     }),
@@ -943,16 +956,17 @@ it.layer(layerTest)("Antigravity provider snapshots", (it) => {
       const harness = yield* makeHarness({
         probeUsage: Effect.succeed(limits),
         probeColabUsage: Effect.succeed(200),
-        rememberedPlan: "Google AI Pro",
+        rememberedAccount: { plan: "Google AI Pro", colabMax: 250 },
       });
       const published = yield* harness.nextPublish(
-        (snapshot) => snapshot.usageLimits?.colabComputeUnits !== undefined,
+        (snapshot) =>
+          snapshot.usageLimits?.windows.some((window) => window.id === "colab") === true,
       );
       yield* harness.initialize;
-      expect((yield* published)?.usageLimits).toEqual({ ...limits, colabComputeUnits: 200 });
+      expect((yield* published)?.usageLimits).toEqual(withColab(limits, 200, 20));
 
       yield* harness.provider.onSignedOut;
-      expect(yield* Ref.get(harness.savedPlans)).toEqual([undefined]);
+      expect(yield* Ref.get(harness.savedAccounts)).toEqual([{}]);
     }),
   );
 
@@ -976,7 +990,8 @@ it.layer(layerTest)("Antigravity provider snapshots", (it) => {
       expect((yield* harness.provider.snapshot.getSnapshot).usageLimits).toEqual(limits);
 
       const paid = yield* harness.nextPublish(
-        (snapshot) => snapshot.usageLimits?.colabComputeUnits !== undefined,
+        (snapshot) =>
+          snapshot.usageLimits?.windows.some((window) => window.id === "colab") === true,
       );
       yield* harness.provider.onSessionStarted({
         ...started,
@@ -985,7 +1000,7 @@ it.layer(layerTest)("Antigravity provider snapshots", (it) => {
           _meta: { antigravity: { tier: { name: "Google AI Pro" } } },
         },
       });
-      expect((yield* paid)?.usageLimits).toEqual({ ...limits, colabComputeUnits: 200 });
+      expect((yield* paid)?.usageLimits).toEqual(withColab(limits, 200, 0));
       yield* harness.provider.snapshot.refresh;
       expect(yield* Ref.get(loads)).toBe(1);
     }),

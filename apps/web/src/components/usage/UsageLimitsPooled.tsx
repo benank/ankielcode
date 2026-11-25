@@ -1,6 +1,5 @@
 import {
   CHATGPT_USAGE_URL,
-  colabBalanceRows,
   collectLimitAccounts,
   collectLimitPools,
   displayLimitWindows,
@@ -38,7 +37,6 @@ import { Button } from "../ui/button";
 import { OpenAI } from "../Icons";
 import { Alert, AlertTitle } from "../ui/alert";
 import { Popover, PopoverCreateHandle, PopoverPopup, PopoverTrigger } from "../ui/popover";
-import { ColabBalanceRow } from "./ColabBalanceRow";
 import { PaceIcon, ResetCreditDialog, barColor, usePaceMark, useResetCredit } from "./UsageLimits";
 import {
   collectExternalUsageLinks,
@@ -642,7 +640,6 @@ function PoolSection({ pool, now }: { readonly pool: LimitPool; readonly now: nu
   const color = barColor(pool.driver);
   const label = providerClients.get(pool.driver)?.label ?? String(pool.driver);
   const windows = displayLimitWindows(pool);
-  const colab = colabBalanceRows(pool);
   const m = useMessages();
   return (
     <section className="flex flex-col gap-3">
@@ -670,13 +667,6 @@ function PoolSection({ pool, now }: { readonly pool: LimitPool; readonly now: nu
           />
         );
       })}
-      {colab.length > 0 ? (
-        <div className="flex flex-col gap-2 rounded-xl border border-border/60 px-4 py-3 text-sm">
-          {colab.map(({ key, balance, source }) => (
-            <ColabBalanceRow key={key} balance={balance} source={source} />
-          ))}
-        </div>
-      ) : null}
     </section>
   );
 }
