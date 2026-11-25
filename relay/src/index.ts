@@ -57,8 +57,7 @@ function checkRelayAccess(env: RelayEnv, hostId: string): Response | null {
       Response.json(
         {
           error: "relay_not_configured",
-          message:
-            "This relay is locked until RELAY_SECRET (or ALLOWED_HOST_IDS) is configured.",
+          message: "This relay is locked until RELAY_SECRET (or ALLOWED_HOST_IDS) is configured.",
         },
         { status: 503 },
       ),

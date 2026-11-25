@@ -163,7 +163,9 @@ async function main() {
 
   try {
     const secret = NodeCrypto.randomBytes(32).toString("base64url");
-    let relayHost = args.domain ? args.domain.replace(/^https?:\/\//i, "").replace(/\/.*$/, "") : null;
+    let relayHost = args.domain
+      ? args.domain.replace(/^https?:\/\//i, "").replace(/\/.*$/, "")
+      : null;
 
     if (args.dryRun) {
       relayHost = relayHost ?? "ankiel-relay.example.workers.dev";
@@ -254,7 +256,9 @@ async function main() {
       console.log("To connect a computer via CLI/env:");
       console.log(`  ANKIEL_RELAY_SETUP="${setupString}"`);
     }
-    console.log("\nNext: restart your Ankiel Code server/desktop app and scan its QR code on your phone.");
+    console.log(
+      "\nNext: restart your Ankiel Code server/desktop app and scan its QR code on your phone.",
+    );
   } finally {
     rl?.close();
   }

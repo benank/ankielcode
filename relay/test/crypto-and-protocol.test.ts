@@ -165,7 +165,11 @@ describe("protocol", () => {
     assert.equal(wsDecoded.connId, id);
     assert.deepEqual(wsDecoded.payload, payload);
 
-    for (const kind of [BINARY_FRAME_WS_DATA, BINARY_FRAME_HTTP_REQ_BODY, BINARY_FRAME_HTTP_RES_BODY] as const) {
+    for (const kind of [
+      BINARY_FRAME_WS_DATA,
+      BINARY_FRAME_HTTP_REQ_BODY,
+      BINARY_FRAME_HTTP_RES_BODY,
+    ] as const) {
       const encoded = encodeBinaryFrame(kind, id, payload);
       const decoded = decodeBinaryFrame(encoded);
       assert.ok(decoded);

@@ -4,20 +4,20 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-11-01",
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "durable_objects": {
     "bindings": [
       {
         "name": "RELAY_ROOM",
-        "class_name": "RelayRoom"
-      }
-    ]
+        "class_name": "RelayRoom",
+      },
+    ],
   },
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": ["RelayRoom"]
-    }
-  ]
+      "new_sqlite_classes": ["RelayRoom"],
+    },
+  ],
 }

@@ -21,6 +21,7 @@ npm run setup
 ```
 
 `npm run setup` handles everything automatically:
+
 1. Logs into Cloudflare via `wrangler login` (if needed).
 2. Deploys the Worker + Durable Object (`wrangler deploy`).
 3. Generates a 256-bit random `RELAY_SECRET` and uploads it directly via stdin (never hits shell history).
@@ -74,10 +75,10 @@ RELAY_URL=http://127.0.0.1:8789 RELAY_SECRET=test-local-secret-123 node --experi
 
 ## Endpoints
 
-| Endpoint | Purpose |
-| --- | --- |
-| `GET /health` | Health check (`{ ok, service, version, configured, requiresSecret, restrictedHosts }`) |
-| `GET /relay/status/:hostId` | Reports `{ hostId, online }` (requires configured relay) |
-| `WSS /relay/host/:hostId` | Outbound host tunnel (Ed25519 + `RELAY_SECRET` HMAC) |
-| `HTTPS/WSS https://<hostId>.<domain>/<path>` | Wildcard subdomain HTTP + WS reverse tunnel |
-| `HTTPS/WSS https://<worker>/h/<hostId>/<path>` | Path-prefix HTTP + WS reverse tunnel (`*.workers.dev` friendly) |
+| Endpoint                                       | Purpose                                                                                |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `GET /health`                                  | Health check (`{ ok, service, version, configured, requiresSecret, restrictedHosts }`) |
+| `GET /relay/status/:hostId`                    | Reports `{ hostId, online }` (requires configured relay)                               |
+| `WSS /relay/host/:hostId`                      | Outbound host tunnel (Ed25519 + `RELAY_SECRET` HMAC)                                   |
+| `HTTPS/WSS https://<hostId>.<domain>/<path>`   | Wildcard subdomain HTTP + WS reverse tunnel                                            |
+| `HTTPS/WSS https://<worker>/h/<hostId>/<path>` | Path-prefix HTTP + WS reverse tunnel (`*.workers.dev` friendly)                        |
