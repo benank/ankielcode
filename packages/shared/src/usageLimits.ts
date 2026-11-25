@@ -1,4 +1,5 @@
 import {
+  ANTIGRAVITY_AUTH_METHODS,
   type EnvironmentId,
   type ModelSelection,
   type ServerSettings,
@@ -320,6 +321,15 @@ export interface LimitAccount {
   readonly limits: ServerProviderUsageLimits;
 }
 
+// Until a session reports Antigravity's tier, older servers and cached snapshots label the sign-in method.
+function providerPlan(provider: ServerProvider) {
+  const label = provider.auth.label;
+  return provider.driver === "antigravity" &&
+    ANTIGRAVITY_AUTH_METHODS.some((method) => method.label === label)
+    ? undefined
+    : label;
+}
+
 export function collectLimitAccounts(presentations: LimitPresentations): readonly LimitAccount[] {
   const accounts = new Map<string, LimitAccount>();
   const creditSources = new Map<string, LimitAccount>();
@@ -403,7 +413,7 @@ export function collectLimitAccounts(presentations: LimitPresentations): readonl
         driver: provider.driver,
         displayName: provider.displayName?.trim() || null,
         email: provider.auth.email,
-        plan: provider.auth.label,
+        plan: providerPlan(provider),
         accentColor: provider.accentColor,
         environments: [{ environmentId, label }],
         sourceLabel: null,
@@ -1044,11 +1054,12 @@ export function collectProviderUsageLimits(
     const shownCredits = showHubCredits
       ? hubCredits.account.usageLimits.resetCredits
       : credits?.limits.resetCredits;
+    const plan = providerPlan(provider);
     accounts.push({
       id: provider.instanceId,
       driver: provider.driver,
       label: `${provider.displayName?.trim() || String(provider.driver)} [${provider.instanceId}]`,
-      ...(provider.auth.label ? { plan: provider.auth.label } : {}),
+      ...(plan ? { plan } : {}),
       instanceId: provider.instanceId,
       resetCreditInput:
         hubCreditId && hubCredits

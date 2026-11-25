@@ -334,6 +334,31 @@ describe("pools", () => {
     }
   });
 
+  it("shows Antigravity's reported tier as its plan, but not its sign-in method", () => {
+    const plan = (label: string) =>
+      collectLimitAccounts(
+        new Map([
+          [
+            EnvironmentId.make("env-a"),
+            {
+              ...laptop,
+              serverConfig: {
+                providers: [
+                  provider({
+                    driver: ProviderDriverKind.make("antigravity"),
+                    auth: { status: "authenticated", label },
+                    usageLimits: { checkedAt, windows: [window] },
+                  }),
+                ],
+              },
+            },
+          ],
+        ]),
+      )[0]?.plan;
+    expect(plan("Google AI Pro")).toBe("Google AI Pro");
+    expect(plan("Google account")).toBeUndefined();
+  });
+
   it("merges OpenCode Go limits from machines with the same API key", () => {
     const go = provider({
       driver: ProviderDriverKind.make("opencode"),
