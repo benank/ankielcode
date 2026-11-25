@@ -503,6 +503,37 @@ it.layer(layerTest)("Antigravity provider snapshots", (it) => {
     }),
   );
 
+  it.effect("shows the session's reported tier as its plan and keeps it across loads", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness();
+      yield* harness.initialize;
+      const label = harness.provider.snapshot.getSnapshot.pipe(
+        Effect.map((snapshot) => snapshot.auth.label),
+      );
+      yield* harness.provider.onSessionStarted(started);
+      expect(yield* label).toBe("Google account");
+      yield* harness.provider.onSessionStarted({
+        ...started,
+        sessionSetupResult: {
+          ...sessionSetupResult,
+          // As `agy acp` 1.5.16 reports it.
+          _meta: {
+            antigravity: {
+              tier: {
+                name: "Google AI Pro",
+                id: "g1-pro-tier",
+                upgradeUri: "https://antigravity.google/g1-upgrade",
+              },
+            },
+          },
+        },
+      });
+      expect(yield* label).toBe("Google AI Pro");
+      yield* harness.provider.onSessionStarted(started);
+      expect(yield* label).toBe("Google AI Pro");
+    }),
+  );
+
   it.effect("keeps a workspace's native commands when the catalog reports its own", () =>
     Effect.gen(function* () {
       const harness = yield* makeHarness();

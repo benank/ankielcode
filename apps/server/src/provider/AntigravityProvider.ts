@@ -19,6 +19,7 @@ import * as FiberHandle from "effect/FiberHandle";
 import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Result from "effect/Result";
+import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import type * as EffectAcpErrors from "effect-acp/errors";
@@ -188,6 +189,19 @@ function antigravityRuntimeModes(
   )
     ? ["approval-required", "auto-accept-edits", "auto", "full-access"]
     : RUNTIME_MODES_WITHOUT_AUTO;
+}
+
+const SessionTierMeta = Schema.Struct({
+  antigravity: Schema.Struct({ tier: Schema.Struct({ name: Schema.NonEmptyString }) }),
+});
+const decodeSessionTierMeta = Schema.decodeUnknownOption(SessionTierMeta);
+
+/** The plan `agy acp` reports in a session result's `_meta`, such as "Google AI Pro". */
+export function antigravitySessionTier(result: { readonly _meta?: unknown }) {
+  return decodeSessionTierMeta(result._meta).pipe(
+    Option.map((meta) => meta.antigravity.tier.name.trim()),
+    Option.filter((name) => name.length > 0),
+  );
 }
 
 export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(function* (
@@ -428,7 +442,14 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
           auth: {
             status: "authenticated",
             type: options.auth?.type ?? "oauth-personal",
-            label: options.auth?.label ?? "Google account",
+            // Loaded sessions may omit the tier, so keep the one an earlier session reported.
+            label: Option.getOrElse(
+              antigravitySessionTier(started.sessionSetupResult),
+              () =>
+                (draft.auth.status === "authenticated" ? draft.auth.label : undefined) ??
+                options.auth?.label ??
+                "Google account",
+            ),
           },
           checkedAt: updatedAt,
           models: buildAntigravityModelsFromSession(started.sessionSetupResult, thinkingLevels),

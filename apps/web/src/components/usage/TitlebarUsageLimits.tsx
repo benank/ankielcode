@@ -200,5 +200,5 @@ function UsageLimitsBreakdown({
 
 // Plan labels repeat the product the provider name already shows, e.g. "ChatGPT Pro 200 Subscription".
 function shortPlanLabel(plan: string) {
-  return plan.replace(/^(ChatGPT|Claude)\s+/i, "").replace(/\s+Subscription$/i, "");
+  return plan.replace(/^(ChatGPT|Claude|Google AI)\s+/i, "").replace(/\s+Subscription$/i, "");
 }

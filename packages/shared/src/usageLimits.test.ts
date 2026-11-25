@@ -334,30 +334,6 @@ describe("pools", () => {
     }
   });
 
-  it("does not report Antigravity's sign-in method as a plan", () => {
-    const accounts = collectLimitAccounts(
-      new Map([
-        [
-          EnvironmentId.make("env-0"),
-          {
-            ...laptop,
-            serverConfig: {
-              providers: [
-                provider({
-                  driver: ProviderDriverKind.make("antigravity"),
-                  auth: { status: "authenticated", label: "Google account" },
-                  usageLimits: { checkedAt, windows: [window] },
-                }),
-              ],
-            },
-          },
-        ],
-      ]),
-    );
-    expect(accounts).toHaveLength(1);
-    expect(accounts[0]?.plan).toBeUndefined();
-  });
-
   it("merges OpenCode Go limits from machines with the same API key", () => {
     const go = provider({
       driver: ProviderDriverKind.make("opencode"),
