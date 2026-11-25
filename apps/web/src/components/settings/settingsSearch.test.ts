@@ -381,6 +381,7 @@ describe("source control host search items", () => {
 
 describe("movedSettingsPath", () => {
   it("sends old links to the page their row moved to", () => {
+    expect(movedSettingsPath("/settings/labs", "pull-request-tab")).toBe("/settings/appearance");
     expect(movedSettingsPath("/settings/general", "text-generation-model")).toBe(
       "/settings/threads",
     );

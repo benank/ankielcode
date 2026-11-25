@@ -404,6 +404,12 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: [msg("latex tex katex equations formulas markdown")],
   },
   {
+    id: "pull-request-tab",
+    title: msg("Show pull requests tab"),
+    to: "/settings/appearance",
+    searchTerms: [msg("show hide pull requests pr tab sidebar navigation")],
+  },
+  {
     id: "panel-animations",
     title: msg("Panel animations"),
     to: "/settings/appearance",
@@ -506,12 +512,6 @@ export const SETTINGS_SEARCH_ITEMS = [
     title: msg("Boring sidebar (group by project)"),
     to: "/settings/labs",
     searchTerms: [msg("beta folders project tree classic sidebar")],
-  },
-  {
-    id: "pull-request-tab",
-    title: msg("Show pull requests tab"),
-    to: "/settings/labs",
-    searchTerms: [msg("show hide pull requests pr tab sidebar navigation")],
   },
   {
     id: "boring-sidebar-multiline",
@@ -1500,6 +1500,7 @@ const RENAMED_SETTINGS_PATHS: Readonly<Record<string, SettingsPath>> = {
 const SPLIT_SETTINGS_PATHS: ReadonlySet<string> = new Set([
   "/settings/general",
   "/settings/appearance",
+  "/settings/labs",
   "/settings/source-control",
   "/settings/connections",
   ...Object.keys(RENAMED_SETTINGS_PATHS),

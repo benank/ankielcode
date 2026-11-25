@@ -228,7 +228,7 @@ instructions to commits and pull requests.
 
 ## Review and merge
 
-Turn on **Show pull requests tab** in **Settings → Labs** to add the list to workspace
+Turn on **Show pull requests tab** in **Settings → Appearance** to add the list to workspace
 navigation on this device. On mobile, use the list title to switch between **Issues** and
 **Pull requests**. Open **Pull requests** to review changes and comments, request reviewers,
 check out a branch, or merge. You can edit review titles and descriptions and your own comments

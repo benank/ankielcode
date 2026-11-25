@@ -1,11 +1,10 @@
 import { useGT } from "gt-react-native";
-import { Platform } from "react-native";
-import { AndroidNavigationAppearanceSection } from "./appearance/sections/AndroidNavigationAppearanceSection";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SettingsScreen } from "./components/SettingsScreen";
 import { CodeAppearanceSection } from "./appearance/sections/CodeAppearanceSection";
+import { NavigationAppearanceSection } from "./appearance/sections/NavigationAppearanceSection";
 import { TerminalAppearanceSection } from "./appearance/sections/TerminalAppearanceSection";
 import { TextAppearanceSection } from "./appearance/sections/TextAppearanceSection";
 import { ThemeAppearanceSection } from "./appearance/sections/ThemeAppearanceSection";
@@ -27,7 +26,7 @@ export function SettingsAppearanceRouteScreen() {
         }}
       >
         <ThemeAppearanceSection />
-        {Platform.OS === "android" ? <AndroidNavigationAppearanceSection /> : null}
+        <NavigationAppearanceSection />
         <TextAppearanceSection />
         <TerminalAppearanceSection />
         <CodeAppearanceSection />

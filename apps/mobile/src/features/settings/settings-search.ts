@@ -22,6 +22,7 @@ const SETTINGS_SEARCH_TERMS = {
     "tailscale",
   ],
   SettingsAppearance: [
+    msg("Show pull requests tab"),
     msg("theme", { $context: "settings search keyword" }),
     msg("dark mode", { $context: "settings search keyword" }),
     msg("light mode", { $context: "settings search keyword" }),
@@ -147,7 +148,6 @@ const SETTINGS_SEARCH_TERMS = {
     msg("start from remote", { $context: "settings search keyword" }),
   ],
   SettingsLabs: [
-    msg("Show pull requests tab"),
     msg("beta", { $context: "settings search keyword" }),
     msg("linked environments", { $context: "settings search keyword" }),
     msg("link machine", { $context: "settings search keyword" }),
