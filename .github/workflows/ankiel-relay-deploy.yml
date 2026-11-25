@@ -1,4 +1,6 @@
-name: Deploy Ankiel Relay
+name: Ankiel Relay
+
+# Deploys are manual: `npm run setup` (or `npm run deploy`) in relay/.
 
 on:
   push:
@@ -11,15 +13,9 @@ on:
     paths:
       - "relay/**"
       - ".github/workflows/ankiel-relay-deploy.yml"
-  workflow_dispatch:
 
 permissions:
   contents: read
-  deployments: write
-
-concurrency:
-  group: ankiel-relay-${{ github.ref }}
-  cancel-in-progress: false
 
 jobs:
   test:
@@ -47,30 +43,3 @@ jobs:
 
       - name: Run unit tests
         run: npm test
-
-  deploy:
-    name: Deploy to Cloudflare Workers
-    needs: [test]
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: relay/package-lock.json
-
-      - name: Install dependencies
-        working-directory: relay
-        run: npm ci
-
-      - name: Deploy Worker
-        uses: cloudflare/wrangler-action@v4
-        with:
-          workingDirectory: relay
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

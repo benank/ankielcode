@@ -68,6 +68,7 @@ import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as VcsProcess from "./vcs/VcsProcess.ts";
 import * as ProviderInstallationGate from "./provider/ProviderInstallationGate.ts";
 import * as Ws from "./ws.ts";
+import * as RelayTunnelService from "./relay/RelayTunnelService.ts";
 import { RpcGroup, RpcMessage, RpcServer } from "effect/rpc";
 import * as RpcTest from "effect/rpc/RpcTest";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -1021,6 +1022,130 @@ it.live.each([
       );
       assert.equal(socket.extensions, extensions);
     }).pipe(Effect.scoped),
+);
+
+it.live("routes relay RPCs to the server's relay tunnel service", () =>
+  Effect.gen(function* () {
+    const relayStatus = {
+      configured: true,
+      connected: true,
+      relayOrigin: "https://relay.example.com",
+      routingMode: "path" as const,
+      hostId: "host-1",
+      publicBaseUrl: "https://relay.example.com/h/host-1/",
+      hasSecret: true,
+      source: "file" as const,
+      lastError: null,
+    };
+    const services = Layer.mergeAll(
+      layerUnusedConfigRpcServices,
+      Layer.mock(ServerBrowser.ServerBrowser)({
+        profileReporter: Effect.succeed(() => Effect.void),
+      }),
+      Layer.mock(EnvironmentAuth.EnvironmentAuth)({
+        authenticateWebSocketUpgrade: () =>
+          Effect.succeed({
+            sessionId: AuthSessionId.make("relay-test"),
+            subject: "one-time-token",
+            method: "bearer-access-token",
+            scopes: [AuthAccessReadScope],
+          }),
+      }),
+      Layer.mock(SessionStore.SessionStore)({
+        cookieName: "relay-test",
+        legacyCookieName: undefined,
+        markConnected: () => Effect.void,
+        markDisconnected: () => Effect.void,
+        awaitInvalidation: () => Effect.never,
+      }),
+      Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({
+        namedProjectsRoot: process.cwd(),
+      }),
+      Layer.mock(ScratchThreadPromotion.ScratchThreadPromotion)({}),
+      Layer.mock(ProviderRegistry.ProviderRegistry)({}),
+      Layer.mock(UsageLimitSources.UsageLimitSources)({}),
+      Layer.mock(ExternalLauncher.ExternalLauncher)({}),
+      Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
+      Layer.mock(DirectEndpoints.DirectEndpoints)({}),
+      Layer.mock(ServerEnvironment.ServerEnvironment)({}),
+      Layer.mock(VcsProcess.VcsProcess)({
+        run: (input) =>
+          Effect.fail(
+            new VcsProcessSpawnError({
+              operation: input.operation,
+              command: input.command,
+              cwd: input.cwd,
+              cause: "No VCS commands in the relay fixture",
+            }),
+          ),
+      }),
+      ProviderInstallationGate.layer,
+      FetchHttpClient.layer,
+    );
+    const context = yield* Layer.build(
+      // As in server.ts, the relay service reaches the route layer, not the router's context.
+      HttpRouter.serve(
+        Ws.layer.pipe(
+          Layer.provide(
+            Layer.mock(RelayTunnelService.RelayTunnelService)({
+              getStatus: Effect.succeed(relayStatus),
+            }),
+          ),
+        ),
+        { disableListenLog: true },
+      ).pipe(
+        Layer.provideMerge(
+          NodeHttpServer.layer(NodeHttp.createServer, { host: "127.0.0.1", port: 0 }),
+        ),
+        Layer.provide(services),
+        Layer.provide(layerConfigSources),
+      ),
+    );
+    const server = Context.get(context, HttpServer.HttpServer);
+    const origin = HttpServer.formatAddress(server.address).replace(/^http/, "ws");
+    const socket = yield* Effect.acquireRelease(
+      Effect.sync(
+        () =>
+          new WebSocket(
+            `${origin}/ws?${ORCHESTRATION_PROTOCOL_QUERY_PARAM}=${ORCHESTRATION_PROTOCOL_VERSION}`,
+            { origin: "ankielcode://app" },
+          ),
+      ),
+      (socket) => Effect.sync(() => socket.terminate()),
+    );
+    const reply = yield* Effect.promise(
+      () =>
+        new Promise<unknown>((resolve, reject) => {
+          socket.once("error", reject);
+          socket.on("message", (data) => {
+            const message: unknown = JSON.parse(String(data));
+            if (
+              typeof message === "object" &&
+              message !== null &&
+              "_tag" in message &&
+              message._tag === "Exit"
+            ) {
+              resolve(message);
+            }
+          });
+          socket.once("open", () =>
+            socket.send(
+              JSON.stringify({
+                _tag: "Request",
+                id: "1",
+                tag: WS_METHODS.serverGetRelayStatus,
+                payload: {},
+                headers: [],
+              }),
+            ),
+          );
+        }),
+    );
+    assert.deepInclude(reply, {
+      requestId: "1",
+      exit: { _tag: "Success", value: relayStatus },
+    });
+  }).pipe(Effect.scoped),
 );
 
 it.effect.each([

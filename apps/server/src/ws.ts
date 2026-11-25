@@ -3646,6 +3646,7 @@ export const layer = Layer.unwrap(
     const peerLinkRequests = yield* PeerLinkRequests.PeerLinkRequests;
     const peerThreadRelay = yield* PeerThreadRelay.PeerThreadRelay;
     const peerClientPairing = yield* PeerClientPairing.PeerClientPairing;
+    const relayTunnel = yield* Effect.serviceOption(RelayTunnelService.RelayTunnelService);
     const sql = yield* SqlClient.SqlClient;
     return HttpRouter.add(
       "GET",
@@ -3728,6 +3729,14 @@ export const layer = Layer.unwrap(
               Layer.provide(Layer.succeed(PeerLinkRequests.PeerLinkRequests, peerLinkRequests)),
               Layer.provide(Layer.succeed(PeerThreadRelay.PeerThreadRelay, peerThreadRelay)),
               Layer.provide(Layer.succeed(PeerClientPairing.PeerClientPairing, peerClientPairing)),
+              // Request handlers see only the router's context, not the services given to routes.
+              Layer.provide(
+                Option.match(relayTunnel, {
+                  onNone: () => Layer.empty,
+                  onSome: (service) =>
+                    Layer.succeed(RelayTunnelService.RelayTunnelService, service),
+                }),
+              ),
               Layer.provide(
                 SourceControlDiscovery.layer.pipe(
                   Layer.provide(

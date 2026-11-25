@@ -45,7 +45,7 @@ The setup script logs into Cloudflare with `wrangler`, deploys the Worker and Du
 ankiel-relay://<your-relay-host>#<secret>
 ```
 
-It works with a free `*.workers.dev` URL (path-prefix routing at `https://<worker>/h/<hostId>/`) or your own wildcard custom domain (`https://<hostId>.<domain>/`). See [Self-Hosting Ankiel Relay on Cloudflare](../../relay/SETUP_CLOUDFLARE.md) for automated GitHub Actions deploys and custom domain details.
+It works with a free `*.workers.dev` URL (path-prefix routing at `https://<worker>/h/<hostId>/`) or your own wildcard custom domain (`https://<hostId>.<domain>/`). See [Self-Hosting Ankiel Relay on Cloudflare](../../relay/SETUP_CLOUDFLARE.md) for setup and custom domain details.
 
 ### 2. Connect your host to the relay
 

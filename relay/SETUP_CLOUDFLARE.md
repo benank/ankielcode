@@ -28,23 +28,14 @@ npm run setup
 4. Copies your `ankiel-relay://<host>#<secret>` setup string to your clipboard.
 5. Offers to configure your local computer immediately (`relay.json` + `0600` `secrets/relay-secret`).
 
-Already deployed via GitHub Actions? Skip the deploy step and just generate + upload your secret and configure your computer:
+Already deployed? Skip the deploy step and just generate + upload your secret and configure your computer:
 
 ```bash
 cd relay
 npm run setup -- --skip-deploy --domain ankiel-relay.<you>.workers.dev
 ```
 
----
-
-## Option 2: Automated Deploys on Push (GitHub Actions — Recommended for Ongoing Updates)
-
-1. In Cloudflare Dashboard → **My Profile → API Tokens → Create Token** using the **Edit Cloudflare Workers** template.
-2. In your GitHub repo → **Settings → Secrets and variables → Actions**, add:
-   - `CLOUDFLARE_API_TOKEN`
-   - `CLOUDFLARE_ACCOUNT_ID`
-3. Push to `main` (or trigger **Deploy Ankiel Relay** manually in the Actions tab).
-4. Run `cd relay && npm run setup -- --skip-deploy` once to generate & upload `RELAY_SECRET` and copy your setup string.
+To ship Worker updates later, run `npm run deploy` in `relay/`.
 
 ---
 

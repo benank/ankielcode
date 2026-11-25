@@ -51,7 +51,7 @@ function parseArgs(argv) {
 
 Options:
   --domain <host>          Custom domain (e.g. relay.ankiel.com) instead of *.workers.dev
-  --skip-deploy            Skip wrangler deploy (e.g. already deployed via GitHub Actions)
+  --skip-deploy            Skip wrangler deploy (e.g. the Worker is already deployed)
   --connect-local [dir]    Write relay.json + 0600 secrets/relay-secret to local state dir
   --no-clipboard           Do not copy the setup string to clipboard
   --yes, -y                Skip interactive prompts
