@@ -18,8 +18,6 @@ import type {
   ThreadId,
 } from "@ankielcode/contracts";
 import * as DateTime from "effect/DateTime";
-import { mFallback, msg } from "gt-i18n";
-import type { MFunctionType } from "gt-i18n/types";
 
 import { formatSubagentDisplayTitle } from "./subagentDisplay.ts";
 
@@ -411,17 +409,4 @@ export function resolveThreadWorkingStartedAt(input: {
     return valid(run.startedAt) ?? valid(run.requestedAt);
   }
   return null;
-}
-
-export function formatWorkingDurationLabel(
-  elapsedMs: number,
-  resolve: MFunctionType = mFallback,
-): string {
-  const seconds = Number.isFinite(elapsedMs) ? Math.max(0, Math.floor(elapsedMs / 1000)) : 0;
-  if (seconds < 60) return resolve(msg("{count}s", { count: seconds }));
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return resolve(msg("{count}m", { count: minutes }));
-  return resolve(
-    msg("{hours}h {minutes}m", { hours: Math.floor(minutes / 60), minutes: minutes % 60 }),
-  );
 }

@@ -330,7 +330,7 @@ export function buildFileDiffEntries(files: ReadonlyArray<FileDiffMetadata>) {
   });
 }
 
-export const DIFF_SURFACE_CURSOR_CSS = `
+const DIFF_SURFACE_CURSOR_CSS = `
 [data-interactive-lines] [data-line],
 [data-interactive-line-numbers] [data-column-number],
 [data-expand-index] [data-separator-content]:hover,

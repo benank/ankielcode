@@ -8,7 +8,7 @@ export type PixelStatusKind = "working" | "thinking" | "waiting" | "attention" |
 export type PixelLevel = 0 | 1 | 2 | 3;
 export type PixelFrame = ReadonlyArray<ReadonlyArray<PixelLevel>>;
 
-export const PIXEL_GRID_SIZE = 5;
+const PIXEL_GRID_SIZE = 5;
 const SIZE = PIXEL_GRID_SIZE;
 const CELL = 3;
 const DOT = 2;
