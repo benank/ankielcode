@@ -513,6 +513,7 @@ class EnvironmentMcpOAuthHttpApi extends HttpApiGroup.make("mcpOAuth")
     }),
   )
   .add(HttpApiEndpoint.get("authorize", "/oauth/mcp/authorize"))
+  .add(HttpApiEndpoint.post("authorizeForm", "/oauth/mcp/authorize"))
   .add(
     HttpApiEndpoint.post("approval", "/oauth/mcp/approval", {
       headers: OptionalBearerHeaders,

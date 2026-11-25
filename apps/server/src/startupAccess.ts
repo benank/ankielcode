@@ -264,7 +264,7 @@ export const formatHeadlessServeOutput = (accessInfo: HeadlessServeAccessInfo): 
           "token and control this machine. Use it over a VPN or tailnet you trust.",
         ]),
     "",
-    renderTerminalQrCode(accessInfo.pairingUrl),
+    renderTerminalQrCode(buildPairingAppLink(accessInfo.pairingUrl)),
     "",
   ].join("\n");
 

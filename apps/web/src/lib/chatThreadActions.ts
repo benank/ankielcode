@@ -75,7 +75,7 @@ export function threadHasStarted(
 }
 
 /**
- * A draft is seeded from sticky state, project defaults, prompt links, or a carried selection.
+ * A draft is seeded from sticky state, project defaults, or a carried selection.
  * That seed is what an unstarted thread sends; once the thread has started, its own selection
  * wins unless the user picked a model or traits for it.
  */

@@ -9,7 +9,7 @@ import { isElectron } from "../env";
 import { NoProjectsHero } from "../components/NoProjectsHero";
 import { sortScopedProjectsForSidebar } from "../components/Sidebar.logic";
 import { Button } from "../components/ui/button";
-import { HostedEmptyState } from "../components/HostedEmptyState";
+import { LocalEnvironmentOffEmptyState } from "../components/LocalEnvironmentOffEmptyState";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "../components/ui/empty";
 import { SidebarInset } from "../components/ui/sidebar";
 import { WorkspacePageHeader } from "../components/WorkspacePageHeader";
@@ -26,9 +26,9 @@ function ChatIndexRouteView() {
   const { authGateState } = Route.useRouteContext();
   const { environments, isReady } = useEnvironments();
 
-  if (authGateState.status === "hosted-static") {
+  if (authGateState.status === "local-environment-disabled") {
     if (!isReady) return null;
-    if (environments.length === 0) return <HostedEmptyState />;
+    if (environments.length === 0) return <LocalEnvironmentOffEmptyState />;
   }
 
   return <IndexDraftLanding />;

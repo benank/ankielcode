@@ -332,7 +332,7 @@ export function useComposerCommandMenu({
       : idleWorkspaceSnapshotRefreshAtom,
   );
   // Every draft change rechecks a stale snapshot, including drafts written by
-  // another surface (a prompt link) that never move the editor selection.
+  // another surface that never move the editor selection.
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- refreshes the provider workspace snapshot atom whenever the draft text changes from any surface
   useEffect(() => {
     refreshWorkspaceSnapshot();

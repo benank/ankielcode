@@ -49,7 +49,7 @@ A new service answers only on this machine. Other devices on the same network re
 your local network so the desktop and mobile apps on
 the same network connect directly. It still does not answer on public addresses.
 Anyone on the same network can reach the port, so a pairing code is all that
-keeps them out. For away-from-home access and [app.code.ankiel.com](https://app.code.ankiel.com) (which requires HTTPS), connect a [Cloudflare Relay](./remote-access.md#cloudflare-relay).
+keeps them out. For away-from-home access, connect a [Cloudflare Relay](./remote-access.md#cloudflare-relay).
 
 A service installed before `ANKIEL_LAN` existed keeps listening on the local
 network. `ankiel status` says so, and `ankiel up --no-lan` turns it off. Any
@@ -159,12 +159,12 @@ Downloads, it may need Full Disk Access for the `ankiel` executable listed in
 Ankiel Code removes internal history older than a day on its own while it runs;
 your conversations are kept. Databases created before this shrank automatically
 still hold the freed space on disk until a one-time offline repair returns it
-and turns on automatic shrinking. Settings > Maintenance (web and desktop) or
+and turns on automatic shrinking. Settings > Maintenance (desktop) or
 Settings > Maintenance (mobile) suggests the repair when at least 1 GiB can be
 reclaimed.
 
 When the desktop app or the background service runs Ankiel Code on that machine,
-select **Reclaim** in Settings on web or desktop. Ankiel Code checks for free disk
+select **Reclaim** in Settings on desktop. Ankiel Code checks for free disk
 space, then stops, repairs the database, and starts again. It is offline while
 the repair runs, and running agents stop. If the repair fails, Settings shows
 why.

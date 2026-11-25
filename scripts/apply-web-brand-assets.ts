@@ -40,15 +40,15 @@ export const applyWebBrandAssetsCommand = Command.make(
   "apply-web-brand-assets",
   {
     brand: Argument.Literals("brand", WEB_ASSET_BRANDS).pipe(
-      Argument.withDescription("Asset brand to copy into the hosted web output directory."),
+      Argument.withDescription("Asset brand to copy into the desktop renderer output directory."),
       Argument.optional,
     ),
     channel: Flag.Literals("channel", WEB_ASSET_CHANNELS).pipe(
-      Flag.withDescription("Hosted release channel to map to a web asset brand."),
+      Flag.withDescription("Release channel to map to a web asset brand."),
       Flag.optional,
     ),
     targetDirectory: Argument.String("target-directory").pipe(
-      Argument.withDescription("Output directory that contains the hosted web build assets."),
+      Argument.withDescription("Output directory that contains the desktop renderer build assets."),
       Argument.optional,
     ),
   },
@@ -62,7 +62,7 @@ export const applyWebBrandAssetsCommand = Command.make(
       ),
       Option.getOrElse(targetDirectory, () => "apps/web/dist"),
     ),
-).pipe(Command.withDescription("Copy web brand assets into a built hosted web app."));
+).pipe(Command.withDescription("Copy web brand assets into a built desktop renderer."));
 
 if (import.meta.main) {
   Command.run(applyWebBrandAssetsCommand, { version: "0.0.0" }).pipe(

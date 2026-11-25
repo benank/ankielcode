@@ -291,10 +291,6 @@
       "types": "./src/assistantCitations.ts",
       "import": "./src/assistantCitations.ts"
     },
-    "./promptLinks": {
-      "types": "./src/promptLinks.ts",
-      "import": "./src/promptLinks.ts"
-    },
     "./threadLinks": {
       "types": "./src/threadLinks.ts",
       "import": "./src/threadLinks.ts"
@@ -634,10 +630,6 @@
     "./toolActivityCopy": {
       "types": "./src/toolActivityCopy.ts",
       "import": "./src/toolActivityCopy.ts"
-    },
-    "./promptLinksCopy": {
-      "types": "./src/promptLinksCopy.ts",
-      "import": "./src/promptLinksCopy.ts"
     },
     "./paletteSearchCopy": {
       "types": "./src/paletteSearchCopy.ts",

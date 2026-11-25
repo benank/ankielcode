@@ -37,7 +37,7 @@ It shouldn't anymore. Ankiel Code drives Claude through Anthropic's Agent SDK, a
 
 ## How do I use Ankiel Code remotely?
 
-Your agents run wherever Ankiel Code runs: your desktop, a server, a VPS. You connect to it from anywhere. Run `ankiel up` on that machine and connect your self-hosted Cloudflare Relay for remote access; same-network (LAN) access works automatically when you're on the same Wi-Fi, and [app.code.ankiel.com](https://app.code.ankiel.com) is the web client. [Remote access](./remote-access.md)
+Your agents run wherever Ankiel Code runs: your desktop, a server, a VPS. You connect to it from anywhere. Run `ankiel up` on that machine and connect your self-hosted Cloudflare Relay for remote access; same-network (LAN) access works automatically when you're on the same Wi-Fi. [Remote access](./remote-access.md)
 
 ## How do I use Ankiel Code on my phone?
 

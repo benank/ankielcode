@@ -249,18 +249,6 @@ const removeNestedBinDirectories = Effect.fn("build-cli-archive.removeNestedBinD
   },
 );
 
-const stageWebClient = Effect.fn("stageWebClient")(function* (source: string, target: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  yield* fs.copy(source, target);
-  const maps = (yield* fs.readDirectory(target, { recursive: true })).filter((entry) =>
-    entry.endsWith(".map"),
-  );
-  for (const entry of maps) {
-    yield* fs.remove(path.join(target, entry), { force: true });
-  }
-});
-
 /** Node links libatomic.so.1, which Ubuntu server and container images lack, so ankiel carries its own. */
 const bundleLinuxLibatomic = Effect.fn("bundleLinuxLibatomic")(function* (input: {
   readonly repoRoot: string;
@@ -612,7 +600,6 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
     : targetKey === hostKey
       ? path.join(serverDir, "dist-exe", executableName)
       : targetExecutable;
-  const webClient = path.join(serverDir, "dist/client");
   const resourceMonitorDir = Option.getOrElse(input.resourceMonitorDir, () =>
     path.join(serverDir, "dist/resource-monitor"),
   );
@@ -620,10 +607,6 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
   yield* requireInput(
     builtExecutable,
     `Run \`node apps/server/scripts/cli.ts build-exe${targetKey === hostKey ? "" : ` --target ${targetKey}`}\` first.`,
-  );
-  yield* requireInput(
-    path.join(webClient, "index.html"),
-    "Run `vp run --filter @ankielcode/cli build` first.",
   );
   yield* requireInput(
     resourceMonitorDir,
@@ -637,7 +620,6 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
 
   yield* Effect.log(`[cli-archive] Staging ${stem}...`);
   yield* fs.copyFile(builtExecutable, path.join(contentDir, executableName));
-  yield* stageWebClient(webClient, path.join(contentDir, "client"));
   yield* fs.copy(resourceMonitorDir, path.join(contentDir, "resource-monitor"));
   yield* stageRuntimeExternals({
     repoRoot,

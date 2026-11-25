@@ -24,7 +24,7 @@ out.
 A repository somewhere else on the machine has to be added, because adding it lets agents work in a
 place they could not reach before.
 
-- On web and desktop, use **Add folder** under **Repositories**.
+- On desktop, use **Add folder** under **Repositories**.
 - If the project folder has a `.code-workspace` file, the folders it lists outside the project are
   offered there with an **Add** button, on mobile too.
 - From a script, `ankiel project add <path> --track <folder>` adds one.
@@ -60,7 +60,7 @@ gets a worktree of its own, because its parent repository decides where it is ch
 Each turn lists the files it changed, grouped by repository, and its diff covers all of them. See
 [Review turn changes](source-control.md#review-turn-changes).
 
-On web and desktop, the Diff pane's **Uncommitted**, **Changes**, and **Commits** sources read one
+On desktop, the Diff pane's **Uncommitted**, **Changes**, and **Commits** sources read one
 repository at a time. Pick it from the repository picker next to the source picker. The picker
 lists every repository the thread reaches, including ones no turn has touched, so edits you made by
 hand show up too.
@@ -69,7 +69,7 @@ hand show up too.
 
 Git actions run in one repository at a time.
 
-- **Web and desktop:** the thread details panel lists the repositories the thread changed, most
+- **Desktop:** the thread details panel lists the repositories the thread changed, most
   recent first, each with its branch and uncommitted changes. Expand one to commit, push, or open a
   pull request there. **Other repositories...** adds any other repository of the project.
 - **Mobile:** open **Git controls** in the thread. The sheet lists the repositories under
@@ -86,12 +86,12 @@ project, and each repository you choose gets a worktree there, all on the thread
 Choose the repositories with the repositories control next to the workspace picker before you send.
 Every repository is included when the project covers eight or fewer; with more, none is
 included until you choose. A repository with no commit yet is left out, since it has nothing to
-branch from. On web and desktop, your last choice is remembered for the project in
+branch from. On desktop, your last choice is remembered for the project in
 that browser. To bring another repository into a running thread, pick it under **Other
 repositories** in the thread details panel or the mobile Git sheet.
 
 Each repository starts from the thread's base branch where it has a branch of that name, and from
-its own default branch otherwise. A plain folder has no branch picker, so on web and desktop you
+its own default branch otherwise. A plain folder has no branch picker, so on desktop you
 name the base branch at the bottom of the repositories control.
 
 In a plain folder, the files outside your repositories are shared links to the originals, not

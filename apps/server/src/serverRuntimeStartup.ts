@@ -314,9 +314,7 @@ const resolveStartupBrowserTarget = Effect.gen(function* () {
   const serverAuth = yield* EnvironmentAuth.EnvironmentAuth;
   const baseTarget =
     serverConfig.devUrl?.toString() ?? resolveLocalOrigin(serverConfig.host, serverConfig.port);
-  return serverConfig.mode === "desktop"
-    ? baseTarget
-    : yield* serverAuth.issueStartupPairingUrl(baseTarget);
+  return yield* serverAuth.issueStartupPairingUrl(baseTarget);
 });
 
 /** Prints the one-time admin pairing URL to stdout only; logger records reach trace files and collectors. */
@@ -555,6 +553,7 @@ const make = Effect.fn("serverRuntimeStartup.make")(function* (options?: Startup
 
     yield* forkParked(
       Effect.gen(function* () {
+        if (serverConfig.mode === "desktop") return;
         if (serverConfig.startupPresentation === "headless") {
           yield* Effect.logDebug("startup phase: headless access info");
           const accessInfo = yield* issueHeadlessServeAccessInfo();
@@ -565,9 +564,7 @@ const make = Effect.fn("serverRuntimeStartup.make")(function* (options?: Startup
         } else {
           yield* Effect.logDebug("startup phase: browser open check");
           const startupBrowserTarget = yield* resolveStartupBrowserTarget;
-          if (serverConfig.mode !== "desktop") {
-            yield* announceStartupPairingUrl(startupBrowserTarget);
-          }
+          yield* announceStartupPairingUrl(startupBrowserTarget);
           yield* runStartupPhase("browser.open", maybeOpenBrowser(startupBrowserTarget));
         }
       }),

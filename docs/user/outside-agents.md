@@ -60,14 +60,12 @@ The page names the agent and where its access goes:
 
 Only approve a sign-in you just started. On the environment's own page, enter a
 code from **Use Ankiel Code in another app (MCP)**, **Settings → Sharing & access**,
-or `ankiel auth pairing create` on the host. A browser already signed in to the
-environment with permission to manage access can approve without a code. On the
-web app, **Use a sign-in code instead** opens the environment's own page.
+or `ankiel auth pairing create` on the host.
 
 A code from **Use Ankiel Code in another app (MCP)** already carries the level you
 picked there. With another code, choose what the agent may do here: **Auto** is
 selected by default, or the closest lower mode allowed by your organization’s
-policy. Approving without a code starts at **Read only**:
+policy.
 
 - **Read only** lets the agent read projects and threads and see
   the available providers and models. It cannot change anything.

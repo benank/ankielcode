@@ -12,7 +12,7 @@ to a named environment on that phone, open **Settings → Voice → Transcribe o
 
 ## Choose where audio goes
 
-On web and desktop, you choose where transcription runs.
+On desktop, you choose where transcription runs.
 Nothing is sent until you choose one: open **Settings → Voice** and set
 **Transcribe with** to the environment that should transcribe for you.
 On a new device, the microphone or dictation shortcut opens that setting from the composer.
@@ -40,7 +40,7 @@ If a key is already saved, just confirm the provider. After
 you stop, the environment forwards your recording and any vocabulary hints to
 the selected provider, which bills its API account. No local model download or chat
 subscription is needed. Switch back to **This device** on mobile or **Off** on
-web and desktop to stop sharing. Removing the key stops that provider for everyone
+desktop to stop sharing. Removing the key stops that provider for everyone
 on the environment.
 
 **OpenRouter** works the same way but has no default model: pick one from its live
@@ -64,7 +64,7 @@ The recommendation uses your Voice language, or your system’s preferred langua
 If another app already downloaded one of these models, you don’t need a second copy.
 **Download** first looks in Handy’s model folder and the Hugging Face cache on that
 environment and uses a copy it finds there instead of downloading. For a copy anywhere
-else, on web or desktop, paste the path of the model file or its folder under the model
+else, on desktop, paste the path of the model file or its folder under the model
 list and choose **Use existing**. The path is on the environment
 that transcribes, not on the device you are using. Ankiel Code checks that the file is exactly a
 model from its list and then uses it in place. Removing the model in Ankiel Code leaves your file
@@ -82,7 +82,7 @@ browse without a language preference. Filtering does not switch your model.
 **Auto**, a recording that fails on the GPU is retried once on that same
 environment's CPU; a GPU you picked yourself reports the error instead. Nothing
 is ever retried on another environment. Models marked **Live preview** show
-text while you speak. On web and desktop, turn off **Advanced → Streaming transcription**
+text while you speak. On desktop, turn off **Advanced → Streaming transcription**
 to transcribe with the same model after stopping instead. This may help when live
 transcription falls behind. The preference is saved on this device and only applies
 to models that support native streaming. Other models can process long recordings in chunks at pauses

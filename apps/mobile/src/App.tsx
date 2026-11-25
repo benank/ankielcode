@@ -20,7 +20,6 @@ import {
   type NavigationState,
 } from "@react-navigation/native";
 import { pipe } from "effect/Function";
-import { DEFAULT_HOSTED_APP_URL } from "@ankielcode/shared/hostedApp";
 
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import { ProjectChipIconRasterizer } from "./native/ProjectChipIconImages";
@@ -62,14 +61,6 @@ import {
   startDevAutoConnect,
   withoutPairingTarget,
 } from "./features/connection/devAutoConnect";
-import {
-  resolvePendingNewTaskPromptLink,
-  takeNewTaskPromptLink,
-} from "./features/prompt-links/newTaskPromptLink";
-import {
-  resolvePendingThreadPromptLink,
-  takeThreadPromptLink,
-} from "./features/prompt-links/threadPromptLink";
 import {
   disposeOnFoundationReplace,
   type FoundationHotModule,
@@ -126,8 +117,6 @@ function getAppStateFromPath(path: string, options: Parameters<typeof getStateFr
     getStateFromPath(path, options),
     (state) => restoreDraftLinkState(state, path),
     (state) => restoreSettingsLinkState(state, settingsLinkPage()),
-    takeThreadPromptLink,
-    takeNewTaskPromptLink,
     withoutPairingTarget,
     startDevAutoConnect,
     takeScheduledTaskNewLink,
@@ -135,13 +124,7 @@ function getAppStateFromPath(path: string, options: Parameters<typeof getStateFr
 }
 
 const appLinking = {
-  prefixes: [
-    Linking.createURL("/"),
-    "ankielcode://",
-    "ankielcode-dev://",
-    "ankielcode-preview://",
-    DEFAULT_HOSTED_APP_URL,
-  ],
+  prefixes: [Linking.createURL("/"), "ankielcode://", "ankielcode-dev://", "ankielcode-preview://"],
   config: { initialRouteName: "Home" },
   filter: (url: string) => shouldHandleAppLink(url),
   getInitialURL: async () => (await Linking.getInitialURL()) ?? (await launchWorkspaceURL()),
@@ -176,8 +159,6 @@ const Navigation = createStaticNavigation(RootStack);
 function handleNavigationStateChange(state: NavigationState | undefined): void {
   recordWorkspaceSelections(state);
   presentPendingIncomingShare();
-  resolvePendingNewTaskPromptLink(state);
-  resolvePendingThreadPromptLink(state);
   if (!state) return;
   // A launch that opens another route has no Home rows for the splash to wait for.
   if (state.routes[state.index]?.name !== "Home") settleLaunchSplashHomeRows();

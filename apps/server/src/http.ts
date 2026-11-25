@@ -727,6 +727,10 @@ const handleStaticAndDevRequest = Effect.fn("handleStaticAndDevRequest")(
     }
 
     const config = yield* ServerConfig.ServerConfig;
+    if (!config.devUrl && !config.staticDir) {
+      return HttpServerResponse.text("Not Found", { status: 404 });
+    }
+
     if (config.devUrl && isDevProxiedPath(url.value.pathname)) {
       return HttpServerResponse.text("Not Found", { status: 404 });
     }

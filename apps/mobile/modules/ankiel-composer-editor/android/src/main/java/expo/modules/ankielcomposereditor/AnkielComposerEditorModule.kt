@@ -11,7 +11,7 @@ import org.json.JSONArray
 internal object AnkielComposerClipboard {
   // Pasted thread links become chips in JS; packages/shared/src/threadLinks.ts parses them.
   fun hasThreadLink(text: String): Boolean =
-    text.contains("ankiel-thread://v2/") || text.contains("https://app.code.ankiel.com/threads/")
+    text.contains("ankiel-thread://v2/")
 
   fun write(context: Context, text: String, fragment: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

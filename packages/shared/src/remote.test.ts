@@ -34,11 +34,10 @@ describe("remote", () => {
     });
   });
 
-  it("derives backend urls from hosted app pairing links", () => {
+  it("derives backend URLs from HTTPS pairing links", () => {
     expect(
       resolveRemotePairingTarget({
-        pairingUrl:
-          "https://app.code.ankiel.com/pair?host=https%3A%2F%2Fdesktop.tailnet.ts.net%3A44342%2F#token=pairing-token",
+        pairingUrl: "https://desktop.tailnet.ts.net:44342/pair#token=pairing-token",
       }),
     ).toEqual({
       credential: "pairing-token",

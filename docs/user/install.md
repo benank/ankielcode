@@ -1,7 +1,7 @@
 # Install Ankiel Code
 
 Ankiel Code runs coding agents on your computer and lets you control them from its
-desktop, web, or mobile app. Set up the machine where the agents will work first.
+desktop or mobile app. Set up the machine where the agents will work first.
 
 ## Requirements
 
@@ -28,15 +28,14 @@ installer or the desktop app did not create is already there, it leaves that
 one alone and stops. Set `ANKIEL_CHANNEL=nightly` to install the nightly train, or
 `ANKIEL_VERSION` to pin an exact version.
 
-| Task                                  | Command                                                                     |
-| ------------------------------------- | --------------------------------------------------------------------------- |
-| Start the server and open the web app | `ankiel`                                                                    |
-| Start the server without a browser    | `ankiel serve`                                                              |
-| Use it from your other devices        | `ankiel up` ([details](./remote-access.md))                                 |
-| Keep it running in the background     | `ankiel service install` ([details](./background-service.md))               |
-| Move to the newest release            | `ankiel update`                                                             |
-| Reclaim database space                | `ankiel doctor` ([details](./background-service.md#reclaim-database-space)) |
-| Remove it again                       | `ankiel uninstall`                                                          |
+| Task                              | Command                                                                     |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| Start the server in the terminal  | `ankiel serve`                                                              |
+| Use it from your other devices    | `ankiel up` ([details](./remote-access.md))                                 |
+| Keep it running in the background | `ankiel service install` ([details](./background-service.md))               |
+| Move to the newest release        | `ankiel update`                                                             |
+| Reclaim database space            | `ankiel doctor` ([details](./background-service.md#reclaim-database-space)) |
+| Remove it again                   | `ankiel uninstall`                                                          |
 
 Run `ankiel help` or `ankiel --help` for the full reference. To start in a new working
 directory, use an explicit path such as `ankiel ./my-project`. A bare directory name
@@ -129,8 +128,7 @@ command cannot reach the app, start or update the desktop app and try again.
 
 Drag one or more folders from Finder, Explorer, or your file manager onto the
 sidebar. Each one opens as a project on this computer, the same as `ankiel app`.
-Files dropped on a thread still attach to that thread. Browsers do not share
-folder paths, so in the web app use **Add project** instead.
+Files dropped on a thread still attach to that thread.
 
 ## Mobile app
 
@@ -146,7 +144,7 @@ before sharing.
 
 ## Providers
 
-Open **Settings → Providers** in the web or desktop app, select the environment,
+Open **Settings → Providers** in the desktop app, select the environment,
 and enable the provider you want. Installation, login, and configuration belong
 to that environment's machine, even when you connect from a phone or another
 computer.

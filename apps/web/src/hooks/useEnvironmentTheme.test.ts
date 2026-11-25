@@ -85,7 +85,7 @@ describe("environment themes", () => {
     ]);
   });
 
-  // Routes without the old root sync component (/connect, prompt-link landings) never saw them.
+  // Routes without the old root sync component (/pair) never saw them.
   it("resolves published themes without a React subscriber mounted", () => {
     appAtomRegistry.set(publishedThemes.atom, [NIGHTFALL_THEME]);
     expect(getThemeDefinition("nightfall")?.label).toBe("Nightfall");

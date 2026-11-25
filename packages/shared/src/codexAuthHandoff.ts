@@ -1,28 +1,4 @@
-import { EnvironmentId, ProviderInstanceId } from "@ankielcode/contracts";
-import * as Schema from "effect/Schema";
 import { oauthCallbackUrl } from "./oauthCallback.ts";
-import { providerAuthReturnUrl } from "./providerAuthReturnUrl.ts";
-
-export const CodexAuthHandoff = Schema.Struct({
-  authorizationUrl: Schema.String.check(Schema.isMaxLength(16_384)),
-  returnUrl: Schema.String.check(Schema.isMaxLength(4_096)),
-  environmentId: EnvironmentId,
-  instanceId: ProviderInstanceId,
-  flowId: Schema.NonEmptyString.check(Schema.isMaxLength(128)),
-});
-export type CodexAuthHandoff = typeof CodexAuthHandoff.Type;
-const Delivery = Schema.Struct({
-  environmentId: EnvironmentId,
-  instanceId: ProviderInstanceId,
-  flowId: Schema.NonEmptyString.check(Schema.isMaxLength(128)),
-  callbackUrl: Schema.String.check(Schema.isMaxLength(16_384)),
-  returnHash: Schema.String.check(Schema.isMaxLength(128)),
-});
-
-const encodeHandoff = Schema.encodeSync(Schema.fromJsonString(CodexAuthHandoff));
-const decodeHandoff = Schema.decodeUnknownSync(Schema.fromJsonString(CodexAuthHandoff));
-const encodeDelivery = Schema.encodeSync(Schema.fromJsonString(Delivery));
-const decodeDelivery = Schema.decodeUnknownSync(Schema.fromJsonString(Delivery));
 
 export function codexAuthorizationRequest(value: string) {
   const url = new URL(value);
@@ -62,68 +38,4 @@ export function codexCallbackUrl(value: string, redirectUri: string, state: stri
   if (clients.length > 1 || (clients.length === 1 && !/^oaiapp_[\w-]+$/u.test(clients[0]!)))
     throw new Error("This redirect URL does not belong to the current sign-in.");
   return callback;
-}
-
-export function codexAuthHandoffUrl(input: CodexAuthHandoff, development = false) {
-  const url = new URL(`${development ? "ankielcode-dev" : "ankielcode"}://auth/codex`);
-  url.searchParams.set("request", encodeHandoff(input));
-  return url.toString();
-}
-
-export function readCodexAuthHandoff(value: string, development: boolean) {
-  try {
-    const url = new URL(value);
-    if (
-      value.length > 32_768 ||
-      url.protocol !== (development ? "ankielcode-dev:" : "ankielcode:") ||
-      url.host !== "auth" ||
-      url.pathname !== "/codex" ||
-      url.username ||
-      url.password ||
-      url.hash ||
-      url.searchParams.getAll("request").length !== 1
-    )
-      return undefined;
-    const input = decodeHandoff(url.searchParams.get("request"));
-    codexAuthorizationRequest(input.authorizationUrl);
-    if (!providerAuthReturnUrl(input.returnUrl)) return undefined;
-    return input;
-  } catch {
-    return undefined;
-  }
-}
-
-/** Codes travel in a fragment, never in hosted web requests or a token store on the helper. */
-export function codexAuthDeliveryUrl(input: CodexAuthHandoff, callbackUrl: string) {
-  const request = codexAuthorizationRequest(input.authorizationUrl);
-  codexCallbackUrl(callbackUrl, request.redirectUri, request.state);
-  const destination = providerAuthReturnUrl(input.returnUrl);
-  if (!destination) throw new Error("Invalid Ankiel Code return address.");
-  const url = new URL(destination);
-  const delivery = {
-    environmentId: input.environmentId,
-    instanceId: input.instanceId,
-    flowId: input.flowId,
-    callbackUrl,
-    returnHash: url.hash,
-  };
-  url.hash = `codex-auth=${encodeURIComponent(encodeDelivery(delivery))}`;
-  return url.toString();
-}
-
-export function readCodexAuthDelivery(value: string) {
-  try {
-    const url = new URL(value);
-    if (!url.hash.startsWith("#codex-auth=") || url.hash.length > 32_768) return undefined;
-    const input = decodeDelivery(decodeURIComponent(url.hash.slice("#codex-auth=".length)));
-    const destination = providerAuthReturnUrl(value);
-    if (!destination) return undefined;
-    const returnUrl = new URL(destination);
-    returnUrl.hash = input.returnHash;
-    const sanitized = providerAuthReturnUrl(returnUrl.toString());
-    if (!sanitized) return undefined;
-    return { ...input, returnUrl: sanitized };
-  } catch {
-    return undefined;
-  }
 }

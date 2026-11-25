@@ -70,7 +70,7 @@ describe("useShownThreadRouteTarget", () => {
     await act(() => router.navigate({ href: "/env-1/thread-b" }));
     await expect.element(shown).toHaveTextContent("thread-b");
 
-    await act(() => router.navigate({ to: "/new" }));
+    await act(() => router.navigate({ href: "/new" }));
     await expect.element(shown).toHaveTextContent("none");
 
     await act(() => router.navigate({ to: "/settings/general" }));

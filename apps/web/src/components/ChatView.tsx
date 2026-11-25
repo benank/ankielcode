@@ -10,7 +10,6 @@ import { queuedRunEditBlockedReason } from "@ankielcode/client-runtime/queued-ru
 import { ScrollToEndButton, WorkspaceFileDropOverlay } from "./chat/TimelineOverlays";
 import { usePasteToFocusComposer } from "./chat/usePasteToFocusComposer";
 import { useFocusComposerOnThreadOpen } from "./chat/useFocusComposerOnThreadOpen";
-import { configuredHostedAppUrl } from "../hostedPairing";
 import {
   announcedRun,
   isDetailBehindShell,
@@ -2510,7 +2509,6 @@ export default function ChatView(props: ChatViewProps) {
             openPanelPullRequestUrl,
             pullRequests: activeThread?.pullRequests,
             linkedPullRequestUrl: linkedThreadPullRequest?.url ?? null,
-            hostedAppUrl: configuredHostedAppUrl(),
           },
           messages,
         );

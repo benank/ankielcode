@@ -6,7 +6,7 @@ which models and account access are available through this agent.
 
 ## Set up Antigravity
 
-On web or desktop, open **Settings > Providers**, choose the environment that runs
+On desktop, open **Settings > Providers**, choose the environment that runs
 your project, and enable Antigravity. Install its runtime there, then choose
 **Sign in** and complete the browser sign-in. Wait for Ankiel Code to confirm
 account access and load models before starting a thread. Once the runtime is installed,
@@ -57,7 +57,7 @@ Leave the field blank to use the managed runtime, or a compatible executable on
 
 ## Update the managed runtime
 
-In web or desktop provider settings, choose **Update Antigravity** when an update
+In desktop provider settings, choose **Update Antigravity** when an update
 is available. Ankiel checks Google's CLI release channel while provider update checks
 are enabled. Installing or reinstalling also checks that channel. Updates keep
 your profile and existing runtime available if the new release fails validation.
@@ -84,7 +84,7 @@ Use Antigravity's native `/plan` command for planning. Tool approvals follow [Pe
 Questions with fixed choices still need one of the offered answers, even in
 **Full access**.
 
-On web and desktop, [Edit from here](./composer.md#edit-an-earlier-prompt) works with
+On desktop, [Edit from here](./composer.md#edit-an-earlier-prompt) works with
 Antigravity. Antigravity cannot rewind its own conversation, so the next turn
 starts a fresh Antigravity session and Ankiel Code sends it the kept conversation,
 without the turns you removed.
@@ -123,7 +123,7 @@ activity.
 ## Accounts and removal
 
 Add an Antigravity provider instance for each Google account in
-**Settings > Providers** on web or desktop. Each has its own sign-in; downloaded
+**Settings > Providers** on desktop. Each has its own sign-in; downloaded
 runtimes are shared on the environment.
 
 | Action                    | Effect                                                            |
@@ -160,9 +160,9 @@ times. Limits refresh with provider status and include usage outside Ankiel Code
 A server restart keeps your Google sign-in. The provider shows the saved account
 until a session, a refresh, or a sign-out reports something new.
 
-To check access and reload models, use **Refresh provider status** in web or desktop
+To check access and reload models, use **Refresh provider status** in desktop
 provider settings, or **Refresh models** in mobile thread settings. If asked to
-sign in again, use provider settings on web or desktop, or **Settings > Providers** on mobile.
+sign in again, use provider settings on desktop, or **Settings > Providers** on mobile.
 
 If Google reports `SUBSCRIPTION_REQUIRED`, an account restriction, or a usage limit,
 follow the provider's message and any retry time. See [Google's account plans][plans]

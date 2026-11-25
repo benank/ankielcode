@@ -56,7 +56,7 @@ describe("reloadOnceForChunkLoadError", () => {
 describe("isChunkLoadError", () => {
   it.each([
     ["Failed to fetch dynamically imported module: ankielcode://app/assets/a.js", true],
-    ["error loading dynamically imported module: https://app.code.ankiel.com/assets/a.js", true],
+    ["error loading dynamically imported module: http://localhost:5173/assets/a.js", true],
     ["Importing a module script failed.", true],
     ["Cannot read properties of undefined", false],
   ])("%s", (message, expected) => {

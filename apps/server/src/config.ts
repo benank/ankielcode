@@ -282,14 +282,6 @@ export const layerTest = (cwd: string, baseDirOrPrefix: string | { readonly pref
 export const resolveStaticDir = Effect.fn(function* () {
   const { join, resolve } = yield* Path.Path;
   const { exists } = yield* FileSystem.FileSystem;
-  const bundledClient = resolve(join(import.meta.dirname, "client"));
-  const bundledStat = yield* exists(join(bundledClient, "index.html")).pipe(
-    Effect.orElseSucceed(() => false),
-  );
-  if (bundledStat) {
-    return bundledClient;
-  }
-
   const monorepoClient = resolve(join(import.meta.dirname, "../../web/dist"));
   const monorepoStat = yield* exists(join(monorepoClient, "index.html")).pipe(
     Effect.orElseSucceed(() => false),

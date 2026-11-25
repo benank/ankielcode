@@ -18,7 +18,6 @@ import {
   parseMcpApprovalCode,
   type RuntimeMode,
 } from "@ankielcode/contracts";
-import { DEFAULT_HOSTED_APP_URL } from "@ankielcode/shared/hostedApp";
 import { encodeOAuthScope } from "@ankielcode/shared/oauthScope";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -618,7 +617,6 @@ export const layerMcpClientAuthenticator = Layer.effect(
     const environmentAuth = yield* EnvironmentAuth.EnvironmentAuth;
     const environment = yield* ServerEnvironment.ServerEnvironment;
     const environmentId = yield* environment.getEnvironmentId;
-    const hostedAppUrl = DEFAULT_HOSTED_APP_URL;
     return McpHttpServer.McpClientAuthenticator.of({
       authenticate: Effect.fn("McpHttpServer.McpClientAuthenticator.authenticate")(
         function (request) {
@@ -635,7 +633,6 @@ export const layerMcpClientAuthenticator = Layer.effect(
                     access: client.access,
                     linked: client.peerLink,
                     linkExpiresAt: client.linkExpiresAt,
-                    ...(client.peerLink ? {} : { hostedAppUrl }),
                   },
                   capabilities: new Set<McpInvocationContext.McpCapability>([
                     "orchestration",

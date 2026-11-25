@@ -5,8 +5,6 @@ import type { DesktopBridge, ThreadId } from "@ankielcode/contracts";
 interface ImportMetaEnv {
   readonly VITE_HTTP_URL: string;
   readonly VITE_WS_URL: string;
-  readonly VITE_HOSTED_APP_URL: string;
-  readonly VITE_HOSTED_APP_CHANNEL: string;
   readonly VITE_RELEASE_CHANNEL: string;
   readonly ANKIEL_DESKTOP_UPDATE_REPOSITORY: string;
   readonly APP_VERSION: string;

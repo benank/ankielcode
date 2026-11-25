@@ -82,7 +82,7 @@ describe("DesktopWebLinks", () => {
     }).pipe(Effect.provide(layer));
   });
 
-  it.effect("holds links that arrive while the web app reloads until it listens again", () => {
+  it.effect("holds links that arrive while the renderer reloads until it listens again", () => {
     const { sent, layer, reload } = makeWindow();
     return Effect.gen(function* () {
       const webLinks = yield* DesktopWebLinks.DesktopWebLinks;

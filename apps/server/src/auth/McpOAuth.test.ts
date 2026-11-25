@@ -312,8 +312,9 @@ it.effect("registers loopback and https clients and never redirects for an unver
 
       const query = new URLSearchParams(authorizeParams(clientId)).toString();
       const handoff = yield* handler(at(`/oauth/mcp/authorize?${query}`));
-      expect(handoff.status).toBe(302);
-      expect(handoff.headers.get("location")).toBe(`/connect-agent?${query}`);
+      expect(handoff.status).toBe(200);
+      expect(handoff.headers.get("location")).toBeNull();
+      expect(yield* Effect.promise(() => handoff.text())).toContain("Connect Claude Code");
       const details = yield* handler(
         postJson("/oauth/mcp/approval", authorizeParams(clientId)),
       ).pipe(Effect.flatMap(json<Record<string, unknown>>));
@@ -339,21 +340,18 @@ it.live("signs in with a pairing code and issues a token only /mcp accepts", () 
       const pairing = yield* auth.issuePairingCredential();
       const params = authorizeParams(clientId);
 
-      const wrongCode = yield* decide(handler, params, {
-        _tag: "pairing-code",
-        access: "auto",
-        code: "nope",
-      });
+      const path = `/oauth/mcp/authorize?${new URLSearchParams(params)}`;
+      const submit = (code: string) =>
+        handler(at(path, form({ decision: "approve", access: "auto", code })));
+      const wrongCode = yield* submit("nope");
       expect(wrongCode.status).toBe(400);
-      expect(wrongCode.message).toContain("unknown, expired, or already used");
+      expect(yield* Effect.promise(() => wrongCode.text())).toContain(
+        "unknown, expired, or already used",
+      );
 
-      const approved = yield* decide(handler, params, {
-        _tag: "pairing-code",
-        access: "auto",
-        code: pairing.credential,
-      });
-      expect(approved.status).toBe(200);
-      const callback = new URL(approved.redirectTo!);
+      const approved = yield* submit(pairing.credential);
+      expect(approved.status).toBe(303);
+      const callback = new URL(approved.headers.get("location")!);
       expect(callback.origin).toBe("http://localhost:51234");
       expect(callback.searchParams.get("state")).toBe("state-1");
       expect(callback.searchParams.get("iss")).toBe(ORIGIN);
@@ -841,7 +839,7 @@ it.live("one-click approves only access the browser session holds the scopes for
       );
       expect(new URL(readOnly.redirectTo!).searchParams.get("code")).toEqual(expect.any(String));
 
-      // The hosted app approves with the owner's session, which sends no cookie.
+      // The app approves with the owner's session, which sends no cookie.
       const connect = `Bearer ${(yield* auth.issueSession({ scopes: [...AuthStandardClientScopes] })).token}`;
       const connectDetails = yield* details(connect);
       expect(connectDetails.oneClickAccess).toContain("full-access");
@@ -853,7 +851,7 @@ it.live("one-click approves only access the browser session holds the scopes for
       );
       expect(new URL(viaConnect.redirectTo!).searchParams.get("code")).toEqual(expect.any(String));
 
-      // The hosted app may load and decide with two credentials minted for the same browser key.
+      // The app may load and decide with two credentials minted for the same browser key.
       const key = makeDpopKey();
       const dpopSession = (thumbprint: string) =>
         auth.issuePairingCredential({ scopes: [...AuthStandardClientScopes] }).pipe(

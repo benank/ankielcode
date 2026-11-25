@@ -6,7 +6,6 @@ import { isAppModalPage } from "../components/sidebar/mainAppLocation";
 import { SidebarInset } from "../components/ui/sidebar";
 import { resolveThreadRouteTarget } from "../threadRoutes";
 import { retainThreadFindForRoute } from "../components/chat/threadFindStore";
-import { ThreadLinkPrompt } from "../components/promptLinks/ThreadLinkPrompt";
 import { useShownThreadRouteTarget } from "../hooks/useShownThreadRouteTarget";
 
 function ChatRouteLayout() {
@@ -14,9 +13,6 @@ function ChatRouteLayout() {
   const { shownTarget, modalOpen } = useShownThreadRouteTarget();
   return (
     <>
-      {shownTarget?.kind === "server" && !modalOpen ? (
-        <ThreadLinkPrompt threadRef={shownTarget.threadRef} />
-      ) : null}
       {shownTarget ? (
         <ThreadRouteView target={shownTarget} background={modalOpen} />
       ) : modalOpen ? (
@@ -34,7 +30,7 @@ export const Route = createFileRoute("/_chat")({
   beforeLoad: async ({ context, location }) => {
     if (
       context.authGateState.status !== "authenticated" &&
-      context.authGateState.status !== "hosted-static"
+      context.authGateState.status !== "local-environment-disabled"
     ) {
       throw redirect({ to: "/pair", replace: true });
     }

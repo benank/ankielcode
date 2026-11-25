@@ -8,9 +8,7 @@ and the phone app. Only an agent is needed to start chatting.
 To see the page again, go to **Settings → About → Welcome page** and select
 **Open**. Direct links, such as Settings, open normally before setup is done.
 
-The hosted app at app.code.ankiel.com does not open the page. With no computer connected,
-it asks you to install Ankiel Code on your computer and pair it. To add more computers later,
-use **Settings → Environments**.
+To add more computers later, use **Settings → Environments**.
 
 If Ankiel Code cannot confirm the workspace during startup, it shows
 **Still connecting** instead of opening the app. Select **Reload** to try again.

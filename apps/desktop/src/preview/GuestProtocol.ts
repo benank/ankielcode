@@ -5,7 +5,7 @@ export const ANNOTATION_CAPTURED_CHANNEL = "preview:annotation-captured";
 export const ANNOTATION_THEME_CHANNEL = "preview:annotation-theme";
 export const ANNOTATION_SEND_ENABLED_CHANNEL = "preview:annotation-send-enabled";
 export const HUMAN_INPUT_CHANNEL = "preview:human-input";
-// Sent to the hosting <webview> element (ipc-message). The web app mirrors this
+// Sent to the hosting <webview> element (ipc-message). The desktop renderer mirrors this
 // literal in HostedBrowserWebview because it cannot import from the desktop app.
 export const POINTER_DOWN_HOST_CHANNEL = "preview:pointer-down";
 export const PAGE_UNHANDLED_SHORTCUT_CHANNEL = "preview:page-unhandled-shortcut";

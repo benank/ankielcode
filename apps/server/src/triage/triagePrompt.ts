@@ -71,9 +71,8 @@ different code depending on it:
 
 - How is Ankiel Code running on this machine: \`npx @ankielcode/cli serve\` in a terminal, the
   background service, or the desktop app?
-- Which surface is the user connecting from: the website (app.code.ankiel.com), the
-  desktop app against a local server, the desktop app against a remote server,
-  or the mobile app?
+- Which surface is the user connecting from: the desktop app with a local server, the
+  desktop app with a remote server, or the mobile app?
 
 Then work from evidence, not assumption. In rough order of value:
 

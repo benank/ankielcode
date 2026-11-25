@@ -2,13 +2,12 @@ import { thrownErrorMessage } from "@ankielcode/client-runtime/errors";
 import * as DateTime from "effect/DateTime";
 import { msg } from "gt-react";
 
-import { resolveDesktopPairingUrl, resolveHostedPairingUrl } from "./pairingUrls";
+import { resolveDesktopPairingUrl } from "./pairingUrls";
 import {
   extractRelayBasePath,
   getPairingTokenFromUrl,
   setPairingTokenOnUrl,
 } from "@ankielcode/shared/remote";
-import { readHostedPairingRequest } from "../../hostedPairing";
 import { m, type MessageResolver } from "../../i18n/messages";
 import {
   isLoopbackHostname,
@@ -253,14 +252,6 @@ export function parsePairingUrlFields(
       urlLikeInput,
       typeof window !== "undefined" ? window.location.origin : "http://localhost",
     );
-    const hostedPairingRequest = readHostedPairingRequest(url);
-    if (hostedPairingRequest) {
-      return {
-        host: hostedPairingRequest.host,
-        pairingCode: hostedPairingRequest.token,
-      };
-    }
-
     const pairingCode = getPairingTokenFromUrl(url);
     if (!pairingCode) return null;
     const basePath = extractRelayBasePath(url.pathname);
@@ -392,7 +383,6 @@ export function selectPairingEndpoint(
   return (
     availableEndpoints.find((endpoint) => endpoint.isDefault) ??
     availableEndpoints.find((endpoint) => endpoint.reachability !== "loopback") ??
-    availableEndpoints.find((endpoint) => endpoint.compatibility.hostedHttpsApp === "compatible") ??
     null
   );
 }
@@ -419,7 +409,6 @@ export function relayStatusToAdvertisedEndpoint(
   }
   const httpBaseUrl = status.publicBaseUrl.replace(/\/+$/u, "");
   const wsBaseUrl = httpBaseUrl.replace(/^http/iu, "ws");
-  const isHttps = httpBaseUrl.startsWith("https://");
   const label = resolve(msg("Cloudflare Relay"));
   return {
     id: `cloudflare-relay:${status.hostId}`,
@@ -433,10 +422,6 @@ export function relayStatusToAdvertisedEndpoint(
     httpBaseUrl,
     wsBaseUrl,
     reachability: "public",
-    compatibility: {
-      hostedHttpsApp: isHttps ? "compatible" : "mixed-content-blocked",
-      desktopApp: "compatible",
-    },
     source: "server",
     status: "available",
   };
@@ -471,12 +456,6 @@ export function resolveAdvertisedEndpointPairingUrl(
   endpoint: AdvertisedEndpoint,
   credential: string,
 ): string {
-  if (endpoint.compatibility.hostedHttpsApp === "compatible") {
-    return (
-      resolveHostedPairingUrl(endpoint.httpBaseUrl, credential) ??
-      resolveDesktopPairingUrl(endpoint.httpBaseUrl, credential)
-    );
-  }
   return resolveDesktopPairingUrl(endpoint.httpBaseUrl, credential);
 }
 
@@ -497,23 +476,10 @@ export function resolveCurrentOriginPairingUrl(
   return setPairingTokenOnUrl(url, credential).toString();
 }
 
-export function isHostedAppPairingUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.pathname === "/pair" && url.searchParams.has("host");
-  } catch {
-    return false;
-  }
-}
-
 export function endpointShareHint(
   endpoint: AdvertisedEndpoint,
-  url: string,
   resolve: MessageResolver = m,
 ): string {
-  if (isHostedAppPairingUrl(url)) {
-    return resolve(msg("Opens the hosted app, no install needed"));
-  }
   switch (endpoint.reachability) {
     case "lan":
       return resolve(msg("Devices on the same network"));

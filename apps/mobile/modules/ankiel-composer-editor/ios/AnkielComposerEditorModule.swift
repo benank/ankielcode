@@ -6,7 +6,7 @@ enum AnkielComposerClipboard {
 
   // Pasted thread links become chips in JS; packages/shared/src/threadLinks.ts parses them.
   static func hasThreadLink(_ text: String) -> Bool {
-    text.contains("ankiel-thread://v2/") || text.contains("https://app.code.ankiel.com/threads/")
+    text.contains("ankiel-thread://v2/")
   }
 
   static func write(text: String, fragment: String) {

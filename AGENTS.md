@@ -1,6 +1,6 @@
 # Ankiel Code
 
-Ankiel Code is a minimal, self-hosted GUI for coding agents. A Node WebSocket server wraps provider CLIs and agents (Codex, Claude Code, Cursor, Grok, OpenCode, Antigravity, Kiro, Pi, Muse Code, fx) and serves web, desktop, and mobile clients.
+Ankiel Code is a minimal, self-hosted GUI for coding agents. A Node WebSocket server wraps provider CLIs and agents (Codex, Claude Code, Cursor, Grok, OpenCode, Antigravity, Kiro, Pi, Muse Code, fx) and serves desktop and mobile clients.
 
 You can think of Ankiel Code as an open source "bring-your-own-subscription" alternative to apps like Claude Desktop, Codex App, Cursor Glass and Conductor. It is a fork of T3 Code (MIT), and it is run by one person who wants to own the whole stack.
 
@@ -26,11 +26,9 @@ The architecture of Ankiel Code's websocket layer (`ankiel`) enables the remote 
 
 ### 5. Multi-surface
 
-Ankiel Code has 3 key app surfaces: **web**, **desktop**, and **mobile**.
+Ankiel Code has two app surfaces: **desktop** and **mobile**.
 
-**Web** is kind of two surfaces: the hosted static client at "app.code.ankiel.com" and the web app served locally by the `ankiel` command. Both need to be supported by all new features where reasonable.
-
-**Desktop** is the main surface most users install first. It's a full Electron app that bundles the server runner as well. The desktop app can also be used as the host server, allowing remote connections from app.code.ankiel.com or the mobile app.
+**Desktop** is the main surface most users install first. It's a full Electron app that bundles the server runner as well. The desktop app can also be used as the host server, allowing remote connections from desktop and mobile apps.
 
 **Mobile** is a React Native app for iOS and Android. The mobile app allows for connecting to any Ankiel Code server to control work remotely.
 
@@ -53,14 +51,14 @@ Of note: Most Ankiel Code contributions will come from Ankiel Code itself, often
 
 1. **Killing by pattern.** Never `pkill -f`, `pgrep | kill`, or `kill` a PID you found by matching a name, path, or worktree string. Your own agent process has this worktree's path in its argv, and this machine runs several other dev servers at once. Kill only a PID you captured at spawn, or the owner of your port from `ss -H -ltnp` after confirming `/proc/<pid>/cwd` is your worktree.
 2. **Writing to the live install.** `~/.ankiel/userdata` is the developer's real Ankiel Code database, in use while you work. Reading or copying from it is fine. Never start a server against it, never open it read-write, never clean it up.
-3. **Baking in origins.** Never set `VITE_HTTP_URL` or `VITE_WS_URL` for dev. Dev is single-origin and Vite proxies `/api`, `/ws`, `/oauth`, and `/.well-known`. Setting them bakes localhost into the bundle and silently breaks every remote browser.
+3. **Baking in origins.** Never set `VITE_HTTP_URL` or `VITE_WS_URL` for dev. Dev is single-origin and Vite proxies `/api`, `/ws`, `/oauth`, and `/.well-known`. Setting them bakes localhost into the bundle and breaks browser-based development and tests.
 
 ## Hit every surface
 
 The most common defect in this repo is a change that works on the path you tested and is missing everywhere else. Before calling frontend work done, walk this list and say which entries applied:
 
 - **Entry points.** Chat view, Settings, command palette, and keybindings. Fixing one is not fixing the feature.
-- **Clients.** Web, desktop (Electron shell/IPC), and mobile (React Native). Shared logic lives in `packages/client-runtime`.
+- **Clients.** Desktop (Electron shell/IPC and React renderer), and mobile (React Native). Shared logic lives in `packages/client-runtime`.
 - **Providers.** Every provider adapter needs a decision, even if the decision is "not supported here".
 - **Agents.** Capabilities a user triggers should be service methods reachable by MCP tools and scheduled tasks, not inline handler code.
 - **Contracts.** Wire changes go in `packages/contracts` so server, web, mobile, and desktop follow.
@@ -123,7 +121,7 @@ Most code changes do not need an internal documentation change. Agents can read 
 ## Where code lives
 
 - `apps/server` - WebSocket, event-sourced orchestration (`Orchestrator` → `EventSink` → `EffectWorker`), providers, checkpointing. Read [02_effect-services.md](docs/internals/02_effect-services.md) and `.repos/effect/LLMS.md`.
-- `apps/web` - React/Vite UI. `apps/desktop` wraps it; `apps/mobile` is React Native; `apps/marketing` is the site.
+- `apps/web` - React/Vite renderer for `apps/desktop`; `apps/mobile` is React Native; `apps/marketing` is the site.
 - `packages/contracts` - Effect/Schema wire contracts plus small derived helpers. No heavy runtime logic.
 - `packages/shared` - shared runtime utils, subpath exports, no barrel.
 - `packages/client-runtime` - client connection and domain state shared by web and mobile.

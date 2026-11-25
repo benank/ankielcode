@@ -115,8 +115,6 @@ function resolveAppVariant(value: string | undefined): AppVariant {
 }
 
 const variant = VARIANT_CONFIG[APP_VARIANT];
-// Copied thread links open the app. app.code.ankiel.com/.well-known lists every variant's identifiers.
-const HOSTED_APP_HOST = "app.code.ankiel.com";
 const iosBundleIdentifier = isIosPersonalTeamBuild
   ? personalTeamBundleIdentifier!
   : variant.iosBundleIdentifier;
@@ -255,7 +253,6 @@ const config: ExpoConfig = {
     bundleIdentifier: iosBundleIdentifier,
     // Avoid Personal Team fallback: it cannot sign App Groups, Apple sign-in or push entitlements.
     ...(appleTeamId ? { appleTeamId } : {}),
-    ...(!isIosPersonalTeamBuild ? { associatedDomains: [`applinks:${HOSTED_APP_HOST}`] } : {}),
     entitlements: {
       "keychain-access-groups": [`$(AppIdentifierPrefix)${iosBundleIdentifier}`],
     },
@@ -307,17 +304,6 @@ const config: ExpoConfig = {
     predictiveBackGestureEnabled: true,
     // expo-sensors declares this for its pedometer, which the app does not use.
     blockedPermissions: ["android.permission.ACTIVITY_RECOGNITION"],
-    intentFilters: [
-      {
-        action: "VIEW",
-        autoVerify: true,
-        data: [{ scheme: "https", host: HOSTED_APP_HOST, pathPrefix: "/threads/" }],
-        category: ["BROWSABLE", "DEFAULT"],
-      },
-    ],
-  },
-  web: {
-    favicon: variant.assets.appIcon,
   },
   plugins: [
     "expo-asset",

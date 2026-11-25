@@ -7,7 +7,6 @@ import {
 } from "@ankielcode/client-runtime/state/runtime";
 import type { EnvironmentId, ScopedThreadRef } from "@ankielcode/contracts";
 import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
-import { promptLinkAppPath } from "@ankielcode/shared/promptLinks";
 import { readPairingAppLink, resolveRemotePairingTarget } from "@ankielcode/shared/remote";
 import { useRouter } from "@tanstack/react-router";
 import * as Effect from "effect/Effect";
@@ -209,11 +208,6 @@ export function DesktopWebLinkCoordinator() {
     const pairingUrl = readPairingAppLink(url);
     if (pairingUrl !== null) {
       await pairFromLink(pairingUrl);
-      return;
-    }
-    const appPath = promptLinkAppPath(url);
-    if (appPath !== null) {
-      await router.navigate({ href: appPath });
       return;
     }
     const routeParams = router.state.matches.at(-1)?.params ?? {};

@@ -1,17 +1,12 @@
-import { isLoopbackHost } from "./preview.ts";
-
 export function providerAuthReturnUrl(value: string | undefined): string | undefined {
   if (!value) return undefined;
   try {
     const url = new URL(value);
     const desktop = ["ankielcode:", "ankielcode-dev:"].includes(url.protocol) && url.host === "app";
-    const web =
-      ["http:", "https:"].includes(url.protocol) &&
-      (isLoopbackHost(url.hostname) || url.origin === "https://app.code.ankiel.com");
     if (
       url.username ||
       url.password ||
-      (!desktop && !web) ||
+      !desktop ||
       (url.pathname !== "/welcome" &&
         url.pathname !== "/settings" &&
         !url.pathname.startsWith("/settings/"))

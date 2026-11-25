@@ -2,14 +2,9 @@ import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@ankielcode/contr
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { DEFAULT_HOSTED_APP_URL } from "./hostedApp.ts";
-
 export const THREAD_LINK_PROTOCOL = "ankiel-thread";
 const V1_PREFIX = `${THREAD_LINK_PROTOCOL}://v1/`;
 const V2_PREFIX = `${THREAD_LINK_PROTOCOL}://v2/`;
-const HOSTED_PREFIX = `${DEFAULT_HOSTED_APP_URL}/threads/`;
-const HOSTED_SEGMENT = "[A-Za-z0-9_%-]+";
-const HOSTED_LINK = `${HOSTED_PREFIX.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}${HOSTED_SEGMENT}/${HOSTED_SEGMENT}`;
 const THREAD_HREF = String.raw`ankiel-thread:\/\/v[12]\/`;
 // A label stops at any bracket, so a run of unclosed brackets is scanned once, not once per bracket.
 const LABEL = String.raw`[^[\]\n]*`;
@@ -21,11 +16,9 @@ const THREAD_LINK_OUTSIDE_CODE = new RegExp(
     String.raw`(?<fence>(\`{3,}|~{3,})[\s\S]*?(?:\2|$))`,
     String.raw`(?<span>(\`+)[^\n]*?\4)`,
     // A labeled link's destination may be angle-bracketed, as CommonMark allows: [label](<href>).
-    String.raw`\[(?<label>${LABEL})\]\((?:<(?<angleHref>${THREAD_HREF}[^\s<>]+|${HOSTED_LINK})>|(?<href>${THREAD_HREF}[^\s>)]+|${HOSTED_LINK}))\)`,
+    String.raw`\[(?<label>${LABEL})\]\((?:<(?<angleHref>${THREAD_HREF}[^\s<>]+)>|(?<href>${THREAD_HREF}[^\s>)]+))\)`,
     String.raw`\[${LABEL}\]\((?:<[^<>\n]*>|[^\s()]*(?:\([^\s()]*\)[^\s()]*)*)(?:[ \t]+(?:"[^"\n]*"|'[^'\n]*'))?\)`,
-    String.raw`<(?<autolink>${THREAD_HREF}[^\s<>]+|${HOSTED_LINK})>`,
-    // After a URL character the hosted link is part of a longer URL, such as a redirect target.
-    String.raw`(?<![A-Za-z0-9%/?#=&@+-])(?<bare>${HOSTED_LINK})(?![\w%/?#-])`,
+    String.raw`<(?<autolink>${THREAD_HREF}[^\s<>]+)>`,
   ].join("|"),
   "g",
 );
@@ -39,39 +32,8 @@ export interface ThreadLink {
   readonly threadId: ThreadId;
 }
 
-// Escapes even URL-safe punctuation, so a sentence's closing period never reads as part of an id.
-const hostedSegment = (id: string) =>
-  encodeURIComponent(id).replace(
-    /[.!~*'()]/g,
-    (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
-  );
-
-/** Opens the thread from anywhere: the hosted app offers the desktop app, the mobile app, or itself. */
-export function hostedThreadLink(ref: ScopedThreadRef, origin = DEFAULT_HOSTED_APP_URL): string {
-  const path = `/threads/${hostedSegment(ref.environmentId)}/${hostedSegment(ref.threadId)}`;
-  return new URL(path, origin).toString();
-}
-
-const HOSTED_PATH = new RegExp(`^(${HOSTED_SEGMENT})/(${HOSTED_SEGMENT})$`);
-
-function parseHostedThreadLink(href: string): ThreadLink | null {
-  const match = HOSTED_PATH.exec(href.slice(HOSTED_PREFIX.length));
-  if (!match) return null;
-  try {
-    const environmentId = Option.getOrNull(decodeEnvironmentId(decodeURIComponent(match[1]!)));
-    const threadId = Option.getOrNull(decodeThreadId(decodeURIComponent(match[2]!)));
-    return environmentId === null || threadId === null ? null : { environmentId, threadId };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * The ids as written. Thread ids can hold percent escapes of their own, so they are not decoded,
- * except in a hosted link, which escapes them itself.
- */
+/** Read ids as written. Thread ids can hold percent escapes of their own. */
 export function parseThreadLinkHref(href: string): ThreadLink | null {
-  if (href.startsWith(HOSTED_PREFIX)) return parseHostedThreadLink(href);
   if (href.startsWith(V1_PREFIX)) {
     const threadId = Option.getOrNull(decodeThreadId(href.slice(V1_PREFIX.length)));
     return threadId === null ? null : { environmentId: null, threadId };
@@ -144,19 +106,8 @@ export function formatThreadLink(ref: ThreadLink, label?: string): string {
   return cleaned ? `[${cleaned}](${destination})` : `<${href}>`;
 }
 
-/** What a person copies out of Ankiel Code: a Markdown link that opens the thread anywhere. */
-export function formatHostedThreadLink(
-  ref: ScopedThreadRef,
-  label: string,
-  origin?: string,
-): string {
-  const href = hostedThreadLink(ref, origin);
-  const cleaned = linkLabel(label);
-  return cleaned ? `[${cleaned}](${href})` : href;
-}
-
 export function hasThreadLinks(markdown: string): boolean {
-  return markdown.includes(`${THREAD_LINK_PROTOCOL}://v`) || markdown.includes(HOSTED_PREFIX);
+  return markdown.includes(`${THREAD_LINK_PROTOCOL}://v`);
 }
 
 /** Every thread the markdown's links can name, so their titles are keyed reads. */
@@ -168,8 +119,7 @@ export function threadLinkRefs(
   // Hermes' matchAll yields matches without `groups`; exec keeps them.
   const pattern = new RegExp(THREAD_LINK_OUTSIDE_CODE);
   for (let match = pattern.exec(markdown); match !== null; match = pattern.exec(markdown)) {
-    const href =
-      match.groups?.angleHref ?? match.groups?.href ?? match.groups?.autolink ?? match.groups?.bare;
+    const href = match.groups?.angleHref ?? match.groups?.href ?? match.groups?.autolink;
     const link = href === undefined ? null : parseThreadLinkHref(href);
     if (link === null) continue;
     for (const ref of threadLinkCandidates(link, messageEnvironmentId)) {
@@ -187,9 +137,9 @@ export function replaceThreadLinks(
   if (!hasThreadLinks(markdown)) return markdown;
   return markdown.replace(THREAD_LINK_OUTSIDE_CODE, (source, ...args) => {
     const groups = args.at(-1) as Partial<
-      Record<"angleHref" | "href" | "autolink" | "bare" | "label", string>
+      Record<"angleHref" | "href" | "autolink" | "label", string>
     >;
-    const href = groups.angleHref ?? groups.href ?? groups.autolink ?? groups.bare;
+    const href = groups.angleHref ?? groups.href ?? groups.autolink;
     const link = href === undefined ? null : parseThreadLinkHref(href);
     return (link && replace(link, groups.label)) ?? source;
   });

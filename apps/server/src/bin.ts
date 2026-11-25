@@ -9,7 +9,7 @@ import { isEntrypoint } from "./entrypoint.ts";
 async function loadCliMain(): Promise<typeof import("./binMain.ts")> {
   if (!NodeSea.isSea()) return import("./binMain.ts");
 
-  // Keep the executable's module URL so the CLI finds the web client and native packages beside it.
+  // Keep the executable's module URL so the CLI finds native packages beside it.
   const require = NodeModule.createRequire(import.meta.url);
   // require() resolves links in the executable path, such as a Windows junction.
   const cliUrl = NodeURL.pathToFileURL(require.resolve(process.execPath)).href;

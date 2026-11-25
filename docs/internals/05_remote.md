@@ -43,13 +43,6 @@ side lists and revokes it in Sharing & access like any other session, and owns i
   [`PeerThreadRelay`](../../apps/server/src/peer/PeerThreadRelay.ts) proxies the same stream format
   read-only so there is no second transcript schema to maintain.
 
-## Hosted web is a client
-
-The hosted web app stores its connection catalog in the browser and connects directly to each
-environment without proxying traffic. A [hosted pairing URL](../../apps/web/src/hostedPairing.ts)
-puts the backend target in the query and the pairing secret in the URL fragment so the secret never
-reaches the hosted origin, then strips it from history.
-
 ## Desktop previews tunnel loopback
 
 A desktop webview for a remote environment keeps `localhost` URLs and tunnels loopback connections

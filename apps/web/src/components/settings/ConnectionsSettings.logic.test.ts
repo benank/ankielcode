@@ -117,10 +117,6 @@ describe("relay pairing helpers", () => {
       wsBaseUrl: `wss://${hostId}.relay.ankiel.com`,
       reachability: "public",
       status: "available",
-      compatibility: {
-        hostedHttpsApp: "compatible",
-        desktopApp: "compatible",
-      },
     });
   });
 });

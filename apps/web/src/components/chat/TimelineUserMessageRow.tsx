@@ -52,7 +52,6 @@ import {
   type LucideIcon,
   MessagesSquareIcon,
   PencilIcon,
-  LinkIcon,
 } from "lucide-react";
 import { Button, InlineButton } from "../ui/button";
 import { FreshSessionRow, ModelSwitchRow } from "./V2LifecycleRow";
@@ -69,7 +68,6 @@ import {
   SnapShotAttachmentDetails,
 } from "./SnapShotAttachmentDetails";
 import { MessageCopyButton } from "./MessageCopyButton";
-import { promptLinkFor } from "../promptLinks/copyPromptLink";
 import { PierreEntryIcon } from "./PierreEntryIcon";
 import { formatBytes } from "../../lib/formatBytes";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
@@ -320,7 +318,6 @@ function AutomationMessageRow({ row }: { row: Extract<TimelineRow, { kind: "mess
     "";
 
   const revertTurnCount = row.revertTurnCount;
-  const promptLink = promptLinkFor(text);
   // Find reads the DOM, so a folded prompt stays mounted but hidden while find is open.
   const bodyMounted = expanded || ctx.findActive;
   const receipt = resolveUserMessageReceipt(
@@ -384,14 +381,6 @@ function AutomationMessageRow({ row }: { row: Extract<TimelineRow, { kind: "mess
                   <RevertUserMessageButton turnCount={revertTurnCount} messageId={row.message.id} />
                 )}
                 <MessageCopyButton text={text} variant="ghost" />
-                {promptLink !== null && (
-                  <MessageCopyButton
-                    text={promptLink}
-                    label={gt("Copy prompt link")}
-                    icon={LinkIcon}
-                    variant="ghost"
-                  />
-                )}
               </div>
             </div>
           ) : null}
@@ -599,7 +588,6 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
     resolvedContext.text,
     (reference) => reference.label,
   );
-  const promptLink = promptLinkFor(plainText);
   const foldSummary =
     plainText
       .split(/\r?\n/)
@@ -895,14 +883,6 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
                   },
                 }
               : {})}
-            variant="ghost"
-          />
-        )}
-        {promptLink !== null && (
-          <MessageCopyButton
-            text={promptLink}
-            label={gt("Copy prompt link")}
-            icon={LinkIcon}
             variant="ghost"
           />
         )}

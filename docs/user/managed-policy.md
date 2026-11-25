@@ -215,7 +215,7 @@ The limit decides which modes Ankiel Code asks the provider for. It is not a san
 
 - `desktop`: as the desktop app's own server.
 - `local-browser`: as a server only browsers on this machine reach, such as `npx @ankielcode/cli`.
-- `remote`: reachable from phones, other computers, and app.code.ankiel.com over the network.
+- `remote`: reachable from phones and other computers over the network.
 
 `remote` is the line that matters. A server reachable from the network also accepts browsers on
 this machine, and the two local kinds differ only in how Ankiel Code was started. On machines with the

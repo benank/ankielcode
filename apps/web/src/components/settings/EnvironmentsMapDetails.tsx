@@ -13,7 +13,7 @@ import { cn } from "~/lib/utils";
 import type { EnvironmentPresentation } from "~/state/environments";
 import { peerLinkEnvironment } from "~/state/peerLinks";
 import { useAtomCommand } from "~/state/use-atom-command";
-import { accessConfig } from "../auth/ConnectAgentSurface";
+import { accessConfig } from "../auth/mcpAccessConfig";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { formatAccessTimestamp } from "./ConnectionsSettings.logic";

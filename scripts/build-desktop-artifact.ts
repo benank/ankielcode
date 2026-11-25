@@ -3343,7 +3343,7 @@ export const validateWindowsPackagedPayload = Effect.fn(
         ),
       );
     }
-    const requiredMembers = [`${stem}/ankiel`, `${stem}/client`, `${stem}/node_modules`];
+    const requiredMembers = [`${stem}/ankiel`, `${stem}/node_modules`];
     const missingMembers = requiredMembers.filter((member) => !members.includes(member));
     const ptyCandidates = [
       `${stem}/node_modules/node-pty/build/Release/pty.node`,

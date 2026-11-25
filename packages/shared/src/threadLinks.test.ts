@@ -4,10 +4,8 @@ import { mFallback } from "gt-i18n";
 import type { MFunctionType } from "gt-i18n/types";
 
 import {
-  formatHostedThreadLink,
   formatThreadLink,
   guessThreadLinkRef,
-  hostedThreadLink,
   parseThreadLinkHref,
   threadLinkCandidates,
   threadLinkRefs,
@@ -214,99 +212,5 @@ describe("thread links", () => {
       "[Fix ci build](ankiel-thread://v2/e/t1)",
     );
     expect(formatThreadLink(ref("e", "t1"), " ] ")).toBe("<ankiel-thread://v2/e/t1>");
-  });
-});
-
-describe("hosted thread links", () => {
-  it("escapes every id character a sentence or path could claim, and reads it back", () => {
-    const thread = ref("env.1", "thread:delegated/mcp%3A1.");
-    const link = hostedThreadLink(thread);
-    expect(link).toBe(
-      "https://app.code.ankiel.com/threads/env%2E1/thread%3Adelegated%2Fmcp%253A1%2E",
-    );
-    expect(parseThreadLinkHref(link)).toEqual(thread);
-    expect(hostedThreadLink(thread, "https://preview.code.ankiel.com/")).toMatch(
-      /^https:\/\/preview\.code\.ankiel\.com\/threads\//,
-    );
-  });
-
-  it("reads only a bare thread path on the hosted app", () => {
-    expect(parseThreadLinkHref("https://app.code.ankiel.com/threads/env-1/thread-1")).toEqual(
-      ref("env-1", "thread-1"),
-    );
-    expect(
-      parseThreadLinkHref("https://app.code.ankiel.com/threads/env-1/thread-1?prompt=go"),
-    ).toBeNull();
-    expect(
-      parseThreadLinkHref("https://app.code.ankiel.com/threads/env-1/thread-1/extra"),
-    ).toBeNull();
-    expect(parseThreadLinkHref("https://app.code.ankiel.com/threads/env-1")).toBeNull();
-    expect(parseThreadLinkHref("https://app.code.ankiel.com/env-1/thread-1")).toBeNull();
-    expect(parseThreadLinkHref("https://evil.test/threads/env-1/thread-1")).toBeNull();
-  });
-
-  it("writes a copied link a reader can follow, labeled when it has a title", () => {
-    expect(formatHostedThreadLink(ref("e", "t1"), "Fix [ci]")).toBe(
-      "[Fix ci](https://app.code.ankiel.com/threads/e/t1)",
-    );
-    expect(formatHostedThreadLink(ref("e", "t1"), " ")).toBe(
-      "https://app.code.ankiel.com/threads/e/t1",
-    );
-  });
-
-  it("titles hosted links in every Markdown form and writes them as v2 links", () => {
-    const title = titlesIn({ there: { t1: "There" } });
-    expect(
-      relabelThreadLinks(
-        [
-          "See https://app.code.ankiel.com/threads/there/t1.",
-          "[old](https://app.code.ankiel.com/threads/there/t1)",
-          "<https://app.code.ankiel.com/threads/there/t1>",
-          "`https://app.code.ankiel.com/threads/there/t1`",
-          "https://app.code.ankiel.com/threads/there/t1?prompt=go",
-        ].join("\n"),
-        local,
-        title,
-      ),
-    ).toBe(
-      [
-        "See [There](ankiel-thread://v2/there/t1).",
-        "[There](ankiel-thread://v2/there/t1)",
-        "[There](ankiel-thread://v2/there/t1)",
-        "`https://app.code.ankiel.com/threads/there/t1`",
-        "https://app.code.ankiel.com/threads/there/t1?prompt=go",
-      ].join("\n"),
-    );
-    expect(
-      relabelThreadLinks("https://app.code.ankiel.com/threads/there/t1", local, () => undefined),
-    ).toBe("Thread on another machine");
-    expect(threadLinkRefs("Open https://app.code.ankiel.com/threads/there/t%3A1", local)).toEqual([
-      ref("there", "t:1"),
-    ]);
-  });
-
-  it("leaves a hosted link that is part of another link as written", () => {
-    const hosted = "https://app.code.ankiel.com/threads/there/t1";
-    const relabeled = "[There](ankiel-thread://v2/there/t1)";
-    const title = titlesIn({ there: { t1: "There" } });
-    for (const [markdown, expected] of [
-      [`https://example.com/?next=${hosted}`],
-      [`[Example](https://example.com/?next=${hosted})`],
-      [`[ ${hosted} ](https://example.com)`],
-      [`[${hosted}](<https://example.com/a b> "Title")`],
-      [`[a](https://example.com/x_(y)) ${hosted}`, `[a](https://example.com/x_(y)) ${relabeled}`],
-      [`(${hosted}) **${hosted}**`, `(${relabeled}) **${relabeled}**`],
-      [`[[[ [old](${hosted})`, `[[[ ${relabeled}`],
-      [`\\\\[old](${hosted})`, `\\\\${relabeled}`],
-      [`\\\\\\\\[old](${hosted})`, `\\\\\\\\${relabeled}`],
-      [`\\[old](${hosted})`, `\\[old](${relabeled})`],
-      [`\\[ ${hosted} ](https://example.com)`, `\\[ ${relabeled} ](https://example.com)`],
-      ["\\[old](ankiel-thread://v2/there/t1) \\<ankiel-thread://v2/there/t1>"],
-    ] as const) {
-      expect(relabelThreadLinks(markdown, local, title)).toBe(expected ?? markdown);
-      expect(threadLinkRefs(markdown, local)).toEqual(
-        expected === undefined ? [] : [ref("there", "t1")],
-      );
-    }
   });
 });

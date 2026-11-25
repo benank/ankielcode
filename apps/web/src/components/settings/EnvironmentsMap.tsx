@@ -57,7 +57,7 @@ import { environmentIdsKey } from "~/state/environmentAtomList";
 import { peerLinkEnvironment, peerLinkListsAtom, usePeerLinkHosts } from "~/state/peerLinks";
 import { formatEnvironmentQueryError } from "~/state/query";
 import { preparedConnectionsAtom, useEnvironmentsWithScope } from "~/state/session";
-import { accessConfig } from "../auth/ConnectAgentSurface";
+import { accessConfig } from "../auth/mcpAccessConfig";
 import { connectionPhaseDotClassName } from "../ConnectionStatusDot";
 import { EnvironmentMachineIcon } from "../EnvironmentMachineIcon";
 import { Button } from "../ui/button";

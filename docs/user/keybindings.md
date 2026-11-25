@@ -1,6 +1,6 @@
 # Keybindings
 
-Customize shortcuts in **Settings → Keybindings** on web and desktop. That page
+Customize shortcuts in **Settings → Keybindings** on desktop. That page
 also lists the command IDs and defaults available in your version.
 
 To free a default shortcut for another command, choose **Unassign** from its row's
@@ -15,7 +15,7 @@ Dictation**, and the hold or toggle behavior in **Settings → Voice**. See
 
 In **Settings → Chat → Send shortcut**, choose whether Enter sends, requires
 `mod+Enter` for multiline prompts, or always requires `mod+Enter`. `Shift+Enter`
-inserts a new line. This applies to the web and desktop composer at desktop widths.
+inserts a new line. This applies to the desktop composer at desktop widths.
 
 **Follow-up behavior** chooses Queue or Steer while the agent runs. Use
 `mod+Enter` to do the opposite for one message, even when the send shortcut
@@ -48,7 +48,7 @@ between tabs. Down returns to the model list. Use Up and Down to browse models a
 to choose one. Right opens the thinking slider. Hold Alt to reveal model shortcuts.
 `mod+shift+up` and `mod+shift+down` switch providers directly.
 
-These shortcuts run inside the focused web or desktop client. `mod` uses Command
+These shortcuts run inside the focused desktop client. `mod` uses Command
 on macOS and Ctrl on Windows and Linux, including GNOME, KDE Plasma, Niri, and
 Hyprland. If a custom desktop shortcut takes the same keys, choose another binding
 in Settings.

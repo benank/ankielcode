@@ -71,7 +71,6 @@ function browserDeviceType(identity: BrowserIdentity): AuthClientMetadataDeviceT
 
 export function clientPresentationMetadata(input: {
   readonly appVersion: string;
-  readonly hosted: boolean;
   readonly identity: BrowserIdentity;
   readonly desktopBridge: Pick<DesktopBridge, "getClientPlatform"> | undefined;
 }): AuthClientPresentationMetadata {
@@ -88,11 +87,10 @@ export function clientPresentationMetadata(input: {
 
   return {
     // oxlint-disable-next-line ankielcode/no-untranslated-copy -- client label stored on the server
-    label: "Ankiel Code Web",
+    label: "Ankiel Code Dev",
     deviceType: browserDeviceType(input.identity),
     os: browserClientOs(input.identity),
     surface: "web",
-    webDeployment: input.hosted ? "hosted" : "server",
     browser: browserFamily(input.identity.userAgent),
     ...(input.appVersion === "0.0.0" ? {} : { appVersion: input.appVersion }),
   };

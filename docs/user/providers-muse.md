@@ -4,7 +4,7 @@ Muse Code is disabled by default. Install
 [Muse Code](https://dev.meta.ai/docs/muse-code) on the machine hosting your
 environment, then run `muse login` as the account that runs Ankiel Code.
 
-Open **Settings → Providers** in the web or desktop app, select the environment,
+Open **Settings → Providers** in the desktop app, select the environment,
 and enable **Muse Code**. Set **Binary path** if Muse is not on the host's `PATH`.
 Refresh provider status after installation or login, then select Muse in a
 thread's model picker.
@@ -22,7 +22,7 @@ saved login.
 
 ## Remote access and instances
 
-Connect from web, desktop, or mobile through [remote access](./remote-access.md).
+Connect from desktop or mobile through [remote access](./remote-access.md).
 Muse uses the selected environment's files and login; connecting devices do not
 need Muse installed. Install and sign in separately on each host where you want
 Muse to run.

@@ -31,7 +31,7 @@ import {
   type ServerProvider,
 } from "@ankielcode/contracts";
 import { checkpointWorkspace } from "@ankielcode/provider-testing/replayWorkspace";
-import { formatThreadLink, hostedThreadLink } from "@ankielcode/shared/threadLinks";
+import { formatThreadLink } from "@ankielcode/shared/threadLinks";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -5154,7 +5154,7 @@ describe("OrchestratorMcpService thread lookup", () => {
         for (const link of [
           `ankiel-thread://v2/${ref.environmentId}/${ref.threadId}`,
           formatThreadLink(ref, "Delegated task"),
-          hostedThreadLink(ref),
+          formatThreadLink(ref),
         ]) {
           const read = yield* mcp
             .readThread(client, { threadId: ThreadId.make(link) })

@@ -63,9 +63,6 @@ export const appendClientConnectionParams = (
     url.searchParams.set("clientOs", clientMetadata.os);
   }
   if (clientMetadata?.surface === "web") {
-    if (clientMetadata.webDeployment) {
-      url.searchParams.set("clientWebDeployment", clientMetadata.webDeployment);
-    }
     if (clientMetadata.browser) {
       url.searchParams.set("clientBrowser", clientMetadata.browser);
     }

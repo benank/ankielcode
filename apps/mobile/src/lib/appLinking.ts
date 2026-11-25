@@ -7,7 +7,7 @@ import type { NavigationState, PartialState } from "@react-navigation/native";
  * to the NotFound wildcard route on every dev launch.
  */
 export function shouldHandleAppLink(url: string): boolean {
-  // Only the route: a thread link's ?prompt= may mention either lifecycle URL.
+  // Ignore launcher URLs only when they are the route being opened.
   const route = url.split(/[?#]/)[0] ?? "";
   return (
     !route.includes("expo-development-client") &&

@@ -5,7 +5,6 @@ import {
   AuthSessionId,
   ForwardCompatibleArray,
   ClientSurface,
-  ClientWebDeployment,
   TrimmedNonEmptyString,
 } from "./baseSchemas.ts";
 import { RuntimeMode } from "./providerPolicy.ts";
@@ -222,7 +221,6 @@ export const AuthClientPresentationMetadata = Schema.Struct({
   osMajorVersion: Schema.optionalKey(Schema.Int),
   deviceModel: Schema.optionalKey(TrimmedNonEmptyString),
   surface: Schema.optionalKey(ClientSurface),
-  webDeployment: Schema.optionalKey(ClientWebDeployment),
   browser: Schema.optionalKey(TrimmedNonEmptyString),
   appVersion: Schema.optionalKey(TrimmedNonEmptyString),
 });

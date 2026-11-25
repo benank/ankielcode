@@ -21,7 +21,6 @@ describe("shouldHandleAppLink", () => {
     "ankielcode://threads/env-1/thread-1",
     "ankielcode://pair?pairingUrl=x",
     "ankielcode-dev://settings/usage?tab=limits",
-    "https://app.code.ankiel.com/threads/env/thread?prompt=Fix%20expo-development-client%20and%20ankielcode://expo-sharing",
   ])("handles path-bearing URL %s", (url) => {
     expect(shouldHandleAppLink(url)).toBe(true);
   });

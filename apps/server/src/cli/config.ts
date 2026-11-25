@@ -362,7 +362,7 @@ export const resolveServerConfig = Effect.fn("config.resolveServerConfig")(funct
   );
   const serverTracePath = env.traceFile ?? derivedPaths.serverTracePath;
   yield* fs.makeDirectory(path.dirname(serverTracePath), { recursive: true });
-  const startupPresentation = options?.startupPresentation ?? "browser";
+  const startupPresentation = options?.startupPresentation ?? (devUrl ? "browser" : "headless");
   const isHeadlessStartup = startupPresentation === "headless";
   const noBrowser = Option.getOrElse(
     resolveOptionPrecedence(
@@ -386,7 +386,7 @@ export const resolveServerConfig = Effect.fn("config.resolveServerConfig")(funct
   const autoBootstrapProjectFromCwd = Option.getOrElse(
     resolveOptionPrecedence(
       Option.fromUndefinedOr(options?.forceAutoBootstrapProjectFromCwd),
-      isHeadlessStartup ? Option.some(false) : Option.none(),
+      options?.startupPresentation === "headless" ? Option.some(false) : Option.none(),
       normalizedFlags.autoBootstrapProjectFromCwd,
       Option.fromUndefinedOr(env.autoBootstrapProjectFromCwd),
     ),
@@ -415,7 +415,6 @@ export const resolveServerConfig = Effect.fn("config.resolveServerConfig")(funct
     ),
     () => 443,
   );
-  const staticDir = devUrl ? undefined : yield* ServerConfig.resolveStaticDir();
   const explicitHost = resolveOptionPrecedence(
     normalizedFlags.host,
     Option.fromUndefinedOr(env.host),
@@ -517,7 +516,7 @@ export const resolveServerConfig = Effect.fn("config.resolveServerConfig")(funct
     serverTracePath,
     host,
     ...(privateNetworkOnly ? { privateNetworkOnly } : {}),
-    staticDir,
+    staticDir: undefined,
     devUrl,
     ...(devAuthToken === undefined ? {} : { devAuthToken }),
     devAllowedOrigins: env.devAllowedOrigins,

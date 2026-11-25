@@ -164,7 +164,7 @@ describe("browser API CORS", () => {
         new Request("https://backend.example/api/environment", {
           method: "OPTIONS",
           headers: {
-            origin: "https://app.code.ankiel.com",
+            origin: "https://client.example",
             "access-control-request-method": "GET",
             "access-control-request-headers": [
               ORCHESTRATION_PROTOCOL_HEADER,
@@ -356,7 +356,7 @@ describe("untraced requests", () => {
 
 const layerFileResponse = Layer.mergeAll(NodeHttpPlatform.layer, NodeServices.layer);
 
-const makeStaticRequest = Effect.fn("HttpTest.makeStaticRequest")(function* (staticDir: string) {
+const makeStaticRequest = Effect.fn("HttpTest.makeStaticRequest")(function* (staticDir?: string) {
   const config = yield* ServerConfig.ServerConfig;
   const fileSystem = yield* FileSystem.FileSystem;
   const layerApp = Layer.merge(
@@ -381,6 +381,14 @@ it.layer(
     Layer.provideMerge(NodeServices.layer),
   ),
 )("static HTTP responses", (it) => {
+  it.effect("does not serve the app from a production server", () =>
+    Effect.gen(function* () {
+      const request = yield* makeStaticRequest();
+      expect((yield* request("/")).status).toBe(404);
+      expect((yield* request("/pair")).status).toBe(404);
+    }),
+  );
+
   it.effect("revalidates non-HTML files and returns changed contents", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

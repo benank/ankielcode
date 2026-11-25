@@ -1,6 +1,6 @@
 # Settings and project overrides
 
-On web and desktop, the "Applying settings for …" sentence at the top of Settings pages picks
+On desktop, the "Applying settings for …" sentence at the top of Settings pages picks
 the project and environment a change applies to. Pages that only hold device preferences, such as
 Appearance, don't show it. They start at **All projects** and **All environments**
 and stay selected as you move between categories or search for a setting.
@@ -142,7 +142,7 @@ For GitHub, turn on **Require signature**, keep the header
 `x-hub-signature-256`, hex encoding and the `sha256=` prefix, and enter the
 same secret in the repository's webhook settings with content type
 `application/json`. Requests without a valid signature are rejected. Set this
-up on desktop or web; mobile keeps an existing signature check but can't turn
+up on desktop; mobile keeps an existing signature check but can't turn
 one on.
 
 To run only for some requests, add **Filters**. Each one tests a value named
@@ -168,7 +168,7 @@ Additional deliveries are accepted without a log entry, and coalesced deliveries
 always replace the persisted payload. Coalesced updates count toward a separate
 60-per-minute validation limit; exceeding it receives HTTP 429.
 
-On desktop and web, pick **Deliveries** from a task's menu to see recent
+On desktop, pick **Deliveries** from a task's menu to see recent
 requests and the prompt each one produced.
 
 If the environment is offline, the sender gets an error and nothing runs;
@@ -285,7 +285,7 @@ Ankiel Code detect an icon again.
 
 Choose **Monogram** in the icon picker to set one or two letters or numbers and a color.
 
-When no image is found, web and desktop show a two-character monogram with a color
+When no image is found, desktop show a two-character monogram with a color
 from the icon palette, derived from the saved project name. For example, `Nebula` becomes `NA`,
 `Silver Orchard` becomes `SO`, and `M7 Forge` becomes `M7`.
 

@@ -1,11 +1,9 @@
-// @effect-diagnostics nodeBuiltinImport:off globalFetchInEffect:off - Hosted handoff test uses a real localhost listener without an OpenAI account.
+// @effect-diagnostics nodeBuiltinImport:off - Test fixtures create isolated startup directories.
 import * as NodeFS from "node:fs";
-import * as NodeHttp from "node:http";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodePathLayer from "@effect/platform-node/NodePath";
-import { codexAuthHandoffUrl, readCodexAuthDelivery } from "@ankielcode/shared/codexAuthHandoff";
-import { EnvironmentId, ProviderInstanceId } from "@ankielcode/contracts";
+import { buildPairingAppLink } from "@ankielcode/shared/remote";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -195,9 +193,9 @@ describe("DesktopStartupLinks", () => {
   it.effect("delivers each queued startup link once, before later links", () => {
     const listeners = new Map<string, (...args: unknown[]) => void>();
     const received: string[] = [];
-    const first = "ankielcode://new?prompt=first";
-    const second = "ankielcode://threads/env-1/thread-1";
-    const later = "ankielcode://new?prompt=later";
+    const first = buildPairingAppLink("https://first.example/#token=first");
+    const second = buildPairingAppLink("https://second.example/#token=second");
+    const later = buildPairingAppLink("https://later.example/#token=later");
     const launchPair =
       "ankielcode://pair?pairingUrl=https%3A%2F%2Fvps.example.com%2F%23token%3Dabc";
     const delivered = Promise.withResolvers<void>();
@@ -314,93 +312,6 @@ it.effect(
   },
 );
 
-it.effect.each(["startup", "open-url", "early-second-instance"] as const)(
-  "receives hosted web sign-in through the desktop %s handler",
-  (entry) =>
-    Effect.gen(function* () {
-      const port = yield* Effect.promise(async () => {
-        const server = NodeHttp.createServer();
-        await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-        const address = server.address();
-        if (!address || typeof address === "string") throw new Error("address");
-        await new Promise<void>((resolve) => server.close(() => resolve()));
-        return address.port;
-      });
-      const authorize = new URL("https://auth.openai.com/api/accounts/authorize");
-      authorize.search = new URLSearchParams({
-        client_id: "dynamic_agent_client",
-        response_type: "code",
-        redirect_uri: `http://127.0.0.1:${port}/auth/callback`,
-        state: "a".repeat(43),
-        code_challenge_method: "S256",
-        code_challenge: "b".repeat(43),
-      }).toString();
-      const request = {
-        authorizationUrl: authorize.toString(),
-        returnUrl: "https://app.code.ankiel.com/welcome#agents:remote-one",
-        environmentId: EnvironmentId.make("remote-one"),
-        instanceId: ProviderInstanceId.make("work"),
-        flowId: "flow-one",
-      };
-      const link = codexAuthHandoffUrl(request, true);
-      const delivered = Promise.withResolvers<string>();
-      const shell = ElectronShell.ElectronShell.of({
-        openExternal: (value) =>
-          Effect.promise(async () => {
-            const url = new URL(String(value));
-            const callback = new URL(url.searchParams.get("redirect_uri")!);
-            callback.search = new URLSearchParams({
-              state: url.searchParams.get("state")!,
-              code: "test-code",
-              client_id: "oaiapp_test",
-            }).toString();
-            const response = await fetch(callback, { redirect: "manual" });
-            delivered.resolve(response.headers.get("location")!);
-            return true;
-          }),
-        openSystemSettings: () => Effect.succeed(false),
-        copyText: () => Effect.void,
-      });
-      const listeners = new Map<string, (...args: unknown[]) => void>();
-      const electronApp = {
-        whenReady: Effect.void,
-        on: (name: string, listener: (...args: unknown[]) => void) =>
-          Effect.sync(() => {
-            listeners.set(name, listener);
-          }),
-      } as unknown as ElectronApp.ElectronApp["Service"];
-      yield* Effect.gen(function* () {
-        const startupLinks = yield* DesktopStartupLinks.DesktopStartupLinks;
-        if (entry === "early-second-instance") {
-          listeners.get("second-instance")?.({}, ["ankiel", link]);
-        }
-        yield* startupLinks.configure;
-        if (entry === "open-url") {
-          const event = { preventDefault: vi.fn() };
-          listeners.get("open-url")!(event, link);
-          assert.strictEqual(event.preventDefault.mock.calls.length, 1);
-        }
-        const delivery = readCodexAuthDelivery(yield* Effect.promise(() => delivered.promise));
-        assert.strictEqual(delivery?.environmentId, request.environmentId);
-        assert.strictEqual(delivery?.instanceId, request.instanceId);
-        assert.strictEqual(delivery?.flowId, request.flowId);
-        assert.strictEqual(delivery?.returnUrl, request.returnUrl);
-      }).pipe(
-        Effect.provide(layerDesktopStartupLinks(true, [], "darwin", undefined, shell, listeners)),
-        Effect.provideService(
-          HostProcess.Arguments,
-          entry === "startup" ? ["ankiel", link] : ["ankiel"],
-        ),
-        Effect.provideService(ElectronApp.ElectronApp, electronApp),
-        Effect.provideService(
-          ElectronWindow.ElectronWindow,
-          {} as ElectronWindow.ElectronWindow["Service"],
-        ),
-        Effect.provideService(DesktopWebLinks.DesktopWebLinks, ignoreWebLinks),
-      );
-    }),
-);
-
 it.effect("hands web and app links to the renderer and leaves other links alone", () =>
   Effect.gen(function* () {
     const listeners = new Map<string, (...args: unknown[]) => void>();
@@ -423,8 +334,7 @@ it.effect("hands web and app links to the renderer and leaves other links alone"
       };
       assert.strictEqual(open("https://example.com/page"), 1);
       assert.strictEqual(open("http://localhost:3000/"), 1);
-      assert.strictEqual(open("ankielcode://new?prompt=hi"), 1);
-      assert.strictEqual(open("ankielcode://threads/env-1/thread-1"), 1);
+      assert.strictEqual(open("ankielcode://new?prompt=hi"), 0);
       assert.strictEqual(open(pairLink), 1);
       assert.strictEqual(open("ankielcode://pair"), 0);
       assert.strictEqual(open("mailto:hello@example.com"), 0);
@@ -433,8 +343,6 @@ it.effect("hands web and app links to the renderer and leaves other links alone"
       assert.deepStrictEqual(received, [
         "https://example.com/page",
         "http://localhost:3000/",
-        "ankielcode://new?prompt=hi",
-        "ankielcode://threads/env-1/thread-1",
         pairLink,
       ]);
     }).pipe(

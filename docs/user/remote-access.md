@@ -1,6 +1,6 @@
 # Remote access
 
-Connect a phone, browser, or another desktop app to Ankiel Code running on a different
+Connect the mobile app or another desktop app to Ankiel Code running on a different
 machine. That machine must stay running and reachable while you work.
 
 ## Set up a host
@@ -27,7 +27,7 @@ examples.
 
 ## Cloudflare Relay
 
-Connect from anywhere — on cellular, away from home, or from [app.code.ankiel.com](https://app.code.ankiel.com) — through a self-hosted relay running on your own Cloudflare account. There is no Ankiel account or hosted backend: your traffic only passes through your own Cloudflare Worker.
+Connect from anywhere — on cellular or away from home — through a self-hosted relay running on your own Cloudflare account. There is no Ankiel account or hosted backend: your traffic only passes through your own Cloudflare Worker.
 
 ### 1. Deploy your relay
 
@@ -58,13 +58,13 @@ You can reuse the same setup string on every computer you want to reach; each co
 
 In **Settings → Sharing & access**, choose the **Cloudflare Relay** endpoint and generate a pairing link or QR code.
 
-Scan the QR code on your phone or paste the pairing URL into **Add environment** in **Settings → Environments** on web, desktop, or mobile. On a computer with the desktop app, you can also open the `ankielcode://pair` app link.
+Scan the QR code on your phone or paste the pairing URL into **Add environment** in **Settings → Environments** on desktop or mobile. On a computer with the desktop app, you can also open the `ankielcode://pair` app link.
 
 Pairing authorizes that device for future connections. Use a fresh one-time link for each new device; you do not need the original token to reconnect. A device stays signed in while you keep using it, until you revoke it in **Settings → Sharing & access** on the host. One unused for 30 days, or paired with a host older than this release, has to pair again. Links created in Settings can only be copied from the client that created them while its Sharing & access page stays open. If you leave or reload that page, create another link to share.
 
 ## Same-network (LAN) access
 
-When your phone, browser, or another computer is on the same Wi-Fi or local network as the host, Ankiel Code can connect directly over your LAN for lower latency without sending traffic through Cloudflare.
+When your phone or another computer is on the same Wi-Fi or local network as the host, Ankiel Code can connect directly over your LAN for lower latency without sending traffic through Cloudflare.
 
 - **Desktop app:** Open **Settings → Sharing & access** and enable **Network access**. Changing network access restarts the desktop app. You can turn it off in the same place.
 - **Command-line host:** Choose local network access in `ankiel up`, or run:
@@ -97,13 +97,13 @@ A machine can have both a **same-network (LAN)** route and a **Cloudflare Relay*
 
 A pairing link for a saved machine is refused when it comes from an address that machine does not have yet; add that address with **Add route** instead. Pairing again over an address the machine already has still works. A route whose machine refused this device's sign-in is marked **Sign-in refused**; pair that address again with **Add route** to use it.
 
-On web and desktop, select the route count under the machine's name in **Settings → Environments** to see its routes, drag to reorder them, or remove a saved route. On mobile, open the machine under **Settings → Environments** and choose **Edit**. Learned routes cannot be removed individually; they go away when the host stops reporting that address or when the paired route they were learned through is removed.
+On desktop, select the route count under the machine's name in **Settings → Environments** to see its routes, drag to reorder them, or remove a saved route. On mobile, open the machine under **Settings → Environments** and choose **Edit**. Learned routes cannot be removed individually; they go away when the host stops reporting that address or when the paired route they were learned through is removed.
 
-Open **Permissions** next to **Routes** in web or desktop, or **Your permissions** in the mobile route details, to see what your current connection can do on that environment. Permissions shown there apply only to the route marked **In use**; other routes are not checked.
+Open **Permissions** next to **Routes** in the desktop app, or **Your permissions** in the mobile route details, to see what your current connection can do on that environment. Permissions shown there apply only to the route marked **In use**; other routes are not checked.
 
 ### Balance new threads across machines
 
-Auto balance is off by default. On web and desktop, enable it in
+Auto balance is off by default. On desktop, enable it in
 **Settings → Environments → Load balancing** to automatically choose a machine for
 new threads in projects grouped across connected environments. The section
 appears once two or more machines are switched on.
@@ -118,17 +118,6 @@ a specific machine to override it. Choosing a branch or worktree also keeps the 
 on that machine. Existing threads stay where they started. If resource checks are
 unavailable or all eligible machines are full, choose a machine manually to continue.
 Mobile keeps its manual environment selection.
-
-### Hosted web app
-
-[app.code.ankiel.com](https://app.code.ankiel.com) needs an HTTPS endpoint, such as your
-Cloudflare Relay. It connects directly to your server; a hosted pairing link does not
-make an unreachable backend reachable or convert HTTP to HTTPS. Opening a hosted pairing
-link shows the server address and asks you to confirm before adding it.
-
-For a plain HTTP LAN endpoint, use the direct pairing URL in a browser that can
-open it, or pair from the desktop or mobile app. On mobile, an IP address entered without a
-scheme uses HTTP, so include `https://` when your server uses HTTPS.
 
 ## Browser on a remote environment
 
@@ -147,7 +136,7 @@ host cannot be reached, the tab shows a connection error; a `localhost`,
 Other names that point at your computer, such as `/etc/hosts` entries, still
 do. These tabs ignore your system proxy settings, so they can't reach a host
 you connect to only through a proxy or over HTTPS with a privately issued
-certificate. The web app keeps streaming.
+certificate. Ankiel Code keeps streaming.
 
 The desktop app can also forward a port on the host to your computer, so any
 app there, such as your own browser, `curl`, or a database client, reaches it
@@ -268,8 +257,7 @@ questions, and manage its queues, projects and scheduled tasks.
 
 Linked environments is a beta. Turn it on for both machines in **Settings →
 Labs**; on mobile, **Settings → Labs** lists each connected machine. On a
-headless server, open its address in a browser and pair to reach its **Settings
-→ Labs**, or add `"linkedEnvironmentsEnabled": true` to `settings.json` in its
+headless server, add `"linkedEnvironmentsEnabled": true` to `settings.json` in its
 `userdata` directory, such as `~/.ankiel/userdata/settings.json`; a running server
 picks it up. While it is
 off on either machine, agents start nothing over a link between them. A task
@@ -322,7 +310,7 @@ an address you trust: the code is sent there.
   does one to a machine on an older Ankiel Code after 30 days; link again with a
   new pairing code.
 
-On web and desktop, **Settings → Environments** opens as a map of your machines:
+On desktop, **Settings → Environments** opens as a map of your machines:
 this app, each environment with one line per route (the one in use is
 highlighted), and the machines an environment links to. Select a machine to
 manage it, or switch to **List** for the same controls as rows. To link from
@@ -379,13 +367,13 @@ fails with that reason.
 You can read a thread on a linked machine without connecting this app to it. Open
 a task that was delegated there from the thread's agents, or a thread link that
 points there, and the thread opens read-only, streamed through the machine you
-are connected to over its link. It follows the thread live. On web and desktop
+are connected to over its link. It follows the thread live. On desktop
 it opens as a tab in the right panel, beside the thread you are in, or in the
 main view with ⌘/Ctrl-click, like
 [subagents and side chats](thread-sidebar.md#open-a-thread-beside-the-one-you-are-in).
 On mobile it opens in the inspector on layouts that have one, where Maximize
 fills the screen, and as its own screen elsewhere. It shows the same timeline as
-any other thread on web and desktop, and a shorter read-only list on mobile.
+any other thread on desktop, and a shorter read-only list on mobile.
 
 - The view is marked **Read-only** with both machines' names. To reply, approve
   or stop the thread, choose **Connect to interact**. When the link has full
@@ -435,9 +423,7 @@ client that should not manage access also needs to go without `terminal:operate`
 and `orchestration:operate`.
 
 To change an existing client's permissions, create a fresh pairing link with the
-scopes it needs. In a browser opened directly on the environment, open that link
-to replace the browser's current grant. For mobile or a saved remote environment
-in web or desktop, use **Add Environment** with the fresh link or code; pairing
+scopes it needs. In the desktop or mobile app, use **Add Environment** with the fresh link or code; pairing
 the same environment replaces its saved grant. Reconnecting alone does not change
 permissions.
 

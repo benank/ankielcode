@@ -95,12 +95,12 @@ const buildCmd = Command.make(
       if (yield* fs.exists(webDist)) {
         yield* fs.copy(webDist, clientTarget);
         yield* applyDevelopmentIconOverrides(repoRoot, serverDir);
-        yield* Effect.log("[cli] Bundled web app into dist/client");
+        yield* Effect.log("[cli] Bundled desktop renderer into dist/client");
       } else {
         yield* Effect.logWarning("[cli] Web dist not found. Skipping client bundle.");
       }
     }),
-).pipe(Command.withDescription("Build the server package (tsdown + bundle web client)."));
+).pipe(Command.withDescription("Build the server package (tsdown + bundle desktop renderer)."));
 
 const buildExeCmd = Command.make(
   "build-exe",

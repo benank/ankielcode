@@ -1,4 +1,3 @@
-import { DEFAULT_HOSTED_APP_URL } from "@ankielcode/shared/hostedApp";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 
 // Keep config parsing independent of local env files and build credentials.
@@ -36,11 +35,8 @@ it.each([
   const config = await loadConfig(value);
   expect(config.ios?.bundleIdentifier).toBe(identifier);
   expect(config.android?.package).toBe(identifier);
-  const host = new URL(DEFAULT_HOSTED_APP_URL).host;
-  expect(config.ios?.associatedDomains).toContain(`applinks:${host}`);
-  expect(config.android?.intentFilters?.[0]?.data).toEqual([
-    { scheme: "https", host, pathPrefix: "/threads/" },
-  ]);
+  expect(config.ios?.associatedDomains).toBeUndefined();
+  expect(config.android?.intentFilters).toBeUndefined();
 });
 
 it("carries no Expo or Apple account identifiers unless the environment sets them", async () => {

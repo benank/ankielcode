@@ -24,7 +24,7 @@ reload. In a worktree thread of a project with several repositories it adds a wo
 repository to the thread instead; see [Worktree threads](multi-repo-projects.md#worktree-threads). A
 worktree thread of a single repository does not offer it.
 
-On web and desktop, open the Diff pane source picker and choose **Commits** to review one local
+On desktop, open the Diff pane source picker and choose **Commits** to review one local
 commit at a time. The list shows the newest 100 commits in the branch comparison. A merge commit
 shows its changes against its first parent.
 
@@ -238,7 +238,7 @@ Where you can edit a description, you can also tick its checkboxes from the Summ
 GitLab calls these merge requests.
 
 A merge or review applies to the commits you opened the pull request on. When someone pushes
-meanwhile, the web and desktop apps offer **Load new commits**; until you do, a merge or review is refused and your
+meanwhile, the desktop app offer **Load new commits**; until you do, a merge or review is refused and your
 review draft is kept. Merging from a thread's pull request row, or from the list, lands the head that
 row had when you confirmed.
 
@@ -250,7 +250,7 @@ Saved views stay in the browser or app where you created them and do not sync ac
 
 A link to part of a pull request opens that part: a comment or review is marked in the activity, a
 changed-line link opens the file at those lines, a checks link opens the checks, and a commit link
-opens that commit's changes. On web and desktop, hovering a comment or commit link previews it.
+opens that commit's changes. On desktop, hovering a comment or commit link previews it.
 
 On mobile, **Pull requests** lists reviews across your connected environments. Open a review
 to read its description, activity, commits, and changed files. Line comments stay as drafts
@@ -267,7 +267,7 @@ co-authors stay credited. The setting is off by default and projects can overrid
 applies to auto-merge, but not merge queues or native stack merges. Original commits keep their
 messages, so merge and rebase can still retain agent credits in those commits.
 
-On web and desktop, hold **Shift** in the GitHub pull request list for quick actions.
+On desktop, hold **Shift** in the GitHub pull request list for quick actions.
 To close several, press **Close**, drag across the rows in the same group, and release.
 Press **Escape** before releasing to cancel. Failed closes stay in the list so you can retry them.
 
@@ -342,7 +342,7 @@ Ankiel Code can read, so the server you are connected to keeps them instead: the
 apps connected to that server, but the host's own site will not show them, and the count reads **viewed in Ankiel Code**.
 
 On mobile, open a changed file and mark it viewed from its header. Viewed files collapse,
-and their marks follow the same rules as on web and desktop.
+and their marks follow the same rules as on desktop.
 
 ## Troubleshooting
 
@@ -374,7 +374,7 @@ also lists the threads that link to it, including archived threads, so you can r
 
 Thread badges show a stack's layer count or the current review number with a count of additional
 links. Clicking a badge with more than one review opens the **Linked items** panel. On mobile, the Git overview lists linked reviews and their stacks; tap a review to open it.
-Linking and unlinking are available in the web and desktop clients.
+Linking and unlinking are available in the desktop client.
 
 The **Linked items** panel lists every review and groups stacks. Unlink a review from its
 row menu. An unlinked stack layer stays out of later syncs. Open linked reviews refresh on the server;

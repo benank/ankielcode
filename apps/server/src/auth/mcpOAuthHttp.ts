@@ -5,7 +5,9 @@ import {
   AuthMcpClientRegistration,
   AuthMcpRegistrationError,
   EnvironmentHttpApi,
+  isRuntimeModeAbove,
   mcpClientScopes,
+  parseMcpApprovalCode,
 } from "@ankielcode/contracts";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
@@ -17,9 +19,7 @@ import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 
 import * as EnvironmentAuth from "./EnvironmentAuth.ts";
 import * as McpOAuth from "./McpOAuth.ts";
-import { renderErrorPage } from "./mcpOAuthHtml.ts";
-
-const APPROVAL_PAGE_PATH = "/connect-agent";
+import { renderConsentPage, renderErrorPage } from "./mcpOAuthHtml.ts";
 
 const PAGE_HEADERS = {
   "content-security-policy":
@@ -30,6 +30,18 @@ const PAGE_HEADERS = {
   "x-content-type-options": "nosniff",
 };
 
+function approvalPage(html: string, status: number, redirectOrigin?: string) {
+  const formAction = redirectOrigin ? `'self' ${redirectOrigin}` : "'none'";
+  return HttpServerResponse.text(html, {
+    status,
+    contentType: "text/html; charset=utf-8",
+    headers: {
+      ...PAGE_HEADERS,
+      "content-security-policy": `${PAGE_HEADERS["content-security-policy"]}; form-action ${formAction}`,
+    },
+  });
+}
+
 // OAuth responses contain credentials and must not be cached.
 const noStore = HttpEffect.appendPreResponseHandler((_request, response) =>
   Effect.succeed(
@@ -37,6 +49,7 @@ const noStore = HttpEffect.appendPreResponseHandler((_request, response) =>
   ),
 );
 
+const decodeAccess = Schema.decodeUnknownOption(AuthMcpClientAccess);
 const requestUrls = Effect.map(HttpServerRequest.HttpServerRequest, McpOAuth.requestUrls);
 const decodeAuthorizationRequest = Schema.decodeEffect(AuthMcpAuthorizationRequest);
 // Decoded by the handler so malformed metadata gets the RFC 7591 error, not HttpApi's empty 400.
@@ -74,6 +87,83 @@ export const layer = HttpApiBuilder.group(
     const protectedResource = () =>
       requestUrls.pipe(Effect.map(McpOAuth.protectedResourceMetadata));
 
+    const authorize = Effect.fn("McpOAuth.authorizePage")(function* (
+      request: HttpServerRequest.HttpServerRequest,
+    ) {
+      const urls = yield* requestUrls;
+      const url = new URL(request.url, urls.issuer);
+      const authorizationRequest = yield* decodeAuthorizationRequest(
+        Object.fromEntries(url.searchParams),
+      ).pipe(Effect.orDie);
+      const authorization = yield* oauth
+        .validateAuthorization({ urls, request: authorizationRequest })
+        .pipe(Effect.result);
+      if (Result.isFailure(authorization)) {
+        const error = authorization.failure;
+        return error._tag === "McpOAuthPageError"
+          ? approvalPage(renderErrorPage(error.description), 400)
+          : HttpServerResponse.redirect(McpOAuth.redirectForError(error, urls.issuer), {
+              headers: PAGE_HEADERS,
+            });
+      }
+
+      const resolved = authorization.success;
+      const redirect = new URL(resolved.redirectUri);
+      const ceiling = oauth.runtimeModeCeiling?.maxRuntimeMode;
+      const levels = AuthMcpClientAccess.literals.filter(
+        (access) =>
+          access === "read-only" || ceiling === undefined || !isRuntimeModeAbove(access, ceiling),
+      );
+      const page = (error?: string) =>
+        approvalPage(
+          renderConsentPage({
+            clientName: resolved.client.name,
+            environmentHost: url.host,
+            redirectHost: redirect.host,
+            levels,
+            defaultAccess:
+              ceiling !== undefined && isRuntimeModeAbove("auto", ceiling) ? ceiling : "auto",
+            error,
+          }),
+          error === undefined ? 200 : 400,
+          redirect.origin,
+        );
+
+      if (request.method !== "POST") return page();
+      const form = new URLSearchParams(yield* request.text.pipe(Effect.orDie));
+      if (form.get("decision") === "deny") {
+        return HttpServerResponse.redirect(oauth.deny(resolved), {
+          status: 303,
+          headers: PAGE_HEADERS,
+        });
+      }
+      const code = form.get("code")?.trim() ?? "";
+      const selectedAccess = decodeAccess(form.get("access"));
+      const boundAccess = parseMcpApprovalCode(code)?.access;
+      const access =
+        boundAccess ?? (selectedAccess._tag === "Some" ? selectedAccess.value : undefined);
+      if (
+        form.get("decision") !== "approve" ||
+        !code ||
+        access === undefined ||
+        !levels.includes(access)
+      ) {
+        return page("Enter a sign-in code and choose a permitted access level.");
+      }
+      return yield* oauth
+        .approve({
+          request,
+          authorization: resolved,
+          decision: { _tag: "pairing-code", code, access },
+        })
+        .pipe(
+          Effect.map((location) =>
+            HttpServerResponse.redirect(location, { status: 303, headers: PAGE_HEADERS }),
+          ),
+          Effect.catch((error) => Effect.succeed(page(error.message))),
+        );
+    });
+
     return handlers
       .handle("protectedResource", protectedResource)
       .handle("mcpProtectedResource", protectedResource)
@@ -103,32 +193,8 @@ export const layer = HttpApiBuilder.group(
           Effect.tap(() => noStore),
         ),
       )
-      .handleRaw("authorize", ({ request }) =>
-        Effect.gen(function* () {
-          const urls = yield* requestUrls;
-          const url = new URL(request.url, urls.issuer);
-          const authorizationRequest = yield* decodeAuthorizationRequest(
-            Object.fromEntries(url.searchParams),
-          ).pipe(Effect.orDie);
-          const authorization = yield* oauth
-            .validateAuthorization({ urls, request: authorizationRequest })
-            .pipe(Effect.result);
-          const headers = { "cache-control": "no-store", "referrer-policy": "no-referrer" };
-          if (Result.isSuccess(authorization)) {
-            return HttpServerResponse.redirect(`${APPROVAL_PAGE_PATH}${url.search}`, { headers });
-          }
-          const error = authorization.failure;
-          return error._tag === "McpOAuthPageError"
-            ? HttpServerResponse.text(renderErrorPage(error.description), {
-                status: 400,
-                contentType: "text/html; charset=utf-8",
-                headers: PAGE_HEADERS,
-              })
-            : HttpServerResponse.redirect(McpOAuth.redirectForError(error, urls.issuer), {
-                headers,
-              });
-        }),
-      )
+      .handleRaw("authorize", ({ request }) => authorize(request))
+      .handleRaw("authorizeForm", ({ request }) => authorize(request))
       .handle("approval", ({ payload, request }) =>
         Effect.gen(function* () {
           const resolved = yield* forwardedAuthorization(oauth, payload);

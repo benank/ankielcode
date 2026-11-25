@@ -2,7 +2,7 @@ import { AuthMcpClientAccess } from "@ankielcode/contracts";
 import { T, useMessages } from "gt-react";
 import { useId } from "react";
 
-import { accessConfig } from "../auth/ConnectAgentSurface";
+import { accessConfig } from "../auth/mcpAccessConfig";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 
 /** What agents here may do in an environment being linked, with what that does not allow. */

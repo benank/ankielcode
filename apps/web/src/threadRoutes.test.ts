@@ -67,7 +67,7 @@ describe("threadRoutes", () => {
     expect(router.state.location.pathname).toBe("/local/mcp%3Aexample");
     expect(router.state.matches.at(-1)?.params).toEqual(ref);
     expect(isThreadRoutePathname(router.state.location.pathname, ref)).toBe(true);
-    await router.navigate({ to: "/new" });
+    await router.navigate({ href: "/new" });
     expect(isThreadRoutePathname(router.state.location.pathname, ref)).toBe(false);
   });
 

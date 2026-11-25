@@ -1,4 +1,4 @@
-import { extractRelayBasePath, readHostedPairingRequest } from "@ankielcode/shared/remote";
+import { extractRelayBasePath } from "@ankielcode/shared/remote";
 import * as Schema from "effect/Schema";
 import { msg } from "gt-react-native";
 
@@ -53,14 +53,6 @@ export function parsePairingUrl(url: string): { host: string; code: string } {
 
   try {
     const parsed = new URL(trimmed);
-    const hostedPairingRequest = readHostedPairingRequest(parsed);
-    if (hostedPairingRequest) {
-      return {
-        host: hostedPairingRequest.host.replace(/\/$/, ""),
-        code: hostedPairingRequest.token,
-      };
-    }
-
     const hashParams = new URLSearchParams(parsed.hash.slice(1));
     const hashToken = hashParams.get("token");
     const queryToken = parsed.searchParams.get("token");

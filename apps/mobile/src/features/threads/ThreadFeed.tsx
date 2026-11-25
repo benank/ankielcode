@@ -84,11 +84,10 @@ import type { ToolCallVisibility } from "@ankielcode/contracts/settings";
 import { encodeComposerContextFragment } from "@ankielcode/shared/composerContextClipboard";
 import {
   hasThreadLinks,
-  hostedThreadLink,
+  formatThreadLink,
   parseThreadLinkHref,
   threadLinkRefs,
 } from "@ankielcode/shared/threadLinks";
-import { PROMPT_LINK_MAX_PROMPT_LENGTH } from "@ankielcode/shared/promptLinks";
 import {
   parseComposerContextHref,
   collectComposerContextReferences,
@@ -214,10 +213,8 @@ import {
   type MediaVideoPreviewSource,
 } from "../../lib/videoPreviewSource";
 import { CopyTextButton } from "./CopyTextButton";
-import { Menu } from "../../components/ui/Menu";
 import { useAndroidControlSizing } from "../../components/ui/useAndroidControlSizing";
 import { useBarInset, useContentTopInset } from "../../components/ui/useBarInset";
-import { copyPromptLink } from "../prompt-links/prompt-link-actions";
 import { parseReviewCommentMessageSegments } from "../review/reviewCommentSelection";
 import {
   ReviewCommentCard,
@@ -418,18 +415,13 @@ export interface ThreadFeedProps {
   readonly onCiteAssistantText?: (citation: AssistantCitation) => void;
 }
 
-const USER_MESSAGE_COPY_MENU_ACTIONS = [
-  { id: "copy-prompt-link", title: msg("Copy prompt link"), image: "link" },
-];
-
 function UserMessageCopyButton(props: {
   readonly text: string;
   readonly onCopy: (() => Promise<void>) | undefined;
   readonly tintColor: ColorValue;
 }) {
   const gt = useGT();
-  const m = useMessages();
-  const button = (
+  return (
     <CopyTextButton
       accessibilityLabel={gt("Copy message")}
       text={props.text}
@@ -438,22 +430,6 @@ function UserMessageCopyButton(props: {
       buttonSize={28}
       iconSize={13}
     />
-  );
-  const linkText = replaceComposerContextReferences(props.text, (reference) => reference.label);
-  if (linkText.length > PROMPT_LINK_MAX_PROMPT_LENGTH) return button;
-  return (
-    <Menu
-      actions={USER_MESSAGE_COPY_MENU_ACTIONS.map((action) => ({
-        ...action,
-        title: m(action.title),
-      }))}
-      onPressAction={({ nativeEvent }) => {
-        if (nativeEvent.event === "copy-prompt-link") void copyPromptLink(linkText);
-      }}
-      shouldOpenOnLongPress
-    >
-      {button}
-    </Menu>
   );
 }
 
@@ -3567,7 +3543,7 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
       const thread = resolveLinkedThread(href);
       if (thread) {
         if (actionId === "open-thread") onMarkdownLinkPress(href);
-        else if (actionId === "copy-thread-link") copyTextWithHaptic(hostedThreadLink(thread));
+        else if (actionId === "copy-thread-link") copyTextWithHaptic(formatThreadLink(thread));
         return;
       }
       const deviceUrl = deviceLoopbackUrl(href);

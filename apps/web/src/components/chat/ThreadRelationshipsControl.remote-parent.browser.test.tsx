@@ -124,15 +124,15 @@ it("leaves the user where they went when the parent read answers late", async ()
   });
   await using screen = await renderChild(late, deleted);
   await parentRow(screen).click();
-  await screen.router?.navigate({ to: "/new" });
+  await screen.router?.navigate({ href: "/issues" });
   await act(async () => {
     answerLate(live);
     await late;
   });
   expect(toast).not.toHaveBeenCalled();
-  expect(screen.router?.latestLocation.pathname).toBe("/new");
+  expect(screen.router?.latestLocation.pathname).toBe("/issues");
   await parentRow(screen).click();
   await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(2));
   await vi.waitFor(() => expect(toast).toHaveBeenCalledOnce());
-  expect(screen.router?.latestLocation.pathname).toBe("/new");
+  expect(screen.router?.latestLocation.pathname).toBe("/issues");
 });

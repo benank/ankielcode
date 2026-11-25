@@ -1693,6 +1693,13 @@ describe("MessagesTimeline agent messages", () => {
   });
 });
 
+it("only offers regular copying for a sent prompt", async () => {
+  await using screen = await renderTimeline([message("Review the checkout changes.")]);
+  expect(screen.buttons(/^Copy/).map((button) => button.getAttribute("aria-label"))).toEqual([
+    "Copy message",
+  ]);
+});
+
 describe("MessagesTimeline attachments", () => {
   it.each(["image", "file"] as const)(
     "copies only matching context records for a wordless %s attachment",

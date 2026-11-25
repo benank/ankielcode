@@ -41,8 +41,7 @@ without expanding shell expressions.
 
 ## Where agents run
 
-Registry agents always run on the machine that hosts your Ankiel Code server. That stays true when you
-connect through `app.code.ankiel.com`.
+Registry agents always run on the machine that hosts your Ankiel Code server.
 
 Agents install under `tools/<agent-id>/<version>/` inside Ankiel home. Ankiel Code verifies SHA-256 when the Registry entry
 provides one; entries without a checksum retain the Registry's HTTPS distribution guarantee.
@@ -53,7 +52,7 @@ but keeps package installs. To use an existing local binary, set **Executable ov
 
 ## Signing in
 
-Open the agent's account section in **Settings → Providers** on web or desktop. Choose
+Open the agent's account section in **Settings → Providers** on desktop. Choose
 **Sign in** and, if the agent offers several methods, select one. For an installed, configured
 provider, mobile also offers **Settings → Providers**.
 
@@ -100,7 +99,7 @@ including when another client performs the import.
 The thread keeps the native session's title and last-update value as provider metadata without
 overwriting a title you set in Ankiel Code. Agents that report ACP context usage drive the thread details
 context window and cumulative cost metadata. See
-[commands and skills](./composer.md#commands-and-skills) to show it on web and desktop.
+[commands and skills](./composer.md#commands-and-skills) to show it on desktop.
 Text resources and links render as assistant output;
 binary resources, images, and audio that Ankiel Code cannot render yet appear as explicit placeholders
 instead of disappearing.

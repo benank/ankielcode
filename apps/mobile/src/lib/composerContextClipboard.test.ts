@@ -353,7 +353,7 @@ describe("mobile context clipboard imports", () => {
 
   it("pastes a thread link as a chip only where the destination's agent reads its machine", async () => {
     const text = [
-      "https://app.code.ankiel.com/threads/destination/local-thread",
+      "<ankiel-thread://v2/destination/local-thread>",
       "<ankiel-thread://v2/source/foreign-thread>",
     ].join(" ");
     const result = await importComposerContextClipboard(
