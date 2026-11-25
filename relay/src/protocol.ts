@@ -238,6 +238,8 @@ export function parseHostControlMessage(raw: string): HostControlMessage | null 
 }
 
 const STRIPPED_REQUEST_HEADERS = new Set([
+  // Edge injects `accept-encoding: br, gzip` and handles client compression on the response.
+  "accept-encoding",
   "connection",
   "keep-alive",
   "proxy-authenticate",

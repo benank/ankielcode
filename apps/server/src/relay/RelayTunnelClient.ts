@@ -208,6 +208,7 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
     const headers: Record<string, string | string[]> = {};
     for (const [key, value] of msg.headers) {
       const lower = key.toLowerCase();
+      if (lower === "accept-encoding") continue;
       const existing = headers[lower];
       if (existing === undefined) {
         headers[lower] = value;

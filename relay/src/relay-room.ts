@@ -397,6 +397,7 @@ export class RelayRoom extends DurableObject<RelayEnv> {
         status,
         ...(statusText ? { statusText } : {}),
         headers: responseHeaders,
+        ...(responseHeaders.has("content-encoding") ? { encodeBody: "manual" as const } : {}),
       }),
     );
   }
@@ -450,7 +451,7 @@ export class RelayRoom extends DurableObject<RelayEnv> {
   }
 
   private failAllPendingHttp(message: string): void {
-    for (const reqId of [...this.pendingHttp.keys()]) {
+    for (const reqId of this.pendingHttp.keys()) {
       this.failPendingHttp(reqId, 502, message);
     }
   }

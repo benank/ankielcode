@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import * as NodeAssert from "node:assert/strict";
+import * as NodeTest from "node:test";
 
 import {
   buildHostChallengeMessage,
@@ -23,6 +23,9 @@ import {
   parseHostControlMessage,
 } from "../src/protocol.ts";
 
+const { describe, it } = NodeTest;
+const FIXED_TIMESTAMP = 1_700_000_000_000;
+
 async function makeTestHostKey() {
   const keyPair = (await crypto.subtle.generateKey("Ed25519", true, [
     "sign",
@@ -41,10 +44,10 @@ async function makeTestHostKey() {
 describe("crypto", () => {
   it("derives a valid 26-char lowercase base32 hostId and verifies Ed25519 challenge", async () => {
     const host = await makeTestHostKey();
-    assert.equal(isValidHostId(host.hostId), true);
+    NodeAssert.equal(isValidHostId(host.hostId), true);
 
     const nonce = randomNonce(32);
-    const timestamp = Date.now();
+    const timestamp = FIXED_TIMESTAMP;
     const msg = buildHostChallengeMessage(host.hostId, nonce, timestamp);
     const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", host.keyPair.privateKey, msg));
 
@@ -56,13 +59,13 @@ describe("crypto", () => {
       signatureBase64Url: encodeBase64Url(sig),
       nowMs: timestamp + 1_000,
     });
-    assert.deepEqual(result, { ok: true });
+    NodeAssert.deepEqual(result, { ok: true });
   });
 
   it("enforces RELAY_SECRET HMAC proof when configured", async () => {
     const host = await makeTestHostKey();
     const nonce = randomNonce(32);
-    const timestamp = Date.now();
+    const timestamp = FIXED_TIMESTAMP;
     const secret = "super-secret-relay-key-123";
     const msg = buildHostChallengeMessage(host.hostId, nonce, timestamp);
     const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", host.keyPair.privateKey, msg));
@@ -76,7 +79,7 @@ describe("crypto", () => {
       relaySecret: secret,
       nowMs: timestamp,
     });
-    assert.deepEqual(missingSecret, { ok: false, reason: "invalid_relay_secret" });
+    NodeAssert.deepEqual(missingSecret, { ok: false, reason: "invalid_relay_secret" });
 
     const wrongSecretProof = await signRelaySecret("wrong-secret", host.hostId, nonce, timestamp);
     const wrongSecret = await verifyHostAuth({
@@ -89,7 +92,7 @@ describe("crypto", () => {
       secretProofBase64Url: wrongSecretProof,
       nowMs: timestamp,
     });
-    assert.deepEqual(wrongSecret, { ok: false, reason: "invalid_relay_secret" });
+    NodeAssert.deepEqual(wrongSecret, { ok: false, reason: "invalid_relay_secret" });
 
     const validSecretProof = await signRelaySecret(secret, host.hostId, nonce, timestamp);
     const ok = await verifyHostAuth({
@@ -102,14 +105,14 @@ describe("crypto", () => {
       secretProofBase64Url: validSecretProof,
       nowMs: timestamp,
     });
-    assert.deepEqual(ok, { ok: true });
+    NodeAssert.deepEqual(ok, { ok: true });
   });
 
   it("rejects hostId mismatch, tampered signature, and expired challenge", async () => {
     const host = await makeTestHostKey();
     const otherHost = await makeTestHostKey();
     const nonce = randomNonce(32);
-    const timestamp = Date.now();
+    const timestamp = FIXED_TIMESTAMP;
     const msg = buildHostChallengeMessage(host.hostId, nonce, timestamp);
     const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", host.keyPair.privateKey, msg));
 
@@ -121,7 +124,7 @@ describe("crypto", () => {
       signatureBase64Url: encodeBase64Url(sig),
       nowMs: timestamp,
     });
-    assert.deepEqual(wrongId, { ok: false, reason: "host_id_mismatch" });
+    NodeAssert.deepEqual(wrongId, { ok: false, reason: "host_id_mismatch" });
 
     const tampered = new Uint8Array(sig);
     tampered[0] = (tampered[0] ?? 0) ^ 0xff;
@@ -133,7 +136,7 @@ describe("crypto", () => {
       signatureBase64Url: encodeBase64Url(tampered),
       nowMs: timestamp,
     });
-    assert.deepEqual(badSig, { ok: false, reason: "invalid_signature" });
+    NodeAssert.deepEqual(badSig, { ok: false, reason: "invalid_signature" });
 
     const expired = await verifyHostAuth({
       expectedHostId: host.hostId,
@@ -143,14 +146,14 @@ describe("crypto", () => {
       signatureBase64Url: encodeBase64Url(sig),
       nowMs: timestamp + 120_000,
     });
-    assert.deepEqual(expired, { ok: false, reason: "challenge_expired" });
+    NodeAssert.deepEqual(expired, { ok: false, reason: "challenge_expired" });
   });
 
   it("parses ALLOWED_HOST_IDS cleanly", () => {
-    assert.equal(parseAllowedHostIds(undefined), null);
-    assert.equal(parseAllowedHostIds("   "), null);
+    NodeAssert.equal(parseAllowedHostIds(undefined), null);
+    NodeAssert.equal(parseAllowedHostIds("   "), null);
     const set = parseAllowedHostIds("abc234, DEF567 , ");
-    assert.deepEqual([...(set ?? [])], ["abc234", "def567"]);
+    NodeAssert.deepEqual([...(set ?? [])], ["abc234", "def567"]);
   });
 });
 
@@ -161,9 +164,9 @@ describe("protocol", () => {
 
     const wsEncoded = encodeBinaryRelayFrame(id, payload);
     const wsDecoded = decodeBinaryRelayFrame(wsEncoded);
-    assert.ok(wsDecoded);
-    assert.equal(wsDecoded.connId, id);
-    assert.deepEqual(wsDecoded.payload, payload);
+    NodeAssert.ok(wsDecoded);
+    NodeAssert.equal(wsDecoded.connId, id);
+    NodeAssert.deepEqual(wsDecoded.payload, payload);
 
     for (const kind of [
       BINARY_FRAME_WS_DATA,
@@ -172,17 +175,19 @@ describe("protocol", () => {
     ] as const) {
       const encoded = encodeBinaryFrame(kind, id, payload);
       const decoded = decodeBinaryFrame(encoded);
-      assert.ok(decoded);
-      assert.equal(decoded.kind, kind);
-      assert.equal(decoded.id, id);
-      assert.deepEqual(decoded.payload, payload);
+      NodeAssert.ok(decoded);
+      NodeAssert.equal(decoded.kind, kind);
+      NodeAssert.equal(decoded.id, id);
+      NodeAssert.deepEqual(decoded.payload, payload);
     }
   });
 
   it("rejects malformed frames and filters hop-by-hop headers", () => {
-    assert.equal(decodeBinaryFrame(new Uint8Array([0x09, 1, 2, 3])), null);
-    assert.deepEqual(parseHostControlMessage(JSON.stringify({ type: "ping" })), { type: "ping" });
-    assert.deepEqual(
+    NodeAssert.equal(decodeBinaryFrame(new Uint8Array([0x09, 1, 2, 3])), null);
+    NodeAssert.deepEqual(parseHostControlMessage(JSON.stringify({ type: "ping" })), {
+      type: "ping",
+    });
+    NodeAssert.deepEqual(
       parseHostControlMessage(
         JSON.stringify({
           type: "http_response_start",
@@ -198,18 +203,20 @@ describe("protocol", () => {
         headers: [["content-type", "application/json"]],
       },
     );
-    assert.equal(parseHostControlMessage("not-json"), null);
+    NodeAssert.equal(parseHostControlMessage("not-json"), null);
 
     const headers = new Headers({
+      "Accept-Encoding": "br, gzip",
       Authorization: "DPoP tok",
       DPoP: "proof-jwt",
       Connection: "keep-alive",
       "CF-Ray": "abc",
     });
     const filtered = Object.fromEntries(filterRequestHeaders(headers));
-    assert.equal(filtered.authorization, "DPoP tok");
-    assert.equal(filtered.dpop, "proof-jwt");
-    assert.equal("connection" in filtered, false);
-    assert.equal("cf-ray" in filtered, false);
+    NodeAssert.equal(filtered.authorization, "DPoP tok");
+    NodeAssert.equal(filtered.dpop, "proof-jwt");
+    NodeAssert.equal("accept-encoding" in filtered, false);
+    NodeAssert.equal("connection" in filtered, false);
+    NodeAssert.equal("cf-ray" in filtered, false);
   });
 });
