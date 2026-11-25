@@ -1,4 +1,3 @@
-import { TimelinePendingApprovalRow } from "./TimelinePendingApprovalRow";
 import { WorkLogButton, WorkLogList, WorkLogRow } from "./WorkLog";
 import type { WorktreeSetupSnapshot } from "@ankielcode/contracts";
 import { type ToolActivityIcon } from "@ankielcode/contracts";
@@ -77,21 +76,12 @@ export const WorkGroupSection = memo(function WorkGroupSection({
   isExpandedToolGroup: boolean;
   displayLabel?: string | undefined;
 }) {
-  const {
-    workspaceRoot,
-    routeThreadKey,
-    onToggleWorkEntry,
-    onWorkEntryContentReady,
-    pendingApprovals,
-  } = use(TimelineRowCtx);
+  const { workspaceRoot, routeThreadKey, onToggleWorkEntry, onWorkEntryContentReady } =
+    use(TimelineRowCtx);
   const gt = useGT();
-  const nonEmptyEntries = groupedEntries.filter((entry) => {
-    const item = entry.projectedItem?.item;
-    return (
-      (item?.type === "approval_request" && pendingApprovals.has(item.requestId)) ||
-      workEntryIsVisibleInGroup(entry, isExpandedToolGroup)
-    );
-  });
+  const nonEmptyEntries = groupedEntries.filter((entry) =>
+    workEntryIsVisibleInGroup(entry, isExpandedToolGroup),
+  );
 
   if (nonEmptyEntries.length === 0) return null;
   if (isExpandedToolGroup && nonEmptyEntries.every((entry) => entry.itemType === "reasoning")) {
@@ -452,8 +442,6 @@ export function ThinkingTimelineRow({ row }: { row: Extract<TimelineRow, { kind:
     providerStarting,
   } = use(TimelineRowActivityCtx);
   if (isPreparingWorktree || isCompacting) return <WorkLogRow label="" />;
-  // A failed group keeps this disclosure while an approval waits, but nothing is thinking then.
-  const live = ctx.pendingApprovals.size === 0;
   const activity = (
     <LiveActivityRow
       label={
@@ -472,8 +460,8 @@ export function ThinkingTimelineRow({ row }: { row: Extract<TimelineRow, { kind:
           />
         )
       }
-      active={live}
-      shimmer={live}
+      active
+      shimmer
     />
   );
   const { groupId } = row;
@@ -622,11 +610,6 @@ export function LiveWorkEntryTimelineRow({
   const threadTarget = useThreadReadTarget(row.entry, ctx.activeThreadEnvironmentId);
   const label = liveWorkEntryLabel(row.entry, ctx.workspaceRoot, row.active, m);
   const threadLabel = threadReadLabel(label, row.entry, threadTarget, m);
-
-  const item = row.entry.projectedItem?.item;
-  const pendingApproval =
-    item?.type === "approval_request" ? ctx.pendingApprovals.get(item.requestId) : undefined;
-  if (pendingApproval) return <TimelinePendingApprovalRow approval={pendingApproval} />;
 
   const failed = workEntryDisplayIndicatesToolFailure(row.entry);
   const thoughtLine =

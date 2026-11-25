@@ -61,7 +61,6 @@ import {
   type WorktreeSetupSnapshot,
   type OrchestrationV2ProjectedTurnItem,
   type RunAttemptId,
-  type RuntimeRequestId,
   RunId,
   type ThreadId,
   type TurnItemId,
@@ -1456,17 +1455,11 @@ function settleSupersededReasoning(entries: ReadonlyArray<TimelineEntry>) {
   });
 }
 
-function workShownAsFinalAnswerOnly(
-  entry: TimelineEntry,
-  pendingApprovalRequestIds: ReadonlySet<RuntimeRequestId> | undefined,
-): boolean {
+function workShownAsFinalAnswerOnly(entry: TimelineEntry): boolean {
   if (entry.kind === "event") return entry.projectedItem.item.type !== "subagent";
   if (entry.kind !== "work") return true;
   const work = entry.entry;
-  const item = work.projectedItem?.item;
   return (
-    (item?.type === "approval_request" &&
-      pendingApprovalRequestIds?.has(item.requestId) === true) ||
     work.questionAnswer !== undefined ||
     timelineEntryIsCompaction(entry) ||
     timelineEntryStartsResponse(entry) ||
@@ -1544,7 +1537,6 @@ function timelineRowEntries(
     | "isWorking"
     | "latestRun"
     | "runningRunId"
-    | "pendingApprovalRequestIds"
   >,
 ) {
   const visibility = input.toolCallVisibility ?? "showAll";
@@ -1561,7 +1553,7 @@ function timelineRowEntries(
     const retainedReplyIds = retainedAssistantReplyEntryIds(entries);
     shown = entries.filter((entry, index) => {
       if (entry.kind !== "message") {
-        return workShownAsFinalAnswerOnly(entry, input.pendingApprovalRequestIds);
+        return workShownAsFinalAnswerOnly(entry);
       }
       const { message } = entry;
       return (
@@ -1619,7 +1611,6 @@ function deriveTimelineTurnFolds(
 export function deriveMessagesTimelineRows(
   input: {
     timelineEntries: ReadonlyArray<TimelineEntry>;
-    pendingApprovalRequestIds?: ReadonlySet<RuntimeRequestId>;
     latestRun?: TimelineLatestRun | null;
     /** The usage-limited run whose failure row the recovery notice replaces. */
     usageLimitRunId?: RunId | null;
@@ -1648,13 +1639,6 @@ export function deriveMessagesTimelineRows(
       embeddedResultRunIds.add(entry.runId);
     }
   }
-  const isPendingApproval = (entry: WorkLogEntry) => {
-    const item = entry.projectedItem?.item;
-    return (
-      item?.type === "approval_request" &&
-      input.pendingApprovalRequestIds?.has(item.requestId) === true
-    );
-  };
   const unsettledRunId = deriveUnsettledRunId(input.latestRun ?? null, input.runningRunId ?? null);
   const revertTurnCountByUserMessageId = input.supportsConversationRollback
     ? deriveRevertTurnCountByUserMessageId({
@@ -1724,14 +1708,6 @@ export function deriveMessagesTimelineRows(
       }
     }
   }
-  if (input.pendingApprovalRequestIds?.size) {
-    for (const entry of timelineEntries) {
-      if (entry.kind === "work" && isPendingApproval(entry.entry)) {
-        collapsedEntryIds.delete(entry.id);
-        collapsedSupersededEntryIds.delete(entry.id);
-      }
-    }
-  }
   const runIdIsActiveResponse = (runId: RunId | null | undefined) =>
     runId == null ? runlessWorkActive : activeVisualResponseRunIds.has(runId);
   const workEntryIsInActiveRun = (entry: WorkLogEntry) =>
@@ -1756,7 +1732,6 @@ export function deriveMessagesTimelineRows(
         entry.entry.itemType === "notification" ||
         entry.entry.itemType === "todo_list" ||
         entry.entry.questionAnswer !== undefined ||
-        isPendingApproval(entry.entry) ||
         !runIdIsActiveResponse(entry.entry.runId) ||
         entry.entry.sourceActivityKind === "context-compaction" ||
         collapsedEntryIds.has(entry.id) ||
@@ -1786,8 +1761,7 @@ export function deriveMessagesTimelineRows(
   const latestToolKeepsActivityLive =
     latestRunningToolEntry !== undefined ||
     (latestVisibleToolEntry !== undefined &&
-      workEntryIndicatesToolSuccess(latestVisibleToolEntry.entry) &&
-      !input.pendingApprovalRequestIds?.size);
+      workEntryIndicatesToolSuccess(latestVisibleToolEntry.entry));
   const latestToolFailed =
     latestRunningToolEntry === undefined &&
     latestVisibleToolEntry !== undefined &&
@@ -2062,7 +2036,6 @@ export function deriveMessagesTimelineRows(
 
     if (timelineEntry.kind === "work") {
       if (
-        isPendingApproval(timelineEntry.entry) ||
         (timelineEntry.entry.runId != null && itemizedRunIds.has(timelineEntry.entry.runId)) ||
         (timelineEntry.entry.itemType === "error" &&
           timelineEntry.entry.toolLifecycleStatus === "failed") ||
@@ -2098,7 +2071,6 @@ export function deriveMessagesTimelineRows(
           nextEntry.entry.itemType === "notification" ||
           nextEntry.entry.itemType === "todo_list" ||
           nextEntry.entry.questionAnswer !== undefined ||
-          isPendingApproval(nextEntry.entry) ||
           activeWorkEntryIds.has(nextEntry.id) ||
           collapsedEntryIds.has(nextEntry.id) ||
           collapsedSupersededEntryIds.has(nextEntry.id) ||
@@ -2397,7 +2369,7 @@ export function deriveMessagesTimelineRows(
     !setupOwnsWorkingSlot &&
     !hasActiveCompaction &&
     !compactionOnlyRunFinished &&
-    (latestToolFailed || (!hasActivityRow && !input.pendingApprovalRequestIds?.size))
+    (latestToolFailed || !hasActivityRow)
   ) {
     const failedGroupAnchor = latestToolFailed ? activeWorkAnchor : undefined;
     if (failedGroupAnchor) {
@@ -2576,7 +2548,6 @@ function replaceStreamingMessageRows(
     expandedRunIds: previousExpandedRuns,
     expandedAttemptIds: previousExpandedAttempts,
     expandedWorkGroupIds: previousExpandedGroups,
-    pendingApprovalRequestIds: previousPendingApprovalRequestIds,
     availableRevertTurnCounts: previousAvailableRevertTurnCounts,
     ...previousContext
   } = previous.input;
@@ -2587,7 +2558,6 @@ function replaceStreamingMessageRows(
     expandedRunIds,
     expandedAttemptIds,
     expandedWorkGroupIds,
-    pendingApprovalRequestIds,
     availableRevertTurnCounts,
     ...context
   } = input;
@@ -2599,7 +2569,6 @@ function replaceStreamingMessageRows(
     !shallow(previousExpandedRuns, expandedRunIds) ||
     !shallow(previousExpandedAttempts, expandedAttemptIds) ||
     !shallow(previousExpandedGroups, expandedWorkGroupIds) ||
-    !shallow(previousPendingApprovalRequestIds, pendingApprovalRequestIds) ||
     !shallow(previousAvailableRevertTurnCounts, availableRevertTurnCounts) ||
     !sameCheckpointSummaries(previousCheckpoints, turnDiffSummaries)
   ) {

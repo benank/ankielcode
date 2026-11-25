@@ -32,6 +32,7 @@ import type {
   ModelSelection,
   ProjectId,
   PreviewAnnotationPayload,
+  ProviderApprovalDecision,
   ThreadContextRecord,
   EnvironmentContextRecord,
   ResolvedKeybindingsConfig,
@@ -226,6 +227,7 @@ import {
 } from "./ComposerAttachmentStrip";
 import { CollapsedComposerStopAction, ComposerPrimaryActions } from "./ComposerPrimaryActions";
 import { ComposerFooterPrimaryActions } from "./ComposerFooterControls";
+import { ComposerPendingApprovalPanel } from "./ComposerPendingApprovalPanel";
 import { ComposerPendingUserInputPanel } from "./ComposerPendingUserInputPanel";
 import { resolveComposerMenuActiveItemId } from "./composerMenuHighlight";
 import { buildPullRequestReferenceContext } from "../pullRequest/pullRequestDetail.logic";
@@ -420,7 +422,6 @@ export interface ChatComposerProps {
 
   activePendingApproval: PendingApproval | null;
   pendingApprovals: PendingApproval[];
-  onHeldRequestIdsChange: (requestIds: ReadonlySet<string>) => void;
   pendingUserInputs: PendingUserInput[];
   activePendingIsResponding: boolean;
   respondingRequestIds: RuntimeRequestId[];
@@ -492,6 +493,10 @@ export interface ChatComposerProps {
   ) => void;
   onResume: () => void;
   onInterrupt: () => void;
+  onRespondToApproval: (
+    requestId: RuntimeRequestId,
+    decision: ProviderApprovalDecision,
+  ) => Promise<unknown>;
   onSelectActivePendingUserInputOption: (questionId: string, optionValue: string) => void;
   onAdvanceActivePendingUserInput: () => void;
   onDismissActivePendingUserInput: (requestId: RuntimeRequestId) => void;
@@ -557,7 +562,6 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     environmentUnavailable,
     activePendingApproval: incomingPendingApproval,
     pendingApprovals,
-    onHeldRequestIdsChange,
     pendingUserInputs: incomingPendingUserInputs,
     activePendingIsResponding: incomingPendingIsResponding,
     respondingRequestIds,
@@ -595,6 +599,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     captureDetachedSend,
     onResume,
     onInterrupt,
+    onRespondToApproval,
     onSelectActivePendingUserInputOption,
     onAdvanceActivePendingUserInput,
     onDismissActivePendingUserInput,
@@ -637,15 +642,13 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     ...pendingApprovals.map((request) => request.requestId),
     ...incomingPendingUserInputs.map((request) => request.requestId),
   ]);
-  // A layout effect so the timeline never paints a held approval as answerable.
-  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- publishes held requests to the timeline without lifting per-keystroke typing state
-  useLayoutEffect(() => {
-    onHeldRequestIdsChange(heldRequestIds);
-  }, [heldRequestIds, onHeldRequestIdsChange]);
   const activePendingApproval =
     incomingPendingApproval && !heldRequestIds.has(incomingPendingApproval.requestId)
       ? incomingPendingApproval
       : null;
+  const visiblePendingApprovals = pendingApprovals.filter(
+    (approval) => !heldRequestIds.has(approval.requestId),
+  );
   const holdingUserInput = incomingPendingUserInputs[0]
     ? heldRequestIds.has(incomingPendingUserInputs[0].requestId)
     : false;
@@ -1276,7 +1279,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   const activePendingUserInput = pendingUserInputs[0] ?? null;
   const isChoiceOnlyPendingQuestion =
     activePendingProgress?.activeQuestion?.allowCustomAnswer === false;
-  const showComposerTopDrawer = pendingUserInputs.length > 0;
+  const showComposerTopDrawer = activePendingApproval !== null || pendingUserInputs.length > 0;
   const showCollapsedMobilePromptRow = isComposerCollapsedMobile;
   const showComposerAttachAction =
     fileStagingLimit !== null &&
@@ -3697,8 +3700,20 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
           <ComposerBannerStack items={shelfItems} />
           {showComposerTopDrawer ? (
             <ComposerBanner.Attachment>
-              <ComposerBanner.Root data-chat-composer-top-drawer="true" variant="info">
-                {pendingUserInputs.length > 0 ? (
+              <ComposerBanner.Root
+                data-chat-composer-top-drawer="true"
+                variant={activePendingApproval ? "warning" : "info"}
+                density={activePendingApproval ? "spacious" : "default"}
+              >
+                {activePendingApproval ? (
+                  <ComposerPendingApprovalPanel
+                    approval={activePendingApproval}
+                    pendingCount={visiblePendingApprovals.length}
+                    disabled={!canOperateThread}
+                    isResponding={respondingRequestIds.includes(activePendingApproval.requestId)}
+                    onRespondToApproval={onRespondToApproval}
+                  />
+                ) : pendingUserInputs.length > 0 ? (
                   <ComposerPendingUserInputPanel
                     pendingUserInputs={pendingUserInputs}
                     cwd={gitCwd ?? undefined}

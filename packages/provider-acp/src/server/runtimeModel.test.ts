@@ -579,6 +579,40 @@ describe("AcpRuntimeModel", () => {
     expect(parsePermissionRequest(request).kind).toBe("unknown");
   });
 
+  it("carries tracked rawInput when a permission request sends an empty rawInput object and applies normalizeToolCall", () => {
+    const request = withTrackedPermissionToolCall(
+      {
+        sessionId: "session-1",
+        options: [{ optionId: "allow-once", name: "Allow once", kind: "allow_once" }],
+        toolCall: { toolCallId: "tool-1", kind: "execute", title: "Run command", rawInput: {} },
+      },
+      {
+        toolCallId: "tool-1",
+        kind: "execute",
+        data: {
+          toolCallId: "tool-1",
+          title: "run_command",
+          rawInput: { CommandLine: "git status -sb" },
+        },
+      },
+    );
+
+    const parsed = parsePermissionRequest(request, {
+      normalizeToolCall: (toolCall) => {
+        const rawInput = toolCall.data.rawInput as { CommandLine?: string } | undefined;
+        return rawInput?.CommandLine
+          ? { ...toolCall, command: rawInput.CommandLine, detail: rawInput.CommandLine }
+          : toolCall;
+      },
+    });
+
+    expect(parsed).toMatchObject({
+      kind: "execute",
+      detail: "git status -sb",
+      toolCall: { command: "git status -sb", detail: "git status -sb" },
+    });
+  });
+
   it("bounds an oversized cumulative tool_call_update content buffer to a tail window", () => {
     const hugeText = Array.from({ length: 2_000 }, (_, i) => `line ${i}: ${"x".repeat(50)}`).join(
       "\n",

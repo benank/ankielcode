@@ -1,12 +1,7 @@
 import type { ToolCallDiffTarget } from "../../diffPanelStore";
 import type { SideThreadOpenIntent } from "@ankielcode/client-runtime/side-thread";
 import type { ThreadRunSummary } from "@ankielcode/client-runtime/state/models";
-import type {
-  ProviderApprovalDecision,
-  ResponseContextRecord,
-  RuntimeRequestId,
-  WorktreeSetupSnapshot,
-} from "@ankielcode/contracts";
+import type { ResponseContextRecord, WorktreeSetupSnapshot } from "@ankielcode/contracts";
 import {
   type EnvironmentId,
   type MessageId,
@@ -24,7 +19,6 @@ import type { WorkflowOpening } from "@ankielcode/client-runtime/state/subagentR
 import { useEffect, useRef, createContext, type MouseEvent, type ReactNode } from "react";
 import { type LegendListRef } from "@legendapp/list/react";
 import type { CodexArtifactTemplate } from "@ankielcode/shared/codexArtifactTemplates";
-import type { PendingApproval } from "../../session-logic";
 import { type ChatFileAttachment } from "../../types";
 import { type ExpandedImageItem, ExpandedImagePreview } from "./ExpandedImagePreview";
 import { type AssistantCitationTarget } from "./AssistantCitationSource";
@@ -47,12 +41,6 @@ export interface TurnItemSource {
 }
 
 export interface TimelineRowSharedState {
-  pendingApprovals: ReadonlyMap<RuntimeRequestId, PendingApproval>;
-  respondingRequestIds: ReadonlyArray<RuntimeRequestId>;
-  canOperateThread: boolean;
-  onRespondToApproval:
-    | ((requestId: RuntimeRequestId, decision: ProviderApprovalDecision) => Promise<unknown>)
-    | undefined;
   citationRequest: AssistantCitationTarget | null;
   /** Absent hides "Reply", as in a linked thread. */
   onReplyToResponse: ((response: ResponseContextRecord) => boolean) | undefined;

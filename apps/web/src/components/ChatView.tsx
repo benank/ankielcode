@@ -151,7 +151,6 @@ import {
 } from "../lib/assistantCitationNavigation";
 import type { AssistantCitationSourceAnchor } from "~/lib/assistantTextSelection";
 import { useStore } from "zustand";
-import { shallow } from "zustand/vanilla/shallow";
 import { useShallow } from "zustand/react/shallow";
 import {
   isAtomCommandInterrupted,
@@ -1500,12 +1499,6 @@ export default function ChatView(props: ChatViewProps) {
     promptRef,
     composerRef,
     setThreadError,
-  });
-  const [heldApprovalRequestIds, setHeldApprovalRequestIds] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
-  const onHeldRequestIdsChange = useStableCallback((requestIds: ReadonlySet<string>) => {
-    setHeldApprovalRequestIds((current) => (shallow(current, requestIds) ? current : requestIds));
   });
   // Answering an approval or question on any client resumes quota spending, so include it in the key.
   const usageLimitsKey =
@@ -3613,11 +3606,6 @@ export default function ChatView(props: ChatViewProps) {
             >
               <WorkspaceMutationIdContext value={workspaceMutationId}>
                 <ThreadTimeline
-                  pendingApprovals={pendingApprovals}
-                  heldApprovalRequestIds={heldApprovalRequestIds}
-                  respondingRequestIds={respondingRequestIds}
-                  onRespondToApproval={onRespondToApprovalStable}
-                  canOperateThread={canOperateThread}
                   threadDetailRef={routeThreadDetailRef}
                   entriesInput={timelineEntriesInput}
                   draftEntries={isServerThread ? null : draftTimelineEntries}
@@ -3894,7 +3882,6 @@ export default function ChatView(props: ChatViewProps) {
                                 environmentUnavailable={activeEnvironmentUnavailableState}
                                 activePendingApproval={activePendingApproval}
                                 pendingApprovals={pendingApprovals}
-                                onHeldRequestIdsChange={onHeldRequestIdsChange}
                                 pendingUserInputs={pendingUserInputs}
                                 activePendingIsResponding={activePendingIsResponding}
                                 respondingRequestIds={respondingRequestIds}
@@ -3942,6 +3929,7 @@ export default function ChatView(props: ChatViewProps) {
                                 captureDetachedSend={captureDetachedSend}
                                 onResume={onComposerResumeStable}
                                 onInterrupt={onInterruptStable}
+                                onRespondToApproval={onRespondToApprovalStable}
                                 onSelectActivePendingUserInputOption={
                                   onSelectActivePendingUserInputOptionStable
                                 }

@@ -1274,6 +1274,8 @@ export function withTrackedPermissionToolCall(
 ): EffectAcpSchema.RequestPermissionRequest {
   if (tracked === undefined) return params;
   const { title, kind, rawInput } = params.toolCall;
+  const rawInputEmpty =
+    rawInput === undefined || (isRecord(rawInput) && Object.keys(rawInput).length === 0);
   return {
     ...params,
     toolCall: {
@@ -1283,7 +1285,7 @@ export function withTrackedPermissionToolCall(
         : {}),
       // Unrecognised kinds map to command approvals, so only a tracked execute kind may grant execution.
       ...(kind === undefined && tracked.kind === "execute" ? { kind: "execute" as const } : {}),
-      ...(rawInput === undefined && tracked.data.rawInput !== undefined
+      ...(rawInputEmpty && tracked.data.rawInput !== undefined
         ? { rawInput: tracked.data.rawInput }
         : {}),
     },
@@ -1292,8 +1294,11 @@ export function withTrackedPermissionToolCall(
 
 export function parsePermissionRequest(
   params: EffectAcpSchema.RequestPermissionRequest,
+  options?: {
+    readonly normalizeToolCall?: ((toolCall: AcpToolCallState) => AcpToolCallState) | undefined;
+  },
 ): AcpPermissionRequest {
-  const toolCall = makeToolCallState(
+  const rawToolCall = makeToolCallState(
     {
       toolCallId: params.toolCall.toolCallId,
       title: params.toolCall.title,
@@ -1306,7 +1311,13 @@ export function parsePermissionRequest(
     },
     { fallbackStatus: "pending" },
   );
-  const kind = normalizeToolKind(params.toolCall.kind) ?? "unknown";
+  const toolCall =
+    rawToolCall !== undefined && options?.normalizeToolCall !== undefined
+      ? options.normalizeToolCall(rawToolCall)
+      : rawToolCall;
+  const kind =
+    normalizeToolKind(params.toolCall.kind === undefined ? toolCall?.kind : params.toolCall.kind) ??
+    "unknown";
   const detail =
     toolCall?.command ??
     toolCall?.title ??

@@ -1332,6 +1332,7 @@ const openSessionWithRunningCommand = Effect.fn("openSessionWithRunningCommand")
   options?: {
     readonly profileDirectory?: string;
     readonly initialToolCalls?: ReadonlyArray<EffectAcpSchema.SessionUpdate>;
+    readonly runtimeMode?: "full-access" | "approval-required";
   },
 ) {
   const childProcessSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -1466,7 +1467,7 @@ const openSessionWithRunningCommand = Effect.fn("openSessionWithRunningCommand")
           },
         });
   const runtimePolicy = ProviderAdapter.ProviderAdapterV2RuntimePolicy.make({
-    runtimeMode: "full-access",
+    runtimeMode: options?.runtimeMode ?? "full-access",
     interactionMode: "default",
     cwd: process.cwd(),
   });
@@ -1507,7 +1508,7 @@ const openSessionWithRunningCommand = Effect.fn("openSessionWithRunningCommand")
         title: "Antigravity wake",
         providerInstanceId: instanceId,
         modelSelection,
-        runtimeMode: "full-access",
+        runtimeMode: runtimePolicy.runtimeMode,
         interactionMode: "default",
         branch: null,
         worktreePath: process.cwd(),
@@ -1793,6 +1794,54 @@ describe("AntigravityAdapterV2 work after the prompt ends", () => {
       yield* TestClock.adjust("3 seconds");
       const run = yield* until((event) => event.type === "turn.terminal");
       assert.include(JSON.stringify(run), "Here is the chart.", "the question kept the run open");
+    }).pipe(Effect.provide(layerSession)),
+  );
+
+  it.effect("surfaces the actual CommandLine on Antigravity command approval requests", () =>
+    Effect.gen(function* () {
+      const { startTurn, until, throughPromptSettled, requestPermission } =
+        yield* openSessionWithRunningCommand({ WaitMsBeforeAsync: 10000 }, undefined, undefined, {
+          runtimeMode: "approval-required",
+        });
+      yield* startTurn(1, false);
+      yield* throughPromptSettled;
+      const approval = yield* requestPermission(
+        {
+          sessionId: "mock-session-1",
+          toolCall: {
+            toolCallId: "call_git_status",
+            kind: "execute",
+            title: "Run command",
+            status: "pending",
+            rawInput: { CommandLine: "git status -sb", Cwd: "/workspace" },
+          },
+          options: [
+            { optionId: "allow", name: "Allow", kind: "allow_once" },
+            { optionId: "deny", name: "Deny", kind: "reject_once" },
+          ],
+        },
+        { requestId: "permission-cmd-1", method: "session/request_permission" },
+      ).pipe(Effect.forkScoped({ startImmediately: true }));
+      const events = yield* until(
+        (event) =>
+          event.type === "turn_item.updated" &&
+          event.turnItem.type === "approval_request" &&
+          event.turnItem.nativeItemRef?.nativeId === "call_git_status",
+      );
+      const approvalEvent = events.findLast(
+        (event) =>
+          event.type === "turn_item.updated" &&
+          event.turnItem.type === "approval_request" &&
+          event.turnItem.nativeItemRef?.nativeId === "call_git_status",
+      );
+      assert.equal(
+        approvalEvent?.type === "turn_item.updated" &&
+          approvalEvent.turnItem.type === "approval_request"
+          ? approvalEvent.turnItem.prompt
+          : undefined,
+        "git status -sb",
+      );
+      yield* Fiber.interrupt(approval);
     }).pipe(Effect.provide(layerSession)),
   );
 

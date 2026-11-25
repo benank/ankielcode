@@ -6,11 +6,10 @@ import { threadEnvironment } from "../../state/threads";
 import { useAtomCommand } from "../../state/use-atom-command";
 import type { ToolCallDiffTarget } from "../../diffPanelStore";
 import { AudioPreviewUnmountContext } from "../files/AudioPreview";
+import { WorkLogBlock } from "./WorkLog";
 import { ThreadFindTimelineContext } from "./ThreadFindProvider";
 import { MarkdownFindContext } from "./markdownFindContext";
 import { useChatCanvas } from "./ChatCanvasContext";
-import { WorkLogBlock } from "./WorkLog";
-import { TimelinePendingApprovalRow } from "./TimelinePendingApprovalRow";
 import type { WorktreeSetupSnapshot } from "@ankielcode/contracts";
 import { deriveTimelineMinimapItems } from "./timelineMinimapItems";
 import {
@@ -31,8 +30,6 @@ import { preserveReadingPosition } from "~/lib/preserveReadingPosition";
 import { useStableCallback } from "~/hooks/useStableCallback";
 
 const NOOP_USE_ARTIFACT_TEMPLATE = () => {};
-const EMPTY_PENDING_APPROVALS: ReadonlyArray<PendingApproval> = [];
-const EMPTY_RESPONDING_REQUEST_IDS: TimelineRowSharedState["respondingRequestIds"] = [];
 
 const NOOP_OPEN_ATTACHMENT = (_attachment: ChatFileAttachment) => {};
 
@@ -55,7 +52,7 @@ import {
   type LegendListRef,
   type MaintainScrollAtEndOptions,
 } from "@legendapp/list/react";
-import { type PendingApproval, type TimelineEntry } from "../../session-logic";
+import { type TimelineEntry } from "../../session-logic";
 import type { CodexArtifactTemplate } from "@ankielcode/shared/codexArtifactTemplates";
 import { type ChatFileAttachment, type TurnDiffSummary } from "../../types";
 import {
@@ -224,11 +221,6 @@ export interface MessagesTimelineHistoryControls {
 }
 
 interface MessagesTimelineProps {
-  pendingApprovals?: ReadonlyArray<PendingApproval>;
-  heldApprovalRequestIds?: ReadonlySet<string> | undefined;
-  respondingRequestIds?: TimelineRowSharedState["respondingRequestIds"];
-  canOperateThread?: boolean;
-  onRespondToApproval?: TimelineRowSharedState["onRespondToApproval"];
   citationRequest?: AssistantCitationRequest | null;
   citationHistory?: CitedHistory;
   onCiteAssistantText?: (
@@ -353,11 +345,6 @@ export function MessagesTimeline(props: MessagesTimelineProps) {
 }
 
 const ConversationTimeline = memo(function ConversationTimeline({
-  pendingApprovals = EMPTY_PENDING_APPROVALS,
-  heldApprovalRequestIds,
-  respondingRequestIds = EMPTY_RESPONDING_REQUEST_IDS,
-  canOperateThread = false,
-  onRespondToApproval,
   citationRequest = null,
   citationHistory = CITED_HISTORY_LOADING,
   onCiteAssistantText,
@@ -745,14 +732,8 @@ const ConversationTimeline = memo(function ConversationTimeline({
       ? new Set(paintedExpandedAttemptIds).add(activeFindAttemptId)
       : paintedExpandedAttemptIds;
 
-  const isVisiblePendingApproval = (approval: PendingApproval) =>
-    !heldApprovalRequestIds?.has(approval.requestId);
-  const pendingApprovalRequestIds = new Set(
-    pendingApprovals.filter(isVisiblePendingApproval).map((approval) => approval.requestId),
-  );
   const rawRows = useIncrementalTimelineRows(`${listIdentityKey}\0${workspaceRoot ?? ""}`, {
     timelineEntries,
-    pendingApprovalRequestIds,
     latestRun,
     usageLimitRunId,
     runningRunId,
@@ -771,19 +752,6 @@ const ConversationTimeline = memo(function ConversationTimeline({
     revealedMessageId,
   });
   const rows = useStableRows(rawRows, listIdentityKey);
-  const matchedApprovalRequestIds = new Set<string>();
-  for (const row of pendingApprovalRequestIds.size > 0 ? rows : []) {
-    const entries =
-      row.kind === "work" ? row.groupedEntries : row.kind === "work-live" ? [row.entry] : [];
-    for (const entry of entries) {
-      const item = entry.projectedItem?.item;
-      if (item?.type === "approval_request") matchedApprovalRequestIds.add(item.requestId);
-    }
-  }
-  const unmatchedPendingApprovals = pendingApprovals.filter(
-    (approval) =>
-      isVisiblePendingApproval(approval) && !matchedApprovalRequestIds.has(approval.requestId),
-  );
   // Run status/timestamps change per stream event; keep them out of shared row context.
   const runs = useStableHandoffRuns(runsProp);
   const minimapItems = deriveTimelineMinimapItems(rows);
@@ -796,7 +764,6 @@ const ConversationTimeline = memo(function ConversationTimeline({
     restoringThreadPosition && restoreRowIndex >= 0 ? { indices: [restoreRowIndex] } : undefined;
   const showsEmptyState =
     rows.length === 0 &&
-    unmatchedPendingApprovals.length === 0 &&
     !isWorking &&
     parentThreadLink === null &&
     historyControls === undefined &&
@@ -1106,18 +1073,7 @@ const ConversationTimeline = memo(function ConversationTimeline({
     };
   };
 
-  // Built from props after the last hook so the compiler can memoize the row context; a map
-  // made before a hook would rebuild it, and re-render every row, on each streamed update.
-  const pendingApprovalsByRequestId = new Map(
-    pendingApprovals
-      .filter(isVisiblePendingApproval)
-      .map((approval) => [approval.requestId, approval]),
-  );
   const sharedState: TimelineRowSharedState = {
-    pendingApprovals: pendingApprovalsByRequestId,
-    respondingRequestIds,
-    canOperateThread,
-    onRespondToApproval,
     citationRequest: readyCitationRequest,
     onReplyToResponse,
     listRef,
@@ -1416,19 +1372,6 @@ const ConversationTimeline = memo(function ConversationTimeline({
       onGrow={onFooterGrow}
     >
       {footer}
-      {unmatchedPendingApprovals.length > 0 ? (
-        <TimelineRowCtx value={sharedState}>
-          <div className="messages-timeline-row-frame">
-            <div className="chat-content-lane overflow-x-clip" data-timeline-root="true">
-              <WorkLogBlock>
-                {unmatchedPendingApprovals.map((approval) => (
-                  <TimelinePendingApprovalRow key={approval.requestId} approval={approval} />
-                ))}
-              </WorkLogBlock>
-            </div>
-          </div>
-        </TimelineRowCtx>
-      ) : null}
     </TimelineListFooter>
   );
 

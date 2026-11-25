@@ -6527,8 +6527,14 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
           transportRequestId: string,
         ) {
           yield* closeTextStreams(context);
-          const parsed = parsePermissionRequest(params);
-          const approvalOptions = flavor.approvalOptions?.(params);
+          const resolvedParams = withTrackedPermissionToolCall(
+            params,
+            context.tools.get(params.toolCall.toolCallId),
+          );
+          const parsed = parsePermissionRequest(resolvedParams, {
+            normalizeToolCall: flavor.normalizeToolCall,
+          });
+          const approvalOptions = flavor.approvalOptions?.(resolvedParams);
           const nativeRequestId = params.toolCall.toolCallId;
           const requestId = yield* idAllocator.allocate.runtimeRequest({
             driver,
@@ -7641,7 +7647,13 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
                 requestId,
                 transportRequestId: pendingTransportRequestId,
               } = admitted.value.pending;
-              const parsedPermission = parsePermissionRequest(params);
+              const resolvedParams = withTrackedPermissionToolCall(
+                params,
+                context.tools.get(params.toolCall.toolCallId),
+              );
+              const parsedPermission = parsePermissionRequest(resolvedParams, {
+                normalizeToolCall: flavor.normalizeToolCall,
+              });
               const answered = yield* Deferred.await(pendingDecision).pipe(
                 Effect.ensuring(
                   runRuntimeCallbackAtGeneration(
@@ -7657,7 +7669,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
               // A card that never offered "this session" (Kiro's, whose
               // allow_always saves a workspace rule) cannot be answered with
               // it by a stale client or a hand-made respond call.
-              const offeredOptions = flavor.approvalOptions?.(params);
+              const offeredOptions = flavor.approvalOptions?.(resolvedParams);
               const decision =
                 answered === "acceptForSession" &&
                 offeredOptions !== undefined &&
