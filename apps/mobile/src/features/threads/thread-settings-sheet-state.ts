@@ -1,5 +1,25 @@
+import {
+  isReasoningControl,
+  selectableProviderOptionChoices,
+} from "@ankielcode/client-runtime/model-traits";
 import type { ModelOption, ProviderGroup } from "../../lib/modelOptions";
-import type { ModelSelection, ProviderInstanceId } from "@ankielcode/contracts";
+import type {
+  ModelSelection,
+  ProviderInstanceId,
+  ProviderOptionDescriptor,
+} from "@ankielcode/contracts";
+
+export function findReasoningDescriptor(
+  descriptors: ReadonlyArray<ProviderOptionDescriptor>,
+): ProviderOptionDescriptor | null {
+  return (
+    descriptors.find(
+      (descriptor) =>
+        isReasoningControl(descriptor) &&
+        (descriptor.type === "boolean" || selectableProviderOptionChoices(descriptor).length > 0),
+    ) ?? null
+  );
+}
 
 export function modelFavoriteKey(provider: ProviderInstanceId, model: string): string {
   return `${provider}:${model}`;
@@ -63,6 +83,53 @@ export function visibleCatalogModels(input: {
     ),
     input.favoriteKeys,
   );
+}
+
+export type CatalogProviderModels = {
+  readonly group: ProviderGroup;
+  readonly models: ReadonlyArray<ModelOption>;
+};
+
+export function partitionCatalogModels(input: {
+  readonly providerGroups: ReadonlyArray<ProviderGroup>;
+  readonly providerFilter: string | null;
+  readonly query: string;
+  readonly favoriteKeys: ReadonlySet<string>;
+  readonly favoritesOnly: boolean;
+  readonly showLegacy: boolean;
+  readonly isDisplayed: (model: ModelOption) => boolean;
+}): {
+  readonly favorites: ReadonlyArray<ModelOption>;
+  readonly providers: ReadonlyArray<CatalogProviderModels>;
+} {
+  const favorites: ModelOption[] = [];
+  const providers: CatalogProviderModels[] = [];
+  for (const group of input.providerGroups) {
+    if (input.providerFilter !== null && group.providerKey !== input.providerFilter) {
+      continue;
+    }
+    const visible = visibleCatalogModels({
+      models: group.models,
+      providerLabel: group.providerLabel,
+      query: input.query,
+      favoriteKeys: input.favoriteKeys,
+      favoritesOnly: input.favoritesOnly,
+      showLegacy: input.showLegacy,
+      isDisplayed: input.isDisplayed,
+    });
+    const remaining: ModelOption[] = [];
+    for (const model of visible) {
+      if (input.favoriteKeys.has(model.key)) {
+        favorites.push(model);
+      } else {
+        remaining.push(model);
+      }
+    }
+    if (!input.favoritesOnly) {
+      providers.push({ group, models: remaining });
+    }
+  }
+  return { favorites, providers };
 }
 
 export function pendingModelAfterPress(input: {

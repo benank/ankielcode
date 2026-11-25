@@ -60,6 +60,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
 import { AppBar } from "../../components/ui/AppBar";
+import { Menu } from "../../components/ui/Menu";
 import { ProviderIcon } from "../../components/ProviderIcon";
 import { ThemedSwitch } from "../../components/ui/ThemedSwitch";
 import { cn } from "../../lib/cn";
@@ -118,10 +119,11 @@ import {
 } from "./thread-settings-options";
 import {
   canCommitPendingModel,
+  findReasoningDescriptor,
   modelFavoriteKey,
+  partitionCatalogModels,
   pendingModelAfterPress,
   providerSectionIsCollapsed,
-  visibleCatalogModels,
 } from "./thread-settings-sheet-state";
 import { formatProviderUpdateRequiredNotice } from "@ankielcode/client-runtime/providerUpdateRequiredModels";
 import type { MessageResolver } from "../../i18n/messages";
@@ -146,11 +148,13 @@ const EMPTY_MODEL_FAVORITES: ReadonlyArray<{
   readonly provider: ProviderInstanceId;
   readonly model: string;
 }> = [];
+const FAVORITES_SECTION_KEY = "__favorites__";
 // Servers that predate `migrateModelPreferences` drop it and keep reporting null favorites.
 const attemptedMigrationGenerations = new Map<EnvironmentId, number>();
 function ProviderHeader(props: {
-  readonly driver: string | undefined;
-  readonly iconUrl: string | undefined;
+  readonly driver?: string | undefined;
+  readonly iconUrl?: string | undefined;
+  readonly leadingIcon?: ReactNode;
   readonly label: string;
   /** A backend inside a provider's section, such as one of fx's: no icon. */
   readonly nested?: boolean;
@@ -164,7 +168,9 @@ function ProviderHeader(props: {
   const gt = useGT();
   const content = (
     <>
-      {props.nested ? null : (
+      {props.nested ? null : props.leadingIcon !== undefined ? (
+        props.leadingIcon
+      ) : (
         <ProviderIcon iconUrl={props.iconUrl} provider={props.driver} size={15} />
       )}
       {props.detail ? (
@@ -326,6 +332,7 @@ type ThreadSettingsSessionValue = {
   readonly runtimeModeChoices: ReadonlyArray<RuntimeModeChoice>;
   readonly onUpdateRuntimeMode: (mode: RuntimeMode) => void;
   readonly displayedDescriptors: ReadonlyArray<ProviderOptionDescriptor>;
+  readonly reasoningDescriptor: ProviderOptionDescriptor | null;
   readonly promptTraits: ReturnType<typeof getPromptControlledTraits>;
   readonly displayedModelSelection: ModelSelection | null;
   readonly reportedModelSelection: ModelSelection | null;
@@ -531,6 +538,7 @@ function ThreadSettingsSessionProvider(
         selections: pendingModel.selection.options,
       })
     : props.optionDescriptors;
+  const reasoningDescriptor = findReasoningDescriptor(displayedDescriptors);
   const promptTraits = getPromptControlledTraits(displayedDescriptors, displayedPrompt);
   const displayedModel =
     pendingModel ??
@@ -661,6 +669,7 @@ function ThreadSettingsSessionProvider(
       }
     },
     displayedDescriptors,
+    reasoningDescriptor,
     promptTraits,
     displayedModelSelection: pendingModel?.selection ?? props.selectedModel,
     reportedModelSelection: pendingModel ? null : (props.reportedModelSelection ?? null),
@@ -733,6 +742,18 @@ type ThreadSettingsProviderCatalog = {
 
 type ThreadSettingsCatalogItem =
   | {
+      readonly kind: "reasoning";
+      readonly key: "reasoning";
+      readonly descriptor: ProviderOptionDescriptor;
+    }
+  | {
+      readonly kind: "favorites";
+      readonly key: "favorites";
+      readonly collapsible: boolean;
+      readonly collapsed: boolean;
+      readonly modelCount: number;
+    }
+  | {
       readonly kind: "provider";
       readonly key: string;
       readonly provider: ThreadSettingsProviderCatalog;
@@ -750,6 +771,7 @@ type ThreadSettingsCatalogItem =
       readonly kind: "model";
       readonly key: string;
       readonly option: ModelOption;
+      readonly showProvider?: boolean;
       readonly isFirst: boolean;
       readonly isLast: boolean;
     }
@@ -767,8 +789,179 @@ type ThreadSettingsCatalogItem =
       readonly key: "options";
     };
 
+function ThreadSettingsReasoningRow(props: { readonly descriptor: ProviderOptionDescriptor }) {
+  const gt = useGT();
+  const session = useThreadSettingsSession();
+  const { descriptor } = props;
+
+  if (descriptor.type === "boolean") {
+    const currentValue = descriptor.currentValue === true;
+    const onLabel = gt("On", { $context: "option state" });
+    const offLabel = gt("Off", { $context: "option state" });
+    const currentLabel = currentValue ? onLabel : offLabel;
+    return (
+      <View className="mx-4 mb-2 mt-1 overflow-hidden rounded-2xl bg-grouped-card">
+        <Menu
+          title={descriptor.label}
+          actions={[
+            {
+              id: "true",
+              title: onLabel,
+              state: currentValue ? "on" : "off",
+            },
+            {
+              id: "false",
+              title: offLabel,
+              state: currentValue ? "off" : "on",
+            },
+          ]}
+          onPressAction={({ nativeEvent }) => {
+            void Haptics.selectionAsync();
+            session.applyOptionChange(descriptor.id, nativeEvent.event === "true");
+          }}
+        >
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={gt("{label}, {value}", {
+              label: descriptor.label,
+              value: currentLabel,
+            })}
+            className="flex-row items-center gap-2 bg-grouped-card px-4 py-2 active:bg-subtle"
+            style={{ minHeight: ROW_MIN_HEIGHT.item }}
+          >
+            <SymbolView
+              name="brain"
+              size={16}
+              tintColorClassName="accent-icon-muted"
+              type="monochrome"
+            />
+            <Text className="text-sm font-ankiel-medium text-foreground">{descriptor.label}</Text>
+            <View className="flex-1" />
+            <Text className="text-sm text-foreground-muted" numberOfLines={1}>
+              {currentLabel}
+            </Text>
+            <SymbolView
+              name="chevron.down"
+              size={12}
+              tintColorClassName="accent-icon-subtle"
+              type="monochrome"
+            />
+          </Pressable>
+        </Menu>
+      </View>
+    );
+  }
+
+  const isPrimaryUltrathink =
+    session.promptTraits.ultrathinkPromptControlled &&
+    descriptor.id === session.promptTraits.primarySelectDescriptor?.id;
+  const currentValue = isPrimaryUltrathink
+    ? "ultrathink"
+    : getProviderOptionCurrentValue(
+        descriptor,
+        session.displayedModelSelection,
+        session.reportedModelSelection,
+      );
+  const currentLabel = isPrimaryUltrathink
+    ? "Ultrathink"
+    : getProviderOptionCurrentLabel(
+        descriptor,
+        session.displayedModelSelection,
+        session.reportedModelSelection,
+      );
+  const choices = selectableChoices(descriptor);
+
+  return (
+    <View className="mx-4 mb-2 mt-1 overflow-hidden rounded-2xl bg-grouped-card">
+      <Menu
+        title={descriptor.label}
+        actions={choices.map((choice) => ({
+          id: choice.id,
+          title: choice.label,
+          ...(choice.description ? { subtitle: choice.description } : {}),
+          state: choice.id === currentValue ? ("on" as const) : ("off" as const),
+        }))}
+        onPressAction={({ nativeEvent }) => {
+          void Haptics.selectionAsync();
+          if (
+            session.promptTraits.ultrathinkInBodyText &&
+            descriptor.id === session.promptTraits.primarySelectDescriptor?.id
+          ) {
+            Dialog.alert(
+              gt("Reasoning controlled by prompt"),
+              gt('Your prompt contains "ultrathink" in the text. Remove it to change this option.'),
+            );
+            return;
+          }
+          session.applyOptionChange(descriptor.id, nativeEvent.event);
+        }}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={
+            currentLabel
+              ? gt("{label}, {value}", { label: descriptor.label, value: currentLabel })
+              : descriptor.label
+          }
+          className="flex-row items-center gap-2 bg-grouped-card px-4 py-2 active:bg-subtle"
+          style={{ minHeight: ROW_MIN_HEIGHT.item }}
+        >
+          <SymbolView
+            name="brain"
+            size={16}
+            tintColorClassName="accent-icon-muted"
+            type="monochrome"
+          />
+          <Text className="text-sm font-ankiel-medium text-foreground">{descriptor.label}</Text>
+          <View className="flex-1" />
+          {currentLabel ? (
+            <Text className="text-sm text-foreground-muted" numberOfLines={1}>
+              {currentLabel}
+            </Text>
+          ) : null}
+          <SymbolView
+            name="chevron.down"
+            size={12}
+            tintColorClassName="accent-icon-subtle"
+            type="monochrome"
+          />
+        </Pressable>
+      </Menu>
+    </View>
+  );
+}
+
+function ThreadSettingsFavoritesListHeader(props: {
+  readonly collapsible: boolean;
+  readonly collapsed: boolean;
+  readonly modelCount: number;
+}) {
+  const gt = useGT();
+  const session = useThreadSettingsSession();
+  const onToggle = () => session.toggleProvider(FAVORITES_SECTION_KEY);
+
+  return (
+    <ProviderHeader
+      collapsible={props.collapsible}
+      collapsed={props.collapsed}
+      leadingIcon={
+        <SymbolView
+          name="star.fill"
+          size={15}
+          tintColorClassName="accent-icon-muted"
+          type="monochrome"
+        />
+      }
+      label={gt("Favorites", { $context: "section heading for favorite models" })}
+      modelCount={props.modelCount}
+      onToggle={onToggle}
+    />
+  );
+}
+
 function ThreadSettingsModelListRow(props: {
   readonly option: ModelOption;
+  readonly showProvider?: boolean;
   readonly isFirst: boolean;
   readonly isLast: boolean;
 }) {
@@ -791,6 +984,7 @@ function ThreadSettingsModelListRow(props: {
       hiddenUpdatePending={session.pendingHiddenKeys.has(props.option.key)}
       option={props.option}
       selected={session.isDisplayed(props.option)}
+      showProvider={props.showProvider}
     />
   );
 }
@@ -835,11 +1029,12 @@ function ThreadSettingsSubProviderListHeader(props: {
   );
 }
 
-const modelItems = (models: ReadonlyArray<ModelOption>) =>
+const modelItems = (models: ReadonlyArray<ModelOption>, showProvider = false) =>
   models.map((option, index) => ({
     kind: "model" as const,
     key: `model:${option.key}`,
     option,
+    ...(showProvider ? { showProvider: true } : {}),
     isFirst: index === 0,
     isLast: index === models.length - 1,
   }));
@@ -901,20 +1096,40 @@ function buildThreadSettingsCatalogItems(
   resolve: MessageResolver,
   locale: string,
 ): ReadonlyArray<ThreadSettingsCatalogItem> {
-  return session.providerGroups.flatMap((group) => {
-    if (session.providerFilter !== null && group.providerKey !== session.providerFilter) {
-      return [];
-    }
+  const { favorites, providers } = partitionCatalogModels({
+    providerGroups: session.providerGroups,
+    providerFilter: session.providerFilter,
+    query: session.searchQuery,
+    favoriteKeys: session.favoriteKeys,
+    favoritesOnly: session.favoritesOnly,
+    showLegacy: session.manageHidden || session.showLegacy,
+    isDisplayed: session.isDisplayed,
+  });
+  const isNarrowed =
+    session.favoritesOnly ||
+    session.providerFilter !== null ||
+    session.searchQuery.trim().length > 0;
+  const collapsible = !isNarrowed;
+  const favoritesCollapsed = providerSectionIsCollapsed({
+    defaultExpanded: true,
+    hasExpansionOverride: session.providerExpansionOverrides.has(FAVORITES_SECTION_KEY),
+    isNarrowed,
+  });
+  const favoriteItems: ReadonlyArray<ThreadSettingsCatalogItem> =
+    favorites.length > 0
+      ? [
+          {
+            kind: "favorites" as const,
+            key: "favorites",
+            collapsible,
+            collapsed: favoritesCollapsed,
+            modelCount: favorites.length,
+          },
+          ...(favoritesCollapsed ? [] : modelItems(favorites, true)),
+        ]
+      : [];
+  const providerItems = providers.flatMap(({ group, models: visibleModels }) => {
     const driver = group.models[0]?.providerDriver ?? group.providerKey;
-    const visibleModels = visibleCatalogModels({
-      models: group.models,
-      providerLabel: group.providerLabel,
-      query: session.searchQuery,
-      favoriteKeys: session.favoriteKeys,
-      favoritesOnly: session.favoritesOnly,
-      showLegacy: session.manageHidden || session.showLegacy,
-      isDisplayed: session.isDisplayed,
-    });
     const updateRequiredNotice =
       group.updateRequired && !session.favoritesOnly
         ? formatProviderUpdateRequiredNotice(
@@ -928,12 +1143,7 @@ function buildThreadSettingsCatalogItems(
       return [];
     }
     const isPrimary = driver !== undefined && PRIMARY_PROVIDER_DRIVERS.has(driver);
-    const containsAppliedSelection = group.models.some(session.isApplied);
-    const isNarrowed =
-      session.favoritesOnly ||
-      session.providerFilter !== null ||
-      session.searchQuery.trim().length > 0;
-    const collapsible = !isNarrowed;
+    const containsAppliedSelection = visibleModels.some(session.isApplied);
     const collapsed = providerSectionIsCollapsed({
       defaultExpanded: isPrimary || containsAppliedSelection,
       hasExpansionOverride: session.providerExpansionOverrides.has(group.providerKey),
@@ -968,6 +1178,7 @@ function buildThreadSettingsCatalogItems(
         : []),
     ];
   });
+  return [...favoriteItems, ...providerItems];
 }
 
 function ThreadSettingsOptionsItem(props: {
@@ -985,6 +1196,11 @@ function ThreadSettingsOptionsItem(props: {
         .get(session.environmentId)
         ?.providers.find((provider) => provider.instanceId === session.providerInstanceId) ?? null)
     : null;
+  const remainingDescriptors = session.reasoningDescriptor
+    ? session.displayedDescriptors.filter(
+        (descriptor) => descriptor.id !== session.reasoningDescriptor?.id,
+      )
+    : session.displayedDescriptors;
 
   return (
     <View style={{ paddingBottom: insets.bottom + props.bottomInset + 12 }}>
@@ -996,7 +1212,7 @@ function ThreadSettingsOptionsItem(props: {
         className="mx-4 overflow-hidden rounded-2xl bg-grouped-card"
         layout={THREAD_SETTINGS_OPTIONS_LAYOUT_TRANSITION}
       >
-        {session.displayedDescriptors.map((descriptor) => {
+        {remainingDescriptors.map((descriptor) => {
           if (descriptor.type === "select") {
             return (
               <Animated.View
@@ -1129,6 +1345,15 @@ function ThreadSettingsMainContent(props: {
     session.providerFilter !== null ||
     session.searchQuery.trim().length > 0;
   const listItems = [
+    ...(session.reasoningDescriptor
+      ? ([
+          {
+            kind: "reasoning",
+            key: "reasoning",
+            descriptor: session.reasoningDescriptor,
+          },
+        ] as const)
+      : []),
     ...(catalogItems.length === 0 ? ([{ kind: "empty", key: "empty" }] as const) : catalogItems),
     { kind: "options", key: "options" },
   ] satisfies ReadonlyArray<ThreadSettingsCatalogItem>;
@@ -1136,7 +1361,17 @@ function ThreadSettingsMainContent(props: {
     const item = itemProps.item;
     let content: ReactNode;
 
-    if (item.kind === "provider") {
+    if (item.kind === "reasoning") {
+      content = <ThreadSettingsReasoningRow descriptor={item.descriptor} />;
+    } else if (item.kind === "favorites") {
+      content = (
+        <ThreadSettingsFavoritesListHeader
+          collapsible={item.collapsible}
+          collapsed={item.collapsed}
+          modelCount={item.modelCount}
+        />
+      );
+    } else if (item.kind === "provider") {
       content = <ThreadSettingsProviderListHeader provider={item.provider} />;
     } else if (item.kind === "subProvider") {
       content = <ThreadSettingsSubProviderListHeader item={item} />;
@@ -1146,6 +1381,7 @@ function ThreadSettingsMainContent(props: {
           isFirst={item.isFirst}
           isLast={item.isLast}
           option={item.option}
+          showProvider={item.showProvider}
         />
       );
     } else if (item.kind === "notice") {

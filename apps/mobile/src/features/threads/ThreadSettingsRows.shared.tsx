@@ -1,6 +1,11 @@
 import { useGT } from "gt-react-native";
 import type { ReactNode } from "react";
 import { Pressable, View } from "react-native";
+import {
+  ProviderIcon,
+  ProviderInstanceIcon,
+  providerInstanceNameLabel,
+} from "../../components/ProviderIcon";
 import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { cn } from "../../lib/cn";
@@ -15,6 +20,7 @@ export type ModelRowProps = {
   readonly onToggleFavorite: () => void;
   readonly onToggleHidden?: () => void;
   readonly hiddenUpdatePending?: boolean;
+  readonly showProvider?: boolean;
   readonly isFirst: boolean;
   readonly isLast: boolean;
 };
@@ -42,6 +48,19 @@ export function ModelRowContent(
     },
 ) {
   const gt = useGT();
+  const badge = props.option.providerBadge;
+  const instanceName =
+    props.showProvider && badge
+      ? providerInstanceNameLabel({
+          provider: props.option.providerDriver,
+          iconUrl: props.option.providerIconUrl,
+          displayName: badge.displayName,
+          showBadge: badge.showBadge,
+        })
+      : null;
+  const subtitle = [instanceName, props.option.subtitle].filter(Boolean).join(" · ");
+  const iconSurfaceColorClassName =
+    props.selected && props.selectedClassName ? "border-secondary" : "border-grouped-card";
   return (
     <View
       style={props.minimumHeight === undefined ? undefined : { minHeight: props.minimumHeight }}
@@ -53,7 +72,13 @@ export function ModelRowContent(
       )}
     >
       <Pressable
-        accessibilityLabel={[props.option.label, props.option.subtitle].filter(Boolean).join(", ")}
+        accessibilityLabel={[
+          props.option.label,
+          props.showProvider ? props.option.providerLabel : null,
+          subtitle,
+        ]
+          .filter(Boolean)
+          .join(", ")}
         accessibilityRole="radio"
         accessibilityState={{
           checked: props.selected,
@@ -64,6 +89,25 @@ export function ModelRowContent(
         onPress={props.onPress}
       >
         {props.leadingSelection}
+        {props.showProvider ? (
+          badge?.showBadge ? (
+            <ProviderInstanceIcon
+              iconUrl={props.option.providerIconUrl}
+              provider={props.option.providerDriver}
+              displayName={badge.displayName}
+              accentColor={badge.accentColor}
+              showBadge
+              surfaceColorClassName={iconSurfaceColorClassName}
+              size={16}
+            />
+          ) : (
+            <ProviderIcon
+              iconUrl={props.option.providerIconUrl}
+              provider={props.option.providerDriver}
+              size={16}
+            />
+          )
+        ) : null}
         <View className="min-w-0 flex-1">
           <View className="flex-row items-center gap-2">
             <Text
@@ -97,12 +141,12 @@ export function ModelRowContent(
               </Text>
             ) : null}
           </View>
-          {props.option.subtitle ? (
+          {subtitle ? (
             <Text
               className="text-xs text-foreground-muted"
               numberOfLines={props.labelNumberOfLines}
             >
-              {props.option.subtitle}
+              {subtitle}
             </Text>
           ) : null}
         </View>

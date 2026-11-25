@@ -175,6 +175,7 @@ export function ProviderInstanceIcon(props: {
   readonly accentColor?: string;
   readonly showBadge?: boolean;
   readonly surfaceColor?: string;
+  readonly surfaceColorClassName?: string;
 }) {
   const accentColor = normalizeProviderAccentColor(props.accentColor);
   return (
@@ -189,7 +190,10 @@ export function ProviderInstanceIcon(props: {
           style={{ position: "absolute", right: -3, bottom: -3, width: 32, alignItems: "flex-end" }}
         >
           <View
-            className={cn(!accentColor && "bg-card", !props.surfaceColor && "border-screen")}
+            className={cn(
+              !accentColor && "bg-card",
+              !props.surfaceColor && (props.surfaceColorClassName ?? "border-screen"),
+            )}
             style={{
               height: 12,
               minWidth: 12,

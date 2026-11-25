@@ -13,6 +13,9 @@ import {
 } from "../../state/use-model-option-memory";
 import {
   canCommitPendingModel,
+  findReasoningDescriptor,
+  modelFavoriteKey,
+  partitionCatalogModels,
   pendingModelAfterPress,
   visibleCatalogModels,
 } from "./thread-settings-sheet-state";
@@ -180,5 +183,160 @@ describe("thread settings sheet state", () => {
     expect(visible("")).toEqual(["gpt-next"]);
     expect(visible("   ")).toEqual(["gpt-next"]);
     expect(visible("Claude Opus 4.8")).toEqual(["Claude Opus 4.8"]);
+  });
+
+  it("moves favorited models into a top section without duplicating them under providers", () => {
+    const codexFav = modelOption("gpt-5.4");
+    const codexOther = modelOption("gpt-5.4-mini");
+    const claudeFav: ModelOption = {
+      ...modelOption("claude-opus-4-6"),
+      key: "claudeAgent:claude-opus-4-6",
+      providerKey: "claudeAgent",
+      providerLabel: "Claude",
+      providerDriver: "claudeAgent",
+      selection: {
+        instanceId: ProviderInstanceId.make("claudeAgent"),
+        model: "claude-opus-4-6",
+        options: [],
+      },
+    };
+    const claudeLegacyFav: ModelOption = {
+      ...claudeFav,
+      key: "claudeAgent:claude-opus-4-5",
+      label: "claude-opus-4-5",
+      isLegacy: true,
+      selection: {
+        instanceId: ProviderInstanceId.make("claudeAgent"),
+        model: "claude-opus-4-5",
+        options: [],
+      },
+    };
+    const claudeOther: ModelOption = {
+      ...claudeFav,
+      key: "claudeAgent:claude-sonnet-4-6",
+      label: "claude-sonnet-4-6",
+      selection: {
+        instanceId: ProviderInstanceId.make("claudeAgent"),
+        model: "claude-sonnet-4-6",
+        options: [],
+      },
+    };
+    const providerGroups = [
+      { providerKey: "codex", providerLabel: "Codex", models: [codexFav, codexOther] },
+      {
+        providerKey: "claudeAgent",
+        providerLabel: "Claude",
+        models: [claudeFav, claudeLegacyFav, claudeOther],
+      },
+    ];
+    const favoriteKeys = new Set([
+      modelFavoriteKey(ProviderInstanceId.make("codex"), "gpt-5.4"),
+      modelFavoriteKey(ProviderInstanceId.make("claudeAgent"), "claude-opus-4-6"),
+      modelFavoriteKey(ProviderInstanceId.make("claudeAgent"), "claude-opus-4-5"),
+    ]);
+
+    const partitioned = partitionCatalogModels({
+      providerGroups,
+      providerFilter: null,
+      query: "",
+      favoriteKeys,
+      favoritesOnly: false,
+      showLegacy: false,
+      isDisplayed: () => false,
+    });
+
+    expect(partitioned.favorites.map((model) => model.key)).toEqual([
+      "codex:gpt-5.4",
+      "claudeAgent:claude-opus-4-6",
+      "claudeAgent:claude-opus-4-5",
+    ]);
+    expect(
+      partitioned.providers.map((entry) => ({
+        provider: entry.group.providerKey,
+        models: entry.models.map((model) => model.key),
+      })),
+    ).toEqual([
+      { provider: "codex", models: ["codex:gpt-5.4-mini"] },
+      { provider: "claudeAgent", models: ["claudeAgent:claude-sonnet-4-6"] },
+    ]);
+
+    const favoritesOnly = partitionCatalogModels({
+      providerGroups,
+      providerFilter: null,
+      query: "",
+      favoriteKeys,
+      favoritesOnly: true,
+      showLegacy: false,
+      isDisplayed: () => false,
+    });
+    expect(favoritesOnly.favorites.map((model) => model.key)).toEqual([
+      "codex:gpt-5.4",
+      "claudeAgent:claude-opus-4-6",
+      "claudeAgent:claude-opus-4-5",
+    ]);
+    expect(favoritesOnly.providers).toEqual([]);
+
+    const filtered = partitionCatalogModels({
+      providerGroups,
+      providerFilter: "claudeAgent",
+      query: "opus",
+      favoriteKeys,
+      favoritesOnly: false,
+      showLegacy: false,
+      isDisplayed: () => false,
+    });
+    expect(filtered.favorites.map((model) => model.key)).toEqual([
+      "claudeAgent:claude-opus-4-6",
+      "claudeAgent:claude-opus-4-5",
+    ]);
+    expect(filtered.providers.map((entry) => entry.models.length)).toEqual([0]);
+  });
+
+  it("finds select and boolean reasoning descriptors while skipping non-reasoning or empty ones", () => {
+    const serviceTier = {
+      id: "serviceTier",
+      label: "Service Tier",
+      type: "select" as const,
+      options: [{ id: "default", label: "Standard", isDefault: true }],
+      currentValue: "default",
+    };
+    const effort = {
+      id: "effort",
+      label: "Reasoning",
+      type: "select" as const,
+      options: [
+        { id: "medium", label: "Medium", isDefault: true },
+        { id: "high", label: "High" },
+      ],
+      currentValue: "medium",
+    };
+    const acpReasoning = {
+      id: "mode_reasoning",
+      label: "Thinking level",
+      type: "select" as const,
+      role: "reasoning" as const,
+      options: [{ id: "deep", label: "Deep" }],
+      currentValue: "deep",
+    };
+    const promptOnlyEffort = {
+      id: "effort",
+      label: "Reasoning",
+      type: "select" as const,
+      options: [{ id: "ultrathink", label: "Ultrathink" }],
+      promptInjectedValues: ["ultrathink"],
+      currentValue: "ultrathink",
+    };
+    const booleanThinking = {
+      id: "thinking",
+      label: "Thinking",
+      type: "boolean" as const,
+      currentValue: true,
+    };
+
+    expect(findReasoningDescriptor([serviceTier])).toBeNull();
+    expect(findReasoningDescriptor([serviceTier, effort])).toEqual(effort);
+    expect(findReasoningDescriptor([serviceTier, acpReasoning])).toEqual(acpReasoning);
+    expect(findReasoningDescriptor([promptOnlyEffort])).toBeNull();
+    expect(findReasoningDescriptor([serviceTier, booleanThinking])).toEqual(booleanThinking);
   });
 });
