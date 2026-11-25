@@ -17,6 +17,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
@@ -85,8 +86,7 @@ function lockBackgroundScroll(popup: HTMLElement | null) {
   };
 }
 
-/** What a docked effort column needs from its picker: the model it serves. */
-export const DockedPickerContext = createContext<{ modelLabel: string }>({ modelLabel: "" });
+export const ComposerPickerCompactContext = createContext(false);
 
 export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
   environmentId: EnvironmentId | null;
@@ -120,18 +120,18 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
   triggerSuffix?: ReactNode;
   /** Names the suffix for the tooltip and screen readers. */
   triggerDetail?: string | null;
+  reasoningLevel?: string | null;
+  leadingControl?: ReactNode;
   /** Composer shortcuts this trigger answers besides the picker's own. */
   triggerShortcuts?: string;
-  /**
-   * Docks an effort column beside the list and a footer under both. The popup then stays open
-   * until Escape or an outside press, and picking a model moves focus to its levels.
-   */
-  effortColumn?: ReactNode;
+  effortControls?: ReactNode;
   footer?: ReactNode;
 }) {
   const composerFloatingLayerProps = useComposerMenuProps();
   const [uncontrolledIsMenuOpen, setUncontrolledIsMenuOpen] = useState(false);
   const isMenuOpen = props.open ?? uncontrolledIsMenuOpen;
+  const [compactMenu, setCompactMenu] = useState(false);
+  const hasEffortControls = props.effortControls !== undefined;
   const registry = useContext(RegistryContext);
   const refreshProviders = useAtomCommand(serverEnvironment.refreshProviders, {
     reportFailure: false,
@@ -146,16 +146,17 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
   });
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- asks the server for newly released models on every open; a parent, a keybinding or the palette can open the picker, so no one handler sees them all
   useEffect(() => {
-    if (isMenuOpen) refreshModelCatalog();
-  }, [isMenuOpen]);
+    if (isMenuOpen && !compactMenu) refreshModelCatalog();
+  }, [isMenuOpen, compactMenu]);
   const gt = useGT();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const modelListFocusRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
+  const menuHeaderRef = useRef<HTMLButtonElement>(null);
   // Touch opens on the popup itself so the on-screen keyboard stays down until the search is tapped.
   const isCoarsePointer = useMediaQuery({ pointer: "coarse" });
   const size = props.size ?? "sm";
-  const docked = props.effortColumn !== undefined;
 
   const activeEntry =
     props.instanceEntries.find((entry) => entry.instanceId === props.activeInstanceId) ?? null;
@@ -192,31 +193,15 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
     }
   };
 
-  /**
-   * Focuses the selected reasoning level, else the first level. With `rows: "any"` it falls back
-   * to the column's first enabled option. False when nothing took focus.
-   */
-  const focusEffort = (rows: "levels" | "any") => {
-    const column = popupRef.current?.querySelector("[data-model-picker-effort]");
-    const level =
-      column?.querySelector<HTMLElement>(
-        '[data-effort-level][aria-checked="true"]:not(:disabled)',
-      ) ?? column?.querySelector<HTMLElement>("[data-effort-level]:not(:disabled)");
-    // No aria-checked here: an On switch is checked but is not where focus belongs.
-    const row =
-      level ??
-      (rows === "any"
-        ? column?.querySelector<HTMLElement>("[data-effort-row]:not(:disabled)")
-        : null);
-    row?.focus({ preventScroll: true });
-    row?.scrollIntoView({ block: "nearest" });
-    return row != null;
+  const focusEffort = (fallback = false) => {
+    const controls = popupRef.current?.querySelector("[data-model-picker-effort]");
+    const control =
+      controls?.querySelector<HTMLElement>("[data-effort-slider]:not(:disabled)") ??
+      (fallback ? controls?.querySelector<HTMLElement>("[data-effort-row]:not(:disabled)") : null);
+    control?.focus({ preventScroll: true });
+    control?.scrollIntoView({ block: "nearest" });
   };
-  const openTarget = (target: "effort" | "permissions") => {
-    if (target === "effort") {
-      focusEffort("any");
-      return;
-    }
+  const focusPermissions = () => {
     popupRef.current
       ?.querySelector<HTMLButtonElement>("[data-composer-permissions-trigger]")
       ?.click();
@@ -225,12 +210,11 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
   const handleInstanceModelChange = (instanceId: ProviderInstanceId, model: string) => {
     if (props.disabled) return;
     props.onInstanceModelChange(instanceId, model);
-    if (!docked) {
+    if (!hasEffortControls) {
       setIsMenuOpen(false);
       return;
     }
-    // The column renders the new model's levels on commit.
-    window.requestAnimationFrame(() => focusEffort("levels"));
+    modelListFocusRef.current?.focus({ preventScroll: true });
   };
 
   const shortcutLabel = props.keybindings
@@ -319,11 +303,15 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
           : (props.getModelDisabledReason?.(instanceId, model) ?? null)
       }
       onInstanceModelChange={handleInstanceModelChange}
-      {...(docked
+      {...(hasEffortControls
         ? {
-            docked,
-            onFocusEffort: () => void focusEffort("any"),
-            // Inside the fixed height, so switching to or from a ChatGPT plan never resizes it.
+            composerLayout: true,
+            modelListFocusRef,
+            onFocusEffort: () => {
+              menuHeaderRef.current?.focus({ preventScroll: true });
+              setCompactMenu(true);
+              window.requestAnimationFrame(() => focusEffort());
+            },
             ...(props.selectedModels === undefined
               ? { listFooter: <ChatGptSharingControl provider={activeEntry?.snapshot ?? null} /> }
               : {}),
@@ -340,14 +328,24 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
           setIsMenuOpen(false);
           return;
         }
+        if (open && hasEffortControls) {
+          setCompactMenu(triggerRef.current?.dataset.openToPermissions !== "true");
+        }
         setIsMenuOpen(open);
       }}
       onOpenChangeComplete={(open) => {
         const target = takeOpenTarget(triggerRef.current);
-        if (open && docked && target) openTarget(target);
+        if (!hasEffortControls) return;
+        if (!open) {
+          setCompactMenu(false);
+          return;
+        }
+        if (target === "effort") focusEffort(true);
+        if (target === "permissions") focusPermissions();
       }}
     >
       <PopoverTrigger
+        payload={hasEffortControls ? (compactMenu ? "thinking" : "models") : undefined}
         render={
           <ComposerControl
             ref={triggerRef}
@@ -361,14 +359,25 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
             data-chat-provider-model-picker="true"
             data-composer-shortcut={props.triggerShortcuts}
             onClick={(event) => {
-              if (!isMenuOpen || !docked) return;
+              if (!isMenuOpen || !hasEffortControls) return;
               const target = takeOpenTarget(triggerRef.current);
               if (!target) return;
               // A shortcut aimed at the open picker moves within it instead of closing it.
               (
                 event as typeof event & { preventBaseUIHandler?: () => void }
               ).preventBaseUIHandler?.();
-              openTarget(target);
+              const nextCompact = target === "effort";
+              if (nextCompact === compactMenu) {
+                if (nextCompact) focusEffort(true);
+                else focusPermissions();
+                return;
+              }
+              menuHeaderRef.current?.focus({ preventScroll: true });
+              setCompactMenu(nextCompact);
+              window.requestAnimationFrame(() => {
+                if (nextCompact) focusEffort(true);
+                else focusPermissions();
+              });
             }}
             className={cn(
               "min-w-0 shrink justify-between whitespace-nowrap",
@@ -458,45 +467,112 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
             unlock?.();
           };
         }}
-        initialFocus={isCoarsePointer ? popupRef : searchInputRef}
+        initialFocus={
+          isCoarsePointer || compactMenu
+            ? popupRef
+            : hasEffortControls
+              ? modelListFocusRef
+              : searchInputRef
+        }
         align={props.popupAlign ?? "start"}
         // Docked, the popup opens above the composer and slides over it when that space is short,
         // so a short window gets its full height (Floating UI sizes to the viewport) instead of a sliver.
-        {...(docked
-          ? { side: "top" as const, collisionAvoidance: { side: "shift", align: "shift" } as const }
+        {...(hasEffortControls
+          ? { side: "top" as const, collisionAvoidance: { side: "flip", align: "shift" } as const }
           : {})}
+        variant={hasEffortControls ? "composer" : "default"}
         className="before:hidden"
         padding="none"
         touchBackdrop
       >
-        {props.effortColumn ? (
-          <DockedPickerContext value={{ modelLabel: triggerTitle }}>
-            <div className="flex max-h-(--available-height) flex-col">
-              {/* One fixed height, so a model with more options never resizes the popup. Short
-                  windows shrink it and keep the footer. */}
-              <div className="flex h-86.5 min-h-0 max-sm:h-auto max-sm:flex-col">
-                {picker}
-                <div
-                  data-model-picker-effort
-                  className="flex min-h-0 w-48 flex-col sm:shrink-0 border-l border-border/70 bg-muted/40 max-sm:h-64 max-sm:w-full max-sm:border-t max-sm:border-l-0"
-                  onKeyDown={(event) => {
-                    if (event.key !== "ArrowLeft" || event.altKey || event.ctrlKey || event.metaKey)
-                      return;
-                    event.preventDefault();
-                    event.stopPropagation();
-                    searchInputRef.current?.focus();
-                  }}
-                >
-                  {props.effortColumn}
+        {hasEffortControls ? (
+          <div
+            className={cn(
+              "flex max-h-(--available-height) max-w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-2xl",
+              compactMenu ? "w-68" : "w-94",
+            )}
+          >
+            <div className="relative shrink-0 px-2 pt-2">
+              {props.leadingControl ? (
+                <div className="absolute inset-s-2 inset-y-0 flex items-center pt-2">
+                  {props.leadingControl}
                 </div>
-              </div>
-              {props.footer}
+              ) : null}
+              <button
+                ref={menuHeaderRef}
+                type="button"
+                aria-label={compactMenu ? gt("Change model") : gt("Back to thinking level")}
+                aria-expanded={!compactMenu}
+                className="flex w-full min-w-0 items-center justify-center gap-2 rounded-xl px-9 py-2 text-sm font-medium hover:bg-foreground/8 focus-visible:bg-foreground/8 focus-visible:outline-none"
+                onClick={() => {
+                  setCompactMenu(!compactMenu);
+                  if (!isCoarsePointer) {
+                    window.requestAnimationFrame(() => {
+                      (compactMenu ? modelListFocusRef.current : menuHeaderRef.current)?.focus({
+                        preventScroll: true,
+                      });
+                    });
+                  }
+                }}
+              >
+                {activeEntry ? (
+                  <ProviderInstanceIcon
+                    driverKind={activeEntry.driverKind}
+                    displayName={activeEntry.displayName}
+                    accentColor={activeEntry.accentColor}
+                    acpRegistryAgentId={activeEntry.acpRegistryAgentId}
+                    acpRegistryIconUrl={activeEntry.acpRegistryIconUrl}
+                    showBadge={showInstanceBadge}
+                    className="size-4"
+                    iconClassName="size-4"
+                  />
+                ) : null}
+                <span className="flex min-w-0 items-baseline gap-1">
+                  <span className="truncate">{triggerText}</span>
+                  {compactMenu && props.reasoningLevel ? (
+                    <span className="shrink-0 text-muted-foreground">{props.reasoningLevel}</span>
+                  ) : null}
+                </span>
+                {compactMenu ? (
+                  <ChevronRightIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                ) : (
+                  <ChevronDownIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                )}
+              </button>
             </div>
-          </DockedPickerContext>
+            {!compactMenu ? picker : null}
+            <div
+              data-model-picker-effort
+              className={cn(
+                "min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-width:thin]",
+                !compactMenu &&
+                  "max-h-[min(12rem,35dvh)] shrink-0 border-t border-border/70 empty:hidden",
+              )}
+              onKeyDown={(event) => {
+                if (
+                  compactMenu ||
+                  event.key !== "ArrowLeft" ||
+                  event.altKey ||
+                  event.ctrlKey ||
+                  event.metaKey ||
+                  (event.target as HTMLElement).matches("[data-effort-slider]")
+                )
+                  return;
+                event.preventDefault();
+                event.stopPropagation();
+                modelListFocusRef.current?.focus({ preventScroll: true });
+              }}
+            >
+              <ComposerPickerCompactContext value={compactMenu}>
+                {props.effortControls}
+              </ComposerPickerCompactContext>
+            </div>
+            {!compactMenu ? props.footer : null}
+          </div>
         ) : (
           picker
         )}
-        {props.selectedModels === undefined && !docked ? (
+        {props.selectedModels === undefined && !hasEffortControls ? (
           <ChatGptSharingControl provider={activeEntry?.snapshot ?? null} />
         ) : null}
       </PopoverPopup>

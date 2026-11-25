@@ -7,6 +7,8 @@ import {
   type ThreadId,
 } from "@ankielcode/contracts";
 
+import { withStoredThreadModelOptions } from "../lib/modelOptions";
+import { withRememberedModelOptions } from "./use-model-option-memory";
 import { scopedThreadKey } from "../lib/scopedEntities";
 import * as Dialog from "../components/ui/Dialog";
 import { msg } from "gt-react-native";
@@ -70,4 +72,13 @@ export function selectThreadModel(
       );
     }
   });
+}
+
+export function selectThreadCatalogModel(
+  ref: Parameters<typeof selectThreadModel>[0],
+  selection: ModelSelection,
+): void {
+  const stored = appAtomRegistry.get(environmentThreadShells.threadShellAtom(ref))?.modelSelection;
+  const remembered = withRememberedModelOptions(selection);
+  selectThreadModel(ref, stored ? withStoredThreadModelOptions(remembered, stored) : remembered);
 }

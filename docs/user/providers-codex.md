@@ -154,15 +154,6 @@ from your computer before repeating the task. Connecting to Ankiel Code remotely
 does not by itself expose that page. Ankiel Code's built-in browser
 preview uses its own browser session.
 
-## Use Daybreak
-
-Models with cyber access programs show a Cyber Access option in the model
-options. It starts on Standard, or on Daybreak when `config.toml` in your Codex
-home sets `daybreak = true` or the model only runs under Daybreak. Your choice carries
-over to new threads. Custom models do not offer it. If Codex rejects a turn
-because your login lacks the program, switch Cyber Access back to Standard or
-sign in to Codex with an account that has it.
-
 ## Codex says I hit a usage limit
 
 When Codex stops on a usage limit, the thread names the window that ran out and

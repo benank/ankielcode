@@ -1070,6 +1070,8 @@ export function NewTaskDraftScreen(props: {
           editorRef: promptInputRef,
           sendBlockedReason: setupBlockReason,
           interactionLocked: isComposerInteractionLocked,
+          onSelectModel: (option) => flow.setSelectedModelKey(option.key),
+          onChangeModelOptions: flow.setSelectedModelOptions,
         }}
         canOperateThread={canOperate}
         selectedThread={thread}

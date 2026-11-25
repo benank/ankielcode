@@ -25,7 +25,8 @@ import { resolveComposerTraitsInput } from "./composerProviderState";
 import { useApplyThreadModelPick } from "./useApplyThreadModelPick";
 import { useStableCallback } from "../../hooks/useStableCallback";
 import {
-  ComposerEffortColumn,
+  ComposerEffortControls,
+  ComposerFastToggle,
   ComposerPickerFooter,
   describeComposerEffort,
 } from "./ComposerModelEffort";
@@ -221,10 +222,12 @@ export function ComposerControlsBar(props: {
       )}
       triggerSuffix={effort.suffix}
       triggerDetail={effort.detail}
+      reasoningLevel={effort.level}
       triggerShortcuts={
         pickerOwnsModeShortcut ? "composer.effort composer.mode" : "composer.effort"
       }
-      effortColumn={<ComposerEffortColumn traits={traitsInput} />}
+      leadingControl={traitsInput ? <ComposerFastToggle traits={traitsInput} /> : null}
+      effortControls={<ComposerEffortControls traits={traitsInput} />}
       footer={
         <ComposerPickerFooter
           traits={traitsInput}

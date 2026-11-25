@@ -10,7 +10,12 @@ import { expect, it } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
 
 import { render } from "../../../test/render";
-import { ComposerEffortColumn, describeComposerEffort } from "./ComposerModelEffort";
+import {
+  ComposerEffortControls,
+  ComposerFastToggle,
+  describeComposerEffort,
+} from "./ComposerModelEffort";
+import { ComposerPickerCompactContext } from "./ProviderModelPicker";
 import type { TraitsSelectionInput } from "./TraitsPicker";
 
 // Shaped like Devin over ACP: its session mode comes first, and its reasoning id is its own.
@@ -54,6 +59,16 @@ const models: ReadonlyArray<ServerProviderModel> = [
             { id: "fast", label: "Fast" },
           ],
         },
+        {
+          id: "serviceTier",
+          label: "Service Tier",
+          type: "select",
+          currentValue: "default",
+          options: [
+            { id: "default", label: "Standard" },
+            { id: "priority", label: "Fast" },
+          ],
+        },
         { id: "auto_approve", label: "Auto-approve tools", type: "boolean", currentValue: false },
       ],
     }),
@@ -74,14 +89,17 @@ function traitsInput(
   };
 }
 
-function Column() {
+function Column({ compact = false }: { compact?: boolean }) {
   const [options, setOptions] = useState<ReadonlyArray<ProviderOptionSelection>>([]);
   const traits = traitsInput(options, (next) => setOptions(next ?? []));
   return (
     <>
       <div data-model-picker-effort>
-        <ComposerEffortColumn traits={traits} />
+        <ComposerPickerCompactContext value={compact}>
+          <ComposerEffortControls traits={traits} />
+        </ComposerPickerCompactContext>
       </div>
+      <ComposerFastToggle traits={traits} />
       <p role="status">{describeComposerEffort(traits, "bars", "sm").suffix}</p>
     </>
   );
@@ -93,14 +111,11 @@ it("draws an agent's reasoning as bars and keeps its mode out of the levels", as
   expect(status.element().querySelector("[data-composer-effort-glyph]")).not.toBeNull();
   await expect.element(status).toHaveTextContent("");
 
-  const levels = screen.getByRole("radiogroup", { name: "Thinking" });
-  await expect.element(levels.getByRole("radio")).toHaveLength(3);
-  await expect.element(screen.getByRole("radio", { name: "Plan" })).not.toBeInTheDocument();
+  const slider = screen.getByRole("slider", { name: "Thinking" });
+  await expect.element(slider).not.toBeInTheDocument();
 
-  // Up and Down walk from the levels through the option rows without opening their menus.
   await userEvent.tab();
-  await expect.element(screen.getByRole("radio", { name: "Medium" })).toHaveFocus();
-  await userEvent.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
+  await userEvent.keyboard("{ArrowDown}");
   const speed = screen.getByRole("button", { name: "Speed: Standard" });
   await expect.element(speed).toHaveFocus();
   await expect.element(page.getByRole("menuitemradio")).not.toBeInTheDocument();
@@ -123,26 +138,25 @@ it("draws an agent's reasoning as bars and keeps its mode out of the levels", as
   await expect.element(page.getByRole("menuitemradio")).not.toBeInTheDocument();
 });
 
-it("focuses a reasoning level by its first letter without selecting it", async () => {
-  await using screen = await render(<Column />, { router: false }); // no routes involved
+it("steps through the provider's reasoning levels with the slider keys", async () => {
+  await using screen = await render(<Column compact />, { router: false }); // no routes involved
+  const slider = screen.getByRole("slider", { name: "Thinking" });
   await userEvent.tab();
-  await expect.element(screen.getByRole("radio", { name: "Medium" })).toHaveFocus();
-  await userEvent.keyboard("l");
-  await expect.element(screen.getByRole("radio", { name: "Low" })).toHaveFocus();
-  await expect
-    .element(screen.getByRole("radio", { name: "Medium" }))
-    .toHaveAttribute("aria-checked", "true");
-  for (const key of ["{Control>}h{/Control}", "{Meta>}h{/Meta}", "{Alt>}h{/Alt}", "{Delete}"]) {
-    await userEvent.keyboard(key);
-    await expect.element(screen.getByRole("radio", { name: "Low" })).toHaveFocus();
-  }
-  await userEvent.keyboard("H");
-  await expect.element(screen.getByRole("radio", { name: "High" })).toHaveFocus();
-  // Wraps past the last level back to the first match.
-  await userEvent.keyboard("m");
-  await expect.element(screen.getByRole("radio", { name: "Medium" })).toHaveFocus();
-  await userEvent.keyboard("h{Enter}");
-  await expect
-    .element(screen.getByRole("radio", { name: "High" }))
-    .toHaveAttribute("aria-checked", "true");
+  await expect.element(slider).toHaveFocus();
+  await userEvent.keyboard("{ArrowLeft}");
+  await expect.element(slider).toHaveAttribute("aria-valuetext", "Low");
+  await userEvent.keyboard("{End}");
+  await expect.element(slider).toHaveAttribute("aria-valuetext", "High");
+  await userEvent.keyboard("{ArrowDown}");
+  await expect.element(slider).toHaveAttribute("aria-valuetext", "Medium");
+});
+
+it("toggles the service tier with one bolt button", async () => {
+  await using screen = await render(<Column compact />, { router: false }); // no routes involved
+  const toggle = screen.getByRole("button", { name: "Fast mode" });
+  await expect.element(toggle).toHaveAttribute("aria-pressed", "false");
+  await toggle.click();
+  await expect.element(toggle).toHaveAttribute("aria-pressed", "true");
+  await toggle.click();
+  await expect.element(toggle).toHaveAttribute("aria-pressed", "false");
 });

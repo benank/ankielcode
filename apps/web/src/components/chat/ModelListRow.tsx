@@ -24,6 +24,7 @@ export const ModelListRow = memo(function ModelListRow(props: {
   acpRegistryAgentId?: string | undefined;
   acpRegistryIconUrl?: string | undefined;
   isFavorite: boolean;
+  composerLayout?: boolean;
   /** In Favorites every row is starred, so the star shows only on hover. */
   favoriteStarOnHover?: boolean;
   isSelected: boolean;
@@ -45,7 +46,8 @@ export const ModelListRow = memo(function ModelListRow(props: {
   const row = (
     <ComboboxItem
       hideIndicator
-      selectedFill={false}
+      selectedFill={props.composerLayout ?? false}
+      variant={props.composerLayout ? "composer" : "default"}
       index={props.index}
       value={modelPickerModelKey(props.instanceId, props.slug)}
       disabled={Boolean(props.disabledReason)}
@@ -81,7 +83,9 @@ export const ModelListRow = memo(function ModelListRow(props: {
           {/* The logo is decorative, so name the provider for screen readers. */}
           <span className="sr-only">, {props.providerDisplayName}</span>
         </div>
-        {props.isSelected ? <CheckIcon className="size-3.5 shrink-0" aria-hidden="true" /> : null}
+        {props.isSelected && !props.composerLayout ? (
+          <CheckIcon className="size-3.5 shrink-0" aria-hidden="true" />
+        ) : null}
         {props.subProvider ? (
           <span className="min-w-0 shrink truncate text-xs text-muted-foreground/70">
             {props.subProvider}
@@ -135,6 +139,9 @@ export const ModelListRow = memo(function ModelListRow(props: {
           </TooltipPopup>
         </Tooltip>
         {props.jumpLabel ? <Kbd>{props.jumpLabel}</Kbd> : null}
+        {props.isSelected && props.composerLayout ? (
+          <CheckIcon className="size-4 shrink-0 text-foreground" aria-hidden="true" />
+        ) : null}
       </div>
     </ComboboxItem>
   );

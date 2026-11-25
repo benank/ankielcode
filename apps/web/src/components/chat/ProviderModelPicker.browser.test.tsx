@@ -5,7 +5,7 @@ import {
   type ModelSelection,
 } from "@ankielcode/contracts";
 import { compileResolvedKeybindingsConfig } from "@ankielcode/shared/keybindings";
-import { useState } from "react";
+import { use, useState } from "react";
 import { expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
 
@@ -14,7 +14,7 @@ import "~/index.css";
 import { render } from "../../../test/render";
 import { __setClientSettingsForTests } from "../../hooks/useSettings";
 import { deriveProviderInstanceEntries } from "../../providerInstances";
-import { ProviderModelPicker } from "./ProviderModelPicker";
+import { ComposerPickerCompactContext, ProviderModelPicker } from "./ProviderModelPicker";
 
 it("keeps each registry image when adding a model from another ACP agent", async () => {
   const icons = [
@@ -96,7 +96,14 @@ it("keeps each registry image when adding a model from another ACP agent", async
   await vi.waitFor(() => expect(imageWidths()).toEqual([11, 17]));
 });
 
-it("keeps a docked picker open after a pick and hands focus to that model's effort", async () => {
+function PickerThinkingSlider({ value }: { value: string | undefined }) {
+  const compact = use(ComposerPickerCompactContext);
+  return compact && value ? (
+    <input type="range" aria-label="Thinking" aria-valuetext={value} data-effort-slider />
+  ) : null;
+}
+
+it("opens thinking first and keeps the full picker open after choosing a model", async () => {
   const instanceId = ProviderInstanceId.make("codex");
   const entries = deriveProviderInstanceEntries([
     {
@@ -119,6 +126,10 @@ it("keeps a docked picker open after a pick and hands focus to that model's effo
       [
         { slug: "original", name: "Original model" },
         { slug: "second", name: "Second model" },
+        ...Array.from({ length: 20 }, (_, index) => ({
+          slug: `filler-${index}`,
+          name: `Model ${index}`,
+        })),
         { slug: "plain", name: "Plain model" },
       ],
     ],
@@ -141,19 +152,9 @@ it("keeps a docked picker open after a pick and hands focus to that model's effo
         instanceEntries={entries}
         modelOptionsByInstance={options}
         triggerAriaLabel="Choose model"
+        reasoningLevel={levels[model]?.at(-1) ?? null}
         onInstanceModelChange={(_, selected) => setModel(selected)}
-        effortColumn={(levels[model] ?? []).map((level, index, all) => (
-          <button
-            key={level}
-            type="button"
-            role="radio"
-            aria-checked={index === all.length - 1}
-            data-effort-row
-            data-effort-level
-          >
-            {level}
-          </button>
-        ))}
+        effortControls={<PickerThinkingSlider value={levels[model]?.at(-1)} />}
       />
     );
   }
@@ -161,20 +162,44 @@ it("keeps a docked picker open after a pick and hands focus to that model's effo
   await using screen = await render(<Picker />);
   await screen.getByRole("button", { name: "Choose model" }).click();
   const search = page.getByPlaceholder("Search models...");
-  await expect.element(search).toHaveFocus();
-  await userEvent.keyboard("{ArrowRight}");
-  await expect.element(page.getByRole("radio", { name: "High" })).toHaveFocus();
-  await userEvent.keyboard("{ArrowLeft}");
-  await expect.element(search).toHaveFocus();
+  const modelList = page.getByRole("listbox", { name: "Models" });
+  const slider = page.getByRole("slider", { name: "Thinking" });
+  const changeModel = page.getByRole("button", { name: "Change model" });
+  await expect.element(slider).toHaveAttribute("aria-valuetext", "High");
+  await expect.element(changeModel).toHaveTextContent("Original modelHigh");
+  await expect.element(modelList).not.toBeInTheDocument();
+  const popup = slider.element().closest<HTMLElement>('[data-slot="popover-popup"]');
+  const compactWidth = popup?.offsetWidth ?? 0;
 
-  await page.getByRole("option", { name: /Second model/ }).click();
-  await expect.element(page.getByRole("radio", { name: "Medium" })).toHaveFocus();
-
-  await page.getByRole("option", { name: /Plain model/ }).click();
-  await page.getByRole("option", { name: /Second model/ }).click();
-  await expect.element(page.getByRole("radio", { name: "Medium" })).toHaveFocus();
-  await userEvent.keyboard("{Escape}");
+  await changeModel.click();
+  await expect.element(modelList).toHaveFocus();
   await expect.element(search).not.toBeInTheDocument();
+  await expect.element(slider).not.toBeInTheDocument();
+  await vi.waitFor(() => expect(popup?.offsetWidth).toBeGreaterThan(compactWidth));
+  const viewport = modelList.element().closest('[data-slot="popover-viewport"]');
+  expect(viewport && getComputedStyle(viewport).overflowX).toBe("hidden");
+  await userEvent.keyboard("{ArrowDown}");
+  await expect.element(modelList).toHaveAttribute("aria-activedescendant");
+  await userEvent.keyboard("{ArrowRight}");
+  await expect.element(slider).toHaveFocus();
+
+  await changeModel.click();
+  const second = page.getByRole("option", { name: /Second model/ });
+  await second.click();
+  await expect.element(second).toHaveAttribute("aria-selected", "true");
+  await expect.element(slider).not.toBeInTheDocument();
+
+  modelList.element().querySelector("[data-model-picker-scroll]")?.scrollTo({ top: 2_000 });
+  await page.getByRole("option", { name: /Plain model/ }).click();
+  await expect.element(slider).not.toBeInTheDocument();
+  modelList.element().querySelector("[data-model-picker-scroll]")?.scrollTo({ top: 0 });
+  await second.click();
+  await page.getByRole("button", { name: "Back to thinking level" }).click();
+  await expect.element(modelList).not.toBeInTheDocument();
+  await expect.element(changeModel).toHaveTextContent("Second modelMedium");
+  await expect.element(slider).toBeVisible();
+  await userEvent.keyboard("{Escape}");
+  await expect.element(slider).not.toBeInTheDocument();
 });
 
 it("lists a model reported twice by one provider once, with contiguous jump shortcuts", async () => {
@@ -226,6 +251,13 @@ it("lists a model reported twice by one provider once, with contiguous jump shor
   );
   await screen.getByRole("button", { name: "Choose model" }).click();
   await expect.element(page.getByRole("option", { name: /Model A/ })).toBeVisible();
+  expect(
+    page
+      .getByRole("option")
+      .elements()
+      .every((row) => !row.querySelector("kbd")),
+  ).toBe(true);
+  await userEvent.keyboard("{Alt>}");
   await vi.waitFor(() =>
     expect(
       page
@@ -242,6 +274,15 @@ it("lists a model reported twice by one provider once, with contiguous jump shor
       ["Model D", "4"],
     ]),
   );
+  await userEvent.keyboard("{/Alt}");
+  await vi.waitFor(() => {
+    expect(
+      page
+        .getByRole("option")
+        .elements()
+        .every((row) => !row.querySelector("kbd")),
+    ).toBe(true);
+  });
 });
 
 it("opens on the active provider when every favorite belongs to a disabled provider", async () => {

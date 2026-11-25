@@ -32,7 +32,7 @@ export function ComposerModelControl(props: {
   const summary = props.provider
     ? buildTraitsTriggerDisplay(
         {
-          descriptors,
+          descriptors: descriptors.filter((descriptor) => descriptor.id !== "cyberAccessProgram"),
           primarySelectDescriptorId: promptTraits.primarySelectDescriptor?.id ?? null,
           ultrathinkPromptControlled: promptTraits.ultrathinkPromptControlled,
           modelSelection: props.selection,

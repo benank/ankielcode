@@ -71,7 +71,6 @@ import {
   serverConfigForCwd,
   type ModelOption,
   type ProviderGroup,
-  withStoredThreadModelOptions,
 } from "../../lib/modelOptions";
 import { groupModelsBySubProvider } from "@ankielcode/client-runtime/providerSubProviders";
 import { applyProviderOptionSelection } from "../../lib/providerOptions";
@@ -93,7 +92,7 @@ import {
 } from "../../state/use-composer-drafts";
 import { useQuietThreadStructure } from "../../state/use-thread-detail";
 import { activeComposerDraftKey, useQueuedRunEdit } from "../../state/queued-run-edit";
-import { selectThreadModel } from "../../state/thread-model-selection";
+import { selectThreadCatalogModel, selectThreadModel } from "../../state/thread-model-selection";
 import { useThreadSelection } from "../../state/use-thread-selection";
 import { useSelectedThreadWorktree } from "../../state/use-selected-thread-worktree";
 import { providerWorkspaceSnapshotRefresh } from "../../state/provider-workspace-snapshot-refresh";
@@ -1196,11 +1195,10 @@ function ThreadSettingsOptionsItem(props: {
         .get(session.environmentId)
         ?.providers.find((provider) => provider.instanceId === session.providerInstanceId) ?? null)
     : null;
-  const remainingDescriptors = session.reasoningDescriptor
-    ? session.displayedDescriptors.filter(
-        (descriptor) => descriptor.id !== session.reasoningDescriptor?.id,
-      )
-    : session.displayedDescriptors;
+  const remainingDescriptors = session.displayedDescriptors.filter(
+    (descriptor) =>
+      descriptor.id !== session.reasoningDescriptor?.id && descriptor.id !== "cyberAccessProgram",
+  );
 
   return (
     <View style={{ paddingBottom: insets.bottom + props.bottomInset + 12 }}>
@@ -1800,14 +1798,7 @@ export function ExistingThreadSettingsRouteScreen({
       prompt={prompt}
       onPromptChange={(text) => setComposerDraftText(draftKey, text)}
       reportedModelSelection={reportedModelSelection}
-      onSelectModel={(option) =>
-        updateModelSelection(
-          withStoredThreadModelOptions(
-            withRememberedModelOptions(option.selection),
-            selectedThread.modelSelection,
-          ),
-        )
-      }
+      onSelectModel={(option) => selectThreadCatalogModel(route.params, option.selection)}
       restoreSelection={withRememberedModelOptions}
       optionDescriptors={resolveProviderOptionDescriptors({
         capabilities: currentModelOption?.capabilities,

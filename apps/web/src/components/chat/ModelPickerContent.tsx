@@ -1,3 +1,4 @@
+import { useShortcutModifierState } from "../../shortcutModifierState";
 import { T, useGT, useLocale, useMessages } from "gt-react";
 import { useLegendListRef } from "~/hooks/useLegendListRef";
 import {
@@ -279,12 +280,17 @@ function ModelPickerList({
   itemKeys,
   extraData,
   renderItem,
+  focusRef,
+  onFocusEffort,
 }: {
   listRef: RefObject<LegendListRef | null>;
   itemKeys: ReadonlyArray<string>;
   extraData: unknown;
   renderItem: (props: { item: string; index: number }) => ReactNode;
+  focusRef?: RefObject<HTMLDivElement | null>;
+  onFocusEffort?: () => void;
 }) {
+  const gt = useGT();
   const [showTopScrollFade, setShowTopScrollFade] = useState(false);
   const [showBottomScrollFade, setShowBottomScrollFade] = useState(false);
   const updateScrollFades = () => {
@@ -299,12 +305,36 @@ function ModelPickerList({
     <div
       className={cn(
         "relative min-h-0 overflow-hidden pr-px",
-        itemKeys.length > 0 ? "flex-1" : "h-0",
+        focusRef &&
+          "rounded-lg has-[>[role=listbox]:focus-visible]:outline-2 has-[>[role=listbox]:focus-visible]:-outline-offset-2 has-[>[role=listbox]:focus-visible]:outline-ring",
+        itemKeys.length === 0 ? "h-0" : focusRef ? "shrink" : "flex-1",
       )}
+      style={
+        focusRef && itemKeys.length > 0
+          ? { height: Math.min(244, itemKeys.length * MODEL_LIST_ESTIMATED_ITEM_SIZE + 20) }
+          : undefined
+      }
     >
-      <ComboboxListVirtualized>
+      <ComboboxListVirtualized
+        {...(focusRef ? { ref: focusRef, tabIndex: 0, "aria-label": gt("Models") } : {})}
+        onKeyDown={(event) => {
+          if (
+            !focusRef ||
+            event.key !== "ArrowRight" ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            event.shiftKey
+          )
+            return;
+          event.preventDefault();
+          event.stopPropagation();
+          onFocusEffort?.();
+        }}
+      >
         <LegendList<string>
           ref={scrollRef}
+          data-model-picker-scroll
           data={itemKeys}
           extraData={extraData}
           keyExtractor={(modelKey) => modelKey}
@@ -318,7 +348,8 @@ function ModelPickerList({
           onScroll={updateScrollFades}
           onReady={updateScrollFades}
           className={cn(
-            "scrollbar-gutter-stable h-full overflow-x-hidden overscroll-y-contain py-1.5 [&::-webkit-scrollbar-track]:my-2",
+            "h-full overflow-x-hidden overscroll-y-contain py-1.5 [&::-webkit-scrollbar-track]:my-2",
+            focusRef ? "[scrollbar-width:thin]" : "scrollbar-gutter-stable",
             getVirtualizedScrollFadeClassName({
               top: showTopScrollFade,
               bottom: showBottomScrollFade,
@@ -364,9 +395,9 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
   onInstanceModelChange: (instanceId: ProviderInstanceId, model: string) => void;
   /** The owning popup moves focus here when it opens (its `initialFocus`). */
   searchInputRef: RefObject<HTMLInputElement | null>;
-  /** Sits beside an effort column: fills the shared row, and stacks above it on narrow screens. */
-  docked?: boolean;
-  /** Right at the end of the search text moves into the popup's effort column. */
+  composerLayout?: boolean;
+  modelListFocusRef?: RefObject<HTMLDivElement | null>;
+  /** Right at the end of the search text moves to the thinking controls. */
   onFocusEffort?: () => void;
   /** Closes the list column, inside the popup's fixed height. */
   listFooter?: ReactNode;
@@ -392,6 +423,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
   useLayoutEffect(() => registerModelPickerContent(), []);
   const highlightedModelKeyRef = useRef<string | null>(null);
   const { favorites } = useEnvironmentModelPreferences(props.environmentId);
+  const { altKey: showJumpLabels } = useShortcutModifierState();
   const activeEntry = props.instanceEntries.find(
     (entry) => entry.instanceId === props.activeInstanceId,
   );
@@ -438,6 +470,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
   const [selectedInstanceId, setSelectedInstanceId] = useState<ProviderInstanceId | "favorites">(
     () => {
       if (
+        props.composerLayout ||
         props.lockedProvider !== null ||
         activeInstanceHasSelectableUnavailableModel ||
         activeInstanceNeedsSetup
@@ -492,16 +525,17 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
   const [searchHeight, setSearchHeight] = useState(0);
   const toggleFavorite = useToggleEnvironmentModelFavorite(props.environmentId);
 
-  const focusSearchInput = () => {
-    searchInputRef.current?.focus({ preventScroll: true });
+  const focusModels = () => {
+    (props.modelListFocusRef?.current ?? searchInputRef.current)?.focus({ preventScroll: true });
   };
 
   const handleSelectInstance = (instanceId: ProviderInstanceId | "favorites") => {
     setSelectedInstanceId(instanceId);
+    if (props.composerLayout) setSearchQuery("");
     // Focusing the search on touch raises the on-screen keyboard on every provider tap.
     if (window.matchMedia("(pointer: coarse)").matches) return;
     window.requestAnimationFrame(() => {
-      focusSearchInput();
+      focusModels();
     });
   };
 
@@ -881,11 +915,9 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
       ),
     ))();
 
-  const modelJumpLabelByKey = modelJumpLabelsByKey(
-    modelJumpModelKeys,
-    keybindings,
-    props.terminalOpen,
-  );
+  const modelJumpLabelByKey = showJumpLabels
+    ? modelJumpLabelsByKey(modelJumpModelKeys, keybindings, props.terminalOpen)
+    : EMPTY_MODEL_JUMP_LABELS;
   const badgedInstanceIds = new Set(
     instanceEntries
       .filter((entry) => shouldShowInstanceBadge(entry, instanceEntries))
@@ -961,12 +993,13 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
       <div
         ref={pickerContentRef}
         className={cn(
-          "relative flex w-screen max-w-90 flex-row overflow-hidden",
-          props.docked ? "max-sm:h-56 max-sm:w-full max-sm:max-w-none" : "max-h-86.5",
+          "relative flex overflow-hidden",
+          props.composerLayout
+            ? "min-h-0 w-full shrink flex-col px-2"
+            : "max-h-86.5 w-screen max-w-90 flex-row",
         )}
-        // Docked, the popup sets the height; a minimum here would overflow short windows.
         style={
-          props.docked
+          props.composerLayout
             ? undefined
             : isSearching
               ? { height: searchHeight }
@@ -980,9 +1013,10 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
           <ModelPickerSidebar
             selectedInstanceId={selectedInstanceId}
             onSelectInstance={handleSelectInstance}
-            onFocusSearch={focusSearchInput}
+            onFocusModels={focusModels}
             instanceEntries={sidebarInstanceEntries}
             showFavorites
+            horizontal={props.composerLayout ?? false}
             {...(selectableUnavailableInstanceIds ? { selectableUnavailableInstanceIds } : {})}
             {...(lockedDisabledInstanceIds
               ? {
@@ -1045,104 +1079,91 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
         >
           <div
             className={cn(
-              "flex min-h-0 flex-1 flex-col overflow-hidden bg-muted/40",
-              showSidebar && "border-l border-border/70",
+              "flex min-h-0 flex-col overflow-hidden",
+              props.composerLayout
+                ? "shrink bg-transparent"
+                : cn("flex-1 bg-muted/40", showSidebar && "border-l border-border/70"),
             )}
           >
-            <ComboboxSearchInput
-              ref={searchInputRef}
-              placeholder={gt("Search models...")}
-              value={searchQuery}
-              onChange={(e) => {
-                if (!isSearching) setSearchHeight(pickerContentRef.current?.offsetHeight ?? 0);
-                setSearchQuery(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.nativeEvent.isComposing || e.keyCode === 229) {
-                  (e as typeof e & { preventBaseUIHandler?: () => void }).preventBaseUIHandler?.();
-                  e.stopPropagation();
-                  return;
-                }
-                if (
-                  showSidebar &&
-                  !e.altKey &&
-                  !e.ctrlKey &&
-                  !e.metaKey &&
-                  ((e.key === "ArrowLeft" && !e.shiftKey && searchQuery.length === 0) ||
-                    (e.key === "Tab" && e.shiftKey))
-                ) {
-                  const sidebar = e.currentTarget
-                    .closest("[data-model-picker-content]")
-                    ?.querySelector("[data-model-picker-sidebar]");
-                  const button =
-                    sidebar?.querySelector<HTMLButtonElement>(
-                      'button[aria-pressed="true"]:not(:disabled)',
-                    ) ?? sidebar?.querySelector<HTMLButtonElement>("button:not(:disabled)");
-                  if (button) {
+            {!props.composerLayout ? (
+              <ComboboxSearchInput
+                ref={searchInputRef}
+                placeholder={gt("Search models...")}
+                value={searchQuery}
+                onChange={(e) => {
+                  if (!isSearching) setSearchHeight(pickerContentRef.current?.offsetHeight ?? 0);
+                  setSearchQuery(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.nativeEvent.isComposing || e.keyCode === 229) {
+                    (
+                      e as typeof e & { preventBaseUIHandler?: () => void }
+                    ).preventBaseUIHandler?.();
+                    e.stopPropagation();
+                    return;
+                  }
+                  if (
+                    showSidebar &&
+                    !e.altKey &&
+                    !e.ctrlKey &&
+                    !e.metaKey &&
+                    ((e.key === "ArrowLeft" && !e.shiftKey && searchQuery.length === 0) ||
+                      (e.key === "Tab" && e.shiftKey))
+                  ) {
+                    const sidebar = e.currentTarget
+                      .closest("[data-model-picker-content]")
+                      ?.querySelector("[data-model-picker-sidebar]");
+                    const button =
+                      sidebar?.querySelector<HTMLButtonElement>(
+                        'button[aria-pressed="true"]:not(:disabled)',
+                      ) ?? sidebar?.querySelector<HTMLButtonElement>("button:not(:disabled)");
+                    if (button) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      button.focus();
+                      return;
+                    }
+                  }
+                  if (e.key === "Escape") {
                     e.preventDefault();
                     e.stopPropagation();
-                    button.focus();
+                    onRequestClose?.();
                     return;
                   }
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onRequestClose?.();
-                  return;
-                }
-                if (
-                  props.onFocusEffort &&
-                  e.key === "ArrowRight" &&
-                  !e.altKey &&
-                  !e.ctrlKey &&
-                  !e.metaKey &&
-                  !e.shiftKey &&
-                  e.currentTarget.selectionStart === searchQuery.length
-                ) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  // The column shows the selected model's effort, so a highlighted model is picked
-                  // first; the owning popup then moves focus to that model's levels.
-                  const highlighted = highlightedModelKeyRef.current
-                    ? parseModelPickerModelKey(highlightedModelKeyRef.current)
-                    : null;
-                  const pickedNew =
-                    highlighted !== null &&
-                    highlightedModelKeyRef.current !== activeModelKey &&
-                    handleModelSelect(highlighted.slug, highlighted.instanceId) !== null;
-                  if (!pickedNew) props.onFocusEffort();
-                  return;
-                }
-                if (e.key === "Enter" && highlightedModelKeyRef.current) {
-                  (e as typeof e & { preventBaseUIHandler?: () => void }).preventBaseUIHandler?.();
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const legacyInstanceId = parseModelPickerLegacySectionKey(
-                    highlightedModelKeyRef.current,
-                  );
-                  if (legacyInstanceId) {
-                    toggleLegacySection(legacyInstanceId);
+                  if (e.key === "Enter" && highlightedModelKeyRef.current) {
+                    (
+                      e as typeof e & { preventBaseUIHandler?: () => void }
+                    ).preventBaseUIHandler?.();
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const legacyInstanceId = parseModelPickerLegacySectionKey(
+                      highlightedModelKeyRef.current,
+                    );
+                    if (legacyInstanceId) {
+                      toggleLegacySection(legacyInstanceId);
+                      return;
+                    }
+                    if (subProviderSectionByKey.has(highlightedModelKeyRef.current)) {
+                      toggleSubProviderSection(highlightedModelKeyRef.current);
+                      return;
+                    }
+                    const model = parseModelPickerModelKey(highlightedModelKeyRef.current);
+                    if (model) {
+                      handleModelSelect(model.slug, model.instanceId, e.shiftKey);
+                    }
                     return;
                   }
-                  if (subProviderSectionByKey.has(highlightedModelKeyRef.current)) {
-                    toggleSubProviderSection(highlightedModelKeyRef.current);
-                    return;
-                  }
-                  const model = parseModelPickerModelKey(highlightedModelKeyRef.current);
-                  if (model) {
-                    handleModelSelect(model.slug, model.instanceId, e.shiftKey);
-                  }
-                  return;
-                }
-                e.stopPropagation();
-              }}
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-            />
+                  e.stopPropagation();
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+              />
+            ) : null}
 
             <ModelPickerList
               listRef={modelListRef}
+              {...(props.modelListFocusRef ? { focusRef: props.modelListFocusRef } : {})}
+              {...(props.onFocusEffort ? { onFocusEffort: props.onFocusEffort } : {})}
               itemKeys={filteredItemKeys}
               extraData={modelListExtraData}
               renderItem={({ item: modelKey, index }) => {
@@ -1223,6 +1244,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
                     providerAccentColor={model.instanceAccentColor}
                     acpRegistryAgentId={model.acpRegistryAgentId}
                     acpRegistryIconUrl={model.acpRegistryIconUrl}
+                    composerLayout={props.composerLayout ?? false}
                     isFavorite={favoritesSet.has(providerModelKey(model.instanceId, model.slug))}
                     isSelected={
                       selectedModelKeys !== undefined

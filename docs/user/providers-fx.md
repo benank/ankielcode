@@ -27,7 +27,7 @@ To update a standalone install manually, run `fx upgrade` on the server's machin
 
 ## Backends, models, and effort
 
-fx can run models through several backends: Vercel AI Gateway, a Codex subscription, a Grok subscription, and any OpenAI-compatible endpoint you configure in fx's settings. In the model picker, the fx tab lists each backend under its own heading. Open a backend to see the models it offers, then pick one. Search lists every backend's models together.
+fx can run models through several backends: Vercel AI Gateway, a Codex subscription, a Grok subscription, and any OpenAI-compatible endpoint you configure in fx's settings. In the model picker, the fx tab lists each backend under its own heading. Open a backend to see the models it offers, then pick one.
 
 The backend is part of each thread's model choice, so two threads can run on different backends at the same time. Switching it in Ankiel Code changes only that thread's fx session. It never changes the default `fx provider` sets for your terminal.
 

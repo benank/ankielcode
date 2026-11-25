@@ -107,6 +107,31 @@ export function getTraitSelectChange(
   };
 }
 
+export function resolveFastModeToggle(
+  descriptors: ReadonlyArray<ProviderOptionDescriptor>,
+  selection?: ModelSelection | null,
+  reportedSelection?: ModelSelection | null,
+) {
+  const tier = descriptors.find((descriptor) => descriptor.id === "serviceTier");
+  if (tier?.type === "select") {
+    const choices = selectableProviderOptionChoices(tier);
+    const fast =
+      choices.find((choice) => choice.label === "Fast") ??
+      choices.find((choice) => choice.label === "Ultrafast");
+    const standard = choices.find((choice) => choice.label === "Standard");
+    if (fast && standard) {
+      const current = getProviderOptionCurrentLabel(tier, selection, reportedSelection);
+      const enabled = current === "Fast" || current === "Ultrafast";
+      return { descriptor: tier, enabled, value: enabled ? standard.id : fast.id } as const;
+    }
+  }
+
+  const toggle = descriptors.find((descriptor) => descriptor.id === "fastMode");
+  if (toggle?.type !== "boolean") return null;
+  const enabled = getProviderOptionCurrentValue(toggle, selection, reportedSelection) === true;
+  return { descriptor: toggle, enabled, value: !enabled } as const;
+}
+
 export function buildTraitsTriggerDisplay(
   input: {
     descriptors: ReadonlyArray<ProviderOptionDescriptor>;

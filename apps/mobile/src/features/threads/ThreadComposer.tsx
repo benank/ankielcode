@@ -16,6 +16,7 @@ import {
   type EnvironmentId,
   type MessageId,
   type ModelSelection,
+  type ProviderOptionSelection,
   type ServerConfig as AnkielServerConfig,
   type UsageLimitsReport,
 } from "@ankielcode/contracts";
@@ -80,7 +81,9 @@ import {
   ComposerToolbarRow,
 } from "../../components/ComposerToolbar";
 import { formatTokens } from "@ankielcode/shared/usageFormat";
-import { ComposerModelControl } from "../../components/ComposerModelControl";
+import { ComposerModelPicker, type ComposerModelPickerPage } from "./ComposerModelPicker";
+import { rememberModelOptions } from "../../state/use-model-option-memory";
+import { selectThreadCatalogModel, selectThreadModel } from "../../state/thread-model-selection";
 import {
   composerStripAttachments,
   type DraftComposerFileAttachment,
@@ -90,6 +93,7 @@ import {
   buildModelOptions,
   isModelSelectionUnavailable,
   serverConfigForCwd,
+  type ModelOption,
 } from "../../lib/modelOptions";
 import { useComposerTextRole } from "../settings/appearance/useScaledTextRole";
 import type { RemoteClientConnectionState } from "../../lib/connection";
@@ -134,6 +138,8 @@ const NO_MACHINES: ReadonlyArray<ComposerEnvironmentCandidate> = [];
 
 export interface ThreadComposerProps {
   readonly isDraft?: boolean;
+  readonly onSelectDraftModel?: (option: ModelOption) => void;
+  readonly onChangeDraftModelOptions?: (options: ReadonlyArray<ProviderOptionSelection>) => void;
   readonly canOperateThread: boolean;
   readonly placeholder: string;
   readonly contentMaxWidth?: number;
@@ -267,6 +273,7 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
   const fallbackInputRef = useRef<ComposerEditorHandle>(null);
   const inputRef = props.editorRef ?? fallbackInputRef;
   const [isFocused, setIsFocused] = useState(false);
+  const [modelPickerPage, setModelPickerPage] = useState<ComposerModelPickerPage | null>(null);
   const pendingPastedTextAttachmentCountRef = useRef(0);
   const pendingNativeImagePasteCountRef = useRef(0);
   const [pendingNativeImageCount, setPendingNativeImageCount] = useState(0);
@@ -442,7 +449,7 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
     offersUsageLimits: usageLimitsOffered,
     onUsageLimits:
       usageLimitsOffered && draftAttachments.length === 0 ? openUsageLimits : undefined,
-    onOpenModelPicker: settingsSheetPresentation.open,
+    onOpenModelPicker: () => setModelPickerPage("models"),
     modelOptions: mentionModelOptions,
     modelProviders: props.serverConfig?.providers,
     ...(props.onFreshSession === undefined ? {} : { onFreshSession: props.onFreshSession }),
@@ -681,16 +688,57 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
   const modelControl = (
     // Only the expanded label can truncate; shrinking the icon-only control clips the icon.
     <View className={compactEditor.isExpanded ? "min-w-0 shrink" : "shrink-0"}>
-      <ComposerModelControl
+      <ComposerModelPicker
         size={usesLargeControls ? "large" : "regular"}
-        modelOption={currentModelOption}
+        currentOption={currentModelOption}
+        options={modelOptions}
+        page={props.hidden ? null : modelPickerPage}
+        onPageChange={setModelPickerPage}
+        environmentId={props.environmentId}
+        cwd={props.projectCwd}
+        canRefreshCatalog={
+          props.serverConfig?.environment.capabilities.modelCatalogRefresh === true
+        }
         selection={currentModelSelection}
         provider={selectedProviderStatus?.driver}
         reportedSelection={props.reportedModelSelection}
         prompt={draftMessage}
         surfaceColor={composerPanel}
         iconOnly={!compactEditor.isExpanded}
-        onPress={openSettings}
+        disabled={!props.canOperateThread || isSubmissionLocked}
+        onSelectModel={(option) => {
+          if (props.onSelectDraftModel) props.onSelectDraftModel(option);
+          else
+            selectThreadCatalogModel(
+              {
+                environmentId: props.environmentId,
+                threadId: props.selectedThread.id,
+                draftKey: composerDraftKey,
+              },
+              option.selection,
+            );
+        }}
+        onChangeOptions={(options, nextPrompt) => {
+          if (nextPrompt !== draftMessage) props.onChangeDraftMessage(nextPrompt);
+          if (props.onChangeDraftModelOptions) {
+            props.onChangeDraftModelOptions(options);
+          } else {
+            rememberModelOptions(
+              currentModelSelection.instanceId,
+              currentModelSelection.model,
+              options,
+            );
+            selectThreadModel(
+              {
+                environmentId: props.environmentId,
+                threadId: props.selectedThread.id,
+                draftKey: composerDraftKey,
+              },
+              { ...currentModelSelection, options },
+            );
+          }
+        }}
+        onOpenSettings={openSettings}
       />
     </View>
   );

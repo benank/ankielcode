@@ -82,8 +82,8 @@ The model picker lists the models the agent reports. If the agent reports none, 
 your own model IDs under **Custom models** in the instance settings.
 
 Other settings the agent offers, such as reasoning effort or approval mode, appear in the
-composer's model picker, beside the model list, like they do for built-in providers. Models and options that change while an agent
-is running update the picker without waiting for another provider probe.
+composer's model picker. Models and options that change while an agent is running update the
+picker without waiting for another provider probe.
 
 ## Commands and skills
 

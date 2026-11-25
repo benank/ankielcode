@@ -237,6 +237,8 @@ export interface ThreadDetailScreenProps {
     readonly editorRef: React.RefObject<ComposerEditorHandle | null>;
     readonly sendBlockedReason: string | null;
     readonly interactionLocked: boolean;
+    readonly onSelectModel: NonNullable<ThreadComposerProps["onSelectDraftModel"]>;
+    readonly onChangeModelOptions: NonNullable<ThreadComposerProps["onChangeDraftModelOptions"]>;
   };
   readonly worktreeSetup?: WorktreeSetupCardProps | null;
   readonly canOperateThread: boolean;
@@ -1915,6 +1917,12 @@ function ThreadDetailBody(
                     <>
                       <ThreadComposer
                         isDraft={Boolean(props.draftMode)}
+                        {...(props.draftMode
+                          ? {
+                              onSelectDraftModel: props.draftMode.onSelectModel,
+                              onChangeDraftModelOptions: props.draftMode.onChangeModelOptions,
+                            }
+                          : {})}
                         canOperateThread={props.canOperateThread}
                         reportedModelSelection={reportedModelSelection}
                         editorRef={composerEditorRef}
