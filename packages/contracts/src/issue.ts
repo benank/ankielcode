@@ -411,19 +411,8 @@ export const IssueTemplate = Schema.Struct({
 });
 export type IssueTemplate = typeof IssueTemplate.Type;
 
-/** A starting point only the tracker's own site can render, such as a form template. */
-export const IssueExternalTemplate = Schema.Struct({
-  name: TrimmedNonEmptyString,
-  about: Schema.String,
-  /** Opens the exact template on the tracker, ready to fill in. */
-  url: TrimmedNonEmptyString,
-});
-export type IssueExternalTemplate = typeof IssueExternalTemplate.Type;
-
 export const IssueTemplateList = Schema.Struct({
   templates: Schema.Array(IssueTemplate),
-  /** Absent from a tracker whose every template is body-shaped. */
-  externalTemplates: Schema.optional(Schema.Array(IssueExternalTemplate)),
   /** False where the scope's config forbids an issue filed from nothing. */
   blankIssuesEnabled: Schema.Boolean,
 });
