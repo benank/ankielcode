@@ -76,6 +76,7 @@ import {
   splashCanHide,
   useLaunchSplashHomeRowsPending,
 } from "./features/home/home-launch-splash";
+import { LaunchSplashMask } from "./features/home/LaunchSplashMask";
 import {
   restoreSettingsLinkState,
   settingsLinkAction,
@@ -204,7 +205,7 @@ disposeOnFoundationReplace(typeof module === "undefined" ? undefined : module.ho
 // read, or a list that does not lay out, from holding the splash screen.
 const SPLASH_WAIT_MS = 1_500;
 
-function SplashScreenCoordinator() {
+function SplashScreenCoordinator({ onReady }: { readonly onReady: () => void }) {
   const { isReady } = useAppearancePreferences();
   const shellCachesRead = useAtomValue(shellCachesReadAtom);
   const homeRowsPending = useLaunchSplashHomeRowsPending();
@@ -231,7 +232,8 @@ function SplashScreenCoordinator() {
     hidden.current = true;
     settleLaunchSplashHomeRows();
     void SplashScreen.hide();
-  }, [isReady, shellCachesRead, homeRowsPending, waitEnded]);
+    onReady();
+  }, [isReady, shellCachesRead, homeRowsPending, waitEnded, onReady]);
 
   return null;
 }
@@ -264,6 +266,8 @@ export default function App() {
 function AppContent() {
   const { themeAppearance } = useAppearancePreferences();
   const navigationTheme = useMobileNavigationTheme();
+  const [splashReady, setSplashReady] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
 
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- matches the Android navigation bar to the app theme, as StatusBar does for the status bar
   useEffect(() => {
@@ -273,15 +277,18 @@ function AppContent() {
     ).setNavigationBarStyle(themeAppearance === "light");
   }, [themeAppearance]);
 
+  const statusBarStyle =
+    !splashReady || themeAppearance === "dark" ? "light-content" : "dark-content";
+
   return (
     <>
-      <SplashScreenCoordinator />
+      <SplashScreenCoordinator onReady={() => setSplashReady(true)} />
       <QuickActionsLanguage />
       <SubscriptionUsageCoordinator />
       <GestureHandlerRootView className="flex-1">
         <KeyboardProvider statusBarTranslucent>
           <SafeAreaProvider>
-            <StatusBar barStyle={themeAppearance === "dark" ? "light-content" : "dark-content"} />
+            <StatusBar barStyle={statusBarStyle} />
             {/* native-stack needs the theme's dark flag to select dark native headers. */}
             <GlobalVoiceInputControl>
               <NativeLayoutMetricsProvider>
@@ -300,6 +307,9 @@ function AppContent() {
             <OverlayPortalHost />
           </SafeAreaProvider>
         </KeyboardProvider>
+        {splashDone ? null : (
+          <LaunchSplashMask ready={splashReady} onComplete={() => setSplashDone(true)} />
+        )}
       </GestureHandlerRootView>
     </>
   );

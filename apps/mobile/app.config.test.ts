@@ -61,3 +61,23 @@ it("derives updates and account identifiers from the environment", async () => {
     url: "https://u.expo.dev/00000000-0000-4000-8000-000000000000",
   });
 });
+
+it.each(["development", "preview", "production"] as const)(
+  "uses the dark splash screen with the light A mark for APP_VARIANT=%j",
+  async (variant) => {
+    const config = await loadConfig(variant);
+    const splashPlugin = config.plugins?.find(
+      (entry): entry is [string, Record<string, unknown>] =>
+        Array.isArray(entry) && entry[0] === "expo-splash-screen",
+    );
+    expect(splashPlugin?.[1]).toMatchObject({
+      image: "./assets/splash-icon.png",
+      backgroundColor: "#121211",
+      imageWidth: 100,
+      dark: {
+        image: "./assets/splash-icon.png",
+        backgroundColor: "#121211",
+      },
+    });
+  },
+);
