@@ -1,4 +1,4 @@
-// Read by evals/mobile-behavior through the Hermes inspector; product modules load lazily so import order is unchanged.
+// Read by scripts/mobile-behavior through the Hermes inspector; product modules load lazily so import order is unchanged.
 
 interface Fiber {
   readonly tag: number;
