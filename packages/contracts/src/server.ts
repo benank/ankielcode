@@ -367,9 +367,6 @@ export const isProviderTextGenerationCapable = (snapshot: ServerProvider): boole
 export const ServerObservability = Schema.Struct({
   logsDirectoryPath: TrimmedNonEmptyString,
   localTracingEnabled: Schema.Boolean,
-  // Always false. Clients from before OTLP export was removed require these keys to decode.
-  otlpTracesEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
-  otlpMetricsEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
 });
 export type ServerObservability = typeof ServerObservability.Type;
 

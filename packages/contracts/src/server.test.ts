@@ -111,23 +111,18 @@ describe("ServerObservability", () => {
   const decode = Schema.decodeUnknownSync(ServerObservability);
   const encode = Schema.encodeSync(ServerObservability);
 
-  it("reads an older server's export fields and still sends the keys older clients require", () => {
+  it("reads an older server's export fields and drops them", () => {
     const observability = decode({
       logsDirectoryPath: "/tmp/ankiel/logs",
       localTracingEnabled: true,
       otlpTracesUrl: "https://collector.example.com/v1/traces",
       otlpTracesSource: "environment",
       otlpTracesEnabled: true,
+      otlpMetricsEnabled: false,
     });
-    expect(observability).not.toHaveProperty("otlpTracesUrl");
-    expect(observability.otlpMetricsEnabled).toBe(false);
-    expect(
-      encode({ ...observability, otlpTracesEnabled: false, otlpMetricsEnabled: false }),
-    ).toEqual({
+    expect(encode(observability)).toEqual({
       logsDirectoryPath: "/tmp/ankiel/logs",
       localTracingEnabled: true,
-      otlpTracesEnabled: false,
-      otlpMetricsEnabled: false,
     });
   });
 });

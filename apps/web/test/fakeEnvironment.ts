@@ -127,8 +127,6 @@ const makeServerConfig = (
     observability: {
       logsDirectoryPath: "/workspace/.ankiel/logs",
       localTracingEnabled: false,
-      otlpTracesEnabled: false,
-      otlpMetricsEnabled: false,
     },
     settings: {},
     threadSnapshotPagination: true,

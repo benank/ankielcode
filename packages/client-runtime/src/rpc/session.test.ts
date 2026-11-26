@@ -148,8 +148,6 @@ const SERVER_CONFIG: ServerConfigType = {
   observability: {
     logsDirectoryPath: "/tmp/logs",
     localTracingEnabled: false,
-    otlpTracesEnabled: false,
-    otlpMetricsEnabled: false,
   },
   settings: DEFAULT_SERVER_SETTINGS,
 };
