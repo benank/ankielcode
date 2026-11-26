@@ -9,9 +9,7 @@ import { resolveWorktreeAnkielHome } from "@ankielcode/shared/devHome";
 import { cliInstallCommand } from "@ankielcode/shared/cliRelease";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { formatHostForUrl, isWildcardHost } from "@ankielcode/shared/hostClassification";
-import { DEFAULT_SIGNAL_EXPORT } from "@ankielcode/shared/observability";
 import { buildPairingAppLink } from "@ankielcode/shared/remote";
-import * as OtelEnvironment from "@ankielcode/shared/otelEnvironment";
 import {
   buildTailscaleHttpsBaseUrl,
   DEFAULT_TAILSCALE_SERVE_PORT,
@@ -352,13 +350,6 @@ const makePairServerConfig = Effect.fn(function* (input: {
     traceBatchWindowMs: 1_000,
     traceMaxBytes: 10 * 1024 * 1024,
     traceMaxFiles: 10,
-    otlpTracesUrl: undefined,
-    otlpMetricsUrl: undefined,
-    otlpLogsUrl: undefined,
-    otlpTracesExport: DEFAULT_SIGNAL_EXPORT,
-    otlpMetricsExport: DEFAULT_SIGNAL_EXPORT,
-    otlpLogsExport: DEFAULT_SIGNAL_EXPORT,
-    otelEnvironment: OtelEnvironment.none,
     mode: "web",
     port: state.port,
     host: state.host,

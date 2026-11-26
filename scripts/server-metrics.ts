@@ -883,6 +883,7 @@ const startServer = Effect.fn("serverMetrics.startServer")(function* (
     ANTHROPIC_BASE_URL: `http://127.0.0.1:${environment.apiPort}`,
     ANTHROPIC_API_KEY: "sk-bench",
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
+    // The real `claude` CLI inherits this env; keep it from exporting to a developer's ambient collector.
     OTEL_SDK_DISABLED: "true",
     ANKIEL_DEV_SEED: "0",
     ...options.forge?.env,

@@ -112,10 +112,6 @@ export function makeDevelopmentEnvironmentScript(environment) {
     ["ANKIEL_PORT", environment.ANKIEL_PORT],
     ["ANKIEL_HOME", environment.ANKIEL_HOME],
     ["ANKIEL_COMMIT_HASH", environment.ANKIEL_COMMIT_HASH],
-    ["ANKIEL_OTLP_TRACES_URL", environment.ANKIEL_OTLP_TRACES_URL],
-    ["ANKIEL_OTLP_EXPORT_INTERVAL_MS", environment.ANKIEL_OTLP_EXPORT_INTERVAL_MS],
-    ["ANKIEL_OTLP_HEADERS", environment.ANKIEL_OTLP_HEADERS],
-    ["ANKIEL_OTLP_PROTOCOL", environment.ANKIEL_OTLP_PROTOCOL],
     ["ANKIEL_DESKTOP_APP_USER_MODEL_ID", APP_BUNDLE_ID],
   ].filter((entry) => typeof entry[1] === "string" && entry[1].trim().length > 0);
   return [

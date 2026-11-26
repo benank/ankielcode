@@ -21,7 +21,7 @@ describe("electron development launcher", () => {
       VITE_DEV_SERVER_URL: "http://127.0.0.1:8526",
       ANKIEL_PORT: "16566",
       ANKIEL_HOME: "/tmp/ankiel",
-      ANKIEL_OTLP_PROTOCOL: "http/protobuf",
+      ANKIEL_COMMIT_HASH: "abc123",
     });
 
     assert.include(
@@ -30,7 +30,7 @@ describe("electron development launcher", () => {
     );
     assert.include(
       environmentScript,
-      "if [ -z \"${ANKIEL_OTLP_PROTOCOL:-}\" ]; then export ANKIEL_OTLP_PROTOCOL='http/protobuf'; fi",
+      "if [ -z \"${ANKIEL_COMMIT_HASH:-}\" ]; then export ANKIEL_COMMIT_HASH='abc123'; fi",
     );
     assert.notInclude(environmentScript, "\nexport VITE_DEV_SERVER_URL=");
   });

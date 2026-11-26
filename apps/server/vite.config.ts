@@ -23,14 +23,6 @@ const buildVersion =
   process.env.APP_VERSION?.trim() ||
   resolveTaggedSourceVersion(NodePath.join(import.meta.dirname, "../.."), packageJson.version);
 const cliBuildChannel = /^[^-+]+-(?:nightly|preview)\./.test(buildVersion) ? "nightly" : "latest";
-// Official release workflows set the telemetry channel; local builds and forks use "dev".
-const RELEASE_CHANNELS = ["stable", "nightly", "preview", "dev"];
-const releaseChannel = process.env.ANKIEL_RELEASE_CHANNEL?.trim() || "dev";
-if (!RELEASE_CHANNELS.includes(releaseChannel)) {
-  throw new Error(
-    `ANKIEL_RELEASE_CHANNEL must be one of ${RELEASE_CHANNELS.join(", ")}, got "${releaseChannel}".`,
-  );
-}
 
 // tsdown SEA needs one chunk (sourcemaps count) and Node >=25.7, so package separately.
 // "bundle" emits the embedded CLI. "1" builds dist-exe/ankiel from the bootstrap.
@@ -149,7 +141,6 @@ export default mergeConfig(
       },
       define: {
         __ANKIEL_BUILD_CHANNEL__: JSON.stringify(cliBuildChannel),
-        __ANKIEL_RELEASE_CHANNEL__: JSON.stringify(releaseChannel),
       },
     },
     test: {

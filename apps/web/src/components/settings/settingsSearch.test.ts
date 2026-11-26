@@ -223,10 +223,8 @@ describe("searchSettings", () => {
 });
 
 describe("settings search targets", () => {
-  it("requires an environment for the resolved telemetry export destination", () => {
-    const result = searchSettings("OpenTelemetry export").find(
-      (item) => item.id === "telemetry-export",
-    )!;
+  it("requires an environment for an environment-scoped destination", () => {
+    const result = searchSettings("Workflows").find((item) => item.id === "workflows-beta")!;
     const target = getSettingsSearchTargetScope(result.targetId ?? result.id)!;
     expect(isSettingsSearchScopeAvailable(target.scope, "all")).toBe(false);
     expect(isSettingsSearchScopeAvailable(target.scope, "project")).toBe(false);

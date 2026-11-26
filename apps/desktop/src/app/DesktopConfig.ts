@@ -1,4 +1,3 @@
-import { OtlpHeadersFromString, OtlpProtocol } from "@ankielcode/shared/observability";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Option from "effect/Option";
@@ -45,16 +44,6 @@ export const DesktopConfig = Config.all({
   commitHashOverride: trimmedString("ANKIEL_COMMIT_HASH"),
   desktopLanHostOverride: trimmedString("ANKIEL_DESKTOP_LAN_HOST"),
   desktopHttpsEndpointUrls: commaSeparatedStrings("ANKIEL_DESKTOP_HTTPS_ENDPOINTS"),
-  otlpTracesUrl: trimmedString("ANKIEL_OTLP_TRACES_URL"),
-  otlpMetricsUrl: trimmedString("ANKIEL_OTLP_METRICS_URL"),
-  otlpLogsUrl: trimmedString("ANKIEL_OTLP_LOGS_URL"),
-  otlpExportIntervalMs: Config.Int("ANKIEL_OTLP_EXPORT_INTERVAL_MS").pipe(
-    Config.withDefault(10_000),
-  ),
-  otlpHeaders: Config.schema(OtlpHeadersFromString, "ANKIEL_OTLP_HEADERS").pipe(Config.option),
-  otlpProtocol: Config.schema(OtlpProtocol, "ANKIEL_OTLP_PROTOCOL").pipe(
-    Config.withDefault("http/json"),
-  ),
   desktopLauncherPath: trimmedString("ANKIEL_DESKTOP_LAUNCHER_PATH"),
   appImagePath: trimmedString("APPIMAGE"),
   disableAutoUpdate: optionalBoolean("ANKIEL_DISABLE_AUTO_UPDATE"),

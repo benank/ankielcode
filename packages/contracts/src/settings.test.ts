@@ -485,6 +485,23 @@ describe("ServerSettings project overrides across versions", () => {
   });
 });
 
+describe("ServerSettings removed OTLP export URLs", () => {
+  const legacy = { observability: { otlpTracesUrl: "http://localhost:4318/v1/traces" } };
+
+  it("loads a settings file that still holds them", () => {
+    expect(decodeServerSettings({ ...legacy, branchNameInstructions: "x" })).toMatchObject({
+      branchNameInstructions: "x",
+    });
+    expect(decodeServerSettings(legacy)).not.toHaveProperty("observability");
+  });
+
+  it("accepts an older client's patch that still sends them", () => {
+    expect(decodeServerSettingsPatch({ ...legacy, branchNameInstructions: "x" })).toEqual({
+      branchNameInstructions: "x",
+    });
+  });
+});
+
 describe("resolveProjectProviderInstanceEnabled", () => {
   const projectId = "project-a" as ProjectId;
   const instanceId = ProviderInstanceId.make("codex_work");

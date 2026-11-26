@@ -407,7 +407,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
       const serverSettings = yield* ServerSettingsModule.ServerSettingsService;
 
       yield* serverSettings.updateSettings({
-        observability: { otlpTracesUrl: "http://localhost:4318/v1/traces" },
+        sourceControlWritingStyle: { mode: "custom" },
         textGenerationModelSelection: {
           instanceId: ProviderInstanceId.make("codex"),
           model: DEFAULT_SERVER_SETTINGS.textGenerationModelSelection.model,
@@ -423,14 +423,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
       });
 
       const next = yield* serverSettings.updateSettings({
-        observability: { otlpMetricsUrl: "http://localhost:4318/v1/metrics" },
+        sourceControlWritingStyle: { customInstructions: "Use the imperative mood." },
         textGenerationModelSelection: {
           options: [{ id: "fastMode", value: false }],
         },
       });
 
-      assert.equal(next.observability.otlpTracesUrl, "http://localhost:4318/v1/traces");
-      assert.equal(next.observability.otlpMetricsUrl, "http://localhost:4318/v1/metrics");
+      assert.equal(next.sourceControlWritingStyle.mode, "custom");
+      assert.equal(next.sourceControlWritingStyle.customInstructions, "Use the imperative mood.");
       assert.deepEqual(
         next.textGenerationModelSelection,
         createModelSelection(
@@ -456,13 +456,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         filePath: config.settingsPath,
         contents: `{ "responseStreamingMode": "turn" }`,
       });
-      yield* serverSettings.updateSettings({
-        observability: { otlpTracesUrl: "http://localhost:4318/v1/traces" },
-      });
+      yield* serverSettings.updateSettings({ branchNameInstructions: "Prefix the ticket id." });
 
       const saved = yield* decodeServerSettingsJson(yield* fs.readFileString(config.settingsPath));
       assert.equal(saved.responseStreamingMode, "turn");
-      assert.equal(saved.observability.otlpTracesUrl, "http://localhost:4318/v1/traces");
+      assert.equal(saved.branchNameInstructions, "Prefix the ticket id.");
 
       yield* writeFileStringAtomically({
         filePath: config.settingsPath,
@@ -487,6 +485,25 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
     }).pipe(Effect.provide(layerServerSettings())),
   );
 
+  it.effect("loads a settings file that still holds the removed OTLP export URLs", () =>
+    Effect.gen(function* () {
+      const config = yield* ServerConfig.ServerConfig;
+      const fs = yield* FileSystem.FileSystem;
+      const serverSettings = yield* ServerSettingsModule.ServerSettingsService;
+      yield* fs.writeFileString(
+        config.settingsPath,
+        JSON.stringify({
+          responseStreamingMode: "turn",
+          observability: { otlpTracesUrl: "http://localhost:4318/v1/traces" },
+        }),
+      );
+
+      const settings = yield* serverSettings.getSettings;
+      assert.equal(settings.responseStreamingMode, "turn");
+      assert.notProperty(settings, "observability");
+    }).pipe(Effect.provide(layerServerSettings())),
+  );
+
   it.effect("refuses to save over a settings file it cannot parse", () =>
     Effect.gen(function* () {
       const config = yield* ServerConfig.ServerConfig;
@@ -497,9 +514,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
       yield* fs.writeFileString(config.settingsPath, raw);
 
       const error = yield* Effect.flip(
-        serverSettings.updateSettings({
-          observability: { otlpTracesUrl: "http://localhost:4318/v1/traces" },
-        }),
+        serverSettings.updateSettings({ branchNameInstructions: "Prefix the ticket id." }),
       );
 
       assert.equal(error.operation, "read-file");

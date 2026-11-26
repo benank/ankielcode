@@ -4,7 +4,6 @@ import { describe, expect, it } from "vite-plus/test";
 import { ExecutionEnvironmentDescriptor } from "./environment.ts";
 import {
   applyServerProviderDeltas,
-  OtlpEndpointCheckInput,
   resolveEnvironmentMachineKind,
   ServerConfigProviderStatusDeltasPayload,
   ServerObservability,
@@ -109,19 +108,27 @@ describe("server config forward compatibility", () => {
 });
 
 describe("ServerObservability", () => {
-  const decodeServerObservability = Schema.decodeUnknownSync(ServerObservability);
+  const decode = Schema.decodeUnknownSync(ServerObservability);
+  const encode = Schema.encodeSync(ServerObservability);
 
-  it("rejects an unknown endpoint source", () => {
-    expect(() =>
-      decodeServerObservability({
-        logsDirectoryPath: "/tmp/ankiel/logs",
-        localTracingEnabled: true,
-        otlpTracesUrl: "https://collector.example.com/v1/traces",
-        otlpTracesSource: "cli",
-        otlpTracesEnabled: true,
-        otlpMetricsEnabled: false,
-      }),
-    ).toThrow();
+  it("reads an older server's export fields and still sends the keys older clients require", () => {
+    const observability = decode({
+      logsDirectoryPath: "/tmp/ankiel/logs",
+      localTracingEnabled: true,
+      otlpTracesUrl: "https://collector.example.com/v1/traces",
+      otlpTracesSource: "environment",
+      otlpTracesEnabled: true,
+    });
+    expect(observability).not.toHaveProperty("otlpTracesUrl");
+    expect(observability.otlpMetricsEnabled).toBe(false);
+    expect(
+      encode({ ...observability, otlpTracesEnabled: false, otlpMetricsEnabled: false }),
+    ).toEqual({
+      logsDirectoryPath: "/tmp/ankiel/logs",
+      localTracingEnabled: true,
+      otlpTracesEnabled: false,
+      otlpMetricsEnabled: false,
+    });
   });
 });
 
@@ -153,18 +160,5 @@ describe("resolveEnvironmentMachineKind", () => {
     expect(
       resolveEnvironmentMachineKind({ environment: parsed, settings: decodeSettings({}) }),
     ).toBe("server");
-  });
-});
-
-describe("OtlpEndpointCheckInput", () => {
-  const decode = Schema.decodeUnknownSync(OtlpEndpointCheckInput);
-
-  it("accepts HTTP receivers only", () => {
-    expect(decode({ signal: "traces", url: "https://collector.example.com/v1/traces" }).url).toBe(
-      "https://collector.example.com/v1/traces",
-    );
-    for (const url of ["data:text/plain,ok", "file:///etc/hosts", "collector:4318/v1/traces"]) {
-      expect(() => decode({ signal: "traces", url })).toThrow();
-    }
   });
 });

@@ -242,13 +242,8 @@ export function makeTraceDiagnosticsAggregator(
       lastSpanAt === null || DateTime.isGreaterThan(endedAt, lastSpanAt) ? endedAt : lastSpanAt;
 
     const exitTag = readExitTag(parsed.exit);
-    const status = isRecordObject(parsed.status) ? parsed.status : {};
-    const attributes = isRecordObject(parsed.attributes) ? parsed.attributes : {};
-    const isFailure = exitTag === "Failure" || status.code === "2";
-    const isInterrupted =
-      exitTag === "Interrupted" ||
-      attributes["effect.fiber.interrupted"] === true ||
-      status.message === "Interrupted";
+    const isFailure = exitTag === "Failure";
+    const isInterrupted = exitTag === "Interrupted";
     if (isFailure) failureCount += 1;
     if (isInterrupted) interruptionCount += 1;
 
@@ -271,10 +266,7 @@ export function makeTraceDiagnosticsAggregator(
     insertBounded(slowestSpans, spanItem, TOP_LIMIT, slowestFirst);
 
     if (isFailure) {
-      const cause =
-        exitTag === "Failure"
-          ? readExitCause(parsed.exit)
-          : (toStringValue(status.message)?.trim() ?? "Failure");
+      const cause = readExitCause(parsed.exit);
       insertBounded(latestFailures, { ...spanItem, cause }, RECENT_LIMIT, latestEndedFirst);
 
       const failureKey = `${name}\0${cause}`;

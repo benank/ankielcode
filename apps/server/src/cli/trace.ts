@@ -22,16 +22,6 @@ const decodeTraceSpanLine = Schema.decodeUnknownOption(
       durationMs: Schema.Finite,
       endTimeUnixNano: Schema.Union([Schema.BigIntFromString, Schema.FiniteFromString]),
       exit: Schema.optional(Schema.Struct({ _tag: Schema.String })),
-      // OTLP errors use code 2; interrupts carry effect.fiber.interrupted, or code 1 with Interrupted before Effect 4.0.2.
-      status: Schema.optional(
-        Schema.Struct({
-          code: Schema.optional(Schema.String),
-          message: Schema.optional(Schema.String),
-        }),
-      ),
-      attributes: Schema.optional(
-        Schema.Struct({ "effect.fiber.interrupted": Schema.optional(Schema.Unknown) }),
-      ),
     }),
   ),
 );
@@ -70,14 +60,8 @@ export function makeTraceSpanSummary(sinceMs = -Infinity) {
     lastPrintedMs = Math.max(lastPrintedMs, printedMs);
     const stats = byName.get(span.name) ?? { durations: [], interrupted: 0, failures: 0 };
     stats.durations.push(span.durationMs);
-    if (
-      span.exit?._tag === "Interrupted" ||
-      span.attributes?.["effect.fiber.interrupted"] === true ||
-      span.status?.message === "Interrupted"
-    ) {
-      stats.interrupted += 1;
-    }
-    if (span.exit?._tag === "Failure" || span.status?.code === "2") stats.failures += 1;
+    if (span.exit?._tag === "Interrupted") stats.interrupted += 1;
+    if (span.exit?._tag === "Failure") stats.failures += 1;
     byName.set(span.name, stats);
   };
 

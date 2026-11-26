@@ -9,8 +9,6 @@ import {
   EnvironmentId,
   type ServerLifecycleStreamEvent,
 } from "@ankielcode/contracts";
-import { DEFAULT_SIGNAL_EXPORT } from "@ankielcode/shared/observability";
-import * as OtelEnvironment from "@ankielcode/shared/otelEnvironment";
 import { HttpServer } from "effect/http";
 import * as NetAddress from "effect/net/NetAddress";
 import * as Deferred from "effect/Deferred";
@@ -80,13 +78,6 @@ it.effect.each([
         traceBatchWindowMs: 200,
         traceMaxBytes: 1024,
         traceMaxFiles: 1,
-        otlpTracesUrl: undefined,
-        otlpMetricsUrl: undefined,
-        otlpLogsUrl: undefined,
-        otlpTracesExport: DEFAULT_SIGNAL_EXPORT,
-        otlpMetricsExport: DEFAULT_SIGNAL_EXPORT,
-        otlpLogsExport: DEFAULT_SIGNAL_EXPORT,
-        otelEnvironment: OtelEnvironment.none,
         staticDir: undefined,
         devAllowedOrigins: [],
         desktopBootstrapToken: undefined,

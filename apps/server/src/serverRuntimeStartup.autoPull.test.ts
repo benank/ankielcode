@@ -1,8 +1,6 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect, it } from "@effect/vitest";
 import { DEFAULT_SERVER_SETTINGS, EnvironmentId, ProjectId } from "@ankielcode/contracts";
-import { DEFAULT_SIGNAL_EXPORT } from "@ankielcode/shared/observability";
-import * as OtelEnvironment from "@ankielcode/shared/otelEnvironment";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -79,13 +77,6 @@ it.effect("parks automatic pull until activation without delaying command readin
         traceBatchWindowMs: 200,
         traceMaxBytes: 1024,
         traceMaxFiles: 1,
-        otlpTracesUrl: undefined,
-        otlpMetricsUrl: undefined,
-        otlpLogsUrl: undefined,
-        otlpTracesExport: DEFAULT_SIGNAL_EXPORT,
-        otlpMetricsExport: DEFAULT_SIGNAL_EXPORT,
-        otlpLogsExport: DEFAULT_SIGNAL_EXPORT,
-        otelEnvironment: OtelEnvironment.none,
         staticDir: undefined,
         devAllowedOrigins: [],
         desktopBootstrapToken: undefined,

@@ -35,17 +35,6 @@ export const orchestrationEffectQueueWait = Metric.timer("ankiel_orchestration_e
     "Time from an orchestration effect's temporal availability until claim, including same-thread blocking.",
 });
 
-// A failed batch (transport errors and 408/429/500/502/503/504 after 3 retries) is dropped with
-// every push for the next 60 s, logged only at Debug. Incremental exports it as a monotonic counter.
-export const otlpExportAttemptFailuresTotal = Metric.counter(
-  "ankiel_otlp_export_attempt_failures_total",
-  {
-    description:
-      "Failed OTLP export attempts by signal and reason. Retries count too, so a dropped batch counts up to four.",
-    incremental: true,
-  },
-);
-
 export const providerSessionsTotal = Metric.counter("ankiel_provider_sessions_total", {
   description: "Total provider session lifecycle operations.",
 });
@@ -58,7 +47,6 @@ export const providerTurnDuration = Metric.timer("ankiel_provider_turn_duration"
   description: "Time for the provider adapter to start a turn, not how long the turn runs.",
 });
 
-// OTLP carries the unit, and Prometheus names the series by it: a unitless gauge gains `_ratio`.
 export const serverResidentBytes = Metric.gauge("ankiel_server_resident_bytes", {
   description: "Resident memory of the server process.",
   attributes: { unit: "By" },

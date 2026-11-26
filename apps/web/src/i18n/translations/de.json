@@ -9802,58 +9802,6 @@
   "a899361f5deb3476": "Beliebige lokale Dateien",
   "8c92f29a2b29adb5": "Nicht committete Änderungen",
   "deb572d6e83f3818": "Bearbeitete versionierte Dateien",
-  "83729e5228731819": "Traces-Endpunkt",
-  "8739ffcda2007458": "Metriken-Endpunkt",
-  "5c90c5ba936fb908": "Logs-Endpunkt",
-  "5e29f3c15d14bbce": "Durch Umgebung festgelegt",
-  "4136ff89bb436dcc": "Durch Desktop festgelegt",
-  "7271a3d01a7593ee": "Aus",
-  "dc827550691bafd1": "Verbunden · {ms} ms",
-  "11b77b0add59d7b4": "Abgelehnt · HTTP {status}",
-  "10cf4b8e7ecc020b": "Zeitüberschreitung",
-  "cba6d3e3a22f2efe": "Nicht erreichbar",
-  "523b72ed9d712100": "OpenTelemetry-Export",
-  "ecaa5a9da2c44a47": "Wähle eine Umgebung, um ihre Telemetrie-Exporte zu konfigurieren.",
-  "5548e6d2e9b8cc64": "Gespeichert. Starte den Server neu, um es anzuwenden.",
-  "23029f9ce3382536": "Dieser Verbindung fehlt die Berechtigung, Einstellungen auf {environment} zu ändern.",
-  "a5f1fe10ef6373fd": "Gib einen HTTP- oder HTTPS-Endpunkt ein oder lass das Feld leer, um den Export zu deaktivieren.",
-  "5b928a84a624e831": "Aktiv: {url}",
-  "b07718fe86a16cc6": "Laufend: Deaktiviert",
-  "6d0831556a517821": "Traces, Metriken und Logs an einen OTLP-HTTP-Empfänger senden. Starte den Server neu, um es anzuwenden. Umgebungsvariablen überschreiben diese Einstellungen.",
-  "f7c3ae7a79ede728": "Testen",
-  "b93d2ec53e944576": [
-    "Aktiv: ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " aus",
-    " ",
-    {
-      "t": "code",
-      "i": 2,
-      "c": {
-        "i": 3,
-        "k": "_gt_value_3",
-        "v": "v"
-      }
-    }
-  ],
-  "ae9958ee0d8ed8e8": [
-    "Laufend: Deaktiviert über",
-    " ",
-    {
-      "t": "code",
-      "i": 1,
-      "c": {
-        "i": 2,
-        "k": "_gt_value_2",
-        "v": "v"
-      }
-    }
-  ],
-  "97585565390197f6": "Verwerfen",
   "c0fce4a3555c5c17": "Verbinden",
   "0d1eba54ff075d77": "Verwenden",
   "035dc7d3b0f3e526": "Thread-Titel und andere generierte Texte",
@@ -9909,6 +9857,7 @@
     " hat geantwortet. Es funktioniert."
   ],
   "74718b8533319acb": "Folgt dem Modell für Textgenerierung",
+  "f7c3ae7a79ede728": "Testen",
   "b2ae5ae37b088f1b": "Keine passenden Modelle.",
   "84853da6b47fd3ab": "Hintergrund",
   "76ded36bf5337e44": "Hintergrund der Werkzeugleiste",
@@ -10580,7 +10529,6 @@
   "df9fa3a9cb004b9b": "onboarding einrichtung erster start erste schritte agenten import projekte",
   "3188bc3b3c4508bc": "Datenschutzerklärung",
   "a141aec506c1ba5a": "privacy data legal",
-  "82136480255a5106": "OTel OTLP telemetrie export endpunkte logs traces metriken Grafana",
   "659d081051faf7ff": "logs traces prozesse ressourcenverlauf fehler spans cpu speicher",
   "f537f91e1ee41d47": "tastenkürzel hotkeys befehle tastenzuweisungen json",
   "1ba01e7ceed64b95": "fenster aufnahme bildschirmfoto",

@@ -67,11 +67,10 @@ const baseConfig: DesktopBackendManager.DesktopBackendStartConfig = {
   preflightFailure: Option.none(),
 };
 
-const configWithObservability: DesktopBackendBootstrapValue = {
+const customBootstrap: DesktopBackendBootstrapValue = {
   ...baseConfig.bootstrap,
   tailscaleServeEnabled: true,
   desktopTelemetryFd: 4,
-  otlpTracesUrl: "http://127.0.0.1:4318/v1/traces",
 };
 
 const readyLine = encodeDesktopTelemetryControl({ version: 1, type: "serverReady" });
@@ -378,7 +377,7 @@ describe("DesktopBackendManager", () => {
       const instance = yield* makeTestInstance({
         config: {
           ...baseConfig,
-          bootstrap: configWithObservability,
+          bootstrap: customBootstrap,
         },
         spawnerLayer: layerSpawner,
         desktopTelemetryStream: Stream.encodeText(
@@ -416,7 +415,7 @@ describe("DesktopBackendManager", () => {
         5_000,
       );
 
-      assert.deepEqual(yield* decodeBootstrap(bootstrapJson), configWithObservability);
+      assert.deepEqual(yield* decodeBootstrap(bootstrapJson), customBootstrap);
       assert.equal(
         telemetryJson,
         '{"version":1,"type":"desktopTelemetryHello","electronPid":123}\n',
