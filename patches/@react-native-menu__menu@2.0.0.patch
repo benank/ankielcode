@@ -178,10 +178,10 @@ index 6a2a205f95c1001f3fdf6fb835815fa7c4c02c16..4f42b64349966fb1438f72439cec8256
 +
  }
 diff --git a/ios/Shared/MenuViewImplementation.swift b/ios/Shared/MenuViewImplementation.swift
-index 5c4e0da4292b15d3a27b5ea1555f11452a470815..fa4d368c6b942f16ab0e1052deee070d388dd72a 100644
+index 5c4e0da4292b15d3a27b5ea1555f11452a470815..24431cf49f8a3801fcae51626bf6638581a694c9 100644
 --- a/ios/Shared/MenuViewImplementation.swift
 +++ b/ios/Shared/MenuViewImplementation.swift
-@@ -60,17 +60,95 @@ public class MenuViewImplementation: UIButton {
+@@ -60,15 +60,130 @@ public class MenuViewImplementation: UIButton {
      }
     
      public override func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
@@ -208,11 +208,15 @@ index 5c4e0da4292b15d3a27b5ea1555f11452a470815..fa4d368c6b942f16ab0e1052deee070d
 +        // menu. Notify React only once presentation actually begins, and
 +        // preserve UIButton's presentation behavior by calling super.
 +        super.contextMenuInteraction(interaction, willDisplayMenuFor: configuration, animator: animator)
++        isMenuDisplayed = true
++        restoreContent()
 +        sendMenuOpen()
 +    }
 +
      public override func contextMenuInteraction(_ interaction: UIContextMenuInteraction, willEndFor configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionAnimating?) {
 +        super.contextMenuInteraction(interaction, willEndFor: configuration, animator: animator)
++        isMenuDisplayed = false
++        restoreContent()
          sendMenuClose()
 +        isMenuPresented = false
 +        if pendingMenu != nil {
@@ -232,8 +236,8 @@ index 5c4e0da4292b15d3a27b5ea1555f11452a470815..fa4d368c6b942f16ab0e1052deee070d
 +        // Also after a selection: UIKit hides the previewed view behind a portal rather than isHidden,
 +        // and morphing back into it is what reliably shows it again; a nil here can leave it hidden.
 +        return contentPreview() ?? super.contextMenuInteraction(interaction, previewForDismissingMenuWithConfiguration: configuration)
-     }
- 
++    }
++
 +    // The button is a transparent overlay: morph from the React content so UIKit hides and restores it.
 +    // iOS 26 only, and only for glass content (the filter pills); otherwise keep UIButton's default,
 +    // which previews the transparent button and so never hides anything visible.
@@ -275,11 +279,42 @@ index 5c4e0da4292b15d3a27b5ea1555f11452a470815..fa4d368c6b942f16ab0e1052deee070d
 +
 +    private var isMenuPresented = false
 +    private var pendingMenu: UIMenu?
++    private var isMenuDisplayed = false
++    private var dimmedContent: [(view: UIView, alpha: CGFloat, dimmed: CGFloat)] = []
 +
++    // In tap mode this button takes the touch, so the React content never sees a press: dim it like a
++    // system button. Glass pills skip it since their morph is the feedback. Fabric owns opacity, so
++    // restore only a view still at the value set here.
++    public override var isHighlighted: Bool {
++        didSet {
++            if !isHighlighted {
++                restoreContent()
++            } else if !isMenuDisplayed, dimmedContent.isEmpty, contentPreview() == nil, let superview = self.superview {
++                for view in superview.subviews where view !== self {
++                    view.layer.removeAnimation(forKey: "opacity")
++                    let alpha = view.alpha
++                    view.alpha = alpha * 0.7
++                    dimmedContent.append((view, alpha, view.alpha))
++                }
++            }
++        }
++    }
++
++    private func restoreContent() {
++        guard !dimmedContent.isEmpty else {
++            return
++        }
++        let content = dimmedContent
++        dimmedContent = []
++        UIView.animate(withDuration: 0.2, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction]) {
++            for (view, alpha, dimmed) in content where view.alpha == dimmed {
++                view.alpha = alpha
++            }
++        }
+     }
+ 
      func setup () {
-         let menu = UIMenu(title: _title,
-             identifier: nil,
-@@ -86,8 +164,102 @@ public class MenuViewImplementation: UIButton {
+@@ -86,8 +201,102 @@ public class MenuViewImplementation: UIButton {
              }
          }
  
@@ -382,7 +417,7 @@ index 5c4e0da4292b15d3a27b5ea1555f11452a470815..fa4d368c6b942f16ab0e1052deee070d
      }
  
      public override func reactSetFrame(_ frame: CGRect) {
-@@ -124,4 +296,8 @@ public class MenuViewImplementation: UIButton {
+@@ -124,4 +333,8 @@ public class MenuViewImplementation: UIButton {
      @objc func sendMenuOpen() {
          // NO-OP (should be overriden by parent)
      }

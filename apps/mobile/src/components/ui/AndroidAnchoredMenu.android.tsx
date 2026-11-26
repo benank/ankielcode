@@ -12,6 +12,7 @@ import { Pressable, ScrollView, View } from "react-native";
 import { useKeyboardState } from "react-native-keyboard-controller";
 
 import { useHardwareBack } from "../../lib/backHandler";
+import { cn } from "../../lib/cn";
 import {
   deriveMenuHorizontalPlacement,
   deriveMenuVerticalPlacement,
@@ -277,7 +278,7 @@ export function AndroidAnchoredMenu(props: AndroidAnchoredMenuProps) {
           accessibilityHint={triggerHint}
           accessibilityState={triggerState}
           hitSlop={triggerHitSlop}
-          className={props.className}
+          className={cn("active:opacity-70", props.className)}
           collapsable={false}
           style={props.style}
           onPress={open}
