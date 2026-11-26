@@ -183,7 +183,10 @@ export const ignoredCheckInputs = Effect.fn("checkChanged.ignoredCheckInputs")(f
   const size = Math.max(1, Math.floor(30_000 / (longest + 16)));
   for (let start = 0; start < directories.length; start += size) {
     const batch = directories.slice(start, start + size).map((dir) => `:(literal)${dir}`);
-    files.push(...(yield* list([...ignored, "--", ":(literal).git/", ...batch])));
+    // Not push(...listed): a large ignored folder (a local .pnpm-store) overflows the call stack.
+    for (const file of yield* list([...ignored, "--", ":(literal).git/", ...batch])) {
+      files.push(file);
+    }
   }
   // A nested repository is listed by its directory, as the old pathspecs listed it.
   return files
