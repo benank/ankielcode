@@ -194,6 +194,21 @@ export interface PixelSpriteStrip {
   readonly haloPath: string;
 }
 
+/**
+ * Maps a linear 0→1 progress to the strip offset, holding each frame and jumping between them.
+ * The step lives in the interpolation because native frame drivers blend their samples, which
+ * would slide a stepped value partway between frames on any refresh rate but 60 Hz.
+ */
+export function pixelStripSteps(frameCount: number) {
+  const inputRange: number[] = [];
+  const outputRange: number[] = [];
+  for (let frame = 0; frame < frameCount; frame++) {
+    inputRange.push(frame / frameCount, (frame + 1) / frameCount);
+    outputRange.push(-frame * PITCH, -frame * PITCH);
+  }
+  return { inputRange, outputRange };
+}
+
 const STRIPS = new Map<PixelStatusKind, PixelSpriteStrip>();
 
 export function pixelSpriteStrip(kind: PixelStatusKind): PixelSpriteStrip {

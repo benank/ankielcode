@@ -5,11 +5,12 @@ import {
   PIXEL_STATUS_BOX as BOX,
   PIXEL_STATUS_PITCH as PITCH,
   pixelSpriteStrip,
+  pixelStripSteps,
   type PixelStatusKind,
   type PixelStatusTone,
 } from "@ankielcode/shared/pixelStatus";
 import { useEffect, useState } from "react";
-import { Animated, View } from "react-native";
+import { Animated, Easing, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
@@ -48,8 +49,7 @@ export function PixelStatus(props: { readonly kind: PixelStatusKind }) {
     const step = Animated.timing(progress, {
       toValue: 1,
       duration: animation.durationMs,
-      // Holds each frame for an equal share, then jumps: a pixel display, not a scroll.
-      easing: (t) => Math.min(Math.floor(t * frames), frames - 1) / (frames - 1),
+      easing: Easing.linear,
       useNativeDriver: true,
     });
     const loop = Animated.loop(step, {
@@ -57,12 +57,10 @@ export function PixelStatus(props: { readonly kind: PixelStatusKind }) {
     });
     loop.start();
     return () => loop.stop();
-  }, [animated, animation.durationMs, animation.iterations, frames, progress]);
+  }, [animated, animation.durationMs, animation.iterations, progress]);
 
   const restY = animation.iterations === "infinite" ? 0 : lastFrameY;
-  const translateY = animated
-    ? progress.interpolate({ inputRange: [0, 1], outputRange: [0, lastFrameY] })
-    : restY;
+  const translateY = animated ? progress.interpolate(pixelStripSteps(frames)) : restY;
 
   return (
     <View
