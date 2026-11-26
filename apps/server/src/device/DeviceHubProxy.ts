@@ -1,4 +1,4 @@
-import { requestUrl } from "../requestUrl.ts";
+import { routedRequestUrl } from "../requestUrl.ts";
 // Loopback-only hubs expose shell execution or unauthenticated actions.
 // Proxy with environment read scope for streams and operate scope for input and tuning.
 import { AuthOrchestrationReadScope, AuthOrchestrationOperateScope } from "@ankielcode/contracts";
@@ -193,7 +193,7 @@ const proxyHttp = Effect.fn("DeviceHubProxy.proxyHttp")(function* (
 
 const handler = Effect.gen(function* () {
   const request = yield* HttpServerRequest.HttpServerRequest;
-  const url = requestUrl(request);
+  const url = routedRequestUrl(request);
   if (Option.isNone(url)) {
     return HttpServerResponse.text("Bad Request", { status: 400 });
   }

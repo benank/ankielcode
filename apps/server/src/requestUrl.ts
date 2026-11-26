@@ -26,3 +26,8 @@ export const requestUrl = (request: HttpServerRequest.HttpServerRequest): Option
       return prefixed;
     }),
   );
+
+/** The URL the router matched, without the relay prefix. Routes that read their own path use this. */
+export const routedRequestUrl = (
+  request: HttpServerRequest.HttpServerRequest,
+): Option.Option<URL> => HttpServerRequest.toURL(request);

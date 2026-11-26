@@ -31,7 +31,33 @@ import {
   createAssetEnvironmentAtoms,
   createProjectFaviconUrlAtomFamily,
   makeRevisionedAssetUrlFamily,
+  resolveAssetUrl,
 } from "./assets.ts";
+
+describe("resolveAssetUrl", () => {
+  const relayBase = "https://relay.example.workers.dev/h/abcdefghijklmnopqrstuvwxyz/";
+
+  it("keeps a path-prefix relay's host route on server paths", () => {
+    expect(resolveAssetUrl(relayBase, "/api/attachments/upload/a.b")).toBe(
+      "https://relay.example.workers.dev/h/abcdefghijklmnopqrstuvwxyz/api/attachments/upload/a.b",
+    );
+    expect(resolveAssetUrl(relayBase, "/api/assets/x/y.png?v=1")).toBe(
+      "https://relay.example.workers.dev/h/abcdefghijklmnopqrstuvwxyz/api/assets/x/y.png?v=1",
+    );
+  });
+
+  it("resolves server paths at the root of a direct or subdomain-relay origin", () => {
+    expect(resolveAssetUrl("http://192.168.1.4:3773/", "/api/assets/x/y.png")).toBe(
+      "http://192.168.1.4:3773/api/assets/x/y.png",
+    );
+  });
+
+  it("leaves absolute URLs alone", () => {
+    expect(resolveAssetUrl(relayBase, "https://cdn.example.com/a.png")).toBe(
+      "https://cdn.example.com/a.png",
+    );
+  });
+});
 
 describe("project favicon URL cache", () => {
   it("does not reuse another environment, workspace, or selected icon's cached URL", () => {

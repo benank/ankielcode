@@ -9,6 +9,7 @@ import {
 } from "@ankielcode/contracts";
 import { mediaMimeTypeFromExtension } from "@ankielcode/shared/mediaPreview";
 import { isWindowsAbsolutePath } from "@ankielcode/shared/path";
+import { extractRelayBasePath } from "@ankielcode/shared/remote";
 import {
   getProjectFaviconResourceKey,
   isProjectFaviconFallbackUrl,
@@ -59,7 +60,11 @@ function parseAssetCollectionKey(
 
 export function resolveAssetUrl(httpBaseUrl: string, relativeUrl: string): string | null {
   try {
-    return new URL(relativeUrl, httpBaseUrl).toString();
+    const base = new URL(httpBaseUrl);
+    // A path-prefix relay serves the environment under /h/<hostId>/, so server paths stay under it.
+    const basePath = extractRelayBasePath(base.pathname);
+    const rooted = basePath !== "/" && relativeUrl.startsWith("/") && !relativeUrl.startsWith("//");
+    return new URL(rooted ? `${basePath}${relativeUrl.slice(1)}` : relativeUrl, base).toString();
   } catch {
     return null;
   }
