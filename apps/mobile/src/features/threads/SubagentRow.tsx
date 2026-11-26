@@ -55,7 +55,7 @@ export function SubagentRow(props: {
   return (
     <View className="flex-row gap-3">
       <View
-        accessibilityLabel={presentation.statusLabel}
+        accessibilityLabel={presentation.tone === "working" ? presentation.statusLabel : undefined}
         className="h-5 w-4 items-center justify-center"
       >
         <SubagentStatusDot tone={presentation.tone} placement="sheet" />
@@ -79,8 +79,6 @@ export function SubagentRow(props: {
                   ·
                 </Text>
                 <Text
-                  accessibilityElementsHidden
-                  importantForAccessibility="no"
                   className={cn(
                     "shrink-0 text-xs font-ankiel-medium",
                     SUBAGENT_TONE_TEXT_CLASS[presentation.tone],
