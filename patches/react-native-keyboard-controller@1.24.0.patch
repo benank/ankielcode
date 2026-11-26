@@ -16,7 +16,7 @@ index cdbd63359be9c04fbb0cb30b3cbd1e399bb72d9a..41a72bcc5ebde85237e6aa6bd8240712
  
    @objc func unmount() {
 diff --git a/ios/observers/movement/observer/KeyboardMovementObserver+Listeners.swift b/ios/observers/movement/observer/KeyboardMovementObserver+Listeners.swift
-index 545a5b20f6caac289afdfd11cd7596d57de14122..fbdc9840113ee8caaac685d6f14d7d9f3c725c75 100644
+index 453990f2253af0bcd141e42d09a79ca22e991f95..061ff35b729d6d8dd8fefefc4aebee08088dfc91 100644
 --- a/ios/observers/movement/observer/KeyboardMovementObserver+Listeners.swift
 +++ b/ios/observers/movement/observer/KeyboardMovementObserver+Listeners.swift
 @@ -8,6 +8,12 @@
@@ -32,7 +32,7 @@ index 545a5b20f6caac289afdfd11cd7596d57de14122..fbdc9840113ee8caaac685d6f14d7d9f
  
      let (duration, frame) = notification.keyboardMetaData()
      if let keyboardFrame = frame {
-@@ -36,8 +42,40 @@ extension KeyboardMovementObserver {
+@@ -35,8 +41,40 @@ extension KeyboardMovementObserver {
      }
    }
  
@@ -74,10 +74,10 @@ index 545a5b20f6caac289afdfd11cd7596d57de14122..fbdc9840113ee8caaac685d6f14d7d9f
      tag = UIResponder.current.reactViewTag
      self.notification = notification
 diff --git a/ios/observers/movement/observer/KeyboardMovementObserver.swift b/ios/observers/movement/observer/KeyboardMovementObserver.swift
-index ae97d611a7f727ebbb0e17eabbb3294e1cc76a2f..2ea1d2ddd3fac6ad418d97c700ab885fe645951f 100644
+index 01c001f1fd04e8bd54c19d3fc2c2dd36cea2bd8d..39d3d9cb0b82f27725b72158b7a2b28d384d8533 100644
 --- a/ios/observers/movement/observer/KeyboardMovementObserver.swift
 +++ b/ios/observers/movement/observer/KeyboardMovementObserver.swift
-@@ -37,6 +37,7 @@ public class KeyboardMovementObserver: NSObject {
+@@ -34,6 +34,7 @@ public class KeyboardMovementObserver: NSObject {
    // manual did events
    var notification: Notification?
    var keyboardDidTask: DispatchWorkItem?
