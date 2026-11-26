@@ -8,14 +8,13 @@ export const CLI_RELEASES_PAGE_URL = `https://github.com/${CLI_RELEASE_REPOSITOR
 export const CLI_RELEASE_CHECKSUMS_FILE = "SHA256SUMS";
 export const CLI_RELEASE_BASE_URL_ENV = "ANKIEL_RELEASE_BASE_URL";
 
-// Keep archive keys aligned with the Linux matrix, Windows ARM64 build, and cli_archive rows in release.yml,
-// and with the SSH runner's host check in packages/ssh/src/tunnel.ts.
-// Node single-executables do not support darwin-x64 and segfault at startup.
+// Keep archive keys aligned with the cli_archive rows in release.yml, the SSH runner's host check in
+// packages/ssh/src/tunnel.ts, and install.ps1's architecture check. Node single-executables segfault
+// on darwin-x64, and no win32-arm64 archive is built.
 const CLI_ARCHIVE_PLATFORM_KEYS = [
   "darwin-arm64",
   "linux-arm64",
   "linux-x64",
-  "win32-arm64",
   "win32-x64",
 ] as const;
 export type CliArchivePlatformKey = (typeof CLI_ARCHIVE_PLATFORM_KEYS)[number];

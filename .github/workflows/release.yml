@@ -378,7 +378,7 @@ jobs:
 
   # Standalone CLI archives for install.sh/install.ps1, SSH remotes, and server self-updates.
   # Keys match CLI_ARCHIVE_PLATFORM_KEYS in packages/shared/src/cliRelease.ts. There is no
-  # darwin-x64 archive (Node single-executables segfault there), and win32-arm64 is not built yet.
+  # darwin-x64 archive (Node single-executables segfault there) and no win32-arm64 archive.
   # build-exe bundles from source, so these legs do not wait for the JS bundle.
   cli_archive:
     name: CLI archive ${{ matrix.label }}

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { cliArchiveTarCommand, newestCliReleaseVersion, parseChecksums } from "./cliRelease.ts";
+import {
+  cliArchivePlatformKey,
+  cliArchiveTarCommand,
+  newestCliReleaseVersion,
+  parseChecksums,
+} from "./cliRelease.ts";
 
 describe("cliRelease", () => {
   it("parses sha256sum output including binary-mode markers", () => {
@@ -15,6 +20,13 @@ describe("cliRelease", () => {
     expect(checksums.get("ankiel-1.2.3-linux-x64.tar.gz")).toBe("a".repeat(64));
     expect(checksums.get("ankiel-1.2.3-win32-x64.zip")).toBe("b".repeat(64));
     expect(checksums.size).toBe(2);
+  });
+
+  it("offers an archive only for hosts that release.yml builds one for", () => {
+    expect(cliArchivePlatformKey("win32", "x64")).toBe("win32-x64");
+    expect(cliArchivePlatformKey("linux", "arm64")).toBe("linux-arm64");
+    expect(cliArchivePlatformKey("win32", "arm64")).toBeUndefined();
+    expect(cliArchivePlatformKey("darwin", "x64")).toBeUndefined();
   });
 
   it("extracts with the System32 bsdtar on Windows and plain tar elsewhere", () => {

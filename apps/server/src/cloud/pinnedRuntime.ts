@@ -265,7 +265,7 @@ const downloadArchive = Effect.fn("cloud.pinned_runtime.download_archive")(funct
   const platformKey = cliArchivePlatformKey(input.platform, input.arch);
   if (platformKey === undefined) {
     return yield* new PinnedRuntimeInstallError({
-      step: `selecting an ankiel release archive for ${input.platform}-${input.arch}`,
+      step: `choosing a release archive: Ankiel Code does not support ${input.platform}-${input.arch} hosts`,
     });
   }
   const httpClient = input.httpClient;

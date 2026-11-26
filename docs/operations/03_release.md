@@ -20,7 +20,7 @@ An upload replaces an existing asset of the same name. On a published release th
 | `ankiel-release.json` (highest server migration)                                  | `publish_release` | Update track switches                                                          |
 | `install.sh`, `install.ps1`                                                       | `publish_release` | `code.ankiel.com/install.sh` and `/install.ps1`, which redirect to the latest  |
 
-There is no macOS x64 or Windows arm64 CLI archive. Node single-executables segfault on x64 macOS, and Windows arm64 is not built yet; the installers and SSH remotes on those hosts report that no archive exists.
+There is no macOS x64 or Windows arm64 CLI archive. Node single-executables segfault on x64 macOS, and Windows arm64 is not built. The installers, SSH remotes, and server self-updates on those hosts report that the host is not supported.
 
 ## Critical release invariants
 
