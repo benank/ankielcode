@@ -2,13 +2,8 @@ import { SettingsGroup } from "./SettingsGroup";
 import { AuthSettingsWriteScope } from "@ankielcode/contracts";
 import { usePrimaryEnvironmentId, usePrimaryEnvironment } from "../../state/environments";
 import { useEnvironmentScope, useEnvironmentsWithScope } from "../../state/session";
-import { useServerConfigs } from "../../state/entities";
 import { InfoIcon, Undo2Icon } from "lucide-react";
-import {
-  DEFAULT_SERVER_SETTINGS,
-  isManagedSettingPath,
-  type ServerSettings,
-} from "@ankielcode/contracts";
+import { DEFAULT_SERVER_SETTINGS, type ServerSettings } from "@ankielcode/contracts";
 import * as Equal from "effect/Equal";
 import { useGT } from "gt-react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
@@ -39,7 +34,6 @@ import {
 } from "./SettingInheritance";
 
 const EMPTY_SETTING_KEYS: readonly (keyof ServerSettings)[] = [];
-const EMPTY_MANAGED_PATHS: readonly string[] = [];
 
 declare module "@tanstack/react-router" {
   interface HistoryState {
@@ -320,9 +314,7 @@ export function SettingsRow({
   serverScoped = false,
   devicePreference = false,
   settingKeys = EMPTY_SETTING_KEYS,
-  managedPaths = EMPTY_MANAGED_PATHS,
   mixed: mixedOverride,
-  managed,
   children,
   className,
   ...rowProps
@@ -337,11 +329,7 @@ export function SettingsRow({
   /** Saved on this device, so a project cannot override it and the row is read-only there. */
   devicePreference?: boolean;
   settingKeys?: readonly (keyof ServerSettings)[];
-  /** Dot paths inside a setting, such as `storageCleanup.logsAfterDays`, an administrator can lock. */
-  managedPaths?: readonly string[];
   mixed?: boolean;
-  /** Why an administrator's policy turns this row's control off, from the contract's denial helpers. */
-  managed?: string | undefined;
   children?: ReactNode;
 }) {
   const gt = useGT();
@@ -359,22 +347,6 @@ export function SettingsRow({
     ? context.connectedEnvironments.length > 0 &&
       context.connectedEnvironments.every((target) => writableIds.has(target.environmentId))
     : primaryCanWrite;
-  const serverConfigs = useServerConfigs();
-  // An administrator's lock on any target wins over every other reason a control is inert.
-  const lockablePaths = [...settingKeys, ...managedPaths];
-  const managedBy =
-    lockablePaths.length === 0
-      ? undefined
-      : (context
-          ? context.connectedEnvironments.map((environment) => environment.serverConfig)
-          : [primaryEnvironmentId === null ? undefined : serverConfigs.get(primaryEnvironmentId)]
-        )
-          .map((config) => config?.managedPolicy)
-          .find(
-            (policy) =>
-              policy !== undefined &&
-              lockablePaths.some((path) => isManagedSettingPath(policy, path)),
-          )?.organization;
   const clearOverrides = useClearScopedSettings();
   const clearProjectOverrides = useClearProjectOverrides();
   const isProjectScope =
@@ -405,10 +377,7 @@ export function SettingsRow({
   );
   const overridingProjects = isProjectScope ? [] : projectOverrides(context, scopedKeys);
   const renderedReset =
-    unavailable ||
-    deviceReadOnly ||
-    managedBy !== undefined ||
-    managed !== undefined ? null : isProjectScope && scopedKeys.length > 0 ? (
+    unavailable || deviceReadOnly ? null : isProjectScope && scopedKeys.length > 0 ? (
       source === "project" || source === "mixed" ? (
         <SettingResetButton
           ariaLabel={
@@ -459,23 +428,19 @@ export function SettingsRow({
         : gt("This connection lacks permission to change settings on the primary environment.");
   };
   const renderedControl =
-    managed !== undefined && control
-      ? inertControl(managed)
-      : managedBy !== undefined && control
-        ? inertControl(gt("Managed by {organization}.", { organization: managedBy }))
-        : unavailable && control
-          ? inertControl(
-              !canWriteSettings
-                ? lackingPermissionMessage()
-                : context
-                  ? gt("Reconnect the selected environment to change this setting.")
-                  : PRIMARY_SETTINGS_UNAVAILABLE_MESSAGE,
-            )
-          : environmentWide && control
-            ? inertControl(gt("Environment-wide setting. Select an environment to change it."))
-            : deviceReadOnly && control
-              ? inertControl(gt("Saved on this device. Select All projects to change it."))
-              : control;
+    unavailable && control
+      ? inertControl(
+          !canWriteSettings
+            ? lackingPermissionMessage()
+            : context
+              ? gt("Reconnect the selected environment to change this setting.")
+              : PRIMARY_SETTINGS_UNAVAILABLE_MESSAGE,
+        )
+      : environmentWide && control
+        ? inertControl(gt("Environment-wide setting. Select an environment to change it."))
+        : deviceReadOnly && control
+          ? inertControl(gt("Saved on this device. Select All projects to change it."))
+          : control;
   const customized =
     context !== null &&
     settingKeys.some((key) =>

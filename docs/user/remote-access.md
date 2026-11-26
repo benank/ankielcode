@@ -170,8 +170,7 @@ access → Preview tunnel** on the host to stop other devices from loading its
 `localhost` pages themselves: port forwarding and **Open on this device** go
 away, and open tunnels close. Tabs keep working by streaming from the host, so
 anyone who can use the host's browser tabs can still view its `localhost` pages
-there. An administrator can also turn it off with a
-[managed policy](./managed-policy.md#other-capabilities).
+there.
 
 The first tab downloads a headless Chrome, about 120 MB, into the Ankiel home. It
 is the same browser [HTML renders](html-renders.md) use, so a host downloads it

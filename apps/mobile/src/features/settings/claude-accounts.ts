@@ -5,10 +5,8 @@ import {
 } from "@ankielcode/client-runtime/provider-instance-ids";
 import {
   defaultInstanceIdForDriver,
-  isManagedSettingPath,
   ProviderDriverKind,
   ProviderInstanceId,
-  type ManagedPolicySummary,
   type ProviderInstanceConfig,
   type ProviderInstanceMutation,
   type ServerSettings,
@@ -37,7 +35,6 @@ export function claudeConfigDir(instance: ProviderInstanceConfig | undefined): s
 /** Adds a Claude instance (`instanceId` null) or edits one, keeping every field the form doesn't show. */
 export function planClaudeAccountSave(input: {
   readonly providerInstances: ServerSettings["providerInstances"];
-  readonly policy: ManagedPolicySummary | undefined;
   readonly instanceId: ProviderInstanceId | null;
   readonly draft: ClaudeAccountDraft;
 }): { readonly mutation: ProviderInstanceMutation } | { readonly error: string } {
@@ -63,11 +60,6 @@ export function planClaudeAccountSave(input: {
         new Set([DEFAULT_CLAUDE_INSTANCE_ID, ...Object.keys(input.providerInstances)]),
       ),
     );
-  if (input.policy && isManagedSettingPath(input.policy, `providerInstances.${instanceId}`)) {
-    return {
-      error: m(msg("Managed by {organization}.", { organization: input.policy.organization })),
-    };
-  }
   const current: ProviderInstanceConfig = Object.hasOwn(input.providerInstances, instanceId)
     ? input.providerInstances[instanceId]!
     : { driver: CLAUDE_DRIVER };

@@ -1,10 +1,8 @@
 import { msg, T, useGT, useLocale, useMessages, Var } from "gt-react-native";
-import { managedCapabilityDenial } from "@ankielcode/client-runtime/contract-labels";
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
 import {
   AuthOrchestrationOperateScope,
-  clampManagedRuntimeMode,
   resolveProjectProviderInstanceEnabled,
 } from "@ankielcode/contracts";
 import { readEnvironmentScope } from "../../state/session";
@@ -769,8 +767,6 @@ function TaskForm({
   const shownSelection =
     draft.threadId === null ? draft.modelSelection : (boundThread?.modelSelection ?? null);
   const modelOptions = buildModelOptions(config, null, undefined, draft.projectId);
-  // Existing webhook tasks keep the option so they can still switch to a timer.
-  const webhookDenial = managedCapabilityDenial(config?.managedPolicy, "webhookTasks", m);
   const canOperate = useAtomValue(
     serverEnvironment.upsertScheduledTask.permissionAtom(environmentId),
   );
@@ -896,9 +892,7 @@ function TaskForm({
                 baseRef: worktreeBaseRef,
                 startFromOrigin: draft.startFromOrigin,
               },
-      // Tasks have no mode picker; a mode above the administrator's ceiling is refused.
-      runtimeMode:
-        clampManagedRuntimeMode(config?.managedPolicy, draft.runtimeMode) ?? draft.runtimeMode,
+      runtimeMode: draft.runtimeMode,
       interactionMode: draft.task?.interactionMode ?? "default",
       creationSource: draft.task?.creationSource ?? "mobile",
     };
@@ -1163,9 +1157,7 @@ function TaskForm({
                     ]
                   : []),
                 { value: "interval", label: gt("Interval") },
-                ...(webhookDenial === undefined || draft.schedule.mode === "webhook"
-                  ? [{ value: "webhook" as const, label: gt("On webhook") }]
-                  : []),
+                { value: "webhook" as const, label: gt("On webhook") },
               ]}
               selected={draft.schedule.mode}
               onSelect={(mode) => {
@@ -1280,12 +1272,6 @@ function TaskForm({
                 }}
               />
             </>
-          ) : draft.schedule.mode === "webhook" && webhookDenial !== undefined && draft.enabled ? (
-            <Text className="border-t border-border-subtle px-4 py-3 text-sm text-foreground-muted">
-              {gt("{reason} Switch the task to a timer, or turn it off, to save it.", {
-                reason: webhookDenial,
-              })}
-            </Text>
           ) : draft.schedule.mode === "once" ? (
             (["date", "time"] as const).map((field) => {
               const runAt = new Date(draft.schedule.runAt);
@@ -1480,9 +1466,7 @@ function TaskForm({
           dictationPending ||
           taskMissing ||
           environmentUnavailable ||
-          automaticBaseRefLoading ||
-          // The server refuses an enabled webhook task under this policy.
-          (draft.enabled && draft.schedule.mode === "webhook" && webhookDenial !== undefined)
+          automaticBaseRefLoading
         }
         onPress={() => void save()}
         label={saving ? gt("Saving…") : draft.task ? gt("Save changes") : gt("Create task")}
@@ -1707,11 +1691,6 @@ function EnvironmentTasks({
                       })
                     : describeSchedule(task, tasks.data?.timeZone, m, locale)}
               </Text>
-              {task.blockedByPolicy ? (
-                <Text className="text-sm text-foreground-muted" numberOfLines={2}>
-                  {task.blockedByPolicy}
-                </Text>
-              ) : null}
               {task.lastRunError ? (
                 <Text className="text-sm text-danger-foreground" numberOfLines={2}>
                   <T>

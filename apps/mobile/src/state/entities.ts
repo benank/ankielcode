@@ -8,7 +8,6 @@ import type {
   EnvironmentThreadShell,
 } from "@ankielcode/client-runtime/state/shell";
 import {
-  allowsPreviewTunnel,
   EnvironmentId,
   ThreadId,
   type ComposerContextRecord,
@@ -320,7 +319,7 @@ export function useEnvironmentServerConfig(
 /** Whether the environment turned its preview tunnel off; false until its config loads. */
 export function useEnvironmentPreviewTunnelOff(environmentId: EnvironmentId | null): boolean {
   const config = useEnvironmentServerConfig(environmentId);
-  return config !== null && !allowsPreviewTunnel(config);
+  return config !== null && !config.settings.enablePreviewTunnel;
 }
 
 export function useServerConfigs(): ReadonlyMap<EnvironmentId, ServerConfig> {

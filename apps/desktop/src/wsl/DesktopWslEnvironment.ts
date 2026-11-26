@@ -16,7 +16,6 @@ import { buildRemoteNodeEnvScript } from "@ankielcode/ssh/tunnel";
 import { satisfiesSemverRange } from "@ankielcode/shared/semver";
 
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
-import * as DesktopManagedPolicy from "../app/DesktopManagedPolicy.ts";
 import { parseWslDistroList, type WslDistro } from "./wslPathParsing.ts";
 
 const PROCESS_TERMINATE_GRACE = Duration.seconds(1);
@@ -1162,10 +1161,7 @@ export const makeIsAvailable = Effect.fn("DesktopWslEnvironment.makeIsAvailable"
 ): Effect.fn.Return<
   boolean,
   never,
-  | FileSystem.FileSystem
-  | Path.Path
-  | DesktopManagedPolicy.DesktopManagedPolicy
-  | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (platform !== "win32") return false;
   const path = yield* Path.Path;
@@ -1175,12 +1171,7 @@ export const makeIsAvailable = Effect.fn("DesktopWslEnvironment.makeIsAvailable"
     return false;
   }
   // System32\wsl.exe is also an install stub on Windows without WSL, so check for its service.
-  if (!(yield* wslServiceRegistered)) return false;
-  // A server in WSL reads Linux's policy, never this machine's, so a managed machine runs none.
-  return yield* (yield* DesktopManagedPolicy.DesktopManagedPolicy).read.pipe(
-    Effect.map((found) => found === undefined),
-    Effect.orElseSucceed(() => false),
-  );
+  return yield* wslServiceRegistered;
 });
 
 export interface DesktopWslEnvironmentTestStub {
@@ -1289,10 +1280,6 @@ export const layer = Layer.effect(
       Effect.provideService(FileSystem.FileSystem, fileSystem),
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(Path.Path, environment.path),
-      Effect.provideService(
-        DesktopManagedPolicy.DesktopManagedPolicy,
-        yield* DesktopManagedPolicy.DesktopManagedPolicy,
-      ),
       Effect.withSpan("desktop.wsl.isAvailable"),
     );
     const isAvailable = Effect.succeed(wslAvailable);

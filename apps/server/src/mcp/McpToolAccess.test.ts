@@ -252,15 +252,6 @@ const fullAccessLinkedClient: McpInvocationContext.McpInvocationScope = {
   ...fullAccessClient,
   client: { ...fullAccessClient.client!, linked: true },
 };
-// An administrator's ceiling narrows every client to it.
-const atCeilingClient: McpInvocationContext.McpInvocationScope = {
-  ...fullAccessClient,
-  runtimeModeCeiling: "auto",
-  client: {
-    ...fullAccessClient.client!,
-    narrowedTo: { runtimeMode: "auto", interactionMode: "default" },
-  },
-};
 const previewOnly = { ...fullAccess, capabilities: new Set(["preview"] as const) };
 
 it.effect.each([
@@ -343,8 +334,6 @@ it.effect.each([
   ["writes_owner_work", readOnlyClient, {}, "capability_denied"],
   ["writes_owner_work", linkedClient, {}, "capability_denied"],
   ["writes_owner_work", fullAccessLinkedClient, {}, "ran"],
-  ["writes_owner_work", atCeilingClient, {}, "ran"],
-  ["writes_environment", atCeilingClient, {}, "capability_denied"],
 ] as const)("%s from %o with %o: %s", ([tool, scope, args, expected]) =>
   call(tool, scope, args).pipe(
     Effect.map((outcome) => expect(outcome).toBe(expected)),

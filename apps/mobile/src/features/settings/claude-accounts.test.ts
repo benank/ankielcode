@@ -1,9 +1,4 @@
-import {
-  ProviderDriverKind,
-  ProviderInstanceId,
-  type ManagedPolicySummary,
-  type ServerSettings,
-} from "@ankielcode/contracts";
+import { ProviderDriverKind, ProviderInstanceId, type ServerSettings } from "@ankielcode/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { planClaudeAccountSave } from "./claude-accounts";
@@ -19,7 +14,6 @@ describe("planClaudeAccountSave", () => {
     const plan = (name: string, configDir: string) =>
       planClaudeAccountSave({
         providerInstances,
-        policy: undefined,
         instanceId: null,
         draft: { name, configDir },
       });
@@ -54,7 +48,6 @@ describe("planClaudeAccountSave", () => {
     const edit = (name: string, configDir: string) =>
       planClaudeAccountSave({
         providerInstances,
-        policy: undefined,
         instanceId: work,
         draft: { name, configDir },
       });
@@ -91,27 +84,11 @@ describe("planClaudeAccountSave", () => {
     expect(
       planClaudeAccountSave({
         providerInstances: { [work]: { driver: claude, config: { homePath: "~/.claude-work" } } },
-        policy: undefined,
         instanceId: work,
         draft: { name: "", configDir: "" },
       }),
     ).toEqual({
       mutation: { operation: "upsert", instanceId: work, instance: { driver: claude } },
     });
-  });
-
-  it("refuses instances the managed policy pins", () => {
-    const policy: ManagedPolicySummary = {
-      organization: "Example Corp",
-      lockedSettings: ["providerInstances.claudeAgent_work.config.homePath"],
-    };
-    expect(
-      planClaudeAccountSave({
-        providerInstances: { [work]: { driver: claude } },
-        policy,
-        instanceId: work,
-        draft: { name: "Work", configDir: "~/.claude-other" },
-      }),
-    ).toEqual({ error: "Managed by Example Corp." });
   });
 });

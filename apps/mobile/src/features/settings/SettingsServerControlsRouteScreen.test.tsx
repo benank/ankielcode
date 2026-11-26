@@ -67,7 +67,6 @@ vi.mock("../../state/use-atom-command", () => ({
 }));
 vi.mock("../threads/thread-settings-options", () => ({
   RUNTIME_MODE_CHOICES: [],
-  withManagedRuntimeModeLimits: (choices: readonly unknown[]) => choices,
 }));
 vi.mock("../../components/ui/ScreenScrollView", () => ({ ScreenScrollView: Children }));
 vi.mock("../../components/ui/AppText", () => ({ AppText: Children }));

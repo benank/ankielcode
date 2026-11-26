@@ -13,11 +13,7 @@ import type {
   RuntimeMode,
   ServerConfig as AnkielServerConfig,
 } from "@ankielcode/contracts";
-import {
-  isManagedDriverAllowed,
-  isProviderDriverKind,
-  resolveProjectProviderInstanceEnabled,
-} from "@ankielcode/contracts";
+import { isProviderDriverKind, resolveProjectProviderInstanceEnabled } from "@ankielcode/contracts";
 import {
   buildExplicitProviderOptionSelectionsFromDescriptors,
   getProviderOptionDescriptors,
@@ -25,17 +21,6 @@ import {
 import { resolveModelShortName } from "@ankielcode/client-runtime/provider-clients";
 import { resolveProvidersForCwd } from "@ankielcode/client-runtime/providerSkills";
 
-/** The contracts `disallowedProviderMessage` English, as translatable sentences. */
-function disallowedProviderText(organization: string | undefined, label: string): string {
-  return organization === undefined
-    ? m(msg("Your organization policy does not allow the {label} provider.", { label }))
-    : m(
-        msg("{organization}''s policy does not allow the {label} provider.", {
-          organization,
-          label,
-        }),
-      );
-}
 export type ModelOption = {
   readonly key: string;
   readonly label: string;
@@ -130,28 +115,6 @@ function isDisabledForProject(
   return provider !== undefined && !isProviderEnabledForProject(config, provider, projectId);
 }
 
-function selectionDriver(
-  config: AnkielServerConfig | null | undefined,
-  instanceId: ModelSelection["instanceId"],
-): string | undefined {
-  return (
-    config?.providers.find((candidate) => candidate.instanceId === instanceId)?.driver ??
-    config?.settings?.providerInstances[instanceId]?.driver
-  );
-}
-
-/** Whether the environment's managed policy leaves this driver out; the server refuses its turns. */
-function isDriverDisallowed(
-  config: AnkielServerConfig | null | undefined,
-  driver: string | undefined,
-) {
-  return (
-    driver !== undefined &&
-    isProviderDriverKind(driver) &&
-    !isManagedDriverAllowed(config?.managedPolicy, driver)
-  );
-}
-
 function normalizeSelectionOptions(
   selection: ModelSelection,
   capabilities: ModelCapabilities | null,
@@ -204,9 +167,6 @@ export function isModelSelectionUnavailable(
   }
   const driver =
     provider?.driver ?? config.settings?.providerInstances[selection.instanceId]?.driver;
-  if (isDriverDisallowed(config, driver)) {
-    return true;
-  }
   return (
     driver === "antigravity" &&
     (!provider ||
@@ -225,24 +185,6 @@ export function describeUnavailableModelSelection(
   const provider = config?.providers.find(
     (candidate) => candidate.instanceId === selection.instanceId,
   );
-  const driver = selectionDriver(config, selection.instanceId);
-  if (isDriverDisallowed(config, driver)) {
-    const label = providerDisplayLabel({
-      driver: driver ?? selection.instanceId,
-      displayName:
-        provider?.displayName ??
-        config?.settings?.providerInstances[selection.instanceId]?.displayName,
-      instanceId: selection.instanceId,
-    });
-    return {
-      title: m(msg("Provider not allowed")),
-      detail: m(
-        msg("{message} Choose another model.", {
-          message: disallowedProviderText(config?.managedPolicy?.organization, label),
-        }),
-      ),
-    };
-  }
   return isDisabledForProject(config, provider, selection.instanceId, projectId)
     ? {
         title: m(msg("Model turned off for this project")),
@@ -391,7 +333,6 @@ export function buildModelOptions(
   for (const provider of config?.providers ?? []) {
     if (
       !matchesLockedProvider(provider) ||
-      isDriverDisallowed(config, provider.driver) ||
       !isProviderEnabledForProject(config, provider, projectId) ||
       !provider.installed ||
       provider.auth.status === "unauthenticated" ||

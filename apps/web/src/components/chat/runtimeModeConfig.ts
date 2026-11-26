@@ -1,5 +1,4 @@
-import { managedRuntimeModeDenial } from "@ankielcode/client-runtime/contract-labels";
-import type { ManagedPolicySummary, RuntimeMode } from "@ankielcode/contracts";
+import type { RuntimeMode } from "@ankielcode/contracts";
 import { msg } from "gt-react";
 import { m, type MessageResolver } from "~/i18n/messages";
 import {
@@ -95,32 +94,9 @@ export function resolveRuntimeModeOption(
   };
 }
 
-/** Why `mode` is unavailable under `managedPolicy`, or undefined when it is allowed. */
-export function runtimeModeDenial(
-  managedPolicy: ManagedPolicySummary | undefined,
-  mode: RuntimeMode,
-  resolve: MessageResolver = m,
-) {
-  const ceiling = managedPolicy?.limits?.maxRuntimeMode;
-  if (ceiling === undefined || managedRuntimeModeDenial(managedPolicy, mode) === undefined) {
-    return undefined;
-  }
-  return resolve(
-    msg("{organization} limits threads to {mode}.", {
-      organization: managedPolicy!.organization,
-      mode: resolve(runtimeModeConfig[ceiling].label),
-    }),
-  );
-}
-
 export function resolveRuntimeModeOptions(
   modes: ReadonlyArray<RuntimeMode>,
-  managedPolicy: ManagedPolicySummary | undefined,
   resolve: MessageResolver = m,
 ) {
-  return modes.map((mode) => {
-    const option = resolveRuntimeModeOption(mode, resolve);
-    const disabledReason = runtimeModeDenial(managedPolicy, mode, resolve);
-    return disabledReason === undefined ? option : { ...option, disabledReason };
-  });
+  return modes.map((mode) => resolveRuntimeModeOption(mode, resolve));
 }

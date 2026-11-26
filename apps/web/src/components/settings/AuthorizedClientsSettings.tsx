@@ -1,7 +1,6 @@
 import { buildPairingAppLink } from "@ankielcode/shared/remote";
 import { thrownErrorMessage } from "@ankielcode/client-runtime/errors";
 import { m as resolveMessage } from "~/i18n/messages";
-import { managedCapabilityDenial } from "@ankielcode/client-runtime/contract-labels";
 import { AUTH_SCOPE_OPTIONS as PAIRING_SCOPE_OPTIONS } from "@ankielcode/shared/authScopeOptions";
 import { PlusIcon, QrCodeIcon } from "lucide-react";
 import { type ReactNode, memo, useId, useRef, useState } from "react";
@@ -60,9 +59,7 @@ import {
 } from "~/environments/primary";
 import { authEnvironment } from "~/state/auth";
 import { readEnvironmentScope } from "~/state/session";
-import { useManagedPolicy, usePrimaryManagedPolicy } from "~/state/managedPolicy";
 import { useAtomCommand } from "~/state/use-atom-command";
-import { ManagedControl } from "../ManagedPolicy";
 import { ConnectionStatusDot } from "../ConnectionStatusDot";
 import { ITEM_ROW_CLASSNAME, ITEM_ROW_INNER_CLASSNAME } from "./itemRows";
 import {
@@ -585,11 +582,6 @@ export const AuthorizedClientsHeaderAction = memo(function AuthorizedClientsHead
 }: AuthorizedClientsHeaderActionProps) {
   const gt = useGT();
   const m = useMessages();
-  const pairingDenial = managedCapabilityDenial(
-    useManagedPolicy(environmentId),
-    "remoteClients",
-    m,
-  );
   const createPairingCredential = useAtomCommand(authEnvironment.createPairingCredential, {
     reportFailure: false,
   });
@@ -664,28 +656,15 @@ export const AuthorizedClientsHeaderAction = memo(function AuthorizedClientsHead
       >
         {isRevokingOtherClients ? gt("Revoking…") : gt("Revoke others")}
       </Button>
-      {pairingDenial !== undefined ? (
-        <ManagedControl reason={pairingDenial}>
-          <Button size="xs" variant="default" disabled>
-            <PlusIcon className="size-3" />
-            <T>Create link</T>
-          </Button>
-        </ManagedControl>
-      ) : null}
-      <Dialog
-        open={dialogOpen && pairingDenial === undefined}
-        onOpenChange={handlePairingDialogOpenChange}
-      >
-        {pairingDenial === undefined ? (
-          <DialogTrigger
-            render={
-              <Button size="xs" variant="default">
-                <PlusIcon className="size-3" />
-                <T>Create link</T>
-              </Button>
-            }
-          />
-        ) : null}
+      <Dialog open={dialogOpen} onOpenChange={handlePairingDialogOpenChange}>
+        <DialogTrigger
+          render={
+            <Button size="xs" variant="default">
+              <PlusIcon className="size-3" />
+              <T>Create link</T>
+            </Button>
+          }
+        />
         <DialogPopup className="max-w-md">
           <DialogHeader>
             <DialogTitle>
@@ -914,8 +893,6 @@ export const AdvertisedEndpointListRow = memo(function AdvertisedEndpointListRow
   const canDisableTailscaleServe =
     isTailscaleHttpsEndpoint(endpoint) && endpoint.status === "available";
   const shouldShowEndpointUrl = !needsTailscaleSetup;
-  const m = useMessages();
-  const remoteDenial = managedCapabilityDenial(usePrimaryManagedPolicy(), "remoteClients", m);
   return (
     <div className={endpointRowClassName(isAvailable)}>
       {isDefault ? (
@@ -951,16 +928,14 @@ export const AdvertisedEndpointListRow = memo(function AdvertisedEndpointListRow
             </span>
           ) : null}
           {needsTailscaleSetup ? (
-            <ManagedControl reason={remoteDenial}>
-              <Button
-                size="xs"
-                variant="outline"
-                onClick={() => onSetupTailscaleServe(endpoint)}
-                disabled={isUpdatingTailscaleServe || remoteDenial !== undefined}
-              >
-                {isUpdatingTailscaleServe ? gt("Restarting…") : gt("Setup", { $context: "verb" })}
-              </Button>
-            </ManagedControl>
+            <Button
+              size="xs"
+              variant="outline"
+              onClick={() => onSetupTailscaleServe(endpoint)}
+              disabled={isUpdatingTailscaleServe}
+            >
+              {isUpdatingTailscaleServe ? gt("Restarting…") : gt("Setup", { $context: "verb" })}
+            </Button>
           ) : null}
           {canDisableTailscaleServe ? (
             <Button

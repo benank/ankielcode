@@ -5,7 +5,6 @@ import type {
 import {
   CommandId,
   type EnvironmentId,
-  isRuntimeModeAbove,
   OrchestratorMcpFailure,
   type ProjectId,
   type ProviderInstanceId,
@@ -109,7 +108,6 @@ export const dispatchFailure = (
   error: OrchestratorV2Error | ThreadManagement.ThreadManagementProviderInstanceDisabledError,
 ) =>
   error._tag === "ThreadManagementProviderInstanceDisabledError" ||
-  error._tag === "OrchestratorRuntimeModeAboveCeilingError" ||
   error._tag === "OrchestratorProviderSelectionBusyError"
     ? new OrchestratorMcpFailure({ code: "invalid_request", message: error.message })
     : (error._tag === "OrchestratorDispatchError" ||
@@ -221,22 +219,12 @@ export const assertFullAccess = (context: Caller, message: string) =>
     ? Effect.void
     : Effect.fail(new OrchestratorMcpFailure({ code: "capability_denied", message }));
 
-/**
- * For work whose definition picks its own modes: the caller must hold the broadest modes a
- * thread may run in here, full access or an administrator's ceiling below it.
- */
-export const assertBroadestAccess = (context: Caller, what: string) => {
-  const broadest = context.scope.runtimeModeCeiling ?? "full-access";
-  return !isRuntimeModeAbove(broadest, context.limits.runtimeMode) &&
-    context.limits.interactionMode === "default"
-    ? Effect.void
-    : Effect.fail(
-        new OrchestratorMcpFailure({
-          code: "capability_denied",
-          message: `Only a caller with ${broadest}/default access can ${what}, because that work picks its own modes. This caller is limited to ${context.limits.runtimeMode}/${context.limits.interactionMode}.`,
-        }),
-      );
-};
+/** For work whose definition picks its own modes: the caller must hold full access. */
+export const assertBroadestAccess = (context: Caller, what: string) =>
+  assertFullAccess(
+    context,
+    `Only a caller with full-access/default access can ${what}, because that work picks its own modes. This caller is limited to ${context.limits.runtimeMode}/${context.limits.interactionMode}.`,
+  );
 
 export const resolveProjectId = (context: Caller, projectId: ProjectId | undefined) =>
   projectId !== undefined

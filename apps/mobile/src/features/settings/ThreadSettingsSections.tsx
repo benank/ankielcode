@@ -1,10 +1,6 @@
 import { T, useGT } from "gt-react-native";
 import { Button } from "../../components/ui/Button";
-import {
-  AuthSettingsWriteScope,
-  isManagedSettingPath,
-  type ServerSettingsPatch,
-} from "@ankielcode/contracts";
+import { AuthSettingsWriteScope, type ServerSettingsPatch } from "@ankielcode/contracts";
 import { useEnvironmentsWithScope } from "../../state/session";
 import { AutoSettleDaysField } from "./components/AutoSettleDaysField";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
@@ -26,11 +22,7 @@ import { SettingsSwitchRow } from "./components/SettingsSwitchRow";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { planAutoSettleSettingsSync, type AutoSettleSettings } from "./autoSettleSettingsSync";
 import { useSettingsEnvironmentFilter } from "./settings-environment-filter";
-import {
-  managedSettingReason,
-  resolveMobileSettingsTargets,
-  uniformMobileSetting,
-} from "./settings-scoped-server";
+import { resolveMobileSettingsTargets, uniformMobileSetting } from "./settings-scoped-server";
 
 export function SettingsLabsRouteScreen() {
   const gt = useGT();
@@ -126,8 +118,6 @@ export function AutoSettleSettingsRows(props: {
   );
 
   const disabled = !canWriteSettings || props.pending;
-  const disabledFor = (...keys: string[]) =>
-    disabled || managedSettingReason(displayTargets, keys) !== undefined;
   const afterDays = referenceSettings.sidebarAutoSettleAfterDays;
 
   return (
@@ -141,7 +131,7 @@ export function AutoSettleSettingsRows(props: {
               "Automatically resume threads when their usage limits reset. You can cancel auto-resume in each thread.",
             )}
             value={uniformMobileSetting(displayTargets, "autoResumeLimitedThreads")}
-            disabled={disabledFor("autoResumeLimitedThreads")}
+            disabled={disabled}
             onValueChange={(value) => writeToAll({ autoResumeLimitedThreads: value })}
           />
           <SettingsSwitchRow
@@ -151,7 +141,7 @@ export function AutoSettleSettingsRows(props: {
               "Snooze threads until their usage limits reset. Enable auto-resume to continue the agent after the reset.",
             )}
             value={uniformMobileSetting(displayTargets, "snoozeLimitedThreads")}
-            disabled={disabledFor("snoozeLimitedThreads")}
+            disabled={disabled}
             onValueChange={(value) => writeToAll({ snoozeLimitedThreads: value })}
           />
         </SettingsSection>
@@ -161,14 +151,14 @@ export function AutoSettleSettingsRows(props: {
           icon="arrow.triangle.branch"
           label={gt("Auto-settle merged threads")}
           value={referenceSettings.sidebarAutoSettleOnMerge}
-          disabled={disabledFor("sidebarAutoSettleOnMerge")}
+          disabled={disabled}
           onValueChange={(value) => writeToAll({ sidebarAutoSettleOnMerge: value })}
         />
         <SettingsSwitchRow
           icon="clock"
           label={gt("Auto-settle inactive threads")}
           value={afterDays !== null}
-          disabled={disabledFor("sidebarAutoSettleAfterDays")}
+          disabled={disabled}
           onValueChange={(value) =>
             writeToAll({ sidebarAutoSettleAfterDays: value ? AUTO_SETTLE_DEFAULT_DAYS : null })
           }
@@ -181,7 +171,7 @@ export function AutoSettleSettingsRows(props: {
             </Text>
             <AutoSettleDaysField
               value={afterDays}
-              disabled={disabledFor("sidebarAutoSettleAfterDays")}
+              disabled={disabled}
               onValueChange={(value) => writeToAll({ sidebarAutoSettleAfterDays: value })}
             />
           </View>
@@ -199,7 +189,7 @@ export function AutoSettleSettingsRows(props: {
             <Button
               label={gt("Apply auto-settle defaults")}
               tone="secondary"
-              disabled={disabledFor("sidebarAutoSettleOnMerge", "sidebarAutoSettleAfterDays")}
+              disabled={disabled}
               onPress={() => writeToAll(autoSettlePatch)}
             />
           </View>
@@ -246,7 +236,6 @@ function MachineLabSection({
   readonly setting: MachineLabSetting;
   readonly description: string;
 }) {
-  const gt = useGT();
   const { environments } = useEnvironments();
   const supported = environments.filter(
     (environment) =>
@@ -262,37 +251,26 @@ function MachineLabSection({
   return (
     <View className="gap-3">
       <SettingsSection title={title}>
-        {supported.map((environment) => {
-          const policy = environment.serverConfig?.managedPolicy;
-          const managed = isManagedSettingPath(policy, setting);
-          return (
-            <SettingsSwitchRow
-              key={environment.environmentId}
-              icon={icon}
-              label={environment.label}
-              {...(managed
-                ? {
-                    subtitle: gt("Managed by {organization}.", {
-                      organization: policy?.organization,
-                    }),
-                  }
-                : {})}
-              value={environment.serverConfig?.settings[setting] === true}
-              disabled={managed || !writable.has(environment.environmentId)}
-              onValueChange={(value) =>
-                void updateSettings({
-                  environmentId: environment.environmentId,
-                  input: {
-                    patch:
-                      setting === "linkedEnvironmentsEnabled"
-                        ? { linkedEnvironmentsEnabled: value }
-                        : { fastWorktreeCheckout: value },
-                  },
-                })
-              }
-            />
-          );
-        })}
+        {supported.map((environment) => (
+          <SettingsSwitchRow
+            key={environment.environmentId}
+            icon={icon}
+            label={environment.label}
+            value={environment.serverConfig?.settings[setting] === true}
+            disabled={!writable.has(environment.environmentId)}
+            onValueChange={(value) =>
+              void updateSettings({
+                environmentId: environment.environmentId,
+                input: {
+                  patch:
+                    setting === "linkedEnvironmentsEnabled"
+                      ? { linkedEnvironmentsEnabled: value }
+                      : { fastWorktreeCheckout: value },
+                },
+              })
+            }
+          />
+        ))}
       </SettingsSection>
       <Text className="px-2 text-sm text-foreground-muted">{description}</Text>
     </View>

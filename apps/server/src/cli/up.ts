@@ -15,8 +15,6 @@ import packageJson from "../../package.json" with { type: "json" };
 import * as BootService from "../cloud/bootService.ts";
 import { compareExactServiceVersions } from "../cloud/serviceProtocol.ts";
 import * as ServerConfig from "../config.ts";
-import * as ManagedLimits from "../policy/managedLimits.ts";
-import * as ManagedPolicy from "../policy/ManagedPolicy.ts";
 import { resolveStoredRelayPublicUrl } from "../relay/relayProtocol.ts";
 import { projectLocationFlags, resolveCliAuthConfig } from "./config.ts";
 import { resolveHostCliCommand } from "./invocation.ts";
@@ -194,12 +192,6 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
         "No terminal. Choose access with --lan or --no-lan, or use --yes for the default. See `ankiel up --help`.",
     });
   }
-  if (routes.lan && !current.lan) {
-    const policy = yield* ManagedPolicy.ManagedPolicy;
-    if (!ManagedLimits.allowsRemoteClients(policy)) {
-      return yield* ManagedLimits.refuseRemoteClients(policy);
-    }
-  }
   // Nothing to run in the background, but a route left on still gets turned off.
   if (!before.service.installed && !routes.lan) {
     if (current.lan) yield* CliService.writeServiceEnv(baseDir, { ANKIEL_LAN: "false" });
@@ -321,7 +313,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
   );
 });
 
-/** Runs `ankiel up` with only what it reads: the service manager and the managed policy. */
+/** Runs `ankiel up` with only what it reads: the service manager. */
 const runUpCommand = Effect.fn("cli.up.run")(function* <A, E>(
   flags: { readonly baseDir: Option.Option<string> },
   run: Effect.Effect<
@@ -329,7 +321,6 @@ const runUpCommand = Effect.fn("cli.up.run")(function* <A, E>(
     E,
     | BootService.BootService
     | ServerConfig.ServerConfig
-    | ManagedPolicy.ManagedPolicy
     | FileSystem.FileSystem
     | Path.Path
     | Prompt.Environment
@@ -338,7 +329,7 @@ const runUpCommand = Effect.fn("cli.up.run")(function* <A, E>(
   const config = yield* resolveCliAuthConfig(flags, yield* GlobalFlag.LogLevel, {
     quietLogs: true,
   });
-  const layerRuntime = Layer.mergeAll(CliService.layer(config), ManagedPolicy.layer).pipe(
+  const layerRuntime = CliService.layer(config).pipe(
     Layer.provideMerge(ServerConfig.layer(config)),
     Layer.provide(Layer.succeed(References.MinimumLogLevel, "Error")),
   );

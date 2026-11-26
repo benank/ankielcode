@@ -114,33 +114,6 @@ export const clientModeCeiling = (client: McpClientCaller | undefined): ClientMo
   };
 };
 
-/**
- * A client approved above an administrator's runtime-mode ceiling acts as if it had narrowed
- * itself to the ceiling, so what it starts and schedules is not refused for a mode it never chose.
- */
-export const withRuntimeModeCeiling = (
-  scope: McpInvocationScope,
-  ceiling: RuntimeMode | undefined,
-): McpInvocationScope => {
-  if (ceiling === undefined) return scope;
-  if (scope.client === undefined) return { ...scope, runtimeModeCeiling: ceiling };
-  const asked = scope.client.narrowedTo;
-  return {
-    ...scope,
-    runtimeModeCeiling: ceiling,
-    client: {
-      ...scope.client,
-      narrowedTo: {
-        runtimeMode:
-          asked !== undefined && runtimeModeRank[asked.runtimeMode] < runtimeModeRank[ceiling]
-            ? asked.runtimeMode
-            : ceiling,
-        interactionMode: asked?.interactionMode ?? "default",
-      },
-    },
-  };
-};
-
 /** Thread callers default to their own thread; client callers need thread for tools that act as the caller. */
 export interface McpInvocationScope {
   readonly environmentId: EnvironmentId;
@@ -151,8 +124,6 @@ export interface McpInvocationScope {
   readonly client: McpClientCaller | undefined;
   /** False while the Linked environments beta is off here; `/mcp` reads it per request. */
   readonly linkedEnvironments?: boolean;
-  /** The broadest runtime mode an administrator lets a thread run in here. Unset is full access. */
-  readonly runtimeModeCeiling?: RuntimeMode | undefined;
   /** True while Labs → Workflows is on here; `/mcp` reads it per request. Unset is off. */
   readonly workflows?: boolean;
   /**

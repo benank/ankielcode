@@ -6,7 +6,6 @@ import {
   squashAtomCommandFailure,
 } from "@ankielcode/client-runtime/state/runtime";
 import {
-  isManagedSettingPath,
   type ProviderInstanceId,
   type ProviderInstanceMutation,
   type ServerProvider,
@@ -86,12 +85,7 @@ export function ClaudeAccount({
         : !provider.installed
           ? gt("Not installed")
           : null;
-  const removable =
-    provider.instanceId !== DEFAULT_CLAUDE_INSTANCE_ID &&
-    !isManagedSettingPath(
-      environment.serverConfig.managedPolicy,
-      `providerInstances.${provider.instanceId}`,
-    );
+  const removable = provider.instanceId !== DEFAULT_CLAUDE_INSTANCE_ID;
   const actions: MenuAction[] = [
     { id: "edit", title: gt("Edit"), image: "pencil" },
     ...(removable
@@ -216,7 +210,6 @@ function ClaudeAccountForm({
   function save() {
     const plan = planClaudeAccountSave({
       providerInstances: environment.serverConfig.settings.providerInstances,
-      policy: environment.serverConfig.managedPolicy,
       instanceId,
       draft,
     });

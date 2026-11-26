@@ -1,10 +1,7 @@
 import * as NodeModule from "node:module";
 
 import { assert, describe, it } from "@effect/vitest";
-import {
-  DESKTOP_UPDATE_RESTART_MARKER_FILE,
-  DesktopUpdateStateSchema,
-} from "@ankielcode/contracts";
+import { DESKTOP_UPDATE_RESTART_MARKER_FILE } from "@ankielcode/contracts";
 import { computeReleaseNotes } from "electron-updater/out/providers/GitHubProvider.js";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
@@ -16,7 +13,6 @@ import * as Logger from "effect/Logger";
 import * as Option from "effect/Option";
 import * as References from "effect/References";
 import * as Ref from "effect/Ref";
-import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 
@@ -25,11 +21,8 @@ import * as DesktopBackendPool from "../backend/DesktopBackendPool.ts";
 import * as DesktopAppSettings from "../settings/DesktopAppSettings.ts";
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
 import * as DesktopState from "../app/DesktopState.ts";
-import * as DesktopUpdatePolicy from "./DesktopUpdatePolicy.ts";
 import * as DesktopUpdates from "./DesktopUpdates.ts";
 import { flushCallbacks, makeHarness } from "./updatesTestHarness.ts";
-
-const encodeUpdateState = Schema.encodeEffect(DesktopUpdateStateSchema);
 
 type ReleaseFeed = Parameters<typeof computeReleaseNotes>[2];
 type RunningVersion = Parameters<typeof computeReleaseNotes>[0];
@@ -1403,140 +1396,5 @@ describe("describeUpdateErrorCause", () => {
       },
     });
     assert.equal(DesktopUpdates.describeUpdateErrorCause(unreadable), "UnknownError");
-  });
-});
-
-describe("DesktopUpdates under a managed policy", () => {
-  const message = "Example Corp manages Ankiel Code updates.";
-  const managed = (
-    policy: Partial<DesktopUpdatePolicy.UpdatePolicy>,
-  ): DesktopUpdatePolicy.UpdatePolicy => ({
-    ...DesktopUpdatePolicy.unmanagedUpdatePolicy,
-    message,
-    ...policy,
-  });
-
-  it.effect("never checks when updates are off", () => {
-    const harness = makeHarness({ policy: managed({ mode: "off" }) });
-
-    return Effect.scoped(
-      Effect.gen(function* () {
-        const updates = yield* DesktopUpdates.DesktopUpdates;
-        yield* updates.configure;
-        yield* TestClock.adjust("10 minutes");
-
-        const state = yield* updates.getState;
-        assert.equal(state.status, "disabled");
-        assert.equal(state.message, message);
-        assert.isFalse((yield* updates.check("menu")).checked);
-        assert.deepEqual(yield* updates.disabledReason, Option.some(message));
-        assert.equal(harness.checkCount(), 0);
-        assert.equal(harness.listenerCount(), 0);
-      }),
-    ).pipe(Effect.provide(Layer.merge(TestClock.layer(), harness.layer)));
-  });
-
-  it.effect("updates from the administrator's feed", () => {
-    const harness = makeHarness({
-      // Any user can set the mock flag; it must not redirect a managed feed.
-      env: { ANKIEL_DESKTOP_MOCK_UPDATES: "true" },
-      policy: managed({ feedUrl: "https://updates.example.com/ankielcode" }),
-    });
-
-    return Effect.scoped(
-      Effect.gen(function* () {
-        const updates = yield* DesktopUpdates.DesktopUpdates;
-        yield* updates.configure;
-        assert.equal((yield* updates.getState).status, "idle");
-        assert.deepEqual(harness.feedUrls(), [
-          { provider: "generic", url: "https://updates.example.com/ankielcode" },
-        ]);
-      }),
-    ).pipe(Effect.provide(Layer.merge(TestClock.layer(), harness.layer)));
-  });
-
-  it.effect("refuses the nightly channel without nightly", () => {
-    const harness = makeHarness({ policy: managed({ allowNightly: false }) });
-
-    return Effect.scoped(
-      Effect.gen(function* () {
-        const updates = yield* DesktopUpdates.DesktopUpdates;
-        yield* updates.configure;
-        const error = yield* updates.setChannel("nightly").pipe(Effect.flip);
-        assert.equal(error._tag, "DesktopUpdateChannelManagedError");
-        assert.equal((yield* updates.getState).channel, "latest");
-      }),
-    ).pipe(Effect.provide(Layer.merge(TestClock.layer(), harness.layer)));
-  });
-
-  it.effect("does not name a blocked build track as the one to switch back to", () => {
-    const harness = makeHarness({
-      appVersion: "1.2.4-nightly.20261027.1",
-      savedChannel: "latest",
-      policy: managed({ allowNightly: false, feedUrl: "https://updates.example.com/ankielcode" }),
-    });
-
-    return Effect.scoped(
-      Effect.gen(function* () {
-        const updates = yield* DesktopUpdates.DesktopUpdates;
-        yield* updates.configure;
-        yield* updates.check("startup");
-        const state = yield* nextPublishedState(() => harness.emit("update-not-available"));
-
-        assert.equal(state.channel, "latest");
-        assert.equal(state.status, "error");
-        assert.equal(state.errorContext, "check");
-        assert.isUndefined(state.trackMismatch);
-      }),
-    ).pipe(Effect.provide(Layer.merge(TestClock.layer(), harness.layer)));
-  });
-
-  it.effect("does not report the channel as the only block when updates are off anyway", () => {
-    const harness = makeHarness({
-      appVersion: "1.2.3-nightly.20261028.1",
-      env: { ANKIEL_DISABLE_AUTO_UPDATE: "true" },
-      policy: managed({ allowNightly: false, feedUrl: "https://updates.example.com/ankielcode" }),
-    });
-
-    return Effect.scoped(
-      Effect.gen(function* () {
-        const updates = yield* DesktopUpdates.DesktopUpdates;
-        yield* updates.configure;
-        const state = yield* updates.getState;
-        assert.isFalse(state.enabled);
-        assert.isUndefined(state.channelBlockedByPolicy);
-      }),
-    ).pipe(Effect.provide(Layer.merge(TestClock.layer(), harness.layer)));
-  });
-
-  it.effect("holds a nightly install until its user switches to stable", () => {
-    const harness = makeHarness({
-      appVersion: "1.2.3-nightly.20261028.1",
-      // A managed app ignores the mock feed, so give it a real one.
-      policy: managed({ allowNightly: false, feedUrl: "https://updates.example.com/ankielcode" }),
-    });
-
-    return Effect.scoped(
-      Effect.gen(function* () {
-        const updates = yield* DesktopUpdates.DesktopUpdates;
-        yield* updates.configure;
-        yield* TestClock.adjust("10 minutes");
-
-        const held = yield* updates.getState;
-        assert.equal(held.channel, "nightly");
-        assert.equal(held.status, "disabled");
-        assert.include(held.message ?? "", message);
-        assert.isTrue(held.channelBlockedByPolicy);
-        assert.isTrue((yield* encodeUpdateState(held)).channelBlockedByPolicy);
-        assert.isFalse((yield* updates.check("menu")).checked);
-        assert.equal(harness.checkCount(), 0);
-
-        const stable = yield* updates.setChannel("latest");
-        assert.equal(stable.channel, "latest");
-        assert.isTrue(stable.enabled);
-        assert.isUndefined(stable.channelBlockedByPolicy);
-        assert.equal(harness.checkCount(), 1);
-      }),
-    ).pipe(Effect.provide(Layer.merge(TestClock.layer(), harness.layer)));
   });
 });

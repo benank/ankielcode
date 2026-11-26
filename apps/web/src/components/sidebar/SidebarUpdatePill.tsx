@@ -1,5 +1,4 @@
 import { thrownErrorMessage } from "@ankielcode/client-runtime/errors";
-import { managedUpdatesDenial } from "@ankielcode/client-runtime/contract-labels";
 import { type DesktopBridge, type DesktopUpdateState } from "@ankielcode/contracts";
 import { TriangleAlertIcon } from "lucide-react";
 import { msg, T, useGT, useMessages } from "gt-react";
@@ -12,7 +11,6 @@ import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { cn } from "../../lib/utils";
 import { ensureLocalApi } from "../../localApi";
 import { useDesktopUpdateState } from "../../state/desktopUpdate";
-import { usePrimaryManagedPolicy } from "../../state/managedPolicy";
 import { stackedThreadToast, toastManager } from "../ui/toast";
 import {
   canCheckForUpdate,
@@ -205,8 +203,6 @@ function SidebarUpdateControl() {
   const state = useDesktopUpdateState();
   const gt = useGT();
   const messages = useMessages();
-  // The desktop updates this machine, whose policy the primary environment reports.
-  const updatesDenial = managedUpdatesDenial(usePrimaryManagedPolicy(), messages);
   const [isActionPending, setIsActionPending] = useState(false);
   const [providerCheck, setProviderCheck] = useState<"button" | "dialog" | null>(null);
   const isCheckingProviders = providerCheck === "button";
@@ -257,9 +253,7 @@ function SidebarUpdateControl() {
     showCheckIcon,
   });
   const idleTooltip =
-    !showUpdateDetails && !showCheckIcon
-      ? getDesktopUpdateIdleTooltip(state, updatesDenial, messages)
-      : null;
+    !showUpdateDetails && !showCheckIcon ? getDesktopUpdateIdleTooltip(state, messages) : null;
   const tooltip = runsEverything
     ? everything.summary
     : showUpdateDetails
@@ -351,9 +345,7 @@ function SidebarUpdateControl() {
             type: "error",
             title: gt("Could not check for updates"),
             description:
-              updatesDenial ??
-              result.state.message ??
-              gt("Automatic updates are not available in this build."),
+              result.state.message ?? gt("Automatic updates are not available in this build."),
           }),
         );
       })

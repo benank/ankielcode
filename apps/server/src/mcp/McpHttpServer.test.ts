@@ -43,7 +43,6 @@ import * as McpOAuth from "../auth/McpOAuth.ts";
 import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
 import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
 import * as Sqlite from "../persistence/Sqlite.ts";
-import * as ManagedPolicy from "../policy/ManagedPolicy.ts";
 import * as PreviewManager from "../preview/Manager.ts";
 
 import * as DeviceService from "../device/DeviceService.ts";
@@ -1416,7 +1415,6 @@ it.effect("accepts case-insensitive MCP bearer schemes and diagnoses rejected cr
     ),
     Layer.provideMerge(Sqlite.layerMemory),
     Layer.provide(ServerSecretStore.layer),
-    Layer.provide(ManagedPolicy.layerTest()),
     Layer.provideMerge(ServerEnvironment.layerIdentity),
     Layer.provide(
       ServerConfig.layerTest(process.cwd(), { prefix: "ankiel-mcp-auth-header-test-" }),

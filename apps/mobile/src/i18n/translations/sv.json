@@ -215,16 +215,6 @@
   "7953122755efa56e": "Löser deltan",
   "d9a8c7734f54ea3f": "Checkar ut filer",
   "215fbed6f97db37d": "Har stannat",
-  "c3d4e74188cdc76f": "{organization} hanterar uppdateringar av Ankiel Code.",
-  "4a3e0e49c5578c95": "{organization} hanterar uppdateringar av Ankiel Code. Bara stabila versioner kan installeras.",
-  "6365146db77a8dac": "{organization} begränsar trådar till Övervakat.",
-  "2aa1c01bf8014725": "{organization} begränsar trådar till Godkänn ändringar automatiskt.",
-  "89563a8fff8bb751": "{organization} begränsar trådar till Auto.",
-  "5b7ff1208620c2c2": "{organization} begränsar trådar till Full åtkomst.",
-  "9bf017edd3847eb1": "Policyn för {organization} tillåter inte anslutning från andra enheter.",
-  "986b0873f913a840": "Policyn för {organization} tillåter inte webhook-uppgifter.",
-  "eebc538e25b09fe2": "Policyn för {organization} tillåter inte import av cookies från webbläsare.",
-  "7642a133db05f164": "{organization}s policy tillåter inte att den här datorns lokala servrar öppnas på andra enheter.",
   "39f6771b49f9b3b6": "Använd standard",
   "45bb0e90e1c42046": "När du kommer tillbaka",
   "c592225cafc222a3": "Innan cachen går ut",
@@ -1360,10 +1350,6 @@
   "218c111b4aa6e029": "Kunde inte läsa en inklistrad bild.",
   "ce88bed3d928cf6b": "Den här bilagan är inte längre tillgänglig. Bifoga filen igen.",
   "232298a82d027b3d": "Detaljer",
-  "35fcb6312e278185": "Din organisations policy tillåter inte leverantören {label}.",
-  "90548f7a4d620371": "Policyn för {organization} tillåter inte leverantören {label}.",
-  "2c850e594aa60ad5": "Leverantören är inte tillåten",
-  "bada142dca0fa1d1": "{message} Välj en annan modell.",
   "d2b4bc575d7d99d8": "Modellen är avstängd för det här projektet",
   "be1bc7fa9d199f70": "Slå på den igen från webben eller skrivbordet, eller välj en annan modell.",
   "b994adb6050417c2": "Modellen för {provider} är inte tillgänglig",
@@ -3155,7 +3141,6 @@
   "cc1c68228ae59262": "Du har den senaste versionen.",
   "40c4c31be0a4151b": "Uppdatera skrivbordsappen på den här datorn.",
   "74e9603036cf74a0": "Uppdatera och starta om {product} på den här datorn.",
-  "ed46ceb44345b705": "Få hjälp från {organization}",
   "56edbb36e9731d20": "Uppdatera leverantörer",
   "50fd05851156af28": "Leverantörsstatusen uppdaterades.",
   "2baa086b75bc2077": "{version} · Senaste {latest}",
@@ -3169,14 +3154,6 @@
   "7489306a36fff015": "Anslut miljön för att hantera den.",
   "d127f26d5bae862d": [
     "Version ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    }
-  ],
-  "114af8e45c69e28a": [
-    "Hanteras av ",
     {
       "i": 1,
       "k": "_gt_value_1",
@@ -3375,7 +3352,6 @@
   "c59bf1e7072eb7d9": "Tid, {time}",
   "a3c37b4a4e597700": "Tid",
   "f5b26c1c8f003aaf": "Upprepa",
-  "a56f1480a041b1a4": "{reason} Byt uppgiften till en timer, eller stäng av den, för att spara den.",
   "b92aceaf6b0eea30": "Datum, {date}",
   "12a46f713d714e93": "Datum",
   "055ac8d594fcf1c6": "Hoppa över begäranden äldre än (minuter)",
@@ -3456,7 +3432,6 @@
   "2e54c9d636c7d212": "Visa svaret när agenten är klar.",
   "d5db39feffc9d626": "Färdiga stycken",
   "875890264aa547fc": "Visa varje stycke eller kodblock när det är klart.",
-  "3b969d1b0381a986": "{subtitle} {reason}",
   "5fc597e1e2a7ec55": "Välj ett projekt med en utcheckning i en ansluten miljö.",
   "83b95c78e73eaa43": "Använd filtret ovan för att välja en ansluten miljö.",
   "d1d1342ccb83a14b": "Standardarbetsyta",
@@ -3465,6 +3440,8 @@
   "006f2c2416a56768": "Förhandsvisningswebbläsare",
   "19e1f74805f4a1fb": "Agenters webbläsaråtkomst",
   "74d09db9719594eb": "Låt agenter använda förhandsvisningswebbläsaren i appen.",
+  "c603786366d31b03": "GitHub-integrering",
+  "e9299508047698d6": "Låt Ankiel Code läsa och hantera ärenden och pull requests på GitHub i den här miljön.",
   "13087312bc6a0b45": "Pull requests",
   "efb65f53a2382026": "Ta bort agentmedförfattare vid merge",
   "88631d9ea293eccd": "Ta bort igenkända agentmedförfattare från merge- och squash-meddelanden hos värdar som stöder det, och behåll mänskliga medförfattare. Gäller även automatisk merge. Gäller inte merge-köer, stack-merges och befintliga commits.",
@@ -3490,15 +3467,6 @@
   "bb906952ffdf6ae4": "Valda projektutcheckningar använder olika värden",
   "5cb964736f071766": "Valda miljöer använder olika värden",
   "3c65f5fcf5915911": "Blandat",
-  "5a20a0be0657dec6": [
-    "Vissa inställningar hanteras av ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " och kan inte ändras här."
-  ],
   "32568cf8de392361": "Inloggning",
   "c2b2df67dab7d511": "En betydligt högre API-gräns än en personlig token eller CLI-inloggning.",
   "b725843fd45b74aa": "Autentiseringsuppgifter",
@@ -3579,7 +3547,6 @@
   "b0c77717b7d7b4a3": "Nya trådar",
   "8c8cf0bc2721cb2c": "Använd senaste projekt",
   "7d8bec2dc3f0e1a6": "Starta nya trådar i det senaste projekt du använde på den här enheten.",
-  "d85822b18e9475df": "Hanteras av {organization}.",
   "c8c52fccfab3ed12": "Inaktiva dagar",
   "bd1801b4c1402c9f": "Standardvärdena för automatisk markering som klar skiljer sig åt",
   "eb4898101556e51c": "Ladda ned {model}?",
@@ -3995,8 +3962,6 @@
   "0014ce0aaf1bd68a": "Skrivskyddad",
   "048b8a737af895ac": "Inget i den här tråden ännu.",
   "d148218513d9950a": "Anslut till ett nätverk som den finns på, till exempel dess Tailscale-nätverk, och försök igen. Du kan fortsätta läsa här.",
-  "1410155e503a917f": "{denial} Byt trådens läge för att fortsätta.",
-  "81ceeceeb521bba6": "Byt till {mode}",
   "6ebd73c7bfb58bb7": "App",
   "7e072f3b5535dc99": "Avsluta helskärm",
   "d3a4862f72c90c1e": "Appen kan inte visas.",
@@ -5281,7 +5246,5 @@
   "ad208e3e32c85029": "Dölj alla",
   "3328503592789bed": "Zen",
   "856812e7e1fc445e": "Verktygsanrop i chatten",
-  "8d545d54c0a9e950": "Dölj kommandon, redigeringar och sökningar som agenter kör. Dölj lyckade behåller misslyckanden. Zen visar bara slutliga svar. Godkännanden, frågor och fel visas alltid.",
-  "c603786366d31b03": "GitHub-integrering",
-  "e9299508047698d6": "Låt Ankiel Code läsa och hantera ärenden och pull requests på GitHub i den här miljön."
+  "8d545d54c0a9e950": "Dölj kommandon, redigeringar och sökningar som agenter kör. Dölj lyckade behåller misslyckanden. Zen visar bara slutliga svar. Godkännanden, frågor och fel visas alltid."
 }

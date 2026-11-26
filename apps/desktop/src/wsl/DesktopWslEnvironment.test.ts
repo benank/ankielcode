@@ -13,10 +13,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { afterAll, expect } from "vite-plus/test";
 import * as NodeChildProcess from "node:child_process";
 
-import { ManagedPolicyFileError } from "@ankielcode/shared/managedPolicyFile";
-
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
-import * as DesktopManagedPolicy from "../app/DesktopManagedPolicy.ts";
 import {
   DesktopWslEnvironment,
   layer as layerDesktopWslEnvironment,
@@ -465,7 +462,6 @@ describe.skipIf(posixShellRunner === null)("WSL runtime install script (executed
         Layer.provide(
           Layer.mergeAll(
             layerFakeWslExe(home),
-            DesktopManagedPolicy.layerTest(),
             Layer.effect(
               DesktopEnvironment.DesktopEnvironment,
               Effect.map(
@@ -591,16 +587,12 @@ const registrySpawner = (keys: ReadonlyArray<string>) =>
     ),
   );
 
-const isAvailable = (
-  policy?: Parameters<typeof DesktopManagedPolicy.layerTest>[0],
-  serviceKeys: ReadonlyArray<string> = [STORE_SERVICE],
-) =>
+const isAvailable = (serviceKeys: ReadonlyArray<string> = [STORE_SERVICE]) =>
   makeIsAvailable("win32", "/windows").pipe(
     Effect.provide(
       Layer.mergeAll(
         FileSystem.layerNoop({ exists: (path) => Effect.succeed(path === WSL_EXE) }),
         Path.layer,
-        DesktopManagedPolicy.layerTest(policy),
       ),
     ),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, registrySpawner(serviceKeys)),
@@ -609,18 +601,9 @@ const isAvailable = (
 describe("makeIsAvailable", () => {
   it.effect("needs a registered WSL service, not just the System32 install stub", () =>
     Effect.gen(function* () {
-      assert.isFalse(yield* isAvailable(undefined, []));
-      assert.isTrue(yield* isAvailable(undefined, [INBOX_SERVICE]));
-    }),
-  );
-
-  it.effect("turns WSL off on a machine with a managed policy, even an invalid one", () =>
-    Effect.gen(function* () {
+      assert.isFalse(yield* isAvailable([]));
+      assert.isTrue(yield* isAvailable([INBOX_SERVICE]));
       assert.isTrue(yield* isAvailable());
-      assert.isFalse(yield* isAvailable({ schemaVersion: 1, organization: "Example Corp" }));
-      assert.isFalse(
-        yield* isAvailable(new ManagedPolicyFileError({ path: "/test", reason: "bad JSON" })),
-      );
     }),
   );
 });

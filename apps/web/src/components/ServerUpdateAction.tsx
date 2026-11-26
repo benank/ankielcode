@@ -5,7 +5,6 @@ import {
   type AuthSessionState,
   sessionGrantsScope,
 } from "@ankielcode/contracts";
-import { managedUpdatesDenial } from "@ankielcode/client-runtime/contract-labels";
 import type { AsyncResult } from "effect/reactivity";
 import { environmentSession } from "~/state/session";
 import type {
@@ -35,9 +34,6 @@ import { serverEnvironment, updateOutdatedServer } from "~/state/server";
 import { appAtomRegistry } from "~/rpc/atomRegistry";
 import { useAtomCommand } from "~/state/use-atom-command";
 import { useServerConfigs } from "~/state/entities";
-import { useManagedPolicy } from "~/state/managedPolicy";
-import { environmentPresentations } from "~/state/presentation";
-import { ManagedControl } from "./ManagedPolicy";
 import { manualServerUpdateCommand } from "~/versionSkew";
 import { crossesReleaseTrack } from "@ankielcode/shared/cliRelease";
 import { Button } from "./ui/button";
@@ -56,15 +52,6 @@ export function serverUpdateStageLabel(
   resolve: MessageResolver = m,
 ): string {
   return resolve(UPDATE_STAGE_LABELS[stage]);
-}
-
-/** Why the environment's policy refuses server updates, read outside render. */
-function readUpdatesDenial(environmentId: EnvironmentId): string | undefined {
-  return managedUpdatesDenial(
-    appAtomRegistry.get(environmentPresentations.serverConfigsAtom).get(environmentId)
-      ?.managedPolicy,
-    m,
-  );
 }
 
 /** Hosts refuse a Stable/Nightly crossing outside a track switch, which checks the database first. */
@@ -128,17 +115,6 @@ export function useServerUpdate() {
     { quiet = false }: { readonly quiet?: boolean } = {},
   ): Promise<ServerUpdateOutcome> => {
     const { environmentId, serverLabel, selfUpdate, targetVersion } = target;
-    const denial = readUpdatesDenial(environmentId);
-    if (denial !== undefined) {
-      if (!quiet) {
-        toastManager.add({
-          type: "error",
-          title: m(msg("{serverLabel} not updated", { serverLabel })),
-          description: denial,
-        });
-      }
-      return { status: "failed", message: denial };
-    }
     if (
       !canUpdateServer(appAtomRegistry.get(environmentSession.sessionStateAtom(environmentId))) ||
       pendingUpdateEnvironmentIds.has(environmentId)
@@ -200,7 +176,6 @@ export function ServerUpdatesAction({
   readonly targets: ReadonlyArray<ServerUpdateTarget>;
 }) {
   const gt = useGT();
-  const messages = useMessages();
   const update = useServerUpdate();
   const serverConfigs = useServerConfigs();
   const pending = useRef(false);
@@ -209,8 +184,6 @@ export function ServerUpdatesAction({
     (target) =>
       target.selfUpdate !== null &&
       (target.selfUpdate !== "desktop-managed" || target.desktopAppUpdate) &&
-      managedUpdatesDenial(serverConfigs.get(target.environmentId)?.managedPolicy, messages) ===
-        undefined &&
       !refusedCrossing(target, serverConfigs.get(target.environmentId)?.environment.serverVersion),
   );
   const handleUpdate = async () => {
@@ -303,12 +276,10 @@ export function ServerUpdateAction({
   appearance = "button",
 }: ServerUpdateTarget & UpdateButtonProps) {
   const gt = useGT();
-  const messages = useMessages();
   const isDesktopAppUpdate = selfUpdate === "desktop-managed";
   const serverVersion = useServerConfigs().get(environmentId)?.environment.serverVersion;
   const sessionStateAtom = environmentSession.sessionStateAtom(environmentId);
   const canUpdate = useAtomValue(sessionStateAtom, canUpdateServer);
-  const updatesDenial = managedUpdatesDenial(useManagedPolicy(environmentId), messages);
   const update = useServerUpdate();
   const updatesInstall =
     installation?.kind === "npm-global" || installation?.kind === "ankiel-launcher";
@@ -377,18 +348,6 @@ export function ServerUpdateAction({
       targetVersion,
     });
   };
-
-  if (updatesDenial !== undefined) {
-    return appearance === "icon" ? (
-      <ManagedControl reason={updatesDenial}>
-        <Button size="icon-xs" variant="ghost-muted" aria-label={updatesDenial} disabled>
-          <CircleArrowUpIcon className="size-3.5" />
-        </Button>
-      </ManagedControl>
-    ) : (
-      <span className="text-muted-foreground text-xs">{updatesDenial}</span>
-    );
-  }
 
   if (selfUpdate === "desktop-managed" && !desktopAppUpdate) {
     return (

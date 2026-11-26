@@ -92,7 +92,6 @@ import { makeManualOnlyProviderMaintenanceCapabilities } from "@ankielcode/provi
 import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import * as ProviderHostPathWatcher from "./ProviderHostPathWatcher.ts";
 import * as DesktopTelemetryReceiver from "../resourceTelemetry/DesktopTelemetryReceiver.ts";
-import { providerHostEnvironment } from "../policy/managedProviders.ts";
 vi.mock("@anthropic-ai/claude-agent-sdk", { spy: true });
 
 const decodeServerProvider = Schema.decodeSync(ServerProvider);
@@ -1818,13 +1817,9 @@ it.layer(
         // PATH. Installed instances may hold live sessions, so it must not be rebuilt.
         const failsEarly = mode === "installed error";
         const replay = mode === "replay" || failsEarly;
-        const host = { PATH: "/early/bin", ANKIEL_CODEX_LAUNCH_ARGS: "hidden" };
-        const environment = providerHostEnvironment(
-          { organization: "PATH test", lockedSettings: [] },
-          host,
-        );
+        const environment: NodeJS.ProcessEnv = { PATH: "/early/bin" };
         const updates = yield* DesktopTelemetryReceiver.makeDesktopShellEnvironmentUpdates(
-          host,
+          environment,
           "linux",
         );
         const entered = yield* Deferred.make<void>();

@@ -1,10 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import {
-  allowsPreviewTunnel,
-  type EnvironmentId,
-  type PreviewRuntime,
-  type PreviewSessionSnapshot,
-} from "@ankielcode/contracts";
+import type { EnvironmentId, PreviewRuntime, PreviewSessionSnapshot } from "@ankielcode/contracts";
 import { Atom } from "effect/reactivity";
 
 import { environmentCatalog } from "~/connection/catalog";
@@ -25,8 +20,9 @@ const desktopLoadsLoopbackAtom = Atom.family((environmentId: EnvironmentId) =>
   Atom.make((get) => {
     const target = get(environmentCatalog.catalogValueAtom).entries.get(environmentId)?.target;
     if (!tunnelsEnvironmentLoopback(target)) return true;
-    const config = get(environmentServerConfigsAtom).get(environmentId);
-    return config !== undefined && allowsPreviewTunnel(config);
+    return (
+      get(environmentServerConfigsAtom).get(environmentId)?.settings.enablePreviewTunnel === true
+    );
   }).pipe(Atom.withLabel(`preview:desktop-loads-loopback:${environmentId}`)),
 );
 

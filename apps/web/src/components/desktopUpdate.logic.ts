@@ -260,13 +260,10 @@ export function canCheckForUpdate(state: DesktopUpdateState | null): boolean {
   );
 }
 
-/** `managedDenial` is this machine's policy refusing updates (`managedUpdatesDenial`); it wins. */
 export function getDesktopUpdateDisabledReason(
   state: Pick<DesktopUpdateState, "enabled" | "status" | "message"> | null,
-  managedDenial?: string,
   resolve: MessageResolver = m,
 ): string | null {
-  if (managedDenial !== undefined) return managedDenial;
   if (!state || (state.enabled && state.status !== "disabled")) return null;
   return (
     state.message?.trim() || resolve(msg("Automatic updates are not available in this build."))
@@ -275,10 +272,9 @@ export function getDesktopUpdateDisabledReason(
 
 export function getDesktopUpdateIdleTooltip(
   state: Pick<DesktopUpdateState, "enabled" | "status" | "message"> | null,
-  managedDenial?: string,
   resolve: MessageResolver = m,
 ) {
-  const disabledReason = getDesktopUpdateDisabledReason(state, managedDenial, resolve);
+  const disabledReason = getDesktopUpdateDisabledReason(state, resolve);
   return disabledReason
     ? { title: resolve(msg("Updates unavailable")), detail: disabledReason }
     : { title: resolve(msg("Check for updates")), detail: null };

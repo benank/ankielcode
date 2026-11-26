@@ -252,4 +252,3 @@ installation, update checks, and shutdown limits keep their existing behavior.
 - [Remote access](./remote-access.md): connect from another device.
 - [Running in the background](./background-service.md): keep a host available.
 - [Updating Ankiel Code](./updating.md): update the app and connected servers.
-- [Managed policy](./managed-policy.md): configure Ankiel Code for everyone on a machine.

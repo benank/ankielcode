@@ -8389,11 +8389,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
           // could be the agent's own skip-approval mode. Modes known to be permission levels are
           // also bounded by the thread's runtime mode, so model options cannot widen it.
           const ceiling =
-            flavor.runtimeModeForSessionMode === undefined ||
-            (runtimePolicy.maxRuntimeMode !== undefined &&
-              isRuntimeModeAbove(runtimePolicy.runtimeMode, runtimePolicy.maxRuntimeMode))
-              ? runtimePolicy.maxRuntimeMode
-              : runtimePolicy.runtimeMode;
+            flavor.runtimeModeForSessionMode === undefined ? undefined : runtimePolicy.runtimeMode;
           const isModeChoice = (id: string) =>
             id === ACP_SESSION_MODE_OPTION_ID ||
             configOptions.some(

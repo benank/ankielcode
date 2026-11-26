@@ -24,7 +24,7 @@ import packageJson from "../package.json" with { type: "json" };
 // Official release workflows set this telemetry channel; other builds report dev.
 // Unlike __ANKIEL_BUILD_CHANNEL__, this is not the sign-in page's latest/nightly channel.
 declare const __ANKIEL_RELEASE_CHANNEL__: ReleaseChannel | undefined;
-export const releaseChannel: ReleaseChannel =
+const releaseChannel: ReleaseChannel =
   typeof __ANKIEL_RELEASE_CHANNEL__ === "undefined" ? "dev" : __ANKIEL_RELEASE_CHANNEL__;
 
 export const DEFAULT_PORT = 3773;

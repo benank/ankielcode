@@ -22,7 +22,6 @@ import {
 } from "./ScheduledTaskService.ts";
 import { WEBHOOK_MAX_BODY_BYTES } from "./webhookRoute.ts";
 import * as WebhookRoute from "./webhookRoute.ts";
-import * as ManagedPolicy from "../policy/ManagedPolicy.ts";
 import * as Workflows from "../workflows/Workflows.ts";
 
 class WebhookTestApi extends HttpApi.make("environment").add(EnvironmentHttpApi.groups.webhooks) {}
@@ -50,7 +49,7 @@ const handlerFor = (
     HttpApiBuilder.layer(WebhookTestApi).pipe(
       Layer.provide(WebhookRoute.layer),
       Layer.provide(Layer.mock(ScheduledTaskService)({ triggerWebhook: trigger })),
-      Layer.provide([hooks, ManagedPolicy.layerTest()]),
+      Layer.provide(hooks),
       Layer.provide(
         HttpPlatform.layer.pipe(
           Layer.provideMerge(NodeServices.layer),
@@ -130,7 +129,6 @@ describe("webhook route", () => {
       [{ _tag: "not_found" }, 404, "not_found"],
       [{ _tag: "rejected_signature" }, 401, "rejected_signature"],
       [{ _tag: "disabled" }, 409, "disabled"],
-      [{ _tag: "blocked_by_policy" }, 403, "blocked_by_policy"],
       [{ _tag: "rate_limited", outcome: "rate_limited" }, 429, "rate_limited"],
       [{ _tag: "rate_limited", outcome: "queue_full" }, 429, "queue_full"],
       [{ _tag: "expired" }, 410, "expired"],

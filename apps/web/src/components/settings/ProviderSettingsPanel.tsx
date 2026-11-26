@@ -97,7 +97,6 @@ import { Toggle, ToggleGroup } from "../ui/toggle-group";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { stackedThreadToast, toastManager } from "../ui/toast";
 import { AddProviderInstanceDialog } from "./AddProviderInstanceDialog";
-import { useManagedPolicy } from "~/state/managedPolicy";
 import { ExpandableText } from "./ExpandableText";
 import { IntervalSecondsField } from "./IntervalSecondsField";
 import { ProviderInstanceCard } from "./ProviderInstanceCard";
@@ -575,10 +574,6 @@ export function EnvironmentProviderSettings({
   const searchableSetting = useSearchableSetting();
   const gt = useGT();
   const settings = useEnvironmentSettings(environmentId);
-  const managedPolicy = useManagedPolicy(environmentId);
-  // A policy that allows no provider leaves nothing to add.
-  const canAddProvider =
-    !readOnly && managedPolicy?.limits?.providers?.allowedDrivers?.length !== 0;
   const canWriteSettings = useEnvironmentScope(environmentId, AuthSettingsWriteScope);
   const canRefreshProviders = useEnvironmentScope(environmentId, AuthOrchestrationReadScope);
   const updateSettings = useUpdateEnvironmentSettings(environmentId);
@@ -1025,7 +1020,7 @@ export function EnvironmentProviderSettings({
         {...searchableSetting("providers")}
         variant="plain"
         titleAction={
-          canAddProvider ? (
+          !readOnly ? (
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -1109,7 +1104,7 @@ export function EnvironmentProviderSettings({
             >
               <div className="divide-y divide-border/50">
                 {rows.map((row) => renderProviderInstance(row, "list"))}
-                {canAddProvider ? (
+                {!readOnly ? (
                   <button
                     type="button"
                     className="flex w-full cursor-pointer items-center gap-3 px-3 py-3 text-left text-sm text-muted-foreground transition-colors outline-none hover:bg-muted/25 hover:text-foreground focus-visible:bg-muted/25 focus-visible:text-foreground sm:px-4"
@@ -1150,16 +1145,13 @@ export function EnvironmentProviderSettings({
         readOnly={readOnly}
       />
 
-      {/* The server drops text generators under a provider allow-list. */}
-      {managedPolicy?.limits?.providers?.allowedDrivers === undefined ? (
-        <TextGeneratorsSettings
-          key={`text-generators:${environmentId}`}
-          environmentId={environmentId}
-          environmentLabel={environmentLabel}
-          providers={serverProviders}
-          readOnly={readOnly}
-        />
-      ) : null}
+      <TextGeneratorsSettings
+        key={`text-generators:${environmentId}`}
+        environmentId={environmentId}
+        environmentLabel={environmentLabel}
+        providers={serverProviders}
+        readOnly={readOnly}
+      />
 
       <SettingsSection title={gt("Advanced")}>
         <SettingsRow

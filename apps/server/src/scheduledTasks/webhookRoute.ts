@@ -9,7 +9,6 @@ import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 
 import * as Metrics from "../observability/Metrics.ts";
-import * as ManagedPolicy from "../policy/ManagedPolicy.ts";
 import * as Workflows from "../workflows/Workflows.ts";
 import * as ScheduledTaskService from "./ScheduledTaskService.ts";
 
@@ -35,7 +34,6 @@ export const layer = HttpApiBuilder.group(
   Effect.fnUntraced(function* (handlers) {
     const scheduledTasks = yield* ScheduledTaskService.ScheduledTaskService;
     const workflows = yield* Workflows.Workflows;
-    const managedPolicy = yield* ManagedPolicy.ManagedPolicy;
     /**
      * The endpoint is raw so the signature is checked over the exact body
      * bytes; the service checks the token and signature.
@@ -85,9 +83,6 @@ export const layer = HttpApiBuilder.group(
       }
       const queryIndex = request.url.indexOf("?");
       if (params.hookId.startsWith(Workflows.HOOK_PREFIX)) {
-        if (ManagedPolicy.deniedBy(managedPolicy, "webhookTasks") !== undefined) {
-          return json(403, { error: "blocked_by_policy" }, "blocked_by_policy");
-        }
         // Answered only once the run is stored, so a sender that hears nothing may send again.
         const started = yield* workflows
           .deliver({
@@ -149,8 +144,6 @@ export const layer = HttpApiBuilder.group(
           return json(401, { error: "invalid_signature" }, "rejected_signature");
         case "disabled":
           return json(409, { error: "hook_disabled" }, "disabled");
-        case "blocked_by_policy":
-          return json(403, { error: "blocked_by_policy" }, "blocked_by_policy");
         case "rate_limited":
           return json(429, { error: result.outcome }, result.outcome);
         case "expired":

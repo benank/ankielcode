@@ -35,7 +35,6 @@ import * as ProjectService from "../project/ProjectService.ts";
 import { projectMutationOperation } from "../project/ProjectMutation.ts";
 import * as AnkielProjectFileLoader from "../project/AnkielProjectFileLoader.ts";
 import * as ServerSettings from "../serverSettings.ts";
-import * as ManagedPolicy from "../policy/ManagedPolicy.ts";
 import { discoverFolders, mergeProjectFolders } from "../workspace/WorkspaceFolders.ts";
 import * as WorkspacePaths from "../workspace/WorkspacePaths.ts";
 import { type CliAuthLocationFlags, projectLocationFlags, resolveCliAuthConfig } from "./config.ts";
@@ -209,11 +208,7 @@ const makeProjectCliRuntimeLayer = (layerProjectService: typeof RuntimeLayer.lay
       ),
     ),
     Layer.provideMerge(WorkspacePaths.layer),
-    Layer.provideMerge(
-      ServerSettings.layer.pipe(
-        Layer.provide(Layer.merge(ServerSecretStore.layer, ManagedPolicy.layer)),
-      ),
-    ),
+    Layer.provideMerge(ServerSettings.layer.pipe(Layer.provide(ServerSecretStore.layer))),
     // Built after acquireServerOwnership; layerCliConfig would contend with this process's own lock.
     Layer.provideMerge(SqlitePersistence.layerConfig),
   );

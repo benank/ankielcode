@@ -181,7 +181,6 @@ function ContextPermissions() {
   const [mode, setMode] = useState<RuntimeMode>("full-access");
   return (
     <ComposerContextPermissions
-      environmentId={null}
       runtimeMode={mode}
       supportedRuntimeModes={["approval-required", "full-access"]}
       onRuntimeModeChange={setMode}

@@ -1,9 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import {
-  allowsPreviewTunnel,
-  type DesktopPortForward,
-  type EnvironmentId,
-} from "@ankielcode/contracts";
+import type { DesktopPortForward, EnvironmentId } from "@ankielcode/contracts";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -58,12 +54,11 @@ export function usePortForwards(): ReadonlyArray<DesktopPortForward> {
 /** Only the desktop app forwards, and only from environments whose tunnel it may use. */
 export const canForwardPorts = (environment: {
   readonly entry: { readonly target: ConnectionTarget };
-  readonly serverConfig: Parameters<typeof allowsPreviewTunnel>[0] | null;
+  readonly serverConfig: { readonly settings: { readonly enablePreviewTunnel: boolean } } | null;
 }): boolean =>
   previewBridge() !== undefined &&
   tunnelsEnvironmentLoopback(environment.entry.target) &&
-  environment.serverConfig !== null &&
-  allowsPreviewTunnel(environment.serverConfig);
+  environment.serverConfig?.settings.enablePreviewTunnel === true;
 
 /**
  * Whether the environment runs on another machine. A saved route can still lead back to this

@@ -44,7 +44,7 @@ const SHARED_THEME: EnvironmentThemeFile = {
   colors: { canvas: "#eff1f5", accent: "#1e66f5" },
 };
 
-/** The settings mock refuses to make this theme the default, as a managed policy can. */
+/** The settings mock fails to make this theme the default. */
 const REFUSED_THEME_ID = "refused";
 
 const withEnvironmentThemes = <A, E>(
@@ -85,7 +85,7 @@ const withEnvironmentThemes = <A, E>(
                   ? Effect.fail(
                       new ServerSettingsError({
                         settingsPath: "settings.json",
-                        operation: "write-managed-setting",
+                        operation: "write-file",
                       }),
                     )
                   : Effect.sync(() => {

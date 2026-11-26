@@ -175,28 +175,3 @@ it.effect("hook paths go only to a caller at the broadest mode", () =>
     expect(JSON.stringify(refused)).not.toContain("token");
   }),
 );
-
-it.effect("under an administrator's ceiling, a caller at the ceiling starts runs", () =>
-  Effect.gen(function* () {
-    const start = { action: "start", workflow: "release", idempotencyKey: "trial" };
-    const started: Array<string> = [];
-    const workflows = {
-      start: (name: string) => Effect.sync(() => (started.push(name), { runId: "run-1" })),
-      get: () => Effect.succeed(emptyRun),
-    };
-    const narrowedTo = (runtimeMode: "auto" | "approval-required") => ({
-      runtimeModeCeiling: "auto" as const,
-      client: { ...fullAccess, narrowedTo: { runtimeMode, interactionMode: "default" as const } },
-    });
-    expect(
-      yield* call(start).pipe(Effect.provide(handlersWith(workflows, narrowedTo("auto")))),
-    ).toEqual({ steps: [], references: [] });
-    expect(started).toEqual(["release"]);
-    expect(
-      yield* call(start).pipe(
-        Effect.provide(handlersWith(workflows, narrowedTo("approval-required"))),
-      ),
-    ).toMatchObject({ code: "capability_denied" });
-    expect(started).toEqual(["release"]);
-  }),
-);

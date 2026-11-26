@@ -2730,7 +2730,7 @@ describe("AntigravityAdapterV2 subagent reads", () => {
 describe("AntigravityAdapterV2 runtime mode ceiling", () => {
   const modesSetFor = (
     pickedMode: string,
-    modes: Pick<ProviderAdapter.ProviderAdapterV2RuntimePolicy, "runtimeMode" | "maxRuntimeMode">,
+    modes: Pick<ProviderAdapter.ProviderAdapterV2RuntimePolicy, "runtimeMode">,
   ) =>
     Effect.gen(function* () {
       const childProcessSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -2791,13 +2791,6 @@ describe("AntigravityAdapterV2 runtime mode ceiling", () => {
       assert.deepEqual(yield* modesSetFor("yolo", { runtimeMode: "approval-required" }), [
         "default",
       ]);
-      assert.deepEqual(
-        yield* modesSetFor("auto_edit", {
-          runtimeMode: "approval-required",
-          maxRuntimeMode: "auto-accept-edits",
-        }),
-        ["default"],
-      );
       // A narrower mode is still the user's to pick.
       assert.deepEqual(yield* modesSetFor("default", { runtimeMode: "auto-accept-edits" }), [
         "auto_edit",

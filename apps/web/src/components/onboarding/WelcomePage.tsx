@@ -20,7 +20,6 @@ import {
   AuthTerminalOperateScope,
   CommandId,
   AuthOrchestrationOperateScope,
-  isManagedDriverAllowed,
   ProviderDriverKind,
   ThreadId,
 } from "@ankielcode/contracts";
@@ -356,13 +355,10 @@ interface AgentTerminalSession {
 function useWelcomeAgents(environmentId: EnvironmentId) {
   const providers = useAtomValue(serverEnvironment.providersValueAtom(environmentId));
   const serverConfig = useAtomValue(serverEnvironment.configValueAtom(environmentId));
-  const managedPolicy = serverConfig?.managedPolicy;
   return {
     providers,
     serverConfig,
-    ...groupWelcomeAgents(providers, serverConfig?.settings, agentName, (provider) =>
-      isManagedDriverAllowed(managedPolicy, provider.driver),
-    ),
+    ...groupWelcomeAgents(providers, serverConfig?.settings, agentName),
   };
 }
 
@@ -370,8 +366,6 @@ const isImportSource = Schema.is(AgentSessionSource);
 
 // The setup card opens below a long list, so bring it into view once.
 const revealOnMount = (node: HTMLElement | null) => node?.scrollIntoView({ block: "nearest" });
-
-const ACP_REGISTRY_DRIVER_KIND = ProviderDriverKind.make("acpRegistry");
 
 function AgentsSection({
   environmentId,
@@ -408,7 +402,6 @@ function AgentsSection({
   // status can be wrong, so this waits for the checks, and a later check never closes it.
   if (moreOpen === null && !checking && found.length === 0) setMoreOpen(true);
   const showMore = moreOpen ?? false;
-  const acpAllowed = isManagedDriverAllowed(serverConfig?.managedPolicy, ACP_REGISTRY_DRIVER_KIND);
   const stateOf = (provider: ServerProvider) => welcomeAgentState(provider, serverConfig?.settings);
   const needsInstallOrSignIn = (provider: ServerProvider) => {
     const state = stateOf(provider);
@@ -575,14 +568,7 @@ function AgentsSection({
     )
       ? gt("This connection cannot control terminals.")
       : null,
-    !canManageProviders &&
-    (acpAllowed ||
-      [...found, ...available].some(
-        (provider) =>
-          stateOf(provider) === "disabled" || codexNeedsSetup(provider, serverConfig?.settings),
-      ))
-      ? gt("This connection cannot manage agents.")
-      : null,
+    !canManageProviders ? gt("This connection cannot manage agents.") : null,
   ].filter((note) => note !== null);
 
   return (
@@ -620,7 +606,7 @@ function AgentsSection({
           >
             {found.length > 0 ? gt("Add more agents") : gt("Set up an agent")}
           </span>
-          {showMore ? null : <AgentLogoStack providers={available} acp={acpAllowed} />}
+          {showMore ? null : <AgentLogoStack providers={available} />}
           <ChevronDownIcon className="ml-auto size-4 text-muted-foreground group-data-panel-open:rotate-180" />
         </CollapsibleTrigger>
         <CollapsiblePanel>
@@ -635,24 +621,22 @@ function AgentsSection({
               />
             ))}
           </div>
-          {acpAllowed ? (
-            <div className="flex min-h-9 items-center gap-3">
-              <RowIcon>
-                <ACPRegistryIcon className="size-4" />
-              </RowIcon>
-              <span className="min-w-0 flex-1 text-sm text-muted-foreground">
-                <T>More agents in the ACP Registry</T>
-              </span>
-              <Button
-                size="xs"
-                variant="outline"
-                disabled={!canManageProviders}
-                onClick={() => setAddingProvider(true)}
-              >
-                <T>Browse</T>
-              </Button>
-            </div>
-          ) : null}
+          <div className="flex min-h-9 items-center gap-3">
+            <RowIcon>
+              <ACPRegistryIcon className="size-4" />
+            </RowIcon>
+            <span className="min-w-0 flex-1 text-sm text-muted-foreground">
+              <T>More agents in the ACP Registry</T>
+            </span>
+            <Button
+              size="xs"
+              variant="outline"
+              disabled={!canManageProviders}
+              onClick={() => setAddingProvider(true)}
+            >
+              <T>Browse</T>
+            </Button>
+          </div>
         </CollapsiblePanel>
       </Collapsible>
       {codexSetupProvider !== null && serverConfig !== null ? (
@@ -703,14 +687,7 @@ function AgentsSection({
 }
 
 // A quiet preview of what the fold holds; the names are inside it.
-function AgentLogoStack({
-  providers,
-  acp,
-}: {
-  readonly providers: ReadonlyArray<ServerProvider>;
-  readonly acp: boolean;
-}) {
-  if (providers.length === 0 && !acp) return null;
+function AgentLogoStack({ providers }: { readonly providers: ReadonlyArray<ServerProvider> }) {
   return (
     <span className="flex items-center gap-2 opacity-60 grayscale" aria-hidden>
       {providers.slice(0, 6).map((provider) => (
@@ -721,7 +698,7 @@ function AgentLogoStack({
           iconClassName="size-3.5"
         />
       ))}
-      {acp ? <ACPRegistryIcon className="size-3.5" /> : null}
+      <ACPRegistryIcon className="size-3.5" />
     </span>
   );
 }

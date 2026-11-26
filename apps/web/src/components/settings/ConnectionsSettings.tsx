@@ -1,6 +1,5 @@
 import { errorDisplayMessage, thrownErrorMessage } from "@ankielcode/client-runtime/errors";
 import { m as resolveMessage } from "~/i18n/messages";
-import { managedCapabilityDenial } from "@ankielcode/client-runtime/contract-labels";
 import { SessionPermissions } from "./SessionPermissions";
 import { useSearch } from "@tanstack/react-router";
 import { ChevronRightIcon, EllipsisIcon } from "lucide-react";
@@ -11,8 +10,6 @@ import {
   AuthAccessReadScope,
   AuthAccessWriteScope,
   AuthEnvironmentMaintainScope,
-  allowsPreviewTunnel,
-  isManagedSettingPath,
   type AuthClientSession,
   type AuthPairingLink,
   type AuthPairingCredentialResult,
@@ -39,7 +36,6 @@ import {
 import { settingsScopeEnvironmentLabel } from "./settingsScopeAxis";
 import { useAccessEnvironment } from "./useAccessEnvironment";
 import { SettingsPageContainer, SettingsRow, SettingsSection } from "./settingsLayout";
-import { ManagedByOrganization } from "../ManagedPolicy";
 import { LocalEnvironmentSetting } from "./LocalEnvironmentSetting";
 import { useSearchableSetting } from "./settingsSearch";
 import { EnvironmentIconMenu } from "./EnvironmentIconPicker";
@@ -399,12 +395,6 @@ function ConnectionsSettingsContent({
     DesktopServerExposureState["mode"] | null
   >(null);
   const primaryServerConfig = primaryEnvironment?.serverConfig ?? null;
-  // Turning remote access off stays possible; only the way in is managed.
-  const remoteClientsDenial = managedCapabilityDenial(
-    primaryServerConfig?.managedPolicy,
-    "remoteClients",
-    m,
-  );
   const primaryVersionMismatch = resolveServerConfigVersionMismatch(primaryServerConfig, m);
   const primaryServerUpdateState = useAtomValue(
     serverEnvironment.updateStateAtom(primaryEnvironmentId),
@@ -1140,7 +1130,6 @@ function ConnectionsSettingsContent({
         ) : null
       }
       control={renderNetworkAccessToggle()}
-      managed={isLocalBackendNetworkAccessible ? undefined : remoteClientsDenial}
     />
   );
   const renderDisabledNetworkAccessRow = () => (
@@ -1187,12 +1176,6 @@ function ConnectionsSettingsContent({
   );
 
   const accessServerConfig = accessEnvironment?.serverConfig ?? null;
-  const accessPolicy = accessServerConfig?.managedPolicy;
-  const previewTunnelDenial =
-    managedCapabilityDenial(accessPolicy, "previewTunnel", m) ??
-    (accessPolicy !== undefined && isManagedSettingPath(accessPolicy, "enablePreviewTunnel")
-      ? gt("Managed by {organization}.", { organization: accessPolicy.organization })
-      : undefined);
   const primarySettings = (
     <>
       {accessEnvironmentPicker}
@@ -1238,11 +1221,6 @@ function ConnectionsSettingsContent({
               ) : null
             }
           >
-            {accessServerConfig?.managedPolicy ? (
-              <div className="px-3 py-2 sm:px-4">
-                <ManagedByOrganization policy={accessServerConfig.managedPolicy} />
-              </div>
-            ) : null}
             {canManageLocalBackend ? (
               <SettingsRow
                 title={gt("Version")}
@@ -1315,10 +1293,9 @@ function ConnectionsSettingsContent({
                 description={gt(
                   "Lets other devices open this machine's local servers: browser tabs loaded on the device, Open on this device, and port forwarding. Off: browser tabs stream from this machine.",
                 )}
-                managed={previewTunnelDenial}
                 control={
                   <Switch
-                    checked={allowsPreviewTunnel(accessServerConfig)}
+                    checked={accessServerConfig.settings.enablePreviewTunnel}
                     disabled={!canWriteAccess}
                     aria-label={gt("Allow the preview tunnel")}
                     onCheckedChange={(enabled) =>

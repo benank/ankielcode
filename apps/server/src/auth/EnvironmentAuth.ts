@@ -23,7 +23,6 @@ import {
   type DpopFailureReason as DpopFailureReasonType,
   mcpClientScopes,
 } from "@ankielcode/contracts";
-import { isLocalLoopbackHost } from "@ankielcode/shared/hostClassification";
 import { encodeOAuthScope } from "@ankielcode/shared/oauthScope";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -48,8 +47,6 @@ import { REUSABLE_DEV_SESSION_EXPIRES_AT, resolveReusableDevAuth } from "./Reusa
 import { verifyRequestDpopProof } from "./dpop.ts";
 import { DESKTOP_RENDERER_ORIGINS } from "../httpCors.ts";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
-import * as ManagedLimits from "../policy/managedLimits.ts";
-import * as ManagedPolicy from "../policy/ManagedPolicy.ts";
 import {
   MCP_APPROVAL_SUBJECT_PREFIX,
   PEER_LINK_PAIRING_SUBJECT_PREFIX,
@@ -426,16 +423,10 @@ export class EnvironmentAuth extends Context.Service<
       readonly proofKeyThumbprint?: string;
       readonly purpose?: "startup";
       readonly mcpApproval?: AuthMcpClientAccess;
-    }) => Effect.Effect<
-      IssuedPairingLink,
-      ServerAuthInternalError | ManagedLimits.ManagedPolicyRefusedError
-    >;
+    }) => Effect.Effect<IssuedPairingLink, ServerAuthInternalError>;
     readonly issuePairingCredential: (
       input?: AuthCreatePairingCredentialInput,
-    ) => Effect.Effect<
-      AuthPairingCredentialResult,
-      ServerAuthInternalError | ManagedLimits.ManagedPolicyRefusedError
-    >;
+    ) => Effect.Effect<AuthPairingCredentialResult, ServerAuthInternalError>;
     readonly issueStartupPairingCredential: () => Effect.Effect<
       AuthPairingCredentialResult,
       ServerAuthInternalError
@@ -673,7 +664,6 @@ export const make = Effect.gen(function* () {
   const digest = yield* Digest.Digest;
   const descriptor = yield* policy.getDescriptor();
   const config = yield* ServerConfig.ServerConfig;
-  const managedPolicy = yield* ManagedPolicy.ManagedPolicy;
   const devAuth = resolveReusableDevAuth(config);
 
   const authenticateToken = (
@@ -1068,13 +1058,6 @@ export const make = Effect.gen(function* () {
   const createPairingLink: EnvironmentAuth["Service"]["createPairingLink"] = Effect.fn(
     "EnvironmentAuth.createPairingLink",
   )(function* (input) {
-    // The startup link is for a browser on this machine; every other link lets a device pair.
-    if (input?.purpose !== "startup" && !ManagedLimits.allowsRemoteClients(managedPolicy)) {
-      return yield* ManagedLimits.refuseRemoteClients(
-        managedPolicy,
-        "so this server cannot create pairing links",
-      );
-    }
     return yield* issuePairingLink(input);
   });
 
@@ -1175,7 +1158,6 @@ export const make = Effect.gen(function* () {
 
   const issueStartupPairingCredential: EnvironmentAuth["Service"]["issueStartupPairingCredential"] =
     () => {
-      // Unguarded: startup already refused auth policies the managed policy leaves out.
       const fallback = issuePairingLink({
         scopes: AuthStandardClientScopes,
         subject: INTERNAL_ADMINISTRATIVE_BOOTSTRAP_SUBJECT,
@@ -1489,10 +1471,7 @@ export const make = Effect.gen(function* () {
       Effect.withSpan("EnvironmentAuth.consumeMcpApprovalCode"),
     );
 
-  yield* revokePairedClientsThePolicyDisallows(managedPolicy, {
-    sessions,
-    pairingLinks: bootstrapCredentials,
-  });
+  yield* revokeLegacyCloudConnectClients({ sessions, pairingLinks: bootstrapCredentials });
 
   return EnvironmentAuth.of({
     getDescriptor: Effect.fn("EnvironmentAuth.getDescriptor")(function () {
@@ -1536,52 +1515,24 @@ const mcpApprovalLevel = (subject: string): AuthMcpClientAccess | undefined => {
   return isMcpClientAccess(level) ? level : undefined;
 };
 
-/** Subjects of sessions and links a pairing link created, keyed by how the client paired. */
-const LINK_PAIRED_SUBJECTS = {
-  link: "one-time-token",
-  connect: LEGACY_CLOUD_CONNECT_SUBJECT,
-} as const;
-
-/**
- * Revokes sessions and unused links from pairing the policy no longer allows, so a policy rolled
- * out to a machine that already had phones paired takes effect on the next start.
- */
-const revokePairedClientsThePolicyDisallows = Effect.fn(
-  "EnvironmentAuth.revokePairedClientsThePolicyDisallows",
-)(function* (
-  policy: ManagedPolicy.ManagedPolicy["Service"],
-  stores: {
-    readonly sessions: SessionStore.SessionStore["Service"];
-    readonly pairingLinks: PairingGrantStore.PairingGrantStore["Service"];
-  },
-) {
-  const remoteAllowed = ManagedLimits.allowsRemoteClients(policy);
-  const disallowed = new Set<string>();
-  if (!remoteAllowed) disallowed.add(LINK_PAIRED_SUBJECTS.link);
-  // The relay that minted these is gone, so none of them can be used again.
-  disallowed.add(LINK_PAIRED_SUBJECTS.connect);
-  if (disallowed.size === 0) return;
+const revokeLegacyCloudConnectClients = Effect.fn(
+  "EnvironmentAuth.revokeLegacyCloudConnectClients",
+)(function* (stores: {
+  readonly sessions: SessionStore.SessionStore["Service"];
+  readonly pairingLinks: PairingGrantStore.PairingGrantStore["Service"];
+}) {
   const sessions = (yield* stores.sessions.listActive()).filter(
-    (session) =>
-      disallowed.has(session.subject) ||
-      // The startup link also pairs browsers on this machine; only a device elsewhere goes.
-      (!remoteAllowed &&
-        session.subject === INTERNAL_ADMINISTRATIVE_BOOTSTRAP_SUBJECT &&
-        session.client.ipAddress !== undefined &&
-        !isLocalLoopbackHost(session.client.ipAddress)),
+    (session) => session.subject === LEGACY_CLOUD_CONNECT_SUBJECT,
   );
   const links = (yield* stores.pairingLinks.listActive()).filter(
-    (link) =>
-      disallowed.has(link.subject) ||
-      // Approval codes let an agent elsewhere sign in, as plain codes do.
-      (!remoteAllowed && link.subject.startsWith(MCP_APPROVAL_SUBJECT_PREFIX)),
+    (link) => link.subject === LEGACY_CLOUD_CONNECT_SUBJECT,
   );
   yield* Effect.forEach(sessions, (session) => stores.sessions.revoke(session.sessionId), {
     discard: true,
   });
   yield* Effect.forEach(links, (link) => stores.pairingLinks.revoke(link.id), { discard: true });
   if (sessions.length > 0 || links.length > 0) {
-    yield* Effect.logInfo("Revoked clients the managed policy does not allow.", {
+    yield* Effect.logInfo("Revoked legacy cloud-connect clients.", {
       sessions: sessions.length,
       pairingLinks: links.length,
     });
@@ -1597,7 +1548,6 @@ export const layer = Layer.effect(EnvironmentAuth, make).pipe(
 const layerStorage = Layer.mergeAll(ServerSecretStore.layer, SqlitePersistence.layerCliConfig);
 
 export const layerRuntime = layer.pipe(
-  Layer.provideMerge(ManagedPolicy.layer),
   Layer.provideMerge(layerStorage),
   Layer.provideMerge(ServerEnvironment.layerIdentity),
 );

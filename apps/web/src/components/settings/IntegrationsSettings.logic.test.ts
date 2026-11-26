@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { type EnvironmentId, managedPolicyDeniedMessage } from "@ankielcode/contracts";
+import type { EnvironmentId } from "@ankielcode/contracts";
 
-import {
-  clearBrowserProfileData,
-  importFailureReason,
-  importPolicyRefusal,
-} from "./IntegrationsSettings";
+import { clearBrowserProfileData, importFailureReason } from "./IntegrationsSettings";
 
 const environmentId = "environment-a" as EnvironmentId;
 const secondEnvironmentId = "environment-b" as EnvironmentId;
@@ -64,23 +60,5 @@ describe("importFailureReason", () => {
     expect(importFailureReason(failure("keychainUnavailable"))).toBe("keychainUnavailable");
     expect(importFailureReason(failure("profileNotSaved"))).toBe("profileNotSaved");
     expect(importFailureReason(failure("profileLimitReached"))).toBe("profileLimitReached");
-  });
-});
-
-describe("importPolicyRefusal", () => {
-  it("recovers a managed policy's refusal from the IPC-wrapped message", () => {
-    const denied = managedPolicyDeniedMessage("Example Corp", "importing browser cookies");
-    expect(
-      importPolicyRefusal({
-        message: `Error invoking remote method 'desktop:preview-import-cookies': BrowserImportPolicyError: ${denied}`,
-      }),
-    ).toBe(denied);
-    const unreadable =
-      "The managed policy at C:\\Program Files\\AnkielCode\\policy.json could not be read, so importing browser cookies is not allowed.";
-    expect(importPolicyRefusal({ message: `Error: ${unreadable}` })).toBe(unreadable);
-  });
-
-  it("leaves other failures to their reason token", () => {
-    expect(importPolicyRefusal(failure("readFailed"))).toBeUndefined();
   });
 });

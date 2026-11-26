@@ -215,16 +215,6 @@
   "7953122755efa56e": "Deltas werden aufgelöst",
   "d9a8c7734f54ea3f": "Dateien werden ausgecheckt",
   "215fbed6f97db37d": "Stockt",
-  "c3d4e74188cdc76f": "{organization} verwaltet die Updates von Ankiel Code.",
-  "4a3e0e49c5578c95": "{organization} verwaltet die Updates von Ankiel Code. Nur stabile Versionen können installiert werden.",
-  "6365146db77a8dac": "{organization} beschränkt Threads auf „Beaufsichtigt“.",
-  "2aa1c01bf8014725": "{organization} beschränkt Threads auf „Änderungen automatisch annehmen“.",
-  "89563a8fff8bb751": "{organization} beschränkt Threads auf „Auto“.",
-  "5b7ff1208620c2c2": "{organization} beschränkt Threads auf „Vollzugriff“.",
-  "9bf017edd3847eb1": "Die Richtlinie von {organization} erlaubt keine Verbindungen von anderen Geräten.",
-  "986b0873f913a840": "Die Richtlinie von {organization} erlaubt keine Webhook-Aufgaben.",
-  "eebc538e25b09fe2": "Die Richtlinie von {organization} erlaubt keinen Import von Browser-Cookies.",
-  "7642a133db05f164": "Die Richtlinie von {organization} erlaubt nicht, die lokalen Server dieses Rechners auf anderen Geräten zu öffnen.",
   "39f6771b49f9b3b6": "Standard verwenden",
   "45bb0e90e1c42046": "Wenn du zurückkommst",
   "c592225cafc222a3": "Bevor der Cache abläuft",
@@ -1360,10 +1350,6 @@
   "218c111b4aa6e029": "Ein eingefügtes Bild konnte nicht gelesen werden.",
   "ce88bed3d928cf6b": "Dieser Anhang ist nicht mehr verfügbar. Hänge die Datei erneut an.",
   "232298a82d027b3d": "Details",
-  "35fcb6312e278185": "Die Richtlinie deiner Organisation erlaubt den Anbieter {label} nicht.",
-  "90548f7a4d620371": "Die Richtlinie von {organization} erlaubt den Anbieter {label} nicht.",
-  "2c850e594aa60ad5": "Anbieter nicht erlaubt",
-  "bada142dca0fa1d1": "{message} Wähle ein anderes Modell.",
   "d2b4bc575d7d99d8": "Modell für dieses Projekt ausgeschaltet",
   "be1bc7fa9d199f70": "Schalte es im Web oder auf dem Desktop wieder ein oder wähle ein anderes Modell.",
   "b994adb6050417c2": "{provider}-Modell nicht verfügbar",
@@ -3154,7 +3140,6 @@
   "cc1c68228ae59262": "Du bist auf dem neuesten Stand.",
   "40c4c31be0a4151b": "Aktualisiere die Desktop-App auf diesem Rechner.",
   "74e9603036cf74a0": "{product} auf diesem Rechner aktualisieren und neu starten.",
-  "ed46ceb44345b705": "Hilfe von {organization} erhalten",
   "56edbb36e9731d20": "Anbieter aktualisieren",
   "50fd05851156af28": "Anbieterstatus aktualisiert.",
   "2baa086b75bc2077": "{version} · Neueste {latest}",
@@ -3168,14 +3153,6 @@
   "7489306a36fff015": "Verbinde diese Umgebung, um sie zu verwalten.",
   "d127f26d5bae862d": [
     "Version ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    }
-  ],
-  "114af8e45c69e28a": [
-    "Verwaltet von ",
     {
       "i": 1,
       "k": "_gt_value_1",
@@ -3374,7 +3351,6 @@
   "c59bf1e7072eb7d9": "Uhrzeit, {time}",
   "a3c37b4a4e597700": "Uhrzeit",
   "f5b26c1c8f003aaf": "Wiederholung",
-  "a56f1480a041b1a4": "{reason} Stelle die Aufgabe auf einen Timer um oder schalte sie aus, um sie zu speichern.",
   "b92aceaf6b0eea30": "Datum, {date}",
   "12a46f713d714e93": "Datum",
   "055ac8d594fcf1c6": "Anfragen überspringen, die älter sind als (Minuten)",
@@ -3455,7 +3431,6 @@
   "2e54c9d636c7d212": "Die Antwort anzeigen, wenn der Agent fertig ist.",
   "d5db39feffc9d626": "Fertige Absätze",
   "875890264aa547fc": "Jeden Absatz oder Codeblock anzeigen, sobald er vollständig ist.",
-  "3b969d1b0381a986": "{subtitle} {reason}",
   "5fc597e1e2a7ec55": "Wähle ein Projekt mit einem Checkout in einer verbundenen Umgebung.",
   "83b95c78e73eaa43": "Verwende den Filter oben, um eine verbundene Umgebung auszuwählen.",
   "d1d1342ccb83a14b": "Standard-Arbeitsbereich",
@@ -3464,6 +3439,8 @@
   "006f2c2416a56768": "Vorschau-Browser",
   "19e1f74805f4a1fb": "Browserzugriff für Agenten",
   "74d09db9719594eb": "Agenten den In-App-Vorschau-Browser nutzen lassen.",
+  "c603786366d31b03": "GitHub-Integration",
+  "e9299508047698d6": "Ankiel Code darf in dieser Umgebung GitHub-Issues und Pull Requests lesen und verwalten.",
   "13087312bc6a0b45": "Pull Requests",
   "efb65f53a2382026": "Agenten-Credits beim Mergen entfernen",
   "88631d9ea293eccd": "Erkannte Agenten-Credits aus Merge- und Squash-Nachrichten entfernen, sofern der Host das unterstützt; menschliche Co-Autoren bleiben erhalten. Gilt auch für Auto-Merge. Ausgenommen sind Merge-Queues, Stack-Merges und bestehende Commits.",
@@ -3489,15 +3466,6 @@
   "bb906952ffdf6ae4": "Ausgewählte Projekt-Checkouts verwenden unterschiedliche Werte",
   "5cb964736f071766": "Ausgewählte Umgebungen verwenden unterschiedliche Werte",
   "3c65f5fcf5915911": "Gemischt",
-  "5a20a0be0657dec6": [
-    "Einige Einstellungen werden von ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " verwaltet und können hier nicht geändert werden."
-  ],
   "32568cf8de392361": "Anmelden",
   "c2b2df67dab7d511": "Ein deutlich höheres API-Ratenlimit als ein persönliches Token oder ein CLI-Login.",
   "b725843fd45b74aa": "Anmeldedaten",
@@ -3578,7 +3546,6 @@
   "b0c77717b7d7b4a3": "Neue Threads",
   "8c8cf0bc2721cb2c": "Letztes Projekt verwenden",
   "7d8bec2dc3f0e1a6": "Neue Threads im zuletzt auf diesem Gerät verwendeten Projekt starten.",
-  "d85822b18e9475df": "Verwaltet von {organization}.",
   "c8c52fccfab3ed12": "Inaktive Tage",
   "bd1801b4c1402c9f": "Standards für automatisches Erledigen unterscheiden sich",
   "eb4898101556e51c": "{model} herunterladen?",
@@ -3994,8 +3961,6 @@
   "0014ce0aaf1bd68a": "Schreibgeschützt",
   "048b8a737af895ac": "Noch nichts in diesem Thread.",
   "d148218513d9950a": "Tritt einem Netzwerk bei, in dem es sich befindet, etwa seinem Tailscale-Netzwerk, und versuche es erneut. Du kannst hier weiterlesen.",
-  "1410155e503a917f": "{denial} Wechsle den Modus dieses Threads, um fortzufahren.",
-  "81ceeceeb521bba6": "Zu {mode} wechseln",
   "6ebd73c7bfb58bb7": "App",
   "7e072f3b5535dc99": "Vollbild beenden",
   "d3a4862f72c90c1e": "Diese App kann nicht angezeigt werden.",
@@ -5281,7 +5246,5 @@
   "ad208e3e32c85029": "Alle ausblenden",
   "3328503592789bed": "Zen",
   "856812e7e1fc445e": "Tool-Aufrufe im Chat",
-  "8d545d54c0a9e950": "Die Befehle, Bearbeitungen und Suchen ausblenden, die Agenten ausführen. „Erfolgreiche ausblenden“ behält Fehler. „Zen“ zeigt nur endgültige Antworten. Genehmigungen, Fragen und Fehler werden immer angezeigt.",
-  "c603786366d31b03": "GitHub-Integration",
-  "e9299508047698d6": "Ankiel Code darf in dieser Umgebung GitHub-Issues und Pull Requests lesen und verwalten."
+  "8d545d54c0a9e950": "Die Befehle, Bearbeitungen und Suchen ausblenden, die Agenten ausführen. „Erfolgreiche ausblenden“ behält Fehler. „Zen“ zeigt nur endgültige Antworten. Genehmigungen, Fragen und Fehler werden immer angezeigt."
 }

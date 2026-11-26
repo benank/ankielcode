@@ -1,5 +1,4 @@
 import { thrownErrorMessage } from "@ankielcode/client-runtime/errors";
-import { managedCapabilityDenial } from "@ankielcode/client-runtime/contract-labels";
 import { useAtomValue } from "@effect/atom-react";
 import { connectionStatusTitle } from "@ankielcode/client-runtime/connection";
 import { AsyncResult } from "effect/reactivity";
@@ -83,10 +82,8 @@ import { useAtomCommand } from "../../state/use-atom-command";
 import { WorktreeBaseBranchPicker } from "../WorktreeBaseBranchPicker";
 import { EnvironmentMachineIcon } from "../EnvironmentMachineIcon";
 import { ConnectionStatusDot, connectionPhaseDotClassName } from "../ConnectionStatusDot";
-import { AuthOrchestrationOperateScope, clampManagedRuntimeMode } from "@ankielcode/contracts";
+import { AuthOrchestrationOperateScope } from "@ankielcode/contracts";
 import { resolvePastedPath } from "@ankielcode/shared/path";
-import { useManagedPolicy } from "~/state/managedPolicy";
-import { ManagedNotice } from "../ManagedPolicy";
 import { readEnvironmentScope } from "~/state/session";
 import { useSettingsScope } from "./SettingsScopeContext";
 import { EnvironmentRow, useEnvironmentTransportLabel } from "./EnvironmentRow";
@@ -841,9 +838,7 @@ function ScheduledTaskRow({
               locale,
             )}{" "}
             ·{" "}
-            {task.blockedByPolicy !== undefined ? (
-              task.blockedByPolicy
-            ) : !task.enabled ? (
+            {!task.enabled ? (
               gt("Paused")
             ) : isWebhook ? (
               gt("Listening")
@@ -1483,11 +1478,6 @@ function ScheduledTaskEditorForm({
   const upsertTask = useAtomCommand(serverEnvironment.upsertScheduledTask, {
     label: "scheduled task upsert",
   });
-  const webhookDenial = managedCapabilityDenial(
-    useManagedPolicy(environmentId),
-    "webhookTasks",
-    messages,
-  );
   const [draft, setDraft] = useState<DraftState>(() =>
     task
       ? taskToDraft(task)
@@ -1663,10 +1653,7 @@ function ScheduledTaskEditorForm({
       ...(offersThreadModes ? { threadMode: draft.threadMode } : {}),
       workspaceStrategy,
       modelSelection: selection,
-      // Tasks have no mode picker; a mode above the administrator's ceiling would fail every run.
-      runtimeMode:
-        clampManagedRuntimeMode(environment?.serverConfig?.managedPolicy, draft.runtimeMode) ??
-        draft.runtimeMode,
+      runtimeMode: draft.runtimeMode,
       interactionMode: draft.interactionMode,
       creationSource: "web",
     };
@@ -2020,29 +2007,13 @@ function ScheduledTaskEditorForm({
                 <Toggle value="interval">
                   <T>Every interval</T>
                 </Toggle>
-                <Toggle
-                  value="webhook"
-                  disabled={webhookDenial !== undefined && draft.scheduleMode !== "webhook"}
-                >
+                <Toggle value="webhook">
                   <T>On webhook</T>
                 </Toggle>
               </ToggleGroup>
             </div>
 
-            {webhookDenial !== undefined ? (
-              <ManagedNotice>
-                {draft.scheduleMode === "webhook"
-                  ? gt(
-                      "{webhookDenial} Switch this task to a time or an interval, or turn it off, to save it.",
-                      { webhookDenial },
-                    )
-                  : webhookDenial}
-              </ManagedNotice>
-            ) : null}
-            {/* A disabled task still saves, so keep its fields reachable for fixing. */}
-            {draft.scheduleMode === "webhook" &&
-            webhookDenial !== undefined &&
-            draft.enabled ? null : draft.scheduleMode === "webhook" ? (
+            {draft.scheduleMode === "webhook" ? (
               <div className="space-y-4">
                 <WebhookEndpointField environmentId={environmentId} task={liveTask} />
                 <p className="text-xs text-muted-foreground">
@@ -2349,8 +2320,7 @@ function ScheduledTaskEditorForm({
             editingTaskMissing ||
             !connected ||
             !tasksQuery.data ||
-            automaticBaseRefLoading ||
-            (draft.enabled && draft.scheduleMode === "webhook" && webhookDenial !== undefined)
+            automaticBaseRefLoading
           }
           onClick={() => void submit()}
         >

@@ -1,7 +1,3 @@
-import {
-  managedNightlyDeniedMessage,
-  managedUpdatesDenial,
-} from "@ankielcode/client-runtime/contract-labels";
 import type { ServerUpdateState } from "@ankielcode/client-runtime/state/server";
 import {
   type DesktopUpdateChannel,
@@ -27,7 +23,6 @@ export interface UpdateEverythingMachine {
   readonly serverConfig: {
     readonly environment: ServerConfig["environment"];
     readonly settings: Pick<ServerConfig["settings"], "continueThreadsAfterServerUpdate">;
-    readonly managedPolicy?: ServerConfig["managedPolicy"];
   } | null;
   readonly connected: boolean;
   /** Why the connection is down, when it says, in the active language. */
@@ -108,15 +103,6 @@ export function collectServerUpdateTargets(
       continue;
     }
     const selfUpdate = resolveServerSelfUpdateCapability(config);
-    const managedDenial = managedMachineUpdateDenial(
-      config,
-      selfUpdate === "desktop-managed" ? undefined : targetVersion,
-      resolve,
-    );
-    if (managedDenial !== undefined) {
-      skip(managedDenial);
-      continue;
-    }
     const desktopAppUpdate = supportsDesktopAppUpdate(config);
     if (selfUpdate === null) {
       skip(resolve(msg("needs a manual update")));
@@ -303,27 +289,6 @@ export function localSwitchBlockReason(
     : localChannelSwitchBlockReason(appVersion, release, block, resolve);
 }
 
-/**
- * The server refuses these with the same message; say so before the run instead of after.
- * `targetVersion` is undefined when the server picks its own version, as desktop apps do.
- */
-function managedMachineUpdateDenial(
-  config: NonNullable<UpdateEverythingMachine["serverConfig"]>,
-  targetVersion: string | undefined,
-  resolve: MessageResolver,
-): string | undefined {
-  const policy = config.managedPolicy;
-  return (
-    managedUpdatesDenial(policy, resolve) ??
-    (policy !== undefined &&
-    policy.limits?.updates?.allowNightly === false &&
-    targetVersion !== undefined &&
-    cliReleaseChannelOf(targetVersion) !== "stable"
-      ? managedNightlyDeniedMessage(policy.organization, resolve)
-      : undefined)
-  );
-}
-
 /** Servers move to the release; desktop-managed hosts reinstall their app on its track. A desktop
  * host already current gets a track-only request, since its saved track may still differ. */
 export function collectChannelSwitchTargets(
@@ -364,8 +329,7 @@ export function collectChannelSwitchTargets(
       if (
         !("skip" in move) &&
         move.selfUpdate === "desktop-managed" &&
-        unavailableReason(machine, resolve) === null &&
-        managedMachineUpdateDenial(config, release.version, resolve) === undefined
+        unavailableReason(machine, resolve) === null
       ) {
         targets.push({ ...target(move.selfUpdate, serverVersion), trackOnly: true });
       }
@@ -374,11 +338,6 @@ export function collectChannelSwitchTargets(
     const unavailable = unavailableReason(machine, resolve);
     if (config === null || serverVersion === undefined || unavailable !== null) {
       skip(unavailable ?? resolve(msg("not connected")));
-      continue;
-    }
-    const managedDenial = managedMachineUpdateDenial(config, release.version, resolve);
-    if (managedDenial !== undefined) {
-      skip(managedDenial);
       continue;
     }
     const move = trackSwitchMove(config, sameTrack, resolve);

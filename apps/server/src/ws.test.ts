@@ -12,7 +12,6 @@ import {
   AuthOrchestrationOperateScope,
   AuthOrchestrationReadScope,
   AuthProvidersManageScope,
-  type ManagedPolicySummary,
   type WorkflowRun,
   type WorkflowStep,
   AuthSessionId,
@@ -173,7 +172,6 @@ import * as Keybindings from "./keybindings.ts";
 import { USAGE_LIMITS_COMMAND } from "@ankielcode/shared/usageLimits";
 import * as FeatureFlags from "@ankielcode/shared/FeatureFlags";
 import * as ServerSettings from "./serverSettings.ts";
-import * as ManagedPolicy from "./policy/ManagedPolicy.ts";
 
 import * as EventStore from "./orchestration-v2/EventStore.ts";
 import * as ThreadManagement from "./orchestration-v2/ThreadManagementService.ts";
@@ -919,9 +917,7 @@ const layerConfigSources = Layer.mergeAll(
   Keybindings.layer,
   AssetSigner.layer.pipe(Layer.provide(ServerSecretStore.layer)),
   WorkspacePreviewRevisions.layer,
-  ServerSettings.layer.pipe(
-    Layer.provide(Layer.merge(ServerSecretStore.layer, ManagedPolicy.layerTest())),
-  ),
+  ServerSettings.layer.pipe(Layer.provide(ServerSecretStore.layer)),
 ).pipe(
   Layer.provideMerge(Layer.fresh(SqlitePersistence.layerMemory)),
   Layer.provideMerge(
@@ -3003,7 +2999,6 @@ const makeAcpRegistryClient = Effect.fn("test.makeAcpRegistryClient")(function* 
   calls: Array<string>,
   options: {
     readonly nativeSessions?: { readonly canList: boolean };
-    readonly managedPolicy?: ManagedPolicySummary;
   },
 ) {
   const scopes = [AuthOrchestrationReadScope, AuthProvidersManageScope];
@@ -3022,7 +3017,7 @@ const makeAcpRegistryClient = Effect.fn("test.makeAcpRegistryClient")(function* 
     Layer.mock(ScratchThreadPromotion.ScratchThreadPromotion)({}),
     Layer.mock(ServerEnvironment.ServerEnvironment)({}),
     Layer.mock(EnvironmentAuth.EnvironmentAuth)({}),
-    ServerSettings.layerTest({}, options.managedPolicy),
+    ServerSettings.layerTest({}),
     Layer.mock(AcpRegistrySupport.AcpRegistryCatalog)({
       prepare: ({ agentId }) =>
         Effect.sync(() => calls.push(`prepare:${agentId}`)).pipe(
@@ -3081,40 +3076,12 @@ it.effect("listing ACP sessions reaches only an agent that advertises listing", 
   }).pipe(Effect.provide(layerWorkflowRpcTest)),
 );
 
-it.effect("preparing an ACP Registry agent follows the policy's allowed providers", () =>
+it.effect("preparing an ACP Registry agent reaches the catalog", () =>
   Effect.gen(function* () {
     const calls: Array<string> = [];
-    const policy = (...allowedDrivers: ReadonlyArray<string>): ManagedPolicySummary => ({
-      organization: "Example Corp",
-      lockedSettings: [],
-      limits: {
-        providers: {
-          allowedDrivers: [
-            ProviderDriverKind.make("codex"),
-            ...allowedDrivers.map((driver) => ProviderDriverKind.make(driver)),
-          ],
-          lockedInstanceFields: {},
-        },
-      },
-    });
-
-    const excluded = yield* makeAcpRegistryClient(calls, { managedPolicy: policy() });
-    const refused = yield* excluded[WS_METHODS.serverPrepareAcpRegistryAgent]({
-      agentId: "example-agent",
-    }).pipe(Effect.flip);
-    assert.strictEqual(
-      refused._tag === "AcpRegistryOperationError" ? refused.message : refused._tag,
-      "Example Corp's policy does not allow the ACP Registry provider.",
-    );
-    assert.deepEqual(calls, []);
-
-    const included = yield* makeAcpRegistryClient(calls, {
-      managedPolicy: policy("acpRegistry"),
-    });
-    yield* included[WS_METHODS.serverPrepareAcpRegistryAgent]({ agentId: "example-agent" });
-    const unmanaged = yield* makeAcpRegistryClient(calls, {});
-    yield* unmanaged[WS_METHODS.serverPrepareAcpRegistryAgent]({ agentId: "example-agent" });
-    assert.deepEqual(calls, ["prepare:example-agent", "prepare:example-agent"]);
+    const client = yield* makeAcpRegistryClient(calls, {});
+    yield* client[WS_METHODS.serverPrepareAcpRegistryAgent]({ agentId: "example-agent" });
+    assert.deepEqual(calls, ["prepare:example-agent"]);
   }).pipe(Effect.provide(layerWorkflowRpcTest)),
 );
 

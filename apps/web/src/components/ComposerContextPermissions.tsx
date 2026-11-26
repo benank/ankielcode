@@ -1,10 +1,9 @@
-import type { EnvironmentId, RuntimeMode } from "@ankielcode/contracts";
+import type { RuntimeMode } from "@ankielcode/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { use } from "react";
 import { T, useGT, useMessages } from "gt-react";
 
 import { shortcutLabelForCommand } from "../keybindings";
-import { useManagedPolicy } from "../state/managedPolicy";
 import { primaryServerKeybindingsAtom } from "../state/server";
 import { HiddenThreadContext } from "./chat/backgroundThread";
 import { ComposerControl } from "./chat/ComposerControl";
@@ -21,7 +20,6 @@ import { Menu, MenuPopup, MenuTrigger } from "./ui/menu";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "./ui/tooltip";
 
 export function ComposerContextPermissions(props: {
-  environmentId: EnvironmentId | null;
   runtimeMode: RuntimeMode;
   supportedRuntimeModes: ReadonlyArray<RuntimeMode> | undefined;
   onRuntimeModeChange: (mode: RuntimeMode) => void;
@@ -36,7 +34,7 @@ export function ComposerContextPermissions(props: {
     props.runtimeMode,
     props.supportedRuntimeModes,
   );
-  const options = resolveRuntimeModeOptions(modes, useManagedPolicy(props.environmentId), messages);
+  const options = resolveRuntimeModeOptions(modes, messages);
   const composerMenuProps = useComposerMenuProps();
   const [open, setOpen] = useComposerMenuState(use(HiddenThreadContext));
   const { icon: Icon } = runtimeModeConfig[mode];

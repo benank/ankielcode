@@ -114,8 +114,6 @@ import * as Keybindings from "./keybindings.ts";
 import * as ServerRuntimeStartup from "./serverRuntimeStartup.ts";
 import * as ServerOwnership from "./serverOwnership.ts";
 import * as ServerSettings from "./serverSettings.ts";
-import * as ManagedLimits from "./policy/managedLimits.ts";
-import * as ManagedPolicy from "./policy/ManagedPolicy.ts";
 import * as ProjectEnrichmentService from "./project/ProjectEnrichmentService.ts";
 import * as NativeAppIconResolver from "./assets/NativeAppIconResolver.ts";
 import * as AntigravityInstallation from "./provider/AntigravityInstallation.ts";
@@ -167,7 +165,6 @@ import * as WebhookRoute from "./scheduledTasks/webhookRoute.ts";
 import * as McpOAuth from "./auth/McpOAuth.ts";
 import * as McpOAuthHttp from "./auth/mcpOAuthHttp.ts";
 import * as EnvironmentAuth from "./auth/EnvironmentAuth.ts";
-import * as EnvironmentAuthPolicy from "./auth/EnvironmentAuthPolicy.ts";
 import * as LinkThreadHttp from "./peer/linkThreadHttp.ts";
 import * as ServerSelfUpdate from "./cloud/selfUpdate.ts";
 import * as DesktopAppUpdate from "./desktopUpdate/DesktopAppUpdate.ts";
@@ -254,7 +251,6 @@ const layerPtyAdapter = NodePtyAdapter.layer;
 
 const layerServerSettings = ServerSettings.layer.pipe(
   Layer.provide(ServerSecretStore.layer),
-  Layer.provideMerge(ManagedPolicy.layer),
   Layer.provideMerge(SqlitePersistence.layerConfig),
 );
 
@@ -310,15 +306,7 @@ const layerSpawner = SpawnWorker.layerServer.pipe(Layer.provide(NodeServices.lay
 const layerHttpServer = Layer.unwrap(
   Effect.gen(function* () {
     const config = yield* ServerConfig.ServerConfig;
-    // Before binding: a host the policy does not allow must never listen, not even briefly.
-    const policy = yield* ManagedPolicy.ManagedPolicy;
-    const bindHost = yield* ManagedLimits.checkServerReachability(policy, {
-      authPolicy: EnvironmentAuthPolicy.resolveServerAuthPolicy(config),
-      host: config.host,
-      tailscaleServeEnabled: config.tailscaleServeEnabled,
-      privateNetworkOnly: config.privateNetworkOnly,
-    });
-    yield* ManagedLimits.closeTailscaleServeTo(policy, { host: bindHost, port: config.port });
+    const bindHost = config.host ?? "127.0.0.1";
     const runSync = Effect.runSyncWith(yield* Effect.context<never>());
     return NodeHttpServer.layer(
       () => {
@@ -343,7 +331,6 @@ const layerHttpServer = Layer.unwrap(
     ).pipe(Layer.merge(layerSpawner));
   }),
 ).pipe(
-  Layer.provide(ManagedPolicy.layer),
   // NodeHttpServer.layer also outputs NodeServices, whose spawner would shadow the wrapped one.
   (layer) => ProcessLauncher.layerServer.pipe(Layer.provideMerge(layer)),
 );
@@ -905,7 +892,6 @@ const layerMakeServer = Layer.unwrap(
           config,
           port: address.port,
           serviceManaged: launcher.managed,
-          managedPolicy: yield* ManagedPolicy.loadedPolicy(yield* ManagedPolicy.ManagedPolicy),
         });
         yield* ownership
           .publish(state)

@@ -29,10 +29,9 @@ revocation and ceilings hold, not what a full-scope session can do once issued.
 | Narrow client                                                                     | Pairing link with explicit scopes                                        | Only the RPCs and routes its scopes allow. Can never widen its own grant.                                                                              |
 | MCP client (outside agent, subject `mcp-client`)                                  | OAuth on `/mcp`                                                          | Only `/mcp`, within a read-only grant or a runtime-mode ceiling. Every other route rejects it.                                                         |
 | Linked environment (peer link)                                                    | OAuth client `ankielcode-peer-link`                                      | Work it starts carries an immutable `linkOrigin` and never exceeds the access it was paired with.                                                      |
-| Agent run by Ankiel                                                               | Thread's runtime mode and thread credential                              | Within its runtime mode, managed policy, and the MCP access declared per tool.                                                                         |
+| Agent run by Ankiel                                                               | Thread's runtime mode and thread credential                              | Within its runtime mode and the MCP access declared per tool.                                                                                          |
 | Signed asset URL                                                                  | Minted with `filesystem:read`                                            | One file, by device and inode identity, until it expires.                                                                                              |
 | Webhook sender                                                                    | A task's webhook URL, plus its signing secret when the task requires one | Start that one task's run with content of its choosing. Nothing in the request is trusted beyond the signature check.                                  |
-| Managed policy                                                                    | Admin-deployed file, read at startup                                     | Ceilings and locks the server enforces for every client.                                                                                               |
 | Preview pages, HTML renders, file previews, agent output                          | Rendered by clients                                                      | Untrusted content. It must never run script in the app's origin or reach Electron IPC or Node.                                                         |
 
 ## A real finding crosses one of these
@@ -68,8 +67,7 @@ revocation and ceilings hold, not what a full-scope session can do once issued.
   what its shell can already do crosses no boundary, though it can still be an
   ordinary bug. That stops at what a shell as the server's OS user cannot reach:
   another client's device, what another scope guards by name (as
-  `providers:manage` does for secret references), a managed-policy ceiling or
-  lock, and access that outlives the session's revocation. Where the session
+  `providers:manage` does for secret references), and access that outlives the session's revocation. Where the session
   can obtain that shell, file contents are within its reach, so reading a file
   via a route that does not check `filesystem:read` crosses no boundary.
 - The default grant includes `access:write`, so a full-scope session can mint
@@ -105,8 +103,7 @@ revocation and ceilings hold, not what a full-scope session can do once issued.
   Code points at already holds the OS account, so a value weakening their own
   setup is their choice. It is a finding when a narrower principal can set it
   for them (a narrow client, an MCP client, an agent below full access,
-  repository content), when [managed policy](docs/user/managed-policy.md) locks
-  the setting and the value still applies, or when the value leaks (see 5).
+  repository content), or when the value leaks (see 5).
   Choosing a host does not make it trusted: what a configured endpoint can do
   to the server or its clients stays in scope.
 - An attacker already running code as the same OS user. That includes one whose
@@ -122,7 +119,6 @@ revocation and ceilings hold, not what a full-scope session can do once issued.
 - Per-RPC scopes: [`auth/RpcAuthorization.ts`](apps/server/src/auth/RpcAuthorization.ts). [`clientRpcPermissions.ts`](packages/contracts/src/clientRpcPermissions.ts) only drives client UI and is never the boundary.
 - MCP: [`auth/McpOAuth.ts`](apps/server/src/auth/McpOAuth.ts), [`mcp/McpToolAccess.ts`](apps/server/src/mcp/McpToolAccess.ts), [`mcp/threadAccess.ts`](apps/server/src/mcp/threadAccess.ts), [`mcp/linkOrigin.ts`](apps/server/src/mcp/linkOrigin.ts)
 - Files and assets: [`workspace/WorkspaceFileSystem.ts`](apps/server/src/workspace/WorkspaceFileSystem.ts), [`assets/AssetAccess.ts`](apps/server/src/assets/AssetAccess.ts)
-- Managed policy: [`apps/server/src/policy`](apps/server/src/policy)
 - Desktop preview isolation: [`preview/WebviewPreferences.ts`](apps/desktop/src/preview/WebviewPreferences.ts)
 
 ## How to audit and triage

@@ -37,7 +37,6 @@ import {
   AuthTerminalOperateScope,
   AuthProvidersManageScope,
   type AuthEnvironmentScope,
-  ProviderDriverKind,
   type ScheduledTaskListResult,
   WorkflowRequestError,
   AuthSessionId,
@@ -192,7 +191,6 @@ import * as NpmRelease from "./cloud/npmRelease.ts";
 import * as ServerLifecycleEvents from "./serverLifecycleEvents.ts";
 import * as ServerRuntimeStartup from "./serverRuntimeStartup.ts";
 import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
-import * as ManagedProviders from "./policy/managedProviders.ts";
 import * as ServerSettings from "./serverSettings.ts";
 import { invalidateSettingsSecrets } from "./sourceControl/sourceControlHostSecrets.ts";
 import * as DatabaseStorage from "./persistence/DatabaseStorage.ts";
@@ -1828,9 +1826,6 @@ export const layerWsRpc = (
             otlpLogsEnabled: config.otlpLogsUrl !== undefined,
           },
           settings,
-          ...(serverSettings.managedPolicy === undefined
-            ? {}
-            : { managedPolicy: serverSettings.managedPolicy }),
           shellResumeCompletionMarker: true,
           shellThreadFamilies: true,
           threadLinkMetadata: true,
@@ -2323,19 +2318,9 @@ export const layerWsRpc = (
         [WS_METHODS.serverPrepareAcpRegistryAgent]: (input) =>
           Effect.annotateCurrentSpan({ "acp_registry.agent_id": input.agentId }).pipe(
             Effect.andThen(
-              Effect.suspend(() => {
-                const blocked = ManagedProviders.disallowedDriverReason(
-                  serverSettings.managedPolicy,
-                  ProviderDriverKind.make("acpRegistry"),
-                );
-                return blocked === undefined
-                  ? acpRegistryCatalog
-                      .prepare(input)
-                      .pipe(Effect.mapError(AcpRegistrySupport.toAcpRegistryOperationError))
-                  : Effect.fail(
-                      new AcpRegistryOperationError({ reason: "install_failed", message: blocked }),
-                    );
-              }),
+              acpRegistryCatalog
+                .prepare(input)
+                .pipe(Effect.mapError(AcpRegistrySupport.toAcpRegistryOperationError)),
             ),
           ),
         [WS_METHODS.serverUninstallAcpRegistryManagedBinary]: (input) =>

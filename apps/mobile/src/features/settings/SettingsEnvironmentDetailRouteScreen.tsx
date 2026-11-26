@@ -11,14 +11,12 @@ import {
   type ServerProvider,
 } from "@ankielcode/contracts";
 import { settlePromise, squashAtomCommandFailure } from "@ankielcode/client-runtime/state/runtime";
-import { managedUpdatesDenial } from "@ankielcode/client-runtime/contract-labels";
 import { sessionPermissionsUnavailableMessage } from "@ankielcode/shared/authScopeOptions";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import { AsyncResult } from "effect/reactivity";
 import { useRef, useState } from "react";
 import { View } from "react-native";
-import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { m } from "../../i18n/messages";
 
@@ -103,10 +101,6 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
   const version = config?.environment.serverVersion;
   const checkedRelease = release?.fromVersion === version ? release : null;
   const capabilities = config?.environment.capabilities;
-  const managedPolicy = config?.managedPolicy;
-  const supportUrl = managedPolicy?.supportUrl;
-  // The server refuses checks and installs; say so instead of offering them.
-  const updatesDenial = managedUpdatesDenial(managedPolicy, messages);
 
   async function run(label: string, action: () => Promise<void>) {
     if (pendingRef.current) return;
@@ -265,16 +259,6 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                         Version <Var>{version}</Var>
                       </T>
                     </Text>
-                    {managedPolicy ? (
-                      <Text className="text-sm text-foreground-muted">
-                        <T>
-                          Managed by <Var>{managedPolicy.organization}</Var>
-                        </T>
-                      </Text>
-                    ) : null}
-                    {updatesDenial ? (
-                      <Text className="text-sm text-foreground-muted">{updatesDenial}</Text>
-                    ) : null}
                     {running ? (
                       <Text className="text-sm text-foreground-muted">
                         {updateState.stage === "resuming"
@@ -286,7 +270,7 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                         {serverUpdateFailureText(updateState, messages)}
                       </Text>
                     ) : null}
-                    {checkedRelease && !updatesDenial ? (
+                    {checkedRelease ? (
                       <Text className="text-sm text-foreground-muted">
                         {checkedRelease.targetVersion
                           ? gt("Version {version} is available.", {
@@ -296,7 +280,6 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                       </Text>
                     ) : null}
                     {checkedRelease?.targetVersion &&
-                    !updatesDenial &&
                     !supportsEnvironmentUpdate(config.environment.capabilities) ? (
                       <Text className="text-sm text-foreground-muted">
                         {capabilities?.serverSelfUpdate === "desktop-managed"
@@ -307,34 +290,22 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                       </Text>
                     ) : null}
                   </View>
-                  {supportUrl ? (
-                    <SettingsActionRow
-                      icon="questionmark.bubble"
-                      label={gt("Get help from {organization}", {
-                        organization: managedPolicy.organization,
-                      })}
-                      onPress={() => void tryOpenExternalUrl(supportUrl)}
-                    />
-                  ) : null}
-                  {updatesDenial ? null : (
-                    <SettingsActionRow
-                      icon="arrow.clockwise"
-                      label={gt("Check for updates")}
-                      disabled={disabled}
-                      loading={pending === "check"}
-                      onPress={() => {
-                        if (disabled) return;
-                        const fromVersion = config.environment.serverVersion;
-                        void run("check", async () => {
-                          const exit = await checkRelease(async () => fromVersion);
-                          // `run` owns the error message, so a failed lookup rethrows to it.
-                          if (Exit.isFailure(exit)) throw Cause.squash(exit.cause);
-                        });
-                      }}
-                    />
-                  )}
+                  <SettingsActionRow
+                    icon="arrow.clockwise"
+                    label={gt("Check for updates")}
+                    disabled={disabled}
+                    loading={pending === "check"}
+                    onPress={() => {
+                      if (disabled) return;
+                      const fromVersion = config.environment.serverVersion;
+                      void run("check", async () => {
+                        const exit = await checkRelease(async () => fromVersion);
+                        // `run` owns the error message, so a failed lookup rethrows to it.
+                        if (Exit.isFailure(exit)) throw Cause.squash(exit.cause);
+                      });
+                    }}
+                  />
                   {checkedRelease?.targetVersion &&
-                  !updatesDenial &&
                   supportsEnvironmentUpdate(config.environment.capabilities) ? (
                     <SettingsActionRow
                       icon="arrow.up.circle"

@@ -62,10 +62,6 @@ export const make = Effect.gen(function* () {
   const secrets = yield* SecretResolver.SecretResolver;
   const http = yield* HttpClient.HttpClient;
   const modelCache = yield* Ref.make(new Map<ProviderInstanceId, CachedModels>());
-  // Settings already drop saved generators under an allow-list; this stops unsaved ones too.
-  const allowListed =
-    settingsService.managedPolicy?.limits?.providers?.allowedDrivers !== undefined;
-
   const readConfig = Effect.fn("TextGenerators.readConfig")(function* (id: ProviderInstanceId) {
     const settings = yield* settingsService.getSettings.pipe(
       Effect.mapError(
@@ -124,11 +120,6 @@ export const make = Effect.gen(function* () {
 
   const listModels = Effect.fn("TextGenerators.listModels")(
     function* (input: ListTextGeneratorModelsInput) {
-      if (allowListed) {
-        return yield* new TextGeneratorRequestError({
-          detail: "Your organization's provider policy turns off text generators.",
-        });
-      }
       const saved = yield* readConfig(input.id);
       const config =
         input.config === undefined

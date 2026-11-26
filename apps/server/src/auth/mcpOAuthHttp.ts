@@ -5,7 +5,6 @@ import {
   AuthMcpClientRegistration,
   AuthMcpRegistrationError,
   EnvironmentHttpApi,
-  isRuntimeModeAbove,
   mcpClientScopes,
   parseMcpApprovalCode,
 } from "@ankielcode/contracts";
@@ -109,11 +108,7 @@ export const layer = HttpApiBuilder.group(
 
       const resolved = authorization.success;
       const redirect = new URL(resolved.redirectUri);
-      const ceiling = oauth.runtimeModeCeiling?.maxRuntimeMode;
-      const levels = AuthMcpClientAccess.literals.filter(
-        (access) =>
-          access === "read-only" || ceiling === undefined || !isRuntimeModeAbove(access, ceiling),
-      );
+      const levels = AuthMcpClientAccess.literals;
       const page = (error?: string) =>
         approvalPage(
           renderConsentPage({
@@ -121,8 +116,7 @@ export const layer = HttpApiBuilder.group(
             environmentHost: url.host,
             redirectHost: redirect.host,
             levels,
-            defaultAccess:
-              ceiling !== undefined && isRuntimeModeAbove("auto", ceiling) ? ceiling : "auto",
+            defaultAccess: "auto",
             error,
           }),
           error === undefined ? 200 : 400,
@@ -206,9 +200,6 @@ export const layer = HttpApiBuilder.group(
             clientName: resolved.client.name,
             redirectHost: new URL(resolved.redirectUri).host,
             environmentHost: new URL(urls.issuer).host,
-            ...(oauth.runtimeModeCeiling === undefined
-              ? {}
-              : { runtimeModeCeiling: oauth.runtimeModeCeiling }),
             ...(session === undefined
               ? {}
               : {

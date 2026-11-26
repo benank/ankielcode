@@ -8,7 +8,6 @@ import {
 } from "@ankielcode/client-runtime/state/runtime";
 import {
   AuthProvidersManageScope,
-  isManagedDriverAllowed,
   type ProviderAuthResponse,
   type ServerProvider,
 } from "@ankielcode/contracts";
@@ -76,7 +75,7 @@ export function SettingsProviderAccountsRouteScreen() {
               ) : (
                 <EnvironmentProviders
                   environment={environment}
-                  providers={managedProviders(environment, providersByEnvironment)}
+                  providers={providersByEnvironment.get(environment.environmentId) ?? []}
                 />
               )}
             </SettingsSection>
@@ -99,10 +98,6 @@ function EnvironmentProviders({
   const claudeAccounts = providers.filter(
     (provider) => provider.driver === CLAUDE_DRIVER && !canManageProvider(provider),
   );
-  const canAddClaude = isManagedDriverAllowed(
-    environment.serverConfig.managedPolicy,
-    CLAUDE_DRIVER,
-  );
   return (
     <>
       {accounts.map((provider, index) => (
@@ -121,18 +116,8 @@ function EnvironmentProviders({
       {claudeAccounts.map((provider) => (
         <ClaudeAccount key={provider.instanceId} environment={environment} provider={provider} />
       ))}
-      {canAddClaude ? <AddClaudeAccount environment={environment} /> : null}
+      <AddClaudeAccount environment={environment} />
     </>
-  );
-}
-
-/** Providers the environment's managed policy allows; the rest cannot run or sign in. */
-function managedProviders(
-  environment: SettingsTarget,
-  providersByEnvironment: ReadonlyMap<string, ReadonlyArray<ServerProvider>>,
-) {
-  return (providersByEnvironment.get(environment.environmentId) ?? []).filter((provider) =>
-    isManagedDriverAllowed(environment.serverConfig.managedPolicy, provider.driver),
   );
 }
 

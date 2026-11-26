@@ -27,10 +27,6 @@ import {
   ScreenReaderAnnouncements,
   ToolCallVisibility,
 } from "@ankielcode/contracts/settings";
-import {
-  managedUpdatesDenial,
-  managedUpdatesMessage,
-} from "@ankielcode/client-runtime/contract-labels";
 import { desktopUpdateChannelOf } from "@ankielcode/shared/cliRelease";
 import { createModelSelection, pickModelSelection } from "@ankielcode/shared/model";
 import { resolvePastedPath } from "@ankielcode/shared/path";
@@ -71,7 +67,6 @@ import { ProjectDefaultsSettings } from "./ProjectDefaultsSettings";
 import { ThreadTitleInstructionsSettings } from "./ThreadTitleInstructionsSettings";
 import { SnoozePresetsRow } from "./SnoozePresetsSettings";
 import { useDesktopUpdateState } from "../../state/desktopUpdate";
-import { usePrimaryManagedPolicy } from "../../state/managedPolicy";
 import {
   getTextGenerationModelOptionsByInstance,
   resolveAppModelSelectionState,
@@ -187,15 +182,6 @@ function AboutVersionSection() {
 
   const hasDesktopBridge = typeof window !== "undefined" && Boolean(window.desktopBridge);
   const selectedUpdateChannel = updateState?.channel ?? "latest";
-  // The desktop updates this machine, whose policy the primary environment reports.
-  const primaryPolicy = usePrimaryManagedPolicy();
-  const updatesDenial = hasDesktopBridge
-    ? managedUpdatesDenial(primaryPolicy, messages)
-    : undefined;
-  const nightlyDeniedBy =
-    hasDesktopBridge && primaryPolicy?.limits?.updates?.allowNightly === false
-      ? primaryPolicy.organization
-      : undefined;
   // A switch that failed part way leaves this app or a server on the other track.
   // With its updater off, a switch cannot move this app, so it is not counted.
   const appOffTrack =
@@ -294,9 +280,7 @@ function AboutVersionSection() {
               type: "error",
               title: gt("Could not check for updates"),
               description:
-                updatesDenial ??
-                result.state.message ??
-                gt("Automatic updates are not available in this build."),
+                result.state.message ?? gt("Automatic updates are not available in this build."),
             }),
           );
         }
@@ -334,7 +318,7 @@ function AboutVersionSection() {
   const description =
     action === "download" || action === "install"
       ? gt("Update available.")
-      : (getDesktopUpdateDisabledReason(updateState, updatesDenial, messages) ??
+      : (getDesktopUpdateDisabledReason(updateState, messages) ??
         gt("Current version of the application."));
 
   return (
@@ -343,7 +327,6 @@ function AboutVersionSection() {
         id={setting("app-version").id}
         title={<AboutVersionTitle />}
         description={description}
-        managed={updatesDenial}
         control={
           <Tooltip>
             <TooltipTrigger
@@ -366,18 +349,7 @@ function AboutVersionSection() {
         <SettingsRow
           {...setting("update-track")}
           description={
-            nightlyDeniedBy !== undefined ? (
-              selectedUpdateChannel === "nightly" ? (
-                gt(
-                  "{policy} Nightly builds are not available; switch to Stable to keep getting updates.",
-                  { policy: managedUpdatesMessage(nightlyDeniedBy, messages) },
-                )
-              ) : (
-                gt("{policy} Nightly builds are not available.", {
-                  policy: managedUpdatesMessage(nightlyDeniedBy, messages),
-                })
-              )
-            ) : unswitchedMachines > 0 ? (
+            unswitchedMachines > 0 ? (
               <>
                 {gt(
                   "{count, plural, one {{count} machine still runs {track}.} other {{count} machines still run {track}.}}",
@@ -405,7 +377,6 @@ function AboutVersionSection() {
               )
             )
           }
-          managed={updatesDenial}
           control={
             <Select
               value={selectedUpdateChannel}
@@ -427,11 +398,7 @@ function AboutVersionSection() {
                 <SelectItem hideIndicator value="latest">
                   <T>Stable</T>
                 </SelectItem>
-                <SelectItem
-                  hideIndicator
-                  value="nightly"
-                  disabled={nightlyDeniedBy !== undefined && selectedUpdateChannel !== "nightly"}
-                >
+                <SelectItem hideIndicator value="nightly">
                   <T>Nightly</T>
                 </SelectItem>
               </SelectPopup>
@@ -2461,34 +2428,11 @@ export function MaintenanceSettingsPanel() {
 export function AboutSettingsPanel() {
   const setting = useSearchableSetting();
   const gt = useGT();
-  const primaryPolicy = usePrimaryManagedPolicy();
   // The Welcome page sets up this computer, so it needs one.
   const primaryEnvironmentId = usePrimaryEnvironmentId();
   return (
     <SettingsPageContainer>
       <SettingsSection id="about" title={gt("App")}>
-        {primaryPolicy ? (
-          <SettingsRow
-            title={gt("Organization")}
-            description={gt(
-              "This environment is managed by {organization}. Some settings and features follow its policy.",
-              { organization: primaryPolicy.organization },
-            )}
-            control={
-              primaryPolicy.supportUrl ? (
-                <Button
-                  render={
-                    <a href={primaryPolicy.supportUrl} target="_blank" rel="noreferrer noopener" />
-                  }
-                  size="sm"
-                  variant="outline"
-                >
-                  <T>Get help</T>
-                </Button>
-              ) : null
-            }
-          />
-        ) : null}
         {isElectron ? (
           <AboutVersionSection />
         ) : (
