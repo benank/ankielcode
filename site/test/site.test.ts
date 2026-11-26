@@ -95,6 +95,26 @@ describe("extractReleaseSummary", () => {
     assert.equal(summary.downloads.winArm64Exe, null);
   });
 
+  it("keeps desktop downloads and SHA256SUMS.txt beside the CLI archives", () => {
+    const cliAsset = (name: string) => ({
+      name,
+      browser_download_url: `https://github.com/benank/ankielcode/releases/download/v0.2.0/${name}`,
+    });
+    const summary = extractReleaseSummary({
+      ...SAMPLE_RELEASE,
+      assets: [
+        cliAsset("SHA256SUMS"),
+        cliAsset("ankiel-0.2.0-darwin-arm64.tar.gz"),
+        cliAsset("ankiel-0.2.0-linux-x64.tar.gz"),
+        cliAsset("ankiel-0.2.0-win32-x64.zip"),
+        cliAsset("install.ps1"),
+        cliAsset("install.sh"),
+        ...(SAMPLE_RELEASE.assets ?? []),
+      ],
+    });
+    assert.deepEqual(summary.downloads, extractReleaseSummary(SAMPLE_RELEASE).downloads);
+  });
+
   it("matches pre-rebrand T3-Code-* artifact names identically", () => {
     const summary = extractReleaseSummary({
       tag_name: "v0.1.12",
@@ -217,6 +237,17 @@ describe("code.ankiel.com Worker routes", () => {
     const body = (await res.json()) as { version: string; downloads: { winX64Exe: string } };
     assert.equal(body.version, "0.2.0");
     assert.match(body.downloads.winX64Exe, /x64\.exe$/);
+  });
+
+  it("redirects /install.sh and /install.ps1 to the latest release's install scripts", async () => {
+    for (const script of ["install.sh", "install.ps1"]) {
+      const res = await handleRequest(new Request(`https://code.ankiel.com/${script}`), env);
+      assert.equal(res.status, 302);
+      assert.equal(
+        res.headers.get("location"),
+        `https://github.com/benank/ankielcode/releases/latest/download/${script}`,
+      );
+    }
   });
 
   it("serves /health, /releases, 404, and 405", async () => {

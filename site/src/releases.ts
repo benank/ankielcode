@@ -88,8 +88,10 @@ export function extractReleaseSummary(payload: GitHubReleasePayload): ReleaseSum
 
   const winArm64Exe = findAssetUrl(assets, (n) => n.endsWith(".exe") && n.includes("arm64"));
 
+  // SHA256SUMS.txt covers every download; SHA256SUMS covers only the CLI archives.
   const checksums =
-    findAssetUrl(assets, (n) => n === "sha256sums.txt" || n === "sha256sums") ?? null;
+    findAssetUrl(assets, (n) => n === "sha256sums.txt") ??
+    findAssetUrl(assets, (n) => n === "sha256sums");
 
   return {
     tag: payload.tag_name,

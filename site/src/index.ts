@@ -82,6 +82,11 @@ export async function handleRequest(
     return redirect(releasesPageUrl(repo));
   }
 
+  // release.yml attaches both install scripts to every release.
+  if (pathname === "/install.sh" || pathname === "/install.ps1") {
+    return redirect(`https://github.com/${repo}/releases/latest/download${pathname}`);
+  }
+
   if (pathname === "/api/latest") {
     const release = await fetchLatestRelease({
       repo,

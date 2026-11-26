@@ -392,9 +392,9 @@ else
     *":${bin_dir}:"* | *":${bin_dir}/:"*) printf '  Run %sankiel%s to use Ankiel Code here, or %sankiel up%s to use it from your other devices.\n\n' "$bold" "$reset" "$bold" "$reset" ;;
     *)
       if [ -n "$path_command" ]; then
-        printf '  %s is not on your PATH yet. Add it with:\n\n    %s\n\n  Then open a new terminal and run %sac%s.\n\n' "$bin_dir" "$path_command" "$bold" "$reset"
+        printf '  %s is not on your PATH yet. Add it with:\n\n    %s\n\n  Then open a new terminal and run %sankiel%s.\n\n' "$bin_dir" "$path_command" "$bold" "$reset"
       else
-        printf '  Add %s to your PATH, then run %sac%s.\n\n' "$bin_dir" "$bold" "$reset"
+        printf '  Add %s to your PATH, then run %sankiel%s.\n\n' "$bin_dir" "$bold" "$reset"
       fi
       ;;
   esac

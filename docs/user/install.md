@@ -20,6 +20,11 @@ On Windows, in PowerShell:
 irm https://code.ankiel.com/install.ps1 | iex
 ```
 
+The installer downloads the latest release from
+[GitHub Releases](https://github.com/benank/ankielcode/releases) and checks it against
+the release's `SHA256SUMS`. It needs no Node.js. Builds exist for macOS on Apple silicon,
+Linux x86_64 and ARM64, and Windows x64.
+
 This installs the `ankiel` command to `~/.local/bin`. If that folder is not on your
 `PATH` yet, the installer says so and, for zsh, bash on Linux, and fish, prints
 a command to add it. On Windows, `ankiel` works in the same PowerShell window right
