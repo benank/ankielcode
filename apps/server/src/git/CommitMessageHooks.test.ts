@@ -1,3 +1,4 @@
+// @effect-diagnostics nodeBuiltinImport:off -- Runs real git commits through the installed hooks in a subprocess.
 import * as NodeChildProcess from "node:child_process";
 import * as NodePath from "node:path";
 import * as NodeServices from "@effect/platform-node/NodeServices";
