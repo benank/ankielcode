@@ -294,7 +294,7 @@ export default defineConfig({
       "ankielcode/no-raw-mcp-registration": "error",
       "ankielcode/no-real-time-wait-in-tests": "error",
       "ankielcode/no-test-in-loop": "error",
-      "ankielcode/no-test-timeout-or-unreasoned-skip": "error",
+      "ankielcode/no-test-timeout-or-focus": "error",
       "ankielcode/no-rpc-permission-bypass": ["error", { allowRawClientAccess: true }],
       "ankielcode/no-unscoped-has": "error",
       "ankielcode/no-wall-clock-in-tests": "error",

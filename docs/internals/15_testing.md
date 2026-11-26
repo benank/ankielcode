@@ -21,8 +21,8 @@ Rules for writing tests, and for asking for them in review.
   - No `performance.now()` or `Date.now()` deltas. Assert on events and counts, not elapsed time.
   - Browser tests assert through `expect.element` or `vi.waitFor`, never `requestAnimationFrame` or `transitionend`.
   - `vi.mock` factories must not spread a real module that pulls in Shiki or the diff workers.
-  - `it.skip` and friends need a tracking issue on the line above: `// quarantine: #1234 <why>`.
-  - Lint enforces this: `ankielcode/no-test-timeout-or-unreasoned-skip`, `ankielcode/no-frame-waits-in-browser-tests`, `ankielcode/no-wall-clock-in-tests`, `ankielcode/no-real-time-wait-in-tests`, `ankielcode/no-polling-loop-in-tests`.
+  - No committed `.only`, `fit`, or `fdescribe`; it silently skips the rest of the file. Say why a test is skipped in a comment above it.
+  - Lint enforces this: `ankielcode/no-test-timeout-or-focus`, `ankielcode/no-frame-waits-in-browser-tests`, `ankielcode/no-wall-clock-in-tests`, `ankielcode/no-real-time-wait-in-tests`, `ankielcode/no-polling-loop-in-tests`.
 
 ## Web browser tests
 

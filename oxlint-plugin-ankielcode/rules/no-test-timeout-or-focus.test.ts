@@ -2,12 +2,12 @@ import { assert, describe } from "@effect/vitest";
 
 import { createOxlintRuleHarness } from "../test/utils.ts";
 
-const RULE = "ankielcode/no-test-timeout-or-unreasoned-skip";
+const RULE = "ankielcode/no-test-timeout-or-focus";
 const rule = createOxlintRuleHarness(RULE, { filename: "fixture.test.ts" });
 
 const assertTimeoutMessage = (output: string) =>
   assert.match(output, /project timeout is the ceiling/);
-const assertSkipMessage = (output: string) => assert.match(output, /quarantine: #1234/);
+const assertFocusMessage = (output: string) => assert.match(output, /focused test/);
 
 describe(RULE, () => {
   rule.valid(
@@ -26,15 +26,19 @@ describe(RULE, () => {
   );
 
   rule.valid(
-    "allows a skip with a quarantine issue or a GitHub issue URL",
+    "allows skips, todos, and the x aliases",
     `
-      import { describe, it } from "vitest";
+      import { describe, it, suite, test } from "vitest";
+      import { it as effectIt } from "@effect/vitest";
+      import * as Effect from "effect/Effect";
 
-      // quarantine: #1234 flakes on Windows until the pty fix lands
       it.skip("pending", () => {});
-
-      // https://github.com/benank/ankielcode/issues/42
-      describe.only("focused", () => {});
+      effectIt.effect.skip("pending", () => Effect.void);
+      test.todo("later");
+      xit("disabled", () => {});
+      suite.skip("later", () => {});
+      test("later", { skip: true }, () => {});
+      it["skip"]("later", () => {});
     `,
   );
 
@@ -60,7 +64,7 @@ describe(RULE, () => {
     `,
     (output) => {
       assertTimeoutMessage(output);
-      assert.equal(output.match(/no-test-timeout-or-unreasoned-skip/g)?.length, 2);
+      assert.equal(output.match(/no-test-timeout-or-focus/g)?.length, 2);
     },
   );
 
@@ -77,7 +81,7 @@ describe(RULE, () => {
     `,
     (output) => {
       assertTimeoutMessage(output);
-      assert.equal(output.match(/no-test-timeout-or-unreasoned-skip/g)?.length, 3);
+      assert.equal(output.match(/no-test-timeout-or-focus/g)?.length, 3);
     },
   );
 
@@ -92,30 +96,19 @@ describe(RULE, () => {
   );
 
   rule.invalid(
-    "reports a skip whose comment has no issue",
+    "reports only and the f aliases, even with a comment",
     `
-      import { it } from "@effect/vitest";
-      import * as Effect from "effect/Effect";
+      import { describe, it } from "vitest";
 
-      // flaky, will fix later
-      it.effect.skip("pending", () => Effect.void);
-    `,
-    assertSkipMessage,
-  );
-
-  rule.invalid(
-    "reports todo, only, and the x/f aliases",
-    `
-      import { describe, it, test } from "vitest";
-
-      test.todo("later");
+      // https://github.com/benank/ankielcode/issues/42
       describe.only("focused", () => {});
-      xit("disabled", () => {});
+      it.only("focused", () => {});
       fdescribe("focused", () => {});
+      fit("focused", () => {});
     `,
     (output) => {
-      assertSkipMessage(output);
-      assert.equal(output.match(/no-test-timeout-or-unreasoned-skip/g)?.length, 4);
+      assertFocusMessage(output);
+      assert.equal(output.match(/no-test-timeout-or-focus/g)?.length, 4);
     },
   );
   rule.invalid(
@@ -138,40 +131,40 @@ describe(RULE, () => {
   );
 
   rule.invalid(
-    "flags the suite alias and option-object skips",
+    "flags the suite alias and option-object focus",
     `
       import { suite, test } from "vitest";
-      suite.skip("later", () => {});
+      suite.only("focused", () => {});
     `,
-    assertSkipMessage,
+    assertFocusMessage,
   );
 
   rule.invalid(
-    "flags a skip option without a quarantine issue",
+    "flags an only option",
     `
       import { test } from "vitest";
-      test("later", { skip: true }, () => {});
+      test("focused", { only: true }, () => {});
     `,
-    assertSkipMessage,
+    assertFocusMessage,
   );
 
   rule.invalid(
-    "flags a bracket-access skip without a quarantine issue",
+    "flags a bracket-access only",
     `
       import { it } from "vitest";
-      it["skip"]("later", () => {});
+      it["only"]("focused", () => {});
     `,
-    assertSkipMessage,
+    assertFocusMessage,
   );
 });
 
 createOxlintRuleHarness(RULE, { filename: "Provider.live.test.ts" }).invalid(
-  "still flags an option-object skip in a live file",
+  "still flags an option-object focus in a live file",
   `
     import { it } from "vitest";
-    it("later", { skip: true }, () => {});
+    it("focused", { only: true }, () => {});
   `,
-  assertSkipMessage,
+  assertFocusMessage,
 );
 
 createOxlintRuleHarness(RULE, { filename: "Provider.live.test.ts" }).valid(

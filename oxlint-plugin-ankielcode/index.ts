@@ -27,7 +27,7 @@ import noRawMcpRegistration from "./rules/no-raw-mcp-registration.ts";
 import noRawResizeObserver from "./rules/no-raw-resize-observer.ts";
 import noRealTimeWaitInTests from "./rules/no-real-time-wait-in-tests.ts";
 import noTestInLoop from "./rules/no-test-in-loop.ts";
-import noTestTimeoutOrUnreasonedSkip from "./rules/no-test-timeout-or-unreasoned-skip.ts";
+import noTestTimeoutOrFocus from "./rules/no-test-timeout-or-focus.ts";
 import noRpcPermissionBypass from "./rules/no-rpc-permission-bypass.ts";
 import noUnscopedHas from "./rules/no-unscoped-has.ts";
 import noWallClockInTests from "./rules/no-wall-clock-in-tests.ts";
@@ -69,7 +69,7 @@ export default definePlugin({
     "no-raw-resize-observer": noRawResizeObserver,
     "no-real-time-wait-in-tests": noRealTimeWaitInTests,
     "no-test-in-loop": noTestInLoop,
-    "no-test-timeout-or-unreasoned-skip": noTestTimeoutOrUnreasonedSkip,
+    "no-test-timeout-or-focus": noTestTimeoutOrFocus,
     "no-rpc-permission-bypass": noRpcPermissionBypass,
     "no-unscoped-has": noUnscopedHas,
     "no-wall-clock-in-tests": noWallClockInTests,
