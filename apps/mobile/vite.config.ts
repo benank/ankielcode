@@ -27,6 +27,7 @@ const reactTests = [
   "src/components/ProjectFavicon.test.tsx",
   "src/components/ui/Dialog.android.test.tsx",
   "src/components/ui/ListToggleRow.test.tsx",
+  "src/components/ui/AppSymbol.test.tsx",
   "src/features/pull-requests/usePullRequestList.test.tsx",
   "src/components/ui/AppBar.android.test.tsx",
   "src/components/ui/AndroidAnchoredMenu.android.test.tsx",

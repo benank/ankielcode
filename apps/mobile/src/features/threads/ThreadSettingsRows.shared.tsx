@@ -198,6 +198,9 @@ export function ModelRowContent(
         onPress={props.onToggleFavorite}
       >
         <SymbolView
+          // Recycled rows and the first favorites load flip the star without a tap; remount so it stays still.
+          key={`${props.option.key}:${props.favoritesLoaded}`}
+          bounce={props.isFavorite}
           name={props.isFavorite ? "star.fill" : "star"}
           size={18}
           tintColorClassName={props.isFavorite ? "accent-icon" : "accent-icon-subtle"}

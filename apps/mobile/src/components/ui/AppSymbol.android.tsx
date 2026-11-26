@@ -362,7 +362,14 @@ export type AppSymbolName =
       android: keyof typeof ANDROID_ICON_BY_MATERIAL_NAME;
     };
 
-export type AppSymbolViewProps = Omit<SymbolViewProps, "name"> & { name: AppSymbolName };
+export type AppSymbolViewProps = Omit<SymbolViewProps, "name" | "animationSpec"> & {
+  name: AppSymbolName;
+  /**
+   * iOS 17+: bounces once each time this turns true after mount, unless Reduce Motion is on.
+   * Leave it undefined on icons that never bounce. Android draws Tabler icons and ignores it.
+   */
+  bounce?: boolean;
+};
 
 export function isAppSymbolName(name: string): name is Extract<AppSymbolName, string> {
   return Object.prototype.hasOwnProperty.call(ANDROID_ICON_BY_SF_SYMBOL, name);

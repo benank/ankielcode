@@ -62,6 +62,7 @@ export const CopyTextButton = memo(function CopyTextButton(props: {
       })}
     >
       <SymbolView
+        bounce={copied}
         name={
           copied
             ? { ios: "checkmark", android: "check" }
