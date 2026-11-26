@@ -16,7 +16,7 @@ import type {
 import { AsyncResult } from "effect/reactivity";
 import { T, useGT, useMessages, Var } from "gt-react-native";
 import { useContext, useState } from "react";
-import { Platform, Pressable, Share, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 
@@ -64,6 +64,7 @@ import { issueIdentity, issueParamsKey, issueTarget, type IssueParams } from "./
 import {
   IssueLabelPill,
   issueCommandError,
+  shareIssueLink,
   issueStatus,
   useIssueAccess,
 } from "./issuePresentation";
@@ -660,11 +661,7 @@ function IssueRoute({ params }: { readonly params: IssueParams }) {
                         id: "share",
                         title: gt("Share…"),
                         icon: "square.and.arrow.up",
-                        onPress: () =>
-                          // Android ignores `url`; iOS shows a `message` URL as plain text.
-                          void Share.share(
-                            Platform.OS === "ios" ? { url } : { message: url },
-                          ).catch(() => undefined),
+                        onPress: () => shareIssueLink(url),
                       },
                     ]
                   : []),

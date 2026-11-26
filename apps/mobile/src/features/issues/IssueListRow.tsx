@@ -6,7 +6,10 @@ import { Pressable, View } from "react-native";
 import { RelativeTime } from "../../components/RelativeTime";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
+import { Menu } from "../../components/ui/Menu";
 import { cn } from "../../lib/cn";
+import { copyTextWithHaptic } from "../../lib/copyTextWithHaptic";
+import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import { ListRowLabel } from "../pull-requests/PullRequestListRow";
 import { PullRequestAvatar } from "../pull-requests/PullRequestPresentation";
 import {
@@ -14,7 +17,7 @@ import {
   THREAD_LIST_V2_SIDEBAR_ROW_CONTAINER_STYLE,
   THREAD_LIST_V2_SIDEBAR_ROW_STYLE,
 } from "../threads/thread-list-v2-row-appearance";
-import { issueStatus } from "./issuePresentation";
+import { issueStatus, shareIssueLink } from "./issuePresentation";
 
 export const IssueListRow = memo(function IssueListRow(props: {
   readonly item: EnvironmentIssueEntry;
@@ -35,83 +38,112 @@ export const IssueListRow = memo(function IssueListRow(props: {
       ? "text-drawer-foreground-muted"
       : "text-foreground-muted";
   const status = issueStatus(item.state);
+  // A Linear key already names its team; a git host's number needs the repository.
+  const reference = item.displayKey.startsWith(`${item.scope}-`)
+    ? item.displayKey
+    : `${item.scope} ${item.displayKey}`;
+  // Moving an issue's state needs the tracker's workflow and the viewer's rights, which only
+  // the issue's own read carries, so state changes stay on the issue page.
+  const actions = [
+    { id: "open", title: gt("Open issue"), image: "arrow.up.right" },
+    { id: "share", title: gt("Share…"), image: "square.and.arrow.up" },
+    { id: "copy", title: gt("Copy link"), image: "link" },
+    { id: "tracker", title: gt("Open on the tracker"), image: "safari" },
+  ];
+  const handleAction = (action: string) => {
+    if (action === "open") props.onSelect(item);
+    if (action === "share") shareIssueLink(item.url);
+    if (action === "copy") copyTextWithHaptic(item.url, { target: "issue link" });
+    if (action === "tracker") void tryOpenExternalUrl(item.url);
+  };
   return (
     <View style={props.sidebar ? THREAD_LIST_V2_SIDEBAR_ROW_CONTAINER_STYLE : undefined}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ selected: props.selected }}
-        accessibilityLabel={[
-          gt("Issue {key}", { key: item.displayKey }),
-          item.title,
-          status.label,
-          gt("by {author}", { author: item.author?.login ?? gt("unknown author") }),
-          item.labels.length ? item.labels.map((label) => label.name).join(", ") : null,
-          item.commentCount
-            ? gt("{count, plural, other {{count} comments}}", {
-                count: item.commentCount,
-              })
-            : null,
-        ]
-          .filter(Boolean)
-          .join(", ")}
-        onPress={() => props.onSelect(item)}
-        style={props.sidebar ? THREAD_LIST_V2_SIDEBAR_ROW_STYLE : undefined}
-        className={cn(
-          "flex-row gap-3 overflow-hidden",
-          !props.sidebar && "px-4 active:bg-row-hover",
-          props.sidebar && "bg-drawer",
-          props.sidebar && !props.selected && "active:bg-thread-hover",
-          props.selected && "bg-thread-selected",
-        )}
+      <Menu
+        shouldOpenOnLongPress
+        title={reference}
+        actions={actions}
+        onPressAction={({ nativeEvent }) => handleAction(nativeEvent.event)}
       >
-        <View className={cn("self-start", props.sidebar ? "pt-0.5" : "pt-2.5")}>
-          <SymbolView name={status.icon} size={20} tintColorClassName={status.tint} />
-        </View>
-        <View
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ selected: props.selected }}
+          accessibilityLabel={[
+            gt("Issue {key}", { key: item.displayKey }),
+            item.title,
+            status.label,
+            gt("by {author}", { author: item.author?.login ?? gt("unknown author") }),
+            item.labels.length ? item.labels.map((label) => label.name).join(", ") : null,
+            item.commentCount
+              ? gt("{count, plural, other {{count} comments}}", {
+                  count: item.commentCount,
+                })
+              : null,
+          ]
+            .filter(Boolean)
+            .join(", ")}
+          accessibilityHint={gt("Double tap to open. Touch and hold for quick actions.")}
+          onPress={() => props.onSelect(item)}
+          style={props.sidebar ? THREAD_LIST_V2_SIDEBAR_ROW_STYLE : undefined}
           className={cn(
-            "min-w-0 flex-1 gap-1",
-            !props.sidebar && "border-b border-border-subtle py-2.5",
+            "flex-row gap-3 overflow-hidden",
+            !props.sidebar && "px-4 active:bg-row-hover",
+            props.sidebar && "bg-drawer",
+            props.sidebar && !props.selected && "active:bg-thread-hover",
+            props.selected && "bg-thread-selected",
           )}
         >
-          <View className="flex-row items-center gap-1.5">
-            <PullRequestAvatar actor={item.author} size={16} />
-            <Text className={cn("min-w-0 flex-1 text-xs", muted)} numberOfLines={1}>
-              {/* A Linear key already names its team; a git host's number needs the repository. */}
-              {item.displayKey.startsWith(`${item.scope}-`)
-                ? item.displayKey
-                : `${item.scope} ${item.displayKey}`}
-            </Text>
-            <Text className={cn("text-2xs tabular-nums", muted)}>
-              <RelativeTime timestamp={item.updatedAt} />
-            </Text>
+          <View className={cn("self-start", props.sidebar ? "pt-0.5" : "pt-2.5")}>
+            <SymbolView name={status.icon} size={20} tintColorClassName={status.tint} />
           </View>
-          <Text
-            className={cn("text-base leading-5 font-ankiel-medium", foreground)}
-            numberOfLines={2}
-            ellipsizeMode="tail"
+          <View
+            className={cn(
+              "min-w-0 flex-1 gap-1",
+              !props.sidebar && "border-b border-border-subtle py-2.5",
+            )}
           >
-            {item.title}
-          </Text>
-          {item.labels.length > 0 || item.commentCount > 0 ? (
             <View className="flex-row items-center gap-1.5">
-              <View className="min-w-0 flex-1 flex-row items-center gap-1">
-                {item.labels.slice(0, 2).map((label) => (
-                  <ListRowLabel key={label.name} label={label} textClassName={muted} />
-                ))}
-                {item.labels.length > 2 ? (
-                  <Text className={cn("shrink-0 text-2xs", muted)}>+{item.labels.length - 2}</Text>
+              <PullRequestAvatar actor={item.author} size={16} />
+              <Text className={cn("min-w-0 flex-1 text-xs", muted)} numberOfLines={1}>
+                {reference}
+              </Text>
+              <Text className={cn("text-2xs tabular-nums", muted)}>
+                <RelativeTime timestamp={item.updatedAt} />
+              </Text>
+            </View>
+            <Text
+              className={cn("text-base leading-5 font-ankiel-medium", foreground)}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {item.title}
+            </Text>
+            {item.labels.length > 0 || item.commentCount > 0 ? (
+              <View className="flex-row items-center gap-1.5">
+                <View className="min-w-0 flex-1 flex-row items-center gap-1">
+                  {item.labels.slice(0, 2).map((label) => (
+                    <ListRowLabel key={label.name} label={label} textClassName={muted} />
+                  ))}
+                  {item.labels.length > 2 ? (
+                    <Text className={cn("shrink-0 text-2xs", muted)}>
+                      +{item.labels.length - 2}
+                    </Text>
+                  ) : null}
+                </View>
+                {item.commentCount > 0 ? (
+                  <View className="shrink-0 flex-row items-center gap-1">
+                    <SymbolView
+                      name="bubble.left"
+                      size={12}
+                      tintColorClassName="accent-icon-muted"
+                    />
+                    <Text className={cn("text-2xs tabular-nums", muted)}>{item.commentCount}</Text>
+                  </View>
                 ) : null}
               </View>
-              {item.commentCount > 0 ? (
-                <View className="shrink-0 flex-row items-center gap-1">
-                  <SymbolView name="bubble.left" size={12} tintColorClassName="accent-icon-muted" />
-                  <Text className={cn("text-2xs tabular-nums", muted)}>{item.commentCount}</Text>
-                </View>
-              ) : null}
-            </View>
-          ) : null}
-        </View>
-      </Pressable>
+            ) : null}
+          </View>
+        </Pressable>
+      </Menu>
     </View>
   );
 });

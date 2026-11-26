@@ -18,7 +18,10 @@ import type {
   buildThreadNavigationTree,
   ThreadNavigationBranch,
 } from "@ankielcode/client-runtime/state/threads";
-import { resolveThreadProviderStack } from "@ankielcode/client-runtime/state/models";
+import {
+  resolveThreadProviderStack,
+  threadRuntimeCanArchive,
+} from "@ankielcode/client-runtime/state/models";
 import {
   threadSearchMatchKey,
   threadSearchSubject,
@@ -377,6 +380,49 @@ export function resolveThreadListV2PixelKind(
     case "ready":
       return wokeAt !== null ? "attention" : threadHasUnseenCompletion(thread) ? "done" : null;
   }
+}
+
+export type ThreadListV2ReadToggle =
+  | { readonly kind: "mark-read"; readonly visitedAt: string }
+  | { readonly kind: "mark-unread" };
+
+/**
+ * What the row's read toggle does: clear the light a visit clears, or bring back the one
+ * mark-unread brings back. Null when neither would change the row, so a toggle always shows.
+ */
+export function resolveThreadListV2ReadToggle(
+  thread: Parameters<typeof resolveThreadListV2PixelKind>[0] &
+    Pick<EnvironmentThreadShell, "runtime">,
+  wokeAt: string | null,
+): ThreadListV2ReadToggle | null {
+  // Older servers cannot persist a visit.
+  if (thread.lastVisitedAt === undefined) return null;
+  const light = resolveThreadListV2PixelKind(thread, wokeAt);
+  const run = thread.latestRun;
+  // The thread's own times, not this device's clock: the server keeps the later visit.
+  const visitedAt = [wokeAt, run?.completedAt ?? run?.startedAt ?? run?.requestedAt]
+    .filter((value): value is string => value != null && !Number.isNaN(Date.parse(value)))
+    .reduce<string | null>(
+      (latest, value) =>
+        latest === null || Date.parse(value) > Date.parse(latest) ? value : latest,
+      null,
+    );
+  if (visitedAt !== null) {
+    const seen =
+      thread.lastVisitedAt !== null && Date.parse(thread.lastVisitedAt) >= Date.parse(visitedAt)
+        ? thread.lastVisitedAt
+        : visitedAt;
+    if (resolveThreadListV2PixelKind({ ...thread, lastVisitedAt: seen }, null) !== light) {
+      return { kind: "mark-read", visitedAt };
+    }
+  }
+  const completedAtMs = Date.parse(run?.completedAt ?? "");
+  if (Number.isNaN(completedAtMs) || !threadRuntimeCanArchive(thread.runtime)) return null;
+  // The server marks a thread unread by moving its visit to just before the run completed.
+  const unseen = new Date(completedAtMs - 1).toISOString();
+  return resolveThreadListV2PixelKind({ ...thread, lastVisitedAt: unseen }, null) !== light
+    ? { kind: "mark-unread" }
+    : null;
 }
 
 function parseTimestampMs(isoDate: string): number {

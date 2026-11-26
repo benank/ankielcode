@@ -42,6 +42,7 @@ import {
   resolveThreadListV2SwipeActions,
   resolveThreadListV2SnoozePresets,
   resolveThreadListV2PixelKind,
+  resolveThreadListV2ReadToggle,
   resolveThreadListV2RowStatus,
   resolveThreadListV2Status,
   resolveThreadListV2WokeAt,
@@ -245,6 +246,88 @@ describe("resolveThreadListV2Status", () => {
       expect(threadHasUnseenCompletion(thread)).toBe(false);
     },
   );
+});
+
+describe("resolveThreadListV2ReadToggle", () => {
+  const COMPLETED_AT = "2026-06-01T23:00:00.000Z";
+  const present = (input: Parameters<typeof makeRawThreadShell>[0]) =>
+    presentThreadShell(
+      environmentId,
+      makeRawThreadShell({
+        latestRunId: RunId.make("run-read-toggle"),
+        latestRunCompletedAt: DateTime.makeUnsafe(COMPLETED_AT),
+        ...input,
+      }),
+    );
+  // What the server stores after each toggle, so a test can take the next one from there.
+  const afterToggle = (thread: EnvironmentThreadShell): EnvironmentThreadShell => {
+    const toggle = resolveThreadListV2ReadToggle(thread, null);
+    if (toggle === null) throw new Error("no toggle");
+    return {
+      ...thread,
+      lastVisitedAt:
+        toggle.kind === "mark-read"
+          ? toggle.visitedAt
+          : new Date(Date.parse(COMPLETED_AT) - 1).toISOString(),
+    };
+  };
+
+  it.each(["completed", "failed"] as const)(
+    "flips a %s run between read and unread and back",
+    (status) => {
+      const unread = present({
+        status,
+        lastVisitedAt: DateTime.makeUnsafe("2026-06-01T22:00:00Z"),
+      });
+      expect(resolveThreadListV2ReadToggle(unread, null)).toEqual({
+        kind: "mark-read",
+        visitedAt: COMPLETED_AT,
+      });
+
+      const read = afterToggle(unread);
+      expect(resolveThreadListV2PixelKind(read, null)).toBeNull();
+      expect(resolveThreadListV2ReadToggle(read, null)).toEqual({ kind: "mark-unread" });
+
+      const unreadAgain = afterToggle(read);
+      expect(resolveThreadListV2PixelKind(unreadAgain, null)).not.toBeNull();
+      expect(resolveThreadListV2ReadToggle(unreadAgain, null)?.kind).toBe("mark-read");
+    },
+  );
+
+  it.each(["interrupted", "cancelled"] as const)(
+    "offers nothing for a %s run, which never shows as unread",
+    (status) => {
+      const thread = present({ status, lastVisitedAt: DateTime.makeUnsafe(NOW) });
+      expect(resolveThreadListV2ReadToggle(thread, null)).toBeNull();
+    },
+  );
+
+  it("marks a woken thread read at its wake time", () => {
+    const wokeAt = "2026-06-01T23:30:00.000Z";
+    const thread = present({
+      status: "completed",
+      lastVisitedAt: DateTime.makeUnsafe(COMPLETED_AT),
+    });
+    expect(resolveThreadListV2ReadToggle(thread, wokeAt)).toEqual({
+      kind: "mark-read",
+      visitedAt: wokeAt,
+    });
+  });
+
+  it("offers nothing while the thread is running", () => {
+    const thread = present({
+      status: "running",
+      activeRunId: RunId.make("run-read-toggle"),
+      lastVisitedAt: DateTime.makeUnsafe(NOW),
+    });
+    expect(resolveThreadListV2ReadToggle(thread, null)).toBeNull();
+  });
+
+  it("offers nothing on a server that cannot record visits", () => {
+    const thread = present({ status: "completed" });
+    expect(thread.lastVisitedAt).toBeUndefined();
+    expect(resolveThreadListV2ReadToggle(thread, null)).toBeNull();
+  });
 });
 
 describe("threadListV2RowAccessibilityLabel", () => {

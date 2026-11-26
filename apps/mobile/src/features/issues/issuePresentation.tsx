@@ -7,7 +7,7 @@ import {
 import type { IssueDetail, IssueLabel, IssueState } from "@ankielcode/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { msg, useMessages } from "gt-react-native";
-import { View } from "react-native";
+import { Platform, Share, View } from "react-native";
 
 import type { AppSymbolName } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
@@ -90,4 +90,9 @@ export function IssueLabelPill({ label }: { readonly label: IssueLabel }) {
       </Text>
     </View>
   );
+}
+
+export function shareIssueLink(url: string) {
+  // Android ignores `url`; iOS shows a `message` URL as plain text.
+  void Share.share(Platform.OS === "ios" ? { url } : { message: url }).catch(() => undefined);
 }

@@ -65,6 +65,7 @@ import {
   layoutThreadListV2RowMenuActions,
   threadListV2RowAccessibilityLabel,
   resolveThreadListV2PixelKind,
+  resolveThreadListV2ReadToggle,
   type ThreadListV2ProjectFolderListItem,
   type ThreadListV2Status,
 } from "./threadListV2";
@@ -798,18 +799,48 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
       input: { threadId: thread.id, visitedAt: props.wokeAt },
     });
   }, [props.wokeAt, thread.environmentId, thread.id, visitThread]);
+  const canOperateThread = useEnvironmentScope(thread.environmentId, AuthOrchestrationOperateScope);
+  const readToggle = canOperateThread
+    ? resolveThreadListV2ReadToggle(thread, showsWoke ? props.wokeAt : null)
+    : null;
+  const readToggleKind = readToggle?.kind ?? null;
+  const readVisitedAt = readToggle?.kind === "mark-read" ? readToggle.visitedAt : null;
+  const handleToggleRead = useCallback(() => {
+    const target = { environmentId: thread.environmentId, input: { threadId: thread.id } };
+    if (readVisitedAt !== null) {
+      void visitThread({ ...target, input: { ...target.input, visitedAt: readVisitedAt } });
+    } else if (readToggleKind === "mark-unread") {
+      void markThreadUnread(target);
+    }
+  }, [
+    markThreadUnread,
+    readToggleKind,
+    readVisitedAt,
+    thread.environmentId,
+    thread.id,
+    visitThread,
+  ]);
+  const readToggleLabel =
+    readToggleKind === "mark-read"
+      ? gt("Mark read")
+      : readToggleKind === "mark-unread"
+        ? gt("Mark unread")
+        : null;
   // VoiceOver cannot focus buttons inside the accessible row.
   const rowAccessibilityActions = useMemo(
     () => [
       ...(prBadgeLabel ? [{ name: "openPullRequests", label: prBadgeLabel }] : []),
       ...(showsWoke ? [{ name: "dismissWoke", label: gt("Dismiss Woke notification") }] : []),
+      // Dismissing Woke already marks the thread read.
+      ...(readToggleLabel !== null && !(showsWoke && readToggleKind === "mark-read")
+        ? [{ name: "toggleRead", label: readToggleLabel }]
+        : []),
     ],
-    [gt, prBadgeLabel, showsWoke],
+    [gt, prBadgeLabel, readToggleKind, readToggleLabel, showsWoke],
   );
 
   const handleDelete = useCallback(() => onDeleteThread(thread), [onDeleteThread, thread]);
   const handleRename = useCallback(() => onRenameThread(thread), [onRenameThread, thread]);
-  const canOperateThread = useEnvironmentScope(thread.environmentId, AuthOrchestrationOperateScope);
   const handleRegenerateTitle = useCallback(
     () => onRegenerateThreadTitle(thread),
     [onRegenerateThreadTitle, thread],
@@ -951,9 +982,11 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         },
         m,
       ),
-      ...(thread.latestRun?.completedAt != null && threadCanArchive(thread.runtime)
-        ? [{ id: "mark-unread", title: gt("Mark unread"), image: "envelope.badge" }]
-        : []),
+      ...(readToggleKind === "mark-read"
+        ? [{ id: "mark-read", title: gt("Mark read"), image: "envelope.open" }]
+        : readToggleKind === "mark-unread"
+          ? [{ id: "mark-unread", title: gt("Mark unread"), image: "envelope.badge" }]
+          : []),
       ...(canTurnIntoProject
         ? [
             {
@@ -970,7 +1003,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
       gt,
       m,
       props.titleRegenerationSupported,
-      thread.latestRun,
+      readToggleKind,
       thread.runtime,
       isRegeneratingTitle,
     ],
@@ -1098,11 +1131,8 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
       if (nativeEvent.event === "rename") handleRename();
       if (nativeEvent.event === "regenerate-title") handleRegenerateTitle();
       if (nativeEvent.event === "turn-into-project") void turnThreadIntoProject(thread);
-      if (nativeEvent.event === "mark-unread") {
-        void markThreadUnread({
-          environmentId: thread.environmentId,
-          input: { threadId: thread.id },
-        });
+      if (nativeEvent.event === "mark-read" || nativeEvent.event === "mark-unread") {
+        handleToggleRead();
       }
       if (nativeEvent.event === "copy-thread") {
         const target = threadChipCopyTarget(
@@ -1152,10 +1182,10 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
       handleSettle,
       handleSnooze,
       handleSetAutoSettle,
+      handleToggleRead,
       handleUnpin,
       handleUnsettle,
       handleUnsnooze,
-      markThreadUnread,
       setCustomSnoozeOpen,
       snoozePresets,
       props.snoozePresets,
@@ -1225,6 +1255,25 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         : null,
     [gt, handleMenuAction, snoozePresetActions, swipeActions.secondary, thread.title],
   );
+  const leadingAction = useMemo(
+    () =>
+      readToggleKind === "mark-read"
+        ? {
+            accessibilityLabel: gt("Mark {title} as read", { title: thread.title }),
+            icon: "envelope.open" as const,
+            label: gt("Read", { $context: "verb, swipe action that marks a thread read" }),
+            onPress: handleToggleRead,
+          }
+        : readToggleKind === "mark-unread"
+          ? {
+              accessibilityLabel: gt("Mark {title} as unread", { title: thread.title }),
+              icon: "envelope.badge" as const,
+              label: gt("Unread", { $context: "verb, swipe action that marks a thread unread" }),
+              onPress: handleToggleRead,
+            }
+          : null,
+    [gt, handleToggleRead, readToggleKind, thread.title],
+  );
   const swipeAccessibilityHint = !canOperateThread
     ? gt("Opens the thread")
     : secondaryAction === null
@@ -1265,6 +1314,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
       onAccessibilityAction={(event) => {
         if (event.nativeEvent.actionName === "openPullRequests") handleOpenPullRequests();
         if (event.nativeEvent.actionName === "dismissWoke") handleAcknowledgeWoke();
+        if (event.nativeEvent.actionName === "toggleRead") handleToggleRead();
       }}
       onPress={() => {
         close();
@@ -1342,6 +1392,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         enableTrackpadSwipe
         fullSwipeAction="primary"
         fullSwipeWidth={(props.fullSwipeWidth ?? windowWidth - 32) - branchInset}
+        leadingAction={leadingAction}
         listAnimatesLayout
         onDelete={handleDelete}
         onSwipeableClose={props.onSwipeableClose}
