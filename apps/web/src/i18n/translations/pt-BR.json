@@ -11185,6 +11185,7 @@
   "6389dee75a7cb536": "{step}, etapa {number}",
   "e0558a82e8059d27": "Limites de uso dos provedores",
   "4acffc5cda91aea2": "Limites de uso dos provedores · maior uso de {percent}%",
+  "9a8d5ee34a1ba4bf": "{tokens} tokens restantes",
   "a436751fedd547ef": "Nenhum limite foi informado pelos provedores.",
   "5434b97f68b55d8f": "Acima do ritmo: consumindo mais rápido do que a janela passa",
   "4e518c48e00f45a9": "No ritmo da janela",

@@ -7,8 +7,13 @@ import type { ReactNode } from "react";
 
 import type { AppBarAction } from "../../components/ui/AppBar.types";
 import { environmentPresentations } from "../../state/presentation";
+import { useThreadSelection } from "../../state/use-thread-selection";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
-import { connectedLimitPresentations, highestUsagePercent } from "./headerUsageLimits.logic";
+import {
+  connectedLimitPresentations,
+  highestUsagePercent,
+  usageLimitsRouteParams,
+} from "./headerUsageLimits.logic";
 import { usageRingPngUri } from "./usageRingPng";
 
 export interface HeaderUsageLimitsControl {
@@ -23,6 +28,7 @@ export interface HeaderUsageLimitsControl {
 export function useHeaderUsageLimitsControl(): HeaderUsageLimitsControl {
   const gt = useGT();
   const navigation = useNavigation();
+  const { selectedThreadDetailRef } = useThreadSelection();
   const { themeVariables } = useAppearancePreferences();
   const allPresentations = useAtomValue(environmentPresentations.presentationsWithProvidersAtom);
   const presentations = connectedLimitPresentations(allPresentations);
@@ -58,7 +64,7 @@ export function useHeaderUsageLimitsControl(): HeaderUsageLimitsControl {
       separateBackground: false,
       onPress: () => {
         void Haptics.selectionAsync();
-        navigation.navigate("UsageLimits");
+        navigation.navigate("UsageLimits", usageLimitsRouteParams(selectedThreadDetailRef));
       },
     },
   };

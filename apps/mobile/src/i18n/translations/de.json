@@ -4701,6 +4701,11 @@
   "4acffc5cda91aea2": "Provider usage limits · highest usage {percent}%",
   "55a38e69338c54ee": "Konto-E-Mail ausblenden",
   "0d3e9f1f27c0e780": "Konto-E-Mail anzeigen",
+  "16fb3b76d0abbb2e": "Kontextfenster",
+  "d996426072afbeb2": "{used} % genutzt",
+  "9a8d5ee34a1ba4bf": "{tokens} Tokens übrig",
+  "66be4fb43249bbd2": "{used} von {max} Tokens",
+  "ce0545a76897e406": "{usedTokens} Tokens genutzt",
   "2f8b30e62d27093a": "Refresh usage limits",
   "412e3b93454812aa": [
     {

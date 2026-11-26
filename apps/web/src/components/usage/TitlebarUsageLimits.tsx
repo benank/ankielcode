@@ -1,3 +1,4 @@
+import type { ContextWindowSnapshot } from "@ankielcode/client-runtime/state/context-window";
 import { refreshUsageLimits } from "@ankielcode/client-runtime/state/usage";
 import {
   collectExternalUsageLinks,
@@ -6,9 +7,10 @@ import {
 } from "@ankielcode/shared/usageLimits";
 import { collectLimitNotices } from "@ankielcode/shared/usageLimitsCopy";
 import { useAtomValue } from "@effect/atom-react";
-import { T, useGT, useMessages } from "gt-react";
+import { T, useGT, useLocale, useMessages } from "gt-react";
 import { useState } from "react";
 
+import { formatContextWindowTokens } from "@ankielcode/client-runtime/state/context-window";
 import { ensureLocalApi } from "~/localApi";
 import { environmentPresentations } from "~/state/presentation";
 import { serverEnvironment } from "~/state/server";
@@ -16,12 +18,18 @@ import { useAtomCommand } from "~/state/use-atom-command";
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 import { RedactedSensitiveText } from "../settings/RedactedSensitiveText";
 import { providerClients } from "../settings/providerDriverMeta";
+import { cn } from "~/lib/utils";
 import { Button } from "../ui/button";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "../ui/popover";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { LimitWindows } from "./UsageLimits";
 
-export function TitlebarUsageLimits() {
+export function TitlebarUsageLimits({
+  contextWindow,
+}: {
+  /** The open thread's context window; null outside a thread or before it reports one. */
+  readonly contextWindow: ContextWindowSnapshot | null;
+}) {
   const gt = useGT();
   const allPresentations = useAtomValue(environmentPresentations.presentationsWithProvidersAtom);
   const refreshProviders = useAtomCommand(serverEnvironment.refreshProviders, {
@@ -100,6 +108,7 @@ export function TitlebarUsageLimits() {
         <TooltipPopup side="bottom">{summary}</TooltipPopup>
       </Tooltip>
       <PopoverPopup width="xl" padding="compact" align="end">
+        {contextWindow ? <ContextWindowUsage usage={contextWindow} /> : null}
         <UsageLimitsBreakdown presentations={presentations} accounts={accounts} />
       </PopoverPopup>
     </Popover>
@@ -195,6 +204,62 @@ function UsageLimitsBreakdown({
         </p>
       ) : null}
     </div>
+  );
+}
+
+function ContextWindowUsage({ usage }: { readonly usage: ContextWindowSnapshot }) {
+  const gt = useGT();
+  const locale = useLocale();
+  const maxTokens = usage.maxTokens != null && usage.maxTokens > 0 ? usage.maxTokens : null;
+  const used =
+    maxTokens !== null && usage.usedPercentage !== null
+      ? Math.round(Math.max(0, Math.min(100, usage.usedPercentage)))
+      : null;
+  const usedTokens = formatContextWindowTokens(usage.usedTokens);
+  return (
+    <section className="flex flex-col gap-1.5 border-b border-border/60 pt-1 pb-3">
+      <PopoverTitle>{gt("Context window")}</PopoverTitle>
+      {maxTokens !== null && used !== null ? (
+        <>
+          <div className="flex items-baseline justify-between gap-3 text-xs">
+            <span className="font-medium text-foreground tabular-nums">
+              {gt("{used}% used", { used })}
+            </span>
+            <span className="text-muted-foreground tabular-nums">
+              {gt("{tokens} tokens left", {
+                tokens: formatContextWindowTokens(usage.remainingTokens),
+              })}
+            </span>
+          </div>
+          <div
+            role="meter"
+            aria-label={gt("Context window")}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={used}
+            className="relative h-3 overflow-hidden rounded-xs bg-muted-foreground/25"
+          >
+            <div
+              className={cn(
+                "absolute inset-y-0 left-0 rounded-xs",
+                used >= 90 ? "bg-destructive" : used >= 80 ? "bg-warning" : "bg-foreground",
+              )}
+              style={{ width: `${used}%` }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {gt("{used} of {max} tokens", {
+              used: usage.usedTokens.toLocaleString(locale),
+              max: maxTokens.toLocaleString(locale),
+            })}
+          </span>
+        </>
+      ) : (
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {gt("{usedTokens} tokens used", { usedTokens })}
+        </span>
+      )}
+    </section>
   );
 }
 

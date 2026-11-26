@@ -11195,6 +11195,7 @@
   "6389dee75a7cb536": "{step}, step {number}",
   "e0558a82e8059d27": "Provider usage limits",
   "4acffc5cda91aea2": "Provider usage limits · highest usage {percent}%",
+  "9a8d5ee34a1ba4bf": "{tokens} tokens left",
   "a436751fedd547ef": "No provider limits reported.",
   "5434b97f68b55d8f": "Ahead of pace: spending faster than the window elapses",
   "4e518c48e00f45a9": "On pace with the window",

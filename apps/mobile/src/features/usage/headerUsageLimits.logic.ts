@@ -1,4 +1,17 @@
+import type { EnvironmentId, ThreadId } from "@ankielcode/contracts";
 import type { LimitAccount, LimitPresentations } from "@ankielcode/shared/usageLimits";
+
+/** The thread whose context window the usage sheet shows beside provider limits. */
+export type UsageLimitsRouteParams = {
+  readonly environmentId: EnvironmentId;
+  readonly threadId: ThreadId;
+};
+
+export function usageLimitsRouteParams(
+  ref: { readonly environmentId: EnvironmentId; readonly threadId: ThreadId } | null,
+): UsageLimitsRouteParams | undefined {
+  return ref === null ? undefined : { environmentId: ref.environmentId, threadId: ref.threadId };
+}
 
 export function connectedLimitPresentations<
   T extends (LimitPresentations extends ReadonlyMap<infer K, infer V>

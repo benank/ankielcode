@@ -238,6 +238,40 @@ export function deriveLatestContextWindowSnapshot(
   return null;
 }
 
+export function formatContextWindowTokens(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) {
+    return "0";
+  }
+  if (value < 1_000) {
+    return `${Math.round(value)}`;
+  }
+  if (value < 10_000) {
+    return `${(value / 1_000).toFixed(1).replace(/\.0$/, "")}k`;
+  }
+  if (value < 999_500) {
+    return `${Math.round(value / 1_000)}k`;
+  }
+  return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}m`;
+}
+
+/** The active conversation's context window, as the thread's details and usage limits show it. */
+export function deriveThreadContextWindow(
+  projection: Pick<
+    ThreadStructure,
+    "thread" | "contextTransfers" | "providerThreads" | "providerTurns"
+  >,
+  visibleTurnItems: ReadonlyArray<{ readonly item: ThreadStructureTurnItem }>,
+): ContextWindowSnapshot | null {
+  const providerThread = projection.providerThreads.find(
+    (thread) => thread.id === projection.thread.activeProviderThreadId,
+  );
+  return deriveLatestContextWindowSnapshot(
+    visibleTurnItems,
+    latestProviderTurnTokenUsage(projection.providerTurns, projection, providerThread),
+    providerThread,
+  );
+}
+
 export function hasDismissedResumeCompaction(
   activities: ReadonlyArray<{ readonly kind: string; readonly payload: unknown }>,
 ): boolean {

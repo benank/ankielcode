@@ -4694,6 +4694,11 @@
   "4acffc5cda91aea2": "Provider usage limits · highest usage {percent}%",
   "55a38e69338c54ee": "Ocultar el correo de la cuenta",
   "0d3e9f1f27c0e780": "Mostrar el correo de la cuenta",
+  "16fb3b76d0abbb2e": "Ventana de contexto",
+  "d996426072afbeb2": "{used} % usado",
+  "9a8d5ee34a1ba4bf": "Quedan {tokens} tokens",
+  "66be4fb43249bbd2": "{used} de {max} tokens",
+  "ce0545a76897e406": "{usedTokens} tokens usados",
   "2f8b30e62d27093a": "Refresh usage limits",
   "412e3b93454812aa": [
     "Queda un ",

@@ -4701,6 +4701,11 @@
   "4acffc5cda91aea2": "Provider usage limits · highest usage {percent}%",
   "55a38e69338c54ee": "Dölj kontots e-postadress",
   "0d3e9f1f27c0e780": "Visa kontots e-postadress",
+  "16fb3b76d0abbb2e": "Kontextfönster",
+  "d996426072afbeb2": "{used} % använt",
+  "9a8d5ee34a1ba4bf": "{tokens} token kvar",
+  "66be4fb43249bbd2": "{used} av {max} token",
+  "ce0545a76897e406": "{usedTokens} token använda",
   "2f8b30e62d27093a": "Refresh usage limits",
   "412e3b93454812aa": [
     {

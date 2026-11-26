@@ -4683,6 +4683,11 @@
   "4acffc5cda91aea2": "Provider usage limits · highest usage {percent}%",
   "55a38e69338c54ee": "隐藏账户邮箱",
   "0d3e9f1f27c0e780": "显示账户邮箱",
+  "16fb3b76d0abbb2e": "上下文窗口",
+  "d996426072afbeb2": "已使用 {used}%",
+  "9a8d5ee34a1ba4bf": "剩余 {tokens} 个 token",
+  "66be4fb43249bbd2": "{used} / {max} token",
+  "ce0545a76897e406": "已使用 {usedTokens} token",
   "2f8b30e62d27093a": "Refresh usage limits",
   "412e3b93454812aa": [
     "剩余 ",

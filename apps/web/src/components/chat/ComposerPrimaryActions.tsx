@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useEnvironmentIdentificationMode } from "~/hooks/useSettings";
 import type { MessageResolver } from "~/i18n/messages";
-import { formatContextWindowTokens } from "~/lib/contextWindow";
+import { formatContextWindowTokens } from "@ankielcode/client-runtime/state/context-window";
 import { cn, isMacPlatform } from "~/lib/utils";
 import { useShortcutModifierState } from "../../shortcutModifierState";
 import { StageBackdropButtonArt, useSidebarStageBackdropVariant } from "../SidebarStageBackdrop";

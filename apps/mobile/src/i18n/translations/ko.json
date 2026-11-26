@@ -4680,6 +4680,11 @@
   "4acffc5cda91aea2": "Provider usage limits · highest usage {percent}%",
   "55a38e69338c54ee": "계정 이메일 숨기기",
   "0d3e9f1f27c0e780": "계정 이메일 표시",
+  "16fb3b76d0abbb2e": "컨텍스트 창",
+  "d996426072afbeb2": "{used}% 사용됨",
+  "9a8d5ee34a1ba4bf": "{tokens} 토큰 남음",
+  "66be4fb43249bbd2": "토큰 {max}개 중 {used}개",
+  "ce0545a76897e406": "토큰 {usedTokens}개 사용됨",
   "2f8b30e62d27093a": "Refresh usage limits",
   "412e3b93454812aa": [
     {

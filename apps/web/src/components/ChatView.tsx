@@ -3472,7 +3472,7 @@ export default function ChatView(props: ChatViewProps) {
         {...panelToggleControlProps}
         showThreadPanelControl={!inlineRightPanelOwnsTitleBar}
       />
-      <TitlebarUsageLimits />
+      <TitlebarUsageLimits contextWindow={activeContextWindow} />
     </div>
   );
   const threadPanelHeaderControl = <ThreadPanelHeaderControl {...panelToggleControlProps} />;

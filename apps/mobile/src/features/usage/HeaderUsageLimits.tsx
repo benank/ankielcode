@@ -1,5 +1,9 @@
 import { providerClients } from "@ankielcode/client-runtime/provider-clients";
 import { normalizeProviderAccentColor } from "@ankielcode/client-runtime/state/provider-instance-display";
+import {
+  deriveThreadContextWindow,
+  formatContextWindowTokens,
+} from "@ankielcode/client-runtime/state/context-window";
 import type { ServerProvider, ServerProviderUsageWindow } from "@ankielcode/contracts";
 import {
   collectExternalUsageLinks,
@@ -8,9 +12,9 @@ import {
 } from "@ankielcode/shared/usageLimits";
 import { collectLimitNotices } from "@ankielcode/shared/usageLimitsCopy";
 import { useAtomValue } from "@effect/atom-react";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
-import { T, useGT, useMessages, Var } from "gt-react-native";
+import { T, useGT, useLocale, useMessages, Var } from "gt-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,11 +28,15 @@ import { ScreenContent } from "../../components/ui/ScreenContent";
 import { SheetHeader } from "../../components/ui/SheetHeader";
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import { environmentPresentations } from "../../state/presentation";
+import { useThreadProjection, useThreadVisibleTurnItems } from "../../state/use-thread-detail";
+import { useThreadSelection } from "../../state/use-thread-selection";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 import {
   connectedLimitPresentations,
   highestUsagePercent,
   shortPlanLabel,
+  usageLimitsRouteParams,
+  type UsageLimitsRouteParams,
 } from "./headerUsageLimits.logic";
 import { resetLabels, useRefreshLimits } from "./UsageLimitsSection";
 import { usageProviderKind, useProviderColors } from "./usageProviders";
@@ -39,6 +47,7 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 export function HeaderUsageLimitsButton() {
   const gt = useGT();
   const navigation = useNavigation();
+  const { selectedThreadDetailRef } = useThreadSelection();
   const { themeVariables } = useAppearancePreferences();
   const allPresentations = useAtomValue(environmentPresentations.presentationsWithProvidersAtom);
   const presentations = connectedLimitPresentations(allPresentations);
@@ -66,7 +75,7 @@ export function HeaderUsageLimitsButton() {
       hitSlop={6}
       onPress={() => {
         void Haptics.selectionAsync();
-        navigation.navigate("UsageLimits");
+        navigation.navigate("UsageLimits", usageLimitsRouteParams(selectedThreadDetailRef));
       }}
       className="size-9 items-center justify-center rounded-full active:opacity-60 android:size-10"
     >
@@ -204,7 +213,71 @@ function CompactAccountCard({
   );
 }
 
-export function UsageLimitsSheet() {
+function ContextWindowCard({ target }: { readonly target: UsageLimitsRouteParams }) {
+  const gt = useGT();
+  const locale = useLocale();
+  const thread = useThreadProjection(target);
+  const visibleTurnItems = useThreadVisibleTurnItems(target);
+  const usage = thread ? deriveThreadContextWindow(thread.projection, visibleTurnItems) : null;
+  if (usage === null) return null;
+  const maxTokens = usage.maxTokens != null && usage.maxTokens > 0 ? usage.maxTokens : null;
+  const used =
+    maxTokens !== null && usage.usedPercentage !== null
+      ? Math.round(Math.max(0, Math.min(100, usage.usedPercentage)))
+      : null;
+  return (
+    <View className="gap-2.5 border-b border-border-subtle py-3">
+      <Text className="text-sm font-ankiel-medium text-foreground">{gt("Context window")}</Text>
+      {maxTokens !== null && used !== null ? (
+        <View className="gap-1">
+          <View className="flex-row items-baseline justify-between gap-3">
+            <Text className="min-w-0 flex-1 text-sm text-foreground">
+              {gt("{used}% used", { used })}
+            </Text>
+            <Text className="text-xs font-ankiel-medium tabular-nums text-foreground">
+              {gt("{tokens} tokens left", {
+                tokens: formatContextWindowTokens(usage.remainingTokens),
+              })}
+            </Text>
+          </View>
+          <View
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel={gt("Context window")}
+            accessibilityValue={{ min: 0, max: 100, now: used }}
+            className="h-1.5 flex-row overflow-hidden rounded-full bg-subtle"
+          >
+            <View
+              className={
+                used >= 90
+                  ? "h-full rounded-full bg-red-500"
+                  : used >= 80
+                    ? "h-full rounded-full bg-amber-500"
+                    : "h-full rounded-full bg-foreground"
+              }
+              style={{ flex: used }}
+            />
+            <View style={{ flex: 100 - used }} />
+          </View>
+          <Text className="text-right text-xs tabular-nums text-foreground-tertiary">
+            {gt("{used} of {max} tokens", {
+              used: usage.usedTokens.toLocaleString(locale),
+              max: maxTokens.toLocaleString(locale),
+            })}
+          </Text>
+        </View>
+      ) : (
+        <Text className="text-xs tabular-nums text-foreground-muted">
+          {gt("{usedTokens} tokens used", {
+            usedTokens: formatContextWindowTokens(usage.usedTokens),
+          })}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+export function UsageLimitsSheet({ route }: StaticScreenProps<UsageLimitsRouteParams | undefined>) {
   const gt = useGT();
   const m = useMessages();
   const navigation = useNavigation();
@@ -248,6 +321,7 @@ export function UsageLimitsSheet() {
             />
           }
         >
+          {route.params ? <ContextWindowCard target={route.params} /> : null}
           {accounts.map((account, index) => (
             <CompactAccountCard key={account.key} account={account} now={now} first={index === 0} />
           ))}

@@ -4703,6 +4703,11 @@
   "4acffc5cda91aea2": "Provider usage limits · highest usage {percent}%",
   "55a38e69338c54ee": "Hide account email",
   "0d3e9f1f27c0e780": "Reveal account email",
+  "16fb3b76d0abbb2e": "Context window",
+  "d996426072afbeb2": "{used}% used",
+  "9a8d5ee34a1ba4bf": "{tokens} tokens left",
+  "66be4fb43249bbd2": "{used} of {max} tokens",
+  "ce0545a76897e406": "{usedTokens} tokens used",
   "2f8b30e62d27093a": "Refresh usage limits",
   "412e3b93454812aa": [
     {

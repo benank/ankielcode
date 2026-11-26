@@ -14,7 +14,11 @@ import {
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 
-import { compactBeforeSendTokens } from "./contextWindow.ts";
+import {
+  compactBeforeSendTokens,
+  deriveThreadContextWindow,
+  formatContextWindowTokens,
+} from "./contextWindow.ts";
 import type { ThreadStructure } from "./models.ts";
 import { v2Projection } from "./orchestrationV2TestFixtures.ts";
 
@@ -260,5 +264,24 @@ describe("compactBeforeSendTokens", () => {
     expect(compactBeforeSendTokens(sendInput(overrides as Parameters<typeof sendInput>[0]))).toBe(
       expected ? 293_611 : null,
     );
+  });
+});
+
+describe("deriveThreadContextWindow", () => {
+  it("reads the active conversation's usage, not an earlier one's", () => {
+    const { projection, visibleTurnItems } = sendInput();
+    const current = deriveThreadContextWindow(projection, visibleTurnItems);
+    expect(current?.usedTokens).toBe(293_611);
+
+    const earlierOnly = sendInput({ onlyEarlierConversationUsage: true });
+    expect(
+      deriveThreadContextWindow(earlierOnly.projection, earlierOnly.visibleTurnItems),
+    ).toBeNull();
+  });
+
+  it("formats token counts compactly", () => {
+    expect(formatContextWindowTokens(158_000)).toBe("158k");
+    expect(formatContextWindowTokens(1_000_000)).toBe("1m");
+    expect(formatContextWindowTokens(null)).toBe("0");
   });
 });
