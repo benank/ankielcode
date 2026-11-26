@@ -31,7 +31,7 @@ const approvalRequiredThreads = Effect.gen(function* () {
   };
 });
 
-/** Archives a thread as an outside agent does: `ankiel_thread_organize` on the server's MCP endpoint. */
+/** Archives a thread from outside the client: `ankiel_thread_organize` on the server's MCP endpoint. */
 const archiveOverMcp = Effect.fn("scenario.archiveOverMcp")(function* (
   baseUrl: string,
   threadId: string,
@@ -42,7 +42,7 @@ const archiveOverMcp = Effect.fn("scenario.archiveOverMcp")(function* (
     "session",
     "issue",
     "--subject",
-    "mcp-client",
+    "cli-mcp-client",
     "--scope",
     "orchestration:read",
     "--scope",
