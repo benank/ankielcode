@@ -896,7 +896,7 @@ type ProjectionWindow = Omit<
 };
 
 export class ProjectionStoreV2 extends Context.Service<ProjectionStoreV2, ProjectionStoreV2Shape>()(
-  "@ankielcode/cli/orchestration-v2/ProjectionStore/ProjectionStoreV2",
+  "@ankielcode/server/orchestration-v2/ProjectionStore/ProjectionStoreV2",
 ) {}
 
 // The provider batch owns the writer, so no other write can change these rows before it commits.

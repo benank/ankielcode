@@ -98,7 +98,7 @@ orchestrator, event store, projections, and checkpoint logic still run in tests.
 Record a fixture against the real SDK with:
 
 ```bash
-pnpm --filter @ankielcode/cli record:cursor-replay --scenario simple
+pnpm --filter @ankielcode/server record:cursor-replay --scenario simple
 ```
 
 Use `--out <path>` to record a temporary probe without replacing a checked-in fixture. Supported

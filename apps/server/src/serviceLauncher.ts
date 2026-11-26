@@ -1219,7 +1219,7 @@ export class Launcher {
     )
       return;
     if (!(await runtimeExists(this.#baseDir, version))) {
-      throw new Error(`Selected @ankielcode/cli@${version} runtime is missing or incomplete.`);
+      throw new Error(`Selected Ankiel Code v${version} runtime is missing or incomplete.`);
     }
     if (this.#stopping) return;
     const paths = runtimePaths(this.#baseDir, version);
@@ -1441,7 +1441,7 @@ export class Launcher {
       }
     } catch (error) {
       process.stderr.write(
-        `[service-launcher] Could not point ${unit.path} at @ankielcode/cli@${version}: ${error instanceof Error ? error.message : String(error)}\n`,
+        `[service-launcher] Could not point ${unit.path} at Ankiel Code v${version}: ${error instanceof Error ? error.message : String(error)}\n`,
       );
     }
   }
@@ -1614,7 +1614,7 @@ export async function main(options: LauncherOptions = {}): Promise<void> {
       if (state === undefined) throw new Error("Service state is invalid or unsupported.");
       if (!(await runtimeExists(baseDir, state.activeVersion))) {
         throw new Error(
-          `Selected @ankielcode/cli@${state.activeVersion} runtime is missing or incomplete.`,
+          `Selected Ankiel Code v${state.activeVersion} runtime is missing or incomplete.`,
         );
       }
     }

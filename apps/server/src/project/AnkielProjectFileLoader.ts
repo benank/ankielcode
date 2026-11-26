@@ -31,7 +31,7 @@ export class AnkielProjectFileLoader extends Context.Service<
     /** Never fails; missing/unreadable/invalid files return none, with warnings for invalid files. */
     readonly load: (workspaceRoot: string) => Effect.Effect<Option.Option<AnkielProjectFile>>;
   }
->()("@ankielcode/cli/project/AnkielProjectFileLoader") {}
+>()("@ankielcode/server/project/AnkielProjectFileLoader") {}
 
 const logAnkielProjectFileLoadError = (error: AnkielProjectFileLoadError) =>
   Effect.logWarning(error).pipe(

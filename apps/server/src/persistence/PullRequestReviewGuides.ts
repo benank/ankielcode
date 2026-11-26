@@ -33,7 +33,7 @@ export class PullRequestReviewGuideRepository extends Context.Service<
       guide: PullRequestReviewGuide,
     ) => Effect.Effect<void, PullRequestReviewGuideRepositoryError>;
   }
->()("@ankielcode/cli/persistence/PullRequestReviewGuides/PullRequestReviewGuideRepository") {}
+>()("@ankielcode/server/persistence/PullRequestReviewGuides/PullRequestReviewGuideRepository") {}
 
 const make = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;

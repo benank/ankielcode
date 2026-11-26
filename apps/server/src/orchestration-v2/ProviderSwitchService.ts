@@ -46,7 +46,7 @@ export interface ProviderSwitchServiceV2Shape {
 export class ProviderSwitchServiceV2 extends Context.Service<
   ProviderSwitchServiceV2,
   ProviderSwitchServiceV2Shape
->()("@ankielcode/cli/orchestration-v2/ProviderSwitchService/ProviderSwitchServiceV2") {}
+>()("@ankielcode/server/orchestration-v2/ProviderSwitchService/ProviderSwitchServiceV2") {}
 
 const isLiveProviderSession = (
   session: OrchestrationV2ThreadProjection["providerSessions"][number],

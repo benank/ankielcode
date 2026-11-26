@@ -50,7 +50,7 @@ export function runServicePreflight(input: {
       // A stale `ankiel` earlier on PATH (an old npm/nvm global) makes `ankiel service install`
       // reinstall itself and report success, so name the exact install and the path check.
       reason: [
-        `The installed service launcher speaks protocol ${launcherProtocol}, but @ankielcode/cli@${version} requires protocol ${SERVICE_LAUNCHER_PROTOCOL}.`,
+        `The installed service launcher speaks protocol ${launcherProtocol}, but Ankiel Code v${version} requires protocol ${SERVICE_LAUNCHER_PROTOCOL}.`,
         `On the server machine, install this exact CLI: \`curl -fsSL https://code.ankiel.com/install.sh | ANKIEL_VERSION=${version} sh\`.`,
         `Check that \`ankiel --version\` prints ${version} and that \`which -a ankiel\` lists no older ankiel (such as an npm or nvm install) first, then run \`~/.local/bin/ankiel service install\` (the installer's default path).`,
         "Updating the desktop app does not update this CLI, and `ankiel service update` only repairs the service with whichever CLI runs it.",
@@ -63,7 +63,7 @@ export function runServicePreflight(input: {
     return {
       status: "blocked",
       version,
-      reason: `Could not read this database to confirm @ankielcode/cli@${version} supports it.`,
+      reason: `Could not read this database to confirm Ankiel Code v${version} supports it.`,
     };
   }
   const newer = recorded
@@ -73,7 +73,7 @@ export function runServicePreflight(input: {
     return {
       status: "blocked",
       version,
-      reason: `This database has migrations that @ankielcode/cli@${version} does not know: ${newer.join(", ")}. A newer build wrote them, and running @ankielcode/cli@${version} on this database is not safe. Stay on the newer release, or wait for a release that includes these migrations.`,
+      reason: `This database has migrations that Ankiel Code v${version} does not know: ${newer.join(", ")}. A newer build wrote them, and running Ankiel Code v${version} on this database is not safe. Stay on the newer release, or wait for a release that includes these migrations.`,
     };
   }
 

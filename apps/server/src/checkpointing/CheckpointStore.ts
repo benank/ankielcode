@@ -103,7 +103,7 @@ export class CheckpointStore extends Context.Service<
       input: DeleteCheckpointRefsInput,
     ) => Effect.Effect<void, CheckpointStoreError>;
   }
->()("@ankielcode/cli/checkpointing/CheckpointStore") {}
+>()("@ankielcode/server/checkpointing/CheckpointStore") {}
 
 /** @public */
 export const make = Effect.gen(function* () {

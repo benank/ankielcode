@@ -556,7 +556,7 @@ export interface ThreadManagementServiceShape {
 export class ThreadManagementService extends Context.Service<
   ThreadManagementService,
   ThreadManagementServiceShape
->()("@ankielcode/cli/orchestration-v2/ThreadManagementService") {}
+>()("@ankielcode/server/orchestration-v2/ThreadManagementService") {}
 
 export const ACTIVE_RUN_STATUSES = [
   "preparing",

@@ -101,7 +101,7 @@ const formatSetup = (setup: Setup, hints: Hints) => {
       !service.supported
         ? "unavailable"
         : service.installed
-          ? `installed · @ankielcode/cli@${service.installedVersion ?? packageJson.version}`
+          ? `installed · Ankiel Code v${service.installedVersion ?? packageJson.version}`
           : "not installed",
     ],
     [
@@ -262,7 +262,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
     yield* printServeCommand("Background service unavailable.");
   } else {
     if (newer) {
-      yield* Console.log(`Keeping installed service version @ankielcode/cli@${installedVersion}.`);
+      yield* Console.log(`Keeping installed service version Ankiel Code v${installedVersion}.`);
     }
     if (update && !interactive) {
       yield* Console.log("Updating Ankiel Code. Running agent turns will stop.");

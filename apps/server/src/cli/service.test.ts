@@ -203,7 +203,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
         );
         const node = "/home/me/.nvm/versions/node/v26.8.2/bin/node";
         const script =
-          "/home/me/.nvm/versions/node/v26.8.2/lib/node_modules/@ankielcode/cli/dist/bin.mjs";
+          "/home/me/.nvm/versions/node/v26.8.2/lib/node_modules/@ankielcode/server/dist/bin.mjs";
 
         const output = yield* Command.runWith(serviceCommand, { version: packageJson.version })([
           command,
@@ -223,7 +223,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
             ),
           ),
         );
-        expect(output).toContain(`@ankielcode/cli@${packageJson.version}`);
+        expect(output).toContain(`Ankiel Code v${packageJson.version}`);
         expect(output).toContain(script);
         expect(installOptions).toEqual([]);
       }),

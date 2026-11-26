@@ -27,7 +27,7 @@ export class TaskFolderStore extends Context.Service<
     readonly put: (taskFolder: TaskFolder) => Effect.Effect<void, TaskFolderError>;
     readonly remove: (root: string) => Effect.Effect<void, TaskFolderError>;
   }
->()("@ankielcode/cli/workspace/TaskFolderStore") {}
+>()("@ankielcode/server/workspace/TaskFolderStore") {}
 
 const TaskFolderRow = Schema.Struct({
   root: Schema.String,

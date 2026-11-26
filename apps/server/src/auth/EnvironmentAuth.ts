@@ -477,7 +477,7 @@ export class EnvironmentAuth extends Context.Service<
       ServerAuthInternalError
     >;
   }
->()("@ankielcode/cli/auth/EnvironmentAuth") {}
+>()("@ankielcode/server/auth/EnvironmentAuth") {}
 
 type BootstrapExchangeResult = {
   readonly response: AuthBrowserSessionResult;

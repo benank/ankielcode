@@ -928,7 +928,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
             );
             assert.deepStrictEqual(spawned.at(-1), [
               "run",
-              "--filter=@ankielcode/cli",
+              "--filter=@ankielcode/server",
               "dev",
               ...devServerInput.runArgs,
             ]);

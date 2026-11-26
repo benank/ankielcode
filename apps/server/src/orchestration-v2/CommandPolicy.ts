@@ -289,7 +289,7 @@ export interface CommandPolicyV2Shape {
 }
 
 export class CommandPolicyV2 extends Context.Service<CommandPolicyV2, CommandPolicyV2Shape>()(
-  "@ankielcode/cli/orchestration-v2/CommandPolicy/CommandPolicyV2",
+  "@ankielcode/server/orchestration-v2/CommandPolicy/CommandPolicyV2",
 ) {}
 
 function unsupported(

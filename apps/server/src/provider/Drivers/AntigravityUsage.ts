@@ -29,7 +29,7 @@ export class AntigravityUsage extends Context.Service<
       readonly windowStartMs: number;
     }) => Effect.Effect<ReadonlyArray<ProviderUsageScan>, UsageReadError>;
   }
->()("@ankielcode/cli/provider/Drivers/AntigravityUsage") {}
+>()("@ankielcode/server/provider/Drivers/AntigravityUsage") {}
 
 const make = Effect.gen(function* () {
   const digest = yield* Digest.Digest;

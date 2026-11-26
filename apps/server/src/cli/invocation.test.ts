@@ -233,8 +233,8 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
       for (const relative of [
-        "project/node_modules/@ankielcode/cli/dist/bin.mjs",
-        "prefix/lib/node_modules/@ankielcode/cli/dist/bin.mjs",
+        "project/node_modules/@ankielcode/server/dist/bin.mjs",
+        "prefix/lib/node_modules/@ankielcode/server/dist/bin.mjs",
         "project/apps/server/dist/bin.mjs",
         ".ankiel/runtime/0.0.45/ankiel",
         "missing/dist/bin.mjs",

@@ -16,7 +16,7 @@ export class EnvironmentAuthPolicy extends Context.Service<
   {
     readonly getDescriptor: () => Effect.Effect<ServerAuthDescriptor>;
   }
->()("@ankielcode/cli/auth/EnvironmentAuthPolicy") {}
+>()("@ankielcode/server/auth/EnvironmentAuthPolicy") {}
 
 /** The auth policy a server started with `config` runs under. */
 function resolveServerAuthPolicy(

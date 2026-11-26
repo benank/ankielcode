@@ -49,7 +49,7 @@ export class OrchestrationCommandReceiptRepository extends Context.Service<
     >;
   }
 >()(
-  "@ankielcode/cli/persistence/OrchestrationCommandReceipts/OrchestrationCommandReceiptRepository",
+  "@ankielcode/server/persistence/OrchestrationCommandReceipts/OrchestrationCommandReceiptRepository",
 ) {}
 
 const makeOrchestrationCommandReceiptRepository = Effect.gen(function* () {

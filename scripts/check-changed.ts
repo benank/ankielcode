@@ -358,7 +358,7 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
     }
   }
   // It reads files other than the ones beside it, so no changed file selects it.
-  if (affected.includes("@ankielcode/cli"))
+  if (affected.includes("@ankielcode/server"))
     tests.add("apps/server/src/provider/AgentContextBudget.test.ts");
   const { vitestTests, nodeTests } = splitTests(tests);
 

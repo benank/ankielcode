@@ -525,7 +525,7 @@ it.layer(NodeServices.layer)("ankiel update checks the database before switching
     stderrInvalidUtf8: false,
   });
   const blockedReason =
-    "This database has migrations that @ankielcode/cli@0.1.8 does not know: 79_example.";
+    "This database has migrations that Ankiel Code v0.1.8 does not know: 79_example.";
 
   it.effect.each([
     {
@@ -552,7 +552,7 @@ it.layer(NodeServices.layer)("ankiel update checks the database before switching
       launcherProtocol: 3,
       preflight: preflightOutput("", 1),
       failure:
-        "@ankielcode/cli@0.1.8 could not confirm it supports this database (its check exited with code 1), so ankiel did not switch to it.",
+        "Ankiel Code v0.1.8 could not confirm it supports this database (its check exited with code 1), so ankiel did not switch to it.",
     },
     {
       // Newer builds keep accepting the current launcher protocol, which may drop 3.

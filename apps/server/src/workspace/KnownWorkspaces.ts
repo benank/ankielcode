@@ -44,7 +44,7 @@ export class KnownWorkspaces extends Context.Service<
     /** Fails unless `cwd` exists and resolves inside a known workspace. */
     readonly assertContains: (cwd: string) => Effect.Effect<void, UnknownWorkspaceError>;
   }
->()("@ankielcode/cli/workspace/KnownWorkspaces") {}
+>()("@ankielcode/server/workspace/KnownWorkspaces") {}
 
 /** @public */
 export const make = Effect.gen(function* () {

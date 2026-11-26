@@ -219,7 +219,7 @@ export class GitManager extends Context.Service<
       Scope.Scope
     >;
   }
->()("@ankielcode/cli/git/GitManager") {}
+>()("@ankielcode/server/git/GitManager") {}
 
 const COMMIT_TIMEOUT_MS = 10 * 60_000;
 const MAX_PROGRESS_TEXT_LENGTH = 500;

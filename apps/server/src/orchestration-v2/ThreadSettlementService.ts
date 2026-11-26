@@ -279,7 +279,7 @@ export class ThreadSettlementServiceV2 extends Context.Service<
     readonly start: () => Effect.Effect<void, never, Scope.Scope>;
     readonly drain: Effect.Effect<void>;
   }
->()("@ankielcode/cli/orchestration-v2/ThreadSettlementService/ThreadSettlementServiceV2") {}
+>()("@ankielcode/server/orchestration-v2/ThreadSettlementService/ThreadSettlementServiceV2") {}
 
 function autoSettlementConfigured(
   settings: import("@ankielcode/contracts").ServerSettings,

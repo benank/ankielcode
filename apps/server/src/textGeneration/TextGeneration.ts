@@ -38,7 +38,7 @@ export type {
 } from "@ankielcode/provider-core/server/textGeneration";
 
 export class TextGeneration extends Context.Service<TextGeneration, ProviderTextGeneration>()(
-  "@ankielcode/cli/textGeneration/TextGeneration",
+  "@ankielcode/server/textGeneration/TextGeneration",
 ) {}
 
 type TextGenerationOp =

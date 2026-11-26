@@ -27,7 +27,7 @@ export class PreviewAgentActivity extends Context.Service<
       Scope.Scope
     >;
   }
->()("@ankielcode/cli/preview/PreviewAgentActivity") {}
+>()("@ankielcode/server/preview/PreviewAgentActivity") {}
 
 const make = Effect.gen(function* () {
   const changes = yield* PubSub.unbounded<PreviewAgentTurnChange>();

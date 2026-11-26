@@ -45,7 +45,7 @@ export interface RuntimePolicyV2Shape {
 }
 
 export class RuntimePolicyV2 extends Context.Service<RuntimePolicyV2, RuntimePolicyV2Shape>()(
-  "@ankielcode/cli/orchestration-v2/RuntimePolicy/RuntimePolicyV2",
+  "@ankielcode/server/orchestration-v2/RuntimePolicy/RuntimePolicyV2",
 ) {}
 
 export function providerRuntimeMode(

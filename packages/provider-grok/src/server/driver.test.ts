@@ -227,7 +227,7 @@ it.layer(layerTest)("GrokDriver", (it) => {
     );
   }
 
-  // An `npx @ankielcode/cli` server inherits npm_config_user_agent, which Grok ranks above `[cli] installer`.
+  // An `npx @ankielcode/server` server inherits npm_config_user_agent, which Grok ranks above `[cli] installer`.
   it.effect.skipIf(windowsHost)("keeps a script install off the npm updater under npx", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

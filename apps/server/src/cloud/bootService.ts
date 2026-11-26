@@ -723,7 +723,7 @@ export class BootServiceDowngradeRefusedError extends Schema.TaggedError<BootSer
   },
 ) {
   override get message(): string {
-    return `Refusing to replace @ankielcode/cli@${this.installedVersion} with older @ankielcode/cli@${this.targetVersion}. Run the command again with --allow-downgrade to continue.`;
+    return `Refusing to replace Ankiel Code v${this.installedVersion} with older Ankiel Code v${this.targetVersion}. Run the command again with --allow-downgrade to continue.`;
   }
 }
 
@@ -808,7 +808,7 @@ export class BootService extends Context.Service<
     readonly uninstall: Effect.Effect<boolean, BootServiceError>;
     readonly status: Effect.Effect<BootServiceStatus, BootServiceError>;
   }
->()("@ankielcode/cli/cloud/bootService") {}
+>()("@ankielcode/server/cloud/bootService") {}
 
 export interface BootServiceHost {
   readonly execPath: string;

@@ -308,7 +308,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
   if (targetChannel === "preview" && currentChannel !== "preview") {
     yield* Console.log(
       [
-        `@ankielcode/cli@${targetVersion} is a preview build.`,
+        `Ankiel Code v${targetVersion} is a preview build.`,
         "  Preview builds are cut by maintainers from unreleased branches to exercise the release",
         "  pipeline. They can be broken, receive no fixes, and are never offered as updates; you",
         `  will have to switch back to ${currentChannel} yourself with \`ankiel update --channel ${currentChannel} --allow-downgrade\`.`,
@@ -359,7 +359,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
   }
   if (!input.allowDowngrade && compareExactServiceVersions(targetVersion, newestInstalled) < 0) {
     return yield* new CliUpdateError({
-      reason: `@ankielcode/cli@${targetVersion} is older than the installed ${newestInstalled}. Pass --allow-downgrade to install it anyway.`,
+      reason: `Ankiel Code v${targetVersion} is older than the installed ${newestInstalled}. Pass --allow-downgrade to install it anyway.`,
     });
   }
 
@@ -434,7 +434,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
                 ? error
                 : new PinnedRuntimePreflightBlockedError({
                     version: targetVersion,
-                    reason: `@ankielcode/cli@${targetVersion} could not confirm it supports this database (its check exited with code ${error.exitCode}), so ankiel did not switch to it.`,
+                    reason: `Ankiel Code v${targetVersion} could not confirm it supports this database (its check exited with code ${error.exitCode}), so ankiel did not switch to it.`,
                   }),
             ),
         }),
@@ -448,7 +448,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
     Effect.catchIf(isUnpublishedRelease, () =>
       Effect.fail(
         new CliUpdateError({
-          reason: `No release archive was published for @ankielcode/cli@${targetVersion}.`,
+          reason: `No release archive was published for Ankiel Code v${targetVersion}.`,
         }),
       ),
     ),
@@ -484,7 +484,7 @@ export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
       Effect.mapError(
         (error) =>
           new CliUpdateError({
-            reason: `@ankielcode/cli@${targetVersion} is installed but the background service could not be ${restartService ? "updated" : "pointed at it"}: ${error.message}`,
+            reason: `Ankiel Code v${targetVersion} is installed but the background service could not be ${restartService ? "updated" : "pointed at it"}: ${error.message}`,
           }),
       ),
     );

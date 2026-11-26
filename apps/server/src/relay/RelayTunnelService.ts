@@ -41,7 +41,7 @@ export interface RelayTunnelServiceShape {
 export class RelayTunnelService extends Context.Service<
   RelayTunnelService,
   RelayTunnelServiceShape
->()("@ankielcode/cli/relay/RelayTunnelService") {}
+>()("@ankielcode/server/relay/RelayTunnelService") {}
 
 interface ActiveState {
   setup: RelaySetupConfig | null;

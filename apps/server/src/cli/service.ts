@@ -154,9 +154,9 @@ export function formatServiceChange(
   result: Extract<ServiceReconcileResult, { readonly changed: true }>,
 ): string {
   if (result.plan.handedOff === true) {
-    return `Service update to @ankielcode/cli@${packageJson.version} queued. This session will disconnect.\nLog: ${result.plan.logPath}`;
+    return `Service update to Ankiel Code v${packageJson.version} queued. This session will disconnect.\nLog: ${result.plan.logPath}`;
   }
-  return `Service ${result.previouslyInstalled ? "updated" : "installed"} · @ankielcode/cli@${packageJson.version}\nLog: ${result.plan.logPath}`;
+  return `Service ${result.previouslyInstalled ? "updated" : "installed"} · Ankiel Code v${packageJson.version}\nLog: ${result.plan.logPath}`;
 }
 
 const MEMORY_CONTROLLER_DISABLED =
@@ -207,7 +207,7 @@ function formatServiceStatus(
   ) {
     return [
       "Ankiel Code service",
-      `  Status: installed · @ankielcode/cli@${installedVersion} (newer than this @ankielcode/cli@${cliVersion} CLI)`,
+      `  Status: installed · Ankiel Code v${installedVersion} (newer than this Ankiel Code v${cliVersion} CLI)`,
       `  Unit: ${status.unitPath}`,
       `  Logs: ${status.logPath}`,
       ...formatProtection(protection),
@@ -217,7 +217,7 @@ function formatServiceStatus(
   }
   return [
     "Ankiel Code service",
-    `  Status: ${status.current ? `installed · @ankielcode/cli@${installedVersion}` : "needs an update or repair"}`,
+    `  Status: ${status.current ? `installed · Ankiel Code v${installedVersion}` : "needs an update or repair"}`,
     `  Unit: ${status.unitPath}`,
     `  Logs: ${status.logPath}`,
     ...formatProtection(protection),
@@ -254,7 +254,7 @@ const serviceInstallCommand = Command.make("install", serviceReconcileFlags).pip
         const result = yield* reconcileService({ allowDowngrade: flags.allowDowngrade });
         if (!result.changed) {
           yield* Console.log(
-            `Ankiel Code service is already installed with @ankielcode/cli@${packageJson.version} (${yield* resolveEntryPath}).`,
+            `Ankiel Code service is already installed with Ankiel Code v${packageJson.version} (${yield* resolveEntryPath}).`,
           );
           return;
         }
@@ -281,7 +281,7 @@ const serviceUpdateCommand = Command.make("update", serviceReconcileFlags).pipe(
         const result = yield* reconcileService({ allowDowngrade: flags.allowDowngrade });
         if (!result.changed) {
           yield* Console.log(
-            `Ankiel Code service is already using @ankielcode/cli@${packageJson.version} (${yield* resolveEntryPath}).`,
+            `Ankiel Code service is already using Ankiel Code v${packageJson.version} (${yield* resolveEntryPath}).`,
           );
           return;
         }
@@ -305,7 +305,7 @@ const serviceRestartCommand = Command.make("restart", projectLocationFlags).pipe
         const onVersion =
           status.installedVersion === undefined
             ? ""
-            : ` on @ankielcode/cli@${status.installedVersion}`;
+            : ` on Ankiel Code v${status.installedVersion}`;
         yield* Console.log(
           outcome === "restarted"
             ? `Restarted the Ankiel Code service${onVersion}.`

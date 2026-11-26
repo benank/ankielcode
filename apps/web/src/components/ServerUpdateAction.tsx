@@ -156,7 +156,7 @@ export function useServerUpdate() {
                 }),
               )
             : m(
-                msg("Reconnected on @ankielcode/cli@{version}.", {
+                msg("Reconnected on Ankiel Code v{version}.", {
                   version: result.value.targetVersion,
                 }),
               ),
@@ -439,7 +439,7 @@ export function OutdatedServerUpdateAction({
       type: "success",
       title: m(msg("{serverLabel} updated", { serverLabel })),
       description: m(
-        msg("Reconnected on @ankielcode/cli@{version}.", { version: result.value.targetVersion }),
+        msg("Reconnected on Ankiel Code v{version}.", { version: result.value.targetVersion }),
       ),
     });
   };

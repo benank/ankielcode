@@ -353,7 +353,7 @@ export class PullRequestSyncReactor extends Context.Service<
     /** Forces reread on the next sweep, including terminal snapshots; rate-limited hosts wait until the pause ends. */
     readonly requestSync: (key: ThreadPullRequestKey) => Effect.Effect<void>;
   }
->()("@ankielcode/cli/orchestration-v2/PullRequestSyncReactor") {}
+>()("@ankielcode/server/orchestration-v2/PullRequestSyncReactor") {}
 
 /** @public */
 export const make = Effect.gen(function* () {

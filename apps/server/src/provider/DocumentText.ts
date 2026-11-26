@@ -41,7 +41,7 @@ export class DocumentText extends Context.Service<
   {
     readonly ensure: (path: string) => Effect.Effect<string | undefined>;
   }
->()("@ankielcode/cli/provider/DocumentText") {}
+>()("@ankielcode/server/provider/DocumentText") {}
 
 const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;

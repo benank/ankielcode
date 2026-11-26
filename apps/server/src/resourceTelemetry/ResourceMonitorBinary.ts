@@ -56,7 +56,7 @@ export class ResourceMonitorBinary extends Context.Service<
   {
     readonly resolve: Effect.Effect<string, ResourceMonitorBinaryError>;
   }
->()("@ankielcode/cli/resourceTelemetry/ResourceMonitorBinary") {}
+>()("@ankielcode/server/resourceTelemetry/ResourceMonitorBinary") {}
 
 function binaryName(platform: NodeJS.Platform): string {
   return platform === "win32" ? "ankiel-resource-monitor.exe" : "ankiel-resource-monitor";

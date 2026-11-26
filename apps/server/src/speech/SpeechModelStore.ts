@@ -68,7 +68,7 @@ export class SpeechModelStore extends Context.Service<
     /** Removes Ankiel Code's file or link; a linked file itself is left in place. */
     readonly remove: (model: ModelFile) => Effect.Effect<void, PlatformError>;
   }
->()("@ankielcode/cli/speech/SpeechModelStore") {}
+>()("@ankielcode/server/speech/SpeechModelStore") {}
 
 const DOWNLOAD_ATTEMPTS = 3;
 const PARTIAL_FILENAME =

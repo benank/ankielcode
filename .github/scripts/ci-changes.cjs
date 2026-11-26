@@ -23,7 +23,7 @@ const EXTRA_OWNERS = [
   // Vite configs and tsconfigs of these apps import scripts/lib directly.
   [
     /^scripts\/lib\//,
-    ["@ankielcode/desktop", "@ankielcode/mobile", "@ankielcode/web", "@ankielcode/cli"],
+    ["@ankielcode/desktop", "@ankielcode/mobile", "@ankielcode/web", "@ankielcode/server"],
   ],
   // scripts/build-desktop-artifact.ts reads the GNOME extension manifest.
   [/^apps\/desktop\/gnome-extension\//, ["@ankielcode/scripts"]],
@@ -40,7 +40,7 @@ const TEST_ONLY_DEPS = {
     "@ankielcode/desktop",
     "@ankielcode/mobile",
     "@ankielcode/web",
-    "@ankielcode/cli",
+    "@ankielcode/server",
     "@ankielcode/provider-cursor",
   ],
 };
@@ -64,7 +64,7 @@ const DESKTOP_LAUNCH = [
   /^scripts\/(smoke-desktop-app\.ts|fixtures\/desktop-launch\/)/,
 ];
 
-const OWN_TEST_JOB = new Set(["@ankielcode/cli", "@ankielcode/web", "@ankielcode/monorepo"]);
+const OWN_TEST_JOB = new Set(["@ankielcode/server", "@ankielcode/web", "@ankielcode/monorepo"]);
 
 function readWorkspace() {
   const patterns = [];
@@ -176,7 +176,7 @@ function decide(files, packages, full) {
       typecheck: affected.size > 0,
       build:
         has("@ankielcode/desktop") ||
-        has("@ankielcode/cli") ||
+        has("@ankielcode/server") ||
         has("@ankielcode/web") ||
         desktopLaunch,
       desktop_launch: desktopLaunch,
@@ -184,7 +184,7 @@ function decide(files, packages, full) {
       // Empty means every package the Test job covers.
       test_packages: everything ? "" : tested.map((pkg) => pkg.name).join(" "),
       test_web: has("@ankielcode/web"),
-      test_server: has("@ankielcode/cli"),
+      test_server: has("@ankielcode/server"),
       rust: everything || rust,
       release_smoke: scriptsChanged,
       mobile_native: files === null || files.some((file) => MOBILE_NATIVE.test(file)),

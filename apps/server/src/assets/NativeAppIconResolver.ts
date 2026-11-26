@@ -31,7 +31,7 @@ export class NativeAppIconResolver extends Context.Service<
   {
     readonly resolve: (app: NativeAppIconReference) => Effect.Effect<string | null>;
   }
->()("@ankielcode/cli/assets/NativeAppIconResolver") {}
+>()("@ankielcode/server/assets/NativeAppIconResolver") {}
 
 function appCacheKey(app: NativeAppIconReference): string {
   return JSON.stringify(app);

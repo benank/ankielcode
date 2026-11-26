@@ -196,7 +196,7 @@ export class TaskFolders extends Context.Service<
       readonly recreate: (checkout: TaskFolderCheckout) => Effect.Effect<void, E>;
     }) => Effect.Effect<void, TaskFolderError | E>;
   }
->()("@ankielcode/cli/workspace/TaskFolders") {}
+>()("@ankielcode/server/workspace/TaskFolders") {}
 
 const isTaskFolderError = Schema.is(TaskFolderError);
 

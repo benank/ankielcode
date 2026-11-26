@@ -146,7 +146,7 @@ export class AuthSessionRepository extends Context.Service<
       input: RevokeAuthSessionsByProofKeyInput,
     ) => Effect.Effect<ReadonlyArray<AuthSessionId>, AuthSessionRepositoryError>;
   }
->()("@ankielcode/cli/persistence/AuthSessions/AuthSessionRepository") {}
+>()("@ankielcode/server/persistence/AuthSessions/AuthSessionRepository") {}
 
 const AuthSessionDbRow = Schema.Struct({
   sessionId: AuthSessionId,

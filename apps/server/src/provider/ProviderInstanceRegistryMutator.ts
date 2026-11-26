@@ -26,4 +26,4 @@ export interface ProviderInstanceRegistryMutatorShape {
 export class ProviderInstanceRegistryMutator extends Context.Service<
   ProviderInstanceRegistryMutator,
   ProviderInstanceRegistryMutatorShape
->()("@ankielcode/cli/provider/ProviderInstanceRegistryMutator") {}
+>()("@ankielcode/server/provider/ProviderInstanceRegistryMutator") {}

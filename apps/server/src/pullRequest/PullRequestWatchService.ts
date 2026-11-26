@@ -77,7 +77,7 @@ export class PullRequestWatchService extends Context.Service<
       | PullRequestUnavailableError
     >;
   }
->()("@ankielcode/cli/pullRequest/PullRequestWatchService") {}
+>()("@ankielcode/server/pullRequest/PullRequestWatchService") {}
 
 const make = Effect.gen(function* () {
   const engine = yield* Orchestrator.OrchestratorV2;

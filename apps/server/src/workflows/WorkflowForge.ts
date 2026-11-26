@@ -226,7 +226,7 @@ export class WorkflowForge extends Context.Service<
       ) => Effect.Effect<void, WorkflowForgeError>;
     };
   }
->()("@ankielcode/cli/workflows/WorkflowForge") {}
+>()("@ankielcode/server/workflows/WorkflowForge") {}
 
 const failed =
   (what: string) =>

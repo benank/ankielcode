@@ -49,7 +49,7 @@ export class WorktreeMcpService extends Context.Service<
       },
     ) => Effect.Effect<VcsListRefsResult, GitCommandError | PlatformError.PlatformError>;
   }
->()("@ankielcode/cli/mcp/WorktreeMcpService") {}
+>()("@ankielcode/server/mcp/WorktreeMcpService") {}
 
 function failure(code: WorktreeMcpFailure["code"], message: string): WorktreeMcpFailure {
   return new WorktreeMcpFailure({ code, message });

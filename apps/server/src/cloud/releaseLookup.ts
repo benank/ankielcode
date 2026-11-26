@@ -99,7 +99,7 @@ export class ReleaseLookup extends Context.Service<
       input: ServerReleaseInput,
     ) => Effect.Effect<ServerRelease | null, ServerReleaseError>;
   }
->()("@ankielcode/cli/cloud/releaseLookup") {}
+>()("@ankielcode/server/cloud/releaseLookup") {}
 
 export const make = Effect.fn("ReleaseLookup.make")(function* () {
   // Unauthenticated GitHub API calls are rate limited per address, so repeated opens share a lookup.

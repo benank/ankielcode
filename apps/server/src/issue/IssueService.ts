@@ -202,7 +202,7 @@ export class IssueService extends Context.Service<
       IssueError
     >;
   }
->()("@ankielcode/cli/issue/IssueService") {}
+>()("@ankielcode/server/issue/IssueService") {}
 
 const make = Effect.gen(function* () {
   const registry = yield* IssueTrackerRegistry.IssueTrackerRegistry;

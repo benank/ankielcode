@@ -374,7 +374,7 @@ export class ThreadSearch extends Context.Service<
       readonly messageThreadIds: ReadonlyArray<ThreadId>;
     }) => Effect.Effect<ReadonlyArray<ThreadId>, ThreadSearchError>;
   }
->()("@ankielcode/cli/orchestration-v2/ThreadSearch") {}
+>()("@ankielcode/server/orchestration-v2/ThreadSearch") {}
 
 // Rows a client gets per search: enough for the shown results without sending every match.
 const OLDER_SETTLED_TITLE_ROWS = 15;

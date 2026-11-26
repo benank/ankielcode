@@ -76,11 +76,11 @@ const MODE_ARGS = {
     "run",
     "--filter=@ankielcode/contracts",
     "--filter=@ankielcode/web",
-    "--filter=@ankielcode/cli",
+    "--filter=@ankielcode/server",
     "--parallel",
     "dev",
   ],
-  "dev:server": ["run", "--filter=@ankielcode/cli", "dev"],
+  "dev:server": ["run", "--filter=@ankielcode/server", "dev"],
   "dev:web": ["run", "--filter=@ankielcode/web", "dev"],
   "dev:desktop": ["run", "--filter=@ankielcode/desktop", "--filter=@ankielcode/web", "dev"],
 } as const satisfies Record<string, ReadonlyArray<string>>;
@@ -90,7 +90,7 @@ const MODE_ARGS = {
 const BUILT_DEV_ARGS = [
   "run",
   "--filter=@ankielcode/web",
-  "--filter=@ankielcode/cli",
+  "--filter=@ankielcode/server",
   "--parallel",
   "dev:built",
 ] as const;

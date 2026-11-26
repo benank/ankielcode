@@ -133,7 +133,7 @@ export class WorkspaceFileSystem extends Context.Service<
       | KnownWorkspaces.UnknownWorkspaceError
     >;
   }
->()("@ankielcode/cli/workspace/WorkspaceFileSystem") {}
+>()("@ankielcode/server/workspace/WorkspaceFileSystem") {}
 
 const UTF8_BOM = "\uFEFF";
 

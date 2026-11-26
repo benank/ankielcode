@@ -53,7 +53,7 @@ export class ThreadIssueService extends Context.Service<
       key: ThreadIssueKey,
     ) => Effect.Effect<IssueLinkedThreadsResult, IssueOperationError>;
   }
->()("@ankielcode/cli/orchestration-v2/ThreadIssueService") {}
+>()("@ankielcode/server/orchestration-v2/ThreadIssueService") {}
 
 const make = Effect.gen(function* () {
   const orchestrator = yield* Orchestrator.OrchestratorV2;

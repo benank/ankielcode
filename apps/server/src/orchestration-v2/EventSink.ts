@@ -266,7 +266,7 @@ export interface EventSinkV2Shape {
 }
 
 export class EventSinkV2 extends Context.Service<EventSinkV2, EventSinkV2Shape>()(
-  "@ankielcode/cli/orchestration-v2/EventSink/EventSinkV2",
+  "@ankielcode/server/orchestration-v2/EventSink/EventSinkV2",
 ) {}
 
 const layerBase: Layer.Layer<

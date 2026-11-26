@@ -87,7 +87,7 @@ export interface OrchestrationEffectExecutorV2Shape {
 export class OrchestrationEffectExecutorV2 extends Context.Service<
   OrchestrationEffectExecutorV2,
   OrchestrationEffectExecutorV2Shape
->()("@ankielcode/cli/orchestration-v2/EffectWorker/OrchestrationEffectExecutorV2") {}
+>()("@ankielcode/server/orchestration-v2/EffectWorker/OrchestrationEffectExecutorV2") {}
 
 export const layerExecutor: Layer.Layer<
   OrchestrationEffectExecutorV2,
@@ -777,7 +777,7 @@ export interface OrchestrationEffectWorkerV2Shape {
 export class OrchestrationEffectWorkerV2 extends Context.Service<
   OrchestrationEffectWorkerV2,
   OrchestrationEffectWorkerV2Shape
->()("@ankielcode/cli/orchestration-v2/EffectWorker/OrchestrationEffectWorkerV2") {}
+>()("@ankielcode/server/orchestration-v2/EffectWorker/OrchestrationEffectWorkerV2") {}
 
 export interface OrchestrationEffectWorkerOptions {
   readonly workerId?: string;

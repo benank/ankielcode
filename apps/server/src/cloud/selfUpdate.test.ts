@@ -201,7 +201,7 @@ it.layer(NodeServices.layer)("server self update", (it) => {
       yield* TestClock.adjust("14 seconds");
       const error = yield* Fiber.join(failing);
       expect(error.reason).toBe(
-        `Could not prepare @ankielcode/cli@1.1.0 while downloading the ankiel release ${asset} (HTTP ${status} from cdn.example).`,
+        `Could not prepare Ankiel Code v1.1.0 while downloading the ankiel release ${asset} (HTTP ${status} from cdn.example).`,
       );
       expect(order).toEqual([]);
       const fs = yield* FileSystem.FileSystem;
