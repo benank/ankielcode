@@ -463,7 +463,6 @@ export function ThinkingTimelineRow({ row }: { row: Extract<TimelineRow, { kind:
         )
       }
       active
-      shimmer
     />
   );
   const { groupId } = row;
@@ -487,7 +486,6 @@ function LiveActivityRow({
   toolIcon,
   failed = false,
   active = false,
-  shimmer = false,
   thinkingPixel = false,
 }: {
   label: ReactNode;
@@ -497,12 +495,10 @@ function LiveActivityRow({
   toolIcon?: ToolActivityIcon | undefined;
   failed?: boolean;
   active?: boolean;
-  shimmer?: boolean;
   /** While active, the thinking pixels stand in for the icon. */
   thinkingPixel?: boolean;
 }) {
   const animated = active && !failed;
-  const showShimmer = animated && shimmer;
   const pixel = animated && thinkingPixel;
   return (
     <div
@@ -516,10 +512,9 @@ function LiveActivityRow({
         toolIcon={toolIcon}
         failed={failed}
         announceFailure={failed}
-        active={animated && !shimmer}
         pixel={pixel ? "live" : undefined}
       />
-      {showShimmer ? (
+      {animated ? (
         <ActivityShimmerOverlay>
           <LiveActivityContent
             label={label}
@@ -542,7 +537,6 @@ function LiveActivityContent({
   toolIcon,
   failed = false,
   announceFailure = false,
-  active = false,
   highlighted = false,
   pixel,
 }: {
@@ -552,7 +546,6 @@ function LiveActivityContent({
   toolIcon?: ToolActivityIcon | undefined;
   failed?: boolean;
   announceFailure?: boolean;
-  active?: boolean;
   highlighted?: boolean;
   // The shimmer copy holds the pixels' place, so only one copy animates.
   pixel?: "live" | "spacer" | undefined;
@@ -595,15 +588,7 @@ function LiveActivityContent({
         ) : null
       }
       label={
-        <span
-          className={cn(
-            "block truncate",
-            highlighted && "text-foreground",
-            active && "live-tool-shine",
-          )}
-        >
-          {label}
-        </span>
+        <span className={cn("block truncate", highlighted && "text-foreground")}>{label}</span>
       }
       trailing={
         showTrailingFailureMark ? (

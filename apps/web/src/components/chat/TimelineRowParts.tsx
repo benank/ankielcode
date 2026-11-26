@@ -53,6 +53,7 @@ export function ActivityShimmerOverlay({
   return (
     <span
       aria-hidden
+      inert
       className="live-activity-focus pointer-events-none absolute inset-y-0 select-none"
     >
       <span className="live-activity-focus-counter block">
