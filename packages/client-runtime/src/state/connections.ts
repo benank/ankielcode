@@ -1,4 +1,5 @@
 import type { EnvironmentId as EnvironmentIdType } from "@ankielcode/contracts";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
@@ -34,6 +35,42 @@ export function* enabledEnvironmentIds(
     }
   }
 }
+
+const REFRESH_SETTLE_TIMEOUT = Duration.seconds(10);
+
+/**
+ * Pull to refresh for live lists: retries enabled environments that are not connected and waits for
+ * each attempt, up to a cap. A connected socket is not probed (a relay can miss the quick probe),
+ * and an attempt under way is not retried, since a retry restarts it.
+ */
+export const refreshEnvironmentConnections = Effect.fn("refreshEnvironmentConnections")(function* (
+  environmentIds: ReadonlyArray<EnvironmentIdType>,
+) {
+  const registry = yield* EnvironmentRegistry.EnvironmentRegistry;
+  const enabled = new Set(
+    enabledEnvironmentIds({ isReady: true, entries: yield* SubscriptionRef.get(registry.entries) }),
+  );
+  const reconnect = Effect.fnUntraced(function* (environmentId: EnvironmentIdType) {
+    const before = yield* registry.state(environmentId);
+    if (before.phase === "connected" || !before.desired) return;
+    if (before.phase !== "connecting") yield* registry.retryNow(environmentId);
+    // The supervisor publishes a new state object per transition, so any other non-connecting
+    // state is this attempt's outcome, even one published before the subscription started.
+    yield* registry.stateChanges(environmentId).pipe(
+      Stream.filter((state) => state !== before && state.phase !== "connecting"),
+      Stream.runHead,
+      Effect.timeoutOption(REFRESH_SETTLE_TIMEOUT),
+    );
+  });
+  yield* Effect.forEach(
+    environmentIds.filter((environmentId) => enabled.has(environmentId)),
+    (environmentId) =>
+      reconnect(environmentId).pipe(
+        Effect.catchTags({ EnvironmentNotRegisteredError: () => Effect.void }),
+      ),
+    { concurrency: "unbounded", discard: true },
+  );
+});
 
 const EMPTY_ENVIRONMENT_CATALOG_STATE: EnvironmentCatalogState = Object.freeze({
   isReady: false,
@@ -182,6 +219,15 @@ export function createEnvironmentCatalogAtoms<R, E>(
         Effect.flatMap((registry) => registry.retryNow(environmentId)),
       ),
   });
+  const refresh = createRuntimeCommand(runtime, {
+    label: "environment-catalog:refresh",
+    scheduler: commandScheduler,
+    concurrency: {
+      mode: "singleFlight",
+      key: (environmentIds: ReadonlyArray<EnvironmentIdType>) => environmentIds.join("\n"),
+    },
+    execute: refreshEnvironmentConnections,
+  });
 
   return {
     catalogAtom,
@@ -196,6 +242,7 @@ export function createEnvironmentCatalogAtoms<R, E>(
     remove,
     removeRoute,
     reorderRoutes,
+    refresh,
     retryNow,
     setEnabled,
   };

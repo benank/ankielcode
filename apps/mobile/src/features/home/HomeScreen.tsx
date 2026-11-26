@@ -26,6 +26,7 @@ import {
   useRef,
   useState,
   type ComponentProps,
+  type ReactNode,
 } from "react";
 import {
   Platform,
@@ -48,6 +49,7 @@ import {
   deriveCenteredContentHorizontalPadding,
 } from "../../lib/layout";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { RefreshControl } from "../../components/ui/RefreshControl";
 import { FloatingActionButton } from "../../components/ui/FloatingActionButton";
 import type { WorkspaceEnvironment, WorkspaceState } from "../../state/workspaceModel";
 import type { SavedRemoteConnection } from "../../lib/connection";
@@ -105,6 +107,7 @@ import { useFabScroll } from "./FabScrollContext";
 import { holdLaunchSplashForHomeRows, settleLaunchSplashHomeRows } from "./home-launch-splash";
 import { useWorkspaceTabs } from "../layout/workspace/WorkspaceTabsContext";
 import { deriveHomeEmptyState } from "./home-empty-state";
+import { useHomeRefresh } from "./useHomeRefresh";
 
 interface HomeScreenProps {
   /** Whether this list is the one on screen; see `useHomeRouteVisible`. */
@@ -190,6 +193,32 @@ function HomeScrollView(props: ComponentProps<typeof ScrollView>) {
 function renderHomeScrollView(props: ScrollViewProps) {
   // The list passes its content and ref in these props; keep the marker inside the real ScrollView.
   return <HomeScrollView {...props} />;
+}
+
+/** Lets an empty Home pull to refresh too, which is how an unreachable environment is retried. */
+function HomeEmptyRefreshScroll(props: {
+  readonly refresh: ReturnType<typeof useHomeRefresh>;
+  readonly progressViewOffset: number;
+  readonly children: ReactNode;
+}) {
+  return (
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      contentInsetAdjustmentBehavior="never"
+      alwaysBounceVertical
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      refreshControl={
+        <RefreshControl
+          refreshing={props.refresh.refreshing}
+          onRefresh={props.refresh.refresh}
+          progressViewOffset={props.progressViewOffset}
+        />
+      }
+    >
+      {props.children}
+    </ScrollView>
+  );
 }
 
 export function HomeScreen(props: HomeScreenProps) {
@@ -450,6 +479,12 @@ export function HomeScreen(props: HomeScreenProps) {
     selectedThreadKey: sidebarRootThreadKey,
     collapsedProjectKeys,
   });
+  const refresh = useHomeRefresh(
+    props.selectedEnvironmentId === null
+      ? props.environments.map((environment) => environment.environmentId)
+      : [props.selectedEnvironmentId],
+    olderSettledShelf.retry,
+  );
   // Called as `props.onSelectThread(...)`, the compiler would cache this handler on the whole
   // props object, which is new on every render of Home's parent.
   const { onSelectThread } = props;
@@ -653,45 +688,47 @@ export function HomeScreen(props: HomeScreenProps) {
     return (
       <View className={containerClassName}>
         <ScreenContent surface={sidebarSurface ? "drawer" : "screen"}>
-          <View
-            className={cn(
-              "flex-1 items-center justify-center px-8",
-              Platform.OS !== "android" && contentBackground,
-            )}
-            style={{
-              paddingBottom:
-                Platform.OS === "ios" ? iosBottomClearance : Math.max(insets.bottom, 24),
-              paddingTop: emptyTopInset,
-              paddingLeft: 32 + (contentSideInsets?.left ?? 0),
-              paddingRight: 32 + (contentSideInsets?.right ?? 0),
-            }}
-          >
-            <View className="w-full max-w-[430px]">
-              <EmptyState
-                title={emptyState.title}
-                detail={emptyState.detail}
-                actionLabel={emptyState.showsAddEnvironment ? gt("Add environment") : undefined}
-                onAction={emptyState.showsAddEnvironment ? props.onAddConnection : undefined}
-                action={
-                  Platform.OS === "android" && emptyState.showsAddEnvironment ? (
-                    <FloatingActionButton
-                      label={gt("Add environment")}
-                      icon="plus"
-                      variant="extended"
-                      tone="primary"
-                      onPress={props.onAddConnection}
-                    />
-                  ) : undefined
-                }
-                variant="plain"
-              />
-              {emptyState.loading ? (
-                <View className="mt-4 items-center">
-                  <AppActivityIndicator colorClassName="accent-icon-muted" />
-                </View>
-              ) : null}
+          <HomeEmptyRefreshScroll refresh={refresh} progressViewOffset={emptyTopInset}>
+            <View
+              className={cn(
+                "flex-1 items-center justify-center px-8",
+                Platform.OS !== "android" && contentBackground,
+              )}
+              style={{
+                paddingBottom:
+                  Platform.OS === "ios" ? iosBottomClearance : Math.max(insets.bottom, 24),
+                paddingTop: emptyTopInset,
+                paddingLeft: 32 + (contentSideInsets?.left ?? 0),
+                paddingRight: 32 + (contentSideInsets?.right ?? 0),
+              }}
+            >
+              <View className="w-full max-w-[430px]">
+                <EmptyState
+                  title={emptyState.title}
+                  detail={emptyState.detail}
+                  actionLabel={emptyState.showsAddEnvironment ? gt("Add environment") : undefined}
+                  onAction={emptyState.showsAddEnvironment ? props.onAddConnection : undefined}
+                  action={
+                    Platform.OS === "android" && emptyState.showsAddEnvironment ? (
+                      <FloatingActionButton
+                        label={gt("Add environment")}
+                        icon="plus"
+                        variant="extended"
+                        tone="primary"
+                        onPress={props.onAddConnection}
+                      />
+                    ) : undefined
+                  }
+                  variant="plain"
+                />
+                {emptyState.loading ? (
+                  <View className="mt-4 items-center">
+                    <AppActivityIndicator colorClassName="accent-icon-muted" />
+                  </View>
+                ) : null}
+              </View>
             </View>
-          </View>
+          </HomeEmptyRefreshScroll>
         </ScreenContent>
       </View>
     );
@@ -743,12 +780,14 @@ export function HomeScreen(props: HomeScreenProps) {
   if (Platform.OS === "android" && threadListV2Items.length === 0) {
     return (
       <ScreenContent surface="screen">
-        <View
-          className="flex-1 items-center justify-center px-4"
-          style={{ paddingBottom: insets.bottom }}
-        >
-          {v2ListEmpty}
-        </View>
+        <HomeEmptyRefreshScroll refresh={refresh} progressViewOffset={0}>
+          <View
+            className="flex-1 items-center justify-center px-4"
+            style={{ paddingBottom: insets.bottom }}
+          >
+            {v2ListEmpty}
+          </View>
+        </HomeEmptyRefreshScroll>
       </ScreenContent>
     );
   }
@@ -809,6 +848,15 @@ export function HomeScreen(props: HomeScreenProps) {
                 showsVerticalScrollIndicator={false}
                 keyboardDismissMode="on-drag"
                 keyboardShouldPersistTaps="handled"
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refresh.refreshing}
+                    onRefresh={refresh.refresh}
+                    // The list already accounts for the navigation header in its content inset.
+                    progressViewOffset={Platform.OS === "ios" ? 60 : undefined}
+                  />
+                }
+                alwaysBounceVertical
                 {...scrollGateHandlers}
                 scrollEventThrottle={16}
                 contentContainerStyle={{
