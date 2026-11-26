@@ -12,7 +12,7 @@ import {
 import {
   currentNativeLayoutMetrics,
   firstNativeLayoutMetrics,
-} from "../../../native/native-layout-metrics";
+} from "../../../native/native-layout-metrics-snapshot";
 import { loadPreferences, savePreferencesPatch } from "../../../persistence/imperative";
 import { rootStackState, type RootStackNavigation } from "../../../lib/root-stack-reset";
 import { workspaceRoutesOf } from "../workspace-overlay-routes";

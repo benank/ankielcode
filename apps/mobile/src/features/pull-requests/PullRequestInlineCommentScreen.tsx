@@ -146,20 +146,20 @@ export function PullRequestInlineCommentScreen({ route }: StaticScreenProps<Inli
         <Button
           label={gt("Delete draft")}
           onPress={() =>
-            Dialog.alert(gt("Delete this draft?"), gt("Your other review comments will be kept."), [
-              { text: gt("Cancel"), style: "cancel" },
-              {
-                text: gt("Delete"),
-                style: "destructive",
-                onPress: () => {
-                  store.update((draft) => ({
-                    ...draft,
-                    comments: draft.comments.filter((comment) => comment.id !== saved.id),
-                  }));
-                  navigation.goBack();
-                },
+            Dialog.confirm({
+              title: gt("Delete this draft?"),
+              message: gt("Your other review comments will be kept."),
+              confirmText: gt("Delete"),
+              destructive: true,
+              presentation: "sheet",
+              onConfirm: () => {
+                store.update((draft) => ({
+                  ...draft,
+                  comments: draft.comments.filter((comment) => comment.id !== saved.id),
+                }));
+                navigation.goBack();
               },
-            ])
+            })
           }
         />
       ) : null}

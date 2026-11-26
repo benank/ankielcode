@@ -467,6 +467,7 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
                       message: gt("Everyone using it for dictation will lose access."),
                       confirmText: gt("Remove key"),
                       destructive: true,
+                      presentation: "sheet",
                       onConfirm: () => void changeKey(provider, null),
                     })
                   }

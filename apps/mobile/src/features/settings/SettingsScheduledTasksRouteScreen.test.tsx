@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 
 const { Children, mocks } = vi.hoisted(() => ({
   Children: ({ children }: { children?: ReactNode }) => children,
-  mocks: { upsert: vi.fn(), alert: vi.fn(), tasks: [] as ScheduledTask[] },
+  mocks: { upsert: vi.fn(), alert: vi.fn(), confirm: vi.fn(), tasks: [] as ScheduledTask[] },
 }));
 vi.mock("react-native", () => ({
   Platform: { OS: "ios" },
@@ -29,7 +29,7 @@ vi.mock("@react-navigation/native", () => ({
 }));
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ bottom: 0 }) }));
 vi.mock("@expo/ui/community/datetime-picker", () => ({ DateTimePicker: () => null }));
-vi.mock("../../components/ui/Dialog", () => ({ alert: mocks.alert }));
+vi.mock("../../components/ui/Dialog", () => ({ alert: mocks.alert, confirm: mocks.confirm }));
 vi.mock("../../components/ui/AppText", () => ({ AppText: Children }));
 vi.mock("../../components/ui/AppSymbol", () => ({ SymbolView: () => null }));
 vi.mock("../../components/EnvironmentMachineSymbol", () => ({
@@ -152,6 +152,7 @@ beforeEach(() => {
   container = document.createElement("div");
   root = createRoot(container);
   mocks.alert.mockReset();
+  mocks.confirm.mockReset();
   mocks.upsert.mockReset();
   mocks.upsert.mockResolvedValue({ _tag: "Success" });
   const task: ScheduledTask = {
@@ -212,6 +213,7 @@ describe("scheduled task batched edits", () => {
       button("Save changes").click();
     });
     expect(mocks.alert).not.toHaveBeenCalled();
+    expect(mocks.confirm).not.toHaveBeenCalled();
     expect(mocks.upsert).toHaveBeenCalledExactlyOnceWith({
       environmentId: "environment",
       input: expect.objectContaining({
@@ -231,6 +233,7 @@ describe("scheduled task batched edits", () => {
     );
     await act(async () => button("Save changes").click());
     expect(mocks.alert).not.toHaveBeenCalled();
+    expect(mocks.confirm).not.toHaveBeenCalled();
     expect(mocks.upsert).toHaveBeenCalledExactlyOnceWith({
       environmentId: "environment",
       input: expect.objectContaining({

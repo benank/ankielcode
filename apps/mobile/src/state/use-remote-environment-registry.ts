@@ -172,23 +172,21 @@ export function useRemoteConnections() {
     if (!environment) {
       return;
     }
-    const remove = {
-      text: m(msg("Remove")),
-      style: "destructive",
-      onPress: () => {
-        void controller.removeEnvironment(environmentId);
-      },
-    } as const;
-    Dialog.alert(
-      m(msg("Remove from this device?")),
-      m(
+    Dialog.confirm({
+      title: m(msg("Remove from this device?")),
+      message: m(
         msg(
           "Forget {name} and its cached threads on this device. Switch it off instead to keep it saved.",
           { name: environment.environmentLabel },
         ),
       ),
-      [{ text: m(msg("Cancel")), style: "cancel" }, remove],
-    );
+      confirmText: m(msg("Remove")),
+      destructive: true,
+      presentation: "sheet",
+      onConfirm: () => {
+        void controller.removeEnvironment(environmentId);
+      },
+    });
   };
 
   return {

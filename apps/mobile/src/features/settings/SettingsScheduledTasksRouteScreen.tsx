@@ -600,18 +600,19 @@ function SettingsScheduledTaskEditorScreen({ title }: { readonly title: string }
       Dialog.alert(gt("Saving task"), gt("Wait for the task to finish saving before leaving."));
       return;
     }
-    Dialog.alert(gt("Discard changes?"), gt("Your unsaved changes will be lost."), [
-      { text: gt("Keep editing"), style: "cancel" },
-      {
-        text: gt("Discard changes"),
-        style: "destructive",
-        onPress: () => {
-          if (voiceInput.isBusy) voiceInput.cancel();
-          discardScheduledTaskEditor();
-          navigation.dispatch(data.action);
-        },
+    Dialog.confirm({
+      title: gt("Discard changes?"),
+      message: gt("Your unsaved changes will be lost."),
+      cancelText: gt("Keep editing"),
+      confirmText: gt("Discard changes"),
+      destructive: true,
+      presentation: "sheet",
+      onConfirm: () => {
+        if (voiceInput.isBusy) voiceInput.cancel();
+        discardScheduledTaskEditor();
+        navigation.dispatch(data.action);
       },
-    ]);
+    });
   });
   return (
     <SettingsScreen
@@ -1536,25 +1537,25 @@ function WebhookScheduleDetails({
             label={rotating ? gt("Rotating…") : gt("Rotate URL")}
             disabled={disabled || rotating}
             onPress={() =>
-              Dialog.alert(gt("Rotate URL?"), gt("The current URL stops working immediately."), [
-                { text: gt("Cancel"), style: "cancel" },
-                {
-                  text: gt("Rotate", { $context: "verb, replace the webhook URL" }),
-                  style: "destructive",
-                  onPress: () => {
-                    setRotating(true);
-                    void rotate({ environmentId, input: { id: task.id } }).then((result) => {
-                      setRotating(false);
-                      if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
-                        Dialog.alert(
-                          gt("Could not rotate URL"),
-                          String(squashAtomCommandFailure(result)),
-                        );
-                      }
-                    });
-                  },
+              Dialog.confirm({
+                title: gt("Rotate URL?"),
+                message: gt("The current URL stops working immediately."),
+                confirmText: gt("Rotate", { $context: "verb, replace the webhook URL" }),
+                destructive: true,
+                presentation: "sheet",
+                onConfirm: () => {
+                  setRotating(true);
+                  void rotate({ environmentId, input: { id: task.id } }).then((result) => {
+                    setRotating(false);
+                    if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
+                      Dialog.alert(
+                        gt("Could not rotate URL"),
+                        String(squashAtomCommandFailure(result)),
+                      );
+                    }
+                  });
                 },
-              ])
+              })
             }
             loading={rotating}
           />
@@ -1727,14 +1728,14 @@ function EnvironmentTasks({
                     },
                   });
                 } else if (action === "delete") {
-                  Dialog.alert(gt("Delete task?"), task.title, [
-                    { text: gt("Cancel"), style: "cancel" },
-                    {
-                      text: gt("Delete"),
-                      style: "destructive",
-                      onPress: () => void act(task, "delete"),
-                    },
-                  ]);
+                  Dialog.confirm({
+                    title: gt("Delete task?"),
+                    message: task.title,
+                    confirmText: gt("Delete"),
+                    destructive: true,
+                    presentation: "sheet",
+                    onConfirm: () => void act(task, "delete"),
+                  });
                 } else if (action === "toggle" || action === "run") {
                   void act(task, action);
                 }

@@ -54,6 +54,7 @@ export function ComponentCatalogScreen() {
       message: "This example only changes local catalog state.",
       confirmText: "Discard",
       destructive: true,
+      presentation: "sheet",
       onConfirm: () => setText(""),
     });
   };

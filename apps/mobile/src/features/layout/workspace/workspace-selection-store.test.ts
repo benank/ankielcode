@@ -40,7 +40,7 @@ vi.mock("../../../persistence/imperative", () => ({
   }),
   savePreferencesPatch: async () => undefined,
 }));
-vi.mock("../../../native/native-layout-metrics", () => ({
+vi.mock("../../../native/native-layout-metrics-snapshot", () => ({
   currentNativeLayoutMetrics: () => null,
   firstNativeLayoutMetrics: async () => null,
 }));

@@ -222,6 +222,7 @@ function confirmThreadDeletion(
     message,
     confirmText: m(msg("Delete", { $context: "verb, confirms deleting a thread" })),
     destructive: true,
+    presentation: "sheet",
     onConfirm: () => {
       void executeAction("delete", thread);
     },

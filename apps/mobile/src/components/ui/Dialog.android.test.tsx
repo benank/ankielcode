@@ -162,3 +162,21 @@ it("ignores a late action from a dialog that a newer one replaced", () => {
   expect(olderAction).toHaveBeenCalledOnce();
   expect(container.textContent).toContain("Newer");
 });
+
+it("shows a sheet confirm as the same Android dialog", () => {
+  const { container } = mountHost();
+  const onConfirm = vi.fn();
+  act(() =>
+    Dialog.confirm({
+      title: "Delete thread?",
+      confirmText: "Delete",
+      destructive: true,
+      presentation: "sheet",
+      onConfirm,
+    }),
+  );
+
+  expect(container.textContent).toContain("Delete thread?");
+  act(() => renderedClicks.at(-1)!());
+  expect(onConfirm).toHaveBeenCalledOnce();
+});

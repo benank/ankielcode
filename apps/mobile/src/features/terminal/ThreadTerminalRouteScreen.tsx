@@ -757,8 +757,9 @@ function ThreadTerminal(props: {
         label: resolveTerminalSessionLabel(terminalId, terminal.summary),
       }),
       message: gt("This stops the running process and clears its history."),
-      confirmText: gt("Confirm"),
+      confirmText: gt("Close terminal"),
       destructive: true,
+      presentation: "sheet",
       onConfirm: async () => {
         if (!readEnvironmentScope(selectedThread.environmentId, AuthTerminalOperateScope)) return;
         const result = await closeTerminal({
