@@ -42,16 +42,6 @@ export function resolveSessionCookieName(input: {
   return `${SESSION_COOKIE_NAME}_${input.port}_${instanceHash}`;
 }
 
-export function resolveLegacySessionCookieName(input: {
-  readonly mode: "web" | "desktop";
-  readonly host: string | undefined;
-  readonly development: boolean;
-}): string | undefined {
-  return input.mode === "web" && !input.development && isRemoteReachableHost(input.host)
-    ? SESSION_COOKIE_NAME
-    : undefined;
-}
-
 /**
  * The loopback address a server given `host` listens on, or undefined when it may listen beyond
  * this machine. Unset means 127.0.0.1. Only a loopback literal or `localhost` counts: Node listens

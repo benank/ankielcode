@@ -20,6 +20,10 @@ The environment issues its own sessions and enforces their capabilities. See
   DPoP binds tokens to a client proof key; an invalid proof must fail rather than fall back to
   bearer auth. Plain paired DPoP sessions renew in place so live sockets and Sharing & access rows
   stay stable; CLI and desktop sessions never self-renew so revoking cuts them off.
+- **Browser cookie sessions are the dev browser's credential.** The renderer in a plain browser
+  (`vp run dev`, `--share`, e2e) pairs through `/api/auth/browser-session` and authenticates by
+  cookie from its own origin. The desktop renderer, mobile, and the CLI use bearer or DPoP tokens.
+  Static serving needs a dev URL, so production servers serve no page that could hold the cookie.
 - **WebSocket tickets and per-RPC authorization.** Bearer and DPoP clients mint short-lived tickets
   over authenticated HTTP so long-lived tokens never appear in socket URLs. DPoP RPC tickets stay
   proof-key bound at upgrade. A successful handshake grants no extra authority: every RPC declares

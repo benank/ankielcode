@@ -879,7 +879,7 @@ const layerUnusedConfigRpcServices = Layer.mergeAll(
   Layer.mock(ServerRuntimeStartup.ServerRuntimeStartup)({}),
   Layer.mock(ServerSelfUpdate.ServerSelfUpdate)({}),
   Layer.mock(ReleaseLookup.ReleaseLookup)({}),
-  Layer.mock(SessionStore.SessionStore)({ cookieName: "config-test", legacyCookieName: undefined }),
+  Layer.mock(SessionStore.SessionStore)({ cookieName: "config-test" }),
   Layer.mock(SourceControlDiscovery.SourceControlDiscovery)({}),
   Layer.mock(SourceControlRepositoryService.SourceControlRepositoryService)({}),
   Layer.mock(SourceControlSignIn.SourceControlSignIn)({}),
@@ -940,7 +940,6 @@ it.live.each([
         }),
         Layer.mock(SessionStore.SessionStore)({
           cookieName: "compression-test",
-          legacyCookieName: undefined,
           markConnected: () => Effect.void,
           markDisconnected: () => Effect.void,
           awaitInvalidation: () => Effect.never,
@@ -1036,7 +1035,6 @@ it.live("routes relay RPCs to the server's relay tunnel service", () =>
       }),
       Layer.mock(SessionStore.SessionStore)({
         cookieName: "relay-test",
-        legacyCookieName: undefined,
         markConnected: () => Effect.void,
         markDisconnected: () => Effect.void,
         awaitInvalidation: () => Effect.never,
@@ -1453,7 +1451,6 @@ it.effect("access changes made while the snapshot loads reach the client after i
               }),
               Layer.mock(SessionStore.SessionStore)({
                 cookieName: "auth-access-test",
-                legacyCookieName: undefined,
                 streamChanges: subscribe(sessionChanges),
               }),
             ),

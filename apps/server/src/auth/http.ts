@@ -216,26 +216,6 @@ const sessionCookieOptions = (request: HttpServerRequest.HttpServerRequest) => (
   secure: Option.exists(requestUrl(request), (url) => url.protocol === "https:"),
 });
 
-const appendSessionCookie = (
-  request: HttpServerRequest.HttpServerRequest,
-  cookieName: string,
-  token: string,
-  expiresAt: DateTime.DateTime,
-) =>
-  Effect.fromResult(
-    Cookies.set(Cookies.empty, cookieName, token, {
-      ...sessionCookieOptions(request),
-      expires: DateTime.toDate(expiresAt),
-    }),
-  ).pipe(
-    Effect.catch(() => failEnvironmentInternal("browser_session_cookie_failed")),
-    Effect.flatMap((cookies) =>
-      HttpEffect.appendPreResponseHandler((_request, response) =>
-        Effect.succeed(HttpServerResponse.mergeCookies(response, cookies)),
-      ),
-    ),
-  );
-
 export const requireEnvironmentScope = Effect.fn("environment.auth.requireScope")(function* (
   scope: AuthEnvironmentScope,
 ) {
@@ -297,27 +277,7 @@ export const layer = HttpApiBuilder.group(
           function* (args) {
             yield* annotateEnvironmentRequest(args.endpoint.name);
             const request = yield* HttpServerRequest.HttpServerRequest;
-            const result = yield* serverAuth.getSessionState(request);
-            const credential = EnvironmentAuth.selectRequestCredential(
-              request,
-              sessions.cookieName,
-              sessions.legacyCookieName,
-            );
-            if (
-              credential?.source === "legacy-cookie" &&
-              result.authenticated &&
-              result.sessionMethod === "browser-session-cookie" &&
-              result.expiresAt
-            ) {
-              yield* appendSessionCookie(
-                request,
-                sessions.cookieName,
-                credential.token,
-                result.expiresAt,
-              );
-              yield* appendCredentialResponseHeaders;
-            }
-            return result;
+            return yield* serverAuth.getSessionState(request);
           },
           Effect.catchIf(EnvironmentAuth.isServerAuthInternalError, (error) =>
             failEnvironmentInternal("internal_error", error),
@@ -333,7 +293,6 @@ export const layer = HttpApiBuilder.group(
             const previousCredential = EnvironmentAuth.selectRequestCredential(
               request,
               sessions.cookieName,
-              sessions.legacyCookieName,
             );
             const result = yield* serverAuth.createBrowserSession(
               args.payload.credential,

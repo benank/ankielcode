@@ -110,7 +110,6 @@ const fixture = (
       Layer.provideMerge(
         Layer.mock(SessionStore.SessionStore, {
           cookieName: "test",
-          legacyCookieName: undefined,
           awaitInvalidation: () => (invalidated ? Effect.promise(() => invalidated) : Effect.never),
         }),
       ),

@@ -168,7 +168,6 @@ const serveWith = Effect.fnUntraced(function* (settings: { readonly workflowsEna
       Layer.provide(
         Layer.mock(SessionStore.SessionStore)({
           cookieName: "ankiel-session",
-          legacyCookieName: undefined,
           awaitInvalidation: (sessionId) =>
             sessionId === "client-session" ? Deferred.await(revoked) : Effect.never,
         }),

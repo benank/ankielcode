@@ -28,7 +28,7 @@ The architecture of Ankiel Code's websocket layer (`ankiel`) enables the remote 
 
 Ankiel Code has two app surfaces: **desktop** and **mobile**.
 
-**Desktop** is the main surface most users install first. It's a full Electron app that bundles the server runner as well. The desktop app can also be used as the host server, allowing remote connections from desktop and mobile apps.
+**Desktop** is the main surface most users install first. It's a full Electron app that bundles the server runner as well. The desktop app can also be used as the host server, allowing remote connections from desktop and mobile apps. Its renderer is `apps/web`; that renderer also runs in a plain browser for `vp run dev` and browser tests, but no browser build ships to users.
 
 **Mobile** is a React Native app for iOS and Android. The mobile app allows for connecting to any Ankiel Code server to control work remotely.
 

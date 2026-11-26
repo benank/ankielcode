@@ -53,7 +53,6 @@ const makeAuth = (
       layer,
       Layer.mock(SessionStore.SessionStore, {
         cookieName: "test",
-        legacyCookieName: undefined,
         awaitInvalidation,
       }),
     ),

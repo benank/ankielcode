@@ -9,11 +9,8 @@ export const BRAND_ASSET_PATHS = {
   productionLinuxIconPng: "assets/prod/black-universal-1024.png",
   productionWindowsIconIco: "assets/prod/ankiel-black-windows.ico",
   productionWebFaviconIco: "assets/prod/ankiel-black-web-favicon.ico",
-  productionWebFavicon16Png: "assets/prod/ankiel-black-web-favicon-16x16.png",
-  productionWebFavicon32Png: "assets/prod/ankiel-black-web-favicon-32x32.png",
   productionWebAppleTouchIconPng: "assets/prod/ankiel-black-web-apple-touch-180.png",
   productionWebIcon192Png: "assets/prod/ankiel-black-web-icon-192x192.png",
-  productionWebIcon512Png: "assets/prod/ankiel-black-web-icon-512x512.png",
 
   nightlyIconComposerProject: "assets/prod/app-icon.icon",
   nightlyIosIconPng: "assets/prod/black-ios-1024.png",
@@ -21,20 +18,12 @@ export const BRAND_ASSET_PATHS = {
   nightlyLinuxIconPng: "assets/prod/black-universal-1024.png",
   nightlyWindowsIconIco: "assets/prod/ankiel-black-windows.ico",
   nightlyWebFaviconIco: "assets/prod/ankiel-black-web-favicon.ico",
-  nightlyWebFavicon16Png: "assets/prod/ankiel-black-web-favicon-16x16.png",
-  nightlyWebFavicon32Png: "assets/prod/ankiel-black-web-favicon-32x32.png",
   nightlyWebAppleTouchIconPng: "assets/prod/ankiel-black-web-apple-touch-180.png",
-  nightlyWebIcon192Png: "assets/prod/ankiel-black-web-icon-192x192.png",
-  nightlyWebIcon512Png: "assets/prod/ankiel-black-web-icon-512x512.png",
 
   developmentDesktopIconPng: "assets/prod/black-macos-1024.png",
   developmentWindowsIconIco: "assets/prod/ankiel-black-windows.ico",
   developmentWebFaviconIco: "assets/prod/ankiel-black-web-favicon.ico",
-  developmentWebFavicon16Png: "assets/prod/ankiel-black-web-favicon-16x16.png",
-  developmentWebFavicon32Png: "assets/prod/ankiel-black-web-favicon-32x32.png",
   developmentWebAppleTouchIconPng: "assets/prod/ankiel-black-web-apple-touch-180.png",
-  developmentWebIcon192Png: "assets/prod/ankiel-black-web-icon-192x192.png",
-  developmentWebIcon512Png: "assets/prod/ankiel-black-web-icon-512x512.png",
 } as const;
 
 export type WebAssetBrand = "development" | "nightly" | "production";
@@ -54,37 +43,21 @@ export interface IconOverride {
 
 const WEB_ICON_TARGET_FILENAMES = {
   faviconIco: "favicon.ico",
-  favicon16Png: "favicon-16x16.png",
-  favicon32Png: "favicon-32x32.png",
   appleTouchIconPng: "apple-touch-icon.png",
-  icon192Png: "icon-192x192.png",
-  icon512Png: "icon-512x512.png",
 } as const;
 
 const WEB_ICON_SOURCE_PATHS_BY_BRAND = {
   development: {
     faviconIco: BRAND_ASSET_PATHS.developmentWebFaviconIco,
-    favicon16Png: BRAND_ASSET_PATHS.developmentWebFavicon16Png,
-    favicon32Png: BRAND_ASSET_PATHS.developmentWebFavicon32Png,
     appleTouchIconPng: BRAND_ASSET_PATHS.developmentWebAppleTouchIconPng,
-    icon192Png: BRAND_ASSET_PATHS.developmentWebIcon192Png,
-    icon512Png: BRAND_ASSET_PATHS.developmentWebIcon512Png,
   },
   nightly: {
     faviconIco: BRAND_ASSET_PATHS.nightlyWebFaviconIco,
-    favicon16Png: BRAND_ASSET_PATHS.nightlyWebFavicon16Png,
-    favicon32Png: BRAND_ASSET_PATHS.nightlyWebFavicon32Png,
     appleTouchIconPng: BRAND_ASSET_PATHS.nightlyWebAppleTouchIconPng,
-    icon192Png: BRAND_ASSET_PATHS.nightlyWebIcon192Png,
-    icon512Png: BRAND_ASSET_PATHS.nightlyWebIcon512Png,
   },
   production: {
     faviconIco: BRAND_ASSET_PATHS.productionWebFaviconIco,
-    favicon16Png: BRAND_ASSET_PATHS.productionWebFavicon16Png,
-    favicon32Png: BRAND_ASSET_PATHS.productionWebFavicon32Png,
     appleTouchIconPng: BRAND_ASSET_PATHS.productionWebAppleTouchIconPng,
-    icon192Png: BRAND_ASSET_PATHS.productionWebIcon192Png,
-    icon512Png: BRAND_ASSET_PATHS.productionWebIcon512Png,
   },
 } as const satisfies Record<WebAssetBrand, Record<keyof typeof WEB_ICON_TARGET_FILENAMES, string>>;
 
@@ -99,24 +72,8 @@ export function resolveWebIconOverrides(
       targetRelativePath: `${targetDirectory}/${WEB_ICON_TARGET_FILENAMES.faviconIco}`,
     },
     {
-      sourceRelativePath: sourcePaths.favicon16Png,
-      targetRelativePath: `${targetDirectory}/${WEB_ICON_TARGET_FILENAMES.favicon16Png}`,
-    },
-    {
-      sourceRelativePath: sourcePaths.favicon32Png,
-      targetRelativePath: `${targetDirectory}/${WEB_ICON_TARGET_FILENAMES.favicon32Png}`,
-    },
-    {
       sourceRelativePath: sourcePaths.appleTouchIconPng,
       targetRelativePath: `${targetDirectory}/${WEB_ICON_TARGET_FILENAMES.appleTouchIconPng}`,
-    },
-    {
-      sourceRelativePath: sourcePaths.icon192Png,
-      targetRelativePath: `${targetDirectory}/${WEB_ICON_TARGET_FILENAMES.icon192Png}`,
-    },
-    {
-      sourceRelativePath: sourcePaths.icon512Png,
-      targetRelativePath: `${targetDirectory}/${WEB_ICON_TARGET_FILENAMES.icon512Png}`,
     },
   ];
 }

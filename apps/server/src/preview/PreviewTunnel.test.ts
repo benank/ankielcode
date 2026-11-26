@@ -92,7 +92,6 @@ const serveTunnel = (
         Layer.provide(
           Layer.mock(SessionStore.SessionStore, {
             cookieName: "ankiel_session",
-            legacyCookieName: undefined,
             awaitInvalidation: () => sessionInvalidated,
           }),
         ),

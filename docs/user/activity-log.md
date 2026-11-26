@@ -28,7 +28,7 @@ it only if it fails. **Hide all** hides every call and shows **Thinking** while 
 and the agent's last reply, which appears when the turn ends. If you steer while the agent is
 answering, the answer it finished before reading your steer stays too. On desktop, Find
 shows the in-between messages while it is open. Approvals, questions, and errors always show. The
-setting applies to this browser or device only.
+setting applies to this device only.
 
 ## Screen reader announcements
 
@@ -40,7 +40,7 @@ short. The reply that closes the turn is not read, so you can read it yourself w
 **Done**. **Everything** adds the step the agent is on, such as the command it is running. Steps
 are spaced out, so a quick step can be skipped for a newer one.
 The agent's reasoning text is never read. The setting follows the agent's real activity, whatever
-**Tool calls in chat** hides, and applies to this browser or device only.
+**Tool calls in chat** hides, and applies to this device only.
 
 To hear the open thread and what it's doing when you switch to Ankiel Code, turn on **Screen reader
 window title** in the same section. The window title then starts with the thread's status

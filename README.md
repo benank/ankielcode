@@ -19,7 +19,7 @@ Ankiel Code is forked from [T3 Code](https://github.com/pingdotgg/t3code) (MIT).
 - **Your subscriptions.** Ankiel Code does not resell tokens. It drives the agents you are already signed in to.
 - **Your data.** There is no account, no telemetry, and no hosted backend to trust.
 - **Every agent in one place.** Change models in the middle of a thread. Let Claude hand a task to Codex.
-- **Desktop, web, and phone.** One server, and every client shows the same threads.
+- **Desktop and phone.** One server, and every client shows the same threads.
 - **Remote ready.** Run agents on any machine. Connect over your local network or your own Cloudflare Relay. See [remote access](./docs/user/remote-access.md).
 - **Git built in.** Each thread can work in its own worktree. Review the diff, then commit, push, and open a pull request with one button.
 - **Fast.** Performance is a feature here, and a dropped frame is a bug.

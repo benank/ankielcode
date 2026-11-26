@@ -43,7 +43,8 @@ never opens a browser. To start in a new working directory, use an explicit path
 as `ankiel ./my-project`. A bare directory name is accepted only if it already exists.
 
 If `ankiel` or `ankiel start` reports an already running server, run the `ankiel pair`
-command it names and open the pairing URL to connect to that server. Stop it
+command it names and paste the pairing URL into **Add environment** in the desktop or mobile
+app to connect to that server. Stop it
 before starting a replacement, or use a different `--base-dir` for an
 independent server.
 

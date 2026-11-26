@@ -19,8 +19,7 @@ the last focused control in each area. Pull requests has a page content area. In
 dialogs and form popups retain focus; a thread context menu closes when an area command
 moves focus away.
 
-In a browser, plain `F6` may move to the browser's own toolbar. Use `mod+F6` and
-`mod+Shift+F6` instead (`mod` is Command on macOS and Ctrl elsewhere). **Focus Next
+`mod+F6` and `mod+Shift+F6` do the same (`mod` is Command on macOS and Ctrl elsewhere). **Focus Next
 Workspace Area** and **Focus Previous Workspace Area** are also in the command palette and
 can be remapped in Settings > Keybindings.
 

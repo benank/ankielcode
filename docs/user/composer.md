@@ -419,7 +419,7 @@ save, or add it to chat.
 ## Images and videos in messages
 
 Select an image or video attachment or link to preview it. Playback support depends
-on your browser or device; save an unsupported video to open it in another app.
+on your device; save an unsupported video to open it in another app.
 
 On desktop, right-click media to save it or copy its path or URL. On mobile,
 touch and hold an image or video thumbnail and choose **Save or share**. On iOS,

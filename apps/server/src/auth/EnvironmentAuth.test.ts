@@ -284,20 +284,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodePlatformCrypto.layer))(
       ),
     );
 
-    it.effect("prefers a bearer token over a stale legacy cookie", () =>
-      Effect.gen(function* () {
-        const serverAuth = yield* EnvironmentAuth.EnvironmentAuth;
-        const sessions = yield* SessionStore.SessionStore;
-        const bearer = yield* serverAuth.issueSession();
-        const verified = yield* serverAuth.authenticateHttpRequest({
-          cookies: { [sessions.legacyCookieName ?? "ankiel_session"]: "stale" },
-          headers: { authorization: `Bearer ${bearer.token}` },
-        } as never);
-
-        expect(verified.sessionId).toBe(bearer.sessionId);
-      }).pipe(Effect.provide(layerEnvironmentAuth({ mode: "web", host: "192.168.1.50" }))),
-    );
-
     it.effect("prefers a bearer token over an empty primary cookie", () =>
       Effect.gen(function* () {
         const serverAuth = yield* EnvironmentAuth.EnvironmentAuth;

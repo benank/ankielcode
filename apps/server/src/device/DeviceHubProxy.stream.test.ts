@@ -49,7 +49,6 @@ it.effect("preserves binary input and admission frames through the real socket p
         Layer.provide(
           Layer.mock(SessionStore.SessionStore, {
             cookieName: "test",
-            legacyCookieName: undefined,
             awaitInvalidation: () => Deferred.await(invalidated),
           }),
         ),

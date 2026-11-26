@@ -1,5 +1,10 @@
 # Web UI
 
+`apps/web` is the desktop app's renderer. It also runs in a plain browser for `vp run dev`,
+`test-ankiel-app`, and `*.browser.test.tsx`, but no browser build ships to users. Keep fallbacks
+for a missing `window.desktopBridge` working so that dev and test path does not break; do not add
+UI aimed at someone using Ankiel Code in a browser.
+
 ## Primitives
 
 Controls come from [`components/ui`](../../apps/web/src/components/ui), and those exports own
