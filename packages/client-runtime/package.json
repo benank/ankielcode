@@ -630,6 +630,10 @@
     "./dpop": {
       "types": "./src/dpop.ts",
       "default": "./src/dpop.ts"
+    },
+    "./settings-secret-notice": {
+      "types": "./src/settingsSecretNotice.ts",
+      "default": "./src/settingsSecretNotice.ts"
     }
   },
   "scripts": {

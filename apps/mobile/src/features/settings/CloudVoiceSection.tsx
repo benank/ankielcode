@@ -2,6 +2,7 @@ import { T, useGT, useMessages } from "gt-react-native";
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { cloudSpeechDisclosure } from "@ankielcode/shared/speechCopy";
 import { setCloudSpeechKey } from "@ankielcode/client-runtime/voice-input";
+import { unsupportedSecretNotice } from "@ankielcode/client-runtime/settings-secret-notice";
 import {
   AuthSettingsWriteScope,
   CLOUD_SPEECH_LABELS,
@@ -9,7 +10,6 @@ import {
   CloudSpeechProvider,
   CloudSpeechApiKey,
   CloudSpeechModelId,
-  isSecretReference,
   type CloudSpeechModel,
   type VoiceTranscriptionDestination,
 } from "@ankielcode/contracts";
@@ -332,9 +332,10 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
     const isActive = active?.provider === provider;
     const modelChosen = isModelId(model) && (catalog?.some((entry) => entry.id === model) ?? false);
     const modelChanged = model !== (activeModel ?? "");
-    // Saved by a build that read keys from a secret provider; this one cannot read it.
-    const stored = environment.serverConfig?.settings.cloudSpeechCredentials?.[provider];
-    const unsupported = isSecretReference(stored) ? stored : null;
+    const unsupported = unsupportedSecretNotice(
+      environment.serverConfig?.settings.cloudSpeechCredentials?.[provider],
+      messages,
+    );
     const keyChanged = credential !== undefined;
     const routedReady =
       modelChosen &&
@@ -357,10 +358,7 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
       draft && !credential
         ? gt("Enter a valid API key.")
         : unsupported !== null
-          ? gt(
-              "Read from the secret provider “{provider}”, which Ankiel Code no longer supports. Enter the value to replace it.",
-              { provider: unsupported.provider },
-            )
+          ? unsupported
           : routed
             ? key && !credential
               ? gt(

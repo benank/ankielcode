@@ -6,6 +6,7 @@ import {
   getCloudSpeechModels,
   setCloudSpeechKey,
 } from "@ankielcode/client-runtime/voice-input";
+import { unsupportedSecretNotice } from "@ankielcode/client-runtime/settings-secret-notice";
 import {
   AuthOrchestrationOperateScope,
   AuthSettingsWriteScope,
@@ -13,7 +14,6 @@ import {
   CloudSpeechModelId,
   CLOUD_SPEECH_LABELS,
   CLOUD_SPEECH_PROVIDER_NAMES,
-  isSecretReference,
   type CloudSpeechModel,
   type CloudSpeechProvider,
   type VoiceTranscriptionDestination,
@@ -184,8 +184,7 @@ export function CloudVoiceConfiguration({
   const [model, setModel] = useState(currentModel ?? "");
   const saved = AsyncResult.isSuccess(presence) ? presence.value?.[provider] : undefined;
   const existing = environment.serverConfig?.settings?.cloudSpeechCredentials?.[provider];
-  // Saved by a build that read keys from a secret provider; this one cannot read it.
-  const unsupported = isSecretReference(existing) ? existing : null;
+  const unsupported = unsupportedSecretNotice(existing, messages);
   const [draft, setDraft] = useState("");
   const credential = isApiKey(draft.trim()) ? draft.trim() : undefined;
   const keyChanged = credential !== undefined;
@@ -251,10 +250,7 @@ export function CloudVoiceConfiguration({
         {draft.trim() && !credential
           ? gt("Enter an API key, not a URL or secret reference.")
           : unsupported !== null
-            ? gt(
-                "Read from the secret provider “{provider}”, which Ankiel Code no longer supports. Enter the value to replace it.",
-                { provider: unsupported.provider },
-              )
+            ? unsupported
             : active && !routed
               ? gt("Updating the key keeps dictation enabled.")
               : routed && saved

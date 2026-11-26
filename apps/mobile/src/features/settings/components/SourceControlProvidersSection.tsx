@@ -1,6 +1,7 @@
 import { useAtomValue } from "@effect/atom-react";
 import { sourceControlInstallHintText } from "@ankielcode/client-runtime/contract-labels";
 import { isSourceControlProviderOffered } from "@ankielcode/client-runtime/operations/projects";
+import { unsupportedSecretNotice } from "@ankielcode/client-runtime/settings-secret-notice";
 import { squashAtomCommandFailure } from "@ankielcode/client-runtime/state/runtime";
 import {
   readHostCredentialSettings,
@@ -217,8 +218,10 @@ export function SourceControlTokenForm(props: {
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  const messages = useMessages();
   const target = host.trim().toLowerCase();
   const saved = hasToken(tokens[target]);
+  const unsupported = unsupportedSecretNotice(tokens[target], messages);
   const savedHosts = Object.entries(tokens)
     .filter(([, value]) => hasToken(value))
     .map(([name]) => name);
@@ -272,7 +275,7 @@ export function SourceControlTokenForm(props: {
       <SecretTextInput
         accessibilityLabel={gt("{provider} token", { provider: definition.label })}
         placeholder={
-          saved
+          saved && unsupported === null
             ? gt("Saved. Enter a new token to replace it")
             : gt("Token", { $context: "access token field" })
         }
@@ -283,6 +286,9 @@ export function SourceControlTokenForm(props: {
         }}
         editable={!locked}
       />
+      {unsupported !== null ? (
+        <Text className="text-xs text-danger-foreground">{unsupported}</Text>
+      ) : null}
       <Text className="text-xs text-foreground-muted">
         {savedHosts.length === 0
           ? gt("No token saved; the server uses {envVar} or the {cliName} login.", {
