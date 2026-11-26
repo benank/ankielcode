@@ -425,6 +425,10 @@ On desktop, right-click media to save it or copy its path or URL. On mobile,
 touch and hold an image or video thumbnail and choose **Save or share**. On iOS,
 return to the thumbnail to open this menu after watching a full-screen video.
 
+On iPhone and iPad, you can also drag an image out of a message and drop it into Files,
+Notes, Mail, or an app beside Ankiel Code. In a file preview, select text and drag the
+selection out the same way.
+
 File links refer to the environment's machine, including when you connect remotely.
 Previews use the original file, even outside the workspace. Moving or deleting it
 can break the preview, so save a copy if you need to keep it.

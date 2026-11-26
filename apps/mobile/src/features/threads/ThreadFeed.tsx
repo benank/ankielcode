@@ -153,6 +153,7 @@ import { useResolveClassNames } from "uniwind";
 import { useReduceMotionEnabled } from "../../lib/appState";
 import { useFilePreviewGallery, FilePreviewGallery } from "../../components/ui/FilePreviewGallery";
 import { assetImageSource } from "../../lib/assetImageSource";
+import { presentationDragProps } from "../../lib/presentationDrag";
 import {
   filePreviewSourceIdentifier,
   remoteAttachmentImageSource,
@@ -620,7 +621,14 @@ function MessageAttachmentImage(props: {
   }
 
   return (
-    <PresentationSource identifier={sourceIdentifier}>
+    <PresentationSource
+      identifier={sourceIdentifier}
+      {...presentationDragProps({
+        uri: uri ?? handoff?.uri,
+        name: props.name,
+        mimeType: props.mimeType,
+      })}
+    >
       <MessageImage
         key={props.attachmentId}
         source={source}

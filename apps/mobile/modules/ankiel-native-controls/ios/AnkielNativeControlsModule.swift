@@ -134,6 +134,9 @@ public final class AnkielNativeControlsModule: Module {
         view.sources = self.presentationSources
         view.identifier = identifier
       }
+      Prop("dragUri") { (view: AnkielPresentationSourceView, value: String?) in view.dragUri = value }
+      Prop("dragName") { (view: AnkielPresentationSourceView, value: String?) in view.dragName = value }
+      Prop("dragMimeType") { (view: AnkielPresentationSourceView, value: String?) in view.dragMimeType = value }
     }
 
     View(AnkielFrostedCutoutView.self) {

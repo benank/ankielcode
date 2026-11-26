@@ -41,8 +41,37 @@ final class AnkielPresentationSourceView: ExpoView {
     }
   }
 
+  var dragUri: String? { didSet { updateDragFile() } }
+  var dragName: String? { didSet { updateDragFile() } }
+  var dragMimeType: String? { didSet { updateDragFile() } }
+  private var drag: AnkielPresentationDrag?
+
   deinit {
     sources?.remove(self, identifier: identifier)
+  }
+
+  private func updateDragFile() {
+    let url = dragUri.flatMap(URL.init(string:))
+    let file = url.map { AnkielDragFile(url: $0, name: dragName ?? "", mimeType: dragMimeType ?? "") }
+    guard file != drag?.file else { return }
+    if drag == nil, file != nil { drag = AnkielPresentationDrag(owner: self) }
+    drag?.file = file
+  }
+
+  override func didAddSubview(_ subview: UIView) {
+    super.didAddSubview(subview)
+    drag?.attach()
+  }
+
+  // Fabric recycles the child, so the drag must not stay on it once it leaves.
+  override func willRemoveSubview(_ subview: UIView) {
+    super.willRemoveSubview(subview)
+    drag?.attach(excluding: subview)
+  }
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    drag?.attach()
   }
 }
 

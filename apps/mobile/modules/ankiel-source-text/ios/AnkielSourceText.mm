@@ -151,7 +151,8 @@ AnkielSourceTextOutsideTapCoordinatorForWindow(UIWindow *window) {
     _textView.textContainer.widthTracksTextView = NO;
     _textView.textContainer.heightTracksTextView = NO;
     _textView.delegate = self;
-    _textView.textDragInteraction.enabled = NO;
+    // Selected source can be dragged into another app; iPhone leaves this off by default.
+    _textView.textDragInteraction.enabled = YES;
     _textView.layoutManager.usesFontLeading = NO;
     [self addSubview:_textView];
   }

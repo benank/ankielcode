@@ -2,7 +2,9 @@ import { requireNativeView } from "expo";
 import type { ComponentType, ReactElement } from "react";
 import type { ViewProps } from "react-native";
 
-export interface PresentationSourceProps extends ViewProps {
+import type { PresentationDragProps } from "../../lib/presentationDrag";
+
+export interface PresentationSourceProps extends ViewProps, Partial<PresentationDragProps> {
   readonly children: ReactElement;
   readonly identifier: string;
 }

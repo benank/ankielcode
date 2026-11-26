@@ -23,6 +23,7 @@ import { WorkspaceMutationIdContext } from "./workspaceMutationIdContext";
 import { ZoomableImagePressable } from "./ZoomableImagePressable";
 import { assetImageCacheKey } from "../../lib/assetImageSource";
 import { filePreviewSourceIdentifier } from "../../lib/filePreviewGallery";
+import { presentationDragProps } from "../../lib/presentationDrag";
 import {
   MARKDOWN_IMAGE_MAX_WIDTH,
   type MarkdownImageDisplaySize,
@@ -170,7 +171,15 @@ export function ThreadMarkdownImageView(props: {
           </Pressable>
         </MediaActionsMenu>
       ) : (
-        <PresentationSource identifier={sourceIdentifier} style={{ alignSelf: "flex-start" }}>
+        <PresentationSource
+          identifier={sourceIdentifier}
+          style={{ alignSelf: "flex-start" }}
+          {...presentationDragProps({
+            uri: props.uri,
+            name: props.actionsSource?.name ?? props.alt,
+            mimeType: props.actionsSource?.mimeType,
+          })}
+        >
           <MediaActionsMenu media={mediaActions}>
             <ZoomableImagePressable
               key={props.sourceKey}
