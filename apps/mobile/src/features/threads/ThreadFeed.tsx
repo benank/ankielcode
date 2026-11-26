@@ -4307,7 +4307,8 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
             drawDistance={500}
             {...(retainedMediaRowId ? { alwaysRender: { keys: [retainedMediaRowId] } } : {})}
             keyboardShouldPersistTaps="always"
-            keyboardDismissMode="none"
+            // Android's on-drag blurs only React Native TextInputs, never the native composer editor.
+            keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "none"}
             // Android scrolls a tapped selectable message into view when it takes focus, which reads
             // as a user scroll and drops end following before the keyboard closes.
             scrollsChildToFocus={false}
