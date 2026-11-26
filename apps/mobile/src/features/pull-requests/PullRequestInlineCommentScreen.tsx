@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { View } from "react-native";
 import type { PullRequestReviewPosition } from "@ankielcode/contracts";
 import { AppText as Text, AppTextInput as TextInput } from "../../components/ui/AppText";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { Button } from "../../components/ui/Button";
 import { uuidv4 } from "../../lib/uuid";
 import { composerPullRequests } from "../../state/pull-requests";
@@ -92,7 +93,7 @@ export function PullRequestInlineCommentScreen({ route }: StaticScreenProps<Inli
       footer={
         <Button
           fullWidth
-          tone="contrast"
+          tone="primary"
           label={busy ? gt("Saving…") : gt("Save draft")}
           loading={busy}
           disabled={
@@ -134,12 +135,12 @@ export function PullRequestInlineCommentScreen({ route }: StaticScreenProps<Inli
         <T>Saved comments are private until you submit your review.</T>
       </Text>
       {stale ? (
-        <Text className="text-sm text-danger-foreground">
+        <Text className="text-sm text-foreground">
           <T>The branch changed. Return to the current diff and select the line again.</T>
         </Text>
       ) : null}
       {store.error || detail.error ? (
-        <Text className="text-sm text-danger-foreground">{store.error ?? detail.error}</Text>
+        <ErrorBanner message={store.error ?? detail.error ?? ""} />
       ) : null}
       {saved ? (
         <Button

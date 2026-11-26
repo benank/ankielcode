@@ -104,9 +104,7 @@ export function PreviewUnreachable({ url, code, description, onReload, move }: P
           </div>
         ) : null}
 
-        <div className="mt-8 text-xs uppercase tracking-wide text-muted-foreground/70">
-          {errorLabel}
-        </div>
+        <div className="mt-8 text-xs font-medium text-muted-foreground/70">{errorLabel}</div>
 
         <div className="mt-auto flex items-center gap-2 pt-8">
           <Button

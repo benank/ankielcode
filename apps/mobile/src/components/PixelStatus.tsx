@@ -13,14 +13,14 @@ import { Animated, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
-import { SIGNAL_COLORS } from "@ankielcode/shared/themePalettes";
-
 import { useAppearancePreferences } from "../features/settings/appearance/AppearancePreferencesProvider";
 import type { MobileThemeVariables } from "../lib/mobileTheme";
 
 export type { PixelStatusKind };
 
-const TONE_VARIABLE: Record<Exclude<PixelStatusTone, "active">, keyof MobileThemeVariables> = {
+/** The one color per status tone; dots and icons that show a state read from here too. */
+export const STATUS_TONE_VARIABLE: Record<PixelStatusTone, keyof MobileThemeVariables> = {
+  active: "--color-signal-active",
   attention: "--color-warning-foreground",
   failed: "--color-danger-foreground",
   done: "--color-foreground-muted",
@@ -31,14 +31,11 @@ const TONE_VARIABLE: Record<Exclude<PixelStatusTone, "active">, keyof MobileThem
  * native driver slides a whole frame at a time, so a playing light costs no JS or commits.
  */
 export function PixelStatus(props: { readonly kind: PixelStatusKind }) {
-  const { themeAppearance, themeVariables } = useAppearancePreferences();
+  const { themeVariables } = useAppearancePreferences();
   const reduceMotion = useReducedMotion();
   const animation = PIXEL_ANIMATIONS[props.kind];
   const strip = pixelSpriteStrip(props.kind);
-  const color =
-    animation.tone === "active"
-      ? SIGNAL_COLORS.active[themeAppearance]
-      : themeVariables[TONE_VARIABLE[animation.tone]];
+  const color = themeVariables[STATUS_TONE_VARIABLE[animation.tone]];
   const frames = strip.frameCount;
   const lastFrameY = -(frames - 1) * PITCH;
   const animated = frames > 1 && !reduceMotion;

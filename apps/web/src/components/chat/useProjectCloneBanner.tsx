@@ -66,7 +66,7 @@ export function useProjectCloneBanner(activeProjectRef: ScopedProjectRef | null)
         variant: "error",
         icon: <DownloadIcon />,
         title: messages(activeProjectFileCopy.title),
-        description: activeProjectFileCopy.failures.join("\n"),
+        description: activeProjectFileCopy.failures[0],
         onDismiss: () => dismissProjectFileCopy(activeProjectRef),
       };
     }
@@ -100,7 +100,7 @@ export function useProjectCloneBanner(activeProjectRef: ScopedProjectRef | null)
     const cancelled = activeProjectClone.phase === "cancelled";
     return {
       id: `project-clone:${projectId}`,
-      variant: cancelled ? "warning" : "error",
+      variant: cancelled ? "default" : "error",
       icon: <DownloadIcon />,
       title: cancelled
         ? gt("Cancelled cloning {name}", { name })

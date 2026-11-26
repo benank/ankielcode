@@ -26,6 +26,7 @@ import { serverEnvironment } from "../../state/server";
 import { readEnvironmentScope } from "../../state/session";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { AndroidIcon, AppleIcon } from "../Icons";
+import { Badge } from "../ui/badge";
 import { Button, InlineButton } from "../ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "../ui/menu";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
@@ -381,7 +382,7 @@ export function DeviceSourcesSettings(props: {
         </MenuTrigger>
         <MenuPopup align="end">
           {extra}
-          <MenuItem variant="destructive" onClick={onRemove}>
+          <MenuItem onClick={onRemove}>
             {gt("Remove", { $context: "verb, removes a device source" })}
           </MenuItem>
         </MenuPopup>
@@ -730,7 +731,7 @@ function PlatformIcon(props: {
         {partial ? (
           <span
             aria-hidden
-            className="absolute top-0.5 right-0.5 size-1.5 rounded-full bg-warning ring-2 ring-background"
+            className="absolute top-0.5 right-0.5 size-1.5 rounded-full bg-muted-foreground ring-2 ring-background"
           />
         ) : null}
       </PopoverTrigger>
@@ -824,9 +825,9 @@ function DeviceSourceRow(props: { row: SourceRow }) {
         <div className="flex min-w-0 items-center gap-1.5">
           <p className="truncate text-sm font-medium">{row.title}</p>
           {row.kind ? (
-            <span className="shrink-0 rounded border border-border px-1 text-3xs uppercase tracking-wide text-muted-foreground">
+            <Badge variant="outline" size="sm">
               {row.kind}
-            </span>
+            </Badge>
           ) : null}
         </div>
         <p className="truncate text-xs text-muted-foreground">{row.description}</p>
@@ -836,7 +837,7 @@ function DeviceSourceRow(props: { row: SourceRow }) {
             role="status"
             className={cn(
               "mt-1 flex flex-wrap items-center gap-1.5 text-xs",
-              environment.status.tone === "error" ? "text-destructive" : "text-warning",
+              environment.status.tone === "error" ? "text-destructive" : "text-muted-foreground",
             )}
           >
             <span className="min-w-0 break-words">

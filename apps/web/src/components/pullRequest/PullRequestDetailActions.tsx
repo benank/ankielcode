@@ -184,7 +184,7 @@ export function PullRequestResolveConflictsButton({
           <span className="inline-flex shrink-0">
             <Button
               size="xs"
-              variant="destructive-outline"
+              variant="default"
               disabled={handoff !== null || unavailable}
               onClick={onResolve}
               aria-label={handoff === "conflicts" ? gt("Preparing...") : gt("Resolve conflicts")}
@@ -410,8 +410,8 @@ export function PullRequestPrimaryAction({
       ) : (primaryAction === "merged" || primaryAction === "closed") &&
         statePresentation !== null ? (
         <Badge size="control" variant="outline">
-          <span className={cn("flex items-center gap-1", statePresentation.toneClassName)}>
-            <statePresentation.Icon className="size-3.5" />
+          <span className="flex items-center gap-1">
+            <statePresentation.Icon className={cn("size-3.5", statePresentation.toneClassName)} />
             {statePresentation.label}
           </span>
         </Badge>

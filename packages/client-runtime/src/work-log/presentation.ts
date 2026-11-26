@@ -330,13 +330,7 @@ function workEntryIndicatesToolFailureFromOutput(
   entry: WorkLogPresentationEntry,
   includeCommand: boolean,
 ): boolean {
-  if (
-    entry.tone === "error" ||
-    entry.toolLifecycleStatus === "failed" ||
-    entry.toolLifecycleStatus === "declined"
-  ) {
-    return true;
-  }
+  if (entry.tone === "error" || entry.toolLifecycleStatus === "failed") return true;
   // Reasoning detail is the model's own prose (often tens of KB), not tool
   // output: scanning it is slow on long threads and misreads phrases like
   // "that exit code 2 is expected" as a failed tool.
@@ -653,9 +647,7 @@ function ankielToolSummaryCall(entry: WorkLogPresentationEntry): AnkielToolSumma
     input: workEntryToolInput(entry),
     output: workEntryToolOutput(entry),
     outcome:
-      entry.toolLifecycleStatus === "failed" ||
-      entry.toolLifecycleStatus === "declined" ||
-      entry.tone === "error"
+      entry.toolLifecycleStatus === "failed" || entry.tone === "error"
         ? "failed"
         : entry.toolLifecycleStatus === "completed"
           ? "completed"

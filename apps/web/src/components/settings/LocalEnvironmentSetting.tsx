@@ -91,11 +91,7 @@ export function LocalEnvironmentSetting() {
             <AlertDialogClose disabled={isUpdating} render={<Button variant="outline" />}>
               <T>Cancel</T>
             </AlertDialogClose>
-            <Button
-              variant={enabled ? "destructive" : "default"}
-              disabled={isUpdating}
-              onClick={() => void applyChange()}
-            >
+            <Button variant="default" disabled={isUpdating} onClick={() => void applyChange()}>
               {isUpdating ? (
                 <>
                   <Spinner size="sm" />

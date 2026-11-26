@@ -61,12 +61,7 @@ export function ThreadSideChatsRow(props: {
                 }
               >
                 {needs === null ? null : (
-                  <View
-                    className={cn(
-                      "h-1.5 w-1.5 shrink-0 rounded-full",
-                      needs === "approval" ? "bg-warning-foreground" : "bg-adaptive-indigo-600-300",
-                    )}
-                  />
+                  <View className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning-foreground" />
                 )}
                 <Text className="shrink text-xs text-foreground" numberOfLines={1}>
                   {sideChat.title}

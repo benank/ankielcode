@@ -9,6 +9,7 @@ import { AsyncResult } from "effect/reactivity";
 import { useGT } from "gt-react-native";
 import { useRef, useState } from "react";
 import { AppText as Text, AppTextInput as TextInput } from "../../components/ui/AppText";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { Button } from "../../components/ui/Button";
 import { composerPullRequests } from "../../state/pull-requests";
 import { useEnvironmentQuery } from "../../state/query";
@@ -141,7 +142,7 @@ export function PullRequestEditScreen({ route }: StaticScreenProps<PullRequestEd
       footer={
         <Button
           fullWidth
-          tone="contrast"
+          tone="primary"
           label={busy ? gt("Saving…") : gt("Save")}
           loading={busy}
           disabled={!allowed || unchanged || invalid || original === null}
@@ -191,11 +192,7 @@ export function PullRequestEditScreen({ route }: StaticScreenProps<PullRequestEd
       {readOnlyReason ? (
         <Text className="text-xs text-foreground-muted">{readOnlyReason}</Text>
       ) : null}
-      {error || detail.error ? (
-        <Text selectable className="text-sm text-danger-foreground">
-          {error ?? detail.error}
-        </Text>
-      ) : null}
+      {error || detail.error ? <ErrorBanner message={error ?? detail.error ?? ""} /> : null}
     </PullRequestSheetContent>
   );
 }

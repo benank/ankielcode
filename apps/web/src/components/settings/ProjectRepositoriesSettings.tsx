@@ -229,7 +229,7 @@ function CheckoutRepositories({ member }: { member: SidebarProjectGroupMember })
         />
       ))}
       {listQuery.error ? (
-        <p role="alert" className="px-3 py-2 text-xs text-warning-foreground sm:px-4">
+        <p role="alert" className="px-3 py-2 text-xs text-destructive sm:px-4">
           {listQuery.error}
         </p>
       ) : null}

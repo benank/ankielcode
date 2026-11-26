@@ -122,14 +122,7 @@ const V2SubagentGroup = memo(function V2SubagentGroup({
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-xs font-semibold">{label}</span>
-            <span
-              className={cn(
-                "block truncate text-3xs text-muted-foreground",
-                summary.active ? "text-info" : summary.failed && "text-destructive",
-              )}
-            >
-              {statusSummary}
-            </span>
+            <span className="block truncate text-3xs text-muted-foreground">{statusSummary}</span>
           </span>
           <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
             <SubagentElapsed agent={subagentGroupTiming(agents)} />

@@ -29,6 +29,7 @@ import {
 } from "../../hooks/useSettings";
 
 import { cn } from "../../lib/utils";
+import { selectionCardClassName } from "./itemRows";
 import { normalizeProviderAccentColor } from "../../providerInstances";
 import { readEnvironmentScope, useEnvironmentScope } from "../../state/session";
 import { Button } from "../ui/button";
@@ -116,7 +117,10 @@ function ProviderOptionGrid({
         <RadioPrimitive.Root
           key={option.driverKind}
           value={option.driverKind}
-          className="relative flex cursor-pointer items-center gap-3 rounded-lg bg-card px-3 py-3 text-left text-muted-foreground outline-none ring-1 ring-black/5 hover:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring data-checked:bg-primary/8 data-checked:text-foreground data-checked:ring-2 data-checked:ring-inset data-checked:ring-primary data-checked:hover:bg-primary/8 dark:bg-white/3 dark:ring-white/5 dark:hover:bg-white/5 dark:data-checked:bg-primary/15 dark:data-checked:ring-primary dark:data-checked:hover:bg-primary/15"
+          className={cn(
+            "relative flex cursor-pointer items-center gap-3 px-3 py-3 text-left",
+            selectionCardClassName(option.driverKind === value),
+          )}
         >
           <ProviderInstanceIcon
             driverKind={option.driverKind}

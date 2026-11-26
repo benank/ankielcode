@@ -16,23 +16,6 @@ import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 // Matches the pill's `duration-180` class.
 const PROVIDER_UPDATE_PILL_EXIT_MS = 180;
 
-const PROVIDER_UPDATE_PILL_STYLES = {
-  loading:
-    "bg-sidebar-control-surface text-sidebar-foreground group-has-[button[data-provider-update-main]:hover]/provider-update:bg-sidebar-row-hover",
-  success:
-    "bg-sidebar-control-surface text-sidebar-foreground group-has-[button[data-provider-update-main]:hover]/provider-update:bg-sidebar-row-hover",
-  warning:
-    "bg-warning/12 text-warning group-has-[button[data-provider-update-main]:hover]/provider-update:bg-warning/18",
-  error:
-    "bg-destructive/12 text-destructive group-has-[button[data-provider-update-main]:hover]/provider-update:bg-destructive/18",
-} as const;
-
-const PROVIDER_UPDATE_PILL_PROGRESS_STYLES = {
-  success: "bg-foreground/8",
-  warning: "bg-warning/14",
-  error: "bg-destructive/14",
-} as const;
-
 function latestProviderCheckedAt(
   providers: ReadonlyArray<Pick<ServerProvider, "checkedAt">>,
 ): string | undefined {
@@ -149,9 +132,7 @@ export function SidebarProviderUpdatePill() {
 
   return (
     <div
-      className={`group/provider-update relative flex min-h-7 w-full shrink-0 items-center overflow-hidden rounded-lg text-2xs leading-4 font-medium transform-gpu transition-all duration-180 ease-drawer will-change-transform ${
-        PROVIDER_UPDATE_PILL_STYLES[displayedView.tone]
-      } ${
+      className={`group/provider-update relative flex min-h-7 w-full shrink-0 items-center overflow-hidden rounded-lg bg-sidebar-control-surface text-2xs leading-4 font-medium text-sidebar-foreground transform-gpu transition-all duration-180 ease-drawer will-change-transform group-has-[button[data-provider-update-main]:hover]/provider-update:bg-sidebar-row-hover ${
         exitingKey === displayedView.key
           ? "pointer-events-none translate-y-1.5 opacity-0"
           : "translate-y-0 opacity-100"
@@ -161,9 +142,7 @@ export function SidebarProviderUpdatePill() {
         <div
           key={displayedView.key}
           aria-hidden="true"
-          className={`pointer-events-none absolute inset-y-0 left-0 w-full origin-left scale-x-0 transition-transform duration-(--provider-update-pill-dismiss-ms) ease-linear starting:scale-x-100 border-r border-current/15 inset-shadow-2xs inset-shadow-white/8 ${
-            PROVIDER_UPDATE_PILL_PROGRESS_STYLES[displayedView.tone]
-          }`}
+          className="pointer-events-none absolute inset-y-0 left-0 w-full origin-left scale-x-0 border-r border-current/15 bg-foreground/8 inset-shadow-2xs inset-shadow-white/8 transition-transform duration-(--provider-update-pill-dismiss-ms) ease-linear starting:scale-x-100"
           style={
             {
               "--provider-update-pill-dismiss-ms": `${dismissAfterVisibleMs}ms`,
@@ -187,7 +166,7 @@ export function SidebarProviderUpdatePill() {
               ) : displayedView.tone === "success" ? (
                 <CircleCheckIcon className="size-3.5 shrink-0" />
               ) : displayedView.tone === "error" ? (
-                <TriangleAlertIcon className="size-3.5 shrink-0" />
+                <TriangleAlertIcon className="size-3.5 shrink-0 text-destructive" />
               ) : (
                 <DownloadIcon className="size-3.5 shrink-0" />
               )}

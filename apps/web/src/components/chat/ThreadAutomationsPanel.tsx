@@ -28,6 +28,7 @@ import { serverEnvironment } from "../../state/server";
 import { useAtomCommand } from "../../state/use-atom-command";
 
 import { readEnvironmentScope } from "../../state/session";
+import { STATUS_TONE_DOT_CLASS } from "../PixelStatus";
 import { Switch } from "../ui/switch";
 import { stackedThreadToast, toastManager } from "../ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
@@ -38,9 +39,9 @@ import {
 
 const STATUS_DOT_CLASS: Record<ScheduledTask["lastRunStatus"], string> = {
   never: "bg-muted-foreground/40",
-  running: "bg-sky-500",
-  succeeded: "bg-emerald-500",
-  failed: "bg-destructive",
+  running: STATUS_TONE_DOT_CLASS.active,
+  succeeded: STATUS_TONE_DOT_CLASS.done,
+  failed: STATUS_TONE_DOT_CLASS.failed,
 };
 
 function taskScheduleLine(

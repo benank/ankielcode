@@ -37,6 +37,8 @@ import {
   supportsDesktopAppUpdate,
 } from "../../versionSkew";
 
+export const ENVIRONMENT_UNAVAILABLE_BANNER_ID_PREFIX = "environment-unavailable:";
+
 export type EnvironmentUnavailableState = {
   readonly environmentId: EnvironmentId;
   readonly label: string;
@@ -194,8 +196,8 @@ export function useSystemComposerBanners(input: SystemComposerBannersInput) {
       !suppressUnavailableBanner;
     if (showUnavailableBanner) {
       items.push({
-        id: `environment-unavailable:${activeEnvironmentUnavailableState.environmentId}`,
-        variant: unavailableConnection.phase === "error" ? "error" : "warning",
+        id: `${ENVIRONMENT_UNAVAILABLE_BANNER_ID_PREFIX}${activeEnvironmentUnavailableState.environmentId}`,
+        variant: unavailableConnection.phase === "error" ? "error" : "default",
         group: "environment",
         icon: <WifiOffIcon />,
         title: environmentReconnecting

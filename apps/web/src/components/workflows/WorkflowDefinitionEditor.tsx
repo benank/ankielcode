@@ -62,7 +62,7 @@ function ProblemList({
   readonly problems: ReadonlyArray<WorkflowDefinitionProblem>;
 }) {
   return (
-    <div role="alert" className="shrink-0 border-b bg-destructive/4 px-4 py-2 text-xs">
+    <div role="alert" className="shrink-0 border-b px-4 py-2 text-xs">
       <p className="font-medium text-destructive-foreground">{title}</p>
       <ul className="mt-1 max-h-32 space-y-1 overflow-auto text-muted-foreground">
         {problems.map((problem) => (

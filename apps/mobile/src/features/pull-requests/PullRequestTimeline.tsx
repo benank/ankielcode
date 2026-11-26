@@ -54,7 +54,7 @@ function TimelineEvent(props: {
                 size={15}
                 tintColorClassName={
                   props.tone === "success"
-                    ? "accent-adaptive-emerald-600-400"
+                    ? "accent-signal-success"
                     : props.tone === "danger"
                       ? "accent-danger-foreground"
                       : "accent-icon-muted"
@@ -274,7 +274,7 @@ export function pullRequestTimelineRows(
       key: `discussion:${thread.id}`,
       date: thread.comments[0]?.createdAt ?? "",
       content: (
-        <TimelineEvent icon="text.bubble" tone={thread.isResolved ? "success" : undefined}>
+        <TimelineEvent icon="text.bubble">
           <View accessible accessibilityRole="header" className="flex-row items-center gap-2">
             <PullRequestAvatar actor={thread.comments[0]?.author ?? null} size={22} />
             <Text className="flex-1 text-sm">

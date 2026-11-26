@@ -14,6 +14,8 @@ import { clearSubmittedReview } from "./pullRequestReviewDrafts";
 import { usePullRequestReviewDraft } from "./usePullRequestReviewDraft";
 import { reviewPositionLabel } from "./pullRequestDiffComments";
 import { AppText as Text, AppTextInput as TextInput } from "../../components/ui/AppText";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
+import { Notice } from "../../components/ui/Notice";
 import { Button } from "../../components/ui/Button";
 import { SegmentedControl } from "../../components/ui/SegmentedControl";
 import { composerPullRequests } from "../../state/pull-requests";
@@ -177,7 +179,7 @@ export function PullRequestReviewSheet({
                 : gt("Post comment")
           }
           fullWidth
-          tone="contrast"
+          tone="primary"
           loading={submission.busy}
           disabled={!canSubmit || result.isPending || result.error !== null}
           onPress={() => void perform()}
@@ -271,15 +273,15 @@ export function PullRequestReviewSheet({
         </View>
       ) : null}
       {reviewing && stale ? (
-        <Text className="text-sm text-danger-foreground">
+        <Text className="text-sm text-foreground">
           <T>
             The branch changed since you wrote a comment. Choose its current line before submitting.
           </T>
         </Text>
       ) : null}
       {reviewing && !canSubmitComments ? (
-        <Text className="text-sm text-danger-foreground">
-          {gt(
+        <Notice
+          message={gt(
             "You can no longer submit line comments on this {term, select, mr {merge request} cr {change request} other {pull request}}. Your drafts are kept here.",
             {
               term: changeRequestTermKind(
@@ -287,12 +289,10 @@ export function PullRequestReviewSheet({
               ),
             },
           )}
-        </Text>
+        />
       ) : null}
       {submission.error || result.error || store.error ? (
-        <Text selectable className="text-sm text-danger-foreground">
-          {submission.error ?? result.error ?? store.error}
-        </Text>
+        <ErrorBanner message={submission.error ?? result.error ?? store.error ?? ""} />
       ) : null}
     </SheetContent>
   );

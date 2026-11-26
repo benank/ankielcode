@@ -29,6 +29,7 @@ import {
   textGeneratorBrand,
   textGeneratorDisplayName,
 } from "../../textGenerators";
+import { cn } from "../../lib/utils";
 import { getTextGenerationModelOptionsByInstance } from "../../modelSelection";
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 import { ProviderModelPicker } from "../chat/ProviderModelPicker";
@@ -59,6 +60,7 @@ import { Label } from "../ui/label";
 import { Spinner } from "../ui/spinner";
 import { Switch } from "../ui/switch";
 import { WizardFooter, WizardHeader, WizardPanel, WizardPopup, WizardSteps } from "../ui/wizard";
+import { selectionCardClassName } from "./itemRows";
 import { SecretSourceInput, useSecretSources } from "./SecretSourceInput";
 import { useSearchableSetting } from "./settingsSearch";
 import { SETTINGS_PICKER_TRIGGER_CLASSNAME, SettingsRow, SettingsSection } from "./settingsLayout";
@@ -161,7 +163,7 @@ export function TextGeneratorsSettings({
                         >
                           <T>Show models</T>
                         </MenuItem>
-                        <MenuItem variant="destructive" onClick={() => setRemoving(id)}>
+                        <MenuItem onClick={() => setRemoving(id)}>
                           <T>Remove</T>
                         </MenuItem>
                       </MenuPopup>
@@ -391,11 +393,13 @@ function TextGeneratorWizard({
                             type="button"
                             role="radio"
                             aria-checked={selected}
-                            className={
+                            className={cn(
+                              "flex flex-col items-center gap-2 px-2 py-3 text-sm",
+                              selectionCardClassName(selected),
                               selected
-                                ? "flex flex-col items-center gap-2 rounded-lg border border-primary bg-primary/5 px-2 py-3 text-sm font-medium text-foreground ring-1 ring-primary ring-inset outline-none focus-visible:ring-2 focus-visible:ring-inset"
-                                : "flex flex-col items-center gap-2 rounded-lg border bg-background px-2 py-3 text-sm text-muted-foreground outline-none hover:bg-accent/50 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-                            }
+                                ? "font-medium text-foreground"
+                                : "text-muted-foreground hover:text-foreground",
+                            )}
                             onClick={() => {
                               setPreset(candidate);
                               setBaseUrl(candidate.baseUrl);

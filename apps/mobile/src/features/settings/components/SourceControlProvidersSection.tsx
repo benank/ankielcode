@@ -410,7 +410,7 @@ export function SourceControlHostFieldsForm(props: {
         <View key={field.key} className="gap-1.5">
           {field.secret ? (
             <>
-              <Text className="text-2xs font-ankiel-bold tracking-[0.8px] uppercase text-foreground-muted">
+              <Text className="text-xs font-ankiel-medium text-foreground-muted">
                 {field.label}
               </Text>
               <SecretTextInput

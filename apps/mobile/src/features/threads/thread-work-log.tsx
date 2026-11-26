@@ -977,17 +977,11 @@ const ThreadWorkLogRow = function ThreadWorkLogRow(
                 colorClassName={warning ? "accent-warning-foreground" : "accent-danger-foreground"}
               />
             </WorkLogIconSlot>
-            <Text
-              className={
-                warning
-                  ? "min-w-0 flex-1 font-ankiel-medium text-sm text-warning-foreground"
-                  : "min-w-0 flex-1 font-ankiel-medium text-sm text-adaptive-rose-600-400"
-              }
-            >
+            <Text className="min-w-0 flex-1 font-ankiel-medium text-sm text-foreground">
               {label}
             </Text>
             {props.copied ? (
-              <Text className="pr-1 font-ankiel-medium text-3xs text-adaptive-emerald-600-400">
+              <Text className="pr-1 font-ankiel-medium text-3xs text-foreground-muted">
                 <T>Copied</T>
               </Text>
             ) : null}
@@ -1083,7 +1077,7 @@ const ThreadWorkLogRow = function ThreadWorkLogRow(
               : null;
   const exitLine =
     failedExitCode === null ? null : (
-      <Text className="mt-1.5 font-mono text-2xs leading-normal text-danger-foreground">
+      <Text className="mt-1.5 font-mono text-2xs leading-normal text-foreground-muted">
         exit {failedExitCode}
       </Text>
     );
@@ -1188,7 +1182,7 @@ const ThreadWorkLogRow = function ThreadWorkLogRow(
                     isUsageLimit
                       ? "accent-warning-foreground"
                       : iconIsDestructive
-                        ? "accent-adaptive-rose-600-400"
+                        ? "accent-danger-foreground"
                         : failed
                           ? "accent-danger-foreground/40"
                           : undefined
@@ -1196,9 +1190,7 @@ const ThreadWorkLogRow = function ThreadWorkLogRow(
                 />
               )}
             </WorkLogIconSlot>
-            <WorkLogLabel
-              tone={isUsageLimit ? "warning" : iconIsDestructive ? "danger" : "default"}
-            >
+            <WorkLogLabel emphasized={isUsageLimit || iconIsDestructive}>
               {displayText}
               {answerPreview ? (
                 <Text
@@ -1217,14 +1209,14 @@ const ThreadWorkLogRow = function ThreadWorkLogRow(
 
         <View className="shrink-0 flex-row items-center gap-px">
           {props.copied ? (
-            <Text className="pr-1 font-ankiel-medium text-3xs text-adaptive-emerald-600-400">
+            <Text className="pr-1 font-ankiel-medium text-3xs text-foreground-muted">
               <T>Copied</T>
             </Text>
           ) : mcpSignInTarget !== null ? (
             <Text
               className={cn(
                 "pr-1 font-ankiel-medium text-sm",
-                mcpSignedIn ? "text-adaptive-emerald-600-400" : "text-primary",
+                mcpSignedIn ? "text-foreground-muted" : "text-primary-text",
               )}
             >
               {mcpSignedIn ? <T>Signed in</T> : <T>Sign in</T>}

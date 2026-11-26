@@ -87,7 +87,7 @@ function reviewDecisionPresentation(decision: PullRequestReviewDecision) {
       return {
         Icon: UserRoundXIcon,
         label: msg("Changes requested"),
-        toneClassName: "text-amber-600/90 dark:text-amber-400/80",
+        toneClassName: "text-destructive",
       };
     case "review-required":
       return {
@@ -222,17 +222,17 @@ const CHECK_STATUS_PRESENTATION = {
   pending: {
     label: msg("Running", { $context: "check status" }),
     Icon: Spinner,
-    toneClassName: "text-amber-500",
+    toneClassName: "text-muted-foreground",
   },
   "action-required": {
     label: msg("Awaiting action"),
     Icon: CircleDotIcon,
-    toneClassName: "text-amber-600 dark:text-amber-400/90",
+    toneClassName: "text-warning",
   },
   success: {
     label: msg("Passed", { $context: "check status" }),
     Icon: CircleCheckIcon,
-    toneClassName: "text-emerald-600 dark:text-emerald-300/90",
+    toneClassName: "text-success-foreground",
   },
   failure: {
     label: msg("Failed", { $context: "check status" }),
@@ -300,7 +300,7 @@ const CHECKS_STATE_PRESENTATION = {
   pending: {
     label: msg("Some checks haven't completed yet"),
     Icon: CircleDotIcon,
-    toneClassName: "text-amber-600 dark:text-amber-400/90",
+    toneClassName: "text-muted-foreground",
   },
 } as const satisfies Record<
   PullRequestChecksState,

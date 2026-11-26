@@ -31,7 +31,7 @@ import { Platform, Pressable, useWindowDimensions, View } from "react-native";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 
 import type { ThreadListProvider } from "../../state/thread-list-environments";
-import { SymbolView, type AppSymbolName } from "../../components/ui/AppSymbol";
+import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
 import { Menu } from "../../components/ui/Menu";
 import { PixelStatus } from "../../components/PixelStatus";
@@ -73,55 +73,19 @@ import { QueuedMessageIcon } from "./queued-message-icon";
 import { ThreadSearchMatchExcerpt } from "./thread-search-match";
 
 interface StatusLabel {
-  // Null when the icon and timer carry the status on their own.
+  // Null when the pixel light and timer carry the status on their own.
   readonly label: string | null;
-  readonly icon: AppSymbolName;
-  readonly className: string;
-  readonly iconTintClassName: string;
 }
 const STATUS_LABEL_BY_STATUS: Partial<Record<ThreadListV2Status, StatusLabel>> = {
-  approval: {
-    label: msg("Approval", { $context: "thread status, waiting for approval" }),
-    icon: "exclamationmark.shield",
-    className: "text-warning-foreground",
-    iconTintClassName: "accent-warning-foreground",
-  },
-  input: {
-    label: msg("Input", { $context: "thread status, waiting for user input" }),
-    icon: "questionmark.bubble",
-    className: "text-adaptive-indigo-600-300",
-    iconTintClassName: "accent-adaptive-indigo-600-300",
-  },
-  working: {
-    label: null,
-    icon: "circle.dashed",
-    className: "text-adaptive-sky-600-400",
-    iconTintClassName: "accent-adaptive-sky-600-400",
-  },
-  waiting: {
-    label: null,
-    icon: "circle.dashed.inset.filled",
-    className: "text-foreground-muted",
-    iconTintClassName: "accent-foreground-muted",
-  },
-  failed: {
-    label: msg("Failed", { $context: "thread status" }),
-    icon: "exclamationmark.circle",
-    className: "text-danger-foreground",
-    iconTintClassName: "accent-danger-foreground",
-  },
-  limited: {
-    label: msg("Limited", { $context: "thread status, usage limit reached" }),
-    icon: "exclamationmark.circle",
-    className: "text-warning-foreground",
-    iconTintClassName: "accent-warning-foreground",
-  },
+  approval: { label: msg("Approval", { $context: "thread status, waiting for approval" }) },
+  input: { label: msg("Input", { $context: "thread status, waiting for user input" }) },
+  working: { label: null },
+  waiting: { label: null },
+  failed: { label: msg("Failed", { $context: "thread status" }) },
+  limited: { label: msg("Limited", { $context: "thread status, usage limit reached" }) },
 };
 const DONE_STATUS_LABEL: StatusLabel = {
   label: msg("Done", { $context: "thread status, turn finished" }),
-  icon: "checkmark.circle",
-  className: "text-adaptive-emerald-700-300",
-  iconTintClassName: "accent-adaptive-emerald-700-300",
 };
 
 const CARD_MENU_ACTIONS: MenuAction[] = [
@@ -572,9 +536,7 @@ export const ThreadListV2PendingRow = memo(function ThreadListV2PendingRow(props
           tintColorClassName={
             selected
               ? selectedThreadRowColors.iconTintClassName
-              : isDraft
-                ? "accent-adaptive-amber-700-300"
-                : rowAppearance.mutedIconTintClassName
+              : rowAppearance.mutedIconTintClassName
           }
           type="monochrome"
           weight="semibold"

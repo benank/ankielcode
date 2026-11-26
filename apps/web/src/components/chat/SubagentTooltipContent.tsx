@@ -14,7 +14,7 @@ import {
 import { readSelectedEffortValue } from "@ankielcode/client-runtime/state/thread-execution";
 import { resolveSelectableModel } from "@ankielcode/shared/model";
 import { getTraitsSpeedDisplay, TraitsSpeedIcon } from "./TraitsSpeed";
-import { useGT, useMessages } from "gt-react";
+import { useMessages } from "gt-react";
 import type { ReactNode } from "react";
 import {
   BotIcon,
@@ -28,6 +28,11 @@ import {
 import { ThreadHoverCard } from "../ThreadHoverCard";
 import { MiddleTruncate } from "../ui/middle-truncate";
 import { ProviderInstanceIcon } from "./ProviderInstanceIcon";
+import { STATUS_TONE_TEXT_CLASS } from "../PixelStatus";
+import {
+  threadRelationshipStatusLabel,
+  threadRelationshipStatusTone,
+} from "./ThreadRelationshipIcon";
 import { cn } from "~/lib/utils";
 import { deriveProviderInstanceEntries, shouldShowInstanceBadge } from "../../providerInstances";
 
@@ -51,7 +56,6 @@ export function SubagentTooltipContent(props: {
   result?: string | null | undefined;
   progress?: string | null | undefined;
 }) {
-  const gt = useGT();
   const messages = useMessages();
   const childSelection =
     props.modelSelection ??
@@ -122,15 +126,9 @@ export function SubagentTooltipContent(props: {
   const entries = deriveProviderInstanceEntries(props.providers ?? []);
   const entry = entries.find((candidate) => candidate.instanceId === props.provider?.instanceId);
   const showInstanceBadge = entry !== undefined && shouldShowInstanceBadge(entry, entries);
-  const working = ["running", "in_progress", "pending", "waiting"].includes(props.status);
-  const failed = ["failed", "error"].includes(props.status);
-  const StatusIcon = working
-    ? CircleDashedIcon
-    : failed
-      ? CircleXIcon
-      : props.status === "completed"
-        ? CheckIcon
-        : CircleDashedIcon;
+  const tone = threadRelationshipStatusTone(props.status);
+  const StatusIcon =
+    tone === "failed" ? CircleXIcon : props.status === "completed" ? CheckIcon : CircleDashedIcon;
   return (
     <ThreadHoverCard title={props.title}>
       <div className="flex min-w-0 items-center gap-2">
@@ -155,45 +153,16 @@ export function SubagentTooltipContent(props: {
           {effort || speed?.speedIcon ? (
             <span className="inline-flex shrink-0 items-center gap-1">
               {effort ? " · " : null}
-              {speed?.speedIcon && provider ? (
-                <TraitsSpeedIcon provider={provider.driver} speedIcon={speed.speedIcon} size="xs" />
-              ) : null}
+              {speed?.speedIcon ? <TraitsSpeedIcon speedIcon={speed.speedIcon} size="xs" /> : null}
               {effort}
             </span>
           ) : null}
         </span>
       </div>
       <div className="flex min-w-0 items-center justify-between gap-4">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-sm font-medium capitalize",
-            working
-              ? "text-info"
-              : failed
-                ? "text-error"
-                : props.status === "completed"
-                  ? "text-success"
-                  : "text-muted-foreground",
-          )}
-        >
-          <StatusIcon aria-hidden className="size-3 shrink-0" />
-          {props.status === "idle"
-            ? gt("idle", { $context: "subagent status" })
-            : props.status === "pending"
-              ? gt("pending", { $context: "subagent status" })
-              : props.status === "running"
-                ? gt("running", { $context: "subagent status" })
-                : props.status === "waiting"
-                  ? gt("waiting", { $context: "subagent status" })
-                  : props.status === "completed"
-                    ? gt("completed", { $context: "subagent status" })
-                    : props.status === "failed"
-                      ? gt("failed", { $context: "subagent status" })
-                      : props.status === "cancelled"
-                        ? gt("cancelled", { $context: "subagent status" })
-                        : props.status === "interrupted"
-                          ? gt("interrupted", { $context: "subagent status" })
-                          : (props.status as string).replaceAll("_", " ")}
+        <span className="inline-flex items-center gap-1 font-medium">
+          <StatusIcon aria-hidden className={cn("size-3 shrink-0", STATUS_TONE_TEXT_CLASS[tone])} />
+          {threadRelationshipStatusLabel(props.status, messages)}
         </span>
         {props.elapsed}
       </div>

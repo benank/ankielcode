@@ -294,7 +294,7 @@ export function ArchivedThreadsPanel() {
                   render={
                     <Button
                       type="button"
-                      variant={action === "delete" ? "destructive-outline" : "outline"}
+                      variant="outline"
                       size="icon-sm"
                       aria-label={m(threadLabel, { title: thread.title })}
                       disabled={pendingKeys.has(threadKey)}

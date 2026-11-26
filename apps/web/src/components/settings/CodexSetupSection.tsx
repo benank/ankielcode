@@ -146,7 +146,7 @@ export function CodexSetupSection(props: CodexSetupSectionProps) {
         }
         control={
           existingReady ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success-foreground">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <CheckIcon className="size-3.5" />
               <T>Ready</T>
             </span>
@@ -865,7 +865,7 @@ function ManagedCodexSetup({
           }
           control={
             authenticated && !busy ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success-foreground">
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <CheckIcon className="size-3.5" />
                 <T>Ready</T>
               </span>

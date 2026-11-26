@@ -575,7 +575,7 @@ const ProviderModelRow = memo(function ProviderModelRow({
             />
           }
         >
-          <StarIcon className={cn("size-3", isFavorite && "fill-current text-warning")} />
+          <StarIcon className={cn("size-3", isFavorite && "fill-current text-foreground")} />
         </TooltipTrigger>
         <TooltipPopup side="top">
           {isFavorite ? gt("Remove from favorites") : gt("Add to favorites")}

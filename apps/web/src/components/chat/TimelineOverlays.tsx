@@ -6,14 +6,14 @@ import { Button } from "../ui/button";
 export function WorkspaceFileDropOverlay() {
   return (
     <div
-      className="pointer-events-none absolute inset-2 z-40 flex items-center justify-center rounded-2xl border-2 border-dashed border-primary/60 bg-primary/[0.035]"
+      className="pointer-events-none absolute inset-2 z-40 flex items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/40"
       data-chat-workspace-drop-overlay="true"
     >
       <div
         role="status"
-        className="flex items-center gap-2 rounded-full border border-primary/25 bg-background/95 px-4 py-2.5 text-sm font-medium text-foreground shadow-lg"
+        className="flex items-center gap-2 rounded-full border border-border bg-background/95 px-4 py-2.5 text-sm font-medium text-foreground shadow-lg"
       >
-        <PlusIcon className="size-4 text-primary" aria-hidden="true" />
+        <PlusIcon className="size-4" aria-hidden="true" />
         <T>Drop files to attach</T>
       </div>
     </div>

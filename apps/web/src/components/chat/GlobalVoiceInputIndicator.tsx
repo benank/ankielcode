@@ -26,7 +26,8 @@ export function GlobalVoiceInputIndicator({ hidden = false }: { hidden?: boolean
 
   return (
     <div className="pointer-events-none fixed inset-x-0 top-3 z-100 flex justify-center px-4">
-      <div className="pointer-events-auto flex max-w-full items-center gap-1 rounded-full bg-popover p-0.5 shadow-lg/5 [-webkit-app-region:no-drag]">
+      {/* One capsule: the dictation pill sheds its own ring and fill inside this one. */}
+      <div className="pointer-events-auto flex max-w-full items-center gap-1 rounded-full bg-popover p-0.5 shadow-lg/5 ring-1 ring-border ring-inset [-webkit-app-region:no-drag] *:data-[slot=voice-input-pill]:bg-transparent *:data-[slot=voice-input-pill]:ring-0">
         <Button
           type="button"
           size="sm-pill"

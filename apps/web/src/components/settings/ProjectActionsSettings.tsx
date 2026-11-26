@@ -8,7 +8,7 @@ import {
   squashAtomCommandFailure,
 } from "@ankielcode/client-runtime/state/runtime";
 import { DEFAULT_RESOLVED_KEYBINDINGS } from "@ankielcode/shared/keybindings";
-import { ChevronDownIcon, PlusIcon } from "lucide-react";
+import { ChevronDownIcon, CircleAlertIcon, PlusIcon } from "lucide-react";
 import { T, useGT } from "gt-react";
 import { useState } from "react";
 import { useAnkielProjectFileState } from "../../hooks/useAnkielProjectFileScripts";
@@ -199,11 +199,15 @@ export function ProjectActionsSettings() {
       )}
       {ankielFile.status === "invalid" ? (
         <SettingsRow
-          title={gt("ankiel.json is invalid")}
+          title={
+            <span className="inline-flex items-center gap-1.5">
+              <CircleAlertIcon aria-hidden className="size-3.5 shrink-0 text-destructive" />
+              {gt("ankiel.json is invalid")}
+            </span>
+          }
           description={gt(
             "An ankiel.json exists in this checkout but fails to parse, so every action and icon it declares is ignored. Check the JSON syntax and icon values.",
           )}
-          className="text-warning"
         />
       ) : null}
       {target && (

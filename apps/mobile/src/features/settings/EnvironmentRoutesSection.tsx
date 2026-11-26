@@ -125,7 +125,6 @@ export function EnvironmentRoutesSection({
         { text: gt("Cancel"), style: "cancel" },
         {
           text: gt("Remove"),
-          style: "destructive",
           onPress: () =>
             void removeRoute({ environmentId, routeId: connectionRouteId(route.target) }),
         },
@@ -287,7 +286,7 @@ function RouteRow(props: {
           <SymbolView
             name="xmark.circle.fill"
             size={REMOVE_SIZE}
-            tintColorClassName="accent-danger-foreground"
+            tintColorClassName="accent-icon-muted"
             type="monochrome"
           />
         </Pressable>

@@ -276,7 +276,7 @@ function ProviderAccount({
           subactions: removableMethods.map((method) => ({
             id: `remove:${method.id}`,
             title: method.name,
-            attributes: { destructive: true, disabled: disabled || active || !canRemoveMethod },
+            attributes: { disabled: disabled || active || !canRemoveMethod },
           })),
         },
       ]
@@ -295,7 +295,6 @@ function ProviderAccount({
         { text: gt("Cancel"), style: "cancel" },
         {
           text: gt("Sign out"),
-          style: "destructive",
           onPress: () => {
             void run(() => logout(target));
           },
@@ -341,7 +340,7 @@ function ProviderAccount({
             id: "signOut",
             title: gt("Sign out"),
             image: "rectangle.portrait.and.arrow.right",
-            attributes: { destructive: true, disabled: disabled || state === null },
+            attributes: { disabled: disabled || state === null },
           },
         ]
       : []),

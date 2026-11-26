@@ -21,6 +21,7 @@ import {
   moveMicrophone,
   preferredMicrophone,
 } from "../../speech/microphoneOrder";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 
 /** The saved microphone order. Keyboard users reorder with the step buttons. */
@@ -120,9 +121,9 @@ function MicrophoneRow(props: {
       </span>
       <span className="col-start-2 flex @min-[32rem]/settings-row:col-start-auto">
         {props.inUse ? (
-          <span className="rounded-sm bg-success/12 px-1 text-2xs text-success-foreground">
+          <Badge variant="outline" size="sm">
             <T>In use</T>
-          </span>
+          </Badge>
         ) : props.notConnected ? (
           <span className="text-2xs text-muted-foreground">
             <T>Not connected</T>

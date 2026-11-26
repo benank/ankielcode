@@ -226,7 +226,7 @@ export function SourceControlAccountSettings({
             ) : null}
             {stalePin ? (
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-warning">
+                <p className="text-xs text-muted-foreground">
                   <T>
                     The chosen login is no longer signed in, so the active <Var>{cliName}</Var>{" "}
                     login is used.
@@ -265,7 +265,7 @@ export function SourceControlAccountSettings({
               </p>
             ))}
             {group.environmentVariable ? (
-              <p className="text-xs text-warning">
+              <p className="text-xs text-muted-foreground">
                 <T>
                   <Var>{group.environmentVariable}</Var> is set on the server, so it overrides the
                   account chosen here until it is unset.

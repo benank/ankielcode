@@ -87,8 +87,19 @@ function AgentActivity(
   const monochrome =
     environment.widgetRenderingMode === "accented" || environment.widgetRenderingMode === "vibrant";
 
-  // iPhone uses dark Live Activity material, macOS light; choose the web palette variant by color scheme.
+  // iPhone uses dark Live Activity material, macOS light; choose the light or dark tone by color scheme.
   const isLightScheme = environment.colorScheme === "light";
+  // The app's status tones ([light, dark]), inlined because the extension drops module scope;
+  // AgentActivityWidget repeats them. Done and stale read as plain labels.
+  const PHASE_TONES: Record<AgentActivityPhase, readonly [string, string] | null> = {
+    starting: ["#0891b2", "#67e8f9"],
+    running: ["#0891b2", "#67e8f9"],
+    waiting_for_approval: ["#a75405", "#f8c15a"],
+    waiting_for_input: ["#a75405", "#f8c15a"],
+    failed: ["#b42318", "#fb7a6f"],
+    completed: null,
+    stale: null,
+  };
   const phaseTint = (phase: AgentActivityPhase | undefined): Foreground => {
     if (environment.isLuminanceReduced) {
       return secondaryForeground;
@@ -96,22 +107,8 @@ function AgentActivity(
     if (monochrome) {
       return primaryForeground;
     }
-    switch (phase) {
-      case "waiting_for_approval":
-        return isLightScheme ? "#d97706" : "#fcd34d";
-      case "waiting_for_input":
-        return isLightScheme ? "#4f46e5" : "#a5b4fc";
-      case "failed":
-        return isLightScheme ? "#dc2626" : "#fca5a5";
-      case "completed":
-        return isLightScheme ? "#059669" : "#6ee7b7";
-      case "stale":
-        return secondaryForeground;
-      case "starting":
-      case "running":
-      default:
-        return isLightScheme ? "#0284c7" : "#7dd3fc";
-    }
+    const tone = PHASE_TONES[phase ?? "running"];
+    return tone ? tone[isLightScheme ? 0 : 1] : secondaryForeground;
   };
 
   const phasePriority = (phase: AgentActivityPhase): number => {
@@ -345,7 +342,7 @@ function AgentActivity(
         ) : null}
       </VStack>
     ),
-    compactLeading: renderLogo(14, tint, linkModifiers),
+    compactLeading: renderLogo(14, primaryForeground, linkModifiers),
     // While agents are only working, stay quiet: the thread list's Working
     // glyph marks the activity without a count. Labels appear only for
     // attention or outcomes.
@@ -384,10 +381,10 @@ function AgentActivity(
     ),
     minimal: heroRow
       ? renderGlyph(phaseSymbol(heroRow.phase), 13, phaseTint(heroRow.phase), linkModifiers)
-      : renderLogo(11, tint, linkModifiers),
+      : renderLogo(11, primaryForeground, linkModifiers),
     expandedLeading: (
       <HStack spacing={5} alignment="center" modifiers={[padding({ leading: 4, vertical: 4 })]}>
-        {renderLogo(15, tint)}
+        {renderLogo(15, primaryForeground)}
         <Text modifiers={[font({ weight: "bold", size: 13 }), foregroundStyle(tint)]}>
           {allDone || environment.isStale ? activeLabel : `${props.activeCount}`}
         </Text>

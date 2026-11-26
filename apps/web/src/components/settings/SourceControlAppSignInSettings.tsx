@@ -9,13 +9,12 @@ import {
 import { useAtomValue } from "@effect/atom-react";
 import * as Cause from "effect/Cause";
 import { msg, T, useGT, Var } from "gt-react";
-import { CheckIcon, ExternalLinkIcon, CopyIcon } from "lucide-react";
+import { CheckIcon, CircleAlertIcon, ExternalLinkIcon, CopyIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { AnkielAppIcon } from "~/components/AnkielAppIcon";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { useEnvironmentSettings } from "../../hooks/useSettings";
-import { cn } from "../../lib/utils";
 import { serverEnvironment } from "../../state/server";
 import { sourceControlEnvironment } from "../../state/sourceControl";
 import { useAtomCommand } from "../../state/use-atom-command";
@@ -51,7 +50,7 @@ function AppMark(props: { readonly signedIn: boolean }) {
     <div className="relative size-10 shrink-0">
       <AnkielAppIcon className="size-full" />
       {props.signedIn ? (
-        <span className="absolute -right-1 -bottom-1 grid size-4 place-items-center rounded-full bg-success text-white ring-2 ring-card">
+        <span className="absolute -right-1 -bottom-1 grid size-4 place-items-center rounded-full bg-foreground text-background ring-2 ring-card">
           <CheckIcon aria-hidden className="size-2.5" strokeWidth={3} />
         </span>
       ) : null}
@@ -217,12 +216,7 @@ export function SourceControlAppSignInSettings({
   }
 
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-xl border bg-card",
-        state.status === "failed" && !signedIn ? "border-destructive/40" : "border-border",
-      )}
-    >
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex items-center gap-3 p-3">
         <AppMark signedIn={signedIn} />
         <div className="min-w-0 flex-1 space-y-0.5">
@@ -257,7 +251,7 @@ export function SourceControlAppSignInSettings({
               <ExternalLinkIcon aria-hidden className="size-3.5" />
             </Button>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span aria-hidden className="size-1.5 rounded-full bg-warning" />
+              <Spinner aria-hidden size="xs" tone="muted" />
               <T>
                 Waiting for approval · code expires at <Var>{expiryTime(waiting.expiresAt)}</Var>
               </T>
@@ -283,8 +277,9 @@ export function SourceControlAppSignInSettings({
       {state.status === "failed" && !signedIn ? (
         <p
           role="alert"
-          className="border-t border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive"
+          className="flex items-start gap-1.5 border-t border-border px-3 py-2 text-xs text-foreground"
         >
+          <CircleAlertIcon aria-hidden className="size-3.5 h-lh shrink-0 text-destructive" />
           {state.message}
         </p>
       ) : null}

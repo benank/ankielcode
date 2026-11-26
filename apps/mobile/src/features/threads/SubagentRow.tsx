@@ -17,9 +17,8 @@ import { View } from "react-native";
 import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { ProviderIcon, ProviderInstanceIcon } from "../../components/ProviderIcon";
-import { cn } from "../../lib/cn";
 import { useEnvironmentServerConfig, useProject, useThreadShell } from "../../state/entities";
-import { SUBAGENT_TONE_TEXT_CLASS, SubagentStatusDot } from "./SubagentStatusDot";
+import { SubagentStatusDot } from "./SubagentStatusDot";
 import { resolveSubagentRowPresentation } from "./threadAgentsPresentation";
 
 type SubagentRowSubagent = Pick<
@@ -71,12 +70,7 @@ export function SubagentRow(props: {
                 >
                   ·
                 </Text>
-                <Text
-                  className={cn(
-                    "shrink-0 text-xs font-ankiel-medium",
-                    SUBAGENT_TONE_TEXT_CLASS[presentation.tone],
-                  )}
-                >
+                <Text className="shrink-0 text-xs font-ankiel-medium text-foreground-secondary">
                   {presentation.statusLabel}
                 </Text>
               </>
@@ -89,13 +83,7 @@ export function SubagentRow(props: {
         </View>
         <SubagentMetadata environmentId={props.environmentId} subagent={props.subagent} />
         {detail ? (
-          <Text
-            numberOfLines={3}
-            className={cn(
-              "text-xs text-foreground-muted",
-              presentation.tone === "failed" && SUBAGENT_TONE_TEXT_CLASS.failed,
-            )}
-          >
+          <Text numberOfLines={3} className="text-xs text-foreground-muted">
             {detail}
           </Text>
         ) : null}

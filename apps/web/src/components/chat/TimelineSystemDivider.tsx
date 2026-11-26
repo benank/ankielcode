@@ -23,7 +23,14 @@ export function TimelineSystemDivider(props: {
           props.wrapDetail && "shrink-0 whitespace-nowrap",
         )}
       >
-        {Icon ? <Icon className="size-3 shrink-0 self-center" /> : null}
+        {Icon ? (
+          <Icon
+            className={cn(
+              "size-3 shrink-0 self-center",
+              props.tone === "danger" && "text-destructive",
+            )}
+          />
+        ) : null}
         {props.label}
       </span>
       {props.detail ? (
@@ -43,12 +50,7 @@ export function TimelineSystemDivider(props: {
   );
 
   return (
-    <div
-      className={cn(
-        "flex min-w-0 items-center gap-2 py-2 text-2xs text-muted-foreground",
-        props.tone === "danger" && "text-destructive",
-      )}
-    >
+    <div className="flex min-w-0 items-center gap-2 py-2 text-2xs text-muted-foreground">
       <span aria-hidden="true" className="h-px flex-1 bg-border/70" />
       {props.onAction ? (
         <Tooltip>

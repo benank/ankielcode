@@ -158,12 +158,10 @@ function CompactWindowRow({
         <View
           className={
             remaining <= 10
-              ? "h-full rounded-full bg-red-500"
-              : remaining <= 30
-                ? "h-full rounded-full bg-amber-500"
-                : "h-full rounded-full bg-foreground"
+              ? "h-full rounded-full bg-danger-foreground"
+              : "h-full rounded-full bg-foreground"
           }
-          style={[{ flex: remaining }, remaining > 30 && color ? { backgroundColor: color } : null]}
+          style={[{ flex: remaining }, remaining > 10 && color ? { backgroundColor: color } : null]}
         />
         <View style={{ flex: 100 - remaining }} />
       </View>
@@ -250,10 +248,8 @@ function ContextWindowCard({ target }: { readonly target: UsageLimitsRouteParams
             <View
               className={
                 used >= 90
-                  ? "h-full rounded-full bg-red-500"
-                  : used >= 80
-                    ? "h-full rounded-full bg-amber-500"
-                    : "h-full rounded-full bg-foreground"
+                  ? "h-full rounded-full bg-danger-foreground"
+                  : "h-full rounded-full bg-foreground"
               }
               style={{ flex: used }}
             />

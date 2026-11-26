@@ -54,6 +54,7 @@ import {
   ENVIRONMENT_MACHINE_SYMBOLS,
 } from "../../components/EnvironmentMachineSymbol";
 import { Menu } from "../../components/ui/Menu";
+import { Notice } from "../../components/ui/Notice";
 import type { ComposerEditorSelection } from "../../components/ComposerEditor";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { SegmentedControl } from "../../components/ui/SegmentedControl";
@@ -73,6 +74,7 @@ import { useVoiceInputController } from "../voice-input/useVoiceInputController"
 import { ScheduledTaskPromptField } from "./components/ScheduledTaskPromptField";
 import { useSettingsEnvironmentMenu } from "./components/SettingsEnvironmentFilterHeader";
 import { SettingsScreen } from "./components/SettingsScreen";
+import { SettingsErrorLine } from "./components/SettingsErrorLine";
 import { SettingsSection } from "./components/SettingsSection";
 import { useSettingsEnvironmentFilter, type SettingsTarget } from "./settings-environment-filter";
 import {
@@ -325,7 +327,7 @@ function WebhookFilterRows(props: {
               }
               className="active:opacity-70"
             >
-              <SymbolView name="trash" size={16} tintColorClassName="accent-danger-foreground" />
+              <SymbolView name="trash" size={16} tintColorClassName="accent-icon-muted" />
             </Pressable>
           </View>
           <FormField
@@ -916,16 +918,10 @@ function TaskForm({
         accessibilityElementsHidden={saving}
         importantForAccessibility={saving ? "no-hide-descendants" : "auto"}
       >
-        {taskMissing ? (
-          <Text className="px-1 text-base text-danger-foreground">
-            <T>This task no longer exists.</T>
-          </Text>
-        ) : null}
+        {taskMissing ? <Notice tone="danger" message={gt("This task no longer exists.")} /> : null}
 
         {environmentUnavailable ? (
-          <Text className="px-1 text-base text-danger-foreground">
-            <T>This environment is disconnected. Reconnect before saving.</T>
-          </Text>
+          <Notice message={gt("This environment is disconnected. Reconnect before saving.")} />
         ) : null}
         <SettingsSection>
           <SelectRow
@@ -1648,7 +1644,7 @@ function EnvironmentTasks({
       }
     >
       {tasks.error ? (
-        <Text className="p-4 text-base text-danger-foreground">{tasks.error}</Text>
+        <SettingsErrorLine className="p-4">{tasks.error}</SettingsErrorLine>
       ) : !tasks.data ? (
         <Text className="p-4 text-base text-foreground-muted">
           <T>Loading tasks…</T>
@@ -1691,11 +1687,11 @@ function EnvironmentTasks({
                     : describeSchedule(task, tasks.data?.timeZone, m, locale)}
               </Text>
               {task.lastRunError ? (
-                <Text className="text-sm text-danger-foreground" numberOfLines={2}>
+                <SettingsErrorLine numberOfLines={2}>
                   <T>
                     Last run failed: <Var>{task.lastRunError}</Var>
                   </T>
-                </Text>
+                </SettingsErrorLine>
               ) : null}
             </Pressable>
             <Menu

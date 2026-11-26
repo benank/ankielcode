@@ -437,7 +437,6 @@ export function useComposerAttachmentIntake(input: {
               "Remove this image from the message?\nIt is referenced in your text; removing it also removes every reference.",
             ),
           ),
-      { variant: "destructive" },
     );
     if (!confirmation) {
       removeComposerImageFromDraft(imageId);

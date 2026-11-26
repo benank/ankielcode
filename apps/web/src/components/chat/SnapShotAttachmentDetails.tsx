@@ -115,7 +115,7 @@ export function SnapShotCopyButton({
         }
       >
         {copied ? (
-          <CheckIcon className="size-3 text-primary" aria-hidden="true" />
+          <CheckIcon className="size-3" aria-hidden="true" />
         ) : (
           <CopyIcon className="size-3" aria-hidden="true" />
         )}

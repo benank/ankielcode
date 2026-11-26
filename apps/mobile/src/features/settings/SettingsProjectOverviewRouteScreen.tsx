@@ -506,7 +506,7 @@ function RemoveCheckoutAction(props: {
       onPress={props.onPress}
       className="self-start rounded-full border border-border bg-card px-3 py-1.5 disabled:opacity-40"
     >
-      <Text className="font-ankiel-medium text-xs text-danger-foreground">
+      <Text className="font-ankiel-medium text-xs text-foreground">
         <T>Remove checkout</T>
       </Text>
     </Pressable>

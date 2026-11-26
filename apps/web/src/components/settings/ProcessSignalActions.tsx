@@ -41,7 +41,7 @@ export function ProcessSignalActions({
             <InlineButton
               disabled={disabled}
               aria-label={gt("Send {signal}", { signal: "SIGKILL" })}
-              tone="destructive"
+              tone="muted"
               onClick={() => onSignal("SIGKILL")}
             >
               {SIGNAL_SHORT_NAMES.SIGKILL}

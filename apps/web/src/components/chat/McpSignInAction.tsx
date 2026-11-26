@@ -106,7 +106,7 @@ export function McpSignInAction({
   return (
     <>
       {signedIn ? (
-        <span className="shrink-0 text-sm text-success-foreground">
+        <span className="shrink-0 text-sm text-muted-foreground">
           <T>Signed in</T>
         </span>
       ) : (

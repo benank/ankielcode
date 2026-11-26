@@ -286,7 +286,7 @@ function RunningThreads({ environmentId }: { readonly environmentId: Environment
   const count = useAtomValue(runningThreadCountAtom(environmentId));
   const gt = useGT();
   return count > 0 ? (
-    <span className="whitespace-nowrap text-warning">
+    <span className="whitespace-nowrap text-muted-foreground">
       {gt("{count, plural, one {{count} running} other {{count} running}}", { count })}
     </span>
   ) : null;

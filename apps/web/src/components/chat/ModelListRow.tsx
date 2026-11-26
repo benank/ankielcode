@@ -92,12 +92,9 @@ export const ModelListRow = memo(function ModelListRow(props: {
           </span>
         ) : null}
         {props.showNewBadge ? (
-          <span
-            className="shrink-0 rounded border border-update/35 bg-update/15 px-0.5 py-px text-3xs font-bold uppercase leading-none tracking-wide text-update-foreground"
-            aria-label={gt("New model")}
-          >
+          <Badge variant="outline" size="sm" aria-label={gt("New model")}>
             {gt("New", { $context: "badge on a newly added model" })}
-          </span>
+          </Badge>
         ) : null}
         {props.unavailable ? (
           <Badge variant="outline" size="sm">
@@ -126,7 +123,7 @@ export const ModelListRow = memo(function ModelListRow(props: {
                 <StarIcon
                   className={cn(
                     "size-3.5 sm:size-3",
-                    props.isFavorite && "fill-current text-warning",
+                    props.isFavorite && "fill-current text-foreground",
                     (!props.isFavorite || props.favoriteStarOnHover) &&
                       "opacity-0 group-hover:opacity-100 group-data-highlighted:opacity-100 in-focus-visible:opacity-100 pointer-coarse:opacity-100",
                   )}

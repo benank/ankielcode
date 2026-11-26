@@ -226,10 +226,7 @@ function PairingForm({
             </Text>
             <View
               collapsable={false}
-              className={cn(
-                "overflow-hidden rounded-[26px] border-continuous border bg-grouped-card",
-                pairingConnectionError ? "border-danger-foreground" : "border-transparent",
-              )}
+              className="overflow-hidden rounded-[26px] border-continuous bg-grouped-card"
             >
               <PairingInputRow
                 label={gt("Address")}

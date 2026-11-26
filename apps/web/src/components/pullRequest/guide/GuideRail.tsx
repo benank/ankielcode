@@ -98,8 +98,8 @@ function StopBullet({ number, seen }: { number: number; seen: boolean }) {
   return (
     <span
       className={cn(
-        "flex size-5 shrink-0 items-center justify-center rounded-full border text-2xs tabular-nums",
-        seen ? "border-success/40 text-success-foreground" : "border-border text-muted-foreground",
+        "flex size-5 shrink-0 items-center justify-center rounded-full border border-border text-2xs tabular-nums",
+        seen ? "text-foreground" : "text-muted-foreground",
       )}
     >
       {seen ? (

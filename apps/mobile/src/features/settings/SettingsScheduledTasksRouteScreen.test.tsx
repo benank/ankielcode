@@ -36,6 +36,7 @@ vi.mock("../../components/EnvironmentMachineSymbol", () => ({
   EnvironmentMachineSymbol: () => null,
   ENVIRONMENT_MACHINE_SYMBOLS: {},
 }));
+vi.mock("../../components/ui/Notice", () => ({ Notice: () => null }));
 vi.mock("../../components/ui/Menu", () => ({
   Menu: ({
     actions,

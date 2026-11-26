@@ -1,4 +1,5 @@
 import type { ProviderDriverKind, ServerProvider } from "@ankielcode/contracts";
+import type { PixelStatusTone } from "@ankielcode/shared/pixelStatus";
 import { msg } from "gt-react";
 import { BotIcon, type LucideIcon } from "lucide-react";
 import { m, type MessageResolver } from "../../i18n/messages";
@@ -8,7 +9,23 @@ import {
   shouldShowInstanceBadge,
   type ProviderInstanceEntry,
 } from "../../providerInstances";
+import { STATUS_TONE_DOT_CLASS } from "../PixelStatus";
 import { ProviderInstanceIcon } from "./ProviderInstanceIcon";
+
+export function threadRelationshipStatusTone(status: string | null): PixelStatusTone {
+  switch (status) {
+    case "running":
+    case "in_progress":
+    case "pending":
+    case "waiting":
+      return "active";
+    case "failed":
+    case "error":
+      return "failed";
+    default:
+      return "done";
+  }
+}
 
 export function threadRelationshipStatusLabel(
   status: string | null,
@@ -94,16 +111,7 @@ export function ThreadRelationshipIcon({
         className={cn(
           "absolute -right-1 size-2 rounded-full border-2 border-card",
           anyInstanceBadge ? "-top-1" : "-bottom-1",
-          status === "running" ||
-            status === "in_progress" ||
-            status === "pending" ||
-            status === "waiting"
-            ? "bg-info"
-            : status === "failed" || status === "error"
-              ? "bg-destructive"
-              : status === "completed"
-                ? "bg-success"
-                : "bg-muted-foreground/45",
+          STATUS_TONE_DOT_CLASS[threadRelationshipStatusTone(status)],
         )}
         aria-hidden="true"
       />

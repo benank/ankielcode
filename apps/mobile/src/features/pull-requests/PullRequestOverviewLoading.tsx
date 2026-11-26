@@ -58,7 +58,7 @@ export function PullRequestOverviewLoading({
           }
           tint={
             summary.checksState === "passing"
-              ? "accent-adaptive-emerald-600-400"
+              ? "accent-signal-success"
               : summary.checksState === "failing"
                 ? "accent-danger-foreground"
                 : "accent-icon-muted"
@@ -87,11 +87,7 @@ export function PullRequestOverviewLoading({
             conflicting ? PullRequestGlyph.conflicting : clean ? "checkmark.circle" : "arrow.branch"
           }
           tint={
-            conflicting
-              ? "accent-danger-foreground"
-              : clean
-                ? "accent-adaptive-emerald-600-400"
-                : undefined
+            conflicting ? "accent-danger-foreground" : clean ? "accent-signal-success" : undefined
           }
         />
         <View className="border-t border-border-subtle p-3">

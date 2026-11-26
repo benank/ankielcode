@@ -22,9 +22,8 @@ import { Chip } from "../../components/ui/Chip";
 import { ListRowLayout } from "../../components/ui/ListRowLayout";
 import { ListSection } from "../../components/ui/ListSection";
 import { RowPressable } from "../../components/ui/RowPressable";
-import { cn } from "../../lib/cn";
 import { useEnvironmentServerConfig, useThreadShell } from "../../state/entities";
-import { SUBAGENT_TONE_TEXT_CLASS, SubagentStatusDot } from "./SubagentStatusDot";
+import { SubagentStatusDot } from "./SubagentStatusDot";
 import { SubagentStopButton } from "./SubagentStopButton";
 import {
   nextWorkflowSelection,
@@ -229,10 +228,7 @@ function WorkflowMemberRow(props: {
                 </Text>
                 <Text
                   textRole="label"
-                  className={cn(
-                    "shrink-0 font-ankiel-medium",
-                    SUBAGENT_TONE_TEXT_CLASS[presentation.tone],
-                  )}
+                  className="shrink-0 font-ankiel-medium text-foreground-secondary"
                 >
                   {presentation.statusLabel}
                 </Text>
@@ -259,9 +255,9 @@ function WorkflowMemberRow(props: {
                 <SymbolView
                   name={{ ios: "bolt.fill", android: "bolt" }}
                   size={11}
-                  tintColorClassName="accent-adaptive-amber-700-300"
+                  tintColorClassName="accent-icon-muted"
                 />
-                <Text textRole="label" className="text-adaptive-amber-700-300">
+                <Text textRole="label" className="text-foreground-muted">
                   {metadata.speed}
                 </Text>
               </View>
@@ -278,7 +274,7 @@ function WorkflowMemberRow(props: {
           </Text>
         ) : null}
         {error ? (
-          <Text textRole="label" numberOfLines={1} className={SUBAGENT_TONE_TEXT_CLASS.failed}>
+          <Text textRole="label" numberOfLines={1} className="text-foreground-muted">
             {error}
           </Text>
         ) : null}

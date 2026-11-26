@@ -328,7 +328,12 @@ export function ComposerDictationError(props: {
   if (!props.error) return null;
   return (
     <View className="min-w-0 flex-row items-center gap-2 px-4 py-3">
-      <Text accessibilityRole="alert" className="min-w-0 flex-1 text-sm text-danger-foreground">
+      <SymbolView
+        name="exclamationmark.circle"
+        size={16}
+        tintColorClassName="accent-danger-foreground"
+      />
+      <Text accessibilityRole="alert" className="min-w-0 flex-1 text-sm text-foreground">
         {props.error}
       </Text>
       <Pressable

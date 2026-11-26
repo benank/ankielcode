@@ -353,7 +353,7 @@ function FileViewedToggle({
         />
         {stale ? (
           <Tooltip>
-            <TooltipTrigger render={<span className="text-warning-foreground" />}>
+            <TooltipTrigger render={<span className="text-foreground" />}>
               <T context="file changed since viewed">Changed</T>
             </TooltipTrigger>
             <TooltipPopup side="bottom">
@@ -1554,7 +1554,7 @@ function PullRequestCodeTab({
                   <TooltipTrigger render={<span className="flex shrink-0 items-center" />}>
                     <TriangleAlertIcon
                       aria-label={gt("Your ticks could not be read")}
-                      className="size-3.5 text-warning-foreground"
+                      className="size-3.5 text-destructive"
                     />
                   </TooltipTrigger>
                   <TooltipPopup side="bottom">
@@ -1570,7 +1570,7 @@ function PullRequestCodeTab({
                   <TooltipTrigger render={<span className="flex shrink-0 items-center" />}>
                     <TriangleAlertIcon
                       aria-label={gt("This count covers only part of the change")}
-                      className="size-3.5 text-warning-foreground"
+                      className="size-3.5 text-muted-foreground"
                     />
                   </TooltipTrigger>
                   <TooltipPopup side="bottom">
@@ -1588,7 +1588,7 @@ function PullRequestCodeTab({
               <TooltipTrigger render={<span className="flex shrink-0 items-center" />}>
                 <TriangleAlertIcon
                   aria-label={gt("Some of this diff was not shown")}
-                  className="size-3.5 text-warning-foreground"
+                  className="size-3.5 text-muted-foreground"
                 />
               </TooltipTrigger>
               <TooltipPopup side="bottom">
@@ -2103,8 +2103,11 @@ function WithheldFileNotice({
 }) {
   const gt = useGT();
   return (
-    <div className="flex items-center gap-2 bg-warning/8 px-3 py-2 text-xs text-warning-foreground">
-      <TriangleAlertIcon aria-hidden className="size-3.5 shrink-0 text-warning" />
+    <div className="flex items-center gap-2 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+      <TriangleAlertIcon
+        aria-hidden
+        className={cn("size-3.5 shrink-0", status === "error" && "text-destructive")}
+      />
       <span>
         {status === "error"
           ? gt("Couldn't load this diff.")

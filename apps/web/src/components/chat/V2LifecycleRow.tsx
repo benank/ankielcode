@@ -64,6 +64,8 @@ import { getTriggerDisplayModelName } from "./providerIconUtils";
 import { ProviderInstanceIcon, providerTextColor } from "./ProviderInstanceIcon";
 import { cn } from "~/lib/utils";
 import { TimelineSystemDivider } from "./TimelineSystemDivider";
+import { STATUS_TONE_DOT_CLASS } from "../PixelStatus";
+import { threadRelationshipStatusTone } from "./ThreadRelationshipIcon";
 import { subagentResumedSince } from "./V2LifecycleRow.logic";
 import { Button, InlineButton } from "../ui/button";
 import { AnkielWordmark } from "../AnkielWordmark";
@@ -193,32 +195,16 @@ export function V2LifecycleRow(props: {
   return null;
 }
 
-const STATUS_VISUALS: Record<
-  OrchestrationV2TurnItem["status"],
-  { dotClass: string; label: string }
-> = {
-  pending: { dotClass: "bg-info", label: msg("Queued", { $context: "subagent status" }) },
-  running: { dotClass: "bg-info", label: msg("Running", { $context: "subagent status" }) },
-  waiting: { dotClass: "bg-info", label: msg("Waiting", { $context: "subagent status" }) },
-  idle: {
-    dotClass: "bg-muted-foreground/50",
-    label: msg("Idle · resumable", { $context: "subagent status" }),
-  },
-  completed: { dotClass: "bg-success", label: msg("Completed", { $context: "subagent status" }) },
-  failed: { dotClass: "bg-destructive", label: msg("Failed", { $context: "subagent status" }) },
-  cancelled: {
-    dotClass: "bg-muted-foreground/60",
-    label: msg("Stopped", { $context: "subagent status" }),
-  },
-  interrupted: {
-    dotClass: "bg-muted-foreground/60",
-    label: msg("Stopped", { $context: "subagent status" }),
-  },
+const STATUS_LABELS: Record<OrchestrationV2TurnItem["status"], string> = {
+  pending: msg("Queued", { $context: "subagent status" }),
+  running: msg("Running", { $context: "subagent status" }),
+  waiting: msg("Waiting", { $context: "subagent status" }),
+  idle: msg("Idle · resumable", { $context: "subagent status" }),
+  completed: msg("Completed", { $context: "subagent status" }),
+  failed: msg("Failed", { $context: "subagent status" }),
+  cancelled: msg("Stopped", { $context: "subagent status" }),
+  interrupted: msg("Stopped", { $context: "subagent status" }),
 };
-
-function subagentStatusVisual(status: OrchestrationV2TurnItem["status"]) {
-  return STATUS_VISUALS[status];
-}
 
 const SETTLED_SUBAGENT_STATUSES = new Set<OrchestrationV2TurnItem["status"]>([
   "completed",
@@ -281,7 +267,7 @@ function SubagentAvatar({
           className={cn(
             "absolute -right-px size-2 rounded-full ring-2 ring-background",
             anyInstanceBadge ? "-top-px" : "-bottom-px",
-            subagentStatusVisual(status).dotClass,
+            STATUS_TONE_DOT_CLASS[threadRelationshipStatusTone(status)],
           )}
         />
       ) : null}
@@ -465,13 +451,12 @@ function SubagentTimelineLink(props: {
   const panel = threadId !== null;
   const liveStatus = agent?.status ?? props.status;
   const status = props.event ? props.event.status : liveStatus;
-  const statusLabel = props.event?.label ?? m(subagentStatusVisual(liveStatus).label);
+  const statusLabel = props.event?.label ?? m(STATUS_LABELS[liveStatus]);
   const result = (agent?.result ?? props.result)?.trim();
   const progress = (agent?.progress ?? props.progress)?.trim();
   const settled = SETTLED_SUBAGENT_STATUSES.has(status ?? liveStatus);
   const rawDetail = settled ? result || progress : progress || result;
   const detail = subagentCardDetail(rawDetail);
-  const failed = status === "failed";
   const timing = {
     status: liveStatus,
     startedAt: isoOrNull(agent?.startedAt ?? props.startedAt),
@@ -491,12 +476,7 @@ function SubagentTimelineLink(props: {
             {props.title}
           </span>
         </span>
-        <span
-          className={cn(
-            "block text-2xs leading-relaxed",
-            failed ? "text-destructive" : "text-muted-foreground",
-          )}
-        >
+        <span className="block text-2xs leading-relaxed text-muted-foreground">
           {detail === null ? (
             statusLabel
           ) : detail.includes("/") && !detail.includes(" ") ? (
@@ -507,11 +487,7 @@ function SubagentTimelineLink(props: {
         </span>
       </span>
       {detail !== null && (props.event !== undefined || status !== "completed") ? (
-        <span
-          className={cn("shrink-0 text-xs", failed ? "text-destructive" : "text-muted-foreground")}
-        >
-          {statusLabel}
-        </span>
+        <span className="shrink-0 text-xs text-muted-foreground">{statusLabel}</span>
       ) : null}
       <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
         {props.event ? props.event.timestamp : <SubagentElapsed agent={timing} />}

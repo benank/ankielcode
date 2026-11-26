@@ -26,21 +26,17 @@ export function Button(props: ButtonProps) {
   const Component =
     tone === "text" ? TextButton : tone === "secondary" ? FilledTonalButton : ComposeButton;
   const containerColor =
-    tone === "contrast"
-      ? colors["--color-foreground"]
-      : tone === "primary"
-        ? colors["--color-primary"]
-        : tone === "text"
-          ? "#00000000"
-          : colors["--color-secondary"];
+    tone === "primary"
+      ? colors["--color-primary"]
+      : tone === "text"
+        ? "#00000000"
+        : colors["--color-secondary"];
   const contentColor =
-    tone === "contrast"
-      ? colors["--color-screen"]
-      : tone === "primary"
-        ? colors["--color-primary-foreground"]
-        : tone === "text"
-          ? colors["--color-primary-text"]
-          : colors["--color-secondary-foreground"];
+    tone === "primary"
+      ? colors["--color-primary-foreground"]
+      : tone === "text"
+        ? colors["--color-primary-text"]
+        : colors["--color-secondary-foreground"];
   return (
     <View
       accessible

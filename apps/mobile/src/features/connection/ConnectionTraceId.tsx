@@ -1,15 +1,12 @@
 import { useGT } from "gt-react-native";
 import { AppText as Text } from "../../components/ui/AppText";
-import { cn } from "../../lib/cn";
 import { copyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 
 export function ConnectionTraceId({
   traceId,
-  tone = "muted",
   activation = "press",
 }: {
   readonly traceId: string;
-  readonly tone?: "muted" | "danger";
   readonly activation?: "press" | "longPress";
 }) {
   const gt = useGT();
@@ -31,10 +28,7 @@ export function ConnectionTraceId({
           event.stopPropagation();
           if (event.nativeEvent.actionName === "activate") copy();
         }}
-        className={cn(
-          "underline decoration-dotted",
-          tone === "danger" ? "text-danger-foreground" : "text-foreground-muted",
-        )}
+        className="text-foreground-muted underline decoration-dotted"
         onLongPress={
           activation === "longPress"
             ? (event) => {

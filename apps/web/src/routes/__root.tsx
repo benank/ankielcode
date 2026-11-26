@@ -238,7 +238,7 @@ function CopyErrorButton({ report }: { report: string }) {
 
   return (
     <Button size="sm" variant="outline" onClick={() => copyToClipboard(report)}>
-      {isCopied ? <CheckIcon className="text-success" /> : <CopyIcon />}
+      {isCopied ? <CheckIcon /> : <CopyIcon />}
       {isCopied ? gt("Copied") : gt("Copy error")}
     </Button>
   );

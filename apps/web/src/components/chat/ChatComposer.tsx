@@ -297,6 +297,7 @@ import {
   useSubmitAfterPreparingImages,
 } from "./preparingComposerImages";
 import { HELD_COMPOSER_SEND_BANNER_ID } from "./ComposerHeldSendBanner";
+import { ENVIRONMENT_UNAVAILABLE_BANNER_ID_PREFIX } from "./useSystemComposerBanners";
 import { ComposerControlsBar } from "./ComposerControlsBar";
 import { composerCommandKeyHandler } from "./composerCommandKey";
 import { promptSuggestionToAccept, usePromptSuggestion } from "./usePromptSuggestion";
@@ -2750,7 +2751,9 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
         (item) =>
           item.id === HELD_COMPOSER_SEND_BANNER_ID ||
           (item.group === "environment" &&
-            (item.variant === "error" || item.variant === "warning")),
+            (item.variant === "error" ||
+              item.variant === "warning" ||
+              item.id.startsWith(ENVIRONMENT_UNAVAILABLE_BANNER_ID_PREFIX))),
       )
     : bannerItems;
 

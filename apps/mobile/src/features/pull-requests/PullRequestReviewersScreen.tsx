@@ -28,6 +28,7 @@ import { Pressable, ScrollView, View } from "react-native";
 import { NativeScrollView } from "../../native/NativeScrollViewMarker";
 import { useContentTopInset, useSearchToolbarInset } from "../../components/ui/useBarInset";
 import { AppText as Text, AppTextInput as TextInput } from "../../components/ui/AppText";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Button } from "../../components/ui/Button";
 import * as Dialog from "../../components/ui/Dialog";
@@ -353,13 +354,15 @@ export function PullRequestReviewersScreen({ route }: StaticScreenProps<PullRequ
             detail.isPending ? (
               <AppActivityIndicator />
             ) : (
-              <Text className="text-danger-foreground">
-                {detail.error ??
+              <ErrorBanner
+                message={
+                  detail.error ??
                   gt(
                     "Couldn't load this {term, select, mr {merge request} cr {change request} other {pull request}}.",
                     { term },
-                  )}
-              </Text>
+                  )
+                }
+              />
             )
           ) : (
             <>
@@ -389,11 +392,7 @@ export function PullRequestReviewersScreen({ route }: StaticScreenProps<PullRequ
                 disabled={!allowed || !query.trim() || pending !== null}
                 onPress={() => void update({ id: query.trim(), kind: "user", isRequested: true })}
               />
-              {error ? (
-                <Text selectable className="text-danger-foreground">
-                  {error}
-                </Text>
-              ) : null}
+              {error ? <ErrorBanner message={error} /> : null}
             </>
           )}
         </ScrollView>

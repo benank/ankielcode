@@ -124,11 +124,11 @@ export const ThreadErrorBanner = memo(function ThreadErrorBanner({
         {(chatGptLimit || onDismiss) && (
           <AlertAction>
             {workspaceLimit ? (
-              <Button variant="default" size="sm" onClick={copyAdminRequest}>
+              <Button variant="ghost" size="xs" onClick={copyAdminRequest}>
                 <T>Copy request for admin</T>
               </Button>
             ) : chatGptLimit ? (
-              <ChatGptUsageButton variant="default" size="sm" />
+              <ChatGptUsageButton variant="ghost" size="xs" />
             ) : null}
             {onDismiss ? (
               <Button

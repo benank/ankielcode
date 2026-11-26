@@ -8,6 +8,7 @@ import { msg, T, useGT, useMessages, Var } from "gt-react";
 import type { MessageResolver } from "~/i18n/messages";
 
 import { cn, randomUUID } from "~/lib/utils";
+import { selectionCardClassName } from "./itemRows";
 
 import { Button } from "../ui/button";
 import {
@@ -386,7 +387,7 @@ function ConfigureStep({
       <DialogPanel>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <section className="flex-1 space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               {gt("From", { $context: "source browser profile" })}
             </p>
             {source.profiles.map((profile) => (
@@ -404,7 +405,7 @@ function ConfigureStep({
             <ArrowRightIcon className="hidden size-4 sm:block" />
           </div>
           <section className="flex-1 space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               {gt("Into", { $context: "destination profile" })}
             </p>
             {canCreateProfile ? (
@@ -464,10 +465,8 @@ function SelectableTile({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        "flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-        selected
-          ? "border-primary bg-primary/8"
-          : "border-border/60 hover:border-border hover:bg-muted/40",
+        "flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left transition-colors",
+        selectionCardClassName(selected),
       )}
     >
       <span className="min-w-0">
@@ -601,7 +600,7 @@ function DoneStep({
       </DialogHeader>
       {skippedDomains.length > 0 ? (
         <DialogPanel>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-medium text-muted-foreground">
             {gt("Skipped", { $context: "heading, cookie domains that were skipped" })}
           </p>
           <p className="mt-1 text-sm text-foreground">{formatSkippedDomains(skippedDomains, m)}</p>

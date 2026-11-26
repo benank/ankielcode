@@ -22,6 +22,7 @@ import { m } from "../../i18n/messages";
 
 import { AppText as Text } from "../../components/ui/AppText";
 import { ProviderIcon } from "../../components/ProviderIcon";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { ScreenScrollView } from "../../components/ui/ScreenScrollView";
 import { appAtomRegistry } from "../../state/atom-registry";
 import { environmentPresentations } from "../../state/presentation";
@@ -35,6 +36,7 @@ import { EnvironmentRoutesSection } from "./EnvironmentRoutesSection";
 import { OutdatedServerUpdateSection } from "./OutdatedServerUpdateSection";
 import { ListActionRow as SettingsActionRow } from "../../components/ui/ListActionRow";
 import { SettingsScreen } from "./components/SettingsScreen";
+import { SettingsErrorLine } from "./components/SettingsErrorLine";
 import { SettingsSection } from "./components/SettingsSection";
 import {
   canMaintainEnvironment,
@@ -244,11 +246,7 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                   : gt("This connection does not have permission to manage the environment.")}
               </Text>
             ) : null}
-            {error ? (
-              <Text selectable className="px-2 text-sm text-danger-foreground">
-                {error}
-              </Text>
-            ) : null}
+            {error ? <ErrorBanner message={error} /> : null}
             {notice ? <Text className="px-2 text-sm text-foreground-muted">{notice}</Text> : null}
             {config && !outdated ? (
               <>
@@ -266,9 +264,9 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                           : gt("Downloading update…")}
                       </Text>
                     ) : updateState.status === "failed" ? (
-                      <Text selectable className="text-sm text-danger-foreground">
+                      <SettingsErrorLine selectable>
                         {serverUpdateFailureText(updateState, messages)}
-                      </Text>
+                      </SettingsErrorLine>
                     ) : null}
                     {checkedRelease ? (
                       <Text className="text-sm text-foreground-muted">
@@ -363,21 +361,17 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                                 ? (provider.version ?? gt("Version unknown"))
                                 : gt("Not installed")}
                           </Text>
-                          {provider.updateState && provider.updateState.status !== "idle" ? (
-                            <Text
-                              selectable
-                              className={
-                                provider.updateState.status === "failed"
-                                  ? "text-sm text-danger-foreground"
-                                  : "text-sm text-foreground-muted"
-                              }
-                            >
+                          {provider.updateState?.status === "failed" ? (
+                            <SettingsErrorLine selectable>
+                              {provider.updateState.message ?? gt("Update failed")}
+                            </SettingsErrorLine>
+                          ) : provider.updateState && provider.updateState.status !== "idle" ? (
+                            <Text selectable className="text-sm text-foreground-muted">
                               {provider.updateState.message ??
                                 {
                                   queued: gt("Update queued"),
                                   running: gt("Update running"),
                                   succeeded: gt("Update succeeded"),
-                                  failed: gt("Update failed"),
                                   unchanged: gt("Update unchanged"),
                                 }[provider.updateState.status]}
                             </Text>

@@ -81,7 +81,7 @@ function endpointStatus(
     return { label: resolve(msg("Not checked")), dot: "bg-muted-foreground/40" };
   }
   const { result } = check;
-  if (result === null) return { label: resolve(msg("Checking…")), dot: "bg-warning" };
+  if (result === null) return { label: resolve(msg("Checking…")), dot: "bg-muted-foreground/40" };
   switch (result._tag) {
     case "Accepted":
       return {

@@ -121,7 +121,6 @@ function WorkflowMemberRow(props: {
   const trigger = useSideThreadTrigger();
   const { member } = props;
   const threadId = member.childThreadId;
-  const failed = member.status === "failed";
   const detail = (
     isTerminalSubagentStatus(member.status)
       ? (member.error ?? member.result ?? member.progress)
@@ -165,12 +164,7 @@ function WorkflowMemberRow(props: {
               {member.title}
             </span>
             {detail ? (
-              <span
-                className={cn(
-                  "block truncate text-2xs leading-relaxed",
-                  failed ? "text-destructive" : "text-muted-foreground",
-                )}
-              >
+              <span className="block truncate text-2xs leading-relaxed text-muted-foreground">
                 {detail}
               </span>
             ) : null}

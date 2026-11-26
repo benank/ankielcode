@@ -324,6 +324,7 @@ describe("WorkflowRunsView", () => {
     // The failed agent's transcript is there to read before choosing.
     await expect.element(screen.getByRole("button", { name: "Transcript" })).toBeVisible();
     await expect.element(screen.getByText("Paused at lint")).not.toBeInTheDocument();
+    await expect.element(screen.getByRole("button", { name: "Stop" })).toBeVisible();
     await why.getByRole("button", { name: "Resume" }).click();
 
     await vi.waitFor(() =>
@@ -416,9 +417,7 @@ describe("WorkflowRunsView", () => {
     await expect
       .element(screen.getByRole("region", { name: "Quick steps" }))
       .toMatchTextContent("loadexisting-prs");
-    await expect
-      .element(screen.getByRole("button", { name: "Cancel run" }))
-      .not.toBeInTheDocument();
+    await expect.element(screen.getByRole("button", { name: "Stop" })).not.toBeInTheDocument();
   });
 
   it("opens an invoked run from its parent's story", async () => {

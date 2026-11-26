@@ -130,8 +130,8 @@ export function SidebarUpdateCapsule({
           restartSeconds === null
             ? "@min-[5rem]/sidebar-update:w-full"
             : "@min-[12rem]/sidebar-update:w-full",
-          view.tone === "slow" && "ring-1 ring-warning/40 ring-inset",
-          view.tone === "failed" && "ring-1 ring-destructive/40 ring-inset",
+          (view.tone === "slow" || view.tone === "failed") &&
+            "ring-1 ring-sidebar-border ring-inset",
         )}
       >
         <PopoverTrigger
@@ -153,7 +153,7 @@ export function SidebarUpdateCapsule({
         >
           <span className={cn(view.tone === "failed" && "text-destructive")}>{view.label}</span>
           {view.slow ? (
-            <span className="text-warning tabular-nums"> {view.slow.elapsed}</span>
+            <span className="text-muted-foreground tabular-nums"> {view.slow.elapsed}</span>
           ) : null}
         </span>
         {view.action !== null ? (

@@ -23,6 +23,7 @@ import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-co
 import { NativeScrollViewMarker as ScrollViewMarker } from "../../native/NativeScrollViewMarker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText as Text, AppTextInput as TextInput } from "../../components/ui/AppText";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { AppBar } from "../../components/ui/AppBar";
 import { Button } from "../../components/ui/Button";
 import { GlassSurface } from "../../components/ui/GlassSurface";
@@ -295,9 +296,9 @@ function Discussion({ params }: { params: PullRequestParams & { readonly discuss
               />
             ) : null}
             {error || activity.error ? (
-              <Text selectable className="py-4 text-sm text-danger-foreground">
-                {error ?? activity.error}
-              </Text>
+              <View className="py-4">
+                <ErrorBanner message={error ?? activity.error ?? ""} />
+              </View>
             ) : null}
             {notice ? <Text className="py-4 text-sm text-foreground-muted">{notice}</Text> : null}
           </ScrollView>
@@ -330,7 +331,7 @@ function Discussion({ params }: { params: PullRequestParams & { readonly discuss
               <View>
                 <Button
                   label={busy ? gt("Posting…") : gt("Reply", { $context: "verb, button" })}
-                  tone="contrast"
+                  tone="primary"
                   disabled={busy || !body.trim()}
                   onPress={() => void post()}
                 />

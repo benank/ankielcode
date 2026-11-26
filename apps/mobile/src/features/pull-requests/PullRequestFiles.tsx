@@ -12,6 +12,7 @@ import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { Button } from "../../components/ui/Button";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { IconButton } from "../../components/ui/IconButton";
 import { Menu } from "../../components/ui/Menu";
 import { RowPressable } from "../../components/ui/RowPressable";
@@ -149,11 +150,7 @@ function FileRow(props: {
       </View>
       <PullRequestDiffStats additions={file.additions} deletions={file.deletions} compact />
       {props.viewed ? (
-        <SymbolView
-          name="checkmark.circle.fill"
-          size={18}
-          tintColorClassName="accent-adaptive-emerald-600-400"
-        />
+        <SymbolView name="checkmark.circle.fill" size={18} tintColorClassName="accent-icon-muted" />
       ) : null}
       <SymbolView name="chevron.right" size={12} tintColorClassName="accent-icon-muted" />
     </RowPressable>
@@ -214,7 +211,7 @@ function NoVisibleFiles({ files }: { readonly files: ChangedFiles }) {
       <EmptyState
         title={diff.nextCursor ? gt("No non-test files loaded yet") : gt("Only test files changed")}
         detail={gt("Test files are hidden from this review.")}
-        action={<Button label={gt("Show test files")} tone="contrast" onPress={filter.showAll} />}
+        action={<Button label={gt("Show test files")} tone="primary" onPress={filter.showAll} />}
         variant="plain"
       />
     ) : null;
@@ -241,9 +238,9 @@ function FilesFooter({ files }: { readonly files: ChangedFiles }) {
         />
       ) : null}
       {viewed.error ? (
-        <Text textRole="label" className="py-2 text-danger-foreground">
-          {viewed.error}
-        </Text>
+        <View className="py-2">
+          <ErrorBanner message={viewed.error} />
+        </View>
       ) : null}
       {parsed.kind === "files" && parsed.notice ? (
         <Text textRole="label" className="py-4 text-foreground-muted">

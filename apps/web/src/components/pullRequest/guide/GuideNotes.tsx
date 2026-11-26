@@ -9,7 +9,7 @@ export function GuideNoteMarker({ marker }: { marker: string }) {
   return (
     <span
       aria-hidden
-      className="inline-flex size-4.5 shrink-0 items-center justify-center rounded-full bg-info/16 font-medium text-3xs text-info-foreground tabular-nums"
+      className="inline-flex size-4.5 shrink-0 items-center justify-center rounded-full bg-muted font-medium text-3xs text-foreground tabular-nums"
     >
       {marker}
     </span>

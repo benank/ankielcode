@@ -24,6 +24,7 @@ import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSw
 
 import { AppText as Text } from "../../components/ui/AppText";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { Notice } from "../../components/ui/Notice";
 import { EnvironmentMachineSymbol } from "../../components/EnvironmentMachineSymbol";
 import { ProjectFavicon } from "../../components/ProjectFavicon";
 import { RelativeTime } from "../../components/RelativeTime";
@@ -152,10 +153,7 @@ function ProjectGroupLabel(props: {
         size={18}
         workspaceRoot={props.project.workspaceRoot}
       />
-      <Text
-        className="flex-1 text-xs font-ankiel-medium tracking-[0.5px] uppercase text-foreground-muted"
-        numberOfLines={1}
-      >
+      <Text className="flex-1 text-xs font-ankiel-medium text-foreground-muted" numberOfLines={1}>
         {props.project.title}
       </Text>
       {props.environmentLabel ? (
@@ -275,14 +273,12 @@ function ArchivedThreadRow(props: {
 function ArchiveError(props: { readonly message: string; readonly onRetry: () => void }) {
   const gt = useGT();
   return (
-    <View className="rounded-[20px] border border-danger-border bg-danger p-4">
-      <Text className="text-base font-ankiel-bold text-danger-foreground">
-        <T>Could not load every archive</T>
+    <View className="gap-2 pb-3">
+      <Notice tone="danger" message={gt("Could not load every archive")} />
+      <Text selectable className="px-1 text-sm text-foreground-muted">
+        {props.message}
       </Text>
-      <Text className="mt-1 text-sm text-foreground-muted">{props.message}</Text>
-      <View className="mt-3">
-        <Button label={gt("Try again")} tone="secondary" onPress={props.onRetry} />
-      </View>
+      <Button label={gt("Try again")} tone="secondary" onPress={props.onRetry} />
     </View>
   );
 }

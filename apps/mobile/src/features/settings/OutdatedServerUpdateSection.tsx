@@ -16,6 +16,7 @@ import {
 } from "../../state/server";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { ListActionRow as SettingsActionRow } from "../../components/ui/ListActionRow";
+import { SettingsErrorLine } from "./components/SettingsErrorLine";
 import { SettingsSection } from "./components/SettingsSection";
 import {
   environmentReleaseCheckAtom,
@@ -103,9 +104,9 @@ export function OutdatedServerUpdateSection({
                 })}
         </Text>
         {error || state.status === "failed" ? (
-          <Text selectable accessibilityRole="alert" className="text-sm text-danger-foreground">
+          <SettingsErrorLine selectable alert>
             {error ?? (state.status === "failed" ? serverUpdateFailureText(state, messages) : null)}
-          </Text>
+          </SettingsErrorLine>
         ) : null}
       </View>
       <SettingsActionRow

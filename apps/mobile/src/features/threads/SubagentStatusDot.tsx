@@ -1,22 +1,16 @@
+import type { PixelStatusTone } from "@ankielcode/shared/pixelStatus";
 import { View } from "react-native";
 
-import { PixelStatus } from "../../components/PixelStatus";
+import { PixelStatus, STATUS_TONE_VARIABLE } from "../../components/PixelStatus";
 import { cn } from "../../lib/cn";
+import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 import type { SubagentRowTone } from "./threadAgentsPresentation";
 
-const TONE_CLASS = {
-  working: "bg-adaptive-sky-600-400",
-  completed: "bg-adaptive-emerald-600-400",
-  failed: "bg-adaptive-rose-600-400",
-  stopped: "bg-foreground-muted",
-} as const satisfies Record<SubagentRowTone, string>;
-
-export const SUBAGENT_TONE_TEXT_CLASS = {
-  working: "text-adaptive-sky-600-400",
-  completed: "text-adaptive-emerald-600-400",
-  failed: "text-adaptive-rose-600-400",
-  stopped: "text-foreground-muted",
-} as const satisfies Record<SubagentRowTone, string>;
+const DOT_TONE = {
+  completed: "done",
+  failed: "failed",
+  stopped: "done",
+} as const satisfies Record<Exclude<SubagentRowTone, "working">, PixelStatusTone>;
 
 export function SubagentStatusDot({
   tone,
@@ -25,15 +19,13 @@ export function SubagentStatusDot({
   readonly tone: SubagentRowTone;
   readonly placement?: "inline" | "sheet";
 }) {
+  const { themeVariables } = useAppearancePreferences();
   // A working agent shows the sidebar's pixel light; its name carries no status word.
   if (tone === "working") return <PixelStatus kind="working" />;
   return (
     <View
-      className={cn(
-        "shrink-0 rounded-full",
-        placement === "sheet" ? "h-2 w-2" : "h-1.5 w-1.5",
-        TONE_CLASS[tone],
-      )}
+      className={cn("shrink-0 rounded-full", placement === "sheet" ? "h-2 w-2" : "h-1.5 w-1.5")}
+      style={{ backgroundColor: themeVariables[STATUS_TONE_VARIABLE[DOT_TONE[tone]]] }}
     />
   );
 }

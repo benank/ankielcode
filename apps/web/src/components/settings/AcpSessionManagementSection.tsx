@@ -373,7 +373,6 @@ function InstanceSessionManagement(
       return;
     const confirmed = await ensureLocalApi().dialogs.confirm(
       gt('Disable ACP provider "{provider}"?', { provider: provider.providerId }),
-      { variant: "destructive" },
     );
     if (
       generation !== projectGeneration.current ||

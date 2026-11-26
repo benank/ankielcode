@@ -167,8 +167,11 @@ export function VoiceInputSetup(props: {
                 </p>
               ) : null}
               {props.error ? (
-                <p role="alert" className="flex items-start gap-1.5 text-destructive">
-                  <CircleAlertIcon aria-hidden className="mt-0.5 size-3.5 shrink-0" />
+                <p role="alert" className="flex items-start gap-1.5">
+                  <CircleAlertIcon
+                    aria-hidden
+                    className="mt-0.5 size-3.5 shrink-0 text-destructive"
+                  />
                   {props.error}
                 </p>
               ) : null}
@@ -234,7 +237,7 @@ export function VoiceInputSetup(props: {
                 </Button>
               </div>
               {selectedIsUnavailable ? (
-                <p className="text-xs text-destructive">
+                <p className="text-xs text-muted-foreground">
                   <T>That microphone is unplugged. Pick another one.</T>
                 </p>
               ) : null}

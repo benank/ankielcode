@@ -1024,7 +1024,7 @@ function AgentRow({
       </div>
       <div className="shrink-0">
         {state === "ready" ? (
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success-foreground">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <CheckIcon className="size-3.5" />
             <T context="agent status">Ready</T>
           </span>

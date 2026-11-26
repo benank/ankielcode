@@ -1931,7 +1931,7 @@ export function PullRequestDetailPanel({
 
         {unseenHeadSha !== undefined && shownHeadSha !== undefined ? (
           <div className="px-4 pb-2">
-            <Alert variant="warning">
+            <Alert>
               <TriangleAlertIcon />
               <AlertDescription>
                 {gt("New commits were pushed. A merge or review still applies to {sha}.", {

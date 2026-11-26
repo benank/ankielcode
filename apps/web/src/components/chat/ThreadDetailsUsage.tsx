@@ -131,7 +131,7 @@ export function ThreadDetailsContext({ usage }: { readonly usage: ContextWindowS
         <UsageRow
           label={gt("Context", { $context: "context window row label" })}
           fill={used}
-          tone={used === null ? null : used >= 90 ? "error" : used >= 80 ? "warning" : null}
+          tone={null}
           tick={tick}
           muted
           value={
@@ -353,14 +353,7 @@ function UsageRow({
           className={cn(
             // Text-only rows span the bar column so they never widen the shared value column.
             "text-end font-medium tabular-nums",
-            fill === null && "col-span-2",
-            tone === "error"
-              ? "text-error-foreground"
-              : tone === "warning"
-                ? "text-warning-foreground"
-                : fill === null
-                  ? "text-muted-foreground"
-                  : "text-foreground/80",
+            fill === null ? "col-span-2 text-muted-foreground" : "text-foreground/80",
           )}
         >
           {value}

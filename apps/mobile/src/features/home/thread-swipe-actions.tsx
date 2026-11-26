@@ -80,7 +80,7 @@ interface ThreadSwipeAction {
 }
 
 interface ThreadSwipeSecondaryAction extends ThreadSwipeAction {
-  readonly tone: "primary" | "secondary" | "danger";
+  readonly tone: "secondary" | "danger";
 }
 
 function swipeActionsWidth(hasSecondaryAction: boolean) {
@@ -585,7 +585,7 @@ export function ThreadSwipeable(props: ThreadSwipeableProps) {
 function SwipeActionButton(props: {
   readonly accessibilityLabel: string;
   readonly actionsWidth: number;
-  readonly tone: "primary" | "secondary" | "danger";
+  readonly tone: "secondary" | "danger";
   readonly compact: boolean;
   readonly entryRange: readonly [number, number];
   readonly fullSwipeThreshold: number;
@@ -713,13 +713,7 @@ function SwipeActionButton(props: {
     >
       <View style={{ height: circleSize, width: circleSize }}>
         <Animated.View
-          className={
-            props.tone === "danger"
-              ? "bg-danger"
-              : props.tone === "secondary"
-                ? "bg-secondary"
-                : "bg-primary"
-          }
+          className={props.tone === "danger" ? "bg-danger" : "bg-secondary"}
           style={[
             {
               borderRadius: 999,
@@ -749,11 +743,7 @@ function SwipeActionButton(props: {
             name={props.icon}
             size={iconSize}
             tintColorClassName={
-              props.tone === "danger"
-                ? "accent-danger-foreground"
-                : props.tone === "secondary"
-                  ? "accent-secondary-foreground"
-                  : "accent-primary-foreground"
+              props.tone === "danger" ? "accent-danger-foreground" : "accent-secondary-foreground"
             }
             type="monochrome"
           />
@@ -847,7 +837,7 @@ function ThreadSwipeActions(props: {
       <SwipeActionButton
         accessibilityLabel={props.primaryAction.accessibilityLabel}
         actionsWidth={actionsWidth}
-        tone={props.primaryAction.destructive === true ? "danger" : "primary"}
+        tone={props.primaryAction.destructive === true ? "danger" : "secondary"}
         compact={props.compact}
         entryRange={
           secondaryAction === null

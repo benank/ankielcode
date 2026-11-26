@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { ComposerBanner, type ComposerBannerVariant } from "./ComposerBanner";
 import { observeResize } from "~/lib/observeResize";
+import { cn } from "~/lib/utils";
 
 /**
  * Where a notice sits in the stack. The machine comes first, then what needs you; the
@@ -182,7 +183,13 @@ function NoticeCard({
       data-chat-composer-collapsed-controls="true"
     >
       <ComposerBanner.Row layout="wrap-actions">
-        <ComposerBanner.Icon className="h-(--composer-banner-icon-column) self-start">
+        <ComposerBanner.Icon
+          className={cn(
+            "h-(--composer-banner-icon-column) self-start",
+            item.variant === "error" && "text-destructive",
+            item.variant === "warning" && "text-warning",
+          )}
+        >
           {item.icon}
         </ComposerBanner.Icon>
         <ComposerBanner.Content className="items-baseline whitespace-nowrap">

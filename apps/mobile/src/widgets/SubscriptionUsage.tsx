@@ -242,7 +242,7 @@ function SubscriptionUsage(
                   foregroundStyle(
                     window.remaining <= 10 && !monochrome
                       ? (palette?.danger ??
-                          (widgetEnvironment.colorScheme === "light" ? "#dc2626" : "#fca5a5"))
+                          (widgetEnvironment.colorScheme === "light" ? "#b42318" : "#fb7a6f"))
                       : primary,
                   ),
                 ]}

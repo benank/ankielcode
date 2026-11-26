@@ -25,6 +25,7 @@ import { useEnvironmentQuery } from "../../state/query";
 import { relayTunnelEnvironment } from "../../state/relayTunnel";
 import { useEnvironmentScope } from "../../state/session";
 import { useAtomCommand } from "../../state/use-atom-command";
+import { SettingsErrorLine } from "./components/SettingsErrorLine";
 import { SettingsSection } from "./components/SettingsSection";
 
 export function EnvironmentRelaySection({
@@ -145,7 +146,6 @@ export function EnvironmentRelaySection({
         "This stops the outbound relay tunnel and removes the saved relay secret from this machine. Devices connected through the relay will lose access until you reconnect.",
       ),
       confirmText: gt("Disconnect"),
-      destructive: true,
       onConfirm: () => {
         void handleDisconnect();
       },
@@ -188,14 +188,10 @@ export function EnvironmentRelaySection({
           {description}
         </Text>
         {activeError ? (
-          <Text selectable className="text-sm text-danger-foreground">
-            {activeError}
-          </Text>
+          <SettingsErrorLine selectable>{activeError}</SettingsErrorLine>
         ) : isConfigured && !isConnected ? (
           status.lastError ? (
-            <Text selectable className="text-sm text-danger-foreground">
-              {status.lastError}
-            </Text>
+            <SettingsErrorLine selectable>{status.lastError}</SettingsErrorLine>
           ) : (
             <Text className="text-sm text-foreground-muted">
               <T>Connecting to relay…</T>

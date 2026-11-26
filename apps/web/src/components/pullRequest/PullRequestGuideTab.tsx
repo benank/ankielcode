@@ -151,7 +151,7 @@ export function PullRequestGuideTab({
 
   const banner =
     stale || failure !== null || running ? (
-      <Alert variant={running ? "default" : "warning"}>
+      <Alert variant={failure === null || running ? "default" : "error"}>
         {running ? <Spinner /> : <TriangleAlertIcon />}
         <AlertDescription>
           {running ? (

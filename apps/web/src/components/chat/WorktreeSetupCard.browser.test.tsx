@@ -76,3 +76,18 @@ it("stops a stage interrupted by the setup ending at the setup's end", async () 
   });
   expect(section.element().textContent).toContain("Check out files2s");
 });
+
+it("summarizes a cancelled setup as skipped, not failed", async () => {
+  const cancelled = snapshot({ phase: "cancelled", endedAt: "2026-10-26T12:00:05.000Z" });
+  await using screen = await render(
+    <WorktreeSetupCard
+      snapshot={cancelled}
+      onCancel={null}
+      onWorkLocally={null}
+      onOpenTerminal={null}
+      embedded
+    />,
+  );
+  const summary = screen.container.querySelector('[data-worktree-setup-stage="summary"]');
+  expect(summary?.getAttribute("data-worktree-setup-status")).toBe("skipped");
+});

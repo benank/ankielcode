@@ -326,7 +326,7 @@ export function ThreadQueueSheet({ route }: StaticScreenProps<QueueTarget>) {
                     {
                       id: "remove",
                       title: gt("Remove", { $context: "verb, menu action" }),
-                      attributes: { disabled: !controls.canDismiss, destructive: true },
+                      attributes: { disabled: !controls.canDismiss },
                     },
                   ]}
                   onPressAction={({ nativeEvent }) =>
@@ -366,7 +366,7 @@ export function ThreadQueueSheet({ route }: StaticScreenProps<QueueTarget>) {
                       </Text>
                     </View>
                     {controls.isEditing ? (
-                      <Text className="shrink-0 text-2xs uppercase tracking-wide text-primary">
+                      <Text className="shrink-0 font-ankiel-medium text-2xs text-foreground-muted">
                         {gt("Editing", {
                           $context: "status badge on the queued message being edited",
                         })}
@@ -385,13 +385,13 @@ export function ThreadQueueSheet({ route }: StaticScreenProps<QueueTarget>) {
                     onPress={() => void act(run.id, "steer")}
                     className="shrink-0 justify-center self-stretch pl-4 active:opacity-70 disabled:opacity-40"
                   >
-                    <View className="min-h-9 flex-row items-center gap-1.5 rounded-full bg-primary px-4">
+                    <View className="min-h-9 flex-row items-center gap-1.5 rounded-full bg-secondary px-4">
                       <SymbolView
                         name="arrow.up"
                         size={13}
-                        tintColorClassName="accent-primary-foreground"
+                        tintColorClassName="accent-secondary-foreground"
                       />
-                      <Text className="font-ankiel-medium text-sm text-primary-foreground">
+                      <Text className="font-ankiel-medium text-sm text-secondary-foreground">
                         <T>Send now</T>
                       </Text>
                     </View>
@@ -453,11 +453,11 @@ function QueueRowSwipeable(props: {
             swipeableRef.current?.close();
             props.onRemove();
           }}
-          className="items-center justify-center bg-danger active:opacity-70 disabled:opacity-40"
+          className="items-center justify-center bg-subtle-strong active:opacity-70 disabled:opacity-40"
           style={{ width: REMOVE_ACTION_WIDTH }}
         >
-          <SymbolView name="trash" size={16} tintColorClassName="accent-danger-foreground" />
-          <Text className="pt-1 text-2xs font-ankiel-medium text-danger-foreground">
+          <SymbolView name="trash" size={16} tintColorClassName="accent-icon" />
+          <Text className="pt-1 text-2xs font-ankiel-medium text-foreground">
             {gt("Remove", { $context: "verb, menu action" })}
           </Text>
         </Pressable>

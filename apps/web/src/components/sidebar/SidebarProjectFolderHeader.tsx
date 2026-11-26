@@ -10,15 +10,16 @@ import { contextMenuSourceOf } from "../../contextMenuSource";
 import type { SidebarProjectSnapshot } from "../../sidebarProjectGrouping";
 import { useUiStateStore } from "../../uiStateStore";
 import { resolveSidebarFolderDot, resolveThreadLastVisitedAt } from "../Sidebar.logic";
+import { STATUS_TONE_DOT_CLASS } from "../PixelStatus";
 import { ProjectFavicon } from "../ProjectFavicon";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 
-const FOLDER_DOT_CLASS_NAME = {
-  attention: "bg-warning",
-  failed: "bg-error",
-  unread: "bg-success",
-  working: "bg-info",
+const FOLDER_DOT_TONE = {
+  attention: "attention",
+  failed: "failed",
+  unread: "done",
+  working: "active",
 } as const;
 
 const FOLDER_DOT_LABEL = {
@@ -93,7 +94,12 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
           {group.displayName}
         </span>
         {dot ? (
-          <span className={cn("size-1.5 shrink-0 rounded-full", FOLDER_DOT_CLASS_NAME[dot])}>
+          <span
+            className={cn(
+              "size-1.5 shrink-0 rounded-full",
+              STATUS_TONE_DOT_CLASS[FOLDER_DOT_TONE[dot]],
+            )}
+          >
             <span className="sr-only">{m(FOLDER_DOT_LABEL[dot])}</span>
           </span>
         ) : null}

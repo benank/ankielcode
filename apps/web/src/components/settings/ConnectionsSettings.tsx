@@ -1484,12 +1484,7 @@ function ConnectionsSettingsContent({
                   </>
                 ) : (
                   <Button
-                    variant={
-                      pendingWslChange?.kind === "disable" ||
-                      (pendingWslChange?.kind === "wsl-only" && pendingWslChange.nextValue)
-                        ? "destructive"
-                        : "default"
-                    }
+                    variant="default"
                     onClick={handleConfirmWslChange}
                     disabled={isUpdatingWslBackend || !canManageLocalBackend}
                   >
@@ -1540,7 +1535,7 @@ function ConnectionsSettingsContent({
                   <T>Cancel</T>
                 </AlertDialogClose>
                 <Button
-                  variant="destructive"
+                  variant="default"
                   onClick={() => void handleConfirmTailscaleServeDisable()}
                   disabled={isUpdatingTailscaleServe || !canManageLocalBackend}
                 >

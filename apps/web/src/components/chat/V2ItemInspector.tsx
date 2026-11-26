@@ -231,7 +231,7 @@ function ToolCallBody(
       {call.argsText ? <StructuredValue value={call.argsText} highlightJson /> : null}
       {props.outputSlot ?? <ToolOutput {...props} />}
       {props.exitCode !== undefined && props.exitCode !== 0 ? (
-        <div className="text-destructive">
+        <div className="text-muted-foreground">
           <T>
             exit <Var>{props.exitCode}</Var>
           </T>

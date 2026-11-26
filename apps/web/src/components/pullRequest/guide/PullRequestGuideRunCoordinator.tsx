@@ -125,7 +125,7 @@ function watchGuideRun(
           hideCopyButton: true,
           leadingIcon:
             failure === null ? (
-              <CircleCheckIcon aria-hidden className="size-4 text-success-foreground" />
+              <CircleCheckIcon aria-hidden className="size-4 text-muted-foreground" />
             ) : (
               <CircleAlertIcon aria-hidden className="size-4 text-destructive-foreground" />
             ),

@@ -376,7 +376,7 @@ export function SavedBackendListRow({
             </MenuItem>
           ) : null}
           <MenuSeparator />
-          <MenuItem variant="destructive" onClick={() => onRemove(environment)}>
+          <MenuItem onClick={() => onRemove(environment)}>
             {isRemoving ? gt("Removing…") : gt("Remove from this device…")}
           </MenuItem>
         </MenuPopup>

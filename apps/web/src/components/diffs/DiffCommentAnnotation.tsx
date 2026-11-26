@@ -84,11 +84,11 @@ export function DiffCommentAnnotation({
     return (
       <div
         data-diff-comment-annotation
-        className="group/comment flex min-w-0 items-start gap-2.5 border-s-2 border-primary/55 bg-primary/[0.045] px-3 py-2.5 font-sans text-foreground selection:bg-primary selection:text-primary-foreground"
+        className="group/comment flex min-w-0 items-start gap-2.5 border-s-2 border-primary/55 px-3 py-2.5 font-sans text-foreground selection:bg-primary selection:text-primary-foreground"
         contentEditable={false}
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <MessageCircle className="size-3.5 h-5 shrink-0 text-primary/70" aria-hidden="true" />
+        <MessageCircle className="size-3.5 h-5 shrink-0 text-muted-foreground" aria-hidden="true" />
         <p
           className="min-w-0 flex-1 whitespace-pre-wrap text-sm leading-5"
           dir={textDirection(displayedText)}

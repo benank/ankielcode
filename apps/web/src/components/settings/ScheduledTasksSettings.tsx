@@ -117,6 +117,7 @@ import { ProviderModelPicker } from "../chat/ProviderModelPicker";
 import { TraitsPicker } from "../chat/TraitsPicker";
 import { createModelSelection } from "@ankielcode/shared/model";
 import { Badge } from "../ui/badge";
+import { Spinner } from "../ui/spinner";
 import { Button } from "../ui/button";
 import {
   Combobox,
@@ -372,10 +373,6 @@ const RUN_STATUS_LABELS: Record<ScheduledTask["lastRunStatus"], string> = {
   succeeded: msg("Succeeded"),
   failed: msg("Failed", { $context: "scheduled task run status" }),
 };
-
-function statusVariant(status: ScheduledTask["lastRunStatus"]) {
-  return status === "failed" ? "error" : "outline";
-}
 
 export function ScheduledTasksSettings(target: {
   readonly environmentId?: EnvironmentId;
@@ -836,15 +833,20 @@ function ScheduledTaskRow({
               gt("Not scheduled")
             )}
           </span>
-          {task.lastRunStatus !== "never" ? (
-            <Badge variant={statusVariant(task.lastRunStatus)}>
-              {messages(RUN_STATUS_LABELS[task.lastRunStatus])}
-            </Badge>
+          {task.lastRunStatus === "failed" ? (
+            <Badge variant="error">{messages(RUN_STATUS_LABELS.failed)}</Badge>
+          ) : task.lastRunStatus === "running" ? (
+            <span className="inline-flex items-center gap-1">
+              <Spinner aria-hidden size="xs" tone="muted" />
+              {messages(RUN_STATUS_LABELS.running)}
+            </span>
+          ) : task.lastRunStatus === "succeeded" ? (
+            <span>{messages(RUN_STATUS_LABELS.succeeded)}</span>
           ) : null}
           {task.threadId !== null && scheduledTaskThreadMode(task) !== "new_thread" ? (
             <ScheduledTaskThreadLink environmentId={environmentId} threadId={task.threadId} />
           ) : null}
-          {task.lastRunError ? <span className="text-destructive">{task.lastRunError}</span> : null}
+          {task.lastRunError ? <span>{task.lastRunError}</span> : null}
         </div>
       }
       control={
@@ -1159,9 +1161,7 @@ function WebhookEndpointField({
     const confirmed =
       (await requestConfirmDialog(
         `${gt("Rotate this webhook URL?")}\n${gt("The current URL stops working.")}`,
-        {
-          variant: "destructive",
-        },
+        { variant: "destructive" },
       )) ?? window.confirm(gt("Rotate this webhook URL? The current URL stops working."));
     if (!confirmed) return;
     setRotating(true);

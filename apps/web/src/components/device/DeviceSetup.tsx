@@ -349,7 +349,7 @@ export function DeviceHubSetupStatus({
   if (!pending && !deviceHubReadiness(state).ready) return null;
   return (
     <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground">
-      {pending ? <Spinner size="xs" /> : <Check className="size-3 text-success" />}
+      {pending ? <Spinner size="xs" /> : <Check className="size-3" />}
       {pending
         ? state.hostStatus === "installing"
           ? compact
@@ -424,7 +424,7 @@ export function AgentDeviceSetupStatus(props: {
   ) {
     return (
       <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Check className="size-3 text-success" />
+        <Check className="size-3" />
         <T>Agent tools are ready.</T>
       </p>
     );
@@ -443,7 +443,7 @@ function PlatformStatus(props: {
       className={cn("flex gap-2", !props.compact && "rounded-md border border-border/60 px-3 py-2")}
     >
       {props.status.ready ? (
-        <Check className="mt-0.5 size-4 shrink-0 text-success" />
+        <Check className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
       ) : (
         <CircleAlert className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
       )}

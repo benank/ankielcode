@@ -24,28 +24,24 @@ export function issueStatus(state: IssueState): {
   readonly label: string;
   readonly icon: AppSymbolName;
   readonly tint: string;
-  readonly text: string;
 } {
   const label = state.name;
   if (state.category === "open")
     return {
       label,
       icon: "git.issue",
-      tint: "accent-adaptive-emerald-600-400",
-      text: "text-adaptive-emerald-600-400",
+      tint: "accent-signal-success",
     };
   if (state.closeReason !== undefined && state.closeReason !== "completed")
     return {
       label,
       icon: "slash.circle",
       tint: "accent-icon-muted",
-      text: "text-foreground-muted",
     };
   return {
     label,
     icon: "checkmark.circle",
     tint: "accent-adaptive-violet-600-400",
-    text: "text-adaptive-violet-600-400",
   };
 }
 

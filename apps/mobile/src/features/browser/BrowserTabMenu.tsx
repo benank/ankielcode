@@ -92,7 +92,7 @@ export function BrowserTabMenu({
     id: "close",
     title: gt("Close tab"),
     image: "xmark",
-    attributes: { destructive: true, disabled: !canClose },
+    attributes: { disabled: !canClose },
   };
   const deviceUrl = tunnelOff ? null : loopbackUrlForDevice(browserTabUrl(tab));
   // The device preview has its own webview and tunnel, so it doesn't wait for the stream.
@@ -143,8 +143,8 @@ export function BrowserTabMenu({
       title: gt("Site data"),
       image: "trash",
       subactions: [
-        { id: "clear:cookies", title: gt("Clear cookies"), attributes: { destructive: true } },
-        { id: "clear:cache", title: gt("Clear cache"), attributes: { destructive: true } },
+        { id: "clear:cookies", title: gt("Clear cookies") },
+        { id: "clear:cache", title: gt("Clear cache") },
       ],
     },
     closeAction,

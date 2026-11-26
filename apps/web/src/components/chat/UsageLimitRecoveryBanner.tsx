@@ -127,7 +127,7 @@ export function usageLimitRecoveryBannerItem(
     id: `usage-limit-recovery:${runId}`,
     variant: "warning",
     group: "environment",
-    icon: <OpenAI aria-hidden="true" />,
+    icon: <OpenAI aria-hidden="true" className="text-foreground" />,
     title: resolve(msg("ChatGPT usage limit reached")),
     description: workspaceLimit
       ? resolve(

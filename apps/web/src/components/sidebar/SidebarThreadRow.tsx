@@ -224,9 +224,9 @@ function SidebarThreadTooltip({
           </div>
         ) : null}
         {branchMismatch ? (
-          <div className="flex min-w-0 items-start gap-2 text-warning">
-            <CircleAlertIcon aria-hidden className="mt-0.5 size-3 shrink-0 stroke-current" />
-            <div className="min-w-0 flex-1 wrap-break-word">
+          <div className="flex min-w-0 items-start gap-2">
+            <CircleAlertIcon aria-hidden className="mt-0.5 size-3 shrink-0 stroke-warning" />
+            <div className="min-w-0 flex-1 wrap-break-word text-foreground/75">
               <T>You're currently checked out on another branch.</T>
             </div>
           </div>
@@ -275,14 +275,16 @@ function SidebarThreadTooltip({
           </div>
         ) : null}
         {thread.runtime?.lastError ? (
-          <div
-            className={cn(
-              "flex min-w-0 items-center gap-2",
-              thread.runtime.lastErrorClass === "usage_limit" ? "text-warning" : "text-error",
-            )}
-          >
-            <CircleAlertIcon className="size-3 shrink-0 stroke-current" />
-            <div className="min-w-0 truncate">
+          <div className="flex min-w-0 items-center gap-2">
+            <CircleAlertIcon
+              className={cn(
+                "size-3 shrink-0",
+                thread.runtime.lastErrorClass === "usage_limit"
+                  ? "stroke-warning"
+                  : "stroke-destructive",
+              )}
+            />
+            <div className="min-w-0 truncate text-foreground/75">
               {thread.runtime.lastErrorClass === "usage_limit"
                 ? gt("Usage limit reached")
                 : gt("Error occurred")}
@@ -299,8 +301,7 @@ type SortableThreadRowBag = Pick<
   "listeners" | "setNodeRef" | "transform" | "transition" | "isDragging"
 >;
 
-export const draftSurfaceClassName = "bg-warning/4 hover:bg-warning/8";
-export const draftPenClassName = "size-3 shrink-0 text-warning-foreground";
+export const draftPenClassName = "size-3 shrink-0 text-sidebar-muted-foreground";
 
 // useSortable memoizes on its `disabled` object, so a fresh one per render
 // re-renders every row and marker on each sidebar update.
@@ -725,9 +726,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
       ? "bg-sidebar-row-active text-sidebar-foreground light:ring-1 light:ring-inset light:ring-sidebar-border/70"
       : isSelected || props.sweepAction !== null
         ? "bg-sidebar-row-selected text-sidebar-foreground light:ring-1 light:ring-inset light:ring-sidebar-border/70"
-        : hasUnsentDraft
-          ? cn(draftSurfaceClassName, "text-sidebar-foreground")
-          : "bg-transparent text-sidebar-foreground hover:bg-sidebar-row-hover",
+        : "bg-transparent text-sidebar-foreground hover:bg-sidebar-row-hover",
     isFileDragOver && "ring-1 ring-inset ring-primary/70",
     isFileDragOver && !props.isActive && !isSelected && "bg-sidebar-row-hover",
     props.sortable?.isDragging &&
@@ -932,7 +931,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
               )}
             >
               {variantAction === "unsnooze" && props.snoozeWakeLabelText !== null ? (
-                <span className="inline-flex items-center gap-1 text-xs text-info-foreground tabular-nums transition-opacity group-any-hover/sidebar-row:opacity-0">
+                <span className="inline-flex items-center gap-1 text-xs text-secondary-label tabular-nums transition-opacity group-any-hover/sidebar-row:opacity-0">
                   {/* The clock tells a wake time from an age at a glance. */}
                   <AlarmClockIcon aria-hidden className="size-3" />
                   {props.snoozeWakeLabelText}

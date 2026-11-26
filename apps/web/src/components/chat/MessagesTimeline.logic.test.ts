@@ -388,7 +388,7 @@ describe("deriveMessagesTimelineRows", () => {
   );
 
   it.each(["running", "completed", "superseded"] as const)(
-    "keeps system notices visible as non-failing warnings through %s work",
+    "keeps system notices visible as neutral, non-failing rows through %s work",
     (state) => {
       const fixture = makeStreamingTimelineFixture();
       const message =
@@ -421,7 +421,7 @@ describe("deriveMessagesTimelineRows", () => {
       });
       if (notice?.kind !== "work") throw new Error("Expected a notice work entry");
       expect(notice.entry.projectedItem).toBe(source);
-      expect(notice.entry.sourceActivityKind).toBe("runtime.warning");
+      expect(notice.entry.sourceActivityKind).toBeUndefined();
       expect(workEntryDisplayLabel(notice.entry, undefined)).toBe(message);
       expect(workEntryDisplayIndicatesToolFailure(notice.entry)).toBe(false);
       const rows = deriveMessagesTimelineRows({
@@ -522,9 +522,7 @@ describe("deriveMessagesTimelineRows", () => {
         optimisticMessages: [],
       });
       if (notice?.kind !== "work") throw new Error("Expected a notice work entry");
-      expect(notice.entry.sourceActivityKind).toBe(
-        level === "info" ? undefined : "runtime.warning",
-      );
+      expect(notice.entry.sourceActivityKind).toBeUndefined();
       expect(workEntryIconName(notice.entry)).toBe(level === "info" ? "zap" : "circle-alert");
       expect(workEntryDisplayLabel(notice.entry, undefined)).toBe(message);
     },

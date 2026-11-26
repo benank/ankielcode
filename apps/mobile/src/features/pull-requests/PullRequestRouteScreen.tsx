@@ -78,6 +78,7 @@ import { NativeScrollView } from "../../native/NativeScrollViewMarker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText as Text } from "../../components/ui/AppText";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { AppBar, type AppBarMenu } from "../../components/ui/AppBar";
 import { useContentTopInset } from "../../components/ui/useBarInset";
 import { useAndroidControlSizing } from "../../components/ui/useAndroidControlSizing";
@@ -227,7 +228,9 @@ function PullRequestIdentity(props: {
         ) : (
           <View className="min-h-8 flex-row items-center gap-1.5">
             <SymbolView name={status.icon} size={14} tintColorClassName={status.tint} />
-            <Text className={`text-xs font-ankiel-medium ${status.text}`}>{status.label}</Text>
+            <Text className="text-xs font-ankiel-medium text-foreground-secondary">
+              {status.label}
+            </Text>
           </View>
         )}
         {"visibility" in pr && pr.visibility === "private" ? (
@@ -708,7 +711,6 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
               id: "state",
               title: pullRequestActionLabel(stateAction, terminology, messages),
               icon: PR_ACTION_ICONS[stateAction],
-              destructive: stateAction === "close",
               onPress: runStateAction,
             },
           ]
@@ -1359,7 +1361,9 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
         </Text>
       ) : null}
       {viewed.error ? (
-        <Text className="px-4 py-2 text-xs text-danger-foreground">{viewed.error}</Text>
+        <View className="px-4 py-2">
+          <ErrorBanner message={viewed.error} />
+        </View>
       ) : null}
       {staleDiff ? (
         <View
@@ -1470,7 +1474,7 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
                 title={gt("Only test files changed")}
                 detail={gt("Test files are hidden from this review.")}
                 action={
-                  <Button label={gt("Show test files")} tone="contrast" onPress={filter.showAll} />
+                  <Button label={gt("Show test files")} tone="primary" onPress={filter.showAll} />
                 }
                 variant="plain"
               />

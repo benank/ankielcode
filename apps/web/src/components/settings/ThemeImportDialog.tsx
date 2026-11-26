@@ -448,7 +448,7 @@ function ThemeImportBody({
 
       <div className="flex items-center gap-3" aria-hidden>
         <div className="h-px flex-1 bg-border" />
-        <span className="text-muted-foreground text-2xs uppercase tracking-wider">
+        <span className="text-muted-foreground text-xs">
           <T>or import a file</T>
         </span>
         <div className="h-px flex-1 bg-border" />

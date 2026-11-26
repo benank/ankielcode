@@ -296,13 +296,7 @@ export function SettingInheritance({
             />
           }
         >
-          <LayersIcon
-            className={cn(
-              "size-3",
-              state === "overridden" && "text-primary",
-              state === "mixed" && "text-warning",
-            )}
-          />
+          <LayersIcon className={cn("size-3", state === "overridden" && "text-foreground")} />
         </TooltipTrigger>
         <TooltipPopup side="top">{overrideSummary}</TooltipPopup>
       </Tooltip>

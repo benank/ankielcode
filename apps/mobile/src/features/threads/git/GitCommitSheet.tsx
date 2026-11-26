@@ -91,7 +91,7 @@ export function GitCommitSheet(props: GitCommitSheetProps) {
       contentContainerClassName="px-5 pt-4 gap-5"
     >
       {isDefaultRef ? (
-        <Text className="text-sm text-warning-foreground">
+        <Text className="text-sm text-foreground-muted">
           <T>You’re on the default branch. You can create a new branch when committing.</T>
         </Text>
       ) : null}

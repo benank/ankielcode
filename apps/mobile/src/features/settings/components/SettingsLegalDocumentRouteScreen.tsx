@@ -71,7 +71,7 @@ export function SettingsLegalDocumentRouteScreen({
           <View className="w-full max-w-[320px] gap-2">
             <Button
               label={gt("Try Again")}
-              tone="contrast"
+              tone="primary"
               fullWidth
               onPress={() => {
                 setLoadError(null);

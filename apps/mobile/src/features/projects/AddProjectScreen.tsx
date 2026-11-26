@@ -89,6 +89,7 @@ import { sourceControlEnvironment } from "../../state/sourceControl";
 import { AppText as Text, AppTextInput as TextInput } from "../../components/ui/AppText";
 import { EnvironmentMachineSymbol } from "../../components/EnvironmentMachineSymbol";
 import { ErrorBanner } from "../../components/ui/ErrorBanner";
+import { Notice } from "../../components/ui/Notice";
 import { SourceControlIcon } from "./SourceControlIcon";
 import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
 import { ThemedSwitch } from "../../components/ui/ThemedSwitch";
@@ -161,7 +162,7 @@ function SectionTitle(props: { readonly children: string }) {
       className={
         Platform.OS === "android"
           ? "px-4 text-sm font-ankiel-medium text-primary-text"
-          : "px-1 text-2xs font-ankiel-bold tracking-[0.7px] uppercase text-foreground-muted"
+          : "px-1 text-xs font-ankiel-medium text-foreground-muted"
       }
     >
       {props.children}
@@ -1087,11 +1088,11 @@ function FolderBrowser(props: {
   return (
     <>
       <SectionTitle>{gt("Browse folders")}</SectionTitle>
-      {!canReadFiles && !fileAccess.isPending ? (
-        <ErrorBanner
-          message={fileAccess.error ?? gt("This connection cannot browse host folders.")}
-        />
-      ) : null}
+      {canReadFiles || fileAccess.isPending ? null : fileAccess.error === null ? (
+        <Notice message={gt("This connection cannot browse host folders.")} />
+      ) : (
+        <ErrorBanner message={fileAccess.error} />
+      )}
       {browseState.error === null ? null : isMissingCloneParentBrowseFailure({
           cloning: props.cloning === true,
           failure: browseState.failure,
@@ -1496,7 +1497,7 @@ export function AddProjectLocalFolderScreen(props: { readonly environmentId?: st
       {environment ? (
         <>
           {!canCreateProject ? (
-            <ErrorBanner message={gt("This connection cannot add projects.")} />
+            <Notice message={gt("This connection cannot add projects.")} />
           ) : null}
           <ProjectPathInput value={pathInput} onChangeText={setPathInput} onSubmit={submitPath} />
           <PrimaryActionButton

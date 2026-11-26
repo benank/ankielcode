@@ -102,11 +102,9 @@ export function ComposerInlineControl(props: {
                 props.size === "large"
                   ? "text-base font-ankiel-medium"
                   : "text-sm font-ankiel-medium",
-                props.tone === "warning"
-                  ? "text-warning-foreground"
-                  : props.emphasized || props.selected
-                    ? "text-foreground"
-                    : "text-foreground-muted",
+                props.tone === "warning" || props.emphasized || props.selected
+                  ? "text-foreground"
+                  : "text-foreground-muted",
               )}
               numberOfLines={1}
               ellipsizeMode={props.labelEllipsizeMode}

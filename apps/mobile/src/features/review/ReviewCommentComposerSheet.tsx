@@ -192,7 +192,7 @@ export function ReviewCommentComposerSheet(props: ReviewCommentComposerSheetProp
         ) : (
           <View className="min-h-0 flex-1 gap-4">
             <View className="gap-1 px-1">
-              <Text className="text-2xs font-ankiel-bold uppercase text-foreground-muted">
+              <Text className="text-xs font-ankiel-medium text-foreground-muted">
                 {selectionLabel}
               </Text>
               <Text

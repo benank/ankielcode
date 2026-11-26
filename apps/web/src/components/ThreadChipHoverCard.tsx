@@ -76,9 +76,9 @@ export function ThreadChipHoverCard(props: {
         </div>
       ) : null}
       {props.unreadable ? (
-        <div className="flex min-w-0 items-start gap-2 text-warning">
-          <CircleAlertIcon aria-hidden className="mt-0.5 size-3 shrink-0 stroke-current" />
-          <div className="min-w-0 flex-1 wrap-break-word">
+        <div className="flex min-w-0 items-start gap-2">
+          <CircleAlertIcon aria-hidden className="mt-0.5 size-3 shrink-0 stroke-warning" />
+          <div className="min-w-0 flex-1 wrap-break-word text-foreground/75">
             {gt(
               "On another machine, so this machine's agent can't read it. Remove it or switch back to send.",
             )}

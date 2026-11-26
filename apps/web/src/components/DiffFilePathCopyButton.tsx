@@ -36,7 +36,7 @@ export function DiffFilePathCopyButton({
           />
         }
       >
-        {isCopied ? <CheckIcon className="size-3 text-success" /> : <CopyIcon className="size-3" />}
+        {isCopied ? <CheckIcon className="size-3" /> : <CopyIcon className="size-3" />}
       </TooltipTrigger>
       <TooltipPopup>
         <p>{isCopied ? gt("Copied") : gt("Copy path")}</p>

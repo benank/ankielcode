@@ -60,7 +60,7 @@ export function startSlowRpcRequestToasts(): () => void {
       description: describeSlowRequests(slowRequests),
       timeout: 0,
       title: m(msg("Some requests are slow")),
-      type: "warning" as const,
+      type: "info" as const,
     };
 
     if (toastId === null) {

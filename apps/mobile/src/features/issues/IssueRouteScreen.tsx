@@ -25,6 +25,7 @@ import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { AppBar } from "../../components/ui/AppBar";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { Button } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -119,7 +120,7 @@ function IssueStateControl(props: {
       className="min-h-8 flex-row items-center gap-1.5 active:opacity-70"
     >
       <SymbolView name={status.icon} size={14} tintColorClassName={status.tint} />
-      <Text className={`text-xs font-ankiel-medium ${status.text}`}>{status.label}</Text>
+      <Text className="text-xs font-ankiel-medium text-foreground-secondary">{status.label}</Text>
       {moves.length ? (
         <SymbolView name="chevron.down" size={9} tintColorClassName="accent-icon-muted" />
       ) : null}
@@ -714,9 +715,9 @@ function IssueRoute({ params }: { readonly params: IssueParams }) {
                   onEditAssignees={() => navigation.navigate("IssueAssignees", identity)}
                 />
                 {mutationError || olderCommentsError || (detail && detailQuery.error) ? (
-                  <Text selectable className="text-sm text-danger-foreground">
-                    {mutationError ?? olderCommentsError ?? detailQuery.error}
-                  </Text>
+                  <ErrorBanner
+                    message={mutationError ?? olderCommentsError ?? detailQuery.error ?? ""}
+                  />
                 ) : null}
                 {!detail ? (
                   detailQuery.error && !detailQuery.isPending ? (

@@ -117,9 +117,7 @@ export function DeviceToolsPanel(props: {
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {error ? (
-          <p className="border-b bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</p>
-        ) : null}
+        {error ? <p className="border-b px-3 py-2 text-xs text-destructive">{error}</p> : null}
         {detail === null && !error ? (
           <div className="flex items-center gap-2 px-3 py-3 text-xs text-muted-foreground">
             <Spinner size="sm" /> <T>Reading device settings…</T>

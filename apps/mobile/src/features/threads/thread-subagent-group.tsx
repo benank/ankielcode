@@ -19,7 +19,6 @@ import { Pressable, View, type ColorValue } from "react-native";
 import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { ProviderIcon, ProviderInstanceIcon } from "../../components/ProviderIcon";
-import { cn } from "../../lib/cn";
 import type { ThreadFeedActivity } from "../../lib/threadActivity";
 import { serverEnvironment } from "../../state/server";
 import { environmentThreadDetails } from "../../state/threads";
@@ -162,16 +161,7 @@ export function ThreadSubagentGroup(props: {
             <Text numberOfLines={1} className="font-ankiel-medium text-sm text-foreground">
               {label}
             </Text>
-            <Text
-              numberOfLines={1}
-              className={cn(
-                "text-2xs text-foreground-muted",
-                agents.some((agent) => isActiveSubagentStatus(agent.status))
-                  ? "text-adaptive-sky-600-400"
-                  : agents.some((agent) => agent.status === "failed") &&
-                      "text-adaptive-rose-600-400",
-              )}
-            >
+            <Text numberOfLines={1} className="text-2xs text-foreground-muted">
               {summary}
             </Text>
           </View>

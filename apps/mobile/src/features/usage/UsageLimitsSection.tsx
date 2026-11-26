@@ -83,14 +83,12 @@ function WindowRow(props: {
       <View
         className={
           remaining <= 10
-            ? "h-full rounded-full bg-red-500"
-            : remaining <= 30
-              ? "h-full rounded-full bg-amber-500"
-              : "h-full rounded-full bg-foreground"
+            ? "h-full rounded-full bg-danger-foreground"
+            : "h-full rounded-full bg-foreground"
         }
         style={[
           { flex: remaining },
-          remaining > 30 && props.color ? { backgroundColor: props.color } : null,
+          remaining > 10 && props.color ? { backgroundColor: props.color } : null,
         ]}
       />
       <View style={{ flex: 100 - remaining }} />
@@ -231,7 +229,7 @@ export function AccountLimits(props: {
           className="min-h-11 justify-center"
           onPress={() => void tryOpenExternalUrl(externalUsage.url)}
         >
-          <Text className="text-sm font-ankiel-medium text-primary">
+          <Text className="text-sm font-ankiel-medium text-primary-text">
             <T>Manage usage</T>
           </Text>
         </Pressable>

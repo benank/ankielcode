@@ -15,10 +15,11 @@ import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import Svg, { Circle, Path } from "react-native-svg";
-import { useResolveClassNames } from "uniwind";
 
+import { STATUS_TONE_VARIABLE } from "../../components/PixelStatus";
 import { AppText as Text } from "../../components/ui/AppText";
 import { cn } from "../../lib/cn";
+import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 
 type StepTone = "working" | "input" | "quiet" | "done" | "failed" | "ended";
 
@@ -36,20 +37,16 @@ interface Palette {
   readonly screen: string;
 }
 
-const colorOf = (
-  style: ReturnType<typeof useResolveClassNames>,
-  key: "color" | "backgroundColor",
-) => String((StyleSheet.flatten(style) as Record<string, unknown>)[key] ?? "transparent");
-
 /** The theme's colours for what is drawn rather than styled: marks and the branch. */
 function usePalette(): Palette {
+  const { themeVariables } = useAppearancePreferences();
   return {
-    working: colorOf(useResolveClassNames("text-primary"), "color"),
-    input: colorOf(useResolveClassNames("text-warning-foreground"), "color"),
-    muted: colorOf(useResolveClassNames("text-foreground-muted"), "color"),
-    failed: colorOf(useResolveClassNames("text-danger-foreground"), "color"),
-    rail: colorOf(useResolveClassNames("bg-border"), "backgroundColor"),
-    screen: colorOf(useResolveClassNames("bg-screen"), "backgroundColor"),
+    working: themeVariables[STATUS_TONE_VARIABLE.active],
+    input: themeVariables[STATUS_TONE_VARIABLE.attention],
+    muted: themeVariables[STATUS_TONE_VARIABLE.done],
+    failed: themeVariables[STATUS_TONE_VARIABLE.failed],
+    rail: themeVariables["--color-border"],
+    screen: themeVariables["--color-screen"],
   };
 }
 
@@ -133,8 +130,8 @@ function StepDot(props: { readonly tone: StepTone; readonly palette: Palette }) 
 }
 
 const VERB_TONE = {
-  working: "text-primary",
-  input: "text-warning-foreground",
+  working: "text-foreground-muted",
+  input: "font-ankiel-medium text-foreground",
   quiet: "text-foreground-muted",
 } as const;
 
@@ -144,7 +141,6 @@ function TimelineRow(props: {
   readonly palette: Palette;
   readonly name: string;
   readonly aside: string | null;
-  readonly asideFailed?: boolean;
   readonly verb: string | null;
   readonly verbTone?: keyof typeof VERB_TONE;
   readonly time: string | null;
@@ -176,13 +172,7 @@ function TimelineRow(props: {
           {props.name}
         </Text>
         {props.aside === null ? null : (
-          <Text
-            numberOfLines={1}
-            className={cn(
-              "min-w-0 flex-1 text-xs",
-              props.asideFailed === true ? "text-danger-foreground" : "text-foreground-muted",
-            )}
-          >
+          <Text numberOfLines={1} className="min-w-0 flex-1 text-xs text-foreground-muted">
             {props.aside}
           </Text>
         )}
@@ -377,7 +367,6 @@ export function WorkflowTimeline(props: {
       palette={palette}
       name={beat.childRun?.title ?? beat.name}
       aside={asideOf(beat)}
-      asideFailed={beat.status === "failed"}
       verb={verbOf(beat)}
       verbTone={
         asks(beat) ? "input" : beat.kind === "sleep" || beat.kind === "wait" ? "quiet" : "working"

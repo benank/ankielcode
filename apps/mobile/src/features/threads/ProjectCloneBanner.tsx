@@ -5,7 +5,7 @@ import { T, useGT, useMessages, Var } from "gt-react-native";
 import { View } from "react-native";
 
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
-import { cn } from "../../lib/cn";
+import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
 
 export function ProjectCloneBanner(props: {
@@ -38,25 +38,23 @@ export function ProjectCloneBanner(props: {
   }
   const cancelled = clone.phase === "cancelled";
   return (
-    <View
-      className={cn(
-        "rounded-2xl border px-3.5 py-3",
-        cancelled ? "border-warning-border bg-warning" : "border-danger-border bg-danger",
-      )}
-    >
-      <Text
-        className={cn(
-          "font-ankiel-medium text-sm",
-          cancelled ? "text-warning-foreground" : "text-danger-foreground",
+    <View className="rounded-2xl border border-border bg-card px-3.5 py-3">
+      <View className="flex-row items-center gap-2">
+        {cancelled ? null : (
+          <SymbolView
+            name="exclamationmark.circle"
+            size={16}
+            tintColorClassName="accent-danger-foreground"
+          />
         )}
-        numberOfLines={1}
-      >
-        {cancelled
-          ? gt("Cancelled cloning {name}", { name })
-          : gt("Failed to clone {name}", { name })}
-      </Text>
+        <Text className="min-w-0 flex-1 font-ankiel-medium text-sm" numberOfLines={1}>
+          {cancelled
+            ? gt("Cancelled cloning {name}", { name })
+            : gt("Failed to clone {name}", { name })}
+        </Text>
+      </View>
       {clone.error ? (
-        <Text className="mt-0.5 text-xs text-danger-foreground" numberOfLines={3}>
+        <Text className="mt-0.5 text-xs text-foreground-muted" numberOfLines={3}>
           {clone.error}
         </Text>
       ) : null}

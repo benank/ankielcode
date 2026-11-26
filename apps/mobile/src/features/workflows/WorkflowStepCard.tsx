@@ -16,10 +16,10 @@ import { useGT } from "gt-react-native";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 
+import { PixelStatus } from "../../components/PixelStatus";
 import { AppText as Text } from "../../components/ui/AppText";
 import { Button } from "../../components/ui/Button";
 import * as Dialog from "../../components/ui/Dialog";
-import { cn } from "../../lib/cn";
 import { useEnvironments } from "../../state/environments";
 
 export function reportFailure(title: string, result: AtomCommandResult<unknown, unknown>) {
@@ -30,20 +30,9 @@ export function reportFailure(title: string, result: AtomCommandResult<unknown, 
 /** Markdown's emphasis marks, which plain text would show as asterisks and backticks. */
 export const plain = (text: string) => text.replace(/\*\*|__|`/g, "");
 
-export function Card(props: { readonly tone?: "input" | "failed"; readonly children: ReactNode }) {
+export function Card(props: { readonly children: ReactNode }) {
   return (
-    <View
-      className={cn(
-        "gap-2 rounded-2xl border p-4",
-        props.tone === "input"
-          ? "border-warning-border bg-warning"
-          : props.tone === "failed"
-            ? "border-danger-border bg-danger/5"
-            : "border-border bg-card",
-      )}
-    >
-      {props.children}
-    </View>
+    <View className="gap-2 rounded-2xl border border-border bg-card p-4">{props.children}</View>
   );
 }
 
@@ -92,12 +81,8 @@ export function BeatCard(props: {
       <View className="flex-row items-center gap-2">
         {/* The sheet's title names the step. */}
         <View className="flex-1" />
-        <Text
-          className={cn(
-            "text-xs",
-            beat.status === "failed" ? "text-danger-foreground" : "text-foreground-muted",
-          )}
-        >
+        <PixelStatus kind={running ? "working" : beat.status === "failed" ? "failed" : "done"} />
+        <Text className="text-xs text-foreground-muted">
           {running
             ? gt("Working", { $context: "workflow step status" })
             : beat.status === "failed"
@@ -121,7 +106,7 @@ export function BeatCard(props: {
         <Text className="text-sm text-foreground">{plain(summary.said)}</Text>
       )}
       {beat.status === "failed" && beat.detail !== null ? (
-        <Text className="text-sm text-danger-foreground">{beat.detail}</Text>
+        <Text className="text-sm text-foreground">{beat.detail}</Text>
       ) : null}
       {answer === null ? <Facts facts={summary.facts} /> : null}
       {thread === null && child === null ? null : (

@@ -19,7 +19,6 @@ import {
   usePreparePullRequestThreadAction,
   usePullRequestResolutionState,
 } from "~/state/sourceControlActions";
-import { cn } from "~/lib/utils";
 import { parsePullRequestReference } from "@ankielcode/client-runtime/pull-request-link-input";
 import { getSourceControlPresentation } from "~/sourceControlPresentation";
 import { useEnvironmentQuery } from "~/state/query";
@@ -52,19 +51,6 @@ interface PullRequestThreadDialogProps {
     worktreePath: string | null;
     pullRequestUrl: string;
   }) => Promise<void> | void;
-}
-
-function pullRequestStatusTone(state: string | undefined): string {
-  switch (state) {
-    case "merged":
-      return "text-violet-600 dark:text-violet-300/90";
-    case "closed":
-      return "text-zinc-500 dark:text-zinc-400/80";
-    case "open":
-      return "text-emerald-600 dark:text-emerald-300/90";
-    default:
-      return "text-muted-foreground";
-  }
 }
 
 export function PullRequestThreadDialog({
@@ -132,7 +118,6 @@ export function PullRequestThreadDialog({
       parsedReference !== parsedDebouncedReference ||
       pullRequestResolution.isPending ||
       pullRequestResolution.isFetching);
-  const statusTone = pullRequestStatusTone(resolvedPullRequest?.state);
 
   const handleConfirm = async (mode: "local" | "worktree") => {
     if (!preparePullRequestThreadAction.isAllowed) return;
@@ -282,7 +267,7 @@ export function PullRequestThreadDialog({
                     </T>
                   </p>
                 </div>
-                <span className={cn("shrink-0 text-xs capitalize", statusTone)}>
+                <span className="shrink-0 text-xs text-muted-foreground capitalize">
                   {gt(
                     "{state, select, open {open} closed {closed} merged {merged} other {{state}}}",
                     {

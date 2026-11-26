@@ -701,7 +701,7 @@ export function ThreadRelationshipsPanel(props: {
             className={
               workflowGroup
                 ? "sr-only"
-                : `shrink-0 text-2xs ${failed ? "text-destructive" : "text-muted-foreground"} ${trailingVisibilityClass}`
+                : `shrink-0 text-2xs text-muted-foreground ${trailingVisibilityClass}`
             }
           >
             {threadRelationshipStatusLabel(rowStatus, m)}

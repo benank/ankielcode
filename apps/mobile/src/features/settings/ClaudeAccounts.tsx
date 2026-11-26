@@ -19,6 +19,7 @@ import { AppText as Text } from "../../components/ui/AppText";
 import { ControlPill } from "../../components/ui/ControlPill";
 import { ListActionRow } from "../../components/ui/ListActionRow";
 import { Menu } from "../../components/ui/Menu";
+import { SettingsErrorLine } from "./components/SettingsErrorLine";
 import { serverEnvironment } from "../../state/server";
 import { useAtomCommand } from "../../state/use-atom-command";
 import {
@@ -94,7 +95,6 @@ export function ClaudeAccount({
             id: "remove",
             title: gt("Remove"),
             image: "trash",
-            attributes: { destructive: true },
           } satisfies MenuAction,
         ]
       : []),
@@ -110,7 +110,6 @@ export function ClaudeAccount({
         { text: gt("Cancel"), style: "cancel" },
         {
           text: gt("Remove"),
-          style: "destructive",
           onPress: () => {
             void run({ operation: "remove", instanceId: provider.instanceId });
           },
@@ -158,9 +157,9 @@ export function ClaudeAccount({
           onDone={() => setEditing(false)}
         />
       ) : error ? (
-        <Text accessibilityRole="alert" className="px-4 pb-3 text-danger-foreground">
+        <SettingsErrorLine alert className="px-4 pb-3">
           {error}
-        </Text>
+        </SettingsErrorLine>
       ) : null}
     </View>
   );

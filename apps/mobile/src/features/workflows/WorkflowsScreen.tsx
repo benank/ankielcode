@@ -20,9 +20,11 @@ import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { PixelStatus, type PixelStatusKind } from "../../components/PixelStatus";
 import { RelativeTime } from "../../components/RelativeTime";
 import { AppText as Text } from "../../components/ui/AppText";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { ScreenScrollView } from "../../components/ui/ScreenScrollView";
 import { SegmentedControl } from "../../components/ui/SegmentedControl";
 import { cn } from "../../lib/cn";
@@ -45,29 +47,41 @@ const NOTHING: Record<WorkflowListTab, string> = {
   all: msg("No runs yet."),
 };
 
-export const WORKFLOW_TONE_CLASS: Record<WorkflowRunTone, string> = {
-  input: "text-warning-foreground",
-  failed: "text-danger-foreground",
-  working: "text-primary",
-  quiet: "text-foreground-muted",
-  done: "text-foreground-muted",
+// The thread list's lights for the same states, so a run reads like a thread does.
+const WORKFLOW_PIXEL: Record<WorkflowRunTone, PixelStatusKind | null> = {
+  input: "attention",
+  failed: "failed",
+  working: "working",
+  quiet: null,
+  done: null,
 };
 
-// The same few colours every time for one workflow, so a list is read by its marks.
-const CHIP_CLASS = [
-  "bg-primary/15 text-primary",
-  "bg-warning/20 text-warning-foreground",
-  "bg-danger/15 text-danger-foreground",
-  "bg-subtle-strong text-foreground-secondary",
-  "bg-foreground/10 text-foreground",
-] as const;
+export function WorkflowStateWord(props: {
+  readonly state: { readonly word: string; readonly tone: WorkflowRunTone };
+  readonly large?: boolean;
+}) {
+  const pixel = WORKFLOW_PIXEL[props.state.tone];
+  return (
+    <View className="flex-row items-center gap-1.5">
+      {pixel === null ? null : <PixelStatus kind={pixel} />}
+      <Text
+        className={cn(
+          "font-ankiel-medium text-foreground-muted",
+          props.large === true ? "text-sm" : "text-xs",
+        )}
+      >
+        {props.state.word}
+      </Text>
+    </View>
+  );
+}
 
 export function WorkflowChip(props: { readonly name: string }) {
-  const chip = workflowChip(props.name);
-  const [surface, text] = (CHIP_CLASS[chip.tone % CHIP_CLASS.length] ?? CHIP_CLASS[0]).split(" ");
   return (
-    <View className={cn("h-5 w-6 items-center justify-center rounded-md", surface)}>
-      <Text className={cn("font-ankiel-bold text-3xs", text)}>{chip.letters}</Text>
+    <View className="h-5 w-6 items-center justify-center rounded-md bg-subtle-strong">
+      <Text className="font-ankiel-bold text-3xs text-foreground-secondary">
+        {workflowChip(props.name).letters}
+      </Text>
     </View>
   );
 }
@@ -88,9 +102,7 @@ function RunRow(props: { readonly node: WorkflowRunNode; readonly onOpen: () => 
         <Text className="min-w-0 flex-1 text-xs text-foreground-muted" numberOfLines={1}>
           {run.workflow}
         </Text>
-        <Text className={cn("font-ankiel-medium text-xs", WORKFLOW_TONE_CLASS[state.tone])}>
-          {state.word}
-        </Text>
+        <WorkflowStateWord state={state} />
       </View>
       <Text className="font-ankiel-medium text-base text-foreground" numberOfLines={1}>
         {run.title}
@@ -219,12 +231,11 @@ export function WorkflowsScreen() {
       {sections.flatMap(({ environment, snapshot, error }) =>
         snapshot === null && error !== null
           ? [
-              <Text
-                key={`error:${environment.environmentId}`}
-                className="px-5 py-3 text-sm text-danger-foreground"
-              >
-                {environments.length > 1 ? `${environment.label}: ${error}` : error}
-              </Text>,
+              <View key={`error:${environment.environmentId}`} className="px-4 py-3">
+                <ErrorBanner
+                  message={environments.length > 1 ? `${environment.label}: ${error}` : error}
+                />
+              </View>,
             ]
           : [],
       )}

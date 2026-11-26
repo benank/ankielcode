@@ -535,7 +535,7 @@ function ReviewThreadEvent({
           </>
         )}
         {thread.isResolved ? (
-          <span className="inline-flex shrink-0 items-center gap-1 font-medium text-success-foreground">
+          <span className="inline-flex shrink-0 items-center gap-1 font-medium">
             <CircleCheckIcon aria-hidden className="size-3" />
             <T context="review thread state">Resolved</T>
           </span>

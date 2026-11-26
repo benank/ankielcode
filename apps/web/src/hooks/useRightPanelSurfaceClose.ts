@@ -95,7 +95,7 @@ export function useRightPanelSurfaceClose(input: {
     }
     const localApi = readLocalApi();
     if (!localApi) return;
-    void localApi.dialogs.confirm(message, { variant: "destructive" }).then(
+    void localApi.dialogs.confirm(message).then(
       (confirmed) => {
         if (confirmed) closeSurfaces();
       },

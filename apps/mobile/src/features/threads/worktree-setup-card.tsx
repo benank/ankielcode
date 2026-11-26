@@ -16,6 +16,7 @@ import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView, type AppSymbolName } from "../../components/ui/AppSymbol";
 import { Sheet } from "../../components/ui/Sheet";
+import { cn } from "../../lib/cn";
 import { ShimmeringWorkContent } from "./thread-work-log";
 import { useVisibleSecondClock } from "./use-visible-second-clock";
 
@@ -93,7 +94,7 @@ function WorktreeSetupHeaderCard(props: WorktreeSetupCardProps & SetupDetailsCon
   return (
     <View accessibilityLabel={gt("Worktree setup")} className="py-1">
       <View className="min-h-11 flex-row items-center gap-2 border-b border-border px-1">
-        <HeaderLabel label={label} active={running && !detailsOpen} failed={failed} />
+        <HeaderLabel label={label} active={running && !detailsOpen} />
         <Text
           className="text-2xs text-foreground-secondary"
           style={{ fontVariant: ["tabular-nums"] }}
@@ -108,7 +109,7 @@ function WorktreeSetupHeaderCard(props: WorktreeSetupCardProps & SetupDetailsCon
           className="min-h-11 max-w-[55%] justify-center px-2"
         >
           <View className="flex-row items-center gap-1">
-            {failed ? (
+            {failed && !shownStageFailed(snapshot) ? (
               <SymbolView
                 name="exclamationmark.circle"
                 size={12}
@@ -138,6 +139,11 @@ function WorktreeSetupHeaderCard(props: WorktreeSetupCardProps & SetupDetailsCon
       </View>
     </View>
   );
+}
+
+/** A failed stage row carries the one red mark; otherwise the details link or error line does. */
+function shownStageFailed(snapshot: WorktreeSetupSnapshot): boolean {
+  return snapshot.stages.some((stage) => stage.id !== "agent" && stage.status === "failed");
 }
 
 /** True once the agent has the turn; the turn's fold row then carries the setup instead of the card. */
@@ -209,9 +215,15 @@ function WorktreeSetupSummaryRow(props: WorktreeSetupCardProps & SetupDetailsCon
       style={{ columnGap: 8 }}
     >
       <View className="w-6 items-center">
-        <SymbolView name="xmark" size={14} tintColorClassName="accent-danger-foreground" />
+        <SymbolView
+          name="xmark"
+          size={14}
+          tintColorClassName={
+            snapshot.phase === "cancelled" ? "accent-icon-muted" : "accent-danger-foreground"
+          }
+        />
       </View>
-      <Text numberOfLines={1} className="flex-1 text-sm text-danger-foreground">
+      <Text numberOfLines={1} className="flex-1 text-sm text-foreground-secondary">
         {label}
       </Text>
       <Text
@@ -263,15 +275,7 @@ export function WorktreePreparingHeader() {
   );
 }
 
-function HeaderLabel({
-  label,
-  active,
-  failed = false,
-}: {
-  label: string;
-  active: boolean;
-  failed?: boolean;
-}) {
+function HeaderLabel({ label, active }: { label: string; active: boolean }) {
   return active ? (
     <ShimmeringWorkContent
       icon="clock"
@@ -282,11 +286,7 @@ function HeaderLabel({
   ) : (
     <Text
       numberOfLines={1}
-      className={
-        failed
-          ? "flex-1 text-sm text-danger-foreground"
-          : "flex-1 text-sm text-foreground-secondary"
-      }
+      className="flex-1 text-sm text-foreground-secondary"
       style={{ fontVariant: ["tabular-nums"] }}
     >
       {label}
@@ -323,12 +323,18 @@ function SetupDetailsSheet({
               <StageRow stage={stage} scriptName={snapshot.setupScript?.name ?? null} now={now} />
               {stage.id === "setup-script" &&
               (stage.status === "running" || stage.status === "failed" || stage.tail.length > 0) ? (
-                <OutputTail lines={stage.tail} failed={stage.status === "failed"} />
+                <OutputTail lines={stage.tail} />
               ) : null}
             </View>
           ))}
         {snapshot.phase === "failed" && snapshot.error ? (
-          <Text selectable className="ml-8 mt-2 text-xs text-danger-foreground">
+          <Text
+            selectable
+            className={cn(
+              "ml-8 mt-2 text-xs",
+              shownStageFailed(snapshot) ? "text-foreground-secondary" : "text-danger-foreground",
+            )}
+          >
             {snapshot.error}
           </Text>
         ) : null}
@@ -405,11 +411,7 @@ function StageRow({
             name={icons[stage.status]}
             size={14}
             tintColorClassName={
-              stage.status === "failed"
-                ? "accent-danger-foreground"
-                : stage.status === "warning"
-                  ? "accent-warning-foreground"
-                  : "accent-icon-muted"
+              stage.status === "failed" ? "accent-danger-foreground" : "accent-icon-muted"
             }
           />
         )}
@@ -422,14 +424,7 @@ function StageRow({
           showIcon={false}
         />
       ) : (
-        <Text
-          numberOfLines={1}
-          className={
-            stage.status === "failed"
-              ? "flex-1 text-sm text-danger-foreground"
-              : "flex-1 text-sm text-foreground-secondary"
-          }
-        >
+        <Text numberOfLines={1} className="flex-1 text-sm text-foreground-secondary">
           {label}
         </Text>
       )}
@@ -452,27 +447,19 @@ function StageRow({
 
 const OUTPUT_TAIL_SLOTS = [0, 1, 2, 3] as const;
 
-function OutputTail({ lines, failed }: { lines: ReadonlyArray<string>; failed: boolean }) {
+function OutputTail({ lines }: { lines: ReadonlyArray<string> }) {
   const gt = useGT();
   return (
     <View
       accessibilityLabel={gt("Setup script output")}
-      className={
-        failed
-          ? "mb-2 ml-8 rounded-md border border-danger-border bg-danger px-3 py-2"
-          : "mb-2 ml-8 rounded-md border border-border bg-card-alt px-3 py-2"
-      }
+      className="mb-2 ml-8 rounded-md border border-border bg-card-alt px-3 py-2"
     >
       {OUTPUT_TAIL_SLOTS.map((slot) => (
         <Text
           key={slot}
           selectable
           numberOfLines={1}
-          className={
-            failed
-              ? "text-2xs leading-5 text-danger-foreground ios:font-[family-name:Menlo] android:font-mono"
-              : "text-2xs leading-5 text-foreground-secondary ios:font-[family-name:Menlo] android:font-mono"
-          }
+          className="text-2xs leading-5 text-foreground-secondary ios:font-[family-name:Menlo] android:font-mono"
         >
           {lines[lines.length - OUTPUT_TAIL_SLOTS.length + slot] || "\u00a0"}
         </Text>

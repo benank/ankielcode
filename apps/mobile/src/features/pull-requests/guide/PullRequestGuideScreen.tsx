@@ -15,6 +15,7 @@ import {
 import { SymbolView } from "../../../components/ui/AppSymbol";
 import { GuideOutline } from "./GuideOutline";
 import { AppText as Text } from "../../../components/ui/AppText";
+import { ErrorBanner } from "../../../components/ui/ErrorBanner";
 import { ScreenScrollView } from "../../../components/ui/ScreenScrollView";
 import { useAppearancePreferences } from "../../settings/appearance/AppearancePreferencesProvider";
 import { PullRequestCardGroup, PullRequestCardRow } from "../PullRequestControls";
@@ -210,7 +211,7 @@ export function PullRequestGuideStopScreen({ route }: StaticScreenProps<GuideSto
                     />
                   ))
                 )}
-                {diff.error ? <Text className="text-danger-foreground">{diff.error}</Text> : null}
+                {diff.error ? <ErrorBanner message={diff.error} /> : null}
                 {notes.length ? (
                   <View className="gap-4">
                     <Text className="font-ankiel-semibold">

@@ -548,7 +548,7 @@ export function UsageLimitsSection({
             className="min-h-11 justify-center"
             onPress={() => void tryOpenExternalUrl(link.url)}
           >
-            <Text className="text-sm font-ankiel-medium text-primary">
+            <Text className="text-sm font-ankiel-medium text-primary-text">
               <T>Manage usage</T>
             </Text>
           </Pressable>
@@ -559,21 +559,17 @@ export function UsageLimitsSection({
           accessible
           accessibilityRole="alert"
           accessibilityLiveRegion="polite"
-          className="flex-row items-start gap-2 rounded-xl border border-warning-border bg-warning px-3.5 py-3"
+          className="flex-row items-start gap-3 rounded-xl border border-border bg-card px-3.5 py-3"
         >
-          <SymbolView
-            name="exclamationmark.triangle"
-            size={16}
-            tintColorClassName="accent-warning-foreground"
-          />
+          <SymbolView name="info.circle" size={16} tintColorClassName="accent-icon-muted" />
           <View className="min-w-0 flex-1 gap-0.5">
             {notices.map((notice) => (
-              <Text key={notice} className="text-sm font-ankiel-medium text-warning-foreground">
+              <Text key={notice} className="text-sm font-ankiel-medium text-foreground">
                 {notice}
               </Text>
             ))}
             {failedLabels.length > 0 ? (
-              <Text className="text-sm font-ankiel-medium text-warning-foreground">
+              <Text className="text-sm font-ankiel-medium text-foreground">
                 <T>
                   <Var>{failedLabels.join(", ")}</Var> could not refresh limits. Showing the last
                   known values.

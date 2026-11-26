@@ -16,6 +16,7 @@ import {
 import * as Option from "effect/Option";
 
 import { cn } from "../../lib/utils";
+import { selectionCardClassName } from "./itemRows";
 import { formatDesktopSshTarget } from "./EnvironmentRow";
 import { Input } from "../ui/input";
 import { CommandShortcut } from "../ui/command";
@@ -372,8 +373,8 @@ export function AddEnvironmentDialog({
         type="button"
         aria-pressed={selected}
         className={cn(
-          "group flex min-h-24 items-start gap-3 rounded-lg border p-4 text-left",
-          selected ? "border-primary/50 bg-primary/5" : "border-border/60 hover:bg-muted/40",
+          "group flex min-h-24 items-start gap-3 p-4 text-left",
+          selectionCardClassName(selected),
         )}
         disabled={isAddingSavedBackend}
         onClick={() => {
@@ -385,9 +386,8 @@ export function AddEnvironmentDialog({
           <span
             className={cn(
               "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md border",
-              selected
-                ? "border-primary/30 bg-primary/10 text-primary"
-                : "border-border/70 bg-background text-muted-foreground group-hover:text-foreground",
+              "border-border/70 bg-background",
+              selected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
             )}
           >
             {input.icon}

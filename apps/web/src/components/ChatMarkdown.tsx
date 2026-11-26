@@ -365,44 +365,18 @@ function orderedListGutterStyle(
 
 const GITHUB_ALERT_PRESENTATIONS: Record<
   string,
-  { label: string; Icon: typeof InfoIcon; borderClassName: string; titleClassName: string }
+  { label: string; Icon: typeof InfoIcon; iconClassName: string }
 > = {
-  insight: {
-    label: msg("Insight"),
-    Icon: StarIcon,
-    borderClassName: "border-info",
-    titleClassName: "text-info",
-  },
-  note: {
-    label: msg("Note"),
-    Icon: InfoIcon,
-    borderClassName: "border-blue-500/70",
-    titleClassName: "text-blue-600 dark:text-blue-400",
-  },
-  tip: {
-    label: msg("Tip"),
-    Icon: LightbulbIcon,
-    borderClassName: "border-emerald-500/70",
-    titleClassName: "text-emerald-600 dark:text-emerald-400",
-  },
+  insight: { label: msg("Insight"), Icon: StarIcon, iconClassName: "text-muted-foreground" },
+  note: { label: msg("Note"), Icon: InfoIcon, iconClassName: "text-muted-foreground" },
+  tip: { label: msg("Tip"), Icon: LightbulbIcon, iconClassName: "text-muted-foreground" },
   important: {
     label: msg("Important"),
     Icon: MessageSquareWarningIcon,
-    borderClassName: "border-purple-500/70",
-    titleClassName: "text-purple-600 dark:text-purple-400",
+    iconClassName: "text-muted-foreground",
   },
-  warning: {
-    label: msg("Warning"),
-    Icon: TriangleAlertIcon,
-    borderClassName: "border-amber-500/70",
-    titleClassName: "text-amber-600 dark:text-amber-500",
-  },
-  caution: {
-    label: msg("Caution"),
-    Icon: OctagonAlertIcon,
-    borderClassName: "border-red-500/70",
-    titleClassName: "text-red-600 dark:text-red-400",
-  },
+  warning: { label: msg("Warning"), Icon: TriangleAlertIcon, iconClassName: "text-warning" },
+  caution: { label: msg("Caution"), Icon: OctagonAlertIcon, iconClassName: "text-destructive" },
 };
 
 function normalizeMarkdownLinkHrefKey(href: string): string {
@@ -1198,14 +1172,14 @@ const CHAT_MARKDOWN_COMPONENTS = {
         role="note"
         data-markdown-alert={alertKind}
         dir={props.dir}
-        className={cn("my-1 border-s-2 ps-3", alert.borderClassName)}
+        className="my-1 border-s-2 border-border ps-3"
       >
         <p
           data-thread-find-ignore="true"
           data-markdown-alert-label=""
-          className={cn("flex items-center gap-1.5 font-medium", alert.titleClassName)}
+          className="flex items-center gap-1.5 font-medium text-foreground"
         >
-          <alert.Icon aria-hidden className="size-3.5 shrink-0" />
+          <alert.Icon aria-hidden className={cn("size-3.5 shrink-0", alert.iconClassName)} />
           {m(alert.label)}
         </p>
         {children}

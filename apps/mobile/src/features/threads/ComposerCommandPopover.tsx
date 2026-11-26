@@ -240,9 +240,7 @@ export const ComposerCommandPopover = memo(function ComposerCommandPopover(
     <PopoverSurface>
       {label ? (
         <View className="px-3.5 pt-2.5 pb-1">
-          <Text className="text-3xs font-ankiel-bold tracking-[0.8px] uppercase text-foreground-muted">
-            {label}
-          </Text>
+          <Text className="text-2xs font-ankiel-medium text-foreground-muted">{label}</Text>
         </View>
       ) : null}
       {props.items.length > 0 ? (

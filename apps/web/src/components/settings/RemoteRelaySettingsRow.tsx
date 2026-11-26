@@ -342,7 +342,7 @@ export function RemoteRelaySettingsRow({
               <T>Cancel</T>
             </AlertDialogClose>
             <Button
-              variant="destructive"
+              variant="default"
               disabled={isDisconnecting}
               onClick={() => void handleDisconnect()}
             >

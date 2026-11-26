@@ -3,6 +3,7 @@ import { useGT } from "gt-react-native";
 import { useRef, useState } from "react";
 
 import { AppText as Text, AppTextInput as TextInput } from "../../components/ui/AppText";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { Button } from "../../components/ui/Button";
 import { issueEnvironment, refreshIssueLists } from "../../state/issues";
 import { useEnvironmentQuery } from "../../state/query";
@@ -60,7 +61,7 @@ export function IssueEditScreen({ route }: StaticScreenProps<IssueEditParams>) {
       footer={
         <Button
           fullWidth
-          tone="contrast"
+          tone="primary"
           label={busy ? gt("Saving…") : gt("Save")}
           loading={busy}
           disabled={!allowed || unchanged || invalid || original === null}
@@ -95,9 +96,7 @@ export function IssueEditScreen({ route }: StaticScreenProps<IssueEditParams>) {
         </Text>
       ) : null}
       {error || detailQuery.error ? (
-        <Text selectable className="text-sm text-danger-foreground">
-          {error ?? detailQuery.error}
-        </Text>
+        <ErrorBanner message={error ?? detailQuery.error ?? ""} />
       ) : null}
     </PullRequestSheetContent>
   );

@@ -360,13 +360,7 @@ function WorkEntryLogRow(props: WorkEntryRowProps) {
             className={cn("size-4", warning ? "text-warning" : "text-destructive")}
           />
         }
-        label={
-          <span
-            className={cn("text-sm font-medium", warning ? "text-warning" : "text-destructive")}
-          >
-            {label}
-          </span>
-        }
+        label={<span className="text-sm font-medium text-foreground">{label}</span>}
         trailing={
           <TimelineRowTimestamp
             createdAt={workEntry.createdAt}
@@ -514,13 +508,11 @@ function WorkEntryLogRow(props: WorkEntryRowProps) {
             ? "text-icon-muted"
             : iconConfig.className,
   );
-  const headingClass = showWarningIndicator
-    ? "font-medium text-warning"
-    : showDestructiveRowStyle
-      ? "font-medium text-destructive"
-      : workLogEntryIsToolLike(workEntry)
-        ? "text-secondary-label"
-        : "text-foreground/80";
+  const headingClass = showDestructiveRowStyle
+    ? "font-medium text-foreground"
+    : workLogEntryIsToolLike(workEntry)
+      ? "text-secondary-label"
+      : "text-foreground/80";
   const threadLabel = isReasoning ? null : threadReadLabel(previewText, workEntry, threadTarget, m);
   const accessiblePreview = [threadLabel?.text ?? previewText, answerPreview]
     .filter(Boolean)
@@ -629,9 +621,7 @@ function WorkEntryLogRow(props: WorkEntryRowProps) {
             />
           ) : null}
           {createdThread ? (
-            <button
-              type="button"
-              className="shrink-0 rounded-sm text-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+            <InlineButton
               aria-label={
                 createdThread.title != null
                   ? gt("Open {title}", { title: createdThread.title })
@@ -644,7 +634,7 @@ function WorkEntryLogRow(props: WorkEntryRowProps) {
               onKeyDown={stopRowToggle}
             >
               <T>Open chat</T>
-            </button>
+            </InlineButton>
           ) : null}
           {notifiedSubagentThreadId ? (
             <InlineButton

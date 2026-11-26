@@ -15,7 +15,6 @@ import {
   useRememberedWorktreeRepositories,
   useWorktreeBaseBranch,
 } from "../worktreeRepositoryChoiceStore";
-import { cn } from "../lib/utils";
 import { ComposerContextLabel } from "./ComposerContextLabel";
 import { ComposerControl } from "./chat/ComposerControl";
 import { useComposerMenuProps } from "./chat/composerEventScope";
@@ -85,10 +84,7 @@ export const WorktreeRepositoriesControl = memo(function WorktreeRepositoriesCon
     <Menu onOpenChange={(open) => (open ? undefined : setFilter(""))}>
       <MenuTrigger
         render={<ComposerControl size="xs" />}
-        className={cn(
-          "min-w-0 flex-initial justify-start",
-          selection.needsChoice && "text-warning-foreground dark:text-warning-foreground",
-        )}
+        className="min-w-0 flex-initial justify-start"
         aria-label={gt("Repositories in the new worktree: {selection}", {
           selection: selection.label,
         })}

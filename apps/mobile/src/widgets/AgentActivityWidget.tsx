@@ -41,24 +41,20 @@ export function AgentActivityWidget(
   type Foreground = Parameters<typeof foregroundStyle>[0];
   const primaryForeground = { type: "hierarchical", style: "primary" } as const;
   const secondaryForeground = { type: "hierarchical", style: "secondary" } as const;
+  // The same status tones as the AgentActivity Live Activity; no module scope to share them.
+  const PHASE_TONES: Record<AgentActivityPhase, readonly [string, string] | null> = {
+    starting: ["#0891b2", "#67e8f9"],
+    running: ["#0891b2", "#67e8f9"],
+    waiting_for_approval: ["#a75405", "#f8c15a"],
+    waiting_for_input: ["#a75405", "#f8c15a"],
+    failed: ["#b42318", "#fb7a6f"],
+    completed: null,
+    stale: null,
+  };
   const phaseTint = (phase: AgentActivityPhase): Foreground => {
     if (monochrome) return primaryForeground;
-    switch (phase) {
-      case "waiting_for_approval":
-        return isLightScheme ? "#d97706" : "#fcd34d";
-      case "waiting_for_input":
-        return isLightScheme ? "#4f46e5" : "#a5b4fc";
-      case "failed":
-        return isLightScheme ? "#dc2626" : "#fca5a5";
-      case "completed":
-        return isLightScheme ? "#059669" : "#6ee7b7";
-      case "stale":
-        return secondaryForeground;
-      case "starting":
-      case "running":
-      default:
-        return isLightScheme ? "#0284c7" : "#7dd3fc";
-    }
+    const tone = PHASE_TONES[phase];
+    return tone ? tone[isLightScheme ? 0 : 1] : secondaryForeground;
   };
   const phasePriority = (phase: AgentActivityPhase): number => {
     if (phase === "waiting_for_approval" || phase === "waiting_for_input") return 0;

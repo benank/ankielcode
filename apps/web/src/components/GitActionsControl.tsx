@@ -34,6 +34,7 @@ import { flushSync } from "react-dom";
 import {
   CheckIcon,
   ChevronDownIcon,
+  CircleAlertIcon,
   CloudDownloadIcon,
   CloudUploadIcon,
   FileDiffIcon,
@@ -71,6 +72,7 @@ import {
   resolveThreadBranchUpdate,
 } from "./GitActionsControl.logic";
 import { WizardPopup, WizardHeader, WizardSteps, WizardPanel, WizardFooter } from "./ui/wizard";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { StartTruncatedPath } from "./StartTruncatedPath";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -426,7 +428,7 @@ function GitActionSuccessButtonContent({ success }: { success: InlineGitActionSu
       className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] grid-rows-[1.125rem] items-center gap-x-3"
       role="status"
     >
-      <CheckIcon aria-hidden="true" className="size-3.5 shrink-0 text-success" />
+      <CheckIcon aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
       <p className={cn("min-w-0 truncate text-left", THREAD_DETAILS_PANEL_LABEL_CLASS)}>
         {success.title}
       </p>
@@ -885,15 +887,13 @@ export function PublishRepositoryDialog(props: PublishRepositoryDialogProps) {
               </div>
             ) : null}
             {publishError && !publishRepositoryAction.isPending ? (
-              <div
-                role="alert"
-                className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive"
-              >
-                <p className="font-medium">
+              <Alert variant="error">
+                <CircleAlertIcon />
+                <AlertTitle>
                   <T>Publish failed</T>
-                </p>
-                <p className="mt-0.5 text-destructive/90">{publishError}</p>
-              </div>
+                </AlertTitle>
+                <AlertDescription>{publishError}</AlertDescription>
+              </Alert>
             ) : null}
           </div>
 
@@ -901,7 +901,7 @@ export function PublishRepositoryDialog(props: PublishRepositoryDialogProps) {
             {publishResult ? (
               <>
                 <div className="flex flex-col items-center gap-2 py-1 text-center">
-                  <span className="grid size-8 place-items-center rounded-full bg-success/15 text-success">
+                  <span className="grid size-8 place-items-center rounded-full bg-muted text-foreground">
                     <CheckIcon className="size-4" aria-hidden />
                   </span>
                   <h3 className="text-sm font-semibold text-foreground">
@@ -1543,7 +1543,7 @@ function CheckoutGitActionsControl({
         </MenuItem>
       ) : null}
       {isDetachedHead && (
-        <p className="px-2 py-1.5 text-xs text-warning">
+        <p className="px-2 py-1.5 text-xs text-muted-foreground">
           {gt(
             "Detached HEAD: create and check out a branch to enable push and {term, select, mr {merge request} cr {change request} other {pull request}} actions.",
             { term: changeRequestTermKind(changeRequestTerminology) },
@@ -1551,7 +1551,7 @@ function CheckoutGitActionsControl({
         </p>
       )}
       {isCleanAndBehind && (
-        <p className="px-2 py-1.5 text-xs text-warning">
+        <p className="px-2 py-1.5 text-xs text-muted-foreground">
           <T>Behind upstream. Pull/rebase first.</T>
         </p>
       )}
@@ -1816,7 +1816,7 @@ function CheckoutGitActionsControl({
                     {gitStatusForActions?.refName ?? gt("(detached HEAD)")}
                   </span>
                   {isDefaultRef && (
-                    <span className="text-right text-warning">
+                    <span className="text-right text-muted-foreground">
                       <T>Default branch</T>
                     </span>
                   )}

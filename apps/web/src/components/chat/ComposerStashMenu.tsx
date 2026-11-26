@@ -240,7 +240,7 @@ export const ComposerStashMenu = memo(function ComposerStashMenu(props: {
                       )}
                     </span>
                   ) : missingImageCount(entry) > 0 ? (
-                    <span className="shrink-0 text-warning-foreground">
+                    <span className="shrink-0 text-muted-foreground">
                       {gt(
                         "{count, plural, one {{count} image dropped} other {{count} images dropped}}",
                         { count: missingImageCount(entry) },

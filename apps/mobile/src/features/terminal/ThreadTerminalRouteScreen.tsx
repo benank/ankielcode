@@ -129,7 +129,6 @@ function TerminalHeader(props: {
                 icon: "trash",
                 // Tabler's trash is 18 units tall; the terminal glyph beside it is 16.
                 iconScale: 16 / 18,
-                destructive: true,
                 disabled: !props.canOperateTerminal,
                 onPress: props.onCloseTerminal,
               },

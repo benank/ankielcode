@@ -111,6 +111,7 @@ import { previewBridge } from "./preview/previewBridge";
 import { dispatchPreviewAction } from "./preview/previewActionBus";
 import { preventThumbButtonFocus, takeThumbButtonNavigation } from "./preview/thumbButtons";
 import { PierreEntryIcon } from "./chat/PierreEntryIcon";
+import { STATUS_TONE_DOT_CLASS } from "./PixelStatus";
 import { resolvePullRequestState } from "./pullRequest/pullRequestPresentation";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 import { observeResize } from "~/lib/observeResize";
@@ -758,7 +759,7 @@ function SideChatTabIcon(props: { environmentId: EnvironmentId | null; threadId:
         <span
           className={cn(
             "absolute -top-0.5 -right-0.5 size-1.5 rounded-full",
-            state === "running" ? "bg-muted-foreground" : "bg-info",
+            state === "running" ? "bg-muted-foreground" : STATUS_TONE_DOT_CLASS.attention,
           )}
           aria-hidden
         />

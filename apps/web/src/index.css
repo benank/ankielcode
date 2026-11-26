@@ -264,6 +264,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
   --color-info-foreground: var(--info-foreground);
   --color-info: var(--info);
   --color-signal-active: var(--signal-active);
+  --color-merged: var(--merged);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-ring: var(--ring);
   --color-input: var(--contrast-input);
@@ -1197,9 +1198,12 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
   --info-foreground: var(--app-theme-accent);
   --success: var(--signal-success);
   --success-foreground: var(--signal-success);
+  /* Pull request "merged" keeps the violet every forge uses for it. */
+  --merged: var(--color-violet-600);
 
   @variant dark {
     color-scheme: dark;
+    --merged: var(--color-violet-300);
   }
 }
 

@@ -93,12 +93,11 @@ export function ThreadHandoffRow(props: {
   );
   const endpoints = useAtomValue(endpointsAtom);
   if (item.type !== "handoff" || endpoints === null) return null;
-  const color = item.status === "failed" ? "#e11d48" : props.iconColor;
   return (
     <ThreadHandoffDivider
       environmentId={props.environmentId}
       endpoints={endpoints}
-      iconColor={color}
+      iconColor={props.iconColor}
       surfaceColor={props.surfaceColor}
       label={gt("Context handoff")}
       failed={item.status === "failed"}

@@ -106,7 +106,7 @@ export function PullRequestSpeedActions<Entry extends PullRequestSpeedActionEntr
             <TooltipTrigger
               render={
                 <Button
-                  variant={action === "close" ? "destructive-outline" : "outline"}
+                  variant="outline"
                   size="xs"
                   disabled={!canWrite || busy || (action === "merge" && entry.stack !== undefined)}
                   aria-label={resolve(ACTIONS[action].numbered, { number: entry.number })}

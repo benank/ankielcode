@@ -1,5 +1,5 @@
 import { errorDisplayMessage } from "@ankielcode/client-runtime/errors";
-import { msg, T, useGT, useMessages } from "gt-react-native";
+import { msg, useGT, useMessages } from "gt-react-native";
 import * as Dialog from "../../components/ui/Dialog";
 import { ConnectionTraceId } from "./ConnectionTraceId";
 import { SymbolView } from "../../components/ui/AppSymbol";
@@ -10,7 +10,7 @@ import { useAtomValue } from "@effect/atom-react";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { useState } from "react";
-import { Platform, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { m as resolveMessage } from "../../i18n/messages";
 
@@ -151,7 +151,7 @@ export function ConnectionEnvironmentRow(props: {
           ) : null}
           {diagnosis ? (
             <>
-              <Text className="text-xs text-danger-foreground">{diagnosis.headline}</Text>
+              <Text className="text-xs text-foreground-secondary">{diagnosis.headline}</Text>
               {connectionState.attempt > 0 ? (
                 <Text className="text-xs text-foreground-muted">
                   {gt("Retrying · attempt {attempt}", { attempt: connectionState.attempt })}
@@ -162,24 +162,20 @@ export function ConnectionEnvironmentRow(props: {
             <Text
               className={cn(
                 "text-xs",
-                hasConnectionFailure ? "text-danger-foreground" : "text-foreground-muted",
+                hasConnectionFailure ? "text-foreground-secondary" : "text-foreground-muted",
               )}
               numberOfLines={props.expanded ? undefined : 1}
               selectable={props.expanded}
             >
               {statusLabel}
               {statusTraceId ? (
-                <ConnectionTraceId
-                  traceId={statusTraceId}
-                  tone={hasConnectionFailure ? "danger" : "muted"}
-                  activation="longPress"
-                />
+                <ConnectionTraceId traceId={statusTraceId} activation="longPress" />
               ) : null}
             </Text>
           ) : null}
           {freeze ? (
             <Text
-              className="text-xs text-warning-foreground"
+              className="text-xs text-foreground-muted"
               numberOfLines={props.expanded ? undefined : 1}
             >
               {`${freeze.title}. ${freeze.description}`}
@@ -251,80 +247,31 @@ export function ConnectionEnvironmentRow(props: {
             />
           </>
 
-          {Platform.OS === "android" ? (
-            <View className="flex-row items-center justify-end gap-2">
-              <View className="flex-1">
-                <Button
-                  label={gt("Save")}
-                  tone="primary"
-                  fullWidth
-                  onPress={() => {
-                    void handleSave();
-                  }}
-                />
-              </View>
-              <IconButton
-                accessibilityLabel={gt("Reconnect environment")}
-                icon="arrow.clockwise"
-                variant="tonal"
-                disabled={!enabled}
-                onPress={() => props.onReconnect(props.environment.environmentId)}
-              />
-              <IconButton
-                accessibilityLabel={gt("Remove environment")}
-                icon="trash"
-                variant="tonal"
-                onPress={() => props.onRemove(props.environment.environmentId)}
+          <View className="flex-row items-center justify-end gap-2">
+            <View className="flex-1">
+              <Button
+                label={gt("Save")}
+                tone="primary"
+                fullWidth
+                onPress={() => {
+                  void handleSave();
+                }}
               />
             </View>
-          ) : (
-            <View className="flex-row justify-end gap-2">
-              <Pressable
-                className="min-h-[42px] flex-1 flex-row items-center justify-center gap-1.5 rounded-[14px] bg-primary px-3.5 py-2.5 active:opacity-70"
-                onPress={handleSave}
-              >
-                <SymbolView
-                  name="checkmark"
-                  size={13}
-                  tintColorClassName="accent-primary-foreground"
-                  type="monochrome"
-                />
-                <Text className="text-xs font-ankiel-bold tracking-[0.8px] uppercase text-primary-foreground">
-                  <T>Save</T>
-                </Text>
-              </Pressable>
-
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={gt("Reconnect environment")}
-                accessibilityState={{ disabled: !enabled }}
-                className="h-[42px] w-[42px] items-center justify-center rounded-[14px] border border-input-border bg-input active:opacity-70 disabled:opacity-40"
-                disabled={!enabled}
-                onPress={() => props.onReconnect(props.environment.environmentId)}
-              >
-                <SymbolView
-                  name="arrow.clockwise"
-                  size={14}
-                  tintColorClassName="accent-icon-subtle"
-                  type="monochrome"
-                />
-              </Pressable>
-
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={gt("Remove environment")}
-                className="h-[42px] w-[42px] items-center justify-center rounded-[14px] border border-danger-border bg-danger active:opacity-70"
-                onPress={() => props.onRemove(props.environment.environmentId)}
-              >
-                <SymbolView
-                  name="trash"
-                  size={14}
-                  tintColorClassName="accent-danger-foreground"
-                  type="monochrome"
-                />
-              </Pressable>
-            </View>
-          )}
+            <IconButton
+              accessibilityLabel={gt("Reconnect environment")}
+              icon="arrow.clockwise"
+              variant="tonal"
+              disabled={!enabled}
+              onPress={() => props.onReconnect(props.environment.environmentId)}
+            />
+            <IconButton
+              accessibilityLabel={gt("Remove environment")}
+              icon="trash"
+              variant="tonal"
+              onPress={() => props.onRemove(props.environment.environmentId)}
+            />
+          </View>
         </Animated.View>
       ) : null}
     </Animated.View>

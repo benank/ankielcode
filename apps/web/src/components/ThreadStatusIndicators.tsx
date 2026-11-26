@@ -22,6 +22,7 @@ import { TerminalIcon } from "lucide-react";
 import { m, type MessageResolver } from "../i18n/messages";
 import { useEnvironment, usePrimaryEnvironmentId } from "../state/environments";
 import { EnvironmentMachineIcon } from "./EnvironmentMachineIcon";
+import { STATUS_TONE_DOT_CLASS } from "./PixelStatus";
 import { useProject } from "../state/entities";
 import {
   pullRequestListLines,
@@ -698,7 +699,7 @@ export function terminalStatusFromRunningIds(
   }
   return {
     label: resolve(msg("Terminal process running")),
-    colorClass: "text-teal-600 dark:text-teal-300/90",
+    colorClass: "text-muted-foreground",
     pulse: true,
   };
 }
@@ -713,38 +714,9 @@ function synchronizeTerminalPulse(event: AnimationEvent<SVGSVGElement>) {
   }
 }
 
-function ThreadStatusLabel({
-  status,
-  compact = false,
-}: {
-  status: ThreadStatusPill;
-  compact?: boolean;
-}) {
+function ThreadStatusLabel({ status }: { status: ThreadStatusPill }) {
   const m = useMessages();
   const label = m(status.label);
-  if (compact) {
-    return (
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <span
-              role="img"
-              aria-label={label}
-              className={`inline-flex size-3.5 shrink-0 items-center justify-center ${status.colorClass}`}
-            />
-          }
-        >
-          <span
-            className={`size-[9px] rounded-full ${status.dotClass} ${
-              status.pulse ? "motion-safe:animate-status-pulse" : ""
-            }`}
-          />
-        </TooltipTrigger>
-        <TooltipPopup side="top">{label}</TooltipPopup>
-      </Tooltip>
-    );
-  }
-
   return (
     <Tooltip>
       <TooltipTrigger
@@ -752,14 +724,16 @@ function ThreadStatusLabel({
           <span
             role="img"
             aria-label={label}
-            className={`inline-flex items-center gap-1 text-3xs ${status.colorClass}`}
+            className="inline-flex items-center gap-1 text-3xs text-muted-foreground"
           />
         }
       >
         <span
-          className={`h-1.5 w-1.5 rounded-full ${status.dotClass} ${
-            status.pulse ? "motion-safe:animate-status-pulse" : ""
-          }`}
+          className={cn(
+            "h-1.5 w-1.5 rounded-full",
+            STATUS_TONE_DOT_CLASS[status.tone],
+            status.pulse && "motion-safe:animate-status-pulse",
+          )}
         />
         <span className="hidden md:inline">{label}</span>
       </TooltipTrigger>
@@ -941,13 +915,13 @@ export function ThreadRowTrailingStatus({ thread }: { thread: SidebarThreadSumma
 function settledPrHoverColorClass(state: ThreadPullRequestBadge["state"]): string {
   switch (state) {
     case "draft":
-      return "group-hover/sidebar-row:text-zinc-500 dark:group-hover/sidebar-row:text-zinc-400/80";
+      return "group-hover/sidebar-row:text-muted-foreground";
     case "open":
-      return "group-hover/sidebar-row:text-emerald-600 dark:group-hover/sidebar-row:text-emerald-300/90";
+      return "group-hover/sidebar-row:text-success-foreground";
     case "merged":
-      return "group-hover/sidebar-row:text-violet-600 dark:group-hover/sidebar-row:text-violet-300/90";
+      return "group-hover/sidebar-row:text-merged";
     case "closed":
-      return "group-hover/sidebar-row:text-red-600 dark:group-hover/sidebar-row:text-red-300/90";
+      return "group-hover/sidebar-row:text-destructive";
   }
 }
 

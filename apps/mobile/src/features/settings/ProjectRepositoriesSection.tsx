@@ -109,7 +109,6 @@ export function ProjectRepositoriesSection(props: {
         name: folder.name,
       }),
       confirmText: gt("Remove", { $context: "verb, removes a folder from the project" }),
-      destructive: true,
       onConfirm: () => void save({ untrack: folder.path }),
     });
 
@@ -148,12 +147,7 @@ export function ProjectRepositoriesSection(props: {
           description={folder.path}
           meta={
             folder.state === undefined ? undefined : (
-              <Text
-                textRole="footnote"
-                className={
-                  folder.state === "missing" ? "text-warning-foreground" : "text-foreground-muted"
-                }
-              >
+              <Text textRole="footnote" className="text-foreground-muted">
                 {m(FOLDER_STATE_LABELS[folder.state])}
               </Text>
             )
@@ -168,7 +162,7 @@ export function ProjectRepositoriesSection(props: {
                 onPress={() => remove(folder)}
                 className="rounded-full border border-border bg-card px-3 py-1.5 disabled:opacity-40"
               >
-                <Text className="font-ankiel-medium text-xs text-danger-foreground">
+                <Text className="font-ankiel-medium text-xs text-foreground">
                   <T context="verb, removes a folder from the project">Remove</T>
                 </Text>
               </Pressable>

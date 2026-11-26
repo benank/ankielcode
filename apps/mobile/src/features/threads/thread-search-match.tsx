@@ -36,11 +36,9 @@ export function ThreadSearchMatchExcerpt(props: {
           props.compact ? "text-sm font-ankiel-medium" : "text-xs font-ankiel-medium",
           props.selected
             ? "text-thread-selected-foreground"
-            : isUser
-              ? props.sidebar
-                ? "text-drawer-foreground-muted"
-                : "text-foreground-secondary"
-              : "text-adaptive-emerald-600-400",
+            : props.sidebar
+              ? "text-drawer-foreground-muted"
+              : "text-foreground-secondary",
         )}
       >
         {isUser

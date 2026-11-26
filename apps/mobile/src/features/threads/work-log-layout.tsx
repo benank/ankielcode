@@ -50,10 +50,10 @@ export function WorkLogPressable({
 
 export function WorkLogLabel({
   children,
-  tone = "default",
+  emphasized = false,
 }: {
   children: ReactNode;
-  tone?: "default" | "danger" | "warning";
+  emphasized?: boolean;
 }) {
   return (
     <Text
@@ -61,9 +61,8 @@ export function WorkLogLabel({
       numberOfLines={1}
       ellipsizeMode="tail"
       className={cn(
-        "min-w-0 flex-1 text-sm text-foreground-muted",
-        tone === "danger" && "font-ankiel-medium text-adaptive-rose-600-400",
-        tone === "warning" && "font-ankiel-medium text-warning-foreground",
+        "min-w-0 flex-1 text-sm",
+        emphasized ? "font-ankiel-medium text-foreground" : "text-foreground-muted",
       )}
     >
       {children}

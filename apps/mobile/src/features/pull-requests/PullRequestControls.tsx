@@ -44,7 +44,6 @@ export function PullRequestCardRow(props: {
   readonly detail?: string;
   readonly onPress?: () => void;
   readonly accessibilityLabel?: string;
-  readonly destructive?: boolean;
   readonly last?: boolean;
   readonly compact?: boolean;
   readonly menu?: boolean;
@@ -63,20 +62,10 @@ export function PullRequestCardRow(props: {
       <SymbolView
         name={props.icon}
         size={18}
-        tintColorClassName={
-          props.destructive ? "accent-danger-foreground" : (props.tint ?? "accent-icon-muted")
-        }
+        tintColorClassName={props.tint ?? "accent-icon-muted"}
       />
       <View className="min-w-0 flex-1 gap-0.5">
-        <Text
-          className={
-            props.destructive
-              ? "text-sm font-ankiel-medium text-danger-foreground"
-              : "text-sm font-ankiel-medium"
-          }
-        >
-          {props.title}
-        </Text>
+        <Text className="text-sm font-ankiel-medium">{props.title}</Text>
         {props.detail ? (
           <Text className="text-2xs text-foreground-muted" numberOfLines={2}>
             {props.detail}

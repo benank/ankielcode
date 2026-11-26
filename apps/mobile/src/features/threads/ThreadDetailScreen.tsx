@@ -847,7 +847,6 @@ function ThreadDetailBody(
                       "It has not answered Stop. Force stop ends the turn and kills the agent's processes, unless other working threads share them.",
                     ),
                     confirmText: gt("Force stop"),
-                    destructive: true,
                     onConfirm: () => void forceStop(runStop.runId),
                   }),
               }

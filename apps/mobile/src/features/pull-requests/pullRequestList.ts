@@ -482,7 +482,7 @@ export function pullRequestListReviewStatus(
       label: resolve(msg("Approved", { $context: "review status badge" })),
       accessibleLabel: resolve(msg("Reviews approved")),
       icon: "person.fill.checkmark",
-      tint: "accent-adaptive-emerald-600-400",
+      tint: "accent-signal-success",
     } as const;
   if (entry.viewerReviewRequested)
     return {

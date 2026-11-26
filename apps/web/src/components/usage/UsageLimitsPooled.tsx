@@ -35,7 +35,7 @@ import { providerClients } from "../settings/providerDriverMeta";
 import { RedactedSensitiveText } from "../settings/RedactedSensitiveText";
 import { Button } from "../ui/button";
 import { OpenAI } from "../Icons";
-import { Alert, AlertTitle } from "../ui/alert";
+import { Alert, AlertDescription } from "../ui/alert";
 import { Popover, PopoverCreateHandle, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { PaceIcon, ResetCreditDialog, barColor, usePaceMark, useResetCredit } from "./UsageLimits";
 import {
@@ -753,12 +753,12 @@ export function UsageLimitsPooled({
 function LimitNotices({ notices }: { readonly notices: readonly string[] }) {
   if (notices.length === 0) return null;
   return (
-    <Alert variant="warning" controlAlignment="first-line">
+    <Alert controlAlignment="first-line">
       <AlertTriangleIcon />
       {notices.map((notice) => (
-        <AlertTitle key={notice} className="break-words">
+        <AlertDescription key={notice} className="break-words">
           {notice}
-        </AlertTitle>
+        </AlertDescription>
       ))}
     </Alert>
   );

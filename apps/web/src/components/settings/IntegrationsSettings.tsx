@@ -1471,7 +1471,9 @@ function BrowserProfilesSetting({ disabled }: { readonly disabled: boolean }) {
                 )}
                 {isDefault ? (
                   <span className={cn("flex", profileWritesDisabled && "opacity-64")}>
-                    <Badge>{gt("Default", { $context: "default browser profile badge" })}</Badge>
+                    <Badge variant="outline">
+                      {gt("Default", { $context: "default browser profile badge" })}
+                    </Badge>
                   </span>
                 ) : null}
               </span>
@@ -1511,7 +1513,6 @@ function BrowserProfilesSetting({ disabled }: { readonly disabled: boolean }) {
                   </MenuItem>
                   {builtIn ? null : (
                     <MenuItem
-                      variant="destructive"
                       disabled={!settingsHydrated || !removalAvailable}
                       onClick={() => {
                         if (settingsHydrated) setProfilePendingRemoval(profile);
@@ -1614,7 +1615,7 @@ function BrowserProfilesSetting({ disabled }: { readonly disabled: boolean }) {
               <T>Cancel</T>
             </AlertDialogClose>
             <Button
-              variant="destructive"
+              variant="default"
               onClick={() => {
                 if (profilePendingClear)
                   clearProfileData(profilePendingClear.id, profilePendingClear.name);

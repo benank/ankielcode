@@ -497,7 +497,6 @@ export function PullRequestActionsMenu({
                       { term: changeRequestTermKind(terminology) },
                     )
               }
-              variant="destructive"
               disabled={actionPending}
               {...inlineConfirm.props("close", () => void perform("close"))}
             >
@@ -548,7 +547,6 @@ export function PullRequestActionsMenu({
           <>
             <MenuSeparator />
             <MenuItem
-              variant="destructive"
               disabled={actionPending || !environmentConnected}
               onClick={() => void confirmDeleteBranch()}
             >

@@ -113,10 +113,7 @@ export function WorkflowRunsView({
   // A broken file is said even where nothing has run, or its workflows would just seem missing.
   const problemAlert =
     snapshot.definition?.problem == null ? null : (
-      <div
-        role="alert"
-        className="flex shrink-0 items-center gap-3 border-b bg-destructive/4 px-4 py-2 text-xs"
-      >
+      <div role="alert" className="flex shrink-0 items-center gap-3 border-b px-4 py-2 text-xs">
         <span className="min-w-0 flex-1 text-muted-foreground">
           <T>
             <span className="font-medium text-destructive-foreground">

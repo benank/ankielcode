@@ -455,11 +455,7 @@ function projectedWorkEntry(
         toolData: item,
       };
     case "system_notice":
-      return {
-        ...common,
-        label: item.message,
-        ...(item.level === "info" ? {} : { sourceActivityKind: "runtime.warning" }),
-      };
+      return { ...common, label: item.message };
     case "error": {
       const presentation = providerErrorPresentation(item, resolve);
       return {

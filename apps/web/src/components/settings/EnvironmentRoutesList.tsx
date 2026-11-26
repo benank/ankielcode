@@ -36,6 +36,7 @@ import { cn } from "~/lib/utils";
 import type { EnvironmentPresentation } from "~/state/environments";
 import { usePreparedConnection } from "~/state/session";
 import { useAtomCommand } from "~/state/use-atom-command";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 
@@ -79,7 +80,6 @@ export function EnvironmentRoutesList({
             route: connectionRouteLabelText(route, messages),
             address,
           }),
-      { variant: "destructive" },
     );
     if (confirmed !== true) return;
     await removeRoute({
@@ -182,14 +182,14 @@ function SortableRouteRow({
         <p className="flex items-center gap-1.5 text-xs font-medium text-foreground">
           {label}
           {inUse ? (
-            <span className="rounded-sm bg-success/12 px-1 text-2xs font-normal text-success-foreground">
+            <Badge variant="outline" size="sm">
               <T>In use</T>
-            </span>
+            </Badge>
           ) : null}
           {refused ? (
-            <span className="rounded-sm bg-destructive/8 px-1 text-2xs font-normal text-destructive-foreground">
+            <Badge variant="error" size="sm">
               <T>Sign-in refused</T>
-            </span>
+            </Badge>
           ) : null}
         </p>
         {address !== null ? (

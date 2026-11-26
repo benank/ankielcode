@@ -18,7 +18,6 @@ import { FullWindowOverlay } from "react-native-screens";
 import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { useAndroidControlSizing } from "../../components/ui/useAndroidControlSizing";
-import { cn } from "../../lib/cn";
 import { CompactVoiceWaveform, DictationElapsedTime } from "./ComposerDictationControl";
 import { useGlobalVoiceInput } from "./VoiceInputProvider";
 import { resolveVoiceComposerPresentation } from "./voiceInputPresentation";
@@ -182,13 +181,7 @@ function EdgeDictationPill(props: {
               className="min-w-0 flex-1 justify-center self-stretch active:opacity-70"
               onPress={() => setExpanded(false)}
             >
-              <Text
-                className={cn(
-                  "text-xs",
-                  isError ? "text-danger-foreground" : "font-ankiel-medium text-foreground",
-                )}
-                numberOfLines={1}
-              >
+              <Text className="text-xs font-ankiel-medium text-foreground" numberOfLines={1}>
                 {isError ? presentation.statusLabel : label}
               </Text>
             </Pressable>

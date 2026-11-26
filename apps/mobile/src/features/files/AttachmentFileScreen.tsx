@@ -177,7 +177,6 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
           title: gt("Remove from draft"),
           icon: "trash",
           inline: false,
-          destructive: true,
           onPress: removeFromDraft,
         } as const)
       : null,
@@ -210,7 +209,6 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
           id: action.id,
           title: action.title,
           icon: action.icon,
-          destructive: "destructive" in action,
           onPress: action.onPress,
         })),
     ],

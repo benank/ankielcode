@@ -435,7 +435,7 @@ function FloatingStatusLabel(props: {
         onLayout={props.onLayout}
         onPress={props.status.onPress}
       >
-        <View className="h-2 w-2 rounded-full bg-red-500" />
+        <View className="h-2 w-2 rounded-full bg-danger-foreground" />
         <Text
           className="max-w-[260px] shrink font-ankiel-medium text-xs text-foreground"
           numberOfLines={1}
@@ -457,7 +457,7 @@ function FloatingStatusLabel(props: {
           <SymbolView
             name="exclamationmark.triangle"
             size={13}
-            tintColorClassName="accent-warning-foreground"
+            tintColorClassName="accent-icon-muted"
             type="monochrome"
           />
         ) : (

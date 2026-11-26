@@ -630,7 +630,7 @@ function ProjectOverrideInheritance({
             />
           }
         >
-          <LayersIcon className="size-3 text-primary" />
+          <LayersIcon className="size-3 text-foreground" />
         </TooltipTrigger>
         <TooltipPopup side="top">
           <T>Overridden for this project</T>
@@ -1069,7 +1069,7 @@ export function ProviderInstanceCard({
             <p
               className={cn(
                 "text-xs leading-snug [overflow-wrap:anywhere]",
-                versionAdvisory.emphasis === "strong" ? "text-warning" : "text-muted-foreground",
+                versionAdvisory.emphasis === "strong" ? "text-foreground" : "text-muted-foreground",
               )}
             >
               {versionAdvisory.detail}
@@ -1099,14 +1099,16 @@ export function ProviderInstanceCard({
               aria-live="polite"
               className={cn(
                 "text-xs leading-snug [overflow-wrap:anywhere]",
-                updateProblem ? "text-warning" : "text-muted-foreground",
+                updateState?.status === "failed" && !isUpdating
+                  ? "text-destructive"
+                  : "text-muted-foreground",
               )}
             >
               {updateProgress ?? updateProblem}
             </p>
           ) : null}
           {onRunVersionAction && updateCommand ? (
-            <div className="flex items-center gap-2 text-3xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center gap-2 text-2xs font-medium text-muted-foreground">
               <span aria-hidden className="h-px flex-1 bg-border" />
               <T>or, update manually using</T>
               <span aria-hidden className="h-px flex-1 bg-border" />

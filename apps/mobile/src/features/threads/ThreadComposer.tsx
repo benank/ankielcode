@@ -96,6 +96,7 @@ import {
 import { useComposerTextRole } from "../settings/appearance/useScaledTextRole";
 import type { RemoteClientConnectionState } from "../../lib/connection";
 import { Menu } from "../../components/ui/Menu";
+import { Notice } from "../../components/ui/Notice";
 import {
   composerRunsDraftLocally,
   type ActiveTurnComposerAction,
@@ -818,23 +819,17 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
         ) : null}
 
         {selectedProviderStatus?.compatibilityAdvisory?.message &&
-        (selectedProviderStatus.compatibilityAdvisory.status === "unsupported" ||
-          selectedProviderStatus.compatibilityAdvisory.status === "broken") ? (
-          <Text
-            accessibilityRole={
-              selectedProviderStatus.compatibilityAdvisory.status === "broken" ? "alert" : undefined
-            }
-            accessibilityLiveRegion={
-              selectedProviderStatus.compatibilityAdvisory.status === "broken"
-                ? "assertive"
-                : "polite"
-            }
-            className={
-              selectedProviderStatus.compatibilityAdvisory.status === "broken"
-                ? "bg-danger px-3 py-2 text-xs text-danger-foreground"
-                : "px-3 py-2 text-xs text-foreground"
-            }
-          >
+        selectedProviderStatus.compatibilityAdvisory.status === "broken" ? (
+          <View accessibilityRole="alert" className="pb-2">
+            <Notice
+              message={selectedProviderStatus.compatibilityAdvisory.message}
+              tone="danger"
+              floating
+            />
+          </View>
+        ) : selectedProviderStatus?.compatibilityAdvisory?.message &&
+          selectedProviderStatus.compatibilityAdvisory.status === "unsupported" ? (
+          <Text accessibilityLiveRegion="polite" className="px-3 py-2 text-xs text-foreground">
             {selectedProviderStatus.compatibilityAdvisory.message}
           </Text>
         ) : null}
@@ -865,12 +860,12 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
               <SymbolView
                 name="exclamationmark.triangle"
                 size={13}
-                tintColorClassName="accent-warning-foreground"
+                tintColorClassName="accent-icon-muted"
                 type="monochrome"
               />
               <Text
                 accessibilityRole="alert"
-                className="min-w-0 flex-1 text-xs text-warning-foreground"
+                className="min-w-0 flex-1 text-xs text-foreground-secondary"
               >
                 {attachmentBlockReason}
               </Text>

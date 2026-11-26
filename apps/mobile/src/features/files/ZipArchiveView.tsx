@@ -329,7 +329,6 @@ function ZipArchiveHeader(props: {
                 accessibilityLabel: gt("Remove from draft"),
                 icon: "trash" as const,
                 onPress: props.onRemove,
-                destructive: true,
                 overflowOnly: true,
               },
             ]

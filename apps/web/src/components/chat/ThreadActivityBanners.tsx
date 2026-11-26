@@ -24,6 +24,7 @@ import {
   CircleStopIcon,
   GitBranchIcon,
   MessageCircleIcon,
+  PuzzleIcon,
   ShieldQuestionIcon,
   TargetIcon,
   TerminalIcon,
@@ -33,6 +34,7 @@ import { Fragment } from "react";
 import { m, type MessageResolver } from "~/i18n/messages";
 import { tickTextContent } from "~/lib/tickTextContent";
 import { BackgroundWorkDetails } from "./BackgroundWorkDetails";
+import { STATUS_TONE_TEXT_CLASS } from "../PixelStatus";
 import { Button, InlineButton } from "../ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
@@ -46,7 +48,7 @@ export function extensionStatusBannerItem(
   return {
     id: "pi-extension-status",
     variant: "default",
-    icon: <span>▸</span>,
+    icon: <PuzzleIcon />,
     title: <output>{`Pi · ${statuses.map((status) => status.text).join(" · ")}`}</output>,
   };
 }
@@ -65,11 +67,11 @@ export function childInputNowItem(
   if (!first || input.parentAwaitingUser) return null;
   return {
     id: `child-input:${first.id}`,
-    // The only line at the end of the timeline that needs you gets the info color.
+    // The only line at the end of the timeline that needs you gets the attention color.
     icon: first.hasPendingApprovals ? (
-      <ShieldQuestionIcon className="text-info-foreground" />
+      <ShieldQuestionIcon className={STATUS_TONE_TEXT_CLASS.attention} />
     ) : (
-      <MessageCircleIcon className="text-info-foreground" />
+      <MessageCircleIcon className={STATUS_TONE_TEXT_CLASS.attention} />
     ),
     title: childThreadInputsTitle(childThreadInputs, resolve),
     waitingLabel: childThreadInputs.every((child) => child.lineage.sideChat === true)
@@ -164,11 +166,7 @@ export function runStopNowItem(input: {
   const requestedAtMs = Date.parse(input.stop.requestedAt);
   return {
     id: `run-stop:${input.threadId}`,
-    icon: unresponsive ? (
-      <TriangleAlertIcon className="text-warning-foreground" />
-    ) : (
-      <CircleStopIcon />
-    ),
+    icon: unresponsive ? <TriangleAlertIcon /> : <CircleStopIcon />,
     title: unresponsive ? (
       <T>Agent not responding to Stop</T>
     ) : (

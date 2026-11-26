@@ -15,11 +15,19 @@ import { observeVisibleAnimation } from "~/lib/visibleAnimation";
 
 export type { PixelStatusKind };
 
-const TONE_CLASS_NAME: Record<PixelStatusTone, string> = {
+/** The one color per status tone; dots, icons and lights that show a state all read from here. */
+export const STATUS_TONE_TEXT_CLASS: Record<PixelStatusTone, string> = {
   active: "text-signal-active",
   attention: "text-warning",
   failed: "text-destructive",
   done: "text-muted-foreground",
+};
+
+export const STATUS_TONE_DOT_CLASS: Record<PixelStatusTone, string> = {
+  active: "bg-signal-active",
+  attention: "bg-warning",
+  failed: "bg-destructive",
+  done: "bg-muted-foreground/60",
 };
 
 let windowFocusTracked = false;
@@ -64,7 +72,7 @@ export function PixelStatus(props: { kind: PixelStatusKind; className?: string }
       data-pixel-status={props.kind}
       className={cn(
         "relative inline-block size-4 shrink-0 overflow-hidden",
-        TONE_CLASS_NAME[animation.tone],
+        STATUS_TONE_TEXT_CLASS[animation.tone],
         animation.dim && "opacity-80",
         props.className,
       )}

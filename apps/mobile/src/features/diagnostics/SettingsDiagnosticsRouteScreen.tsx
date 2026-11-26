@@ -175,7 +175,7 @@ function CrashRow(props: { readonly record: StartupCrashRecord; readonly first: 
       <Text className="text-xs text-foreground-muted">
         {new Date(record.timestamp).toLocaleString()}
       </Text>
-      <Text selectable className="text-base leading-snug text-danger-foreground">
+      <Text selectable className="text-base leading-snug text-foreground">
         {record.description}
       </Text>
       {record.frames.length > 0 ? (

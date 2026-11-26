@@ -149,7 +149,7 @@ export function UsageLimitRecoveryCard({
   return (
     <View
       accessibilityRole={chatGptLimit ? "alert" : undefined}
-      className="mx-3 mb-2 flex-row gap-2 rounded-xl border border-warning-foreground/25 bg-screen p-3"
+      className="mx-3 mb-2 flex-row gap-2 rounded-xl border border-border bg-card p-3"
     >
       {chatGptLimit ? (
         <View className="pt-0.5">
@@ -163,9 +163,7 @@ export function UsageLimitRecoveryCard({
           </Text>
         ) : null}
         <Text
-          className={
-            chatGptLimit ? "text-sm text-foreground-muted" : "text-sm text-warning-foreground"
-          }
+          className={chatGptLimit ? "text-sm text-foreground-muted" : "text-sm text-foreground"}
         >
           {workspaceLimit
             ? copied
@@ -219,7 +217,7 @@ export function UsageLimitRecoveryCard({
           </View>
         ) : null}
         {error ? (
-          <Text accessibilityRole="alert" className="text-sm text-destructive">
+          <Text accessibilityRole="alert" className="text-sm text-danger-foreground">
             {error}
           </Text>
         ) : null}
@@ -247,7 +245,7 @@ function RecoveryAction(props: {
         className={
           props.disabled
             ? "text-sm font-ankiel-medium text-foreground-muted"
-            : "text-sm font-ankiel-medium text-primary"
+            : "text-sm font-ankiel-medium text-primary-text"
         }
       >
         {props.label}

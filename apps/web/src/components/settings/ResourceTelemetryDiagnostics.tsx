@@ -44,6 +44,7 @@ import {
   useResourceTelemetryHistory,
 } from "../../lib/resourceTelemetryState";
 import { cn } from "../../lib/utils";
+import { STATUS_TONE_DOT_CLASS, STATUS_TONE_TEXT_CLASS } from "../PixelStatus";
 import { formatBytes } from "../../lib/formatBytes";
 import { ensureLocalApi } from "../../localApi";
 import { serverEnvironment } from "../../state/server";
@@ -118,13 +119,6 @@ function categoryLabel(
   }
 }
 
-function categoryDotClass(category: ResourceTelemetryProcessCategory): string {
-  if (category === "resource-monitor") return "bg-warning";
-  if (category.startsWith("electron-")) return "bg-info";
-  if (category === "server") return "bg-violet-500";
-  return "bg-success";
-}
-
 function ioSemanticsLabel(
   semantics: ResourceTelemetryIoSemantics,
   resolve: MessageResolver = m,
@@ -151,47 +145,34 @@ function booleanStateLabel(
   return resolve(msg("Unknown"));
 }
 
-function sourceStatusTone(status: ResourceTelemetrySourceStatus): "default" | "warning" | "danger" {
-  if (status === "healthy") return "default";
-  if (status === "starting" || status === "degraded") return "warning";
-  return "danger";
-}
+const SOURCE_STATUS_LABELS: Record<ResourceTelemetrySourceStatus, string> = {
+  starting: msg("Starting"),
+  healthy: msg("Healthy", { $context: "resource monitor status" }),
+  degraded: msg("Degraded", { $context: "resource monitor status" }),
+  unavailable: msg("Unavailable"),
+  stopped: msg("Stopped", { $context: "resource monitor status" }),
+};
 
-function SourceStatusBadge({
+function SourceStatusLabel({
   label,
   status,
-  presentation,
+  statusLabel,
 }: {
-  label: string;
+  label?: string | undefined;
   status: ResourceTelemetrySourceStatus;
-  presentation?:
-    | {
-        readonly label: string;
-        readonly tone: "neutral";
-      }
-    | undefined;
+  /** Replaces the status when it is expected, so the dot stays quiet. */
+  statusLabel?: string | undefined;
 }) {
-  const tone = presentation?.tone ?? sourceStatusTone(status);
+  const resolve = useMessages();
+  const failed = statusLabel === undefined && (status === "unavailable" || status === "stopped");
+  const text = statusLabel ?? resolve(SOURCE_STATUS_LABELS[status]);
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-3xs font-semibold uppercase tracking-widest",
-        tone === "neutral" && "border-border/70 bg-muted/45 text-muted-foreground",
-        tone === "default" && "border-success/25 bg-success/10 text-success-foreground",
-        tone === "warning" && "border-warning/30 bg-warning/10 text-warning-foreground",
-        tone === "danger" && "border-destructive/30 bg-destructive/10 text-destructive",
-      )}
-    >
+    <span className="inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
       <span
-        className={cn(
-          "size-1.5 rounded-full",
-          tone === "neutral" && "bg-muted-foreground/55",
-          tone === "default" && "bg-success",
-          tone === "warning" && "bg-warning",
-          tone === "danger" && "bg-destructive",
-        )}
+        aria-hidden
+        className={cn("size-1.5 rounded-full", STATUS_TONE_DOT_CLASS[failed ? "failed" : "done"])}
       />
-      {label} {presentation?.label ?? status}
+      {label ? `${label} · ${text}` : text}
     </span>
   );
 }
@@ -242,19 +223,21 @@ function IconStat({
 }) {
   return (
     <div className="group min-w-0 px-4 py-4 sm:px-5">
-      <div className="flex items-center gap-2 text-3xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-        <span className="text-muted-foreground/55 transition-colors group-hover:text-foreground/65">
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        <span
+          className={
+            tone === "warning"
+              ? STATUS_TONE_TEXT_CLASS.attention
+              : tone === "danger"
+                ? STATUS_TONE_TEXT_CLASS.failed
+                : "text-muted-foreground/55 transition-colors group-hover:text-foreground/65"
+          }
+        >
           {icon}
         </span>
         <span className="truncate">{label}</span>
       </div>
-      <div
-        className={cn(
-          "mt-2.5 truncate font-mono text-2xl font-semibold tracking-tighter tabular-nums text-foreground",
-          tone === "warning" && "text-warning-foreground",
-          tone === "danger" && "text-destructive",
-        )}
-      >
+      <div className="mt-2.5 truncate font-mono text-2xl font-semibold tracking-tighter tabular-nums text-foreground">
         {value}
       </div>
       {detail ? (
@@ -266,23 +249,20 @@ function IconStat({
 
 function AggregateCard({
   label,
-  accentClass,
   aggregate,
 }: {
   label: string;
-  accentClass: string;
   aggregate: ResourceTelemetryAggregate;
 }) {
   const gt = useGT();
   return (
-    <div className="relative overflow-hidden border-t border-border/60 px-4 py-4 first:border-t-0 md:border-t-0 md:border-l md:first:border-l-0 sm:px-5">
-      <span className={cn("absolute inset-x-5 top-0 h-0.5 rounded-full opacity-75", accentClass)} />
+    <div className="border-t border-border/60 px-4 py-4 first:border-t-0 md:border-t-0 md:border-l md:first:border-l-0 sm:px-5">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground/75">
-          {label}
-        </div>
-        <div className="rounded-md bg-muted/55 px-1.5 py-0.5 font-mono text-3xs tabular-nums text-muted-foreground/70">
-          {aggregate.processCount} {aggregate.processCount === 1 ? "process" : "processes"}
+        <div className="text-xs font-medium text-muted-foreground">{label}</div>
+        <div className="text-2xs tabular-nums text-muted-foreground/70">
+          {gt("{count, plural, one {{count} process} other {{count} processes}}", {
+            count: aggregate.processCount,
+          })}
         </div>
       </div>
       <div className="mt-3.5 grid grid-cols-2 gap-x-4 gap-y-2.5">
@@ -298,9 +278,7 @@ function AggregateCard({
 function MetricPair({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <div className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground/45">
-        {label}
-      </div>
+      <div className="text-2xs text-muted-foreground/70">{label}</div>
       <div className="truncate font-mono text-xs font-medium tabular-nums text-foreground/90">
         {value}
       </div>
@@ -326,40 +304,19 @@ function HealthSource({ label, health }: { label: string; health: ResourceTeleme
               })}
         </div>
       </div>
-      <SourceStatusBadge
-        label=""
+      <SourceStatusLabel
         status={health.status}
-        presentation={
-          expectedInBrowser
-            ? {
-                label: gt("Desktop only"),
-                tone: "neutral",
-              }
-            : undefined
-        }
+        statusLabel={expectedInBrowser ? gt("Desktop only") : undefined}
       />
     </div>
   );
 }
 
-function DetailRow({
-  label,
-  value,
-  valueClassName,
-}: {
-  label: string;
-  value: ReactNode;
-  valueClassName?: string | undefined;
-}) {
+function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 border-t border-border/50 py-2.5 first:border-t-0">
       <span className="text-2xs text-muted-foreground/75">{label}</span>
-      <span
-        className={cn(
-          "min-w-0 truncate text-right font-mono text-2xs tabular-nums text-foreground/85",
-          valueClassName,
-        )}
-      >
+      <span className="min-w-0 truncate text-right font-mono text-2xs tabular-nums text-foreground/85">
         {value}
       </span>
     </div>
@@ -505,7 +462,7 @@ function ProcessTreeName({
       ) : (
         <span className="size-5" aria-hidden />
       )}
-      <span className={cn("size-1.5 rounded-full", categoryDotClass(process.category))} />
+      <span className="size-1.5 rounded-full bg-muted-foreground/40" />
       <Tooltip>
         <TooltipTrigger
           render={<span className="min-w-0 truncate font-medium text-foreground">{name}</span>}
@@ -598,7 +555,7 @@ function ProcessTable({
             <col className="w-[6%]" />
             <col className="w-[4%]" />
           </colgroup>
-          <thead className="sticky top-0 z-10 border-b border-border/60 bg-card text-3xs uppercase tracking-widest text-muted-foreground/65">
+          <thead className="sticky top-0 z-10 border-b border-border/60 bg-card text-2xs text-muted-foreground/70">
             <tr>
               <th className="px-4 py-2 font-semibold sm:pl-5">
                 <T>Process</T>
@@ -664,10 +621,10 @@ function ProcessTable({
                 <td className="px-3 py-2 text-right font-mono tabular-nums">
                   {formatBytes(process.residentBytes)}
                 </td>
-                <td className="px-3 py-2 text-right font-mono tabular-nums text-info-foreground">
+                <td className="px-3 py-2 text-right font-mono tabular-nums">
                   {formatRate(process.ioReadBytesPerSecond)}
                 </td>
-                <td className="px-3 py-2 text-right font-mono tabular-nums text-warning-foreground">
+                <td className="px-3 py-2 text-right font-mono tabular-nums">
                   {formatRate(process.ioWriteBytesPerSecond)}
                 </td>
                 <td className="px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
@@ -727,7 +684,7 @@ function HistoryProcessTable({
             <col className="w-[7%]" />
             <col className="w-[5%]" />
           </colgroup>
-          <thead className="sticky top-0 z-10 border-b border-border/60 bg-card text-3xs uppercase tracking-widest text-muted-foreground/65">
+          <thead className="sticky top-0 z-10 border-b border-border/60 bg-card text-2xs text-muted-foreground/70">
             <tr>
               <th className="px-4 py-2 font-semibold sm:pl-5">
                 <T>Process</T>
@@ -794,10 +751,10 @@ function HistoryProcessTable({
                 <td className="px-3 py-2 text-right font-mono tabular-nums">
                   {formatBytes(process.peakRssBytes)}
                 </td>
-                <td className="px-3 py-2 text-right font-mono tabular-nums text-info-foreground">
+                <td className="px-3 py-2 text-right font-mono tabular-nums">
                   {formatBytes(process.ioReadBytes)}
                 </td>
-                <td className="px-3 py-2 text-right font-mono tabular-nums text-warning-foreground">
+                <td className="px-3 py-2 text-right font-mono tabular-nums">
                   {formatBytes(process.ioWriteBytes)}
                 </td>
                 <td className="px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
@@ -827,7 +784,7 @@ function AttributionTable({ entries }: { entries: ReadonlyArray<ResourceAttribut
           <col className="w-[10%]" />
           <col className="w-[12%]" />
         </colgroup>
-        <thead className="border-b border-border/60 text-3xs uppercase tracking-widest text-muted-foreground/65">
+        <thead className="border-b border-border/60 text-2xs text-muted-foreground/70">
           <tr>
             <th className="px-4 py-2 font-semibold sm:pl-5">
               <T>Component</T>
@@ -863,10 +820,10 @@ function AttributionTable({ entries }: { entries: ReadonlyArray<ResourceAttribut
                 {entry.component}
               </td>
               <td className="truncate px-3 py-2 text-muted-foreground">{entry.operation}</td>
-              <td className="px-3 py-2 text-right font-mono tabular-nums text-info-foreground">
+              <td className="px-3 py-2 text-right font-mono tabular-nums">
                 {formatBytes(entry.logicalReadBytes)}
               </td>
-              <td className="px-3 py-2 text-right font-mono tabular-nums text-warning-foreground">
+              <td className="px-3 py-2 text-right font-mono tabular-nums">
                 {formatBytes(entry.logicalWriteBytes)}
               </td>
               <td className="px-3 py-2 text-right font-mono tabular-nums">{entry.count}</td>
@@ -1067,7 +1024,7 @@ function ResourceTelemetryDiagnosticsBody({
         headerAction={
           <div className="flex items-center gap-2">
             {snapshot ? (
-              <SourceStatusBadge label={gt("Native")} status={snapshot.health.native.status} />
+              <SourceStatusLabel label={gt("Native")} status={snapshot.health.native.status} />
             ) : null}
             <LastSampleLabel sampledAt={snapshot?.readAt ?? null} />
             <Tooltip>
@@ -1094,7 +1051,7 @@ function ResourceTelemetryDiagnosticsBody({
         <div className="overflow-hidden rounded-[inherit]">
           <div className="flex flex-col gap-3 border-b border-border/60 bg-linear-to-r from-muted/45 via-muted/20 to-transparent px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div>
-              <div className="text-3xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+              <div className="text-xs font-medium text-muted-foreground">
                 <T>Ankiel system footprint</T>
               </div>
               <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
@@ -1105,14 +1062,7 @@ function ResourceTelemetryDiagnosticsBody({
               </p>
             </div>
             <div className="flex items-center gap-2 text-3xs text-muted-foreground/65">
-              <span
-                className={cn(
-                  "size-1.5 rounded-full",
-                  snapshot && snapshot.sampleIntervalMs > 0
-                    ? "bg-success"
-                    : "bg-muted-foreground/55",
-                )}
-              />
+              <span className="size-1.5 rounded-full bg-muted-foreground/55" />
               {snapshot
                 ? formatSamplingStatus(snapshot.sampleIntervalMs, messages)
                 : gt("Sampling every ...")}
@@ -1196,28 +1146,16 @@ function ResourceTelemetryDiagnosticsBody({
             />
           </div>
           {telemetry.error ? (
-            <div className="flex items-start gap-2 border-t border-destructive/20 bg-destructive/5 px-4 py-3 text-xs text-destructive sm:px-5">
-              <AlertTriangleIcon className="size-3.5 h-lh shrink-0" />
+            <div className="flex items-start gap-2 border-t border-border/60 px-4 py-3 text-xs text-foreground sm:px-5">
+              <AlertTriangleIcon className="size-3.5 h-lh shrink-0 text-destructive" />
               <span>{telemetry.error}</span>
             </div>
           ) : null}
           {snapshot ? (
             <div className="grid border-t border-border/60 bg-muted/10 md:grid-cols-3">
-              <AggregateCard
-                label={gt("Backend + agents")}
-                accentClass="bg-success/80"
-                aggregate={snapshot.groups.backend}
-              />
-              <AggregateCard
-                label={gt("Desktop")}
-                accentClass="bg-info/80"
-                aggregate={snapshot.groups.electron}
-              />
-              <AggregateCard
-                label={gt("Monitor overhead")}
-                accentClass="bg-warning/80"
-                aggregate={snapshot.groups.monitor}
-              />
+              <AggregateCard label={gt("Backend + agents")} aggregate={snapshot.groups.backend} />
+              <AggregateCard label={gt("Desktop")} aggregate={snapshot.groups.electron} />
+              <AggregateCard label={gt("Monitor overhead")} aggregate={snapshot.groups.monitor} />
             </div>
           ) : null}
         </div>
@@ -1237,7 +1175,7 @@ function ResourceTelemetryDiagnosticsBody({
       >
         <div className="grid overflow-hidden rounded-[inherit] md:grid-cols-2 md:divide-x md:divide-border/60">
           <div className="px-4 py-4 sm:px-5">
-            <div className="mb-3 flex items-center gap-2 text-3xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+            <div className="mb-3 flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <span className="flex size-6 items-center justify-center rounded-md bg-muted/60">
                 <BatteryIcon className="size-3.5" />
               </span>
@@ -1288,16 +1226,7 @@ function ResourceTelemetryDiagnosticsBody({
                         )
                   }
                 />
-                <DetailRow
-                  label={gt("Thermal")}
-                  value={snapshot.power.thermalState}
-                  valueClassName={
-                    snapshot.power.thermalState === "serious" ||
-                    snapshot.power.thermalState === "critical"
-                      ? "text-destructive"
-                      : undefined
-                  }
-                />
+                <DetailRow label={gt("Thermal")} value={snapshot.power.thermalState} />
               </>
             ) : (
               <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-5">
@@ -1314,7 +1243,7 @@ function ResourceTelemetryDiagnosticsBody({
             )}
           </div>
           <div className="border-t border-border/60 px-4 py-4 md:border-t-0 sm:px-5">
-            <div className="mb-3 flex items-center gap-2 text-3xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+            <div className="mb-3 flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <span className="flex size-6 items-center justify-center rounded-md bg-muted/60">
                 <GaugeIcon className="size-3.5" />
               </span>
@@ -1341,11 +1270,6 @@ function ResourceTelemetryDiagnosticsBody({
                 <DetailRow
                   label={gt("Inaccessible")}
                   value={String(snapshot.health.inaccessibleProcessCount)}
-                  valueClassName={
-                    snapshot.health.inaccessibleProcessCount > 0
-                      ? "text-warning-foreground"
-                      : undefined
-                  }
                 />
                 <DetailRow
                   label={gt("Sidecar")}
@@ -1389,8 +1313,8 @@ function ResourceTelemetryDiagnosticsBody({
       >
         <div className="overflow-hidden rounded-[inherit]">
           {history.error ? (
-            <div className="flex items-start gap-2 border-b border-destructive/20 bg-destructive/5 px-4 py-3 text-xs text-destructive sm:px-5">
-              <AlertTriangleIcon className="size-3.5 h-lh shrink-0" />
+            <div className="flex items-start gap-2 border-b border-border/60 px-4 py-3 text-xs text-foreground sm:px-5">
+              <AlertTriangleIcon className="size-3.5 h-lh shrink-0 text-destructive" />
               <span>{history.error}</span>
             </div>
           ) : null}

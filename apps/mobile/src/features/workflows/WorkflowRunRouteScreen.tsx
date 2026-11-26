@@ -17,14 +17,15 @@ import { useRef, useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { PixelStatus } from "../../components/PixelStatus";
 import { RelativeTime } from "../../components/RelativeTime";
 import { AppBar } from "../../components/ui/AppBar";
+import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
 import { Button } from "../../components/ui/Button";
 import * as Dialog from "../../components/ui/Dialog";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ScreenScrollView } from "../../components/ui/ScreenScrollView";
-import { cn } from "../../lib/cn";
 import { useEnvironmentQuery } from "../../state/query";
 import { serverEnvironment } from "../../state/server";
 import { useAtomCommand } from "../../state/use-atom-command";
@@ -36,7 +37,7 @@ import {
   useCanOpenThread,
   workflowRunFeedOf,
 } from "./WorkflowStepCard";
-import { WORKFLOW_TONE_CLASS, WorkflowChip } from "./WorkflowsScreen";
+import { WorkflowChip, WorkflowStateWord } from "./WorkflowsScreen";
 import { WorkflowTimeline } from "./WorkflowTimeline";
 
 export type WorkflowRunParams = {
@@ -73,10 +74,11 @@ function QuestionCard(props: {
   };
   const thread = question.thread;
   return (
-    <Card tone="input">
+    <Card>
       {props.inline === true ? null : (
         <View className="flex-row items-center gap-2">
-          <Text className="font-ankiel-medium text-xs text-warning-foreground">
+          <PixelStatus kind="attention" />
+          <Text className="font-ankiel-medium text-sm text-foreground">
             {gt("Needs you", { $context: "workflow run status: it waits on a person" })}
           </Text>
           <Text className="text-xs text-foreground-muted">
@@ -170,7 +172,6 @@ function RunBody(props: { readonly environmentId: EnvironmentId; readonly node: 
               { text: gt("Keep it"), style: "cancel", onPress: () => done() },
               {
                 text: gt("Cancel run"),
-                style: "destructive",
                 onPress: () => {
                   void cancel(target).then((result) => {
                     reportFailure(gt("Could not cancel the run"), result);
@@ -221,10 +222,17 @@ function RunBody(props: { readonly environmentId: EnvironmentId; readonly node: 
   );
   const pausedAt = feed === null ? null : workflowPausedBeat(feed, run.status);
   const pause = (
-    <Card tone="failed">
-      <Text className="font-ankiel-medium text-sm text-danger-foreground">
-        {gt("Paused", { $context: "workflow run status" })}
-      </Text>
+    <Card>
+      <View className="flex-row items-center gap-2">
+        <SymbolView
+          name="exclamationmark.circle"
+          size={16}
+          tintColorClassName="accent-danger-foreground"
+        />
+        <Text className="font-ankiel-medium text-sm text-foreground">
+          {gt("Paused", { $context: "workflow run status" })}
+        </Text>
+      </View>
       <Text className="text-sm text-foreground">{run.detail ?? gt("A step failed.")}</Text>
       <Text className="text-xs text-foreground-muted">
         {run.retired
@@ -262,9 +270,7 @@ function RunBody(props: { readonly environmentId: EnvironmentId; readonly node: 
           <Text className="min-w-0 flex-1 font-ankiel-bold text-lg text-foreground">
             {run.title}
           </Text>
-          <Text className={cn("font-ankiel-medium text-sm", WORKFLOW_TONE_CLASS[state.tone])}>
-            {state.word}
-          </Text>
+          <WorkflowStateWord state={state} large />
         </View>
         <View className="flex-row items-center gap-2">
           <WorkflowChip name={run.workflow} />

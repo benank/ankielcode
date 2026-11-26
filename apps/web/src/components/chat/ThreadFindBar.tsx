@@ -3,7 +3,6 @@ import { T, useGT } from "gt-react";
 import { ChevronDownIcon, ChevronUpIcon, XIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
-import { cn } from "~/lib/utils";
 import {
   formatThreadFindCount,
   nextThreadFindAnnouncement,
@@ -48,7 +47,6 @@ export function ThreadFindBar(props: ThreadFindBarProps) {
   ]);
 
   const hasQuery = props.query.trim().length > 0;
-  const noResults = hasQuery && !props.status && props.matchCount === 0;
   let label = "";
   if (hasQuery) {
     label = props.counting ? "1/…" : formatThreadFindCount(props.activeIndex, props.matchCount);
@@ -111,10 +109,7 @@ export function ThreadFindBar(props: ThreadFindBarProps) {
           </span>
           <span
             aria-hidden
-            className={cn(
-              "min-w-10 text-center text-xs tabular-nums",
-              noResults ? "text-destructive" : "text-muted-foreground",
-            )}
+            className="min-w-10 text-center text-xs text-muted-foreground tabular-nums"
           >
             {label}
           </span>

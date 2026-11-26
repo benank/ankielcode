@@ -61,6 +61,8 @@ import { authEnvironment } from "~/state/auth";
 import { readEnvironmentScope } from "~/state/session";
 import { useAtomCommand } from "~/state/use-atom-command";
 import { ConnectionStatusDot } from "../ConnectionStatusDot";
+import { useInlineActionConfirm } from "../pullRequest/useInlineActionConfirm";
+import { Badge } from "../ui/badge";
 import { ITEM_ROW_CLASSNAME, ITEM_ROW_INNER_CLASSNAME } from "./itemRows";
 import {
   formatAccessTimestamp,
@@ -123,8 +125,51 @@ function AccessScopeSummary({
 
 function endpointRowClassName(isAvailable: boolean) {
   return cn(
-    "relative first:rounded-t-xl last:rounded-b-xl px-3 py-3 sm:px-4",
+    "first:rounded-t-xl last:rounded-b-xl px-3 py-3 sm:px-4",
     !isAvailable && "bg-muted/15",
+  );
+}
+
+/** Revoking takes a second click, since the device needs a new pairing link to come back. */
+function RevokeButton({
+  scopeKey,
+  label,
+  pending,
+  disabled,
+  onRevoke,
+}: {
+  scopeKey: string;
+  label: string;
+  pending: boolean;
+  disabled: boolean;
+  onRevoke: () => void;
+}) {
+  const gt = useGT();
+  const inlineConfirm = useInlineActionConfirm(scopeKey);
+  return (
+    <Button
+      size="xs"
+      variant="outline"
+      disabled={disabled || pending}
+      {...inlineConfirm.props("revoke", onRevoke)}
+    >
+      {/* The longest label holds the width, so the confirming click lands on the button. */}
+      <span className="inline-grid">
+        <span aria-hidden className="invisible col-start-1 row-start-1">
+          {label}
+        </span>
+        <span aria-hidden className="invisible col-start-1 row-start-1">
+          {gt("Confirm revoke?")}
+        </span>
+        <span className="col-start-1 row-start-1">
+          {pending
+            ? gt("Revoking…")
+            : inlineConfirm.isArmed("revoke")
+              ? gt("Confirm revoke?")
+              : label}
+        </span>
+      </span>
+    </Button>
   );
 }
 
@@ -267,7 +312,7 @@ const PairingLinkListRow = memo(function PairingLinkListRow({
               tooltipText={gt("Link created at {time}", {
                 time: formatAccessTimestamp(pairingLink.createdAt),
               })}
-              dotClassName="bg-warning"
+              dotClassName="bg-muted-foreground/40"
             />
             <h3 className="text-sm font-medium text-foreground">{primaryLabel}</h3>
           </div>
@@ -372,14 +417,13 @@ const PairingLinkListRow = memo(function PairingLinkListRow({
               </DialogFooter>
             </DialogPopup>
           </Dialog>
-          <Button
-            size="xs"
-            variant="destructive-outline"
-            disabled={!canRevoke || revokingPairingLinkId === pairingLink.id}
-            onClick={() => void onRevoke(pairingLink.id)}
-          >
-            {revokingPairingLinkId === pairingLink.id ? gt("Revoking…") : gt("Revoke")}
-          </Button>
+          <RevokeButton
+            scopeKey={pairingLink.id}
+            label={gt("Revoke")}
+            pending={revokingPairingLinkId === pairingLink.id}
+            disabled={!canRevoke}
+            onRevoke={() => void onRevoke(pairingLink.id)}
+          />
         </div>
       </div>
       {isQrPanelOpen && qrPairingUrl !== null ? (
@@ -531,9 +575,9 @@ const ConnectedClientListRow = memo(function ConnectedClientListRow({
             />
             <h3 className="text-sm font-medium text-foreground">{primaryLabel}</h3>
             {clientSession.current ? (
-              <span className="text-3xs text-muted-foreground/80 rounded-md border border-border/50 bg-muted/50 px-1 py-0.5">
+              <Badge variant="outline" size="sm">
                 <T>This device</T>
-              </span>
+              </Badge>
             ) : null}
           </div>
           <p className="text-xs text-muted-foreground">
@@ -548,14 +592,13 @@ const ConnectedClientListRow = memo(function ConnectedClientListRow({
         </div>
         <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto sm:justify-end">
           {!clientSession.current ? (
-            <Button
-              size="xs"
-              variant="destructive-outline"
-              disabled={!canRevoke || revokingClientSessionId === clientSession.sessionId}
-              onClick={() => void onRevokeSession(clientSession.sessionId)}
-            >
-              {revokingClientSessionId === clientSession.sessionId ? gt("Revoking…") : gt("Revoke")}
-            </Button>
+            <RevokeButton
+              scopeKey={clientSession.sessionId}
+              label={gt("Revoke")}
+              pending={revokingClientSessionId === clientSession.sessionId}
+              disabled={!canRevoke}
+              onRevoke={() => void onRevokeSession(clientSession.sessionId)}
+            />
           ) : null}
         </div>
       </div>
@@ -648,14 +691,13 @@ export const AuthorizedClientsHeaderAction = memo(function AuthorizedClientsHead
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
-      <Button
-        size="xs"
-        variant="destructive-outline"
-        disabled={isRevokingOtherClients || !canRevokeOtherClients(clientSessions)}
-        onClick={() => void onRevokeOtherClients()}
-      >
-        {isRevokingOtherClients ? gt("Revoking…") : gt("Revoke others")}
-      </Button>
+      <RevokeButton
+        scopeKey={environmentId}
+        label={gt("Revoke others")}
+        pending={isRevokingOtherClients}
+        disabled={!canRevokeOtherClients(clientSessions)}
+        onRevoke={() => void onRevokeOtherClients()}
+      />
       <Dialog open={dialogOpen} onOpenChange={handlePairingDialogOpenChange}>
         <DialogTrigger
           render={
@@ -755,7 +797,7 @@ export const AuthorizedClientsHeaderAction = memo(function AuthorizedClientsHead
                           {m(description)}
                         </span>
                         {terminalSelected && scope === AuthTerminalOperateScope ? (
-                          <span className="block text-xs text-warning">
+                          <span className="block text-xs text-muted-foreground">
                             {gt(
                               "Terminal commands can read or change files within the server account’s permissions.",
                             )}
@@ -771,7 +813,7 @@ export const AuthorizedClientsHeaderAction = memo(function AuthorizedClientsHead
                   <T>Select at least one permission.</T>
                 </p>
               ) : selectedScopes.includes(AuthAccessWriteScope) ? (
-                <p className="text-xs text-warning">
+                <p className="text-xs text-muted-foreground">
                   <T>This client can create or revoke access for other devices.</T>
                 </p>
               ) : null}
@@ -895,9 +937,6 @@ export const AdvertisedEndpointListRow = memo(function AdvertisedEndpointListRow
   const shouldShowEndpointUrl = !needsTailscaleSetup;
   return (
     <div className={endpointRowClassName(isAvailable)}>
-      {isDefault ? (
-        <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-primary" aria-hidden />
-      ) : null}
       <div className="flex min-h-7 min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
         <div className="flex min-h-7 min-w-0 flex-1 items-center gap-3">
           <h3 className="shrink-0 text-sm leading-5 font-medium text-foreground">
@@ -916,16 +955,16 @@ export const AdvertisedEndpointListRow = memo(function AdvertisedEndpointListRow
             </Tooltip>
           ) : null}
           {!isAvailable ? (
-            <span className="inline-flex h-6 shrink-0 items-center rounded-md border border-border/70 px-1.5 text-3xs text-muted-foreground">
+            <Badge variant="outline" size="sm">
               <T>Setup required</T>
-            </span>
+            </Badge>
           ) : null}
         </div>
         <div className="ml-auto flex min-h-7 shrink-0 items-center justify-end gap-2">
           {isDefault ? (
-            <span className="inline-flex h-6 items-center rounded-md border border-primary/30 bg-primary/10 px-1.5 text-3xs text-primary">
+            <Badge variant="outline" size="sm">
               {gt("Default", { $context: "default endpoint badge" })}
-            </span>
+            </Badge>
           ) : null}
           {needsTailscaleSetup ? (
             <Button
@@ -940,7 +979,7 @@ export const AdvertisedEndpointListRow = memo(function AdvertisedEndpointListRow
           {canDisableTailscaleServe ? (
             <Button
               size="xs"
-              variant="destructive-outline"
+              variant="outline"
               onClick={() => onDisableTailscaleServe(endpoint)}
               disabled={isUpdatingTailscaleServe}
             >

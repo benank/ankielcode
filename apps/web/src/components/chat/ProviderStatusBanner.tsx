@@ -6,9 +6,9 @@ import {
 import { useAtomValue } from "@effect/atom-react";
 import { msg, T, useGT, useMessages } from "gt-react";
 import { memo, useRef, useState, useSyncExternalStore } from "react";
-import { InfoIcon, XIcon } from "lucide-react";
+import { CircleAlertIcon, XIcon } from "lucide-react";
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "../ui/alert";
-import { Button, InlineButton } from "../ui/button";
+import { Button } from "../ui/button";
 import { m, type MessageResolver } from "../../i18n/messages";
 import { formatProviderDriverKindLabel } from "../../providerModels";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
@@ -200,7 +200,7 @@ export const ProviderStatusBanner = memo(function ProviderStatusBanner({
         surface="glass"
         controlAlignment="first-line"
       >
-        <InfoIcon />
+        <CircleAlertIcon />
         <AlertTitle>{title}</AlertTitle>
         <AlertDescription>
           <div className="flex flex-col gap-2">
@@ -210,18 +210,22 @@ export const ProviderStatusBanner = memo(function ProviderStatusBanner({
                 {message}
               </TooltipPopup>
             </Tooltip>
-            <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-1">
               {onOpenProviderSetup && hasProviderSetup(status) ? (
-                <InlineButton onClick={() => onOpenProviderSetup(status.instanceId)}>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => onOpenProviderSetup(status.instanceId)}
+                >
                   <T>Open provider setup</T>
-                </InlineButton>
+                </Button>
               ) : null}
               <Button
                 aria-label={gt("Refresh {provider} provider status", { provider: providerName })}
                 disabled={!canRefresh || isRefreshing}
                 onClick={() => void refresh()}
                 size="xs"
-                variant="outline"
+                variant="ghost"
               >
                 <RefreshIcon />
                 {isRefreshing ? gt("Refreshing...") : gt("Refresh")}
@@ -242,7 +246,7 @@ export const ProviderStatusBanner = memo(function ProviderStatusBanner({
             }
             onClick={onDismiss}
             size="icon-xs"
-            variant="ghost-muted"
+            variant="ghost"
           >
             <XIcon />
           </Button>

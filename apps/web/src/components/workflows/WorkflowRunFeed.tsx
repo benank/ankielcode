@@ -14,6 +14,7 @@ import {
 } from "@ankielcode/contracts";
 import { formatModelSlugName } from "@ankielcode/shared/model";
 import { formatDuration } from "@ankielcode/shared/orchestrationTiming";
+import type { PixelStatusTone } from "@ankielcode/shared/pixelStatus";
 import { msg, T, useGT, useMessages, Var } from "gt-react";
 import {
   ArrowLeftIcon,
@@ -47,6 +48,7 @@ import { serverEnvironment } from "../../state/server";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { formatRelativeTimeLabel } from "../../timestampFormat";
 import ChatMarkdown from "../ChatMarkdown";
+import { STATUS_TONE_DOT_CLASS } from "../PixelStatus";
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -153,27 +155,23 @@ export function WorkflowChip({ name }: { readonly name: string }) {
   );
 }
 
-// The thread list's own colours for the same states, so a run reads like a thread does.
-const WORKFLOW_TONE_CLASS: Record<WorkflowRunTone, string> = {
-  input: "text-warning-foreground",
-  failed: "text-destructive",
-  working: "text-info-foreground",
-  quiet: "text-muted-foreground",
-  done: "text-success-foreground",
+// The thread list's tones for the same states, so a run reads like a thread does.
+const WORKFLOW_DOT_TONE: Record<WorkflowRunTone, PixelStatusTone | null> = {
+  input: "attention",
+  failed: "failed",
+  working: "active",
+  quiet: null,
+  done: null,
 };
 
 export function WorkflowStateWord({ node }: { readonly node: WorkflowRunNode }) {
   const m = useMessages();
   const state = workflowRunState(node, m);
+  const dotTone = WORKFLOW_DOT_TONE[state.tone];
   return (
-    <span
-      className={cn(
-        "flex shrink-0 items-center gap-1 text-xs font-medium whitespace-nowrap",
-        WORKFLOW_TONE_CLASS[state.tone],
-      )}
-    >
-      {state.tone === "working" ? (
-        <span aria-hidden className="size-1.5 rounded-full bg-info" />
+    <span className="flex shrink-0 items-center gap-1 text-xs font-medium whitespace-nowrap text-muted-foreground">
+      {dotTone !== null ? (
+        <span aria-hidden className={cn("size-1.5 rounded-full", STATUS_TONE_DOT_CLASS[dotTone])} />
       ) : state.tone === "done" ? (
         <CheckIcon aria-hidden className="size-3" />
       ) : null}
@@ -256,7 +254,6 @@ export function WorkflowRunFeed({
     setBusy(true);
     const confirmed = await (requestConfirmDialog(
       gt("Cancel {title}? Its agents stop and the run cannot be resumed.", { title: run.title }),
-      { variant: "destructive" },
     ) ?? Promise.resolve(false));
     if (!confirmed) return setBusy(false);
     const result = await cancel(target);
@@ -469,9 +466,8 @@ export function WorkflowRunFeed({
             {ended ? null : (
               <Button
                 size="xs"
-                variant="ghost-destructive"
+                variant="ghost-muted"
                 disabled={busy || !canCancel}
-                title={gt("Cancel run")}
                 onClick={() => void cancelRun()}
               >
                 <SquareIcon className="size-2.5 fill-current" />
@@ -597,7 +593,7 @@ export function WorkflowRunFeed({
                   <CardHead
                     mark={
                       run.status === "completed" ? (
-                        <CheckIcon className="size-3.5 text-success-foreground" />
+                        <CheckIcon className="size-3.5 text-muted-foreground" />
                       ) : null
                     }
                     name={endWord}
@@ -623,22 +619,15 @@ export function WorkflowRunFeed({
 
 type StepTone = "working" | "input" | "quiet" | "done" | "failed" | "ended";
 
-// Colour says what is live: blue for work under way, amber for a person's turn. Done is quiet.
+// Colour says what is live: cyan for work under way, amber for a person's turn. Done is quiet.
 const RING: Record<StepTone, string> = {
-  working: "stroke-info",
+  working: "stroke-signal-active",
   input: "stroke-warning",
   quiet: "stroke-muted-foreground/60",
   done: "stroke-muted-foreground/45",
   failed: "stroke-destructive",
   ended: "stroke-muted-foreground/60",
 };
-
-const VERB_TONE = {
-  working: "text-info-foreground",
-  input: "text-warning-foreground",
-  quiet: "text-muted-foreground",
-  failed: "text-destructive",
-} as const;
 
 /**
  * A step's place on the rail: a ring, filled while it works, ticked when it is done. `pulse` and
@@ -662,7 +651,7 @@ function StepMark({
         <span
           className={cn(
             "absolute inset-0.5 rounded-full border-2 opacity-0 motion-safe:animate-step-ping",
-            tone === "input" ? "border-warning" : "border-info",
+            tone === "input" ? "border-warning" : "border-signal-active",
           )}
         />
       ) : null}
@@ -685,7 +674,7 @@ function StepMark({
                 ? "fill-warning"
                 : tone === "quiet"
                   ? "fill-muted-foreground/60"
-                  : "fill-info"
+                  : "fill-signal-active"
             }
           />
         ) : tone === "done" ? (
@@ -732,9 +721,7 @@ function TimelineRow({
   name,
   note,
   verb,
-  verbTone = "working",
   aside,
-  asideTone,
   duration,
   selected,
   current = false,
@@ -752,9 +739,7 @@ function TimelineRow({
   /** A quieter word after the name, such as the agent's model. */
   readonly note?: string | null;
   readonly verb?: string | null;
-  readonly verbTone?: keyof typeof VERB_TONE;
   readonly aside?: string | null;
-  readonly asideTone?: "failed";
   readonly duration?: string | null;
   readonly selected: boolean;
   /** The pane beside the timeline shows it. */
@@ -796,7 +781,7 @@ function TimelineRow({
                   : tone === "input"
                     ? "border-warning bg-warning"
                     : tone === "working"
-                      ? "border-info bg-info"
+                      ? "border-signal-active bg-signal-active"
                       : "border-muted-foreground/50 bg-background",
             )}
           />
@@ -818,18 +803,11 @@ function TimelineRow({
           </span>
         </span>
         {note || aside ? (
-          <span
-            className={cn(
-              "min-w-0 truncate text-xs",
-              asideTone === "failed" ? "text-destructive" : "text-muted-foreground",
-            )}
-          >
-            {aside ?? note}
-          </span>
+          <span className="min-w-0 truncate text-xs text-muted-foreground">{aside ?? note}</span>
         ) : null}
       </span>
       {verb ? (
-        <span className={cn("relative max-w-[40%] shrink-0 truncate text-xs", VERB_TONE[verbTone])}>
+        <span className="relative max-w-[40%] shrink-0 truncate text-xs text-muted-foreground">
           {verb}
         </span>
       ) : null}
@@ -1052,7 +1030,7 @@ function WorkflowTimeline({
                 {gt("{count} in parallel", { count: row.beats.length })}
               </span>
               {working ? (
-                <span className="text-xs text-info-foreground">
+                <span className="text-xs text-muted-foreground">
                   {gt("{count} running", { count: running })}
                 </span>
               ) : null}
@@ -1113,7 +1091,6 @@ function WorkflowTimeline({
             draw={false}
             name={asked.name}
             verb={gt("Asks you", { $context: "a workflow step waits on a person's answer" })}
-            verbTone="input"
             selected={focus === `question:${asked.name}`}
             current={current === `question:${asked.name}`}
             onPick={() => onPick(`question:${asked.name}`)}
@@ -1322,11 +1299,7 @@ function WorkflowBeatRow({
       name={beat.childRun?.title ?? beat.name}
       note={beat.kind === "agent" && (under || said === null) ? model : null}
       verb={verb}
-      verbTone={
-        needsYou ? "input" : beat.kind === "sleep" || beat.kind === "wait" ? "quiet" : "working"
-      }
       aside={aside}
-      {...(failed ? { asideTone: "failed" as const } : {})}
       duration={workflowStepTime(elapsedOf(beat))}
       selected={selected}
       current={current}
@@ -1592,7 +1565,7 @@ function WorkflowBeatCard({
         return (
           <FeedCard tone="quiet" label={beat.name}>
             <CardHead
-              mark={<span aria-hidden className="size-1.5 rounded-full bg-info" />}
+              mark={<span aria-hidden className="size-1.5 rounded-full bg-signal-active" />}
               name={beat.name}
               sub={`${gt("running for {duration}", { duration: length })}${tries}`}
             />
@@ -1670,7 +1643,7 @@ function WorkflowAgentCard({
           provider === undefined ? (
             <BotIcon
               aria-hidden
-              className={cn("size-4", under ? "text-info-foreground" : "text-muted-foreground")}
+              className={cn("size-4", under ? "text-signal-active" : "text-muted-foreground")}
             />
           ) : (
             <ProviderInstanceIcon
@@ -1706,8 +1679,8 @@ function WorkflowAgentCard({
         }
       />
       {beat.status === "failed" && beat.detail ? (
-        <p className="mt-3 flex gap-1.5 text-sm text-destructive">
-          <CircleAlertIcon className="mt-0.5 size-3.5 shrink-0" />
+        <p className="mt-3 flex gap-1.5 text-sm">
+          <CircleAlertIcon className="mt-0.5 size-3.5 shrink-0 text-destructive" />
           <span className="break-words whitespace-pre-wrap">{beat.detail}</span>
         </p>
       ) : null}
@@ -1850,7 +1823,11 @@ function WorkflowQuestionCard({
     <FeedCard tone="ask" label={view.title} reveal>
       {inline ? null : (
         <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className={cn("font-medium", WORKFLOW_TONE_CLASS.input)}>
+          <span className="flex items-center gap-1 font-medium">
+            <span
+              aria-hidden
+              className={cn("size-1.5 rounded-full", STATUS_TONE_DOT_CLASS.attention)}
+            />
             <T context="the workflow run waits on a person">Needs you</T>
           </span>
           <span>

@@ -308,6 +308,7 @@ export function workEntryIsVisibleInGroup(
       (entry.toolLifecycleStatus === "inProgress" ||
         entry.sourceActivityKind === "task.progress")) ||
     entry.toolLifecycleStatus === "stopped" ||
+    entry.toolLifecycleStatus === "declined" ||
     !workEntryIndicatesToolNeutralStatus(entry)
   );
 }
@@ -1756,7 +1757,6 @@ export function deriveMessagesTimelineRows(
   const latestToolFailed =
     latestRunningToolEntry === undefined &&
     latestVisibleToolEntry !== undefined &&
-    latestVisibleToolEntry.entry.toolLifecycleStatus !== "declined" &&
     workEntryDisplayIndicatesToolFailure(latestVisibleToolEntry.entry);
 
   const latestThoughtEntry = visibleActiveToolEntries.findLast(

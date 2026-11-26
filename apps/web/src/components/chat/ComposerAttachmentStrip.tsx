@@ -277,7 +277,7 @@ export function ComposerAttachmentMediaRow({
                       <span
                         role="img"
                         aria-label={gt("Draft attachment may not persist")}
-                        className="absolute left-1 top-1 inline-flex items-center justify-center rounded bg-background/85 p-0.5 text-warning-foreground"
+                        className="absolute left-1 top-1 inline-flex items-center justify-center rounded bg-background/85 p-0.5 text-muted-foreground"
                       >
                         <CircleAlertIcon className="size-3" />
                       </span>

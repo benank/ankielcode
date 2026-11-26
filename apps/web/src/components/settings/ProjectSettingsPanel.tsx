@@ -719,7 +719,7 @@ function ProjectDetail({
             control={
               <Button
                 size="sm"
-                variant="destructive-outline"
+                variant="outline"
                 disabled={!canEditGroup}
                 onClick={() => void removeMembers(group.memberProjects)}
               >

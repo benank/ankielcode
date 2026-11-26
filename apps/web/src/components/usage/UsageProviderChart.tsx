@@ -513,10 +513,7 @@ export function UsageProviderChart({
         </UsageChartPlot>
       </div>
 
-      <div
-        aria-hidden
-        className="flex justify-between pl-16 text-3xs text-muted-foreground uppercase"
-      >
+      <div aria-hidden className="flex justify-between pl-16 text-3xs text-muted-foreground">
         <span>{periods[0] === undefined ? "" : formatPeriod(periods[0])}</span>
         <span>
           {periods[Math.floor(periods.length / 2)] === undefined

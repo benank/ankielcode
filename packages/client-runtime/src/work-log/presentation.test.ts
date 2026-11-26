@@ -78,6 +78,19 @@ describe("workEntryIndicatesToolFailure", () => {
     expect(workEntryDisplayIndicatesToolFailure(entry)).toBe(false);
   });
 
+  it("does not treat a declined tool as failed", () => {
+    const entry: WorkLogPresentationEntry = {
+      ...base,
+      label: "Declined command",
+      tone: "tool",
+      itemType: "command_execution",
+      toolLifecycleStatus: "declined",
+    };
+    expect(workEntryIndicatesToolFailure(entry)).toBe(false);
+    expect(workEntryDisplayIndicatesToolFailure(entry)).toBe(false);
+    expect(workEntryIndicatesToolFailure({ ...entry, toolLifecycleStatus: "failed" })).toBe(true);
+  });
+
   it("ignores failure phrases in reasoning text", () => {
     const entry: WorkLogPresentationEntry = {
       ...base,

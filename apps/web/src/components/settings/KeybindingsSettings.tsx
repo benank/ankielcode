@@ -255,7 +255,7 @@ function WarningTooltipIcon({
             tabIndex={focusable ? 0 : undefined}
             aria-label={label}
             className={cn(
-              "inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-warning outline-none transition-colors hover:bg-warning/10 focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-warning/25",
+              "inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
               className,
             )}
           />
@@ -715,7 +715,7 @@ function WhenExpressionBuilder({
           </div>
         )}
         {parseError ? (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg border border-destructive/30 bg-background/75 p-4 text-center text-xs text-destructive backdrop-blur-xs">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg border border-border bg-background/75 p-4 text-center text-xs text-destructive backdrop-blur-xs">
             <T>Fix the expression above to continue editing visually.</T>
           </div>
         ) : null}
@@ -1039,12 +1039,12 @@ function KeybindingRowMenu({
           </MenuItem>
         ) : null}
         {canUnassign ? (
-          <MenuItem variant="destructive" disabled={isSaving} onClick={() => onUnassign(row)}>
+          <MenuItem disabled={isSaving} onClick={() => onUnassign(row)}>
             {gt("Unassign", { $context: "verb, removes the key from a keyboard shortcut" })}
           </MenuItem>
         ) : null}
         {canRemove ? (
-          <MenuItem variant="destructive" disabled={isSaving} onClick={() => onRemove(row)}>
+          <MenuItem disabled={isSaving} onClick={() => onRemove(row)}>
             {gt("Remove", { $context: "verb, removes a keybinding" })}
           </MenuItem>
         ) : null}

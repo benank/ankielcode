@@ -20,6 +20,7 @@ import {
 import { useServerConfigs } from "../../state/entities";
 import { useSavedRemoteConnections } from "../../state/use-remote-environment-registry";
 import { ListActionRow as SettingsActionRow } from "../../components/ui/ListActionRow";
+import { SettingsErrorLine } from "./components/SettingsErrorLine";
 import { SettingsSection } from "./components/SettingsSection";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { formatBytes } from "../../lib/formatBytes";
@@ -54,7 +55,6 @@ export function SettingsClientStorageRouteScreen() {
         "This removes offline threads, server metadata, and cached branches for this environment. The saved connection and credentials stay intact.",
       ),
       confirmText: gt("Clear Cache"),
-      destructive: true,
       onConfirm: () =>
         clearCache({ type: "environment", environmentId: environment.environmentId }),
     });
@@ -67,7 +67,6 @@ export function SettingsClientStorageRouteScreen() {
         "This removes offline data for every environment. Connections, credentials, account data, and app preferences stay intact.",
       ),
       confirmText: gt("Clear All Caches"),
-      destructive: true,
       onConfirm: () => clearCache({ type: "all" }),
     });
   };
@@ -162,9 +161,9 @@ export function SettingsClientStorageRouteScreen() {
             </T>
           </Text>
           {AsyncResult.isFailure(summaryResult) || AsyncResult.isFailure(clearResult) ? (
-            <Text selectable className="px-2 text-sm text-danger-foreground">
+            <SettingsErrorLine className="px-2">
               <T>Client storage is temporarily unavailable. Try again after restarting the app.</T>
-            </Text>
+            </SettingsErrorLine>
           ) : null}
         </View>
       </ScrollView>

@@ -234,7 +234,7 @@ export function DeviceControlsRail(props: {
               <T>Close device panel</T>
             </MenuItem>
             <MenuSeparator />
-            <MenuItem variant="destructive" onClick={props.onPowerOff}>
+            <MenuItem onClick={props.onPowerOff}>
               <Power />
               {props.hostKind === "simlock"
                 ? gt("Return device to the pool")

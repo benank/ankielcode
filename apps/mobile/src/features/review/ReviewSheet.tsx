@@ -672,7 +672,7 @@ export function ReviewSheet(props: ReviewSheetProps) {
           title={gt("Only test files changed")}
           detail={gt("Test files are hidden from this review.")}
           action={
-            <Button label={gt("Show test files")} tone="contrast" onPress={fileFilter.showAll} />
+            <Button label={gt("Show test files")} tone="primary" onPress={fileFilter.showAll} />
           }
           variant="plain"
         />,

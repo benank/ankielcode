@@ -2,6 +2,7 @@ import { T, useGT } from "gt-react-native";
 import { Button } from "../../components/ui/Button";
 import { View } from "react-native";
 
+import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
 
 export function ThreadCreationFailedCard(props: {
@@ -11,9 +12,16 @@ export function ThreadCreationFailedCard(props: {
   const gt = useGT();
   return (
     <View className="gap-2.5 rounded-[20px] border border-border-subtle bg-card-alt p-4">
-      <Text className="font-ankiel-bold text-2xs uppercase tracking-[1.1px] text-danger-foreground">
-        <T>Could not start task</T>
-      </Text>
+      <View className="flex-row items-center gap-2">
+        <SymbolView
+          name="exclamationmark.circle"
+          size={16}
+          tintColorClassName="accent-danger-foreground"
+        />
+        <Text className="min-w-0 flex-1 font-ankiel-medium text-sm text-foreground">
+          <T>Could not start task</T>
+        </Text>
+      </View>
       <Text className="font-sans text-sm leading-normal text-foreground-secondary">
         {props.reason}
       </Text>

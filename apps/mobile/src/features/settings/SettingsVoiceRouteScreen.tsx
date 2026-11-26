@@ -498,7 +498,6 @@ function MicrophoneRow(props: {
           onDelete={onForget}
           primaryAction={{
             accessibilityLabel: gt("Forget {title}", { title }),
-            destructive: true,
             icon: "trash",
             label: gt("Forget", { $context: "verb, forget a microphone" }),
             onPress: onForget,

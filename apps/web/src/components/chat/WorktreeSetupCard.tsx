@@ -72,9 +72,9 @@ function StageIcon({ status }: { status: WorktreeSetupStage["status"] }) {
     case "running":
       return <Spinner size="md" className="shrink-0" />;
     case "failed":
-      return <XIcon aria-hidden className={className} />;
+      return <XIcon aria-hidden className={cn(className, "text-destructive")} />;
     case "warning":
-      return <CircleAlertIcon aria-hidden className={className} />;
+      return <CircleAlertIcon aria-hidden className={cn(className, "text-warning")} />;
     case "skipped":
       return <MinusIcon aria-hidden className={className} />;
     case "pending":
@@ -83,18 +83,7 @@ function StageIcon({ status }: { status: WorktreeSetupStage["status"] }) {
 }
 
 function stageRowClassName(status: WorktreeSetupStage["status"]): string {
-  switch (status) {
-    case "failed":
-      return "text-destructive-foreground";
-    case "warning":
-      return "text-warning-foreground";
-    case "pending":
-      return "text-secondary-label opacity-40";
-    case "running":
-    case "skipped":
-    case "done":
-      return "text-secondary-label";
-  }
+  return status === "pending" ? "text-secondary-label opacity-40" : "text-secondary-label";
 }
 
 function ShimmerOverlay({ children }: { children: ReactNode }) {
@@ -128,23 +117,13 @@ function headerLabel(snapshot: WorktreeSetupSnapshot, resolve: MessageResolver):
 function SetupHeaderRow({ snapshot }: { snapshot: WorktreeSetupSnapshot }) {
   const m = useMessages();
   const running = snapshot.phase === "running";
-  const failed = snapshot.phase === "failed";
-  const finishedWithFailedStage =
-    snapshot.phase === "done" && snapshot.stages.some((stage) => stage.status === "failed");
   const text = headerLabel(snapshot, m);
-  const tone = failed
-    ? "text-destructive-foreground"
-    : finishedWithFailedStage
-      ? "text-warning-foreground"
-      : "text-muted-foreground";
   return (
     <div className="border-b border-border/60 pb-2 pt-1">
-      <div
-        className={cn(
-          "flex h-6 min-w-0 items-baseline gap-2 px-1 text-sm leading-relaxed tabular-nums",
-          tone,
-        )}
-      >
+      <div className="flex h-6 min-w-0 items-baseline gap-2 px-1 text-sm leading-relaxed text-muted-foreground tabular-nums">
+        {snapshot.phase === "failed" ? (
+          <CircleAlertIcon aria-hidden className="size-3.5 shrink-0 self-center text-destructive" />
+        ) : null}
         <span
           ref={running ? observeVisibleAnimation : undefined}
           className="relative min-w-0 shrink overflow-hidden whitespace-nowrap"
@@ -228,20 +207,13 @@ function StageRow({
 const OUTPUT_TAIL_LINES = 4;
 const OUTPUT_TAIL_SLOTS = Array.from({ length: OUTPUT_TAIL_LINES }, (_, slot) => slot);
 
-function OutputTail({ lines, failed }: { lines: ReadonlyArray<string>; failed: boolean }) {
+function OutputTail({ lines }: { lines: ReadonlyArray<string> }) {
   const rows = OUTPUT_TAIL_SLOTS.map((slot) => ({
     slot,
     line: lines[lines.length - OUTPUT_TAIL_LINES + slot] ?? "",
   }));
   return (
-    <pre
-      className={cn(
-        "mb-1 ml-8 overflow-hidden rounded-md border px-2.5 py-1.5 font-mono text-2xs leading-relaxed select-text",
-        failed
-          ? "border-destructive/20 bg-error-surface text-destructive-foreground"
-          : "border-border bg-code text-muted-foreground",
-      )}
-    >
+    <pre className="mb-1 ml-8 overflow-hidden rounded-md border border-border bg-code px-2.5 py-1.5 font-mono text-2xs leading-relaxed text-muted-foreground select-text">
       {rows.map(({ slot, line }) => (
         <div key={slot} className="truncate whitespace-pre">
           {line.length === 0 ? "\u00a0" : line}
@@ -299,9 +271,10 @@ function SetupDetails({ snapshot }: { snapshot: WorktreeSetupSnapshot }) {
 function CollapsedSummaryRow({ snapshot }: { snapshot: WorktreeSetupSnapshot }) {
   const m = useMessages();
   const status: WorktreeSetupStage["status"] =
-    snapshot.phase === "failed" || snapshot.phase === "cancelled"
-      ? "failed"
-      : snapshot.stages.some((stage) => stage.id === "setup-script" && stage.status === "failed")
+    snapshot.phase === "cancelled"
+      ? "skipped"
+      : snapshot.phase === "failed" ||
+          snapshot.stages.some((stage) => stage.id === "setup-script" && stage.status === "failed")
         ? "failed"
         : "done";
   const label = headerLabel(snapshot, m);
@@ -360,9 +333,7 @@ export function WorktreeSetupCard({
                 setupEndedAt={snapshot.endedAt}
                 scriptName={snapshot.setupScript?.name ?? null}
               />
-              {stage.id === "setup-script" && showTail ? (
-                <OutputTail lines={stage.tail} failed={stage.status === "failed"} />
-              ) : null}
+              {stage.id === "setup-script" && showTail ? <OutputTail lines={stage.tail} /> : null}
             </div>
           ))}
         </div>

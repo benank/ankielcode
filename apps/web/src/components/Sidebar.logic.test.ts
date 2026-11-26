@@ -477,6 +477,7 @@ describe("resolveThreadStatusPill", () => {
     expect(resolveSidebarThreadStatus(blocked)).toBe("waiting");
     expect(resolveThreadStatusPill({ thread: blocked })).toMatchObject({
       label: "Waiting",
+      tone: "done",
       pulse: false,
     });
 
@@ -484,8 +485,23 @@ describe("resolveThreadStatusPill", () => {
     expect(resolveSidebarThreadStatus(resumed)).toBe("working");
     expect(resolveThreadStatusPill({ thread: resumed })).toMatchObject({
       label: "Working",
+      tone: "active",
       pulse: true,
     });
+  });
+
+  it("asks for you on pending approvals and input, and connects while the runtime starts", () => {
+    expect(
+      resolveThreadStatusPill({ thread: { ...baseThread, hasPendingApprovals: true } }),
+    ).toMatchObject({ label: "Pending Approval", tone: "attention", pulse: false });
+    expect(
+      resolveThreadStatusPill({ thread: { ...baseThread, hasPendingUserInput: true } }),
+    ).toMatchObject({ label: "Awaiting Input", tone: "attention", pulse: false });
+    expect(
+      resolveThreadStatusPill({
+        thread: { ...baseThread, runtime: { ...baseThread.runtime, status: "starting" } },
+      }),
+    ).toMatchObject({ label: "Connecting", tone: "active", pulse: true });
   });
 
   it("shows waiting for an idle thread with pending background tasks", () => {
@@ -505,8 +521,7 @@ describe("resolveThreadStatusPill", () => {
       }),
     ).toMatchObject({
       label: "Waiting",
-      colorClass: "text-sidebar-muted-foreground",
-      dotClass: "bg-sidebar-muted-foreground",
+      tone: "done",
       pulse: false,
     });
   });
@@ -525,7 +540,7 @@ describe("resolveThreadStatusPill", () => {
           },
         },
       }),
-    ).toMatchObject({ label: "Plan Ready", pulse: false });
+    ).toMatchObject({ label: "Plan Ready", tone: "attention", pulse: false });
   });
 
   it("does not manufacture completed state without a client visit marker", () => {
@@ -559,7 +574,7 @@ describe("resolveThreadStatusPill", () => {
           },
         },
       }),
-    ).toMatchObject({ label: "Completed", pulse: false });
+    ).toMatchObject({ label: "Completed", tone: "done", pulse: false });
   });
 
   it("shows failed, not completed, when the unseen run failed", () => {
@@ -577,6 +592,7 @@ describe("resolveThreadStatusPill", () => {
     };
     expect(resolveThreadStatusPill({ thread: failed })).toMatchObject({
       label: "Failed",
+      tone: "failed",
       pulse: false,
     });
     // The failure sends the thread to the inbox, so its pill must not say it is still waiting.

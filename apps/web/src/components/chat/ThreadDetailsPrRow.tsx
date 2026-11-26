@@ -360,9 +360,12 @@ export function ThreadDetailsPrRow({
               </div>
             ) : null}
             {detail.isDraft && conflicting ? (
-              <div className="flex min-w-0 items-start gap-2 text-destructive">
-                <TriangleAlertIcon aria-hidden className="mt-0.5 size-3 shrink-0 stroke-current" />
-                <div className="min-w-0 flex-1 wrap-break-word">
+              <div className="flex min-w-0 items-start gap-2">
+                <TriangleAlertIcon
+                  aria-hidden
+                  className="mt-0.5 size-3 shrink-0 stroke-current text-destructive"
+                />
+                <div className="min-w-0 flex-1 wrap-break-word text-foreground/75">
                   <T>
                     Merge conflicts with <Var>{detail.baseBranch}</Var>
                   </T>

@@ -3,7 +3,6 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ChevronDownIcon, ChevronUpIcon, XIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
-import { cn } from "~/lib/utils";
 import { previewBridge } from "./previewBridge";
 
 interface PreviewFindBarProps {
@@ -76,7 +75,6 @@ export function PreviewFindBar({ tabId, focusRequestId, onClose }: PreviewFindBa
   };
 
   const hasQuery = query.length > 0;
-  const noResults = hasQuery && result !== null && result.matches === 0;
   const label =
     hasQuery && result ? `${result.matches === 0 ? 0 : result.active}/${result.matches}` : "";
   const navigationDisabled = !result || result.matches === 0;
@@ -106,10 +104,7 @@ export function PreviewFindBar({ tabId, focusRequestId, onClose }: PreviewFindBa
         <InputGroupAddon align="inline-end" inset="pill">
           <span
             aria-live="polite"
-            className={cn(
-              "min-w-10 text-center text-xs tabular-nums",
-              noResults ? "text-destructive" : "text-muted-foreground",
-            )}
+            className="min-w-10 text-center text-xs text-muted-foreground tabular-nums"
           >
             {label}
           </span>

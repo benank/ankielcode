@@ -23,7 +23,7 @@ export async function confirmTerminalClose(
       await ensureClientSettingsHydrated();
       shouldConfirm = getClientSettings().confirmTerminalClose;
     } catch {
-      // If saved settings cannot be read, keep the destructive confirmation.
+      // If saved settings cannot be read, keep the confirmation.
     }
     if (!shouldConfirm) return true;
     return await localApi.dialogs.confirm(
@@ -44,7 +44,6 @@ export async function confirmTerminalClose(
               }),
             ),
           ].join("\n"),
-      { variant: "destructive" },
     );
   } catch {
     return false;

@@ -122,7 +122,7 @@ export function AppSignInRow(props: {
         ),
         [
           { text: gt("Install on an organization"), onPress: () => openUrl(appSignIn.installUrl) },
-          { text: gt("Sign out"), style: "destructive", onPress: signOut },
+          { text: gt("Sign out"), onPress: signOut },
           { text: gt("Cancel"), style: "cancel" },
         ],
       );

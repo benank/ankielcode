@@ -402,11 +402,8 @@ export function DevicePanel(props: {
 function DeviceNotice(props: { readonly onDismiss: () => void; readonly children: ReactNode }) {
   const gt = useGT();
   return (
-    <div
-      role="alert"
-      className="flex items-start gap-2 border-b bg-destructive/5 px-3 py-2 text-xs text-destructive"
-    >
-      <CircleAlert className="mt-1 size-3.5 shrink-0" />
+    <div role="alert" className="flex items-start gap-2 border-b px-3 py-2 text-xs">
+      <CircleAlert className="mt-1 size-3.5 shrink-0 text-destructive" />
       <div
         className="max-h-32 min-w-0 flex-1 overflow-y-auto whitespace-pre-wrap break-words"
         tabIndex={0}
@@ -448,7 +445,7 @@ function DeviceDiscoveryWarning(props: {
       className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-b px-3 py-1 text-xs text-muted-foreground"
     >
       <span className="flex min-w-0 flex-1 basis-56 items-start gap-2">
-        <CircleAlert className="mt-px size-3.5 shrink-0 text-warning-foreground" />
+        <CircleAlert className="mt-px size-3.5 shrink-0" />
         <span className="min-w-0">
           {platforms.length > 1
             ? gt("{first} and {second} lists on {host} may be incomplete.", {

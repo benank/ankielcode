@@ -45,9 +45,7 @@ export function ThreadSearchMatchExcerpt(props: {
   const isUser = props.match.source === "user";
   return (
     <span className="truncate text-xs text-muted-foreground/85">
-      <span className={isUser ? "text-info-foreground" : "text-success-foreground"}>
-        {isUser ? <T>You:</T> : <T>Agent:</T>}
-      </span>{" "}
+      <span className="font-medium text-foreground/70">{isUser ? <T>You:</T> : <T>Agent:</T>}</span>{" "}
       <HighlightedSearchText
         text={props.match.snippet}
         ranges={findSearchTokenRanges(props.match.snippet, props.match.query)}

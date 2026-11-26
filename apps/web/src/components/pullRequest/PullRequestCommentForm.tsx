@@ -152,7 +152,7 @@ export function PullRequestCommentForm({
         {followUpAction === null ? null : (
           <Button
             size="xs"
-            variant={followUpAction === "close" ? "destructive-outline" : "outline"}
+            variant="outline"
             disabled={submitDisabled}
             {...(followUpAction === "close"
               ? inlineConfirm.props("close", () => submitAfterDictation("close"))

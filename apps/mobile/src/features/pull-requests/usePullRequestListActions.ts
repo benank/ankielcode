@@ -171,7 +171,7 @@ export function usePullRequestListActions(
       { text: gt("Cancel"), style: "cancel" },
       {
         text: label,
-        style: supported === "close" ? "destructive" : "default",
+        style: "default",
         onPress: () => void perform(entry, supported),
       },
     ]);
@@ -203,7 +203,6 @@ export function usePullRequestListActions(
               id: "close",
               title: pullRequestActionLabel("close", terminology, m),
               image: "xmark",
-              attributes: { destructive: true },
             },
           ]
         : writableEnvironments.has(entry.environmentId) && entry.state === "closed"

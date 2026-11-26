@@ -46,7 +46,7 @@ export function GuideNotice({ state }: { readonly state: ReturnType<typeof useRe
         {state.canWrite || busy || notice.kind === "unavailable" ? (
           <Button
             label={notice.action}
-            tone={compact ? "secondary" : "contrast"}
+            tone={compact ? "secondary" : "primary"}
             disabled={busy}
             onPress={() => (notice.kind === "unavailable" ? state.refresh() : void state.write())}
             loading={busy}

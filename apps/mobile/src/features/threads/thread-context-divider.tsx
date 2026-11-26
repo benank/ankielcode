@@ -19,7 +19,14 @@ export function ThreadContextDivider(props: {
         {/* One row, so a long label wraps beside its icon instead of under it. */}
         <View className="shrink flex-row items-center gap-1.5">
           {props.icon ? (
-            <SymbolView name={props.icon} size={12} tintColor={props.iconColor} type="monochrome" />
+            <SymbolView
+              name={props.icon}
+              size={12}
+              {...(props.failed
+                ? { tintColorClassName: "accent-danger-foreground" }
+                : { tintColor: props.iconColor })}
+              type="monochrome"
+            />
           ) : null}
           {props.active ? (
             <ShimmeringWorkContent
@@ -32,13 +39,7 @@ export function ThreadContextDivider(props: {
               showIcon={false}
             />
           ) : (
-            <Text
-              className={
-                props.failed
-                  ? "shrink font-ankiel-medium text-xs text-danger-foreground"
-                  : "shrink font-ankiel-medium text-xs text-foreground-muted"
-              }
-            >
+            <Text className="shrink font-ankiel-medium text-xs text-foreground-muted">
               {props.label}
             </Text>
           )}

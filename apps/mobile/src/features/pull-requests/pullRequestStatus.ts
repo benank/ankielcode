@@ -16,35 +16,24 @@ const STATES = {
   open: {
     label: msg("Open", { $context: "pull request state" }),
     icon: PullRequestGlyph.pullRequest,
-    tint: "accent-adaptive-emerald-600-400",
-    text: "text-adaptive-emerald-600-400",
-    background: "bg-adaptive-emerald-500-a12-a16",
+    tint: "accent-signal-success",
   },
   merged: {
     label: msg("Merged", { $context: "pull request state" }),
     icon: PullRequestGlyph.merged,
     tint: "accent-adaptive-violet-600-400",
-    text: "text-adaptive-violet-600-400",
-    background: "bg-adaptive-violet-500-a12-a16",
   },
   closed: {
     label: msg("Closed", { $context: "pull request state" }),
     icon: PullRequestGlyph.closed,
     tint: "accent-danger-foreground",
-    text: "text-danger-foreground",
-    background: "bg-danger",
   },
   draft: {
     label: msg("Draft", { $context: "pull request state" }),
     icon: PullRequestGlyph.draft,
     tint: "accent-icon-muted",
-    text: "text-foreground-muted",
-    background: "bg-grouped-card",
   },
-} satisfies Record<
-  string,
-  { label: string; icon: AppSymbolName; tint: string; text: string; background: string }
->;
+} satisfies Record<string, { label: string; icon: AppSymbolName; tint: string }>;
 
 export function pullRequestStatus(
   pr: Pick<PullRequestListEntry, "state" | "isDraft">,
@@ -77,7 +66,7 @@ export function checkStatus(check: PullRequestCheck, resolve: MessageResolver = 
       return {
         label: resolve(msg("Passed", { $context: "CI check status" })),
         icon: "checkmark.circle",
-        tint: "accent-adaptive-emerald-600-400",
+        tint: "accent-signal-success",
       } as const;
     case "failure":
       return {
@@ -95,7 +84,7 @@ export function checkStatus(check: PullRequestCheck, resolve: MessageResolver = 
       return {
         label: resolve(msg("Pending", { $context: "CI check status" })),
         icon: "clock",
-        tint: "accent-warning-foreground",
+        tint: "accent-icon-muted",
       } as const;
     case "cancelled":
       return {
@@ -172,7 +161,7 @@ export function pullRequestChecksSummary(
         msg("{count, plural, one {{count} pending} other {{count} pending}}", { count: pending }),
       ),
       icon: "clock",
-      tint: "accent-warning-foreground",
+      tint: "accent-icon-muted",
     } as const;
   if (passed)
     return {
@@ -181,7 +170,7 @@ export function pullRequestChecksSummary(
         passed === total ? resolve(msg("All checks passed")) : resolve(msg("Checks completed")),
       count,
       icon: "checkmark.circle",
-      tint: "accent-adaptive-emerald-600-400",
+      tint: "accent-signal-success",
     } as const;
   return {
     label: total
@@ -264,7 +253,7 @@ export function pullRequestReviewSummary(
         }),
       ),
       icon: "checkmark.circle",
-      tint: "accent-adaptive-emerald-600-400",
+      tint: "accent-signal-success",
       reviews,
     } as const;
   const commented = reviews.filter((review) => review.reviewState === "COMMENTED");
@@ -317,8 +306,8 @@ export function pullRequestBranchSummary(
 
 export function pullRequestChecksStatus(state: PullRequestChecksState) {
   if (state === "passing")
-    return { icon: "checkmark.circle", tint: "accent-adaptive-emerald-600-400" } as const;
+    return { icon: "checkmark.circle", tint: "accent-signal-success" } as const;
   if (state === "failing")
     return { icon: "xmark.circle.fill", tint: "accent-danger-foreground" } as const;
-  return { icon: "clock", tint: "accent-warning-foreground" } as const;
+  return { icon: "clock", tint: "accent-icon-muted" } as const;
 }

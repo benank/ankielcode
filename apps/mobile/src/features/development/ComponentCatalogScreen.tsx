@@ -148,7 +148,6 @@ export function ComponentCatalogScreen() {
               <View className="flex-row flex-wrap gap-2">
                 <Button label="Primary" tone="primary" onPress={announceAction} />
                 <Button label="Secondary" onPress={announceAction} />
-                <Button label="Contrast" tone="contrast" onPress={announceAction} />
               </View>
               <View className="flex-row flex-wrap gap-2">
                 <Button label="Disabled" disabled onPress={announceAction} />

@@ -74,7 +74,7 @@ export function PullRequestStatusMenu(props: RowProps) {
       className="min-h-8 flex-row items-center gap-1.5 active:opacity-70"
     >
       <SymbolView name={status.icon} size={14} tintColorClassName={status.tint} />
-      <Text className={`text-xs font-ankiel-medium ${status.text}`}>{status.label}</Text>
+      <Text className="text-xs font-ankiel-medium text-foreground-secondary">{status.label}</Text>
       {actions.length ? (
         <SymbolView name="chevron.down" size={9} tintColorClassName="accent-icon-muted" />
       ) : null}
@@ -91,7 +91,6 @@ export function PullRequestStatusMenu(props: RowProps) {
         id,
         title: pullRequestActionLabel(id, terminology, m),
         image: PR_ACTION_ICONS[id],
-        attributes: { destructive: id === "close" },
       }))}
       onPressAction={({ nativeEvent }) => {
         const selected = actions.find((id) => id === nativeEvent.event);
@@ -232,13 +231,7 @@ export function PullRequestBranchRow(props: RowProps) {
       icon={
         conflicting ? PullRequestGlyph.conflicting : clean ? "checkmark.circle" : "arrow.branch"
       }
-      tint={
-        conflicting
-          ? "accent-danger-foreground"
-          : clean
-            ? "accent-adaptive-emerald-600-400"
-            : undefined
-      }
+      tint={conflicting ? "accent-danger-foreground" : clean ? "accent-signal-success" : undefined}
       value={
         conflicting || (clean && props.pr.baseComparison !== "behind" && !action.busy)
           ? undefined
@@ -341,7 +334,7 @@ export function PullRequestReviewersRow(props: RowProps) {
                 size={18}
                 tintColorClassName={
                   review.reviewState === "APPROVED" && !review.outdated
-                    ? "accent-adaptive-emerald-600-400"
+                    ? "accent-signal-success"
                     : review.reviewState === "CHANGES_REQUESTED"
                       ? "accent-danger-foreground"
                       : "accent-icon-muted"

@@ -195,7 +195,7 @@ function SecretCheckButton(props: {
               {state?.status === "checking" ? (
                 <Spinner />
               ) : state?.status === "resolved" ? (
-                <CheckIcon className="text-success-foreground" />
+                <CheckIcon />
               ) : state?.status === "failed" ? (
                 <AlertTriangleIcon className="text-destructive" />
               ) : (
