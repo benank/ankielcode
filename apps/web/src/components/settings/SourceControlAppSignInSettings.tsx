@@ -103,7 +103,7 @@ export function SourceControlAppSignInSettings({
   );
   const signedIn = (signIns[host] ?? "").length > 0;
   const token = tokens[host];
-  // A token read from a secret provider overrides the sign-in like a saved one.
+  // A saved token overrides the sign-in, even a secret provider reference this build cannot read.
   const tokenOverrides = typeof token === "string" ? token.length > 0 : token !== undefined;
   const canSignIn = useAtomValue(
     sourceControlEnvironment.startSignIn.permissionAtom(environmentId),

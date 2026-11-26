@@ -42,7 +42,6 @@ type ProviderInstanceRegistryHydrationEnv =
   | ServerConfig.ServerConfig
   | Path.Path
   | FileSystem.FileSystem
-  // Secret provider reads.
   | SecureRandom.SecureRandom
   // The Claude runner counts its CLIs as running agents for port discovery.
   | PortScanner.PortDiscovery

@@ -164,7 +164,7 @@ export const AntigravityDriver: ProviderDriver<
     const settings = { ...config, enabled } satisfies AntigravitySettings;
     const auth: AntigravityAuthConfig = {
       authMethod: settings.authMethod,
-      // The instance registry has already read a referenced key from its secret provider.
+      // The registry keeps an enabled instance whose key is a secret provider reference unavailable.
       apiKey: settingsSecretLiteral(settings.apiKey),
       gcpProject: settings.gcpProject,
       gcpLocation: settings.gcpLocation,

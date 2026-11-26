@@ -120,7 +120,7 @@ it.effect("reports a management key saved as a secret provider reference as unsu
       {
         id: "unresolved-hub",
         error:
-          "The management key is read from a secret provider, which Ankiel Code no longer supports. Enter the key in Settings.",
+          "The management key is read from a secret provider, which Ankiel Code no longer supports. Remove this source and add it again with the key.",
       },
     ]);
     expect(authorizations).toEqual([]);

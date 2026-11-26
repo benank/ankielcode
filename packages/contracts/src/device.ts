@@ -41,8 +41,8 @@ export const EasDeviceHostConfig = Schema.Struct({
   /** Expo project that sessions run under, when the project's app config does not name one. */
   appId: Schema.optional(TrimmedNonEmptyString),
   /**
-   * Expo access token, kept in the secret store, or the secret provider to read
-   * it from. When empty the server uses EXPO_TOKEN, then the `eas login` session.
+   * Expo access token, kept in the secret store (older builds could save a
+   * secret provider reference instead). When empty the server uses EXPO_TOKEN, then the `eas login` session.
    * This is `secretSetting` from settings.ts, which imports this module.
    */
   accessToken: SettingsSecretValue.pipe(
@@ -80,8 +80,8 @@ export const SimlockDeviceHostConfig = Schema.Struct({
   /** The gateway's origin, such as https://gateway.example.ts.net:4700. */
   gatewayUrl: TrimmedNonEmptyString.check(Schema.isPattern(/^https?:\/\/[^\s/]+\/?$/)),
   /**
-   * Leases, drives, watches, and takes input on its own leases. Kept in the secret store, or the
-   * secret provider to read it from.
+   * Leases, drives, watches, and takes input on its own leases. Kept in the secret store (older
+   * builds could save a secret provider reference instead).
    */
   agentToken: SettingsSecretValue.pipe(
     Schema.withDecodingDefaultKey(Effect.succeed("")),

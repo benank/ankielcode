@@ -297,7 +297,7 @@ export const OpenCodeDriver: ProviderDriver<
       ...config,
       enabled,
       binaryPath: expandHomePath(config.binaryPath, yield* HostProcess.HomeDirectory),
-      // The instance registry has already read a referenced password from its secret provider.
+      // The registry keeps an enabled instance whose password is a secret provider reference unavailable.
       serverPassword: settingsSecretLiteral(config.serverPassword),
     } satisfies OpenCodeSettings;
     const probeRuntime = (probeEnv: NodeJS.ProcessEnv) =>

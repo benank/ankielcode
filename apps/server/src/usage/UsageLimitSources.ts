@@ -90,7 +90,7 @@ function keepLastGoodReadings(
 function missingManagementKey(config: UsageLimitSourceConfig): string {
   return typeof config.managementKey === "string"
     ? "No management key configured."
-    : "The management key is read from a secret provider, which Ankiel Code no longer supports. Enter the key in Settings.";
+    : "The management key is read from a secret provider, which Ankiel Code no longer supports. Remove this source and add it again with the key.";
 }
 
 /** @public */
