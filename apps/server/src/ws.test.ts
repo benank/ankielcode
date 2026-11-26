@@ -144,7 +144,6 @@ import * as DatabaseStorage from "./persistence/DatabaseStorage.ts";
 import * as TerminalManager from "./terminal/Manager.ts";
 import * as ThreadLaunchService from "./orchestration-v2/ThreadLaunchService.ts";
 import * as ThreadSearch from "./orchestration-v2/ThreadSearch.ts";
-import * as UsageLimitSources from "./usage/UsageLimitSources.ts";
 import * as UsageService from "./usage/UsageService.ts";
 import * as VcsProvisioningService from "./vcs/VcsProvisioningService.ts";
 import * as VcsStatusBroadcaster from "./vcs/VcsStatusBroadcaster.ts";
@@ -941,7 +940,6 @@ it.live.each([
         }),
         Layer.mock(ScratchThreadPromotion.ScratchThreadPromotion)({}),
         Layer.mock(ProviderRegistry.ProviderRegistry)({}),
-        Layer.mock(UsageLimitSources.UsageLimitSources)({}),
         Layer.mock(ExternalLauncher.ExternalLauncher)({}),
         Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
         Layer.mock(DirectEndpoints.DirectEndpoints)({}),
@@ -1036,7 +1034,6 @@ it.live("routes relay RPCs to the server's relay tunnel service", () =>
       }),
       Layer.mock(ScratchThreadPromotion.ScratchThreadPromotion)({}),
       Layer.mock(ProviderRegistry.ProviderRegistry)({}),
-      Layer.mock(UsageLimitSources.UsageLimitSources)({}),
       Layer.mock(ExternalLauncher.ExternalLauncher)({}),
       Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
       Layer.mock(DirectEndpoints.DirectEndpoints)({}),
@@ -1172,7 +1169,6 @@ it.effect.each([
           getProviders: Effect.succeed([]),
           streamChanges: Stream.never,
         }),
-        Layer.mock(UsageLimitSources.UsageLimitSources)({ streamChanges: Stream.make([]) }),
         Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({
           resolveTargets: () =>
             Deferred.succeed(remoteDiscoveryStarted, undefined).pipe(
@@ -1421,7 +1417,6 @@ it.effect("access changes made while the snapshot loads reach the client after i
               layerUnusedConfigRpcServices,
               Layer.mock(ExternalLauncher.ExternalLauncher)({}),
               Layer.mock(ProviderRegistry.ProviderRegistry)({}),
-              Layer.mock(UsageLimitSources.UsageLimitSources)({}),
               Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
               Layer.mock(DirectEndpoints.DirectEndpoints)({}),
               Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({
@@ -1556,11 +1551,6 @@ it.effect("on-demand clients get provider config without workspace snapshots", (
                 ? { instanceId, snapshotForCwd: () => Effect.die("unused") }
                 : { instanceId }) as never,
           ),
-      }),
-      Layer.mock(UsageLimitSources.UsageLimitSources)({
-        current: Effect.succeed([]),
-        streamChanges: Stream.make([]),
-        refresh: Effect.void,
       }),
       Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({
         resolveTargets: () => Effect.succeed([]),
@@ -1943,7 +1933,6 @@ it.effect("a missing thread worktree gets its project's skills in the cwd snapsh
           ),
         ),
       ),
-      Layer.mock(UsageLimitSources.UsageLimitSources)({ current: Effect.succeed([]) }),
       Layer.mock(ExternalLauncher.ExternalLauncher)({}),
       Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
       Layer.mock(DirectEndpoints.DirectEndpoints)({}),
@@ -2034,7 +2023,6 @@ it.effect(
           }),
           Layer.mock(ExternalLauncher.ExternalLauncher)({}),
           Layer.mock(ProviderRegistry.ProviderRegistry)({}),
-          Layer.mock(UsageLimitSources.UsageLimitSources)({}),
           Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
           Layer.mock(DirectEndpoints.DirectEndpoints)({}),
           Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({ namedProjectsRoot: "/unused" }),
@@ -2121,7 +2109,6 @@ it.effect("a git action that fails partway still refreshes the repository status
       }),
       Layer.mock(ExternalLauncher.ExternalLauncher)({}),
       Layer.mock(ProviderRegistry.ProviderRegistry)({}),
-      Layer.mock(UsageLimitSources.UsageLimitSources)({}),
       Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
       Layer.mock(DirectEndpoints.DirectEndpoints)({}),
       Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({ namedProjectsRoot: "/unused" }),
@@ -2200,7 +2187,6 @@ it.effect("a publish whose push fails still refreshes the new remote", () =>
       }),
       Layer.mock(ExternalLauncher.ExternalLauncher)({}),
       Layer.mock(ProviderRegistry.ProviderRegistry)({}),
-      Layer.mock(UsageLimitSources.UsageLimitSources)({}),
       Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
       Layer.mock(DirectEndpoints.DirectEndpoints)({}),
       Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({ namedProjectsRoot: "/unused" }),
@@ -2757,7 +2743,6 @@ it.effect("ACP session RPCs list a thread missing its history and repair it on i
       Layer.fresh(layerConfigSources),
       Layer.mock(ExternalLauncher.ExternalLauncher)({}),
       Layer.mock(ProviderRegistry.ProviderRegistry)({}),
-      Layer.mock(UsageLimitSources.UsageLimitSources)({}),
       Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
       Layer.mock(DirectEndpoints.DirectEndpoints)({}),
       Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({ namedProjectsRoot: "/unused" }),
@@ -2930,7 +2915,6 @@ const makeWorkflowClient = Effect.fn("test.makeWorkflowClient")(function* (
     layerUnusedConfigRpcServices,
     Layer.mock(ExternalLauncher.ExternalLauncher)({}),
     Layer.mock(ProviderRegistry.ProviderRegistry)({}),
-    Layer.mock(UsageLimitSources.UsageLimitSources)({}),
     Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
     Layer.mock(DirectEndpoints.DirectEndpoints)({}),
     Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({ namedProjectsRoot: "/unused" }),
@@ -2986,7 +2970,6 @@ const makeAcpRegistryClient = Effect.fn("test.makeAcpRegistryClient")(function* 
     layerUnusedConfigRpcServices,
     Layer.mock(ExternalLauncher.ExternalLauncher)({}),
     Layer.mock(ProviderRegistry.ProviderRegistry)({}),
-    Layer.mock(UsageLimitSources.UsageLimitSources)({}),
     Layer.mock(RemoteOpenTargets.RemoteOpenTargets)({}),
     Layer.mock(DirectEndpoints.DirectEndpoints)({}),
     Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({ namedProjectsRoot: "/unused" }),

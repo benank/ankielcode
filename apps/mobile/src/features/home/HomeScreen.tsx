@@ -98,14 +98,12 @@ import {
   buildHomeProjectScopes,
   findHomeProjectScope,
   type HomeProjectSortOrder,
-  sortHomeProjectScopes,
 } from "./homeThreadList";
 import { createSwipeRowActivation } from "./swipe-row-activation";
 import { SwipeableScrollGateProvider, useSwipeableScrollGate } from "./thread-swipe-actions";
 import { useFabScroll } from "./FabScrollContext";
 import { holdLaunchSplashForHomeRows, settleLaunchSplashHomeRows } from "./home-launch-splash";
 import { useWorkspaceTabs } from "../layout/workspace/WorkspaceTabsContext";
-import { ThreadListFilters } from "./ThreadListFilters";
 import { deriveHomeEmptyState } from "./home-empty-state";
 
 interface HomeScreenProps {
@@ -125,8 +123,6 @@ interface HomeScreenProps {
   readonly projectSortOrder: HomeProjectSortOrder;
   readonly projectGroupingMode: SidebarProjectGroupingMode;
   readonly onSearchQueryChange: (query: string) => void;
-  readonly onEnvironmentChange: (environmentId: EnvironmentId | null) => void;
-  readonly onProjectChange: (projectKey: string | null) => void;
   readonly onAddConnection: () => void;
   readonly onOpenSettings: () => void;
   readonly onStartNewTask: () => void;
@@ -703,33 +699,6 @@ export function HomeScreen(props: HomeScreenProps) {
 
   const listHeader = Platform.OS === "ios" ? undefined : <HomeTopContentSpacer />;
 
-  const v2ListHeader = (
-    <>
-      {listHeader}
-      {Platform.OS === "ios" && workspace ? (
-        <ThreadListFilters
-          gutter={sidebarSurface ? 8 : 0}
-          environments={props.environments}
-          projects={pickableProjectGroups(
-            sortHomeProjectScopes({
-              scopes: projectScopes,
-              threads: props.threads,
-              pendingTasks: [],
-              projectSortOrder: "updated_at",
-            }),
-          ).map((scope) => ({
-            key: scope.key,
-            label: scope.title,
-          }))}
-          selectedEnvironmentId={props.selectedEnvironmentId}
-          selectedProjectKey={props.selectedProjectKey}
-          onEnvironmentChange={props.onEnvironmentChange}
-          onProjectChange={props.onProjectChange}
-        />
-      ) : null}
-    </>
-  );
-
   const v2ListEmpty =
     hasSearchQuery && threadSearch.isPending ? (
       <EmptyState
@@ -810,7 +779,7 @@ export function HomeScreen(props: HomeScreenProps) {
                 drawDistance={THREAD_LIST_V2_DRAW_DISTANCE}
                 recycleItems
                 extraData={v2ExtraData}
-                ListHeaderComponent={v2ListHeader}
+                ListHeaderComponent={listHeader}
                 // Lifted above the rows so an iOS filter menu's dismissal morph is not covered.
                 ListHeaderComponentStyle={{ zIndex: 1 }}
                 ListFooterComponent={

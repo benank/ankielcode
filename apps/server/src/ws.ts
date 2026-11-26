@@ -272,13 +272,9 @@ import {
   SOCKET_FRAME_PARTS_QUERY_PARAM,
   splitLargeSocketFrames,
 } from "@ankielcode/shared/socketFrameParts";
-import {
-  sameUsageLimitCommandCoverage,
-  withUsageLimitsCommands,
-} from "@ankielcode/shared/usageLimits";
+import { withUsageLimitsCommands } from "@ankielcode/shared/usageLimits";
 import * as AgentSessionScanner from "./project/AgentSessionScanner.ts";
 import * as AgentSessionImporter from "./project/AgentSessionImporter.ts";
-import * as UsageLimitSources from "./usage/UsageLimitSources.ts";
 import { requestUrl } from "./requestUrl.ts";
 
 const CONFIG_DISCOVERY_TIMEOUT = Duration.seconds(5);
@@ -1417,7 +1413,6 @@ export const layerWsRpc = (
               Effect.orElseSucceed(() => null),
             );
       const usage = yield* UsageService.UsageService;
-      const usageLimitSources = yield* UsageLimitSources.UsageLimitSources;
       const worktreeSetupTracker = yield* WorktreeSetupTracker.WorktreeSetupTracker;
       const projectCloneTracker = yield* ProjectCloneTracker.ProjectCloneTracker;
       const repositoryIdentityResolver =
@@ -1741,7 +1736,7 @@ export const layerWsRpc = (
         const keybindingsConfig = yield* keybindings.loadConfigState;
         const currentProviders = yield* providerRegistry.getProviders;
         const commandProviders = options.usageLimitsCommand
-          ? withUsageLimitsCommands(currentProviders, yield* usageLimitSources.current)
+          ? withUsageLimitsCommands(currentProviders)
           : currentProviders;
         const providers = options.workspaceSnapshotsOnDemand
           ? withoutWorkspaceSnapshots(
@@ -2379,10 +2374,6 @@ export const layerWsRpc = (
                 fresh: input.fresh,
               });
             }
-            // Await refresh; RPC scope closure would interrupt a fork before the hub answered.
-            if (input.instanceId === undefined) {
-              yield* usageLimitSources.refresh;
-            }
             let providers = yield* input.cwd !== undefined && input.instanceId !== undefined
               ? providerRegistry.refreshWorkspaceSnapshot({
                   instanceId: input.instanceId,
@@ -2426,9 +2417,7 @@ export const layerWsRpc = (
             }
             if (input.workspaceSnapshotsOnDemand !== true) return { providers };
             const commandProviders =
-              input.usageLimitsCommand === true
-                ? withUsageLimitsCommands(providers, yield* usageLimitSources.current)
-                : providers;
+              input.usageLimitsCommand === true ? withUsageLimitsCommands(providers) : providers;
             if (instanceId === undefined || cwd === undefined) {
               return { providers: withoutWorkspaceSnapshots(commandProviders) };
             }
@@ -2516,7 +2505,6 @@ export const layerWsRpc = (
         [WS_METHODS.providerConsumeResetCredit]:
           /* Request instrumentation already owns the span; keep this helper in that context. */
           Effect.fnUntraced(function* (input) {
-            if ("sourceId" in input) return yield* usageLimitSources.consumeResetCredit(input);
             const instance = yield* providerInstances.getInstance(input.instanceId);
             if (instance === undefined || !instance.enabled) {
               return yield* new ProviderSetupError({
@@ -2532,7 +2520,7 @@ export const layerWsRpc = (
                 detail: "This provider does not bank reset credits.",
               });
             }
-            const outcome = yield* instance.consumeResetCredit(input.creditId).pipe(
+            const outcome = yield* instance.consumeResetCredit().pipe(
               Effect.mapError(
                 (error) =>
                   new ProviderSetupError({
@@ -3328,20 +3316,13 @@ export const layerWsRpc = (
                   },
                 })),
               );
-              const providerStatuses = Stream.zipLatestWith(
-                // Seed the changes-only stream so early source refreshes pair with current providers.
-                Stream.concat(
-                  Stream.fromEffect(providerRegistry.getProviders),
-                  providerRegistry.streamChanges,
-                ),
-                usageLimitSources.streamChanges.pipe(
-                  Stream.changesWith(
-                    usageLimitsCommand ? sameUsageLimitCommandCoverage : () => true,
-                  ),
-                ),
-                (providers, sources) =>
-                  usageLimitsCommand ? withUsageLimitsCommands(providers, sources) : providers,
+              const providerStatuses = Stream.concat(
+                Stream.fromEffect(providerRegistry.getProviders),
+                providerRegistry.streamChanges,
               ).pipe(
+                Stream.map((providers) =>
+                  usageLimitsCommand ? withUsageLimitsCommands(providers) : providers,
+                ),
                 // Stripped before the de-dupe below, so snapshot-only changes send nothing.
                 Stream.mapEffect((commandProviders) =>
                   workspaceSnapshotsOnDemand
@@ -3380,16 +3361,6 @@ export const layerWsRpc = (
                       })),
                     )
                   : Stream.empty;
-              const usageLimitSourceUpdates =
-                input.usageLimitSources === true
-                  ? usageLimitSources.streamChanges.pipe(
-                      Stream.map((sources) => ({
-                        version: 1 as const,
-                        type: "usageLimitSourcesUpdated" as const,
-                        payload: { sources },
-                      })),
-                    )
-                  : Stream.empty;
               const settingsUpdates = settingsChanges.pipe(
                 Stream.map((settings) =>
                   ServerSettings.redactServerSettingsForClient(settings, settingsClient),
@@ -3405,10 +3376,7 @@ export const layerWsRpc = (
                 keybindingsUpdates,
                 Stream.merge(
                   providerStatuses,
-                  Stream.merge(
-                    settingsUpdates,
-                    Stream.merge(environmentThemeUpdates, usageLimitSourceUpdates),
-                  ),
+                  Stream.merge(settingsUpdates, environmentThemeUpdates),
                 ),
               );
 

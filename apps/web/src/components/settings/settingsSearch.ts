@@ -1005,17 +1005,6 @@ export const SETTINGS_SEARCH_ITEMS = [
     ],
   },
   {
-    id: "usage-providers",
-    title: msg("Usage providers"),
-    to: "/settings/providers",
-    searchTerms: [
-      msg(
-        "usage sources CLIProxyAPI CLI proxy hub quota subscription limits management key add remove",
-      ),
-    ],
-    providerSettingsOnly: true,
-  },
-  {
     id: "text-generators",
     title: msg("Text generators"),
     to: "/settings/providers",

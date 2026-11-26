@@ -56,7 +56,6 @@ import { usePendingThreadRequests } from "./chat/usePendingThreadRequests";
 import { isScratchProject } from "@ankielcode/client-runtime/state/projects";
 import { resolveWorktreeRepositorySelection } from "@ankielcode/client-runtime/state/thread-repositories";
 import { visibleThreadPullRequests } from "@ankielcode/shared/threadPullRequests";
-import type { UsageLimitSourceSnapshots } from "@ankielcode/contracts";
 import { feedbackBannerItem } from "./chat/ComposerFeedback";
 import { freshSessionBannerItem } from "./chat/ComposerFreshSession";
 import { heldComposerSendBannerItem } from "./chat/ComposerHeldSendBanner";
@@ -426,7 +425,6 @@ const ACTIVE_RUN_STATUSES: ReadonlySet<string> = new Set([
   "waiting",
 ]);
 const EMPTY_PROVIDER_MODELS: ServerProvider["models"] = [];
-const EMPTY_USAGE_LIMIT_SOURCES: UsageLimitSourceSnapshots = [];
 import type { CodexArtifactTemplate } from "@ankielcode/shared/codexArtifactTemplates";
 
 const EMPTY_FEEDBACK_SUBMISSIONS: ReadonlyArray<CodexFeedbackSubmission> = [];
@@ -1422,11 +1420,6 @@ export default function ChatView(props: ChatViewProps) {
   const selectedProvider = selectedProviderEntry?.driverKind ?? requestedDriverKind;
   const activeProviderInstanceId = selectedProviderEntry?.instanceId ?? null;
   const activeProviderStatus = selectedProviderEntry?.snapshot ?? null;
-  const activeUsageModel =
-    [
-      composerModelSelectionApplies ? composerSelectedModelSelection : null,
-      activeThread?.modelSelection,
-    ].find((selection) => selection?.instanceId === activeProviderInstanceId)?.model ?? null;
   const conversationProviderStatus =
     providerStatuses.find((status) => status.instanceId === activeRuntime?.providerInstanceId) ??
     activeProviderStatus;
@@ -1493,10 +1486,8 @@ export default function ChatView(props: ChatViewProps) {
     threadKey: routeThreadKey,
     panelKey: usageLimitsKey,
     providerInstanceId: activeProviderInstanceId,
-    model: activeUsageModel,
     providerDriver: activeProviderStatus?.driver ?? null,
     providers: providerStatuses,
-    sources: serverConfig?.usageLimitSources ?? EMPTY_USAGE_LIMIT_SOURCES,
   });
   const {
     beginLocalDispatch,
@@ -4108,9 +4099,7 @@ export default function ChatView(props: ChatViewProps) {
                   onDeleteProjectScript={deleteProjectScriptStable}
                   usage={{
                     providerInstanceId: activeProviderInstanceId,
-                    model: activeUsageModel,
                     providers: providerStatuses,
-                    sources: serverConfig?.usageLimitSources ?? EMPTY_USAGE_LIMIT_SOURCES,
                     contextWindow: activeContextWindow,
                   }}
                 />

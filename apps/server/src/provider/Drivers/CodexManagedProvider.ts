@@ -30,6 +30,7 @@ import {
 import { codexContinuationIdentity } from "./CodexHomeLayout.ts";
 import { withInstanceIdentity } from "@ankielcode/provider-core/server/instanceIdentity";
 import { HttpClient } from "effect/http";
+import { CHATGPT_USAGE_URL } from "@ankielcode/shared/usageLimits";
 const DRIVER = ProviderDriverKind.make("codex");
 
 export const makeManagedCodexProvider = Effect.fn("makeManagedCodexProvider")(function* (
@@ -114,7 +115,7 @@ export const makeManagedCodexProvider = Effect.fn("makeManagedCodexProvider")(fu
         message:
           "ChatGPT tracks subscription usage across connected apps. Open Usage settings with the account you connected to Codex.",
       },
-      externalUsage: { label: "ChatGPT usage", url: "https://chatgpt.com/#settings/Usage" },
+      externalUsage: { label: "ChatGPT usage", url: CHATGPT_USAGE_URL },
     };
     const managedAuth = {
       subscriptionSharing: true,

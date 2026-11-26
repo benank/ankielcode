@@ -1,5 +1,7 @@
 import {
   CHATGPT_USAGE_URL,
+  CLAUDE_USAGE_LINK,
+  CODEX_USAGE_LINK,
   collectLimitAccounts,
   collectLimitPools,
   displayLimitWindows,
@@ -34,7 +36,7 @@ import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 import { providerClients } from "../settings/providerDriverMeta";
 import { RedactedSensitiveText } from "../settings/RedactedSensitiveText";
 import { Button } from "../ui/button";
-import { OpenAI } from "../Icons";
+import { ClaudeAI, OpenAI } from "../Icons";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Popover, PopoverCreateHandle, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { PaceIcon, ResetCreditDialog, barColor, usePaceMark, useResetCredit } from "./UsageLimits";
@@ -43,7 +45,7 @@ import {
   collectLimitNotices,
   cursorUsageWindowDetails,
   formatResetsIn,
-  resetCreditChoices,
+  resetCreditChoice,
 } from "@ankielcode/shared/usageLimitsCopy";
 
 function accountInitials(email: string): string {
@@ -81,24 +83,19 @@ function AccountAvatar({
   readonly account: LimitAccount;
   readonly className?: string;
 }) {
-  if (account.redeem) {
-    return (
-      <ProviderInstanceIcon
-        driverKind={account.driver}
-        displayName={
-          account.displayName ??
-          providerClients.get(account.driver)?.label ??
-          String(account.driver)
-        }
-        accentColor={account.accentColor}
-        showBadge={Boolean(account.displayName)}
-        indicatorBackground="var(--popover)"
-        className={cn("size-5", className)}
-        iconClassName="size-4 text-foreground/80"
-      />
-    );
-  }
-  return account.email ? <AccountChip email={account.email} /> : null;
+  return (
+    <ProviderInstanceIcon
+      driverKind={account.driver}
+      displayName={
+        account.displayName ?? providerClients.get(account.driver)?.label ?? String(account.driver)
+      }
+      accentColor={account.accentColor}
+      showBadge={Boolean(account.displayName)}
+      indicatorBackground="var(--popover)"
+      className={cn("size-5", className)}
+      iconClassName="size-4 text-foreground/80"
+    />
+  );
 }
 
 function AccountName({
@@ -144,7 +141,7 @@ function SegmentPopover({
   readonly window: LimitPoolMember["window"];
   readonly reset: LimitPoolWindow["resets"][number] | undefined;
   readonly now: number;
-  readonly redeem: ReturnType<typeof useResetCredit> | null;
+  readonly redeem: ReturnType<typeof useResetCredit>;
   readonly onRedeem: (choice: ResetCreditChoice) => void;
 }) {
   const timestampFormat = usePrimarySettings((settings) => settings.timestampFormat);
@@ -153,14 +150,10 @@ function SegmentPopover({
   const remaining = remainingPercent(window);
   const timeLeft = paceRemainingPercent(window, now);
   const resetsIn = formatResetsIn(window, now, m, "in");
-  const where =
-    account.environments.length > 0
-      ? account.environments.map((environment) => environment.label).join(", ")
-      : account.sourceLabel;
-  const choices =
-    redeem && account.redeem && account.limits.resetCredits?.availableCount
-      ? resetCreditChoices(account.limits.resetCredits, account.redeem.input, now, true, m)
-      : [];
+  const where = account.environments.map((environment) => environment.label).join(", ");
+  const choice = account.limits.resetCredits?.availableCount
+    ? resetCreditChoice(account.limits.resetCredits, account.redeem.input, now, true, m)
+    : null;
   return (
     <div className="flex w-72 max-w-[calc(100vw-3rem)] flex-col gap-2.5 text-xs">
       <div className="flex min-w-0 flex-col gap-0.5">
@@ -184,17 +177,7 @@ function SegmentPopover({
         {account.plan ? (
           <Row label={gt("Plan", { $context: "subscription plan" })}>{account.plan}</Row>
         ) : null}
-        {where ? (
-          <Row
-            label={
-              account.environments.length > 0
-                ? gt("Signed in")
-                : gt("Via", { $context: "signed in through a source" })
-            }
-          >
-            {where}
-          </Row>
-        ) : null}
+        {where ? <Row label={gt("Signed in")}>{where}</Row> : null}
       </div>
       <div className="flex flex-col gap-1 border-t border-border/60 pt-2.5">
         <Row label={gt("Left", { $context: "remaining usage" })}>{remaining}%</Row>
@@ -213,24 +196,18 @@ function SegmentPopover({
           </Row>
         ) : null}
       </div>
-      {choices.length > 0 && redeem ? (
-        <div className="flex flex-col gap-1.5 border-t border-border/60 pt-2.5 text-muted-foreground">
-          {choices.map((choice) => (
-            <span key={choice.key} className="flex items-center gap-3">
-              <span className="tabular-nums">{choice.summary}</span>
-              {choice.availableCount > 0 ? (
-                <Button
-                  size="xs"
-                  variant="outline"
-                  disabled={redeem.busy || !redeem.canManageProviders}
-                  className="ms-auto"
-                  onClick={() => onRedeem(choice)}
-                >
-                  {redeem.busy ? gt("Using…") : choice.actionLabel}
-                </Button>
-              ) : null}
-            </span>
-          ))}
+      {choice ? (
+        <div className="flex items-center gap-3 border-t border-border/60 pt-2.5 text-muted-foreground">
+          <span className="tabular-nums">{choice.summary}</span>
+          <Button
+            size="xs"
+            variant="outline"
+            disabled={redeem.busy || !redeem.canManageProviders}
+            className="ms-auto"
+            onClick={() => onRedeem(choice)}
+          >
+            {redeem.busy ? gt("Using…") : choice.actionLabel}
+          </Button>
         </div>
       ) : null}
     </div>
@@ -266,8 +243,7 @@ function ActiveSegmentPopover({
         (member) =>
           member.account.key === payload.account.key &&
           member.window.id === payload.window.id &&
-          member.window.kind === payload.window.kind &&
-          Boolean(member.account.redeem) === Boolean(payload.redeem),
+          member.window.kind === payload.window.kind,
       ),
     ),
   );
@@ -287,7 +263,7 @@ function ActiveSegmentPopover({
         now={now}
         onRedeem={(choice) => {
           handle.close();
-          payload.redeem?.confirm(choice);
+          payload.redeem.confirm(choice);
         }}
       />
     </PopoverPopup>
@@ -311,24 +287,11 @@ function PoolSegment({
   readonly index: number;
   readonly showAccountName: boolean;
 }) {
-  return account.redeem ? (
-    <RedeemableSegment account={account} redeemAt={account.redeem} {...props} />
-  ) : (
-    <SegmentTriggers account={account} redeem={null} {...props} />
-  );
-}
-
-function RedeemableSegment({
-  redeemAt,
-  ...props
-}: Omit<Parameters<typeof SegmentTriggers>[0], "redeem"> & {
-  readonly redeemAt: NonNullable<LimitAccount["redeem"]>;
-}) {
-  const redeem = useResetCredit(redeemAt.environmentId);
+  const redeem = useResetCredit(account.redeem.environmentId);
   const gt = useGT();
   return (
     <>
-      <SegmentTriggers redeem={redeem} {...props} />
+      <SegmentTriggers account={account} redeem={redeem} {...props} />
       <ResetCreditDialog
         open={redeem.confirming}
         onOpenChange={redeem.setConfirming}
@@ -339,7 +302,7 @@ function RedeemableSegment({
       {/* The popover closed before the confirm, so progress and the outcome need a home outside it. */}
       {redeem.busy || redeem.status ? (
         <span role="status" className="col-span-full text-xs text-muted-foreground">
-          <AccountName account={props.account} className="font-medium text-foreground" />{" "}
+          <AccountName account={account} className="font-medium text-foreground" />{" "}
           {redeem.busy ? gt("Using reset credit…") : redeem.status}
         </span>
       ) : null}
@@ -718,8 +681,10 @@ export function UsageLimitsPooled({
           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4"
         >
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            {link.url === CHATGPT_USAGE_URL ? (
+            {link.url === CHATGPT_USAGE_URL || link.url === CODEX_USAGE_LINK.url ? (
               <OpenAI className="size-5 shrink-0" aria-hidden="true" />
+            ) : link.url === CLAUDE_USAGE_LINK.url ? (
+              <ClaudeAI className="size-5 shrink-0" aria-hidden="true" />
             ) : null}
             <div className="min-w-0 space-y-1">
               <h2 className="text-sm font-medium">{link.label}</h2>

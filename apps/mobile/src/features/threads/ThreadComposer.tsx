@@ -377,11 +377,7 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
   const { onSendMessage, onChangeDraftMessage, onShowUsageLimits } = props;
   const usageLimitsOffered =
     selectedProviderStatus !== null &&
-    hasProviderUsageLimits(
-      selectedProviderStatus.driver,
-      props.serverConfig?.providers ?? [],
-      props.serverConfig?.usageLimitSources ?? [],
-    );
+    hasProviderUsageLimits(selectedProviderStatus.driver, props.serverConfig?.providers ?? []);
   const draftRunsLocally = composerRunsDraftLocally({
     text: draftMessage,
     holdsOnlyText: draftAttachments.length === 0,
@@ -408,9 +404,7 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
     const report = collectProviderUsageLimits(
       currentModelSelection.instanceId,
       props.serverConfig?.providers ?? [],
-      props.serverConfig?.usageLimitSources ?? [],
       Date.now(),
-      currentModelSelection.model,
     );
     onShowUsageLimits(report);
     if (!report) {

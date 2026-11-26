@@ -12,7 +12,6 @@ import {
   type ServerProviderUsageWindow,
 } from "@ankielcode/contracts";
 import {
-  type ResetCreditChoice,
   paceOf,
   paceRemainingPercent,
   remainingPercent,
@@ -21,7 +20,7 @@ import {
 import {
   formatDuration,
   limitsNotice,
-  resetCreditChoices,
+  resetCreditChoice,
 } from "@ankielcode/shared/usageLimitsCopy";
 import { msg, T, useGT, useMessages, Var } from "gt-react-native";
 import { type ReactNode, useContext, useRef, useState } from "react";
@@ -263,8 +262,9 @@ export function ResetCredits(props: {
   const gt = useGT();
   const m = useMessages();
   if (dense && credits.availableCount === 0 && status === null) return null;
+  const choice = resetCreditChoice(credits, input, now, false, m);
 
-  const redeem = async (choice: ResetCreditChoice) => {
+  const redeem = async () => {
     if (!readEnvironmentScope(environmentId, AuthProvidersManageScope)) return;
     setBusy(true);
     setStatus(null);
@@ -281,46 +281,42 @@ export function ResetCredits(props: {
     );
   };
 
-  const confirm = (choice: ResetCreditChoice) => {
+  const confirm = () => {
     if (!readEnvironmentScope(environmentId, AuthProvidersManageScope)) return;
     Dialog.alert(resolveNow(msg("Use a reset credit?")), choice.confirmDescription, [
       { text: resolveNow(msg("Cancel")), style: "cancel" },
-      { text: resolveNow(msg("Use credit")), onPress: () => void redeem(choice) },
+      { text: resolveNow(msg("Use credit")), onPress: () => void redeem() },
     ]);
   };
 
   return (
     <View className="gap-1">
-      {resetCreditChoices(credits, input, now, false, m).map((choice) => (
-        <View key={choice.key} className="flex-row flex-wrap items-center gap-x-3 gap-y-1">
-          <Text className="text-xs tabular-nums text-foreground-tertiary">{choice.summary}</Text>
-          {choice.availableCount > 0 ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled: busy || !canManageProviders }}
-              disabled={busy || !canManageProviders}
-              onPress={() => confirm(choice)}
+      <View className="flex-row flex-wrap items-center gap-x-3 gap-y-1">
+        <Text className="text-xs tabular-nums text-foreground-tertiary">{choice.summary}</Text>
+        {choice.availableCount > 0 ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: busy || !canManageProviders }}
+            disabled={busy || !canManageProviders}
+            onPress={confirm}
+            className={
+              dense
+                ? "rounded-full bg-subtle-strong px-2.5 py-1 disabled:opacity-[0.45]"
+                : "min-h-[44px] justify-center rounded-full bg-subtle-strong px-3 py-1.5 disabled:opacity-[0.45]"
+            }
+          >
+            <Text
               className={
                 dense
-                  ? "rounded-full bg-subtle-strong px-2.5 py-1 disabled:opacity-[0.45]"
-                  : "min-h-[44px] justify-center rounded-full bg-subtle-strong px-3 py-1.5 disabled:opacity-[0.45]"
+                  ? "text-xs font-ankiel-medium text-foreground"
+                  : "text-sm font-ankiel-medium text-foreground"
               }
             >
-              <Text
-                className={
-                  dense
-                    ? "text-xs font-ankiel-medium text-foreground"
-                    : "text-sm font-ankiel-medium text-foreground"
-                }
-              >
-                {busy
-                  ? gt("Using…", { $context: "reset credit is being used" })
-                  : choice.actionLabel}
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
-      ))}
+              {busy ? gt("Using…", { $context: "reset credit is being used" }) : choice.actionLabel}
+            </Text>
+          </Pressable>
+        ) : null}
+      </View>
       {!canManageProviders ? (
         <Text className="text-xs text-foreground-tertiary">
           <T>This connection cannot manage provider accounts.</T>

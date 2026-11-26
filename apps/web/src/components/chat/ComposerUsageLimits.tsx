@@ -183,11 +183,6 @@ function UsageLimitsBannerBody({
             </div>
           );
         })}
-        {report.notices.map((notice) => (
-          <span key={notice} className="text-xs text-muted-foreground">
-            {notice}
-          </span>
-        ))}
       </ComposerBanner.Body>
     </ComposerBanner.Scroll>
   );

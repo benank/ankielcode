@@ -15,7 +15,6 @@ import {
   providersWithLimits,
   type ResetCreditChoice,
   resetCountdown,
-  unshownFailedHubAccounts,
 } from "./usageLimits.ts";
 
 const MINUTE = 60_000;
@@ -88,8 +87,6 @@ export function collectLimitNotices(
   const label = (environmentLabel: string, subject: string) =>
     showEnvironmentLabel ? `${environmentLabel} · ${subject}` : subject;
   const notices = new Set<string>();
-  // A failed hub read needs no notice when another report already shows the account's row.
-  const failedAccounts = unshownFailedHubAccounts(presentations);
   for (const presentation of presentations.values()) {
     const environmentLabel = presentation.entry.target.label;
     for (const provider of providersWithLimits(presentation.serverConfig?.providers ?? [])) {
@@ -104,25 +101,6 @@ export function collectLimitNotices(
       const notice = limits ? limitsNotice(limits, resolve) : null;
       const name = provider.displayName?.trim() || String(provider.driver);
       if (notice) notices.add(`${label(environmentLabel, name)}: ${notice}`);
-    }
-    for (const source of presentation.serverConfig?.usageLimitSources ?? []) {
-      if (source.error) {
-        notices.add(`${label(environmentLabel, source.label)}: ${source.error}`);
-      } else if (source.accounts.length === 0) {
-        notices.add(
-          resolve(
-            msg("{source}: No accounts reported.", {
-              source: label(environmentLabel, source.label),
-            }),
-          ),
-        );
-      }
-      for (const account of source.accounts) {
-        const name = failedAccounts.get(account);
-        if (name === undefined) continue;
-        const notice = limitsNotice(account.usageLimits, resolve);
-        notices.add(`${label(environmentLabel, source.label)} · ${name}: ${notice}`);
-      }
     }
   }
   return [...notices];
@@ -140,71 +118,47 @@ export function formatDuration(ms: number, resolve: MFunctionType = mFallback): 
 }
 
 /** @public */
-export function resetCreditChoices(
+export function resetCreditChoice(
   credits: ServerProviderResetCredits,
   input: ProviderConsumeResetCreditInput,
   now: number,
   compact = false,
   resolve: MFunctionType = mFallback,
-): ReadonlyArray<ResetCreditChoice> {
-  const expiresIn = (at: string | undefined) =>
-    at ? formatDuration(Date.parse(at) - now, resolve) : null;
-  if (credits.options && "instanceId" in input) {
-    return credits.options.map((option) => {
-      const expires = expiresIn(option.expiresAt);
-      const values = { label: option.label, count: option.availableCount };
-      return {
-        key: option.creditId,
-        summary: expires
-          ? resolve(msg("{label} · {count} left · expires in {expires}", { ...values, expires }))
-          : resolve(msg("{label} · {count} left", values)),
-        actionLabel: resolve(msg("Use", { $context: "button that redeems a reset credit" })),
-        confirmDescription: resolve(
-          msg("{label}: {description} This cannot be undone.", {
-            label: option.label,
-            description: option.description,
-          }),
-        ),
-        availableCount: option.availableCount,
-        input: { ...input, creditId: option.creditId },
-      };
-    });
-  }
+): ResetCreditChoice {
   const count = credits.availableCount;
-  const expires = expiresIn(credits.nextExpiresAt);
-  return [
-    {
-      key: "next",
-      summary:
-        count === 0
-          ? resolve(msg("No reset credits banked"))
-          : compact
-            ? expires
-              ? resolve(msg("{count} banked · expires in {expires}", { count, expires }))
-              : resolve(msg("{count} banked", { count }))
-            : expires
-              ? resolve(
-                  msg(
-                    "{count, plural, one {{count} reset credit banked · next expires in {expires}} other {{count} reset credits banked · next expires in {expires}}}",
-                    { count, expires },
-                  ),
-                )
-              : resolve(
-                  msg(
-                    "{count, plural, one {{count} reset credit banked} other {{count} reset credits banked}}",
-                    { count },
-                  ),
+  const expires = credits.nextExpiresAt
+    ? formatDuration(Date.parse(credits.nextExpiresAt) - now, resolve)
+    : null;
+  return {
+    summary:
+      count === 0
+        ? resolve(msg("No reset credits banked"))
+        : compact
+          ? expires
+            ? resolve(msg("{count} banked · expires in {expires}", { count, expires }))
+            : resolve(msg("{count} banked", { count }))
+          : expires
+            ? resolve(
+                msg(
+                  "{count, plural, one {{count} reset credit banked · next expires in {expires}} other {{count} reset credits banked · next expires in {expires}}}",
+                  { count, expires },
                 ),
-      actionLabel: resolve(msg("Use reset")),
-      confirmDescription: resolve(
-        msg(
-          "This redeems one credit on your account and clears the current rate-limit windows. It cannot be undone.",
-        ),
+              )
+            : resolve(
+                msg(
+                  "{count, plural, one {{count} reset credit banked} other {{count} reset credits banked}}",
+                  { count },
+                ),
+              ),
+    actionLabel: resolve(msg("Use reset")),
+    confirmDescription: resolve(
+      msg(
+        "This redeems one credit on your account and clears the current rate-limit windows. It cannot be undone.",
       ),
-      availableCount: count,
-      input,
-    },
-  ];
+    ),
+    availableCount: count,
+    input,
+  };
 }
 
 /**

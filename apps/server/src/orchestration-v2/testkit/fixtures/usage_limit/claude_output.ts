@@ -4,8 +4,8 @@ import type { ProviderReplayTranscript } from "@ankielcode/contracts";
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import { assertBaseProjection, projectionFor } from "../shared.ts";
 
-/** The usage-limit failure Claude reports through a CLIProxyAPI hub with every account spent. */
-export function claudeUsageLimitFailure(
+/** The usage-limit failure Claude reports, without a reset time, once every account is spent. */
+function claudeUsageLimitFailure(
   result: OrchestratorV2ScenarioResult,
   transcript: ProviderReplayTranscript,
 ) {

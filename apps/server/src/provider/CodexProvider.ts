@@ -58,6 +58,7 @@ import {
   type CodexResetCreditsSummary,
 } from "./codexUsageLimits.ts";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
+import { CODEX_USAGE_LINK } from "@ankielcode/shared/usageLimits";
 import packageJson from "../../package.json" with { type: "json" };
 const isCodexAppServerSpawnError = Schema.is(CodexErrors.CodexAppServerSpawnError);
 
@@ -208,7 +209,7 @@ function codexAccountAuthLabel(
   return usageLabel ?? codexPlanLabel(account.planType);
 }
 
-export function codexPlanLabel(planType: string | null | undefined): string | undefined {
+function codexPlanLabel(planType: string | null | undefined): string | undefined {
   switch (planType) {
     case "free":
       return "ChatGPT Free Subscription";
@@ -1131,7 +1132,7 @@ export const checkCodexProviderStatus = Effect.fn("checkCodexProviderStatus")(fu
           : undefined,
       );
   // Sign-in guidance still applies when Codex itself says it needs an OpenAI login.
-  const usageLimits =
+  const readUsageLimits =
     !snapshot.nativeUsage && !accountStatus.message
       ? makeUnavailableUsageLimits({ checkedAt, reason: "unsupported" })
       : snapshot.rateLimits === undefined || "failure" in snapshot.rateLimits
@@ -1147,6 +1148,11 @@ export const checkCodexProviderStatus = Effect.fn("checkCodexProviderStatus")(fu
             resetCredits: snapshot.rateLimits.resetCredits,
             checkedAt,
           });
+  // Plan accounts can always see and redeem resets on ChatGPT, even when Codex reports none.
+  const usageLimits =
+    !managedAuth && accountStatus.auth.type === "chatgpt"
+      ? { ...readUsageLimits, externalUsage: CODEX_USAGE_LINK }
+      : readUsageLimits;
 
   return buildServerProvider({
     presentation: CODEX_PRESENTATION,

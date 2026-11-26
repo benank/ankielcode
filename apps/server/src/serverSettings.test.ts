@@ -12,7 +12,6 @@ import {
   resolveProviderInstanceEnabled,
   SecretProviderId,
   ServerSettings,
-  UsageLimitSourceId,
   type SimlockDeviceHostConfig,
 } from "@ankielcode/contracts";
 import { createModelSelection } from "@ankielcode/shared/model";
@@ -650,27 +649,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
 
         yield* serverSettings.updateSettings({ usagePriceOverrides: { "example-model": prices } });
         const usageModelAliases = { "example-preview": "example-model" };
-        const sourceId = UsageLimitSourceId.make("hub");
-        const usageLimitSources = {
-          [sourceId]: {
-            kind: "cliproxy" as const,
-            url: "https://hub.example.test",
-            managementKey: "",
-            enabled: true,
-          },
-        };
-        const saved = yield* serverSettings.updateSettings({
-          usageModelAliases,
-          usageLimitSources,
-        });
+        const saved = yield* serverSettings.updateSettings({ usageModelAliases });
         const updated = yield* serverSettings.updateSettings({
           storageCleanup: { worktreeSettledAfterDays: 0, worktreeKeepWhen: "any-local-files" },
         });
-        assert.deepStrictEqual(updated.usageLimitSources, saved.usageLimitSources);
+        assert.deepStrictEqual(updated.usageModelAliases, saved.usageModelAliases);
         const persisted = yield* readPersisted;
         assert.deepStrictEqual(persisted.usagePriceOverrides, { "example-model": prices });
         assert.deepStrictEqual(persisted.usageModelAliases, usageModelAliases);
-        assert.deepStrictEqual(persisted.usageLimitSources, usageLimitSources);
         assert.equal(persisted.storageCleanup.worktreeSettledAfterDays, 0);
         assert.equal(persisted.storageCleanup.worktreeKeepWhen, "any-local-files");
 
@@ -1463,7 +1449,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
   );
 
   it.effect(
-    "uses the same secret lifecycle for provider config, environment, host tokens, and quota keys",
+    "uses the same secret lifecycle for provider config, environment, and host tokens",
     () =>
       Effect.gen(function* () {
         const service = yield* ServerSettingsModule.ServerSettingsService;
@@ -1487,14 +1473,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
             bitbucket: { email: "me@example.test", accessToken: "bitbucket-secret" },
             gitcafe: { token: "gitcafe-secret" },
           },
-          usageLimitSources: {
-            [UsageLimitSourceId.make("hub")]: {
-              kind: "cliproxy",
-              url: "https://hub.example.test",
-              managementKey: "quota-secret",
-              enabled: true,
-            },
-          },
           easDeviceHosts: [
             {
               kind: "eas",
@@ -1513,7 +1491,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           "github-secret",
           "bitbucket-secret",
           "gitcafe-secret",
-          "quota-secret",
           "expo-secret",
         ];
         const client = ServerSettingsModule.redactServerSettingsForClient(saved, {
@@ -1530,7 +1507,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         const echoed = yield* service.updateSettings({
           providerInstances: client.providerInstances,
           sourceControlHosts: client.sourceControlHosts,
-          usageLimitSources: client.usageLimitSources,
           easDeviceHosts: client.easDeviceHosts,
         });
         for (const value of values) assert.include(JSON.stringify(echoed), value);
@@ -1582,7 +1558,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
             serverHost: null,
           }),
           sourceControlHostSecretName({ kind: "gitcafe", field: "token", serverHost: null }),
-          "usage-limit-source-aHVi",
         ];
         for (const name of secretNames) {
           assert.isTrue(Option.isSome(yield* store.get(name)), name);
@@ -1614,12 +1589,45 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
             bitbucket: { accessToken: "" },
             gitcafe: { token: "" },
           },
-          usageLimitSources: { [UsageLimitSourceId.make("hub")]: null },
         });
         for (const name of secretNames) {
           assert.isTrue(Option.isNone(yield* store.get(name)));
         }
       }).pipe(Effect.provide(layerServerSettingsWithSecrets())),
+  );
+
+  it.effect("drops a retired usage limit hub entry without resetting other settings", () =>
+    Effect.gen(function* () {
+      const service = yield* ServerSettingsModule.ServerSettingsService;
+      const config = yield* ServerConfig.ServerConfig;
+      const fs = yield* FileSystem.FileSystem;
+      const usageModelAliases = { "example-preview": "example-model" };
+      yield* fs.writeFileString(
+        config.settingsPath,
+        JSON.stringify({
+          usageModelAliases,
+          usageLimitSources: {
+            hub: {
+              kind: "cliproxy",
+              url: "http://127.0.0.1:8317",
+              managementKey: SECRET_REDACTED,
+              enabled: true,
+            },
+            referenced: {
+              kind: "cliproxy",
+              url: "http://127.0.0.1:8318",
+              managementKey: { provider: "personal", reference: "op://Private/Hub/key" },
+            },
+          },
+        }),
+      );
+      assert.deepStrictEqual((yield* service.getSettings).usageModelAliases, usageModelAliases);
+      const saved = yield* service.updateSettings({
+        storageCleanup: { worktreeSettledAfterDays: 0, worktreeKeepWhen: "any-local-files" },
+      });
+      assert.deepStrictEqual(saved.usageModelAliases, usageModelAliases);
+      assert.notInclude(yield* fs.readFileString(config.settingsPath), "usageLimitSources");
+    }).pipe(Effect.provide(layerServerSettingsWithSecrets())),
   );
 
   it.effect("moves saved provider credentials to the secret store when settings load", () =>
@@ -1772,7 +1780,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         // A client that cannot decode references sees saved secrets and can send them back.
         const usageReference = {
           provider: SecretProviderId.make("personal"),
-          reference: "op://Private/Hub/key",
+          reference: "op://Private/OpenRouter/key",
         };
         const easReference = {
           provider: SecretProviderId.make("personal"),
@@ -1792,7 +1800,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         };
         const antigravity = ProviderInstanceId.make("antigravity");
         const openCode = ProviderInstanceId.make("opencode");
-        const hub = UsageLimitSourceId.make("hub");
         const router = ProviderInstanceId.make("openrouter");
         const withUsage = yield* serverSettings.updateSettings({
           cloudSpeechCredentials: { openai: usageReference, xai: "literal-fixture" },
@@ -1801,14 +1808,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
               kind: "openaiCompatible",
               baseUrl: "https://openrouter.ai/api/v1",
               apiKey: usageReference,
-              enabled: true,
-            },
-          },
-          usageLimitSources: {
-            [hub]: {
-              kind: "cliproxy",
-              url: "https://hub.test",
-              managementKey: usageReference,
               enabled: true,
             },
           },
@@ -1855,7 +1854,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           openrouter: "",
         });
         assert.equal(legacy.sourceControlHosts.bitbucket?.accessToken, SECRET_REDACTED);
-        assert.equal(legacy.usageLimitSources[hub]?.managementKey, SECRET_REDACTED);
         assert.equal(legacy.textGenerators[router]?.apiKey, SECRET_REDACTED);
         assert.equal(legacy.easDeviceHosts[0]?.accessToken, SECRET_REDACTED);
         assert.equal(legacy.simlockDeviceHosts[0]?.agentToken, SECRET_REDACTED);
@@ -1866,7 +1864,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         const echoed = yield* serverSettings.updateSettings({
           cloudSpeechCredentials: legacy.cloudSpeechCredentials,
           sourceControlHosts: legacy.sourceControlHosts,
-          usageLimitSources: legacy.usageLimitSources,
           textGenerators: legacy.textGenerators,
           easDeviceHosts: legacy.easDeviceHosts,
           simlockDeviceHosts: legacy.simlockDeviceHosts,
@@ -1877,7 +1874,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           "github.com": gitHubReference,
           "ghe.acme.test": "ghp_ghe",
         });
-        assert.deepEqual(echoed.usageLimitSources[hub]?.managementKey, usageReference);
         assert.deepEqual(echoed.textGenerators[router]?.apiKey, usageReference);
         assert.deepEqual(echoed.cloudSpeechCredentials, {
           openai: usageReference,
@@ -1919,7 +1915,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         "cloudSpeechCredentials.openrouter",
         "easDeviceHosts.[].accessToken",
         "simlockDeviceHosts.[].agentToken",
-        "usageLimitSources.*.managementKey",
         "textGenerators.*.apiKey",
       ]);
     }),

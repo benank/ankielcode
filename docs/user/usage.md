@@ -118,7 +118,7 @@ setting removes it from `settings.json`.
 ## Track subscription limits
 
 **Usage → Limits** pools every subscription account it can see per provider, so with several Codex
-or Claude accounts across your enabled environments and hubs you read one number per window rather than a
+or Claude accounts across your enabled environments you read one number per window rather than a
 list. Each window card shows how much of the pool is left and a bar with one segment per account,
 kept in the same column across windows. Accounts are ordered by their next 5-hour refill, soonest
 first. For an account with no weekly quota left, this is when its session becomes usable again.
@@ -126,13 +126,15 @@ The first available window is used when no account reports a 5-hour limit. A gap
 account does not report that window. When the provider reports reset times, the card also says
 when the next reset lands and how much it hands back. The hatched
 part of a segment is what that reset restores. Tap a segment or account row for the account's plan,
-where it is signed in, and its reset time. On web, you can hover too. Codex and Claude accounts
+where it is signed in, and its reset time. On web, you can hover too. Codex accounts
 with banked reset credits show a ticket count and the **Use reset** action in the account details.
-Claude resets are not available when the server runs on macOS, where Claude keeps its login in the
-Keychain. On narrow screens, numbered rows below
+Claude doesn't let other apps read or use limit resets, so Claude subscriptions get a
+**Manage usage** link to claude.ai's usage page instead. ChatGPT-signed-in Codex accounts get the
+same link to ChatGPT's Codex usage page, where every reset and its expiry is listed.
+On narrow screens, numbered rows below
 the bar show each account's quota, countdown, and credits. Tap a row to open its details.
 
-The same account signed in on more than one environment, or reported by a hub as well, counts once.
+The same account signed in on more than one environment counts once.
 Filter with the environment dropdown to see what a single machine has.
 
 When a Claude or Codex account has no overall weekly quota left, its pooled session contribution
@@ -143,7 +145,7 @@ model-specific weekly allowances keep their reported values.
 
 Opening Limits checks the selected connected environments automatically. Each client waits at
 least five minutes between automatic checks of an environment, including after a failed check.
-If a window still looks stale, refresh Limits to re-check every provider and hub.
+If a window still looks stale, refresh Limits to re-check every provider.
 
 Pick `/usage-limits` from the composer's command menu, or send it as a message, to check the
 current model's limits without leaving the conversation. The result opens above the composer and
@@ -187,21 +189,6 @@ Until then it shows no limits. Readings are not kept across a server restart.
 
 API-key accounts may not report subscription limits. This also applies to Claude connections
 using a proxy through `ANTHROPIC_AUTH_TOKEN`.
-
-## Connect a CLIProxyAPI hub
-
-To see pooled accounts, open **Settings → Providers → Usage providers → Add hub**. Choose the
-environment that will connect to the hub and enter its URL and management key.
-
-The hub's Codex, Claude and xAI (shown as Grok) accounts appear under **Usage → Limits**;
-accounts for other providers are not read. Codex accounts show banked reset credits; select an
-account and choose **Use reset** to redeem one. No hub plugin is required.
-
-This connection supplies usage information; configure
-the provider separately to send agent requests through the hub. A thread uses the hub's limits and
-reset times only when its provider's endpoint has the same address as the hub, for example
-`http://127.0.0.1:8317` for both. Remove the hub from the same settings section when you no longer
-need it.
 
 ## Subscription usage widget
 

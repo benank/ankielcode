@@ -24,8 +24,8 @@ const GrokCredentials = Schema.Record(
   }),
 );
 const decodeCredentials = Schema.decodeEffect(Schema.fromJsonString(GrokCredentials));
-export const GROK_USAGE_URL = "https://cli-chat-proxy.grok.com/v1/billing?format=credits";
-export const GrokUsageResponse = Schema.Struct({
+const GROK_USAGE_URL = "https://cli-chat-proxy.grok.com/v1/billing?format=credits";
+const GrokUsageResponse = Schema.Struct({
   config: Schema.optional(
     Schema.Struct({
       creditUsagePercent: Schema.optional(Schema.Number),

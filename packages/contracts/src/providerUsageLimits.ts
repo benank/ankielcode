@@ -7,7 +7,6 @@ import {
   TrimmedNonEmptyString,
 } from "./baseSchemas.ts";
 import { ProviderDriverKind, ProviderInstanceId } from "./providerInstance.ts";
-import { UsageLimitSourceId } from "./usageLimitSourceId.ts";
 
 /** Stable per-provider ids let sparse updates merge with full probes. */
 export const ServerProviderUsageWindow = Schema.Struct({
@@ -23,23 +22,9 @@ export const ServerProviderUsageWindow = Schema.Struct({
 });
 export type ServerProviderUsageWindow = typeof ServerProviderUsageWindow.Type;
 
-/** One kind of banked reset, such as Claude's weekly reset or its Fable-only reset. */
-export const ServerProviderResetCreditOption = Schema.Struct({
-  creditId: TrimmedNonEmptyString,
-  label: TrimmedNonEmptyString,
-  description: TrimmedNonEmptyString,
-  availableCount: NonNegativeInt,
-  expiresAt: Schema.optional(IsoDateTime),
-});
-export type ServerProviderResetCreditOption = typeof ServerProviderResetCreditOption.Type;
-
 export const ServerProviderResetCredits = Schema.Struct({
   availableCount: NonNegativeInt,
   nextExpiresAt: Schema.optional(IsoDateTime),
-  /** Pins hub redemption to the displayed credit, including retries from another client. */
-  nextCreditId: Schema.optional(TrimmedNonEmptyString),
-  /** Present when resets differ in what they refill; redeem one by its `creditId`. */
-  options: Schema.optional(ForwardCompatibleArray(ServerProviderResetCreditOption)),
 });
 export type ServerProviderResetCredits = typeof ServerProviderResetCredits.Type;
 
@@ -72,60 +57,10 @@ export const ProviderUsageLimitsUpdate = Schema.Struct({
 });
 export type ProviderUsageLimitsUpdate = typeof ProviderUsageLimitsUpdate.Type;
 
-export const UsageLimitSourceAccount = Schema.Struct({
-  id: TrimmedNonEmptyString,
-  driver: ProviderDriverKind,
-  email: Schema.optional(TrimmedNonEmptyString),
-  plan: Schema.optional(TrimmedNonEmptyString),
-  workspaceId: Schema.optional(TrimmedNonEmptyString),
-  /** The models the hub routes to this account. */
-  models: Schema.optional(Schema.Array(TrimmedNonEmptyString)),
-  usageLimits: ServerProviderUsageLimits,
+export const ProviderConsumeResetCreditInput = Schema.Struct({
+  instanceId: ProviderInstanceId,
 });
-export type UsageLimitSourceAccount = typeof UsageLimitSourceAccount.Type;
-
-export const UsageLimitSourceSnapshot = Schema.Struct({
-  id: UsageLimitSourceId,
-  kind: Schema.Literal("cliproxy"),
-  label: TrimmedNonEmptyString,
-  /** Origin of the hub, which also serves the agents sent through it. */
-  origin: Schema.optional(TrimmedNonEmptyString),
-  /** Origin and base path of the hub, which tell apart hubs served from one origin. */
-  endpoint: Schema.optional(TrimmedNonEmptyString),
-  checkedAt: IsoDateTime,
-  accounts: ForwardCompatibleArray(UsageLimitSourceAccount),
-  error: Schema.optional(TrimmedNonEmptyString),
-});
-export type UsageLimitSourceSnapshot = typeof UsageLimitSourceSnapshot.Type;
-
-export const UsageLimitSourceSnapshots = ForwardCompatibleArray(UsageLimitSourceSnapshot);
-export type UsageLimitSourceSnapshots = typeof UsageLimitSourceSnapshots.Type;
-
-export const UsageLimitSourceConsumeResetCreditInput = Schema.Struct({
-  sourceId: UsageLimitSourceId,
-  accountId: TrimmedNonEmptyString,
-  creditId: TrimmedNonEmptyString,
-});
-export type UsageLimitSourceConsumeResetCreditInput =
-  typeof UsageLimitSourceConsumeResetCreditInput.Type;
-
-export const ProviderConsumeResetCreditInput = Schema.Union([
-  Schema.Struct({
-    instanceId: ProviderInstanceId,
-    creditId: Schema.optional(TrimmedNonEmptyString),
-  }),
-  UsageLimitSourceConsumeResetCreditInput,
-]);
 export type ProviderConsumeResetCreditInput = typeof ProviderConsumeResetCreditInput.Type;
-
-export class UsageLimitSourceError extends Schema.TaggedError<UsageLimitSourceError>()(
-  "UsageLimitSourceError",
-  { detail: Schema.String },
-) {
-  override get message(): string {
-    return this.detail;
-  }
-}
 
 export const ProviderConsumeResetCreditOutcome = Schema.Literals([
   "reset",
@@ -150,7 +85,6 @@ export const UsageLimitsReport = Schema.Struct({
       label: TrimmedNonEmptyString,
       plan: Schema.optional(TrimmedNonEmptyString),
       email: Schema.optional(TrimmedNonEmptyString),
-      sourceLabel: Schema.optional(TrimmedNonEmptyString),
       instanceId: Schema.optional(ProviderInstanceId),
       resetCreditInput: Schema.optional(ProviderConsumeResetCreditInput),
       displayName: Schema.optional(Schema.String),
@@ -158,6 +92,5 @@ export const UsageLimitsReport = Schema.Struct({
       limits: ServerProviderUsageLimits,
     }),
   ),
-  notices: Schema.Array(Schema.String),
 });
 export type UsageLimitsReport = typeof UsageLimitsReport.Type;

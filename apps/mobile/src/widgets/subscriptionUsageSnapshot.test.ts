@@ -2,7 +2,6 @@ import {
   EnvironmentId,
   ProviderDriverKind,
   ProviderInstanceId,
-  UsageLimitSourceId,
   type ServerProvider,
 } from "@ankielcode/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
@@ -112,42 +111,6 @@ describe("subscription widget snapshots", () => {
       },
       { name: "RE2" },
     ]);
-    expect(JSON.stringify(snapshot)).not.toContain("example.com");
-  });
-  it("uses upstream deduplication for a native account also present in a proxy hub", () => {
-    const input = new Map([
-      [
-        EnvironmentId.make("env"),
-        {
-          entry: { target: { label: "Remote" } },
-          serverConfig: {
-            providers: [provider()],
-            usageLimitSources: [
-              {
-                id: UsageLimitSourceId.make("hub"),
-                kind: "cliproxy" as const,
-                label: "Hub",
-                checkedAt,
-                accounts: [
-                  {
-                    id: "account",
-                    driver: ProviderDriverKind.make("codex"),
-                    email: " PRIVATE@example.com ",
-                    usageLimits: limits,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      ],
-    ]);
-    expect(buildSubscriptionUsageSnapshot(input, deepLink).providers[0]?.detail).toBe(
-      "Subscription remaining",
-    );
-    input.get(EnvironmentId.make("env"))!.serverConfig.providers = [];
-    const snapshot = buildSubscriptionUsageSnapshot(input, deepLink);
-    expect(snapshot.providers[0]?.name).toBe("Codex");
     expect(JSON.stringify(snapshot)).not.toContain("example.com");
   });
   it("bounds OS storage and puts the most constrained windows first", () => {

@@ -45,6 +45,7 @@ import { HttpClient, HttpClientResponse } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { WindowsShellEnvironment } from "@ankielcode/shared/shell";
+import { CLAUDE_USAGE_LINK, CODEX_USAGE_LINK } from "@ankielcode/shared/usageLimits";
 import { deepMerge } from "@ankielcode/shared/Struct";
 import { createModelCapabilities } from "@ankielcode/shared/model";
 import { applyServerSettingsPatch } from "@ankielcode/shared/serverSettings";
@@ -328,6 +329,12 @@ type TestClaudeCapabilities = {
   readonly apiProvider: string | undefined;
   readonly slashCommands: ReadonlyArray<ServerProviderSlashCommand>;
   readonly models?: ReadonlyArray<ModelInfo>;
+  readonly usage?: {
+    readonly rate_limits_available: boolean;
+    readonly rate_limits: {
+      readonly five_hour?: { readonly utilization: number; readonly resets_at: string | null };
+    } | null;
+  };
 };
 
 function claudeCapabilities(overrides: Partial<TestClaudeCapabilities> = {}) {
@@ -709,6 +716,7 @@ it.layer(
           reason: "probeFailed",
           message: "Codex CLI is not authenticated. Run `codex login` and try again.",
         });
+        assert.isUndefined(status.usageLimits?.externalUsage);
       }),
     );
 
@@ -1011,6 +1019,7 @@ it.layer(
         assert.strictEqual(status.auth.status, "authenticated");
         assert.isUndefined(status.usageLimits?.unavailable);
         assert.strictEqual(status.usageLimits?.windows[0]?.usedPercent, 42);
+        assert.deepStrictEqual(status.usageLimits?.externalUsage, CODEX_USAGE_LINK);
       }),
     );
 
@@ -4712,6 +4721,30 @@ it.layer(
   });
 
   describe("checkClaudeProviderStatus", () => {
+    it.effect("links subscribers to claude.ai for usage and limit resets", () =>
+      Effect.gen(function* () {
+        const usage = {
+          rate_limits_available: true,
+          rate_limits: { five_hour: { utilization: 30, resets_at: null } },
+        };
+        const subscriber = yield* checkClaudeProviderStatus(
+          defaultClaudeSettings,
+          claudeCapabilities({ subscriptionType: "max", tokenSource: "claude.ai", usage }),
+        );
+        assert.strictEqual(subscriber.usageLimits?.windows[0]?.usedPercent, 30);
+        assert.deepStrictEqual(subscriber.usageLimits?.externalUsage, CLAUDE_USAGE_LINK);
+
+        const apiKey = yield* checkClaudeProviderStatus(
+          defaultClaudeSettings,
+          claudeCapabilities({
+            apiKeySource: "ANTHROPIC_API_KEY",
+            usage: { rate_limits_available: false, rate_limits: null },
+          }),
+        );
+        assert.isUndefined(apiKey.usageLimits?.externalUsage);
+      }),
+    );
+
     it.effect("adds models Claude Code reports that the catalog does not know", () =>
       Effect.gen(function* () {
         const status = yield* checkClaudeProviderStatus(

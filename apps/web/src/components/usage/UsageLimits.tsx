@@ -39,7 +39,7 @@ import {
 import { Button } from "../ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { UsageLimitsPooled } from "./UsageLimitsPooled";
-import { formatResetsIn, resetCreditChoices } from "@ankielcode/shared/usageLimitsCopy";
+import { formatResetsIn, resetCreditChoice } from "@ankielcode/shared/usageLimitsCopy";
 import { PROVIDER_PRESENTATION } from "./usageProviders";
 
 const PACE: Record<LimitPace, { readonly label: string; readonly icon: typeof GaugeIcon }> = {
@@ -344,23 +344,22 @@ export function ResetCredits({
   const gt = useGT();
   const m = useMessages();
   if (credits.availableCount === 0 && status === null) return null;
+  const offered = resetCreditChoice(credits, input, now, false, m);
   return (
     <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-      {resetCreditChoices(credits, input, now, false, m).map((choice) => (
-        <div key={choice.key} className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="tabular-nums">{choice.summary}</span>
-          {choice.availableCount > 0 ? (
-            <Button
-              size="xs"
-              variant="outline"
-              disabled={busy || !canManageProviders}
-              onClick={() => confirm(choice)}
-            >
-              {busy ? gt("Using…") : choice.actionLabel}
-            </Button>
-          ) : null}
-        </div>
-      ))}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="tabular-nums">{offered.summary}</span>
+        {offered.availableCount > 0 ? (
+          <Button
+            size="xs"
+            variant="outline"
+            disabled={busy || !canManageProviders}
+            onClick={() => confirm(offered)}
+          >
+            {busy ? gt("Using…") : offered.actionLabel}
+          </Button>
+        ) : null}
+      </div>
       {status ? <span className="text-foreground">{status}</span> : null}
       <ResetCreditDialog
         open={confirming}
@@ -401,12 +400,6 @@ export function UsageLimitsSection({
             serverConfig: {
               ...config,
               providers: config.providers.filter((provider) => isVisible(provider.driver)),
-              usageLimitSources: config.usageLimitSources?.flatMap((source) => {
-                const accounts = source.accounts.filter((account) => isVisible(account.driver));
-                return accounts.length === 0 && source.accounts.length > 0
-                  ? []
-                  : [{ ...source, accounts }];
-              }),
             },
           },
         ] as const,

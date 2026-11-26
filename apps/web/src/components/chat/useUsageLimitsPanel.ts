@@ -1,11 +1,6 @@
 import { msg, useMessages } from "gt-react";
 import { m } from "~/i18n/messages";
-import type {
-  EnvironmentId,
-  ProviderInstanceId,
-  ServerProvider,
-  UsageLimitSourceSnapshots,
-} from "@ankielcode/contracts";
+import type { EnvironmentId, ProviderInstanceId, ServerProvider } from "@ankielcode/contracts";
 import { collectProviderUsageLimits, hasProviderUsageLimits } from "@ankielcode/shared/usageLimits";
 import { useState } from "react";
 import { useStableCallback } from "../../hooks/useStableCallback";
@@ -18,21 +13,11 @@ export function useUsageLimitsPanel(input: {
   readonly threadKey: string;
   readonly panelKey: string | null;
   readonly providerInstanceId: ProviderInstanceId | null;
-  readonly model: string | null;
   readonly providerDriver: ServerProvider["driver"] | null;
   readonly providers: readonly ServerProvider[];
-  readonly sources: UsageLimitSourceSnapshots;
 }) {
-  const {
-    environmentId,
-    threadKey,
-    panelKey,
-    providerInstanceId,
-    model,
-    providerDriver,
-    providers,
-    sources,
-  } = input;
+  const { environmentId, threadKey, panelKey, providerInstanceId, providerDriver, providers } =
+    input;
   const messages = useMessages();
   const [panel, setPanel] = useState<{
     readonly key: string;
@@ -44,7 +29,7 @@ export function useUsageLimitsPanel(input: {
   }
   const report =
     panel !== null && panelKey !== null && panel.key === panelKey && providerInstanceId !== null
-      ? collectProviderUsageLimits(providerInstanceId, providers, sources, panel.now, model)
+      ? collectProviderUsageLimits(providerInstanceId, providers, panel.now)
       : null;
   const banner =
     report !== null && panel !== null
@@ -58,14 +43,13 @@ export function useUsageLimitsPanel(input: {
         )
       : null;
   // Intercept /usage-limits only when Limits has selected-provider data.
-  const offered =
-    providerDriver !== null && hasProviderUsageLimits(providerDriver, providers, sources);
+  const offered = providerDriver !== null && hasProviderUsageLimits(providerDriver, providers);
 
   const open = useStableCallback(() => {
     const now = Date.now();
     const nextReport =
       providerInstanceId !== null && panelKey !== null
-        ? collectProviderUsageLimits(providerInstanceId, providers, sources, now, model)
+        ? collectProviderUsageLimits(providerInstanceId, providers, now)
         : null;
     if (nextReport && panelKey !== null) {
       setPanel({ key: panelKey, threadKey, now });

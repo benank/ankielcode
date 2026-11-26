@@ -22,7 +22,6 @@ import {
   TrimmedNonEmptyString,
   TrimmedString,
 } from "./baseSchemas.ts";
-import { UsageLimitSourceId } from "./usageLimitSourceId.ts";
 import { UsageModelFilter } from "./usage.ts";
 import { containsSecretReference, SettingsSecretValue } from "./settingsSecretValue.ts";
 import { EnvironmentMachineKind, ThreadEnvMode, WorktreeSubmodules } from "./environment.ts";
@@ -948,18 +947,6 @@ export const AntigravitySettings = makeProviderSettingsSchema(
 );
 export type AntigravitySettings = typeof AntigravitySettings.Type;
 
-export const UsageLimitSourceConfig = Schema.Struct({
-  kind: Schema.Literal("cliproxy"),
-  label: Schema.optional(TrimmedNonEmptyString),
-  url: TrimmedNonEmptyString,
-  managementKey: SettingsSecretValue.pipe(
-    Schema.withDecodingDefault(Effect.succeed("")),
-    secretSetting,
-  ),
-  enabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
-});
-export type UsageLimitSourceConfig = typeof UsageLimitSourceConfig.Type;
-
 export const TextGeneratorKind = Schema.Literals(["openaiCompatible", "anthropic"]);
 export type TextGeneratorKind = typeof TextGeneratorKind.Type;
 
@@ -1563,10 +1550,6 @@ export const ServerSettings = Schema.Struct({
   offeredSourceControlProviders: Schema.Record(Schema.String, Schema.Boolean).pipe(
     Schema.withDecodingDefault(Effect.succeed({})),
   ),
-  // User-chosen ids preserve rows across edits; undecodable entries round-trip untouched.
-  usageLimitSources: Schema.Record(UsageLimitSourceId, UsageLimitSourceConfig).pipe(
-    Schema.withDecodingDefault(Effect.succeed({})),
-  ),
   textGenerators: Schema.Record(ProviderInstanceId, TextGeneratorConfig).pipe(
     Schema.withDecodingDefault(Effect.succeed({})),
   ),
@@ -1923,11 +1906,7 @@ export const ServerSettingsPatch = Schema.Struct({
   offeredSourceControlProviders: Schema.optionalKey(Schema.Record(Schema.String, Schema.Boolean)),
   // Replace whole maps to avoid half-merged driver configs.
   providerInstances: Schema.optionalKey(Schema.Record(ProviderInstanceId, ProviderInstanceConfig)),
-  // Merge per source to avoid racing other edits; null removes an entry.
-  usageLimitSources: Schema.optionalKey(
-    Schema.Record(UsageLimitSourceId, Schema.NullOr(UsageLimitSourceConfig)),
-  ),
-  // Merge per entry like usageLimitSources; null removes an entry.
+  // Merge per entry to avoid racing other edits; null removes an entry.
   textGenerators: Schema.optionalKey(
     Schema.Record(ProviderInstanceId, Schema.NullOr(TextGeneratorConfig)),
   ),
@@ -1970,12 +1949,7 @@ export function requiredScopesForServerSettingsPatch(
     if (value === undefined) continue;
     if (key === "enablePreviewTunnel") {
       changesAccess = true;
-    } else if (
-      key === "providers" ||
-      key === "providerInstances" ||
-      key === "usageLimitSources" ||
-      key === "textGenerators"
-    ) {
+    } else if (key === "providers" || key === "providerInstances" || key === "textGenerators") {
       changesProviders = true;
     } else {
       changesSettings = true;

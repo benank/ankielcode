@@ -690,23 +690,17 @@ export function UsageLimitAccountScreen({ route }: AccountScreenProps) {
             </View>
             <View className="gap-2 rounded-panel border-continuous bg-grouped-card p-4">
               <Text className="text-sm font-ankiel-medium text-foreground">
-                {account.environments.length
-                  ? gt("Signed in", {
-                      $context: "heading for environments signed in to the account",
-                    })
-                  : gt("Source", { $context: "heading for where account limits come from" })}
+                {gt("Signed in", {
+                  $context: "heading for environments signed in to the account",
+                })}
               </Text>
-              {account.environments.length ? (
-                account.environments.map((environment) => (
-                  <Text key={environment.environmentId} className="text-sm text-foreground-muted">
-                    {environment.label}
-                  </Text>
-                ))
-              ) : (
-                <Text className="text-sm text-foreground-muted">{account.sourceLabel}</Text>
-              )}
+              {account.environments.map((environment) => (
+                <Text key={environment.environmentId} className="text-sm text-foreground-muted">
+                  {environment.label}
+                </Text>
+              ))}
             </View>
-            {account.redeem && account.limits.resetCredits ? (
+            {account.limits.resetCredits ? (
               <View className="gap-3 rounded-panel border-continuous bg-grouped-card p-4">
                 <Text className="text-sm font-ankiel-medium text-foreground">
                   <T>Reset credits</T>

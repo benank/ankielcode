@@ -12,7 +12,7 @@ import { parse as parseYamlDocument } from "yaml";
 
 import { expandHomePath } from "@ankielcode/provider-core/server/pathExpansion";
 
-import { claudeAccountConfigPath, readClaudeOauthAccount } from "../claudeResetCredits.ts";
+import { claudeAccountConfigPath, readClaudeOauthAccount } from "../claudeAccountConfig.ts";
 
 type ClaudeSkillScope = "user" | "project";
 

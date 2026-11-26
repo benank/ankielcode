@@ -482,7 +482,6 @@ const cachedConfigSnapshotEvent = (config: ServerConfig): ServerConfigStreamEven
 
 export interface ServerConfigSubscriptionOptions {
   readonly environmentThemes?: boolean;
-  readonly usageLimitSources?: boolean;
   readonly usageLimitsCommand?: boolean;
   readonly providerCatalogsOnDemand?: boolean;
   readonly providerCatalogDigests?: boolean;
@@ -599,7 +598,6 @@ export const makeEnvironmentServerConfigState = Effect.fn("EnvironmentServerConf
       // serverTime changes every connect, which would rewrite the cache each time.
       const {
         environmentThemes: _themes,
-        usageLimitSources: _sources,
         lastEventLoopStall: _stall,
         serverTime: _serverTime,
         ...cacheable
@@ -654,7 +652,6 @@ export const makeEnvironmentServerConfigState = Effect.fn("EnvironmentServerConf
     let fetchedCatalogs: ReadonlyArray<FetchedMachineCatalog> = [];
     const configUpdates = subscribe(WS_METHODS.subscribeServerConfig, {
       ...(subscription.environmentThemes === true ? { environmentThemes: true } : {}),
-      ...(subscription.usageLimitSources === true ? { usageLimitSources: true } : {}),
       ...(subscription.usageLimitsCommand === true ? { usageLimitsCommand: true } : {}),
       ...(subscription.providerCatalogsOnDemand === true ? { providerCatalogsOnDemand: true } : {}),
       ...(subscription.providerCatalogDigests === true ? { providerCatalogDigests: true } : {}),
@@ -953,7 +950,6 @@ export function createServerEnvironmentAtoms<R, E>(
       environmentId: EnvironmentId,
     ) => Atom.Atom<ServerConfig | null>;
     readonly environmentThemes?: boolean;
-    readonly usageLimitSources?: boolean;
     readonly usageLimitsCommand?: boolean;
     readonly providerCatalogsOnDemand?: boolean;
     readonly providerCatalogDigests?: boolean;
@@ -981,7 +977,6 @@ export function createServerEnvironmentAtoms<R, E>(
           environmentId,
           {
             ...(options.environmentThemes === true ? { environmentThemes: true } : {}),
-            ...(options.usageLimitSources === true ? { usageLimitSources: true } : {}),
             ...(options.usageLimitsCommand === true ? { usageLimitsCommand: true } : {}),
             ...(options.providerCatalogsOnDemand === true
               ? { providerCatalogsOnDemand: true }

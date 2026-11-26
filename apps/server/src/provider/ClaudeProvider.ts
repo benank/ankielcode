@@ -8,7 +8,6 @@ import {
   type ServerProvider,
   type ServerProviderModel,
   type ServerProviderSlashCommand,
-  type ServerProviderResetCredits,
 } from "@ankielcode/contracts";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
@@ -23,6 +22,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { createModelCapabilities } from "@ankielcode/shared/model";
 import { envTrampoline, supportsEnvChdir } from "@ankielcode/shared/envTrampoline";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
+import { CLAUDE_USAGE_LINK } from "@ankielcode/shared/usageLimits";
 import * as SpawnWorker from "../process/SpawnWorker.ts";
 import { resolveSpawnCommand } from "@ankielcode/shared/shell";
 import {
@@ -674,7 +674,6 @@ export const checkClaudeProviderStatus = Effect.fn("checkClaudeProviderStatus")(
   modelCatalog: ClaudeModelCatalog = BUNDLED_CLAUDE_MODEL_CATALOG,
   /** Shared with the adapter so turn events reuse the scoped-bucket names this probe saw. */
   scopedLimitNames?: Ref.Ref<ClaudeScopedLimitNames>,
-  resolveResetCredits?: (version: string) => Effect.Effect<ServerProviderResetCredits | undefined>,
 ): Effect.fn.Return<
   ServerProviderDraft,
   never,
@@ -868,7 +867,7 @@ export const checkClaudeProviderStatus = Effect.fn("checkClaudeProviderStatus")(
       apiKeySource: capabilities.apiKeySource,
     });
   const usageCheckedAt = capabilities.usageCheckedAt ?? checkedAt;
-  const usageLimits = !capabilities.usage
+  const readUsageLimits = !capabilities.usage
     ? makeUnavailableUsageLimits({ checkedAt, reason: "probeFailed" })
     : scopedLimitNames
       ? yield* recordClaudeUsageResponse(scopedLimitNames, {
@@ -879,13 +878,11 @@ export const checkClaudeProviderStatus = Effect.fn("checkClaudeProviderStatus")(
           response: capabilities.usage,
           checkedAt: usageCheckedAt,
         }).limits;
-  const resetCredits =
-    resolveResetCredits &&
-    capabilities.subscriptionType &&
-    !usageLimits.unavailable &&
-    parsedVersion
-      ? yield* resolveResetCredits(parsedVersion)
-      : undefined;
+  // Subscribers can only see and redeem limit resets on claude.ai.
+  const usageLimits =
+    capabilities.subscriptionType && readUsageLimits.unavailable?.reason !== "unsupported"
+      ? { ...readUsageLimits, externalUsage: CLAUDE_USAGE_LINK }
+      : readUsageLimits;
   return buildServerProvider({
     presentation: CLAUDE_PRESENTATION,
     enabled: claudeSettings.enabled,
@@ -905,7 +902,7 @@ export const checkClaudeProviderStatus = Effect.fn("checkClaudeProviderStatus")(
         ...(authMetadata ? authMetadata : {}),
       },
       ...(versionUpgradeMessage ? { message: versionUpgradeMessage } : {}),
-      usageLimits: resetCredits ? { ...usageLimits, resetCredits } : usageLimits,
+      usageLimits,
     },
   });
 });
