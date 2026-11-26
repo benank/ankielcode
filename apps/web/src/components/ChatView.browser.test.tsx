@@ -133,6 +133,7 @@ vi.mock(import("~/rpc/requestLatencyState"), async (original) => ({
   trackRpcRequestSent: () => {},
 }));
 
+// Linear is no longer a tracker; an issue an older build linked keeps rendering with its kind.
 it("opens a linked Linear issue from an inactive thread's sidebar badge", async () => {
   const style = document.createElement("style");
   style.textContent = stylesheet;
@@ -251,7 +252,7 @@ it("opens a linked Linear issue from an inactive thread's sidebar badge", async 
     .getByRole("link", { name: issueName });
   await expect.element(issueRow.getByRole("img", { name: "Open" })).toBeVisible();
   await expect.element(issueRow.getByRole("img", { name: "3 comments" })).toBeVisible();
-  await expect.element(issueRow.getByRole("img", { name: "Linear" })).toBeVisible();
+  await expect.element(issueRow.getByRole("img", { name: "linear" })).toBeVisible();
   await expect.element(issueRow.getByText(issue.scope, { exact: true })).toBeVisible();
   await userEvent.click(issueRow);
   expect(router.history.location.pathname).toBe(`/${ENVIRONMENT_ID}/${linked.id}`);

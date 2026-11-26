@@ -21,12 +21,9 @@ import type {
   IssueSummary,
   IssueTemplateList,
   IssueTrackerKind,
-  IssueTrackerScope,
   IssueViewerPermissions,
-  StandaloneIssueTrackerDescriptor,
 } from "@ankielcode/contracts";
 import { IssueTrackerKind as IssueTrackerKindSchema } from "@ankielcode/contracts";
-import type { IssueLink } from "../shared/definition.ts";
 
 /**
  * The one failure shape every tracker reports, so the service can decide what a failure means
@@ -57,8 +54,8 @@ export class IssueTrackerError extends Schema.TaggedError<IssueTrackerError>()(
 
 /**
  * Where a tracker's issues are addressed from. `cwd` is a checkout whose credentials serve the
- * read; `host` is where the tracker is served from (`github.com`, a GHE install, `linear.app`);
- * `scope` is the tracker's own container — a repository path, a team or project key.
+ * read; `host` is where the tracker is served from (`github.com`, a GHE install); `scope` is the
+ * tracker's own container, such as a repository path.
  */
 export interface IssueScopeTarget {
   readonly cwd: string;
@@ -67,7 +64,7 @@ export interface IssueScopeTarget {
 }
 
 export interface IssueTarget extends IssueScopeTarget {
-  /** The issue's native id within the scope: `"123"` on GitHub, `"ENG-123"` on Linear. */
+  /** The issue's native id within the scope, such as `"123"` on GitHub. */
   readonly key: string;
 }
 
@@ -202,33 +199,4 @@ export interface IssueTrackerApi {
   readonly listCandidates?: (
     input: IssueScopeTarget,
   ) => Effect.Effect<IssueCandidates, IssueTrackerError>;
-}
-
-/**
- * A tracker reached with its own credential rather than a checkout's: Linear, Jira. The server
- * stores one credential per kind and offers the connect flow from `standalone`; a project reads
- * the tracker by binding one of the scopes `probeCredential` lists. The `cwd` on every target is
- * then only the project's root, which such a tracker ignores.
- */
-export interface StandaloneIssueTrackerApi extends IssueTrackerApi {
-  readonly standalone: StandaloneIssueTrackerDescriptor;
-  /** Retains the workspace identity so canonical URLs can disambiguate repeated scope keys. */
-  readonly parseIssueUrl: (url: URL) => (IssueLink & { readonly workspace: string }) | null;
-  /**
-   * Who a credential signs in as and which scopes it reaches, asked of the tracker itself. Run on
-   * a credential before it is stored, and on the stored one to report connection status.
-   */
-  readonly probeCredential: (token: string) => Effect.Effect<
-    {
-      readonly account: string;
-      /** What the tracker's issue URLs name the credential's workspace by, where they name one. */
-      readonly workspace?: string | undefined;
-      readonly scopes: ReadonlyArray<IssueTrackerScope>;
-    },
-    IssueTrackerError
-  >;
-}
-
-export function isStandaloneIssueTracker(api: IssueTrackerApi): api is StandaloneIssueTrackerApi {
-  return "standalone" in api;
 }

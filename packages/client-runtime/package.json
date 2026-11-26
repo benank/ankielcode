@@ -639,7 +639,6 @@
   },
   "dependencies": {
     "@ankielcode/contracts": "workspace:*",
-    "@ankielcode/issue-tracker-linear": "workspace:*",
     "@ankielcode/provider-acp-registry": "workspace:*",
     "@ankielcode/provider-core": "workspace:*",
     "@ankielcode/provider-cursor": "workspace:*",

@@ -251,7 +251,7 @@ Effect.fn(function* () {
 
 ## Issues and pull requests
 
-Reads and writes the project's configured tracker (GitHub, GitLab, Linear, etc.) and git host using the project's credentials. Pass an issue/PR object from a trigger or `list`, or `{ project, url }` (useful when an agent returns a URL).
+Reads and writes the project's configured tracker (GitHub, GitLab, etc.) and git host using the project's credentials. Pass an issue/PR object from a trigger or `list`, or `{ project, url }` (useful when an agent returns a URL).
 
 | Call                                                                          | Where            | Returns                                                                |
 | ----------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------- |

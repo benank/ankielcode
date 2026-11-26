@@ -150,8 +150,6 @@ import { cn } from "../lib/utils";
 import { resolveRemoteOpenState, useRemoteOpenResolution } from "../remoteOpen";
 import { rightPanelHostRef, useRightPanelStore } from "../rightPanelStore";
 import { useOpenIssueLink } from "../lib/openIssueLink";
-import { issueTrackerEnvironment } from "../state/issueTrackers";
-import { useEnvironmentQuery } from "../state/query";
 import { readThreadShell, useProjects } from "../state/entities";
 import { serverEnvironment } from "../state/server";
 import { shellEnvironment } from "../state/shell";
@@ -175,10 +173,7 @@ import {
   workspaceLinkLookupQuery,
 } from "@ankielcode/client-runtime/workspace-basename-lookup";
 import { resolvePullRequestPreviewTarget } from "@ankielcode/client-runtime/change-request-links";
-import {
-  mayContainStandaloneIssueLink,
-  resolveIssueLinkTarget,
-} from "@ankielcode/client-runtime/issue-links";
+import { resolveIssueLinkTarget } from "@ankielcode/client-runtime/issue-links";
 import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
 import { useOpenChangeRequestLink } from "~/lib/openPullRequestLink";
 import { textDirection } from "~/textDirection";
@@ -707,13 +702,6 @@ function useChatMarkdownState(
         : revealInFileExplorerLabelForOs(revealInFileManager, messages);
   const projects = useProjects();
   const issueProjects = projects.filter((project) => project.environmentId === environmentId);
-  // Only text naming a standalone tracker asks for its bindings, whose read probes the tracker.
-  const issueTrackers =
-    useEnvironmentQuery(
-      issuesEnabled && environmentId !== null && mayContainStandaloneIssueLink(text)
-        ? issueTrackerEnvironment.connections({ environmentId, input: {} })
-        : null,
-    ).data ?? undefined;
   const [preferredEditor] = usePreferredEditor(availableEditors);
   const preferredEditorMenuLabel = openInEditorMenuLabel(preferredEditor, messages);
   const openInPreferredEditor = useOpenInPreferredEditor(environmentId, availableEditors, cwd);
@@ -1084,7 +1072,6 @@ function useChatMarkdownState(
     openMarkdownMedia,
     projects,
     issueProjects,
-    issueTrackers,
     linkedThreadPullRequestFor,
     resolveThreadPullRequest,
     resolvedTheme,
@@ -1256,7 +1243,6 @@ const CHAT_MARKDOWN_COMPONENTS = {
       openExternalLinkInPreview,
       projects,
       issueProjects,
-      issueTrackers,
       linkedThreadPullRequestFor,
       resolveThreadPullRequest,
       pullRequestsEnabled,
@@ -1327,11 +1313,7 @@ const CHAT_MARKDOWN_COMPONENTS = {
         : null;
       const issueTarget =
         issuesEnabled && environmentId !== null && href
-          ? resolveIssueLinkTarget({
-              url: href,
-              projects: issueProjects,
-              trackers: issueTrackers,
-            })
+          ? resolveIssueLinkTarget({ url: href, projects: issueProjects })
           : null;
       const issuePreviewTarget =
         issueTarget === null || environmentId === null
@@ -1382,7 +1364,7 @@ const CHAT_MARKDOWN_COMPONENTS = {
             if (
               !href ||
               openChangeRequestLink(event, href, undefined, environmentId ?? undefined) ||
-              openIssueLink(event, href, environmentId ?? undefined, issueTrackers)
+              openIssueLink(event, href, environmentId ?? undefined)
             ) {
               return;
             }
@@ -1540,7 +1522,6 @@ const CHAT_MARKDOWN_COMPONENTS = {
                 },
                 url,
                 environmentId ?? undefined,
-                issueTrackers,
               );
               if (!opened) await openDeferredMarkdownLink(url);
             }}

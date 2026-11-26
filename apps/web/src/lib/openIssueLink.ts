@@ -1,8 +1,4 @@
-import type {
-  EnvironmentId,
-  IssueTrackerConnectionList,
-  ScopedThreadRef,
-} from "@ankielcode/contracts";
+import type { EnvironmentId, ScopedThreadRef } from "@ankielcode/contracts";
 import { resolveIssueLinkTarget } from "@ankielcode/client-runtime/issue-links";
 import { useNavigate } from "@tanstack/react-router";
 import type { MouseEvent } from "react";
@@ -27,12 +23,11 @@ export function useOpenIssueLink(
   >,
   targetUrl: string,
   targetEnvironmentId?: EnvironmentId,
-  trackers?: IssueTrackerConnectionList,
 ) => boolean {
   const allProjects = useProjects();
   const serverConfigs = useServerConfigs();
   const navigate = useNavigate();
-  return (event, targetUrl, targetEnvironmentId, trackers) => {
+  return (event, targetUrl, targetEnvironmentId) => {
     if (event.metaKey || event.ctrlKey) return false;
     const resolvedPanelRef = panelRef ?? threadRef;
     // A list page's panel ref is a placeholder, not an environment; the link names its own.
@@ -42,7 +37,6 @@ export function useOpenIssueLink(
     const target = resolveIssueLinkTarget({
       url: targetUrl,
       projects: allProjects.filter((project) => project.environmentId === environmentId),
-      trackers,
     });
     if (target === null) return false;
     event.preventDefault();

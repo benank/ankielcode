@@ -425,20 +425,12 @@ The search box asks the tracker itself where it can search. Press **Load more** 
 The **Views** menu saves and restores a search, filter, and sort setup, as it does for pull
 requests.
 
-To list Linear issues beside a project's, connect Linear with an API key under
-Settings → Source control & issues, then pick one or more teams for that project there. Pick
-another team at any time to add it; uncheck every team to unbind the project. Each team's
-issues appear in the Linear group of the issue list, sorted with the rest by last update, and
-each can be loaded further on its own. To
-connect another Linear workspace or user, add another account in the same place; each project
-reads its teams through the account you picked them under.
-
 Select an issue to open it beside the list: description, comments, state changes, linked pull
 requests, labels, assignees, and reactions. Linked pull requests open in the same panel. You can
 comment, edit the title and description, change labels and assignees, react, and move it to
 another state when the tracker and your account allow it. Where a GitHub repository has issue
-statuses (Backlog, Todo, In progress, and so on), those are the states you move between, as a
-Linear team's workflow states are; elsewhere you close or reopen, with a close reason where the
+statuses (Backlog, Todo, In progress, and so on), those are the states you move between;
+elsewhere you close or reopen, with a close reason where the
 tracker records one. An issue read through a project that does not own its repository is shown read-only.
 
 An issue can be kept with a thread the way a pull request can: open it beside the thread (issue

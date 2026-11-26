@@ -101,10 +101,7 @@ import { SettingsClientStorageRouteScreen } from "./features/settings/SettingsCl
 import { SettingsDiagnosticsRouteScreen } from "./features/diagnostics/SettingsDiagnosticsRouteScreen";
 import { SettingsProviderAccountsRouteScreen } from "./features/settings/SettingsProviderAccountsRouteScreen";
 import { SettingsEnvironmentDetailRouteScreen } from "./features/settings/SettingsEnvironmentDetailRouteScreen";
-import {
-  SettingsIssueTrackerRouteScreen,
-  SettingsSourceControlProviderRouteScreen,
-} from "./features/settings/SettingsSourceControlDetailRouteScreens";
+import { SettingsSourceControlProviderRouteScreen } from "./features/settings/SettingsSourceControlDetailRouteScreens";
 import { SettingsEnvironmentsRouteScreen } from "./features/settings/SettingsEnvironmentsRouteScreen";
 import { SettingsFollowUpRouteScreen } from "./features/settings/SettingsFollowUpRouteScreen";
 import { SettingsLanguageRouteScreen } from "./features/settings/SettingsLanguageRouteScreen";
@@ -170,7 +167,6 @@ const ROUTE_TITLES: Readonly<Record<string, string>> = {
   SettingsSourceControlProvider: msg("Provider", {
     $context: "settings page of one source control provider",
   }),
-  SettingsIssueTracker: msg("Issue tracker"),
   SettingsEnvironmentAgentBehavior: msg("Threads"),
   SettingsWorktrees: msg("Worktrees"),
   SettingsLabs: msg("Labs"),
@@ -258,10 +254,6 @@ const SETTINGS_SCREENS = {
   }),
   SettingsSourceControlProvider: createNativeStackScreen({
     screen: SettingsSourceControlProviderRouteScreen,
-    options: settingsPage(),
-  }),
-  SettingsIssueTracker: createNativeStackScreen({
-    screen: SettingsIssueTrackerRouteScreen,
     options: settingsPage(),
   }),
   SettingsEnvironmentAgentBehavior: createNativeStackScreen({

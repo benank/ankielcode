@@ -1199,13 +1199,6 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: [msg("github issues pull requests automation")],
   },
   {
-    id: "issue-trackers",
-    title: msg("Issue trackers"),
-    to: "/settings/source-control",
-    scope: "environment-defaults",
-    searchTerms: [msg("linear jira issues tracker team api key connect bind project")],
-  },
-  {
     id: "source-control",
     title: msg("Source control"),
     to: "/settings/source-control",

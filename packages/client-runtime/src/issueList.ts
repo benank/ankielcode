@@ -194,8 +194,8 @@ export function issueFilterScopes(
         scopes.push({ environmentId, input });
       }
     }
-    // A tracker bound in settings (a Linear team) is no repository's; the answer names its scope,
-    // matched or not. Older servers do not, so their rows stand in.
+    // The answer names every scope it read, a repository's or not. Older servers do not, so their
+    // rows stand in.
     const covered: ReadonlyArray<IssueScopeRef> =
       page.answer.scopes ??
       page.entries.map(({ projectId, tracker, host, scope }) => ({

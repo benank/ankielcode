@@ -35,7 +35,6 @@
     "generate:expo-schema": "node scripts/fetch-expo-schema.ts"
   },
   "dependencies": {
-    "@ankielcode/issue-tracker-linear": "workspace:*",
     "@ankielcode/provider-acp": "workspace:*",
     "@ankielcode/provider-acp-registry": "workspace:*",
     "@ankielcode/provider-core": "workspace:*",
