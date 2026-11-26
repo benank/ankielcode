@@ -4,6 +4,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vite-plus/test";
 
+import type { PendingUserInputDraftAnswer } from "@ankielcode/client-runtime/state/pending-user-input";
 import type { PendingUserInput } from "../../lib/threadActivity";
 
 const harness = vi.hoisted(() => ({
@@ -38,7 +39,13 @@ vi.mock("../../components/ui/AppText", () => ({
 }));
 vi.mock("../../components/ui/ControlPill", () => ({ ControlPill: () => null }));
 vi.mock("../../components/PixelStatus", () => ({ PixelStatus: () => null }));
-vi.mock("../../components/ui/Button", () => ({ Button: () => null }));
+vi.mock("../../components/ui/Button", () => ({
+  Button: (props: { label: string; disabled?: boolean; onPress: () => void }) => (
+    <button type="button" disabled={props.disabled} onClick={props.onPress}>
+      {props.label}
+    </button>
+  ),
+}));
 vi.mock("./QuestionAttachments", () => ({ QuestionAttachments: () => null }));
 vi.mock("../files/FileMarkdownPreview", () => ({
   useMarkdownPreviewStyles: () => ({ nativeTextStyle: {} }),
@@ -71,7 +78,10 @@ vi.mock("@react-navigation/native", () => ({
 
 import { PendingUserInputCard } from "./PendingUserInputCard";
 
-function setup(questionMarkdown: string) {
+function setup(
+  questionMarkdown: string | ReadonlyArray<object>,
+  drafts: Record<string, PendingUserInputDraftAnswer> = {},
+) {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   harness.navigate = [];
   harness.openedUrls = [];
@@ -79,15 +89,18 @@ function setup(questionMarkdown: string) {
   const pendingUserInput = {
     requestId: "request-1" as RuntimeRequestId,
     responseCapability: "resumable",
-    questions: [
-      {
-        id: "question-1",
-        header: "Review",
-        question: questionMarkdown,
-        options: [],
-        allowCustomAnswer: false,
-      },
-    ],
+    questions:
+      typeof questionMarkdown === "string"
+        ? [
+            {
+              id: "question-1",
+              header: "Review",
+              question: questionMarkdown,
+              options: [],
+              allowCustomAnswer: false,
+            },
+          ]
+        : questionMarkdown,
   } as unknown as PendingUserInput;
   const container = document.createElement("div");
   const root = createRoot(container);
@@ -104,7 +117,7 @@ function setup(questionMarkdown: string) {
         cardCoverage={{ value: 0, set: () => {} } as never}
         collapsed={false}
         onToggleCollapsed={() => {}}
-        drafts={{}}
+        drafts={drafts}
         answers={null}
         respondingUserInputId={null}
         onSelectOption={() => {}}
@@ -114,7 +127,16 @@ function setup(questionMarkdown: string) {
       />,
     ),
   );
+  const button = (label: string) =>
+    [...container.querySelectorAll("button")].find((element) => element.textContent === label);
   return {
+    text: () => container.textContent ?? "",
+    button,
+    async press(label: string) {
+      const target = button(label);
+      if (!target) throw new Error(`No button labelled ${label}`);
+      await act(async () => target.click());
+    },
     async pressLink(label: string) {
       const link = [...container.querySelectorAll("button")].find(
         (button) => button.textContent === label,
@@ -140,4 +162,41 @@ it("opens a workspace file link in a question in the thread's file viewer", asyn
       { environmentId: "env-1", threadId: "thread-1", path: ["docs", "probe.md"], line: "12" },
     ],
   ]);
+});
+
+it("shows one question per page and moves on once the current one is answered", async () => {
+  const questions = [
+    {
+      id: "question-1",
+      header: "Scope",
+      question: "See [first](https://example.com/first)",
+      options: [{ label: "Narrow" }, { label: "Wide" }],
+      multiSelect: false,
+      allowCustomAnswer: false,
+    },
+    {
+      id: "question-2",
+      header: "Rollout",
+      question: "See [second](https://example.com/second)",
+      options: [{ label: "Now" }],
+      multiSelect: false,
+      allowCustomAnswer: false,
+    },
+  ];
+  {
+    using screen = setup(questions);
+    expect(screen.button("first")).toBeDefined();
+    expect(screen.button("second")).toBeUndefined();
+    expect(screen.text()).toContain("1 of 2");
+    expect(screen.button("Next")?.disabled).toBe(true);
+  }
+
+  using screen = setup(questions, { "question-1": { selectedOptionValues: ["Narrow"] } });
+  await screen.press("Next");
+  expect(screen.button("first")).toBeUndefined();
+  expect(screen.button("second")).toBeDefined();
+  expect(screen.text()).toContain("2 of 2");
+  expect(screen.button("Submit")).toBeDefined();
+  await screen.press("Previous");
+  expect(screen.button("first")).toBeDefined();
 });

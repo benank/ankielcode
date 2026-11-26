@@ -12,6 +12,7 @@ import { Kbd } from "../ui/kbd";
 import { cn } from "~/lib/utils";
 import { isInSideChatPane } from "~/lib/sideChatPane";
 import { ComposerBanner } from "./ComposerBanner";
+import { PixelStatus } from "../PixelStatus";
 import ChatMarkdown from "../ChatMarkdown";
 
 interface PendingUserInputPanelProps {
@@ -188,9 +189,15 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
         data-pending-user-input-toggle={isCollapsed ? "collapsed" : "expanded"}
         className="px-4 py-1.5"
       >
+        <ComposerBanner.Icon>
+          <PixelStatus kind="attention" />
+        </ComposerBanner.Icon>
         <ComposerBanner.Content>
           <span
-            className={cn("min-w-0 truncate text-muted-foreground", isCollapsed && "max-w-1/2")}
+            className={cn(
+              "min-w-0 truncate font-medium text-foreground",
+              isCollapsed && "max-w-1/2",
+            )}
             dir={textDirection(activeQuestion.header)}
           >
             {activeQuestion.header}
@@ -238,16 +245,16 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
       </CollapsibleTrigger>
       <CollapsiblePanel>
         <ComposerBanner.Scroll>
-          <ComposerBanner.Body className="ps-6 pe-4 pb-1 wrap-anywhere sm:ps-5.5">
+          <ComposerBanner.Body className="pe-4 pb-1.5 wrap-anywhere">
             <ChatMarkdown
               text={activeQuestion.question}
               cwd={cwd}
               threadRef={threadRef}
               lineBreaks
-              className={cn("pt-0.5 text-foreground/85", questionTextAlign)}
+              className={cn("pt-0.5 text-foreground", questionTextAlign)}
             />
             {/* Rows span the header row's width so the radios align with the question text and the shortcut column sits under the dismiss button. */}
-            <div className="-ms-2 mt-1.5 sm:-ms-1.5">
+            <div className="-ms-2 mt-2 sm:-ms-1.5">
               {activeQuestion.options.map((option, index) => {
                 const optionValue = option.value ?? option.label;
                 const isSelected = draftSelectedOptions?.[index] === true;
@@ -274,7 +281,7 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
                       </span>
                       {option.description && option.description !== option.label ? (
                         <span
-                          className="text-secondary-label text-2xs"
+                          className="text-xs text-muted-foreground"
                           dir={textDirection(option.description)}
                         >
                           {option.description}

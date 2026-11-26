@@ -9,7 +9,7 @@ import {
 } from "@ankielcode/shared/textDirection";
 import { useNavigation } from "@react-navigation/native";
 import { Plural, T, useGT, Var } from "gt-react-native";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, View, type LayoutChangeEvent } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -35,6 +35,7 @@ import {
 import { useLiveThreadLinkLabels } from "../../state/entities";
 import {
   isPendingUserInputOptionSelected,
+  resolvePendingUserInputAnswer,
   type PendingUserInputDraftAnswer,
 } from "@ankielcode/client-runtime/state/pending-user-input";
 import type { PendingUserInput } from "../../lib/threadActivity";
@@ -122,12 +123,50 @@ function QuestionText(props: {
   );
 }
 
+function OptionIndicator(props: { readonly multiSelect: boolean; readonly selected: boolean }) {
+  if (props.multiSelect) {
+    return (
+      <View
+        className={cn(
+          "size-5 items-center justify-center rounded-md border-[1.5px]",
+          props.selected ? "border-foreground bg-foreground" : "border-foreground-muted",
+        )}
+      >
+        {props.selected ? (
+          <SymbolView name="checkmark" size={11} weight="bold" tintColorClassName="accent-screen" />
+        ) : null}
+      </View>
+    );
+  }
+  return (
+    <View
+      className={cn(
+        "size-5 items-center justify-center rounded-full border-[1.5px]",
+        props.selected ? "border-foreground" : "border-foreground-muted",
+      )}
+    >
+      {props.selected ? <View className="size-2.5 rounded-full bg-foreground" /> : null}
+    </View>
+  );
+}
+
 export function PendingUserInputCard(props: PendingUserInputCardProps) {
   const gt = useGT();
   const questionCount = props.pendingUserInput.questions.length;
   const canRespond = props.pendingUserInput.responseCapability !== "not_resumable";
   const isResponding = props.respondingUserInputId === props.pendingUserInput.requestId;
   const responseDisabled = !canRespond || isResponding;
+  // One question per page; the page resets when a new request takes the card.
+  const requestId = props.pendingUserInput.requestId;
+  const [page, setPage] = useState({ requestId, index: 0 });
+  const questionIndex =
+    page.requestId === requestId ? Math.min(page.index, Math.max(0, questionCount - 1)) : 0;
+  const question = props.pendingUserInput.questions[questionIndex];
+  const isLastQuestion = questionIndex >= questionCount - 1;
+  const questionAnswered =
+    question !== undefined &&
+    resolvePendingUserInputAnswer(question, props.drafts[question.id]) !== null;
+  const goToQuestion = (index: number) => setPage({ requestId, index });
   const setDirection = markdownProseDirection(
     props.pendingUserInput.questions
       .flatMap((question) => [
@@ -241,34 +280,43 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
       className="overflow-hidden gap-2.5 rounded-card border border-border bg-card-alt p-4"
       style={cardAnimatedStyle}
     >
-      <View className="flex-row items-start gap-2">
+      <View className="flex-row items-center gap-2">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={gt("Collapse user input")}
           onPress={props.onToggleCollapsed}
-          className="flex-1 flex-row items-start gap-2"
+          className="min-h-9 flex-1 flex-row items-center gap-2 active:opacity-70"
         >
-          <View className="min-h-8 flex-1 flex-row items-center gap-2">
-            <PixelStatus kind="attention" />
-            <Text className="font-ankiel-medium text-base text-foreground">
-              <T>User input needed</T>
+          <PixelStatus kind="attention" />
+          <Text
+            numberOfLines={1}
+            className="min-w-0 shrink font-ankiel-medium text-sm text-foreground"
+            style={
+              question?.header ? proseDirectionStyle(question.header, setDirection) : undefined
+            }
+          >
+            {question?.header ? question.header : <T>User input needed</T>}
+          </Text>
+          <View className="flex-1" />
+          {questionCount > 1 ? (
+            <Text className="font-sans text-xs tabular-nums text-foreground-muted">
+              {gt("{position} of {total}", { position: questionIndex + 1, total: questionCount })}
             </Text>
-          </View>
-          <View className="h-8 w-8 items-center justify-center rounded-full bg-subtle-strong">
-            <SymbolView
-              name="chevron.down"
-              size={13}
-              tintColorClassName={"accent-icon-subtle"}
-              type="monochrome"
-            />
-          </View>
+          ) : null}
+          <SymbolView
+            name="chevron.down"
+            size={12}
+            tintColorClassName={"accent-icon-subtle"}
+            type="monochrome"
+          />
         </Pressable>
         {stopButton}
       </View>
       <ScrollView
+        key={question?.id}
         bounces={false}
         className="min-h-0"
-        contentContainerClassName="gap-2.5 pb-1"
+        contentContainerClassName="gap-3 pb-1"
         keyboardShouldPersistTaps="handled"
         nestedScrollEnabled
         showsVerticalScrollIndicator
@@ -282,70 +330,58 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
             </T>
           </Text>
         ) : null}
-        {props.pendingUserInput.questions.map((question) => {
-          const draft = props.drafts[question.id];
-          return (
-            <View key={question.id} className="gap-2 pt-1">
-              <Text
-                className="font-ankiel-medium text-xs text-foreground-muted"
-                style={proseDirectionStyle(question.header, setDirection)}
-              >
-                {question.header}
-              </Text>
-              <QuestionText
-                markdown={question.question}
-                environmentId={props.environmentId}
-                threadId={props.threadId}
-                workspaceRoot={props.workspaceRoot}
-                setDirection={setDirection}
-                preserveSoftBreaks
-              />
-              <View className="gap-2">
-                {question.options.map((option) => {
+        {question ? (
+          <>
+            <QuestionText
+              markdown={question.question}
+              environmentId={props.environmentId}
+              threadId={props.threadId}
+              workspaceRoot={props.workspaceRoot}
+              setDirection={setDirection}
+              preserveSoftBreaks
+            />
+            {question.options.length > 0 ? (
+              <View className="overflow-hidden rounded-2xl border border-border bg-card">
+                {question.options.map((option, optionIndex) => {
                   const optionValue = option.value ?? option.label.trim();
-                  const selected = isPendingUserInputOptionSelected(question, draft, optionValue);
+                  const selected = isPendingUserInputOptionSelected(
+                    question,
+                    props.drafts[question.id],
+                    optionValue,
+                  );
                   const description =
                     option.description !== option.label ? option.description : undefined;
                   return (
-                    <View key={optionValue} className="gap-1.5">
-                      <Pressable
-                        accessibilityRole={question.multiSelect ? "checkbox" : "radio"}
-                        accessibilityState={{ checked: selected, disabled: responseDisabled }}
-                        disabled={responseDisabled}
-                        className={cn(
-                          "min-h-12 w-full rounded-2xl border px-3.5 py-3",
-                          selected ? "border-foreground bg-input" : "border-border bg-input",
-                        )}
-                        onPress={() =>
-                          props.onSelectOption(
-                            props.pendingUserInput.requestId,
-                            question,
-                            optionValue,
-                          )
-                        }
-                      >
-                        <View className="min-w-0 flex-1 gap-0.5">
+                    <Pressable
+                      key={optionValue}
+                      accessibilityRole={question.multiSelect ? "checkbox" : "radio"}
+                      accessibilityState={{ checked: selected, disabled: responseDisabled }}
+                      disabled={responseDisabled}
+                      className={cn(
+                        "min-h-12 flex-row items-start gap-3 px-3.5 py-3 active:bg-subtle",
+                        optionIndex > 0 && "border-t border-border",
+                      )}
+                      onPress={() => props.onSelectOption(requestId, question, optionValue)}
+                    >
+                      <View className="h-5 justify-center">
+                        <OptionIndicator multiSelect={question.multiSelect} selected={selected} />
+                      </View>
+                      <View className="min-w-0 flex-1 gap-0.5">
+                        <Text
+                          className="font-ankiel-medium text-sm text-foreground"
+                          style={proseDirectionStyle(option.label, setDirection)}
+                        >
+                          {option.label}
+                        </Text>
+                        {description ? (
                           <Text
-                            className={cn(
-                              "font-ankiel-bold text-sm",
-                              selected ? "text-foreground" : "text-foreground-secondary",
-                            )}
-                            style={proseDirectionStyle(option.label, setDirection)}
+                            className="font-sans text-sm leading-5 text-foreground-muted"
+                            style={proseDirectionStyle(description, setDirection)}
                           >
-                            {option.label}
+                            {description}
                           </Text>
-                          {description ? (
-                            <Text
-                              className="font-sans text-sm leading-5 text-foreground-muted"
-                              style={proseDirectionStyle(description, setDirection)}
-                            >
-                              {description}
-                            </Text>
-                          ) : null}
-                        </View>
-                      </Pressable>
-                      {option.preview ? (
-                        <View className="px-3.5">
+                        ) : null}
+                        {option.preview ? (
                           <QuestionText
                             markdown={option.preview}
                             environmentId={props.environmentId}
@@ -354,45 +390,68 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
                             setDirection={setDirection}
                             preserveSoftBreaks
                           />
-                        </View>
-                      ) : null}
-                    </View>
+                        ) : null}
+                      </View>
+                    </Pressable>
                   );
                 })}
               </View>
-              {question.allowCustomAnswer !== false ? (
-                <QuestionAttachments
-                  key={`${props.pendingUserInput.requestId}:${question.id}`}
-                  requestId={props.pendingUserInput.requestId}
-                  question={question}
-                  questions={props.pendingUserInput.questions}
-                  disabled={responseDisabled}
-                  value={draft?.customAnswer ?? ""}
-                  onChangeText={(value) =>
-                    props.onChangeCustomAnswer(props.pendingUserInput.requestId, question.id, value)
-                  }
-                  onInputFocusChange={props.onInputFocusChange}
-                />
-              ) : null}
-            </View>
-          );
-        })}
+            ) : null}
+            {question.allowCustomAnswer !== false ? (
+              <QuestionAttachments
+                key={`${requestId}:${question.id}`}
+                requestId={requestId}
+                question={question}
+                questions={props.pendingUserInput.questions}
+                disabled={responseDisabled}
+                value={props.drafts[question.id]?.customAnswer ?? ""}
+                onChangeText={(value) => props.onChangeCustomAnswer(requestId, question.id, value)}
+                onInputFocusChange={props.onInputFocusChange}
+              />
+            ) : null}
+          </>
+        ) : null}
       </ScrollView>
-      <Button
-        label={gt("Submit answers")}
-        fullWidth
-        tone="primary"
-        disabled={!props.canOperateThread || responseDisabled || props.answers === null}
-        onPress={() => void props.onSubmit()}
-      />
-      {props.pendingUserInput.dismissible ? (
-        <Button
-          label={gt("Dismiss without answering")}
-          tone="text"
-          disabled={isResponding}
-          onPress={() => void props.onDismiss()}
-        />
-      ) : null}
+      <View className="flex-row items-center gap-2">
+        {questionIndex > 0 ? (
+          <Button
+            label={gt("Previous", { $context: "button that goes to the previous question" })}
+            tone="text"
+            size="compact"
+            disabled={isResponding}
+            onPress={() => goToQuestion(questionIndex - 1)}
+          />
+        ) : props.pendingUserInput.dismissible ? (
+          <Button
+            label={gt("Dismiss")}
+            accessibilityLabel={gt("Dismiss without answering")}
+            tone="text"
+            size="compact"
+            disabled={isResponding}
+            onPress={() => void props.onDismiss()}
+          />
+        ) : null}
+        <View className="flex-1" />
+        {isLastQuestion ? (
+          <Button
+            label={gt("Submit", { $context: "verb, submits answers" })}
+            accessibilityLabel={gt("Submit answers")}
+            tone="primary"
+            size="compact"
+            loading={isResponding}
+            disabled={!props.canOperateThread || responseDisabled || props.answers === null}
+            onPress={() => void props.onSubmit()}
+          />
+        ) : (
+          <Button
+            label={gt("Next", { $context: "button that goes to the next question" })}
+            tone="primary"
+            size="compact"
+            disabled={responseDisabled || !questionAnswered}
+            onPress={() => goToQuestion(questionIndex + 1)}
+          />
+        )}
+      </View>
       {!props.canOperateThread ? (
         <Text className="font-sans text-xs text-foreground-tertiary">
           <T>This connection cannot submit answers.</T>
