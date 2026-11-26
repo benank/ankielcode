@@ -7,9 +7,9 @@ import { SecretReference } from "./secretReference.ts";
 
 /**
  * A credential setting: the literal, which is kept in the secret store and redacted for
- * clients, or the secret reference to read it from, which is not itself a secret and is
- * stored and shown as written. Typing a settings field with it is the whole declaration:
- * forms offer a secret provider for it and the server reads the secret for its consumer.
+ * clients. Builds that read secrets from a secret provider (1Password) could also store a
+ * reference to one, which this build still decodes but cannot read: forms show it as
+ * unsupported, and its consumer fails with `SettingsSecretUnresolvedError`.
  */
 export const SettingsSecretValue = Schema.Union([TrimmedString, SecretReference]).pipe(
   Schema.annotateKey({ settingsSecret: true, settingsSecretReference: true }),
@@ -35,28 +35,20 @@ export class SettingsSecretUnresolvedError extends Schema.TaggedError<SettingsSe
   { provider: Schema.String },
 ) {
   override get message(): string {
-    return `Could not read the credential from the secret provider "${this.provider}". Unlock or fix it in Settings, then try again.`;
+    return `This credential is read from the secret provider "${this.provider}", which Ankiel Code no longer supports. Enter the value in Settings, then try again.`;
   }
 }
 
 /**
- * The literal a credential setting holds once its secret is resolved. A reference still in place
- * could not be read, and fails instead of passing for a missing token, so callers that would fall
- * back to another credential cannot silently switch accounts.
+ * The literal a credential setting holds. A reference to a secret provider cannot be read, and
+ * fails instead of passing for a missing token, so callers that would fall back to another
+ * credential cannot silently switch accounts.
  */
 export const requireSettingsSecretLiteral = (
   value: SettingsSecretValue | undefined,
-  secretProviders: Readonly<Record<string, { readonly label: string } | undefined>>,
 ): Effect.Effect<string, SettingsSecretUnresolvedError> =>
   isSecretReference(value)
-    ? Effect.fail(
-        new SettingsSecretUnresolvedError({
-          provider:
-            (Object.hasOwn(secretProviders, value.provider)
-              ? secretProviders[value.provider]?.label.trim()
-              : undefined) || value.provider,
-        }),
-      )
+    ? Effect.fail(new SettingsSecretUnresolvedError({ provider: value.provider }))
     : Effect.succeed(value ?? "");
 
 export function acceptsSecretReference(schema: Schema.Top): boolean {
@@ -116,21 +108,3 @@ export function secretReferencesInSettings(
     },
   );
 }
-
-/** `settings` with each slot set to its value, keeping the other keys of a record field. */
-export function withSettingsSecrets<Settings extends Readonly<Record<string, unknown>>>(
-  settings: Settings,
-  slots: ReadonlyArray<SettingsSecretSlot & { readonly value: string }>,
-): Settings {
-  const next: Record<string, unknown> = { ...settings };
-  for (const { field, key, value } of slots) {
-    next[field] = key === undefined ? value : { ...(next[field] as object), [key]: value };
-  }
-  return next as Settings;
-}
-
-export const SecretSourceCheckResult = Schema.Union([
-  Schema.TaggedStruct("Resolved", {}),
-  Schema.TaggedStruct("Failed", { detail: Schema.String }),
-]);
-export type SecretSourceCheckResult = typeof SecretSourceCheckResult.Type;

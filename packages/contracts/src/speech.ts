@@ -64,7 +64,7 @@ export class CloudSpeechError extends Schema.TaggedError<CloudSpeechError>()(
       case "key-changed":
         return `The ${name} key changed before your recording was sent. Try again.`;
       case "unreadable-key":
-        return `Couldn’t read the ${name} API key. Unlock the vault on the selected environment or update the key in Settings → Voice. No audio was sent to ${name}.`;
+        return `Couldn’t read the ${name} API key. Enter the key again in Settings → Voice. No audio was sent to ${name}.`;
       case "rejected-key":
         return `${name} rejected this API key. Check its permissions and billing in Settings → Voice.`;
       case "rate-limit":

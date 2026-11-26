@@ -174,7 +174,7 @@ describe("command permissions", () => {
     }),
   );
 
-  it.effect.each([WS_METHODS.serverCheckSecretSource])(
+  it.effect.each([WS_METHODS.serverRunStorageCleanup])(
     "requires the destination settings grant for %s",
     (method) =>
       Effect.gen(function* () {

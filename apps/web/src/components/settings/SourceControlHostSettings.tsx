@@ -50,7 +50,6 @@ export function SourceControlHostSettings({
         value={saved ?? {}}
         idPrefix={`source-control-${definition.kind}-${environmentId}`}
         variant="settings"
-        environmentId={environmentId}
         onChange={(next) => {
           const fields = next ?? {};
           const changed = Object.fromEntries(

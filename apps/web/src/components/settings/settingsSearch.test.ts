@@ -15,7 +15,6 @@ import {
   isSettingsSearchScopeAvailable,
   movedSettingsPath,
   searchSettings,
-  settingsNavGroups,
   SETTINGS_SEARCH_ITEMS,
   sourceControlHostSearchItems,
   sourceControlHostSettingsSearchId,
@@ -68,28 +67,6 @@ describe("searchSettings", () => {
         to: "/settings/threads",
         scope: "environment-defaults",
       });
-    }
-  });
-
-  it("shows the Secrets page in nav and search only when an environment enables secret providers", () => {
-    const availability = {
-      hasEnvironment: true,
-      hasProviderSettingsEnvironment: true,
-      canManageLocalBackend: false,
-      isWslSettingsRowVisible: false,
-      hasThreadAutoSettlement: false,
-    };
-    for (const enabled of [false, true]) {
-      const navPaths = settingsNavGroups(enabled).flatMap((group) => group.paths);
-      const searchPaths = searchSettings(
-        "1password",
-        filterAvailableSettingsSearchItems({
-          ...availability,
-          hasSecretProvidersEnvironment: enabled,
-        }),
-      ).map((item) => item.to);
-      expect(navPaths.includes("/settings/secrets")).toBe(enabled);
-      expect(searchPaths.includes("/settings/secrets")).toBe(enabled);
     }
   });
 

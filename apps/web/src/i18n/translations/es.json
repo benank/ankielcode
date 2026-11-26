@@ -312,7 +312,6 @@
   "610aea624f895a78": "Guardado de forma segura y privada",
   "8cc00444f7443feb": "Rechazado",
   "acd01e781e2355cc": "Solicitud finalizada",
-  "329b7854b7e0546e": "Usa una referencia de 1Password como {example}.",
   "97e4c50a99272f63": "No se pudo responder a la solicitud. Inténtalo de nuevo.",
   "420bea546d5f8802": "Hilo copiado",
   "2efb2dd3bf170f67": "No se pudo copiar el hilo",
@@ -6812,9 +6811,9 @@
   "ef5fef499da688e8": "Reemplazar clave de API",
   "cad38c8893ab98e4": "Clave de API",
   "42ec8bbd6819af00": "Clave de API de {company}",
-  "03d751a890780a70": "Referencia de la clave de API de {company}",
   "2db595fcf95d3ff6": "Introduce la clave de API",
   "7aa0d5470ed46175": "Introduce una clave de API, no una URL ni una referencia a un secreto.",
+  "cfacaad3134382ef": "Read from the secret provider “{provider}”, which Ankiel Code no longer supports. Enter the value to replace it.",
   "dad7aceef19f0f5b": "Actualizar la clave mantiene el dictado activado.",
   "015e394f14d5ede0": "Déjalo en blanco para conservar la clave guardada.",
   "0a9e4d44c145cd07": "Cualquiera con acceso al dictado en {environment} puede cargar costes a esta clave.",
@@ -7334,7 +7333,6 @@
   "287b18c47ec92be0": "Sesión iniciada como {account} con el token de acceso guardado aquí.",
   "9f07a56693256c4d": "Sesión iniciada como {account} con EXPO_TOKEN en el servidor.",
   "ba4c99506ff9822a": "Sesión iniciada como {account} con el eas login del servidor.",
-  "972be7e4b4a995a0": "Introduce una referencia de secreto válida.",
   "aa4df315152b7b70": "Los minutos de inactividad deben ser menos que los minutos de sesión.",
   "e96801c9ea01d761": "Ponle una etiqueta al host y límites dentro de los rangos indicados.",
   "c2839b56a6559626": "Añadir host de Expo",
@@ -8579,80 +8577,6 @@
   "a8fad08ceff4e04f": "Las tareas desactivadas siguen guardadas, pero no se ejecutan.",
   "af3bf76ebab013ff": "Secreto guardado; introduce un valor nuevo para reemplazarlo",
   "6d5cbb6a55929e77": "Sin definir",
-  "6855de06fd5c0e7f": "Introduce un nombre.",
-  "eb91d60b57d46345": "Introduce la cuenta de 1Password.",
-  "67678fd68bb24d27": "El nombre necesita al menos una letra o un dígito.",
-  "fe6fc15c3bb8022e": "Ya existe un proveedor de secretos con este nombre.",
-  "0c816bce39329beb": "Editar {label}",
-  "02f531b974fc3dd5": "Añadir un proveedor de 1Password",
-  "acbf0b4710755dc1": "Personal",
-  "bc714daca44e1826": "Guardar cambios",
-  "787b3fff435313e4": [
-    "Las variables de proveedor de ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " pueden leer valores de él por nombre. Los valores se leen con la CLI op en ese servidor cuando se inicia un proveedor."
-  ],
-  "daf8daec701f0863": "Cuenta",
-  "c3d6c8494c7d4b8f": "La abreviatura de la cuenta, la dirección de inicio de sesión sin https:// o el ID que muestra op account list.",
-  "afa8b4a2e025dd36": "Valor",
-  "13f8f1e086293635": "Origen de {label}",
-  "4579dce838e7c0a3": "No se pudo contactar con el servidor",
-  "72906d2339314412": "No puedes comprobar secretos en este entorno",
-  "314546d4d3481e1f": "Comprobar que el secreto se resuelve",
-  "957c652364c674b4": "Comprobando el secreto",
-  "d4ce4e6e4826e278": "Secreto resuelto",
-  "40916e46dfac8738": "{label} falló: {detail}",
-  "9064b191dab9f782": "{label} resuelto",
-  "4d12d2e6d168fdb5": "Referencia de {label}",
-  "f7b9aef971c1ce37": "Comprobar {label}",
-  "3e3cabe47b0b5c07": "Voz · {provider}",
-  "cd90b098a17bca20": "No hay proveedores de secretos configurados.",
-  "1c9374501ee389d3": "Añade una cuenta de 1Password y elígela como origen de una variable de proveedor.",
-  "382541febe15f472": "Alternar visibilidad de la cuenta",
-  "40426afd511710f8": "Proveedor no compatible ({kind})",
-  "bc57b89d73b712d1": [
-    "Actualiza Ankiel Code en ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " para gestionar sus proveedores de secretos."
-  ],
-  "13d4f258e93f1dc1": "Conecta un entorno para gestionar los proveedores de secretos de los que leen sus variables de proveedor.",
-  "88466f5a03be2419": "Ajuste de todo el entorno. Selecciona un entorno para cambiarlo.",
-  "a3538ba5ca802bd7": [
-    "¿Quitar ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    "?"
-  ],
-  "0d5b3b39f92c04e4": "Quitar proveedor",
-  "c52bdbe39649742c": [
-    "Nada lee de ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    ". Los secretos en sí no se tocan."
-  ],
-  "59c40978bc7c05ad": [
-    "Estas leen de ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " y quedarán sin definir. Los secretos en sí no se tocan."
-  ],
   "910a79263d640e22": "Permitido",
   "43e5c059e5308eee": "No concedido",
   "32659cddbd37d220": "Estos permisos se aplican a tu ruta activa. Otras rutas pueden tener permisos distintos.",
@@ -9362,6 +9286,7 @@
     ", o desactiva un host."
   ],
   "9e8b725de0072098": "Sesión iniciada como",
+  "daf8daec701f0863": "Cuenta",
   "25d2d58cd2a8f103": [
     "Cuenta activa de ",
     {
@@ -9932,6 +9857,7 @@
   "1d4f61e89b446440": "Minimizar el editor de temas",
   "13e2b78d333a32ee": "Cerrar el editor de temas",
   "9137253dc9576644": "Combinar con «{label}»",
+  "bc714daca44e1826": "Guardar cambios",
   "e80f1a3dfabdbae1": "Añadir paleta clara",
   "e86fd314d1599271": "Añadir paleta oscura",
   "f2ba1c687d850d82": "Nombre del tema",
@@ -10016,6 +9942,7 @@
   "d4d21ada26ceeb4e": "Usar el tema {label}, activo",
   "1ad8f0ea72e46432": "Usar el tema {label}",
   "8ef2b7c62fc504fa": "Duplicar {label}",
+  "0c816bce39329beb": "Editar {label}",
   "885721ab59f2647b": "Exportar {label}",
   "161ae90f23219c76": "Quitar temas de {collectionLabel}",
   "0a539f726e6982d3": "Quitar {label}",
@@ -10109,6 +10036,15 @@
   ],
   "f54364b854a07918": "No hay hubs configurados.",
   "4cf6a373a7535324": "{name} · Deshabilitado",
+  "a3538ba5ca802bd7": [
+    "¿Quitar ",
+    {
+      "i": 1,
+      "k": "_gt_value_1",
+      "v": "v"
+    },
+    "?"
+  ],
   "1d1e9cda847bd398": "La clave de gestión del hub se elimina de este servidor. Sus cuentas salen de la vista Límites; el hub en sí no se toca. Vuelve a añadirlo con la URL y la clave para recuperarlas.",
   "c9bee4f93481b77a": "Quitar hub",
   "0424112d5a0ecd71": "Automático",
@@ -10381,7 +10317,6 @@
   "2ab325baee3ec9a3": "Tareas programadas",
   "0a59e086514a62a9": "Control de versiones e issues",
   "1de0df2b8a4fb96e": "Compartir y acceso",
-  "4c70e3e7b3e6c493": "Secretos",
   "79b768229c9ef672": "Mantenimiento",
   "f41ea186c275b56e": "Acerca de",
   "af4b7734da1d5ce7": "Voz",
@@ -10567,10 +10502,6 @@
   "cbf49f84e7f456e5": "Equilibrio de carga",
   "6f1a769805a28197": "automático máquina entorno recursos cpu memoria capacidad preferencia peso proyectos compartidos",
   "563b1163723f019b": "Compartir pull requests",
-  "40c9f6f66a0139ff": "Proveedores de secretos",
-  "fd4ec272764a2405": "1password bóveda credenciales clave de api",
-  "ff679e74f97044e6": "Añadir proveedor de secretos",
-  "ddd5990f613aebb4": "nueva bóveda de 1password op cli cuenta",
   "b9b1dccabd2ed00d": "Hilos archivados",
   "f505371f6f6fd624": "restaurar reabrir historial eliminado proyectos",
   "2ed592dc3ae2e382": "Ponle una etiqueta al host.",

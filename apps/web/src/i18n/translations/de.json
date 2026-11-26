@@ -312,7 +312,6 @@
   "610aea624f895a78": "Sicher gespeichert und privat gehalten",
   "8cc00444f7443feb": "Abgelehnt",
   "acd01e781e2355cc": "Anfrage beendet",
-  "329b7854b7e0546e": "Verwende eine 1Password-Referenz wie {example}.",
   "97e4c50a99272f63": "Die Anfrage konnte nicht beantwortet werden. Versuche es erneut.",
   "420bea546d5f8802": "Thread kopiert",
   "2efb2dd3bf170f67": "Thread konnte nicht kopiert werden",
@@ -6814,9 +6813,9 @@
   "ef5fef499da688e8": "API-Schlüssel ersetzen",
   "cad38c8893ab98e4": "API-Schlüssel",
   "42ec8bbd6819af00": "{company}-API-Schlüssel",
-  "03d751a890780a70": "Referenz auf {company}-API-Schlüssel",
   "2db595fcf95d3ff6": "API-Schlüssel eingeben",
   "7aa0d5470ed46175": "Gib einen API-Schlüssel ein, keine URL oder Geheimnisreferenz.",
+  "cfacaad3134382ef": "Read from the secret provider “{provider}”, which Ankiel Code no longer supports. Enter the value to replace it.",
   "dad7aceef19f0f5b": "Beim Aktualisieren des Schlüssels bleibt das Diktat aktiviert.",
   "015e394f14d5ede0": "Leer lassen, um den gespeicherten Schlüssel zu behalten.",
   "0a9e4d44c145cd07": "Alle mit Diktat-Zugriff auf {environment} können über diesen Schlüssel abrechnen.",
@@ -7337,7 +7336,6 @@
   "287b18c47ec92be0": "Angemeldet als {account} mit dem hier gespeicherten Zugriffstoken.",
   "9f07a56693256c4d": "Angemeldet als {account} mit EXPO_TOKEN auf dem Server.",
   "ba4c99506ff9822a": "Angemeldet als {account} mit dem eas login des Servers.",
-  "972be7e4b4a995a0": "Gib eine gültige Geheimnisreferenz ein.",
   "aa4df315152b7b70": "Leerlaufminuten müssen kleiner als die Sitzungsminuten sein.",
   "e96801c9ea01d761": "Gib dem Host eine Bezeichnung und Limits innerhalb der angezeigten Bereiche.",
   "c2839b56a6559626": "Expo-Host hinzufügen",
@@ -8584,79 +8582,6 @@
   "a8fad08ceff4e04f": "Deaktivierte Aufgaben bleiben gespeichert, werden aber nicht ausgeführt.",
   "af3bf76ebab013ff": "Gespeichertes Geheimnis, gib einen neuen Wert ein, um es zu ersetzen",
   "6d5cbb6a55929e77": "Nicht festgelegt",
-  "6855de06fd5c0e7f": "Gib einen Namen ein.",
-  "eb91d60b57d46345": "Gib das 1Password-Konto ein.",
-  "67678fd68bb24d27": "Der Name braucht mindestens einen Buchstaben oder eine Ziffer.",
-  "fe6fc15c3bb8022e": "Ein Geheimnisanbieter mit diesem Namen existiert bereits.",
-  "0c816bce39329beb": "{label} bearbeiten",
-  "02f531b974fc3dd5": "1Password-Anbieter hinzufügen",
-  "acbf0b4710755dc1": "Persönlich",
-  "bc714daca44e1826": "Änderungen speichern",
-  "787b3fff435313e4": [
-    "Anbietervariablen auf ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " können Werte daraus per Name lesen. Die Werte werden beim Start eines Anbieters mit der op-CLI auf diesem Server gelesen."
-  ],
-  "daf8daec701f0863": "Konto",
-  "c3d6c8494c7d4b8f": "Das Konto-Kürzel, die Anmeldeadresse ohne https:// oder die ID, die op account list anzeigt.",
-  "afa8b4a2e025dd36": "Wert",
-  "13f8f1e086293635": "Quelle für {label}",
-  "4579dce838e7c0a3": "Server nicht erreichbar",
-  "72906d2339314412": "Du kannst in dieser Umgebung keine Geheimnisse prüfen",
-  "314546d4d3481e1f": "Prüfen, ob das Geheimnis aufgelöst wird",
-  "957c652364c674b4": "Geheimnis wird geprüft",
-  "d4ce4e6e4826e278": "Geheimnis aufgelöst",
-  "40916e46dfac8738": "{label} fehlgeschlagen: {detail}",
-  "9064b191dab9f782": "{label} aufgelöst",
-  "4d12d2e6d168fdb5": "Referenz für {label}",
-  "f7b9aef971c1ce37": "{label} prüfen",
-  "3e3cabe47b0b5c07": "Spracheingabe · {provider}",
-  "cd90b098a17bca20": "Keine Geheimnisanbieter konfiguriert.",
-  "1c9374501ee389d3": "Füge ein 1Password-Konto hinzu und wähle es dann als Quelle einer Anbietervariable.",
-  "382541febe15f472": "Kontosichtbarkeit umschalten",
-  "40426afd511710f8": "Nicht unterstützter Anbieter ({kind})",
-  "bc57b89d73b712d1": [
-    "Aktualisiere Ankiel Code auf ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    ", um seine Geheimnisanbieter zu verwalten."
-  ],
-  "13d4f258e93f1dc1": "Verbinde eine Umgebung, um die Geheimnisanbieter zu verwalten, aus denen ihre Anbietervariablen lesen.",
-  "88466f5a03be2419": "Umgebungsweite Einstellung. Wähle eine Umgebung, um sie zu ändern.",
-  "a3538ba5ca802bd7": [
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " entfernen?"
-  ],
-  "0d5b3b39f92c04e4": "Anbieter entfernen",
-  "c52bdbe39649742c": [
-    "Nichts liest aus ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    ". Die Geheimnisse selbst bleiben unberührt."
-  ],
-  "59c40978bc7c05ad": [
-    "Diese lesen aus ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " und werden geleert. Die Geheimnisse selbst bleiben unberührt."
-  ],
   "910a79263d640e22": "Erlaubt",
   "43e5c059e5308eee": "Nicht gewährt",
   "32659cddbd37d220": "Diese Berechtigungen gelten für deine aktive Route. Andere Routen können andere Berechtigungen haben.",
@@ -9366,6 +9291,7 @@
     "-Host verwendet, oder schalte einen Host aus."
   ],
   "9e8b725de0072098": "Angemeldet als",
+  "daf8daec701f0863": "Konto",
   "25d2d58cd2a8f103": [
     "Aktives ",
     {
@@ -9938,6 +9864,7 @@
   "1d4f61e89b446440": "Design-Editor minimieren",
   "13e2b78d333a32ee": "Design-Editor schließen",
   "9137253dc9576644": "Mit „{label}“ zusammenführen",
+  "bc714daca44e1826": "Änderungen speichern",
   "e80f1a3dfabdbae1": "Helle Palette hinzufügen",
   "e86fd314d1599271": "Dunkle Palette hinzufügen",
   "f2ba1c687d850d82": "Name des Designs",
@@ -10022,6 +9949,7 @@
   "d4d21ada26ceeb4e": "Design {label} verwenden, aktuell aktiv",
   "1ad8f0ea72e46432": "Design {label} verwenden",
   "8ef2b7c62fc504fa": "{label} duplizieren",
+  "0c816bce39329beb": "{label} bearbeiten",
   "885721ab59f2647b": "{label} exportieren",
   "161ae90f23219c76": "Designs aus {collectionLabel} entfernen",
   "0a539f726e6982d3": "{label} entfernen",
@@ -10116,6 +10044,14 @@
   ],
   "f54364b854a07918": "Keine Hubs konfiguriert.",
   "4cf6a373a7535324": "{name} · Deaktiviert",
+  "a3538ba5ca802bd7": [
+    {
+      "i": 1,
+      "k": "_gt_value_1",
+      "v": "v"
+    },
+    " entfernen?"
+  ],
   "1d1e9cda847bd398": "Der Verwaltungsschlüssel des Hubs wird von diesem Server gelöscht. Seine Konten verschwinden aus der Limits-Ansicht; der Hub selbst bleibt unberührt. Füge ihn mit URL und Schlüssel erneut hinzu, um sie zurückzuholen.",
   "c9bee4f93481b77a": "Hub entfernen",
   "0424112d5a0ecd71": "Automatisch",
@@ -10389,7 +10325,6 @@
   "2ab325baee3ec9a3": "Geplante Aufgaben",
   "0a59e086514a62a9": "Versionskontrolle & Issues",
   "1de0df2b8a4fb96e": "Freigabe & Zugriff",
-  "4c70e3e7b3e6c493": "Geheimnisse",
   "79b768229c9ef672": "Wartung",
   "f41ea186c275b56e": "Info",
   "af4b7734da1d5ce7": "Spracheingabe",
@@ -10575,10 +10510,6 @@
   "cbf49f84e7f456e5": "Lastverteilung",
   "6f1a769805a28197": "automatisch rechner umgebung ressourcen cpu speicher kapazität präferenz gewichtung gemeinsame projekte",
   "563b1163723f019b": "Pull-Request-Freigabe",
-  "40c9f6f66a0139ff": "Geheimnisanbieter",
-  "fd4ec272764a2405": "1password tresor zugangsdaten api-schlüssel",
-  "ff679e74f97044e6": "Geheimnisanbieter hinzufügen",
-  "ddd5990f613aebb4": "neu 1password tresor op cli konto",
   "b9b1dccabd2ed00d": "Archivierte Threads",
   "f505371f6f6fd624": "wiederherstellen wieder öffnen gelöscht verlauf projekte",
   "2ed592dc3ae2e382": "Gib dem Host eine Bezeichnung.",

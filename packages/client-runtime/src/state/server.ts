@@ -12,7 +12,6 @@ import {
   type ProviderInstanceId,
   type ServerConfig,
   type ServerConfigStreamEvent,
-  type ServerFeatureFlags,
   type ServerLifecycleWelcomePayload,
   type ServerLifecycleStreamReadyEvent,
   type ServerProviderWorkspaceSnapshot,
@@ -837,14 +836,6 @@ function serverWelcomeStateChanges(environmentId: EnvironmentId) {
       ),
     ),
   );
-}
-
-/** Whether an environment's server turned on a feature flag; unset flags and unloaded configs are off. */
-export function hasFeatureFlag(
-  config: Pick<ServerConfig, "featureFlags"> | null | undefined,
-  flag: keyof ServerFeatureFlags,
-): boolean {
-  return config?.featureFlags?.[flag] === true;
 }
 
 export function resolveServerConfigValue(
@@ -2022,10 +2013,6 @@ export function createServerEnvironmentAtoms<R, E>(
         mode: "singleFlight",
         key: ({ environmentId }) => environmentId,
       },
-    }),
-    checkSecretSource: createEnvironmentRpcCommand(runtime, {
-      label: "environment-data:server:check-secret-source",
-      tag: WS_METHODS.serverCheckSecretSource,
     }),
     listTextGeneratorModels: createEnvironmentRpcCommand(runtime, {
       label: "environment-data:server:list-text-generator-models",

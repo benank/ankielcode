@@ -1,11 +1,6 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { cloudSpeechDisclosure } from "@ankielcode/shared/speechCopy";
 import type { PreparedConnection } from "@ankielcode/client-runtime/connection";
-import { hasFeatureFlag } from "@ankielcode/client-runtime/state/server";
-import {
-  configuredSecretSources,
-  secretRequestReference,
-} from "@ankielcode/client-runtime/secret-request";
 import {
   getCloudSpeechKeys,
   getCloudSpeechModels,
@@ -13,7 +8,6 @@ import {
 } from "@ankielcode/client-runtime/voice-input";
 import {
   AuthOrchestrationOperateScope,
-  AuthProvidersManageScope,
   AuthSettingsWriteScope,
   CloudSpeechApiKey,
   CloudSpeechModelId,
@@ -22,8 +16,6 @@ import {
   isSecretReference,
   type CloudSpeechModel,
   type CloudSpeechProvider,
-  type SecretProviderId,
-  type SettingsSecretValue,
   type VoiceTranscriptionDestination,
 } from "@ankielcode/contracts";
 import * as Effect from "effect/Effect";
@@ -63,10 +55,8 @@ import {
   DialogPopup,
   DialogTitle,
 } from "../ui/dialog";
-import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { SecretInput } from "./SecretInput";
-import { SecretSourceSelect } from "./SecretSourceInput";
 
 // Per dialog instance, not an Atom.family: key presence must be read fresh each time it opens.
 function useCloudRead<A, E>(
@@ -177,7 +167,6 @@ export function CloudVoiceConfiguration({
   const prepared = Option.getOrNull(usePreparedConnection(id));
   const canUse = useEnvironmentScope(id, AuthOrchestrationOperateScope);
   const canManage = useEnvironmentScope(id, AuthSettingsWriteScope);
-  const canUseReferences = useEnvironmentScope(id, AuthProvidersManageScope);
   const [presence, refresh] = useCloudRead(canUse ? prepared : null, getCloudSpeechKeys);
   const [models, refreshModels] = useCloudRead(
     routed && canUse ? prepared : null,
@@ -195,32 +184,11 @@ export function CloudVoiceConfiguration({
   const [model, setModel] = useState(currentModel ?? "");
   const saved = AsyncResult.isSuccess(presence) ? presence.value?.[provider] : undefined;
   const existing = environment.serverConfig?.settings?.cloudSpeechCredentials?.[provider];
-  const sources =
-    canUseReferences &&
-    hasFeatureFlag(environment.serverConfig, "secretProviders") &&
-    environment.serverConfig?.secretReferences
-      ? configuredSecretSources(environment.serverConfig.settings?.secretProviders ?? {}, messages)
-      : [];
-  const reference =
-    isSecretReference(existing) && sources.some((s) => s.id === existing.provider)
-      ? existing
-      : null;
-  const [sourceId, setSourceId] = useState<SecretProviderId | null>(reference?.provider ?? null);
-  const [draft, setDraft] = useState(reference?.reference ?? "");
-  const source = sources.find((s) => s.id === sourceId);
-  const credential =
-    sourceId !== null
-      ? source && secretRequestReference(source, draft)
-      : isApiKey(draft.trim())
-        ? draft.trim()
-        : undefined;
-  const keyChanged =
-    credential !== undefined &&
-    !(
-      isSecretReference(credential) &&
-      reference?.provider === credential.provider &&
-      reference.reference === credential.reference
-    );
+  // Saved by a build that read keys from a secret provider; this one cannot read it.
+  const unsupported = isSecretReference(existing) ? existing : null;
+  const [draft, setDraft] = useState("");
+  const credential = isApiKey(draft.trim()) ? draft.trim() : undefined;
+  const keyChanged = credential !== undefined;
   const connected = canUse && prepared !== null;
   // Fixed providers edit the key only when nothing is saved or the device already uses them.
   const editingKey = canManage && saved !== undefined && (routed || active || !saved);
@@ -237,7 +205,7 @@ export function CloudVoiceConfiguration({
     ? modelChosen && keyReady && (!active || modelChanged || keyChanged)
     : credential !== undefined;
 
-  const saveKey = async (value: SettingsSecretValue | null, thenEnable: boolean) => {
+  const saveKey = async (value: string | null, thenEnable: boolean) => {
     if (!connected || !canManage || busy) return;
     setError("");
     setBusy(true);
@@ -267,62 +235,33 @@ export function CloudVoiceConfiguration({
       <Label htmlFor="voice-cloud-key">
         {routed && saved ? gt("Replace API key") : gt("API key")}
       </Label>
-      <div className="flex min-w-0 items-start gap-2">
-        {sources.length > 0 && (
-          <SecretSourceSelect
-            value={sourceId}
-            sources={sources}
-            label={gt("{company} API key", { company })}
-            disabled={busy}
-            onValueChange={(next) => {
-              setSourceId(next);
-              setDraft("");
-              setError("");
-            }}
-          />
-        )}
-        <div className="min-w-0 flex-1">
-          {sourceId !== null ? (
-            <Input
-              key={sourceId}
-              id="voice-cloud-key"
-              name="reference"
-              aria-label={gt("{company} API key reference", { company })}
-              autoFocus={!routed}
-              placeholder={source?.referencePlaceholder}
-              value={draft}
-              disabled={busy}
-              autoComplete="off"
-              spellCheck={false}
-              onChange={(event) => setDraft(event.target.value)}
-            />
-          ) : (
-            <SecretInput
-              id="voice-cloud-key"
-              name="key"
-              aria-label={gt("{company} API key", { company })}
-              autoFocus={!routed}
-              placeholder={gt("Enter API key")}
-              value={draft}
-              configured={saved === true}
-              disabled={busy}
-              maxLength={4096}
-              onChange={(event) => setDraft(event.target.value)}
-            />
-          )}
-        </div>
-      </div>
+      <SecretInput
+        id="voice-cloud-key"
+        name="key"
+        aria-label={gt("{company} API key", { company })}
+        autoFocus={!routed}
+        placeholder={gt("Enter API key")}
+        value={draft}
+        configured={saved === true && unsupported === null}
+        disabled={busy}
+        maxLength={4096}
+        onChange={(event) => setDraft(event.target.value)}
+      />
       <p className="text-sm text-muted-foreground">
         {draft.trim() && !credential
-          ? (source?.invalidReferenceMessage ??
-            gt("Enter an API key, not a URL or secret reference."))
-          : active && !routed
-            ? gt("Updating the key keeps dictation enabled.")
-            : routed && saved
-              ? gt("Leave blank to keep the saved key.")
-              : gt("Anyone with dictation access to {environment} can bill this key.", {
-                  environment: environment.label,
-                })}
+          ? gt("Enter an API key, not a URL or secret reference.")
+          : unsupported !== null
+            ? gt(
+                "Read from the secret provider “{provider}”, which Ankiel Code no longer supports. Enter the value to replace it.",
+                { provider: unsupported.provider },
+              )
+            : active && !routed
+              ? gt("Updating the key keeps dictation enabled.")
+              : routed && saved
+                ? gt("Leave blank to keep the saved key.")
+                : gt("Anyone with dictation access to {environment} can bill this key.", {
+                    environment: environment.label,
+                  })}
       </p>
     </>
   );

@@ -2,6 +2,7 @@ import {
   type ListTextGeneratorModelsInput,
   type ListTextGeneratorModelsResult,
   type ProviderInstanceId,
+  requireSettingsSecretLiteral,
   TextGenerationError,
   type TextGeneratorConfig,
   TextGeneratorError,
@@ -9,7 +10,6 @@ import {
   textGeneratorForSelection,
 } from "@ankielcode/contracts";
 import * as TextGenerationOperations from "@ankielcode/provider-core/server/textGenerationOperations";
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -17,8 +17,6 @@ import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 import { FetchHttpClient, HttpClient } from "effect/http";
 
-import * as SecretResolverLayer from "../secrets/SecretResolver.ts";
-import { requireSettingsSecret } from "../secrets/settingsSecretValue.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import { SECRET_REDACTED } from "../settingsSecrets.ts";
 import {
@@ -59,7 +57,6 @@ const generatorLabel = (config: TextGeneratorConfig) => {
 /** @public */
 export const make = Effect.gen(function* () {
   const settingsService = yield* ServerSettings.ServerSettingsService;
-  const secrets = yield* SecretResolver.SecretResolver;
   const http = yield* HttpClient.HttpClient;
   const modelCache = yield* Ref.make(new Map<ProviderInstanceId, CachedModels>());
   const readConfig = Effect.fn("TextGenerators.readConfig")(function* (id: ProviderInstanceId) {
@@ -74,7 +71,7 @@ export const make = Effect.gen(function* () {
 
   const connect = Effect.fn("TextGenerators.connect")(function* (config: TextGeneratorConfig) {
     const label = generatorLabel(config);
-    const apiKey = yield* requireSettingsSecret(secrets, config.apiKey).pipe(
+    const apiKey = yield* requireSettingsSecretLiteral(config.apiKey).pipe(
       Effect.mapError((cause) => new TextGeneratorRequestError({ detail: cause.message, cause })),
     );
     return { baseUrl: config.baseUrl, apiKey, label } satisfies TextGeneratorConnection;
@@ -180,6 +177,4 @@ export const make = Effect.gen(function* () {
   return TextGenerators.of({ runner, listModels });
 });
 
-export const layer = Layer.effect(TextGenerators, make).pipe(
-  Layer.provide([SecretResolverLayer.layer, FetchHttpClient.layer]),
-);
+export const layer = Layer.effect(TextGenerators, make).pipe(Layer.provide(FetchHttpClient.layer));

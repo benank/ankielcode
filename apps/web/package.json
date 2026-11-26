@@ -19,8 +19,6 @@
     "@ankielcode/client-runtime": "workspace:*",
     "@ankielcode/contracts": "workspace:*",
     "@ankielcode/provider-core": "workspace:*",
-    "@ankielcode/secret-provider-definitions": "workspace:*",
-    "@ankielcode/secret-provider-onepassword": "workspace:*",
     "@ankielcode/shared": "workspace:*",
     "@base-ui/react": "^1.9.0",
     "@betteroffice/docx": "0.5.1",

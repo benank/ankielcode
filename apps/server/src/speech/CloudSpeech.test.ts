@@ -1,6 +1,5 @@
 import { it } from "@effect/vitest";
 import { DEFAULT_SPEECH_TRANSCRIPTION_OPTIONS, SecretProviderId } from "@ankielcode/contracts";
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
@@ -16,25 +15,13 @@ it.effect.each(["openai", "xai"] as const)("sends only to %s using its own saved
       provider: SecretProviderId.make("work"),
       reference: "op://Work/Voice/key",
     };
-    let resolved: string | undefined;
-    let cached: string | undefined;
-    const read = vi.fn(() => Effect.sync(() => [(cached ??= resolved)]));
     const upstream = vi.fn<typeof fetch>(async () => Response.json({ text: "hello" }));
+    const settings = yield* ServerSettings.ServerSettingsService;
     const service = yield* CloudSpeech.CloudSpeech.pipe(
       Effect.provide(
         CloudSpeech.layer.pipe(
           Layer.provide(FetchHttpClient.layer),
-          Layer.provide(ServerSettings.ServerSettingsService.layerTest()),
-          Layer.provide(
-            Layer.mock(SecretResolver.SecretResolver)({
-              read,
-              label: () => Effect.succeed("Work"),
-              invalidate: () =>
-                Effect.sync(() => {
-                  cached = undefined;
-                }),
-            }),
-          ),
+          Layer.provide(Layer.succeed(ServerSettings.ServerSettingsService, settings)),
         ),
       ),
     );
@@ -85,22 +72,15 @@ it.effect.each(["openai", "xai"] as const)("sends only to %s using its own saved
     expect((yield* service.configured)[provider]).toBe(false);
     yield* Effect.flip(transcribe());
     expect(upstream).toHaveBeenCalledTimes(2);
-    yield* service.setKey(provider, reference);
+    // A key a build with secret providers saved as a reference is never sent anywhere.
+    yield* settings.updateSettings({ cloudSpeechCredentials: { [provider]: reference } });
     expect((yield* service.configured)[provider]).toBe(true);
-    expect(read).not.toHaveBeenCalled();
-    resolved = "resolved-fixture";
-    expect(yield* transcribe()).toBe("hello");
-    expect(read).toHaveBeenCalledWith([reference]);
-    expect(new Headers(upstream.mock.calls[2]?.[1]?.headers).get("authorization")).toBe(
-      "Bearer resolved-fixture",
-    );
-    resolved = undefined;
     expect(yield* Effect.flip(transcribe())).toMatchObject({
       provider,
       reason: "unreadable-key",
     });
-    expect(upstream).toHaveBeenCalledTimes(3);
-  }),
+    expect(upstream).toHaveBeenCalledTimes(2);
+  }).pipe(Effect.provide(ServerSettings.ServerSettingsService.layerTest())),
 );
 
 it.effect("uploads to OpenRouter only for a listed exact model, as zero-retention JSON WAV", () =>
@@ -115,7 +95,6 @@ it.effect("uploads to OpenRouter only for a listed exact model, as zero-retentio
         CloudSpeech.layer.pipe(
           Layer.provide(FetchHttpClient.layer),
           Layer.provide(ServerSettings.ServerSettingsService.layerTest()),
-          Layer.provide(Layer.mock(SecretResolver.SecretResolver)({})),
         ),
       ),
     );
@@ -173,7 +152,6 @@ it.effect("removing a key while a catalog read is pending prevents the upload", 
         CloudSpeech.layer.pipe(
           Layer.provide(FetchHttpClient.layer),
           Layer.provide(ServerSettings.ServerSettingsService.layerTest()),
-          Layer.provide(Layer.mock(SecretResolver.SecretResolver)({})),
         ),
       ),
     );

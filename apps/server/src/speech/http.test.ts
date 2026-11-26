@@ -7,7 +7,6 @@ import { expect, vi } from "vite-plus/test";
 import {
   AuthSessionId,
   AuthOrchestrationOperateScope,
-  AuthProvidersManageScope,
   AuthSettingsWriteScope,
   type AuthEnvironmentScope,
   CloudSpeechError,
@@ -226,18 +225,9 @@ effectIt.effect(
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ key }),
         });
-      // A reference needs the scope that saving it through settings would.
-      const refused = yield* setReference(reference);
-      expect(refused.status).toBe(403);
-      expect(yield* Effect.promise(() => refused.json())).toMatchObject({
-        requiredPermission: AuthProvidersManageScope,
-      });
+      // Keys are typed values only; a secret provider reference is no longer accepted.
+      expect((yield* setReference(reference)).status).toBe(400);
       expect(save).toHaveBeenCalledTimes(1);
-      scopes.add(AuthProvidersManageScope);
-      expect((yield* setReference(reference)).status).toBe(204);
-      expect(save).toHaveBeenLastCalledWith("xai", reference);
-      expect((yield* setReference(reference.reference)).status).toBe(400);
-      expect(save).toHaveBeenCalledTimes(2);
       const failed = yield* call("openai/transcribe", {
         method: "POST",
         headers: { "content-type": "application/octet-stream" },

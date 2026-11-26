@@ -312,7 +312,6 @@
   "610aea624f895a78": "Enregistré de façon sécurisée et gardé privé",
   "8cc00444f7443feb": "Refusé",
   "acd01e781e2355cc": "Demande terminée",
-  "329b7854b7e0546e": "Utilisez une référence 1Password comme {example}.",
   "97e4c50a99272f63": "Impossible de répondre à la demande. Réessayez.",
   "420bea546d5f8802": "Fil copié",
   "2efb2dd3bf170f67": "Échec de la copie du fil",
@@ -6813,9 +6812,9 @@
   "ef5fef499da688e8": "Remplacer la clé API",
   "cad38c8893ab98e4": "Clé API",
   "42ec8bbd6819af00": "Clé API {company}",
-  "03d751a890780a70": "Référence de la clé API {company}",
   "2db595fcf95d3ff6": "Saisissez la clé API",
   "7aa0d5470ed46175": "Saisissez une clé API, pas une URL ni une référence de secret.",
+  "cfacaad3134382ef": "Read from the secret provider “{provider}”, which Ankiel Code no longer supports. Enter the value to replace it.",
   "dad7aceef19f0f5b": "Mettre à jour la clé garde la dictée activée.",
   "015e394f14d5ede0": "Laissez vide pour garder la clé enregistrée.",
   "0a9e4d44c145cd07": "Toute personne ayant accès à la dictée sur {environment} peut facturer cette clé.",
@@ -7335,7 +7334,6 @@
   "287b18c47ec92be0": "Connecté en tant que {account} avec le jeton d’accès enregistré ici.",
   "9f07a56693256c4d": "Connecté en tant que {account} avec EXPO_TOKEN sur le serveur.",
   "ba4c99506ff9822a": "Connecté en tant que {account} avec le eas login du serveur.",
-  "972be7e4b4a995a0": "Saisissez une référence de secret valide.",
   "aa4df315152b7b70": "Les minutes d’inactivité doivent être inférieures aux minutes de session.",
   "e96801c9ea01d761": "Donnez à l’hôte un libellé et des limites dans les plages indiquées.",
   "c2839b56a6559626": "Ajouter un hôte Expo",
@@ -8581,80 +8579,6 @@
   "a8fad08ceff4e04f": "Les tâches désactivées restent enregistrées mais ne s’exécutent pas.",
   "af3bf76ebab013ff": "Secret enregistré, saisissez une nouvelle valeur pour le remplacer",
   "6d5cbb6a55929e77": "Non défini",
-  "6855de06fd5c0e7f": "Saisissez un nom.",
-  "eb91d60b57d46345": "Saisissez le compte 1Password.",
-  "67678fd68bb24d27": "Le nom doit contenir au moins une lettre ou un chiffre.",
-  "fe6fc15c3bb8022e": "Un fournisseur de secrets porte déjà ce nom.",
-  "0c816bce39329beb": "Modifier {label}",
-  "02f531b974fc3dd5": "Ajouter un fournisseur 1Password",
-  "acbf0b4710755dc1": "Personnel",
-  "bc714daca44e1826": "Enregistrer les modifications",
-  "787b3fff435313e4": [
-    "Les variables de fournisseur sur ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " peuvent y lire des valeurs par nom. Les valeurs sont lues avec la CLI op sur ce serveur au démarrage d’un fournisseur."
-  ],
-  "daf8daec701f0863": "Compte",
-  "c3d6c8494c7d4b8f": "Le raccourci du compte, l’adresse de connexion sans https://, ou l’ID affiché par op account list.",
-  "afa8b4a2e025dd36": "Valeur",
-  "13f8f1e086293635": "Source de {label}",
-  "4579dce838e7c0a3": "Impossible de joindre le serveur",
-  "72906d2339314412": "Vous ne pouvez pas vérifier les secrets dans cet environnement",
-  "314546d4d3481e1f": "Vérifier que le secret se résout",
-  "957c652364c674b4": "Vérification du secret",
-  "d4ce4e6e4826e278": "Secret résolu",
-  "40916e46dfac8738": "{label} en échec : {detail}",
-  "9064b191dab9f782": "{label} résolu",
-  "4d12d2e6d168fdb5": "Référence de {label}",
-  "f7b9aef971c1ce37": "Vérifier {label}",
-  "3e3cabe47b0b5c07": "Voix · {provider}",
-  "cd90b098a17bca20": "Aucun fournisseur de secrets configuré.",
-  "1c9374501ee389d3": "Ajoutez un compte 1Password, puis choisissez-le comme source d’une variable de fournisseur.",
-  "382541febe15f472": "Afficher ou masquer le compte",
-  "40426afd511710f8": "Fournisseur non pris en charge ({kind})",
-  "bc57b89d73b712d1": [
-    "Mettez à jour Ankiel Code sur ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " pour gérer ses fournisseurs de secrets."
-  ],
-  "13d4f258e93f1dc1": "Connectez un environnement pour gérer les fournisseurs de secrets lus par ses variables de fournisseur.",
-  "88466f5a03be2419": "Paramètre propre à l’environnement. Sélectionnez un environnement pour le modifier.",
-  "a3538ba5ca802bd7": [
-    "Supprimer ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " ?"
-  ],
-  "0d5b3b39f92c04e4": "Supprimer le fournisseur",
-  "c52bdbe39649742c": [
-    "Rien ne lit depuis ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    ". Les secrets eux-mêmes ne sont pas touchés."
-  ],
-  "59c40978bc7c05ad": [
-    "Ces variables lisent depuis ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " et seront retirées. Les secrets eux-mêmes ne sont pas touchés."
-  ],
   "910a79263d640e22": "Autorisé",
   "43e5c059e5308eee": "Non accordé",
   "32659cddbd37d220": "Ces autorisations s’appliquent à votre route active. D’autres routes peuvent avoir des autorisations différentes.",
@@ -9364,6 +9288,7 @@
     ", ou désactivez un hôte."
   ],
   "9e8b725de0072098": "Connecté en tant que",
+  "daf8daec701f0863": "Compte",
   "25d2d58cd2a8f103": [
     "Compte ",
     {
@@ -9937,6 +9862,7 @@
   "1d4f61e89b446440": "Réduire l’éditeur de thème",
   "13e2b78d333a32ee": "Fermer l’éditeur de thème",
   "9137253dc9576644": "Fusionner dans « {label} »",
+  "bc714daca44e1826": "Enregistrer les modifications",
   "e80f1a3dfabdbae1": "Ajouter une palette claire",
   "e86fd314d1599271": "Ajouter une palette sombre",
   "f2ba1c687d850d82": "Nom du thème",
@@ -10021,6 +9947,7 @@
   "d4d21ada26ceeb4e": "Utiliser le thème {label}, actuellement actif",
   "1ad8f0ea72e46432": "Utiliser le thème {label}",
   "8ef2b7c62fc504fa": "Dupliquer {label}",
+  "0c816bce39329beb": "Modifier {label}",
   "885721ab59f2647b": "Exporter {label}",
   "161ae90f23219c76": "Supprimer des thèmes de {collectionLabel}",
   "0a539f726e6982d3": "Supprimer {label}",
@@ -10114,6 +10041,15 @@
   ],
   "f54364b854a07918": "Aucun hub configuré.",
   "4cf6a373a7535324": "{name} · Désactivé",
+  "a3538ba5ca802bd7": [
+    "Supprimer ",
+    {
+      "i": 1,
+      "k": "_gt_value_1",
+      "v": "v"
+    },
+    " ?"
+  ],
   "1d1e9cda847bd398": "La clé de gestion du hub est supprimée de ce serveur. Ses comptes quittent la vue Limites ; le hub lui-même n’est pas touché. Ajoutez-le à nouveau avec l’URL et la clé pour les récupérer.",
   "c9bee4f93481b77a": "Supprimer le hub",
   "0424112d5a0ecd71": "Auto",
@@ -10386,7 +10322,6 @@
   "2ab325baee3ec9a3": "Tâches planifiées",
   "0a59e086514a62a9": "Gestion de versions et tickets",
   "1de0df2b8a4fb96e": "Partage et accès",
-  "4c70e3e7b3e6c493": "Secrets",
   "79b768229c9ef672": "Maintenance",
   "f41ea186c275b56e": "À propos",
   "af4b7734da1d5ce7": "Voix",
@@ -10572,10 +10507,6 @@
   "cbf49f84e7f456e5": "Répartition de charge",
   "6f1a769805a28197": "automatique machine environnement ressources cpu mémoire capacité préférence poids projets partagés",
   "563b1163723f019b": "Partage des pull requests",
-  "40c9f6f66a0139ff": "Fournisseurs de secrets",
-  "fd4ec272764a2405": "1password coffre identifiants clé d’api",
-  "ff679e74f97044e6": "Ajouter un fournisseur de secrets",
-  "ddd5990f613aebb4": "nouveau coffre 1password op cli compte",
   "b9b1dccabd2ed00d": "Fils archivés",
   "f505371f6f6fd624": "restaurer rouvrir supprimés historique projets",
   "2ed592dc3ae2e382": "Donnez un libellé à l’hôte.",

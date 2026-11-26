@@ -1,6 +1,5 @@
 import { it } from "@effect/vitest";
 import { ProviderInstanceId, type TextGeneratorConfig } from "@ankielcode/contracts";
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
@@ -23,7 +22,6 @@ const layer = (generator: Partial<TextGeneratorConfig>) =>
       }),
     ),
     Layer.provide(FetchHttpClient.layer),
-    Layer.provide(Layer.mock(SecretResolver.SecretResolver)({})),
   );
 
 const request = {

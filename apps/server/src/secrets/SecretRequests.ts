@@ -8,11 +8,9 @@ import {
   SecretRequestError,
   type OrchestrationV2TurnItem,
   type ProjectId,
-  type SecretReference,
   type SecretRequestAnswerInput,
   type ThreadId,
 } from "@ankielcode/contracts";
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -105,7 +103,6 @@ const make = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const threadManagement = yield* ThreadManagementService.ThreadManagementService;
-  const resolver = yield* SecretResolver.SecretResolver;
   // Beside the store's own files so the same owner-only directory and cleanup rules apply.
   const filesDir = store.directory === undefined ? undefined : path.join(store.directory, "files");
 
@@ -135,21 +132,6 @@ const make = Effect.gen(function* () {
     Effect.forEach(fieldNames(item), (field) =>
       refFor(threadId, item.id, field).pipe(Effect.flatMap((ref) => removeLogged(storeName(ref)))),
     );
-
-  const readReference = Effect.fn("SecretRequests.readReference")(function* (
-    reference: SecretReference,
-  ) {
-    // The resolver keeps failed reads for the server's life; a retry after unlocking must re-read.
-    yield* resolver.invalidate([reference]);
-    const [value] = yield* resolver.read([reference]);
-    if (value === undefined || value.trim() === "") {
-      return yield* new SecretRequestError({
-        reason: "reference_unreadable",
-        provider: yield* resolver.label(reference.provider),
-      });
-    }
-    return value;
-  });
 
   // One answer at a time: fields are stored one by one, so two racing answers could otherwise
   // each keep some of their values on one card.
@@ -183,10 +165,8 @@ const make = Effect.gen(function* () {
     const values =
       input.answer.type === "decline"
         ? undefined
-        : input.answer.type === "reference" && item.fields === undefined
-          ? [[undefined, yield* readReference(input.answer.reference)] as const]
-          : (answerValues(item, input.answer) ??
-            (yield* new SecretRequestError({ reason: "fields_mismatch" })));
+        : (answerValues(item, input.answer) ??
+          (yield* new SecretRequestError({ reason: "fields_mismatch" })));
     if (values !== undefined) {
       const savedAt = yield* Clock.currentTimeMillis;
       // Cleared when interrupted too, or a retry would keep these values beside its own.

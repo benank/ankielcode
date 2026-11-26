@@ -19,7 +19,10 @@ export const SecretReferencePath = TrimmedNonEmptyString.check(
   Schema.isPattern(/^[^\r\n]+$/),
 );
 
-/** Points at a secret held by a configured secret provider; the secret itself is never stored. */
+/**
+ * Points at a secret held by a secret provider (1Password), which older builds could read. Kept
+ * so settings that still hold one decode; nothing in this build reads it.
+ */
 export const SecretReference = Schema.Struct({
   provider: SecretProviderId,
   reference: SecretReferencePath,

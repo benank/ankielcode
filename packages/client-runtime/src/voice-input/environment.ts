@@ -7,7 +7,6 @@ import type {
   CloudSpeechModelId,
   CloudSpeechProvider,
   EnvironmentSpeechModelDownload,
-  SettingsSecretValue,
   SpeechAcceleration,
   SpeechModelUnloadTimeout,
   SpeechTranscriptionOptions,
@@ -110,7 +109,7 @@ export const requireCloudSpeechKey = (
 export const setCloudSpeechKey = (
   prepared: PreparedConnection,
   provider: CloudSpeechProvider,
-  key: SettingsSecretValue | null,
+  key: string | null,
 ) =>
   request({
     group: "voice",
@@ -121,7 +120,7 @@ export const setCloudSpeechKey = (
       client.setCloudKey({
         headers,
         params: { provider },
-        payload: { key: typeof key === "string" ? Redacted.make(key) : key },
+        payload: { key: key === null ? null : Redacted.make(key) },
       }),
   });
 

@@ -8,7 +8,6 @@ import {
   type ServerProviderUsageWindow,
   type UsageLimitSourceSnapshot,
 } from "@ankielcode/contracts";
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -57,11 +56,6 @@ it.effect("keeps malformed source URLs encodable for config subscribers", () =>
     );
   }).pipe(
     Effect.provide([
-      Layer.succeed(SecretResolver.SecretResolver, {
-        label: (provider) => Effect.succeed(provider),
-        read: (references) => Effect.succeed(references.map(() => undefined)),
-        invalidate: () => Effect.void,
-      }),
       ServerSettings.layerTest({
         usageLimitSources: {
           [UsageLimitSourceId.make("local-hub")]: {
@@ -109,7 +103,7 @@ it.effect("keeps malformed source URLs encodable for config subscribers", () =>
   ),
 );
 
-it.effect("reads a management key from its secret provider", () => {
+it.effect("reports a management key saved as a secret provider reference as unsupported", () => {
   const authorizations: Array<string | undefined> = [];
   const keySource = (reference: string) => ({
     provider: SecretProviderId.make("homelab"),
@@ -123,23 +117,17 @@ it.effect("reads a management key from its secret provider", () => {
       Effect.flatMap(Effect.fromOption),
     );
     expect(snapshots.map(({ id, error }) => ({ id, error }))).toEqual([
-      { id: "resolved-hub", error: undefined },
       {
         id: "unresolved-hub",
-        error: "Could not read the management key from its secret provider.",
+        error:
+          "The management key is read from a secret provider, which Ankiel Code no longer supports. Enter the key in Settings.",
       },
     ]);
-    expect(authorizations).toEqual(["Bearer resolved-key"]);
+    expect(authorizations).toEqual([]);
   }).pipe(
     Effect.provide([
       ServerSettings.layerTest({
         usageLimitSources: {
-          [UsageLimitSourceId.make("resolved-hub")]: {
-            kind: "cliproxy",
-            url: "https://resolved.test",
-            managementKey: keySource("cliproxy#key"),
-            enabled: true,
-          },
           [UsageLimitSourceId.make("unresolved-hub")]: {
             kind: "cliproxy",
             url: "https://unresolved.test",
@@ -150,16 +138,6 @@ it.effect("reads a management key from its secret provider", () => {
       }),
       Layer.mock(BackgroundPolicy.BackgroundPolicy)({
         shouldRunScopeWork: () => Effect.succeed(false),
-      }),
-      Layer.succeed(SecretResolver.SecretResolver, {
-        label: (provider) => Effect.succeed(provider),
-        read: (references) =>
-          Effect.succeed(
-            references.map((reference) =>
-              reference.reference === "cliproxy#key" ? "resolved-key" : undefined,
-            ),
-          ),
-        invalidate: () => Effect.void,
       }),
       Layer.succeed(
         HttpClient.HttpClient,
@@ -220,11 +198,6 @@ it.effect("keeps an account's last good reading when the hub's next read of it i
       }),
       Layer.mock(BackgroundPolicy.BackgroundPolicy)({
         shouldRunScopeWork: () => Effect.succeed(false),
-      }),
-      Layer.succeed(SecretResolver.SecretResolver, {
-        label: (provider) => Effect.succeed(provider),
-        read: (references) => Effect.succeed(references.map(() => undefined)),
-        invalidate: () => Effect.void,
       }),
       Layer.succeed(
         HttpClient.HttpClient,

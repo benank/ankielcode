@@ -28,10 +28,9 @@ The environment issues its own sessions and enforces their capabilities. See
   over authenticated HTTP so long-lived tokens never appear in socket URLs. DPoP RPC tickets stay
   proof-key bound at upgrade. A successful handshake grants no extra authority: every RPC declares
   and checks its required scope in [`RpcAuthorization.ts`](../../apps/server/src/auth/RpcAuthorization.ts).
-- **Secret references need `providers:manage`.** A request that names a secret for the server to
-  read needs `providers:manage` on top of its method's scope, whether the reference is saved in
-  settings or used once, as in a secret request answered with a reference. Typed values need only
-  the method's scope. Clients hide the secret provider picker from sessions without it.
+- **Secret references need `providers:manage`.** Builds that read secret providers saved
+  credentials as references. This build cannot read them, but a request that carries one still
+  needs `providers:manage` on top of its method's scope. Typed values need only the method's scope.
 - **Project scripts need `orchestration:operate`.** The host runs a saved project script itself,
   on worktree creation and on settle, so saving one needs `orchestration:operate` on top of
   `settings:write`, whether it arrives in a settings patch or a project update.

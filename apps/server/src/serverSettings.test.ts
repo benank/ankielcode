@@ -12,7 +12,6 @@ import {
   resolveProviderInstanceEnabled,
   SecretProviderId,
   ServerSettings,
-  ServerSettingsPatch,
   UsageLimitSourceId,
   type SimlockDeviceHostConfig,
 } from "@ankielcode/contracts";
@@ -42,7 +41,6 @@ import { resolveProviderInstanceTerminalEnvironment } from "./terminal/Manager.t
 
 const decodeServerSettings = Schema.decodeUnknownEffect(ServerSettings);
 const decodeServerSettingsJson = Schema.decodeUnknownEffect(Schema.fromJsonString(ServerSettings));
-const decodeServerSettingsPatch = Schema.decodeUnknownEffect(ServerSettingsPatch);
 
 const layerServerSettings = () =>
   ServerSettingsModule.layer.pipe(
@@ -300,42 +298,51 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
     }).pipe(Effect.provide(layerServerSettings())),
   );
 
-  it.effect("sends clients a known secret provider's config but never an unknown kind's", () =>
+  it.effect("loads a settings file saved with secret providers and keeps its references", () =>
     Effect.gen(function* () {
-      const settings = yield* decodeServerSettings({
-        secretProviders: {
-          personal: { kind: "one_password", label: "Personal", config: { account: "my" } },
-          vault: { kind: "openbao", label: "Vault", config: { token: "bao-token" } },
-        },
-      });
-      assert.deepStrictEqual<unknown>(
-        ServerSettingsModule.redactServerSettingsForClient(settings, { secretReferences: true })
-          .secretProviders,
-        {
-          personal: { kind: "one_password", label: "Personal", config: { account: "my" } },
-          vault: { kind: "openbao", label: "Vault" },
-        },
-      );
-    }),
-  );
-
-  it.effect("stores no secret provider of an unloaded kind or with a config its kind rejects", () =>
-    Effect.gen(function* () {
+      const config = yield* ServerConfig.ServerConfig;
+      const fs = yield* FileSystem.FileSystem;
       const service = yield* ServerSettingsModule.ServerSettingsService;
-      const write = (entry: unknown) =>
-        decodeServerSettingsPatch({ secretProviders: { personal: entry } }).pipe(
-          Effect.flatMap(service.updateSettings),
-          Effect.flip,
-        );
-      for (const entry of [
-        { kind: "one_password", label: "Personal", config: { account: "--help" } },
-        { kind: "one_password", label: "Personal" },
-        { kind: "openbao", label: "Vault", config: { address: "https://x" } },
-      ]) {
-        assert.deepInclude(yield* write(entry), { operation: "write-secret-provider" });
-      }
-      assert.deepStrictEqual((yield* service.getSettings).secretProviders, {});
-    }).pipe(Effect.provide(layerServerSettings())),
+      const reference = {
+        provider: SecretProviderId.make("personal"),
+        reference: "op://Private/OpenAI/credential",
+      };
+      const instanceId = ProviderInstanceId.make("antigravity_refs");
+      yield* fs.writeFileString(
+        config.settingsPath,
+        JSON.stringify({
+          responseStreamingMode: "turn",
+          secretProviders: {
+            personal: { kind: "one_password", label: "Personal", config: { account: "my" } },
+          },
+          textGenerators: {
+            gateway: { kind: "openaiCompatible", baseUrl: "https://x.test", apiKey: reference },
+          },
+          providerInstances: {
+            [instanceId]: {
+              driver: "antigravity",
+              environment: [{ name: "API_TOKEN", value: "", sensitive: true, secret: reference }],
+            },
+          },
+        }),
+      );
+
+      const loaded = yield* service.getSettings;
+      assert.equal(loaded.responseStreamingMode, "turn");
+      assert.deepEqual(Object.values(loaded.textGenerators)[0]?.apiKey, reference);
+
+      // An unrelated save keeps the other settings and the references, which only the user replaces.
+      const saved = yield* service.updateSettings({ worktreesDirectory: "/work" });
+      assert.equal(saved.responseStreamingMode, "turn");
+      assert.deepEqual(Object.values(saved.textGenerators)[0]?.apiKey, reference);
+      assert.deepEqual(saved.providerInstances[instanceId]?.environment, [
+        { name: "API_TOKEN", value: reference, sensitive: true },
+      ]);
+      const persisted = yield* decodeServerSettingsJson(
+        yield* fs.readFileString(config.settingsPath),
+      );
+      assert.deepEqual(Object.values(persisted.textGenerators)[0]?.apiKey, reference);
+    }).pipe(Effect.provide(layerServerSettingsWithSecrets())),
   );
 
   it.effect("saves through a symlinked settings file without replacing the link", () =>
@@ -1901,88 +1908,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           "typed-token",
         );
       }).pipe(Effect.provide(layerServerSettingsWithSecrets())),
-  );
-
-  it.effect("removing a secret provider unsets every field that read from it", () =>
-    Effect.gen(function* () {
-      const service = yield* ServerSettingsModule.ServerSettingsService;
-      const personal = (reference: string) => ({
-        provider: SecretProviderId.make("personal"),
-        reference: `op://Private/${reference}`,
-      });
-      const work = { provider: SecretProviderId.make("work"), reference: "op://Work/token" };
-      const instanceId = ProviderInstanceId.make("antigravity_refs");
-      const hub = UsageLimitSourceId.make("hub");
-      yield* decodeServerSettingsPatch({
-        secretProviders: {
-          personal: { kind: "one_password", label: "Personal", config: { account: "my" } },
-          work: { kind: "one_password", label: "Work", config: { account: "work" } },
-        },
-      }).pipe(Effect.flatMap(service.updateSettings));
-      yield* service.updateSettings({
-        providerInstances: {
-          [instanceId]: {
-            driver: ProviderDriverKind.make("antigravity"),
-            environment: [
-              { name: "API_TOKEN", value: personal("Antigravity/env"), sensitive: true },
-              { name: "WORK_TOKEN", value: work, sensitive: true },
-              { name: "PLAIN", value: "kept", sensitive: false },
-            ],
-          },
-        },
-        sourceControlHosts: {
-          bitbucket: { accessToken: personal("Bitbucket/token") },
-          github: { tokens: { "github.com": personal("GitHub/token"), "ghe.acme.test": work } },
-        },
-        cloudSpeechCredentials: { openai: personal("Voice/key"), xai: work },
-        usageLimitSources: {
-          [hub]: {
-            kind: "cliproxy",
-            url: "https://hub.test",
-            managementKey: personal("Hub/key"),
-            enabled: true,
-          },
-        },
-        easDeviceHosts: [
-          {
-            kind: "eas",
-            id: "eas",
-            label: "Expo Simulators",
-            accessToken: personal("Expo/token"),
-            maxSessionMinutes: 30,
-            idleMinutes: 10,
-            maxConcurrentSessions: 2,
-          },
-        ],
-      });
-
-      // An older client's save echoes a reference it cannot decode as the redacted marker.
-      const removed = yield* service.updateSettings({
-        secretProviders: { [SecretProviderId.make("personal")]: null },
-        usageLimitSources: {
-          [hub]: {
-            kind: "cliproxy",
-            url: "https://hub.test",
-            managementKey: SECRET_REDACTED,
-            enabled: true,
-          },
-        },
-      });
-      assert.notInclude(JSON.stringify(removed), "op://Private");
-      assert.deepEqual(removed.providerInstances[instanceId]?.environment, [
-        { name: "WORK_TOKEN", value: work, sensitive: true },
-        { name: "PLAIN", value: "kept", sensitive: false },
-      ]);
-      assert.equal(removed.sourceControlHosts.bitbucket?.accessToken, "");
-      assert.deepEqual(removed.sourceControlHosts.github?.tokens, {
-        "github.com": "",
-        "ghe.acme.test": work,
-      });
-      assert.equal(removed.usageLimitSources[hub]?.managementKey, "");
-      assert.deepEqual(removed.cloudSpeechCredentials, { openai: "", xai: work, openrouter: "" });
-      assert.equal(removed.easDeviceHosts[0]?.accessToken, "");
-      assert.deepEqual(Object.keys(removed.secretProviders), ["work"]);
-    }).pipe(Effect.provide(layerServerSettingsWithSecrets())),
   );
 
   it.effect("knows every strictly decoded field that can hold a secret reference", () =>

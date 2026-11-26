@@ -131,7 +131,7 @@ it.effect.each([
     status: "authenticated",
     detail: "GH_TOKEN from the server environment",
   },
-  // getWithSecrets leaves a reference its secret provider could not read in place.
+  // A reference saved by a build with secret providers cannot be read.
   {
     name: "an unreadable",
     token: { provider: "vault", reference: "op://v/gh" },
@@ -166,14 +166,13 @@ it.effect.each([
                 ...host,
                 settings: {
                   ...host.settings,
-                  getWithSecrets: () =>
-                    Effect.succeed(
-                      decodeSettings({
-                        sourceControlHosts: {
-                          github: { tokens: { "github.com": scenario.token } },
-                        },
-                      }),
-                    ),
+                  get: Effect.succeed(
+                    decodeSettings({
+                      sourceControlHosts: {
+                        github: { tokens: { "github.com": scenario.token } },
+                      },
+                    }),
+                  ),
                 },
               };
             }),

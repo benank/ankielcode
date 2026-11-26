@@ -3,8 +3,6 @@ import {
   ProjectId,
   ProviderDriverKind,
   ProviderInstanceId,
-  SecretProviderId,
-  SecretProviderKind,
   type ServerSettings,
 } from "@ankielcode/contracts";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -156,68 +154,21 @@ describe("seedDevReplayInstance", () => {
 });
 
 describe("layerSettingsWatcher", () => {
-  const provider = (label: string) => ({
-    [SecretProviderId.make("personal")]: {
-      kind: SecretProviderKind.make("one_password"),
-      label,
-      config: { account: "my" },
-    },
-  });
-
-  const watch = (initial: ServerSettings | undefined) =>
+  effectIt.effect("reconciles the registry with each settings change", () =>
     Effect.gen(function* () {
+      const settings = yield* ServerSettingsService;
       const changes = yield* Queue.unbounded<ServerSettings>();
       const reconciled = yield* Queue.unbounded<void>();
-      let reloads = 0;
       const mutator = Layer.succeed(ProviderInstanceRegistryMutator, {
         reconcile: () => Queue.offer(reconciled, undefined),
-        reloadSecrets: () => Effect.sync(() => void reloads++),
         rebuild: () => Effect.void,
-        applySecret: () => Effect.succeed([]),
       });
       yield* Layer.build(
-        layerSettingsWatcher(Stream.fromQueue(changes), initial).pipe(Layer.provide(mutator)),
+        layerSettingsWatcher(Stream.fromQueue(changes)).pipe(Layer.provide(mutator)),
       );
-      return {
-        reloads: () => reloads,
-        // Changes run one at a time, so the repeat's reconcile means the first one's reload decision is done.
-        change: (settings: ServerSettings) =>
-          Queue.offerAll(changes, [settings, settings]).pipe(
-            Effect.andThen(Queue.take(reconciled)),
-            Effect.andThen(Queue.take(reconciled)),
-          ),
-      };
-    });
-
-  effectIt.effect(
-    "retries unreadable secrets when a secret provider changes, not when it is renamed",
-    () =>
-      Effect.gen(function* () {
-        const settings = yield* ServerSettingsService;
-        const { reloads, change } = yield* watch(yield* settings.getSettings);
-
-        yield* change(yield* settings.updateSettings({ secretProviders: provider("Personal") }));
-        expect(reloads()).toBe(1);
-
-        // A label is not read by any vault, so renaming a provider retries nothing.
-        yield* change(yield* settings.updateSettings({ secretProviders: provider("Renamed") }));
-        expect(reloads()).toBe(1);
-      }).pipe(Effect.scoped, Effect.provide(ServerSettingsService.layerTest())),
-  );
-
-  effectIt.effect(
-    "compares a change queued during startup with the settings the registry started from",
-    () =>
-      Effect.gen(function* () {
-        const settings = yield* ServerSettingsService;
-        const started = yield* settings.getSettings;
-        const saved = yield* settings.updateSettings({ secretProviders: provider("Personal") });
-        const { reloads, change } = yield* watch(started);
-
-        yield* change(saved);
-
-        expect(reloads()).toBe(1);
-      }).pipe(Effect.scoped, Effect.provide(ServerSettingsService.layerTest())),
+      yield* Queue.offer(changes, yield* settings.updateSettings({ worktreesDirectory: "/w" }));
+      yield* Queue.take(reconciled);
+    }).pipe(Effect.scoped, Effect.provide(ServerSettingsService.layerTest())),
   );
 });
 

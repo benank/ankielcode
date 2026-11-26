@@ -1,4 +1,4 @@
-import type { EnvironmentId, SecretReference, UnifiedSettings } from "@ankielcode/contracts";
+import type { EnvironmentId, UnifiedSettings } from "@ankielcode/contracts";
 import { T, useGT, Var } from "gt-react";
 import { useId, useState } from "react";
 
@@ -15,7 +15,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { sourceIdFromUrl } from "./AddUsageLimitSourceDialog.logic";
-import { SecretSourceInput, useSecretSources } from "./SecretSourceInput";
+import { SecretInput } from "./SecretInput";
 import { Label } from "../ui/label";
 
 /** Send the management key once to server secret storage; settings retain only a redaction marker. */
@@ -37,18 +37,15 @@ export function AddUsageLimitSourceDialog({
   const updateSettings = useUpdateEnvironmentSettings(environmentId);
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
-  const secretSources = useSecretSources(environmentId);
-  const [keyDraft, setKeyDraft] = useState<string | SecretReference>("");
-  const [keyValid, setKeyValid] = useState(true);
-  const managementKey = typeof keyDraft === "string" ? keyDraft.trim() : keyDraft;
+  const [keyDraft, setKeyDraft] = useState("");
+  const managementKey = keyDraft.trim();
   const trimmedUrl = url.trim();
-  const canSave = keyValid && trimmedUrl.length > 0 && managementKey !== "";
+  const canSave = trimmedUrl.length > 0 && managementKey !== "";
 
   const reset = () => {
     setLabel("");
     setUrl("");
     setKeyDraft("");
-    setKeyValid(true);
   };
 
   const save = () => {
@@ -114,15 +111,11 @@ export function AddUsageLimitSourceDialog({
               <Label htmlFor="usage-source-key">
                 <T>Management key</T>
               </Label>
-              <SecretSourceInput
+              <SecretInput
                 id="usage-source-key"
                 aria-label={gt("Management key")}
                 value={keyDraft}
-                sources={secretSources}
-                environmentId={environmentId}
                 onChange={(event) => setKeyDraft(event.target.value)}
-                onSecretChange={(secret) => setKeyDraft(secret ?? "")}
-                onValidityChange={setKeyValid}
               />
             </div>
             <div className="grid gap-1.5">

@@ -28,7 +28,6 @@ import {
   type EnvironmentId,
   type ProjectId,
   type ProviderDriverKind,
-  type SecretReference,
   type ServerProvider,
   type ServerProviderModel,
 } from "@ankielcode/contracts";
@@ -45,7 +44,7 @@ import { normalizeProviderAccentColor } from "../../providerInstances";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { DraftInput } from "../ui/draft-input";
-import { SecretSourceInput, type SecretSource } from "./SecretSourceInput";
+import { SecretSourceInput } from "./SecretSourceInput";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { Switch } from "../ui/switch";
 import { stackedThreadToast, toastManager } from "../ui/toast";
@@ -270,29 +269,12 @@ export function nextProviderEnvironmentWithFieldValue(
   return next;
 }
 
-export function nextProviderEnvironmentWithFieldSecret(
-  environment: ReadonlyArray<ProviderInstanceEnvironmentVariable> | undefined,
-  field: ProviderEnvironmentField,
-  secret: SecretReference | undefined,
-): ReadonlyArray<ProviderInstanceEnvironmentVariable> {
-  const others = providerEnvironmentWithoutNames(environment, new Set([field.name]));
-  return secret === undefined
-    ? others
-    : [...others, { name: field.name, value: secret, sensitive: true }];
-}
-
 function ProviderEnvironmentFieldRow(props: {
   readonly field: ProviderEnvironmentField;
   readonly variable: ProviderInstanceEnvironmentVariable | undefined;
   readonly idPrefix: string;
   readonly onCommit: (field: ProviderEnvironmentField, value: string) => void;
-  readonly onSecretChange: (
-    field: ProviderEnvironmentField,
-    secret: SecretReference | undefined,
-  ) => void;
   readonly onRemove: (field: ProviderEnvironmentField) => void;
-  readonly secretSources: ReadonlyArray<SecretSource>;
-  readonly environmentId?: EnvironmentId | undefined;
 }) {
   const gt = useGT();
   const inputId = `${props.idPrefix}-environment-${props.field.name}`;
@@ -326,9 +308,6 @@ function ProviderEnvironmentFieldRow(props: {
               configured={props.variable?.valueRedacted === true}
               spellCheck={false}
               aria-label={props.field.label}
-              sources={props.secretSources}
-              environmentId={props.environmentId}
-              onSecretChange={(secret) => props.onSecretChange(props.field, secret)}
             />
           )}
           {props.variable ? (
@@ -351,8 +330,6 @@ function ProviderEnvironmentFieldRow(props: {
 export function ProviderEnvironmentSection(props: {
   readonly environment: ReadonlyArray<ProviderInstanceEnvironmentVariable>;
   readonly onChange: (environment: ReadonlyArray<ProviderInstanceEnvironmentVariable>) => void;
-  readonly secretSources?: ReadonlyArray<SecretSource>;
-  readonly environmentId?: EnvironmentId | undefined;
 }) {
   const gt = useGT();
   const [storedDraft, setDraft] = useState(() =>
@@ -412,16 +389,6 @@ export function ProviderEnvironmentSection(props: {
           }
         : row,
     );
-    setRows(nextRows);
-    publishRows(nextRows);
-  };
-
-  const setVariableSecret = (id: string, secret: SecretReference | undefined) => {
-    const nextRows = rows.map((row) => {
-      if (row.id !== id) return row;
-      const { valueRedacted: _valueRedacted, ...rest } = row;
-      return { ...rest, value: secret ?? "" };
-    });
     setRows(nextRows);
     publishRows(nextRows);
   };
@@ -520,11 +487,10 @@ export function ProviderEnvironmentSection(props: {
                   </TooltipPopup>
                 </Tooltip>
               ) : null;
-            const layout = (source: ReactNode, value: ReactNode) => (
+            const layout = (value: ReactNode) => (
               <div className="flex min-w-0 flex-col gap-1.5 rounded-lg border p-2">
                 <div className="flex min-w-0 items-center gap-1.5">
                   {nameInput}
-                  {source}
                   {removeButton}
                 </div>
                 <div className="flex min-w-0 items-start gap-1.5">
@@ -535,47 +501,45 @@ export function ProviderEnvironmentSection(props: {
             );
             return (
               <Fragment key={variable.id}>
-                {variable.sensitive ? (
-                  <SecretSourceInput
-                    size="sm"
-                    font="mono"
-                    className="min-w-0 flex-1"
-                    value={variable.valueRedacted ? "" : variable.value}
-                    onCommit={(value) => updateVariable(variable.id, { value })}
-                    placeholder={gt("value", {
-                      $context: "placeholder for an environment variable value",
-                    })}
-                    configured={variable.valueRedacted === true}
-                    spellCheck={false}
-                    aria-label={gt("Environment variable value {number}", { number: index + 1 })}
-                    sources={props.secretSources ?? []}
-                    environmentId={props.environmentId}
-                    onSecretChange={(secret) => setVariableSecret(variable.id, secret)}
-                  >
-                    {(parts) => layout(parts.source, parts.value)}
-                  </SecretSourceInput>
-                ) : (
-                  layout(
-                    null,
-                    <DraftInput
-                      size="sm"
-                      font="mono"
-                      className="min-w-0 flex-1"
-                      value={
-                        variable.valueRedacted || typeof variable.value !== "string"
-                          ? ""
-                          : variable.value
-                      }
-                      onCommit={(value) => updateVariable(variable.id, { value })}
-                      autoComplete="off"
-                      placeholder={gt("value", {
-                        $context: "placeholder for an environment variable value",
-                      })}
-                      spellCheck={false}
-                      aria-label={gt("Environment variable value {number}", { number: index + 1 })}
-                    />,
-                  )
-                )}
+                {variable.sensitive
+                  ? layout(
+                      <SecretSourceInput
+                        size="sm"
+                        font="mono"
+                        className="min-w-0 flex-1"
+                        value={variable.valueRedacted ? "" : variable.value}
+                        onCommit={(value) => updateVariable(variable.id, { value })}
+                        placeholder={gt("value", {
+                          $context: "placeholder for an environment variable value",
+                        })}
+                        configured={variable.valueRedacted === true}
+                        spellCheck={false}
+                        aria-label={gt("Environment variable value {number}", {
+                          number: index + 1,
+                        })}
+                      />,
+                    )
+                  : layout(
+                      <DraftInput
+                        size="sm"
+                        font="mono"
+                        className="min-w-0 flex-1"
+                        value={
+                          variable.valueRedacted || typeof variable.value !== "string"
+                            ? ""
+                            : variable.value
+                        }
+                        onCommit={(value) => updateVariable(variable.id, { value })}
+                        autoComplete="off"
+                        placeholder={gt("value", {
+                          $context: "placeholder for an environment variable value",
+                        })}
+                        spellCheck={false}
+                        aria-label={gt("Environment variable value {number}", {
+                          number: index + 1,
+                        })}
+                      />,
+                    )}
               </Fragment>
             );
           })}
@@ -714,7 +678,6 @@ interface ProviderInstanceCardProps {
   readonly isUpdating?: boolean | undefined;
   readonly onAcceptUrlAuth?: ((action: AcpRegistryUrlAuthAction) => void) | undefined;
   readonly environmentId?: EnvironmentId | undefined;
-  readonly secretSources?: ReadonlyArray<SecretSource>;
   readonly projectOverride?: ProjectOverrideControl | undefined;
   readonly acpProjects?:
     | ReadonlyArray<{
@@ -726,7 +689,6 @@ interface ProviderInstanceCardProps {
 }
 
 const EMPTY_ACP_PROJECTS: NonNullable<ProviderInstanceCardProps["acpProjects"]> = [];
-const NO_SECRET_SOURCES: ReadonlyArray<SecretSource> = [];
 const NO_CUSTOM_MODELS: ReadonlyArray<CustomModelDefinition> = [];
 
 /**
@@ -786,7 +748,6 @@ export function ProviderInstanceCard({
   onAcceptUrlAuth,
   environmentId,
   acpProjects = EMPTY_ACP_PROJECTS,
-  secretSources = NO_SECRET_SOURCES,
   projectOverride,
 }: ProviderInstanceCardProps) {
   const gt = useGT();
@@ -945,12 +906,6 @@ export function ProviderInstanceCard({
   };
   const updateEnvironmentField = (field: ProviderEnvironmentField, value: string) => {
     updateEnvironment(nextProviderEnvironmentWithFieldValue(instance.environment, field, value));
-  };
-  const updateEnvironmentFieldSecret = (
-    field: ProviderEnvironmentField,
-    secret: SecretReference | undefined,
-  ) => {
-    updateEnvironment(nextProviderEnvironmentWithFieldSecret(instance.environment, field, secret));
   };
   const removeEnvironmentField = (field: ProviderEnvironmentField) => {
     updateEnvironment(providerEnvironmentWithoutNames(instance.environment, new Set([field.name])));
@@ -1308,7 +1263,6 @@ export function ProviderInstanceCard({
       idPrefix={`provider-instance-${instanceId}`}
       variant="settings"
       onChange={updateConfig}
-      environmentId={environmentId}
     />
   ) : (
     <SettingsRow
@@ -1378,10 +1332,7 @@ export function ProviderInstanceCard({
                   variable={readProviderEnvironmentVariable(instance.environment, field.name)}
                   idPrefix={`provider-instance-${instanceId}`}
                   onCommit={updateEnvironmentField}
-                  onSecretChange={updateEnvironmentFieldSecret}
                   onRemove={removeEnvironmentField}
-                  secretSources={secretSources}
-                  environmentId={environmentId}
                 />
               ))}
             </div>
@@ -1424,8 +1375,6 @@ export function ProviderInstanceCard({
         <ProviderEnvironmentSection
           environment={genericEnvironment}
           onChange={updateGenericEnvironment}
-          secretSources={secretSources}
-          environmentId={environmentId}
         />
       </SettingsSection>
       {environmentId !== undefined && liveProvider?.driver === "acpRegistry" ? (

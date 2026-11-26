@@ -14,7 +14,6 @@ import {
   MessagesSquareIcon,
   PanelsTopLeftIcon,
   KeyboardIcon,
-  KeyRoundIcon,
   MicIcon,
   PaletteIcon,
   SearchIcon,
@@ -44,16 +43,13 @@ import { scrollToSettingsTarget } from "./settingsLayout";
 import {
   searchSettings,
   revealSettingsSearchTarget,
-  settingsNavGroups,
+  SETTINGS_NAV_GROUPS,
   SETTINGS_NAV_LABELS,
   SETTINGS_SECTION_LABELS,
   type SettingsPath,
   type SettingsSearchItem,
 } from "./settingsSearch";
-import {
-  useAvailableSettingsSearchItems,
-  useHasSecretProvidersEnvironment,
-} from "./useAvailableSettingsSearchItems";
+import { useAvailableSettingsSearchItems } from "./useAvailableSettingsSearchItems";
 import { handleSettingsSectionKeyDown } from "./settingsSectionNavigation";
 import { workspaceAreaProps } from "../../lib/workspaceFocus";
 
@@ -90,7 +86,6 @@ const SETTINGS_SECTION_ICONS: Readonly<
   "/settings/worktrees": FolderTreeIcon,
   "/settings/connections": ServerIcon,
   "/settings/access": ShieldCheckIcon,
-  "/settings/secrets": KeyRoundIcon,
   "/settings/maintenance": WrenchIcon,
   "/settings/labs": FlaskConicalIcon,
   "/settings/about": InfoIcon,
@@ -126,7 +121,7 @@ export function SettingsSidebarNav({ pathname }: { pathname: string }) {
   const [compactSearchOpen, setCompactSearchOpen] = useState(false);
   const [activeResultIndex, setActiveResultIndex] = useState(0);
   const searchableItems = useAvailableSettingsSearchItems();
-  const navGroups = settingsNavGroups(useHasSecretProvidersEnvironment());
+  const navGroups = SETTINGS_NAV_GROUPS;
   const results = searchSettings(query, searchableItems, m);
   const isSearching = query.trim().length > 0;
   const hasResults = results.length > 0;

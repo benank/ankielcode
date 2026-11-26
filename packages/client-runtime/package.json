@@ -648,7 +648,6 @@
     "@ankielcode/provider-muse": "workspace:*",
     "@ankielcode/provider-opencode": "workspace:*",
     "@ankielcode/provider-pi": "workspace:*",
-    "@ankielcode/secret-provider-definitions": "workspace:*",
     "@ankielcode/shared": "workspace:*",
     "@ankielcode/source-control-core": "workspace:*",
     "@ankielcode/source-control-definitions": "workspace:*",

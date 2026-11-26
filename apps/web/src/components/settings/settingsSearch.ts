@@ -35,7 +35,6 @@ export type SettingsPath =
   | "/settings/worktrees"
   | "/settings/connections"
   | "/settings/access"
-  | "/settings/secrets"
   | "/settings/maintenance"
   | "/settings/labs"
   | "/settings/about"
@@ -60,7 +59,6 @@ export interface SettingsSearchItem {
   readonly macOnly?: boolean;
   readonly windowsOnly?: boolean;
   readonly releaseChannelOnly?: boolean;
-  readonly secretProvidersOnly?: boolean;
   readonly environmentOnly?: boolean;
   readonly providerSettingsOnly?: boolean;
   readonly localBackendManagementOnly?: boolean;
@@ -84,7 +82,6 @@ export interface SettingsSearchAvailability {
   /** An environment without a provider allow-list, which hides text generators. */
   readonly hasTextGeneratorsEnvironment?: boolean;
   readonly hasPrimaryEnvironment?: boolean;
-  readonly hasSecretProvidersEnvironment?: boolean;
 }
 
 export const SETTINGS_SECTION_LABELS: Readonly<Record<SettingsPath, string>> = {
@@ -105,7 +102,6 @@ export const SETTINGS_SECTION_LABELS: Readonly<Record<SettingsPath, string>> = {
   "/settings/worktrees": msg("Worktrees"),
   "/settings/connections": msg("Environments"),
   "/settings/access": msg("Sharing & access"),
-  "/settings/secrets": msg("Secrets"),
   "/settings/maintenance": msg("Maintenance"),
   "/settings/labs": msg("Labs"),
   "/settings/about": msg("About"),
@@ -129,7 +125,7 @@ type SettingsNavGroup = {
 };
 
 /** Sidebar order. A group with a hidden heading is set apart on screen by space alone. */
-const ALL_SETTINGS_NAV_GROUPS: ReadonlyArray<SettingsNavGroup> = [
+export const SETTINGS_NAV_GROUPS: ReadonlyArray<SettingsNavGroup> = [
   {
     heading: msg("Preferences"),
     headingHidden: true,
@@ -159,7 +155,7 @@ const ALL_SETTINGS_NAV_GROUPS: ReadonlyArray<SettingsNavGroup> = [
   },
   {
     heading: msg("Connections"),
-    paths: ["/settings/connections", "/settings/access", "/settings/secrets"],
+    paths: ["/settings/connections", "/settings/access"],
   },
   {
     heading: msg("More"),
@@ -167,18 +163,6 @@ const ALL_SETTINGS_NAV_GROUPS: ReadonlyArray<SettingsNavGroup> = [
     paths: ["/settings/maintenance", "/settings/labs", "/settings/about", "/settings/archived"],
   },
 ];
-
-const SETTINGS_NAV_GROUPS_WITHOUT_SECRETS = ALL_SETTINGS_NAV_GROUPS.map((group) => ({
-  ...group,
-  paths: group.paths.filter((path) => path !== "/settings/secrets"),
-}));
-
-/** Sidebar groups; Secrets shows only when some environment's server enables secret providers. */
-export function settingsNavGroups(hasSecretProvidersEnvironment: boolean) {
-  return hasSecretProvidersEnvironment
-    ? ALL_SETTINGS_NAV_GROUPS
-    : SETTINGS_NAV_GROUPS_WITHOUT_SECRETS;
-}
 
 export function keybindingSearchAnchorId<Command extends KeybindingCommand>(command: Command) {
   return `keybinding-${command}` as const;
@@ -1384,21 +1368,6 @@ export const SETTINGS_SEARCH_ITEMS = [
     ],
   },
   {
-    id: "secret-providers",
-    title: msg("Secret providers"),
-    to: "/settings/secrets",
-    searchTerms: [msg("1password vault credentials api key")],
-    secretProvidersOnly: true,
-  },
-  {
-    id: "secret-providers-add",
-    title: msg("Add secret provider"),
-    to: "/settings/secrets",
-    targetId: "secret-providers",
-    searchTerms: [msg("new 1password vault op cli account")],
-    secretProvidersOnly: true,
-  },
-  {
     id: "archive",
     title: msg("Archived threads"),
     to: "/settings/archived",
@@ -1428,7 +1397,6 @@ const SETTINGS_CATEGORY_SCOPES: Readonly<Record<SettingsPath, SettingsSearchScop
   "/settings/worktrees": "project-defaults",
   "/settings/connections": "connections",
   "/settings/access": "connections",
-  "/settings/secrets": null,
   "/settings/scheduled-tasks": null,
   "/settings/maintenance": null,
   "/settings/labs": null,
@@ -1567,8 +1535,7 @@ export function filterAvailableSettingsSearchItems(
       (!item.requiresThreadAutoSettlement || availability.hasThreadAutoSettlement) &&
       (!item.fastWorktreeCheckoutOnly ||
         availability.hasFastWorktreeCheckoutEnvironment === true) &&
-      (!item.textGeneratorsOnly || availability.hasTextGeneratorsEnvironment === true) &&
-      (!item.secretProvidersOnly || availability.hasSecretProvidersEnvironment === true),
+      (!item.textGeneratorsOnly || availability.hasTextGeneratorsEnvironment === true),
   );
 }
 

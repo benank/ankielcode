@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { SecretProviderId, type SimlockDeviceHostConfig } from "@ankielcode/contracts";
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Clock from "effect/Clock";
@@ -161,22 +160,11 @@ const fakePool = (
     };
   });
 
-const makeSecretResolver = (values: Record<string, string> = {}) =>
-  Layer.succeed(SecretResolver.SecretResolver, {
-    read: (references) =>
-      Effect.succeed(references.map((reference) => values[reference.reference])),
-    invalidate: () => Effect.void,
-    label: (provider) => Effect.succeed(provider),
-  });
+const layer = ServerConfig.layerTest(process.cwd(), { prefix: "ankiel-simlock-host-" }).pipe(
+  Layer.provideMerge(NodeServices.layer),
+);
 
-const layerWith = (secrets: Layer.Layer<SecretResolver.SecretResolver>) =>
-  Layer.mergeAll(
-    ServerConfig.layerTest(process.cwd(), { prefix: "ankiel-simlock-host-" }),
-    secrets,
-  ).pipe(Layer.provideMerge(NodeServices.layer));
-
-const layer = layerWith(makeSecretResolver());
-
+// Saved by a build that read secrets from a secret provider; this one cannot read it.
 const tokenSource = { provider: SecretProviderId.make("homelab"), reference: "simlock#token" };
 
 const makeHost = (
@@ -329,7 +317,6 @@ describe("Simlock device host", () => {
 
       expect(
         yield* SimlockDeviceHost.resolveSimlockToken(
-          yield* SecretResolver.SecretResolver,
           "https://elsewhere.example:4700",
           config({ agentToken: "saved-token" }),
           {},
@@ -348,23 +335,6 @@ describe("Simlock device host", () => {
       });
       expect(pool.requests).toHaveLength(requests);
     }).pipe(Effect.scoped, Effect.provide(layer)),
-  );
-
-  it.effect("reads its agent token from the secret provider the setting names", () =>
-    Effect.gen(function* () {
-      const pool = yield* fakePool();
-      const scope = yield* Scope.make();
-      const host = yield* makeHost(pool, config({ agentToken: tokenSource }), scope);
-      const ready = yield* host.ensureReady(() => Effect.void);
-      const [iphone] = (yield* ready.devices.list).devices;
-      const leaseId = yield* ready.devices.boot(iphone!);
-      expect(yield* ready.devices.agentEndpoint!(leaseId)).toMatchObject({ token: "agent-token" });
-      yield* Scope.close(scope, Exit.void);
-      expect(pool.ran("close")).toHaveLength(1);
-    }).pipe(
-      Effect.scoped,
-      Effect.provide(layerWith(makeSecretResolver({ "simlock#token": "agent-token" }))),
-    ),
   );
 
   it.effect("fails instead of using this machine's token when its secret cannot be read", () =>

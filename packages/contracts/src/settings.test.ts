@@ -170,41 +170,20 @@ it("drops a hand-edited non-string hidden tag and keeps the rest of the settings
 });
 
 describe("ServerSettings secret providers", () => {
-  const onePassword = (account: string) => ({
-    kind: "one_password",
-    label: "Personal",
-    config: { account },
-  });
-
-  it("keeps an unknown kind or a longer label from invalidating the rest of the settings", () => {
-    const openbao = { kind: "openbao", label: "V".repeat(65), config: { address: "https://x" } };
+  it("still loads settings saved with secret providers and keeps their references", () => {
+    const reference = { provider: "personal", reference: "op://Private/OpenAI/credential" };
     const decoded = decodeServerSettings({
       worktreesDirectory: "/work",
-      secretProviders: { vault: openbao, personal: onePassword("my.1password.com") },
+      secretProviders: {
+        personal: { kind: "one_password", label: "Personal", config: { account: "my" } },
+      },
+      textGenerators: {
+        openai: { kind: "openaiCompatible", baseUrl: "https://x", apiKey: reference },
+      },
     });
     expect(decoded.worktreesDirectory).toBe("/work");
-    expect(encodeServerSettings(decoded).secretProviders).toEqual({
-      vault: openbao,
-      personal: onePassword("my.1password.com"),
-    });
-  });
-
-  it("accepts slug ids and null removals but no id that is not a slug", () => {
-    expect(
-      decodeServerSettingsPatch({
-        secretProviders: { "1password": onePassword("my.1password.com"), work: null },
-      }).secretProviders,
-    ).toEqual({ "1password": onePassword("my.1password.com"), work: null });
-    for (const id of ["", "My Vault", "a/b", "-vault"]) {
-      expect(() =>
-        decodeServerSettingsPatch({ secretProviders: { [id]: onePassword("my.1password.com") } }),
-      ).toThrow();
-    }
-    expect(() =>
-      decodeServerSettingsPatch({
-        secretProviders: { work: { ...onePassword("my.1password.com"), label: "V".repeat(65) } },
-      }),
-    ).toThrow();
+    expect("secretProviders" in decoded).toBe(false);
+    expect(Object.values(decoded.textGenerators)[0]?.apiKey).toEqual(reference);
   });
 
   it("stores a provider environment secret reference in a layout older builds still decode", () => {

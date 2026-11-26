@@ -894,15 +894,6 @@ importers:
       '@ankielcode/provider-testing':
         specifier: workspace:*
         version: link:../../packages/provider-testing
-      '@ankielcode/secret-provider-core':
-        specifier: workspace:*
-        version: link:../../packages/secret-provider-core
-      '@ankielcode/secret-provider-definitions':
-        specifier: workspace:*
-        version: link:../../packages/secret-provider-definitions
-      '@ankielcode/secret-provider-onepassword':
-        specifier: workspace:*
-        version: link:../../packages/secret-provider-onepassword
       '@ankielcode/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -963,12 +954,6 @@ importers:
       '@ankielcode/provider-core':
         specifier: workspace:*
         version: link:../../packages/provider-core
-      '@ankielcode/secret-provider-definitions':
-        specifier: workspace:*
-        version: link:../../packages/secret-provider-definitions
-      '@ankielcode/secret-provider-onepassword':
-        specifier: workspace:*
-        version: link:../../packages/secret-provider-onepassword
       '@ankielcode/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -1271,9 +1256,6 @@ importers:
       '@ankielcode/provider-pi':
         specifier: workspace:*
         version: link:../provider-pi
-      '@ankielcode/secret-provider-definitions':
-        specifier: workspace:*
-        version: link:../secret-provider-definitions
       '@ankielcode/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1757,68 +1739,6 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(patch_hash=14a7acd734809d8dddbf2c19c4ec01fdd2ffae60a612de42b5ed29860216052a)
     devDependencies:
-      '@effect/vitest':
-        specifier: 4.1.5
-        version: 4.1.5(patch_hash=dd0bf2b1ae0f63aff0d620ebc67b82d19759b3fa69a608ef85e2a5b40b4d46c5)(@astrojs/compiler-rs@0.5.1)(@types/node@24.12.4)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@6.0.3))(bufferutil@4.1.0)(effect@4.1.5(patch_hash=14a7acd734809d8dddbf2c19c4ec01fdd2ffae60a612de42b5ed29860216052a))(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.0(@noble/hashes@1.8.0))(playwright@1.64.1)(terser@5.48.0)(typescript@6.0.3)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@types/node':
-        specifier: 24.12.4
-        version: 24.12.4
-      vite-plus:
-        specifier: 1.4.0
-        version: 1.4.0(@astrojs/compiler-rs@0.5.1)(@types/node@24.12.4)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@6.0.3))(bufferutil@4.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.0(@noble/hashes@1.8.0))(playwright@1.64.1)(terser@5.48.0)(typescript@6.0.3)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-
-  packages/secret-provider-core:
-    dependencies:
-      '@ankielcode/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-      effect:
-        specifier: 4.1.5
-        version: 4.1.5(patch_hash=14a7acd734809d8dddbf2c19c4ec01fdd2ffae60a612de42b5ed29860216052a)
-    devDependencies:
-      '@effect/platform-node':
-        specifier: 4.1.5
-        version: 4.1.5(bufferutil@4.1.0)(effect@4.1.5(patch_hash=14a7acd734809d8dddbf2c19c4ec01fdd2ffae60a612de42b5ed29860216052a))(redis@6.2.1)(utf-8-validate@6.0.6)
-      '@effect/vitest':
-        specifier: 4.1.5
-        version: 4.1.5(patch_hash=dd0bf2b1ae0f63aff0d620ebc67b82d19759b3fa69a608ef85e2a5b40b4d46c5)(@astrojs/compiler-rs@0.5.1)(@types/node@24.12.4)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@6.0.3))(bufferutil@4.1.0)(effect@4.1.5(patch_hash=14a7acd734809d8dddbf2c19c4ec01fdd2ffae60a612de42b5ed29860216052a))(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.0(@noble/hashes@1.8.0))(playwright@1.64.1)(terser@5.48.0)(typescript@6.0.3)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-      '@types/node':
-        specifier: 24.12.4
-        version: 24.12.4
-      vite-plus:
-        specifier: 1.4.0
-        version: 1.4.0(@astrojs/compiler-rs@0.5.1)(@types/node@24.12.4)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@6.0.3))(bufferutil@4.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.0(@noble/hashes@1.8.0))(playwright@1.64.1)(terser@5.48.0)(typescript@6.0.3)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)
-
-  packages/secret-provider-definitions:
-    dependencies:
-      '@ankielcode/secret-provider-core':
-        specifier: workspace:*
-        version: link:../secret-provider-core
-      '@ankielcode/secret-provider-onepassword':
-        specifier: workspace:*
-        version: link:../secret-provider-onepassword
-
-  packages/secret-provider-onepassword:
-    dependencies:
-      '@ankielcode/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-      '@ankielcode/provider-core':
-        specifier: workspace:*
-        version: link:../provider-core
-      '@ankielcode/secret-provider-core':
-        specifier: workspace:*
-        version: link:../secret-provider-core
-      '@ankielcode/shared':
-        specifier: workspace:*
-        version: link:../shared
-      effect:
-        specifier: 4.1.5
-        version: 4.1.5(patch_hash=14a7acd734809d8dddbf2c19c4ec01fdd2ffae60a612de42b5ed29860216052a)
-    devDependencies:
-      '@effect/platform-node':
-        specifier: 4.1.5
-        version: 4.1.5(bufferutil@4.1.0)(effect@4.1.5(patch_hash=14a7acd734809d8dddbf2c19c4ec01fdd2ffae60a612de42b5ed29860216052a))(redis@6.2.1)(utf-8-validate@6.0.6)
       '@effect/vitest':
         specifier: 4.1.5
         version: 4.1.5(patch_hash=dd0bf2b1ae0f63aff0d620ebc67b82d19759b3fa69a608ef85e2a5b40b4d46c5)(@astrojs/compiler-rs@0.5.1)(@types/node@24.12.4)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@6.0.3))(bufferutil@4.1.0)(effect@4.1.5(patch_hash=14a7acd734809d8dddbf2c19c4ec01fdd2ffae60a612de42b5ed29860216052a))(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.0(@noble/hashes@1.8.0))(playwright@1.64.1)(terser@5.48.0)(typescript@6.0.3)(unrun@0.2.39)(utf-8-validate@6.0.6)(yaml@2.9.0)

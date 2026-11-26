@@ -53,7 +53,6 @@ import {
   EnvironmentSpeechStatus,
   EnvironmentSpeechTranscriptionResult,
 } from "./speech.ts";
-import { SecretReference } from "./secretReference.ts";
 import {
   OrchestrationV2ShellHttpSnapshot,
   OrchestrationV2ShellResumable,
@@ -566,9 +565,7 @@ export class EnvironmentVoiceHttpApi extends HttpApiGroup.make("voice")
       headers: OptionalBearerHeaders,
       params: Schema.Struct({ provider: CloudSpeechProvider }),
       payload: Schema.Struct({
-        key: Schema.NullOr(
-          Schema.Union([Schema.RedactedFromValue(CloudSpeechApiKey), SecretReference]),
-        ),
+        key: Schema.NullOr(Schema.RedactedFromValue(CloudSpeechApiKey)),
       }),
       success: HttpApiSchema.NoContent,
       error: EnvironmentScopedOperationErrors,

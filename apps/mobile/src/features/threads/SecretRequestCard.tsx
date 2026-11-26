@@ -5,42 +5,30 @@ import {
   secretRequestInputs,
   secretRequestLink,
   secretRequestPrivacyNote,
-  secretRequestReference,
-  secretRequestSources,
   secretRequestValue,
   type SecretRequestItem,
   type SecretRequestReply,
-  type SecretRequestSource,
 } from "@ankielcode/client-runtime/secret-request";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
 } from "@ankielcode/client-runtime/state/runtime";
-import {
-  AuthProvidersManageScope,
-  type EnvironmentId,
-  type OrchestrationV2ProjectedTurnItem,
-  type SecretProviderId,
-} from "@ankielcode/contracts";
-import { useAtomValue } from "@effect/atom-react";
+import type { EnvironmentId, OrchestrationV2ProjectedTurnItem } from "@ankielcode/contracts";
 import { useGT, useMessages } from "gt-react-native";
 import { useRef, useState } from "react";
 import { View, type ColorValue } from "react-native";
 
 import { SymbolView, type AppSymbolName } from "../../components/ui/AppSymbol";
-import { AppText as Text, AppTextInput as TextInput } from "../../components/ui/AppText";
+import { AppText as Text } from "../../components/ui/AppText";
 import { SecretTextInput } from "../../components/ui/SecretTextInput";
 import type { SecretTextInputHandle } from "../../components/ui/SecretTextInput.types";
 import { serverEnvironment } from "../../state/server";
-import { useEnvironmentScope } from "../../state/session";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import { Button } from "../../components/ui/Button";
-import { Chip } from "../../components/ui/Chip";
 
 const LOCK_SYMBOL: AppSymbolName = { ios: "lock", android: "lock" };
 const PRIVATE_SYMBOL: AppSymbolName = { ios: "checkmark.shield", android: "lock" };
-const NO_SOURCES: ReadonlyArray<SecretRequestSource> = [];
 
 export function SecretRequestCard(props: {
   readonly environmentId: EnvironmentId;
@@ -92,18 +80,7 @@ function PendingSecretRequestForm(props: {
   });
   const inputs = secretRequestInputs(item, m);
   const multiple = item.fields !== undefined;
-  const config = useAtomValue(serverEnvironment.configValueAtom(props.environmentId));
-  // The server accepts a reference answer only with this scope; without it the card is typed.
-  const canUseReferences = useEnvironmentScope(props.environmentId, AuthProvidersManageScope);
-  // A reference answers one value, so a card with fields is always typed.
-  const sources =
-    multiple || !canUseReferences
-      ? NO_SOURCES
-      : secretRequestSources(config, config?.settings.secretProviders ?? {}, m);
-  const [sourceId, setSourceId] = useState<SecretProviderId | null>(null);
-  const source = sources.find((candidate) => candidate.id === sourceId) ?? null;
   const [values, setValues] = useState<Readonly<Record<string, string>>>({});
-  const [reference, setReference] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Submit then a tap can both run before a re-render; this guard is synchronous.
@@ -124,28 +101,15 @@ function PendingSecretRequestForm(props: {
       inFlight.current = false;
       setSubmitting(false);
     });
-    if (result._tag === "Success") {
-      setReference("");
-      return;
-    }
+    if (result._tag === "Success") return;
     setValues(typed);
     if (!isAtomCommandInterrupted(result)) {
       setError(secretRequestFailureMessage(squashAtomCommandFailure(result), m));
     }
   };
-  const save = (typed: Readonly<Record<string, string>>) => {
-    if (source === null) {
-      void send({ type: "save", values: typed });
-    } else if (secretRequestReference(source, reference) === undefined) {
-      setError(source.invalidReferenceMessage);
-    } else {
-      void send({ type: "reference", source, reference });
-    }
-  };
-  const canSave =
-    source === null
-      ? secretRequestAnswerInput(item, { type: "save", values }) !== null
-      : reference.trim().length > 0;
+  const save = (typed: Readonly<Record<string, string>>) =>
+    void send({ type: "save", values: typed });
+  const canSave = secretRequestAnswerInput(item, { type: "save", values }) !== null;
   const link = secretRequestLink(item);
 
   return (
@@ -174,92 +138,36 @@ function PendingSecretRequestForm(props: {
           ) : null}
         </View>
       ) : null}
-      {sources.length > 0 ? (
-        <View className="flex-row flex-wrap gap-2">
-          <Chip
-            label={gt("Value", { $context: "noun, enter the secret value directly" })}
-            size="small"
-            selected={source === null}
-            disabled={submitting}
-            onPress={() => {
-              setSourceId(null);
-              setError(null);
+      {inputs.map((input, index) => {
+        const last = index === inputs.length - 1;
+        const field = (
+          <SecretTextInput
+            key={input.key}
+            // A single input is labelled by the card title.
+            accessibilityLabel={multiple ? input.label : item.label}
+            secret={input.secret}
+            onMount={(handle) => {
+              inputRefs.current[index] = handle;
             }}
+            placeholder={input.placeholder}
+            value={secretRequestValue(values, input.key)}
+            onChangeText={(value) => setValues((current) => ({ ...current, [input.key]: value }))}
+            editable={!submitting}
+            returnKeyType={last ? "done" : "next"}
+            onSubmitEditing={(value) =>
+              last ? save({ ...values, [input.key]: value }) : inputRefs.current[index + 1]?.focus()
+            }
           />
-          {sources.map((candidate) => (
-            <Chip
-              key={candidate.id}
-              label={candidate.label}
-              size="small"
-              selected={candidate.id === source?.id}
-              disabled={submitting}
-              onPress={() => {
-                setSourceId(candidate.id);
-                setError(null);
-              }}
-            />
-          ))}
-        </View>
-      ) : null}
-      {source === null ? (
-        inputs.map((input, index) => {
-          const last = index === inputs.length - 1;
-          const field = (
-            <SecretTextInput
-              key={input.key}
-              // A single input is labelled by the card title.
-              accessibilityLabel={multiple ? input.label : item.label}
-              secret={input.secret}
-              onMount={(handle) => {
-                inputRefs.current[index] = handle;
-              }}
-              placeholder={input.placeholder}
-              value={secretRequestValue(values, input.key)}
-              onChangeText={(value) => setValues((current) => ({ ...current, [input.key]: value }))}
-              editable={!submitting}
-              returnKeyType={last ? "done" : "next"}
-              onSubmitEditing={(value) =>
-                last
-                  ? save({ ...values, [input.key]: value })
-                  : inputRefs.current[index + 1]?.focus()
-              }
-            />
-          );
-          return multiple ? (
-            <View key={input.key} className="gap-1.5">
-              <Text className="font-ankiel-medium text-sm text-foreground-muted">
-                {input.label}
-              </Text>
-              {field}
-            </View>
-          ) : (
-            field
-          );
-        })
-      ) : (
-        <TextInput
-          key={source.id}
-          accessibilityLabel={gt("{label} reference in {source}", {
-            label: item.label,
-            source: source.label,
-          })}
-          placeholder={source.referencePlaceholder}
-          value={reference}
-          onChangeText={(next) => {
-            setReference(next);
-            setError(null);
-          }}
-          editable={!submitting}
-          autoCorrect={false}
-          autoCapitalize="none"
-          autoComplete="off"
-          textContentType="none"
-          importantForAutofill="no"
-          spellCheck={false}
-          returnKeyType="done"
-          onSubmitEditing={() => save(values)}
-        />
-      )}
+        );
+        return multiple ? (
+          <View key={input.key} className="gap-1.5">
+            <Text className="font-ankiel-medium text-sm text-foreground-muted">{input.label}</Text>
+            {field}
+          </View>
+        ) : (
+          field
+        );
+      })}
       {error !== null ? (
         <Text
           accessibilityRole="alert"

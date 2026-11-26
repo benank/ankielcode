@@ -1,7 +1,6 @@
 import {
   isSecretReference,
   type EnvironmentId,
-  type SecretReference,
   type SettingsSecretValue,
 } from "@ankielcode/contracts";
 import { T, useGT, Var } from "gt-react";
@@ -19,7 +18,7 @@ import { useAtomCommand } from "../../state/use-atom-command";
 import { Button, InlineButton } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { SecretSourceInput, useSecretSources } from "./SecretSourceInput";
+import { SecretSourceInput } from "./SecretSourceInput";
 
 const hasToken = (token: SettingsSecretValue | undefined) =>
   typeof token === "string" ? token.length > 0 : token !== undefined;
@@ -49,11 +48,9 @@ export function SourceControlTokenSettings({
   });
   const defaultHost = definition.publicHost ?? "";
   const [host, setHost] = useState(defaultHost);
-  const secretSources = useSecretSources(environmentId);
-  const [pending, setPending] = useState<{
-    readonly key: string;
-    readonly draft: string | SecretReference;
-  } | null>(null);
+  const [pending, setPending] = useState<{ readonly key: string; readonly draft: string } | null>(
+    null,
+  );
   const [saving, setSaving] = useState(false);
   const normalizedHost = host.trim().toLowerCase();
   const savedToken = tokens[normalizedHost];
@@ -64,9 +61,9 @@ export function SourceControlTokenSettings({
   const sourceKey = JSON.stringify([normalizedHost, savedToken ?? ""]);
   const draft =
     pending?.key === sourceKey ? pending.draft : isSecretReference(savedToken) ? savedToken : "";
-  const submission = typeof draft === "string" ? draft.trim() : draft;
+  const submission = typeof draft === "string" ? draft.trim() : "";
 
-  const save = async (target: string, token: SettingsSecretValue) => {
+  const save = async (target: string, token: string) => {
     setSaving(true);
     const result = await updateSettings({
       environmentId,
@@ -144,12 +141,9 @@ export function SourceControlTokenSettings({
               id={`${definition.kind}-token-${environmentId}`}
               size="sm"
               aria-label={gt("{host} token", { host: definition.label })}
-              environmentId={environmentId}
               configured={isSaved && !isSecretReference(savedToken)}
               value={draft}
-              sources={secretSources}
               onChange={(event) => setPending({ key: sourceKey, draft: event.target.value })}
-              onSecretChange={(secret) => setPending({ key: sourceKey, draft: secret ?? "" })}
             />
           </div>
         </div>

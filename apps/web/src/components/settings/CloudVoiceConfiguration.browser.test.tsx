@@ -20,13 +20,7 @@ vi.mock("../../state/environments", async (importOriginal) => ({
         label: "Laptop",
         connection: { phase: "available" },
         serverConfig: {
-          featureFlags: { secretProviders: true },
-          secretReferences: true,
-          settings: {
-            secretProviders: {
-              work: { kind: "one_password", label: "Work vault", config: { account: "work" } },
-            },
-          },
+          settings: {},
           environment: {
             platform: { os: "linux", arch: "x64" },
             capabilities: { voiceTranscription: true, cloudVoiceTranscription: true },
@@ -131,18 +125,16 @@ it("enables the chosen provider only after a successful setup", async () => {
       await destination.click();
       await page.getByRole("option", { name: "OpenAI via Laptop" }).click();
       const dialog = page.getByRole("dialog");
-      await dialog.getByRole("combobox", { name: "OpenAI API key source" }).click();
-      await page.getByRole("option", { name: "Work vault" }).click();
-      await dialog.getByLabelText("OpenAI API key reference").fill("op://Work/Voice/key");
+      await dialog.getByLabelText("OpenAI API key").fill("sk-voice-key");
       await userEvent.keyboard("{Enter}");
       await expect.element(dialog.getByRole("alert")).toBeVisible();
       expect(writes).toEqual([]);
       await expect.element(dialog.getByRole("button", { name: "Save and enable" })).toBeEnabled();
-      await dialog.getByLabelText("OpenAI API key reference").click();
+      await dialog.getByLabelText("OpenAI API key").click();
       await userEvent.keyboard("{Enter}");
       await expect.element(dialog).not.toBeInTheDocument();
       await expect.element(destination).toHaveTextContent("OpenAI via Laptop");
-      expect(writes).toEqual([{ key: { provider: "work", reference: "op://Work/Voice/key" } }]);
+      expect(writes).toEqual([{ key: "sk-voice-key" }]);
     },
   );
 });

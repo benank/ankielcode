@@ -21,7 +21,6 @@ import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -748,12 +747,6 @@ describe("device setup consent", () => {
   );
 });
 
-const layerSecretResolver = Layer.succeed(SecretResolver.SecretResolver, {
-  label: (provider) => Effect.succeed(provider),
-  read: (references) => Effect.succeed(references.map(() => undefined)),
-  invalidate: () => Effect.void,
-});
-
 const WINDOWS_HOST_GUIDANCE = new SshDeviceHost.SshWindowsHostError({ cause: null }).message;
 
 it.effect.each([
@@ -847,7 +840,6 @@ it.effect.each([
     Effect.provide(
       Layer.mergeAll(
         ServerSettings.layerTest(),
-        layerSecretResolver,
         ServerConfig.layerTest(process.cwd(), { prefix: "ankiel-device-probe-" }),
         NodeCrypto.layer,
         NetService.layer,
@@ -1938,12 +1930,7 @@ it.effect("reconciles SSH host settings without publishing no-op changes", () =>
   }).pipe(
     Effect.scoped,
     Effect.provide(
-      Layer.mergeAll(
-        ServerSettings.layerTest(),
-        layerSecretResolver,
-        NodeServices.layer,
-        NodeCrypto.layer,
-      ),
+      Layer.mergeAll(ServerSettings.layerTest(), NodeServices.layer, NodeCrypto.layer),
     ),
   ),
 );
@@ -2019,7 +2006,6 @@ it.effect.each(["exit", "missing"] as const)(
       Effect.provide(
         Layer.mergeAll(
           ServerSettings.layerTest({ enableDeviceSupport: true }),
-          layerSecretResolver,
           ServerConfig.layerTest(process.cwd(), { prefix: "ankiel-device-update-" }),
           NodeCrypto.layer,
           NetService.layer,

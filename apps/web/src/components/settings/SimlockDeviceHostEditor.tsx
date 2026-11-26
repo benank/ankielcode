@@ -29,7 +29,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Spinner } from "../ui/spinner";
-import { SecretSourceInput, useSecretSources } from "./SecretSourceInput";
+import { SecretSourceInput } from "./SecretSourceInput";
 import {
   planSimlockDeviceHostSave,
   simlockDeviceHostProblem,
@@ -95,15 +95,8 @@ export function SimlockDeviceHostEditor(props: {
     gatewayUrl: gatewayUrl.trim(),
   };
   const checkUrl = simlockDeviceHostProblem(next) === null ? next.gatewayUrl : null;
-  // Environments whose token field holds a secret reference that cannot be saved yet.
-  const [invalidTokens, setInvalidTokens] = useState<ReadonlySet<EnvironmentId>>(new Set());
   const plan = planSimlockDeviceHostSave(props.environments, next, tokens, messages);
-  const problem =
-    "problem" in plan
-      ? plan.problem
-      : invalidTokens.size > 0
-        ? gt("Enter a valid secret reference.")
-        : null;
+  const problem = "problem" in plan ? plan.problem : null;
   const several = props.environments.length > 1;
 
   const limit = (
@@ -208,14 +201,6 @@ export function SimlockDeviceHostEditor(props: {
                   onChange={(token) =>
                     setTokens((current) => new Map(current).set(environment.environmentId, token))
                   }
-                  onValidityChange={(valid) =>
-                    setInvalidTokens((current) => {
-                      const nextInvalid = new Set(current);
-                      if (valid) nextInvalid.delete(environment.environmentId);
-                      else nextInvalid.add(environment.environmentId);
-                      return nextInvalid;
-                    })
-                  }
                 />
               ))}
               <p className="text-xs text-muted-foreground">
@@ -279,20 +264,13 @@ function SimlockTokenField(props: {
   saved: SettingsSecretValue;
   busy: boolean;
   onChange: (token: SimlockTokenEntry) => void;
-  onValidityChange: (valid: boolean) => void;
 }) {
   const gt = useGT();
   const id = useId();
-  const sources = useSecretSources(props.environmentId);
   const [inputKey, setInputKey] = useState(0);
-  // Emptying the field or leaving a reference returns to a saved literal, never to a saved reference.
+  // Emptying the field returns to a saved literal, never to a saved reference.
   const savedLiteral = typeof props.saved === "string" && props.saved !== "";
-  const entered =
-    props.token.kind !== "new"
-      ? ""
-      : typeof props.token.value === "string"
-        ? props.token.value.trim()
-        : props.token.value;
+  const entered = props.token.kind !== "new" ? "" : props.token.value.trim();
   // A cleared field asks about the machine's own token, which a blank one falls back to.
   const check = useAtomValue(
     props.gatewayUrl === null
@@ -340,7 +318,6 @@ function SimlockTokenField(props: {
           key={inputKey}
           id={id}
           aria-label={gt("Agent token")}
-          environmentId={props.environmentId}
           className="min-w-0 flex-1"
           configured={props.token.kind === "saved" && typeof props.saved === "string"}
           value={
@@ -349,17 +326,6 @@ function SimlockTokenField(props: {
               : props.token.kind === "saved" && isSecretReference(props.saved)
                 ? props.saved
                 : ""
-          }
-          sources={sources}
-          onValidityChange={props.onValidityChange}
-          onSecretChange={(secret) =>
-            props.onChange(
-              secret
-                ? { kind: "new", value: secret }
-                : savedLiteral
-                  ? { kind: "saved" }
-                  : { kind: "cleared" },
-            )
           }
           disabled={props.busy}
           onChange={(event) => {
@@ -383,7 +349,6 @@ function SimlockTokenField(props: {
             disabled={props.busy}
             onClick={() => {
               props.onChange({ kind: "cleared" });
-              props.onValidityChange(true);
               setInputKey((key) => key + 1);
             }}
           >

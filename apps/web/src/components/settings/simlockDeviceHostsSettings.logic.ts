@@ -1,7 +1,6 @@
 import {
   SimlockDeviceHostConfig,
   type EnvironmentId,
-  type SettingsSecretValue,
   type SimlockDeviceHostConfig as SimlockDeviceHostConfigType,
 } from "@ankielcode/contracts";
 import * as Option from "effect/Option";
@@ -68,10 +67,10 @@ export interface SimlockHostEnvironment {
   readonly hosts: ReadonlyArray<SimlockDeviceHostConfigType>;
 }
 
-/** A token field: the environment's saved token, a replacement or secret reference, or none. */
+/** A token field: the environment's saved token, a replacement, or none. */
 export type SimlockTokenEntry =
   | { kind: "saved" }
-  | { kind: "new"; value: SettingsSecretValue }
+  | { kind: "new"; value: string }
   | { kind: "cleared" };
 
 /**

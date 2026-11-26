@@ -10,10 +10,6 @@ vi.mock(import("../../hooks/useSettings"), async (original) => ({
   ...(await original()),
   useUpdateEnvironmentSettings: (() => updateSettings) as never,
 }));
-vi.mock(import("./SecretSourceInput"), async (original) => ({
-  ...(await original()),
-  useSecretSources: () => [],
-}));
 
 import { AddUsageLimitSourceDialog } from "./AddUsageLimitSourceDialog";
 

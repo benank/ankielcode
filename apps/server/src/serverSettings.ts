@@ -54,7 +54,6 @@ import {
   isModelSelectionProviderEnabled,
 } from "@ankielcode/shared/serverSettings";
 import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
-import { secretProviderDefinitions } from "./secrets/secretProviderDefinitions.ts";
 import { watchDirectoryReplacements } from "./watchDirectoryReplacements.ts";
 import {
   readSecretFieldValues,
@@ -64,7 +63,6 @@ import {
 import {
   mapSettingsSecrets,
   mapSettingsSecretValues,
-  withoutRemovedSecretProviderReferences,
   withoutRedirectedSimlockTokens,
   SECRET_REDACTED,
   type SettingsSecret,
@@ -154,7 +152,7 @@ export function redactServerSettingsForClient(
     : mapSettingsSecretValues(redacted, (value) =>
         isSecretReference(value) ? SECRET_REDACTED : value,
       );
-  return { ...shaped, secretProviders: withoutUnknownSecretProviderConfigs(shaped) };
+  return shaped;
 }
 
 /** A client shown a reference as a saved secret sends that marker back; it keeps the reference. */
@@ -170,19 +168,6 @@ function withEchoedSecretReferences(current: ServerSettings, next: ServerSetting
   );
 }
 
-// A newer kind's config may hold credentials this build cannot recognize, so it never leaves the server.
-function withoutUnknownSecretProviderConfigs(
-  settings: ServerSettings,
-): ServerSettings["secretProviders"] {
-  return Object.fromEntries(
-    Object.entries(settings.secretProviders).map(([id, entry]) => {
-      if (secretProviderConfigGuards.has(entry.kind)) return [id, entry];
-      const { config: _config, ...envelope } = entry;
-      return [id, envelope];
-    }),
-  ) as ServerSettings["secretProviders"];
-}
-
 export function applyProviderInstanceMutation(
   settings: ServerSettings,
   mutation: ProviderInstanceMutation,
@@ -194,40 +179,6 @@ export function applyProviderInstanceMutation(
     delete providerInstances[mutation.instanceId];
   }
   return { ...settings, providerInstances };
-}
-
-const secretProviderConfigGuards = new Map(
-  secretProviderDefinitions.definitions.map((definition) => [
-    definition.kind as string,
-    Schema.is(definition.configSchema),
-  ]),
-);
-
-// Rejects a kind this server has not loaded rather than storing a config it cannot check.
-function ensureSecretProviderWritesAllowed(
-  patch: ServerSettingsPatch,
-  settingsPath: string,
-): Effect.Effect<void, ServerSettingsError> {
-  for (const [id, entry] of Object.entries(patch.secretProviders ?? {})) {
-    if (entry === null) continue;
-    const isConfig = secretProviderConfigGuards.get(entry.kind);
-    const problem =
-      isConfig === undefined
-        ? `Unsupported secret provider kind: ${entry.kind}.`
-        : isConfig(entry.config)
-          ? undefined
-          : `Invalid ${entry.kind} config for secret provider ${id}.`;
-    if (problem !== undefined) {
-      return Effect.fail(
-        new ServerSettingsError({
-          settingsPath,
-          operation: "write-secret-provider",
-          cause: new Error(problem),
-        }),
-      );
-    }
-  }
-  return Effect.void;
 }
 
 function ensureProviderInstanceMutationAllowed(
@@ -1157,15 +1108,14 @@ const make = Effect.gen(function* () {
             cause: parseFailure.value,
           });
         }
-        // An older client echoes a reference as the redacted marker; restore it so
-        // a removed provider's reference is cleared below rather than restored by persistence.
+        // An older client echoes a reference as the redacted marker; restore it.
         const updated = withoutRedirectedSimlockTokens(
           current,
           withEchoedSecretReferences(current, yield* update(current)),
         );
         const persisted = yield* persistSettingsSecrets(
           current,
-          withoutRemovedSecretProviderReferences(current, yield* normalizeServerSettings(updated)),
+          yield* normalizeServerSettings(updated),
         );
         const next = yield* normalizeServerSettings(persisted.settings);
         const materializedNext = yield* Effect.uninterruptibleMask(() =>
@@ -1340,14 +1290,11 @@ const make = Effect.gen(function* () {
     getSettings: getMaterializedSettings,
     updateSettings: (patch) =>
       updateAndPersistSettings((current) =>
-        ensureSecretProviderWritesAllowed(patch, settingsPath).pipe(
-          Effect.as(applyServerSettingsPatch(current, patch)),
-        ),
+        Effect.succeed(applyServerSettingsPatch(current, patch)),
       ),
     updateProviderInstance: (mutation, patch = {}) =>
       updateAndPersistSettings((current) =>
         Effect.gen(function* () {
-          yield* ensureSecretProviderWritesAllowed(patch, settingsPath);
           yield* ensureProviderInstanceMutationAllowed(current, mutation, settingsPath);
           const patched = applyServerSettingsPatch(current, patch);
           return applyProviderInstanceMutation(patched, mutation);

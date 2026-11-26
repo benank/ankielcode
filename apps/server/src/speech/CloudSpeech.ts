@@ -4,15 +4,13 @@ import {
   CloudSpeechModel,
   CloudSpeechModelId,
   SettingsSecretValue,
-  isSecretReference,
-  type SecretReference,
+  requireSettingsSecretLiteral,
   type ServerSettingsError,
   type CloudSpeechKeys,
   type CloudSpeechProvider,
   EnvironmentSpeechTranscriptionResult,
   type SpeechTranscriptionOptions,
 } from "@ankielcode/contracts";
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import { cloudSpeechLanguages, effectiveSpeechLanguage } from "@ankielcode/shared/speech";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -22,7 +20,6 @@ import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import * as ServerSettings from "../serverSettings.ts";
-import { requireSettingsSecret } from "../secrets/settingsSecretValue.ts";
 import { applySpeechAliases, speechRecognitionWords } from "./customWords.ts";
 import { removeSpeechFillerWords } from "./fillerWords.ts";
 import { decodeSpeechPcm, SpeechInvalidAudioError } from "./SpeechService.ts";
@@ -112,7 +109,7 @@ export class CloudSpeech extends Context.Service<
     readonly models: Effect.Effect<ReadonlyArray<CloudSpeechModel>, CloudSpeechError>;
     readonly setKey: (
       provider: CloudSpeechProvider,
-      key: Redacted.Redacted<string> | SecretReference | null,
+      key: Redacted.Redacted<string> | null,
     ) => Effect.Effect<void, ServerSettingsError>;
     readonly transcribe: (
       provider: CloudSpeechProvider,
@@ -127,7 +124,6 @@ export const layer = Layer.effect(
   CloudSpeech,
   Effect.gen(function* () {
     const settings = yield* ServerSettings.ServerSettingsService;
-    const resolver = yield* SecretResolver.SecretResolver;
     const http = yield* HttpClient.HttpClient;
     const credentials = settings.getSettings.pipe(
       Effect.map((value) => value.cloudSpeechCredentials),
@@ -173,11 +169,11 @@ export const layer = Layer.effect(
     );
     const setKey = Effect.fn("CloudSpeech.setKey")(function* (
       provider: CloudSpeechProvider,
-      key: Redacted.Redacted<string> | SecretReference | null,
+      key: Redacted.Redacted<string> | null,
     ) {
       yield* settings.updateSettings({
         cloudSpeechCredentials: {
-          [provider]: Redacted.isRedacted(key) ? Redacted.value(key) : (key ?? ""),
+          [provider]: key === null ? "" : Redacted.value(key),
         },
       });
     });
@@ -203,12 +199,8 @@ export const layer = Layer.effect(
         const language = effectiveSpeechLanguage(cloudSpeechLanguages, options.speechLanguage);
         if (provider === "openrouter" && !(yield* models).some((entry) => entry.id === model))
           return yield* new CloudSpeechError({ provider, reason: "model-unavailable" });
-        // A vault that locked since the last recording must not authorize a new upload.
-        if (isSecretReference(source)) yield* resolver.invalidate([source]);
         const unreadable = () => new CloudSpeechError({ provider, reason: "unreadable-key" });
-        const key = yield* requireSettingsSecret(resolver, source).pipe(
-          Effect.mapError(unreadable),
-        );
+        const key = yield* requireSettingsSecretLiteral(source).pipe(Effect.mapError(unreadable));
         if (!isApiKey(key)) return yield* unreadable();
         const audio = wave(samples);
         const request = HttpClientRequest.post(endpoints[provider].url).pipe(
@@ -218,7 +210,7 @@ export const layer = Layer.effect(
             : audioBody(provider, audio, language, options),
         );
         const unavailable = () => new CloudSpeechError({ provider, reason: "unavailable" });
-        // A catalog fetch or vault lookup may have outlived the credential it started with.
+        // A catalog fetch may have outlived the credential it started with.
         const current = (yield* credentials)[provider];
         if (!current || !sameCredential(source, current))
           return yield* new CloudSpeechError({

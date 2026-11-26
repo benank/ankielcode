@@ -312,7 +312,6 @@
   "610aea624f895a78": "Saved securely and kept private",
   "8cc00444f7443feb": "Declined",
   "acd01e781e2355cc": "Request ended",
-  "329b7854b7e0546e": "Use a 1Password reference like {example}.",
   "97e4c50a99272f63": "Could not answer the request. Try again.",
   "420bea546d5f8802": "Thread copied",
   "2efb2dd3bf170f67": "Failed to copy thread",
@@ -6820,9 +6819,9 @@
   "ef5fef499da688e8": "Replace API key",
   "cad38c8893ab98e4": "API key",
   "42ec8bbd6819af00": "{company} API key",
-  "03d751a890780a70": "{company} API key reference",
   "2db595fcf95d3ff6": "Enter API key",
   "7aa0d5470ed46175": "Enter an API key, not a URL or secret reference.",
+  "cfacaad3134382ef": "Read from the secret provider “{provider}”, which Ankiel Code no longer supports. Enter the value to replace it.",
   "dad7aceef19f0f5b": "Updating the key keeps dictation enabled.",
   "015e394f14d5ede0": "Leave blank to keep the saved key.",
   "0a9e4d44c145cd07": "Anyone with dictation access to {environment} can bill this key.",
@@ -7344,7 +7343,6 @@
   "287b18c47ec92be0": "Signed in as {account} with the access token saved here.",
   "9f07a56693256c4d": "Signed in as {account} with EXPO_TOKEN on the server.",
   "ba4c99506ff9822a": "Signed in as {account} with the server's eas login.",
-  "972be7e4b4a995a0": "Enter a valid secret reference.",
   "aa4df315152b7b70": "Idle minutes must be smaller than session minutes.",
   "e96801c9ea01d761": "Give the host a label and limits within the ranges shown.",
   "c2839b56a6559626": "Add Expo host",
@@ -8591,80 +8589,6 @@
   "a8fad08ceff4e04f": "Disabled tasks stay saved but do not run.",
   "af3bf76ebab013ff": "Stored secret, enter a new value to replace",
   "6d5cbb6a55929e77": "Not set",
-  "6855de06fd5c0e7f": "Enter a name.",
-  "eb91d60b57d46345": "Enter the 1Password account.",
-  "67678fd68bb24d27": "The name needs at least one letter or digit.",
-  "fe6fc15c3bb8022e": "A secret provider with this name exists.",
-  "0c816bce39329beb": "Edit {label}",
-  "02f531b974fc3dd5": "Add a 1Password provider",
-  "acbf0b4710755dc1": "Personal",
-  "bc714daca44e1826": "Save changes",
-  "787b3fff435313e4": [
-    "Provider variables on ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " can read values from it by name. Values are read with the op CLI on that server when a provider starts."
-  ],
-  "daf8daec701f0863": "Account",
-  "c3d6c8494c7d4b8f": "The account shorthand, sign-in address without https://, or ID that op account list shows.",
-  "afa8b4a2e025dd36": "Value",
-  "13f8f1e086293635": "{label} source",
-  "4579dce838e7c0a3": "Could not reach the server",
-  "72906d2339314412": "You cannot check secrets on this environment",
-  "314546d4d3481e1f": "Check that the secret resolves",
-  "957c652364c674b4": "Checking the secret",
-  "d4ce4e6e4826e278": "Secret resolved",
-  "40916e46dfac8738": "{label} failed: {detail}",
-  "9064b191dab9f782": "{label} resolved",
-  "4d12d2e6d168fdb5": "{label} reference",
-  "f7b9aef971c1ce37": "Check {label}",
-  "3e3cabe47b0b5c07": "Voice · {provider}",
-  "cd90b098a17bca20": "No secret providers configured.",
-  "1c9374501ee389d3": "Add a 1Password account, then pick it as the source of a provider variable.",
-  "382541febe15f472": "Toggle account visibility",
-  "40426afd511710f8": "Unsupported provider ({kind})",
-  "bc57b89d73b712d1": [
-    "Update Ankiel Code on ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " to manage its secret providers."
-  ],
-  "13d4f258e93f1dc1": "Connect an environment to manage the secret providers its provider variables read from.",
-  "88466f5a03be2419": "Environment-wide setting. Select an environment to change it.",
-  "a3538ba5ca802bd7": [
-    "Remove ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    "?"
-  ],
-  "0d5b3b39f92c04e4": "Remove provider",
-  "c52bdbe39649742c": [
-    "Nothing reads from ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    ". The secrets themselves are untouched."
-  ],
-  "59c40978bc7c05ad": [
-    "These read from ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " and will be unset. The secrets themselves are untouched."
-  ],
   "910a79263d640e22": "Allowed",
   "43e5c059e5308eee": "Not granted",
   "32659cddbd37d220": "These permissions apply to your active route. Other routes may have different permissions.",
@@ -9374,6 +9298,7 @@
     " host uses, or turn a host off."
   ],
   "9e8b725de0072098": "Signed in as",
+  "daf8daec701f0863": "Account",
   "25d2d58cd2a8f103": [
     "Active ",
     {
@@ -9947,6 +9872,7 @@
   "1d4f61e89b446440": "Minimize the theme editor",
   "13e2b78d333a32ee": "Close the theme editor",
   "9137253dc9576644": "Merge into “{label}”",
+  "bc714daca44e1826": "Save changes",
   "e80f1a3dfabdbae1": "Add light palette",
   "e86fd314d1599271": "Add dark palette",
   "f2ba1c687d850d82": "Theme name",
@@ -10031,6 +9957,7 @@
   "d4d21ada26ceeb4e": "Use {label} theme, currently active",
   "1ad8f0ea72e46432": "Use {label} theme",
   "8ef2b7c62fc504fa": "Duplicate {label}",
+  "0c816bce39329beb": "Edit {label}",
   "885721ab59f2647b": "Export {label}",
   "161ae90f23219c76": "Remove themes from {collectionLabel}",
   "0a539f726e6982d3": "Remove {label}",
@@ -10124,6 +10051,15 @@
   ],
   "f54364b854a07918": "No hubs configured.",
   "4cf6a373a7535324": "{name} · Disabled",
+  "a3538ba5ca802bd7": [
+    "Remove ",
+    {
+      "i": 1,
+      "k": "_gt_value_1",
+      "v": "v"
+    },
+    "?"
+  ],
   "1d1e9cda847bd398": "The hub's management key is deleted from this server. Its accounts leave the Limits view; the hub itself is untouched. Add it again with the URL and key to bring them back.",
   "c9bee4f93481b77a": "Remove hub",
   "0424112d5a0ecd71": "Auto",
@@ -10396,7 +10332,6 @@
   "2ab325baee3ec9a3": "Scheduled tasks",
   "0a59e086514a62a9": "Source control & issues",
   "1de0df2b8a4fb96e": "Sharing & access",
-  "4c70e3e7b3e6c493": "Secrets",
   "79b768229c9ef672": "Maintenance",
   "f41ea186c275b56e": "About",
   "af4b7734da1d5ce7": "Voice",
@@ -10582,10 +10517,6 @@
   "cbf49f84e7f456e5": "Load balancing",
   "6f1a769805a28197": "automatic machine environment resources cpu memory capacity preference weight shared projects",
   "563b1163723f019b": "Pull request sharing",
-  "40c9f6f66a0139ff": "Secret providers",
-  "fd4ec272764a2405": "1password vault credentials api key",
-  "ff679e74f97044e6": "Add secret provider",
-  "ddd5990f613aebb4": "new 1password vault op cli account",
   "b9b1dccabd2ed00d": "Archived threads",
   "f505371f6f6fd624": "restore reopen deleted history projects",
   "2ed592dc3ae2e382": "Give the host a label.",

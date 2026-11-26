@@ -6,26 +6,16 @@ import {
   secretRequestInputs,
   secretRequestLink,
   secretRequestPrivacyNote,
-  secretRequestReference,
-  secretRequestSources,
   secretRequestValue,
   type SecretRequestInput,
   type SecretRequestItem,
   type SecretRequestReply,
-  type SecretRequestSource,
 } from "@ankielcode/client-runtime/secret-request";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
 } from "@ankielcode/client-runtime/state/runtime";
-import {
-  AuthProvidersManageScope,
-  type EnvironmentId,
-  type OrchestrationV2ProjectedTurnItem,
-  type SecretProviderId,
-} from "@ankielcode/contracts";
-import { useAtomValue } from "@effect/atom-react";
-import { hasFeatureFlag } from "@ankielcode/client-runtime/state/server";
+import type { EnvironmentId, OrchestrationV2ProjectedTurnItem } from "@ankielcode/contracts";
 import { T, useGT, useMessages, Var } from "gt-react";
 import {
   CheckIcon,
@@ -39,12 +29,9 @@ import {
 import { useId, useRef, useState, type FormEvent } from "react";
 
 import { serverEnvironment } from "../../state/server";
-import { useEnvironmentScope } from "../../state/session";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
-import { SecretSourceSelect } from "../settings/SecretSourceInput";
 import { WorkLogRow } from "./WorkLog";
 
 export function SecretRequestCard(props: {
@@ -77,18 +64,6 @@ export function SecretRequestCard(props: {
   return <PendingSecretRequestForm environmentId={props.environmentId} item={item} />;
 }
 
-const NO_SOURCES: ReadonlyArray<SecretRequestSource> = [];
-
-function useSecretRequestSources(environmentId: EnvironmentId) {
-  const config = useAtomValue(serverEnvironment.configValueAtom(environmentId));
-  const messages = useMessages();
-  // The server accepts a reference answer only with this scope; without it the card is typed.
-  const canUseReferences = useEnvironmentScope(environmentId, AuthProvidersManageScope);
-  return canUseReferences && hasFeatureFlag(config, "secretProviders")
-    ? secretRequestSources(config, config?.settings.secretProviders ?? {}, messages)
-    : NO_SOURCES;
-}
-
 function PendingSecretRequestForm(props: {
   readonly environmentId: EnvironmentId;
   readonly item: SecretRequestItem;
@@ -105,13 +80,7 @@ function PendingSecretRequestForm(props: {
     reportDefect: false,
   });
   const multiple = item.fields !== undefined;
-  // A reference answers one value, so a card with fields is always typed.
-  const configuredSources = useSecretRequestSources(props.environmentId);
-  const sources = multiple ? NO_SOURCES : configuredSources;
-  const [sourceId, setSourceId] = useState<SecretProviderId | null>(null);
-  const source = sources.find((candidate) => candidate.id === sourceId) ?? null;
   const [values, setValues] = useState<Readonly<Record<string, string>>>({});
-  const [reference, setReference] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Enter and click can both submit before a render.
@@ -119,10 +88,7 @@ function PendingSecretRequestForm(props: {
   const inputs = secretRequestInputs(item, messages);
   const inputId = (index: number) => `${formId}-${index}`;
   const describedBy = error !== null ? `${privacyId} ${errorId}` : privacyId;
-  const canSave =
-    source === null
-      ? secretRequestAnswerInput(item, { type: "save", values }) !== null
-      : reference.trim().length > 0;
+  const canSave = secretRequestAnswerInput(item, { type: "save", values }) !== null;
 
   const send = async (reply: SecretRequestReply) => {
     const input = secretRequestAnswerInput(item, reply);
@@ -138,10 +104,7 @@ function PendingSecretRequestForm(props: {
       inFlight.current = false;
       setSubmitting(false);
     });
-    if (result._tag === "Success") {
-      setReference("");
-      return;
-    }
+    if (result._tag === "Success") return;
     setValues(typed);
     if (!isAtomCommandInterrupted(result)) {
       pipe(
@@ -154,13 +117,7 @@ function PendingSecretRequestForm(props: {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (source === null) {
-      void send({ type: "save", values });
-    } else if (secretRequestReference(source, reference) === undefined) {
-      setError(source.invalidReferenceMessage);
-    } else {
-      void send({ type: "reference", source, reference });
-    }
+    void send({ type: "save", values });
   };
 
   const link = secretRequestLink(item);
@@ -235,41 +192,7 @@ function PendingSecretRequestForm(props: {
         <div className="flex min-w-0 flex-col gap-2.5">{inputs.map(field)}</div>
       ) : (
         <div className="flex min-w-0 items-center gap-2">
-          {sources.length > 0 ? (
-            <SecretSourceSelect
-              value={source?.id ?? null}
-              sources={sources}
-              label={item.label}
-              disabled={submitting}
-              onValueChange={(next) => {
-                setSourceId(next);
-                setError(null);
-              }}
-            />
-          ) : null}
-          <div className="min-w-0 flex-1">
-            {source === null ? (
-              inputs.map(field)
-            ) : (
-              <Input
-                id={inputId(0)}
-                font="mono"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                placeholder={source.referencePlaceholder}
-                value={reference}
-                disabled={submitting}
-                aria-invalid={error !== null || undefined}
-                aria-describedby={describedBy}
-                onChange={(event) => {
-                  setReference(event.currentTarget.value);
-                  setError(null);
-                }}
-              />
-            )}
-          </div>
+          <div className="min-w-0 flex-1">{inputs.map(field)}</div>
           {saveButton}
         </div>
       )}

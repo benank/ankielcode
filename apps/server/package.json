@@ -73,9 +73,6 @@
   "devDependencies": {
     "@ankielcode/contracts": "workspace:*",
     "@ankielcode/provider-testing": "workspace:*",
-    "@ankielcode/secret-provider-core": "workspace:*",
-    "@ankielcode/secret-provider-definitions": "workspace:*",
-    "@ankielcode/secret-provider-onepassword": "workspace:*",
     "@ankielcode/shared": "workspace:*",
     "@ankielcode/source-control-testing": "workspace:*",
     "@ankielcode/ssh": "workspace:*",

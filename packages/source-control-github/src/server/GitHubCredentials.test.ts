@@ -7,11 +7,7 @@ import * as Redacted from "effect/Redacted";
 import { HttpClient } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 
-import {
-  DEFAULT_SERVER_SETTINGS,
-  SecretProviderId,
-  SecretProviderKind,
-} from "@ankielcode/contracts";
+import { DEFAULT_SERVER_SETTINGS, SecretProviderId } from "@ankielcode/contracts";
 import type * as SourceControlHost from "@ankielcode/source-control-core/server/SourceControlHost";
 import { applyServerSettingsPatch } from "@ankielcode/shared/serverSettings";
 import * as TestSourceControlHost from "@ankielcode/source-control-testing/TestSourceControlHost";
@@ -166,15 +162,8 @@ describe("GitHubCredentials", () => {
       expect(Redacted.value(credential.token)).toBe("saved-token");
       expect(credential.source).toBe("settings");
 
-      // A reference left in place by getWithSecrets is one its secret provider could not read.
+      // A reference saved by a build with secret providers fails instead of falling back to gh.
       yield* settings.update({
-        secretProviders: {
-          [SecretProviderId.make("vault")]: {
-            kind: SecretProviderKind.make("one_password"),
-            label: "Work vault",
-            config: {},
-          },
-        },
         sourceControlHosts: {
           github: {
             tokens: {
@@ -185,7 +174,7 @@ describe("GitHubCredentials", () => {
       });
       const error = yield* Effect.flip(credentials.get("github.com"));
       expect(error._tag).toBe("SettingsSecretUnresolvedError");
-      expect(error.message).toContain('"Work vault"');
+      expect(error.message).toContain('"vault"');
       expect(calls).toEqual([]);
     }).pipe(Effect.provide(layer));
   });

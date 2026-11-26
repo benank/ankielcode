@@ -13,6 +13,7 @@ import {
   type DevicePlatformAvailability,
   type SettingsSecretValue,
   type SimlockDeviceHostConfig,
+  requireSettingsSecretLiteral,
 } from "@ankielcode/contracts";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
@@ -30,10 +31,8 @@ import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { truncate } from "@ankielcode/shared/String";
 import type { NodeRuntimeUnavailableError } from "@ankielcode/shared/nodeRuntime";
 
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import * as ServerConfig from "../config.ts";
 import * as ProcessRunner from "../processRunner.ts";
-import { requireSettingsSecret } from "../secrets/settingsSecretValue.ts";
 import { writeAgentDeviceConfig } from "./AgentDeviceTarget.ts";
 import * as DeviceHost from "./DeviceHost.ts";
 
@@ -139,14 +138,13 @@ export const machineSimlockToken = (environment: NodeJS.ProcessEnv) => {
  * instead of falling back to this machine's token.
  */
 export const resolveSimlockToken = Effect.fn("SimlockDeviceHost.resolveToken")(function* (
-  secrets: SecretResolver.SecretResolver["Service"],
   gatewayUrl: string,
   saved: { readonly gatewayUrl: string; readonly agentToken: SettingsSecretValue } | undefined,
   environment: NodeJS.ProcessEnv,
 ) {
   if (saved?.agentToken && sameOrigin(saved.gatewayUrl, gatewayUrl))
     return {
-      agentToken: yield* requireSettingsSecret(secrets, saved.agentToken),
+      agentToken: yield* requireSettingsSecretLiteral(saved.agentToken),
       source: "settings" as const,
     };
   const machine = machineSimlockToken(environment);
@@ -213,7 +211,6 @@ export const make = Effect.fn("SimlockDeviceHost.make")(function* (
   const server = yield* ServerConfig.ServerConfig;
   const services = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
   const environment = yield* HostProcess.Environment;
-  const secrets = yield* SecretResolver.SecretResolver;
   const hostId = config.id;
   const gateway = config.gatewayUrl.replace(/\/$/, "");
   const agentDeviceUrl = `${gateway}/v1/agent-device`;
@@ -241,8 +238,8 @@ export const make = Effect.fn("SimlockDeviceHost.make")(function* (
       ...(cause === undefined ? {} : { cause }),
     });
 
-  // Read on each use, so a rotated or unlocked secret applies without rebuilding the host.
-  const currentToken = resolveSimlockToken(secrets, config.gatewayUrl, config, environment).pipe(
+  // Read on each use, so a rotated token applies without rebuilding the host.
+  const currentToken = resolveSimlockToken(config.gatewayUrl, config, environment).pipe(
     Effect.mapError((error) => unavailable(error.message, error)),
     Effect.flatMap((token) =>
       token

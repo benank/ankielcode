@@ -61,7 +61,7 @@ import { Spinner } from "../ui/spinner";
 import { Switch } from "../ui/switch";
 import { WizardFooter, WizardHeader, WizardPanel, WizardPopup, WizardSteps } from "../ui/wizard";
 import { selectionCardClassName } from "./itemRows";
-import { SecretSourceInput, useSecretSources } from "./SecretSourceInput";
+import { SecretSourceInput } from "./SecretSourceInput";
 import { useSearchableSetting } from "./settingsSearch";
 import { SETTINGS_PICKER_TRIGGER_CLASSNAME, SettingsRow, SettingsSection } from "./settingsLayout";
 
@@ -287,11 +287,9 @@ function TextGeneratorWizard({
   const [preset, setPreset] = useState(TEXT_GENERATOR_PRESETS[0]!);
   const [baseUrl, setBaseUrl] = useState(existing?.baseUrl ?? preset.baseUrl);
   const [label, setLabel] = useState(existing?.label ?? "");
-  const secretSources = useSecretSources(environmentId);
   const [keyDraft, setKeyDraft] = useState<string | SecretReference>(
     isSecretReference(existing?.apiKey) ? existing.apiKey : "",
   );
-  const [keyValid, setKeyValid] = useState(true);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState<string | null>(null);
   const [modelCount, setModelCount] = useState(0);
@@ -317,7 +315,7 @@ function TextGeneratorWizard({
     existing === null
       ? preset.id === "custom"
       : !["openai", "anthropic", "openrouter"].includes(textGeneratorBrand(existing));
-  const canConnect = keyValid && Option.isSome(config) && (!keyRequired || apiKey !== "");
+  const canConnect = Option.isSome(config) && (!keyRequired || apiKey !== "");
   const name = Option.isSome(config)
     ? textGeneratorDisplayName(config.value, messages)
     : messages(preset.label);
@@ -449,14 +447,11 @@ function TextGeneratorWizard({
                     aria-label={gt("API key")}
                     value={keyDraft}
                     configured={storedKey !== ""}
-                    sources={secretSources}
                     onChange={(event) => {
                       setKeyDraft(event.target.value);
                       setCheckError(null);
                     }}
-                    onSecretChange={(secret) => setKeyDraft(secret ?? "")}
                     autoFocus={existing === null && preset.id !== "custom"}
-                    onValidityChange={setKeyValid}
                   />
                 </div>
                 <div className="grid gap-1.5">

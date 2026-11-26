@@ -8,7 +8,6 @@ import {
   type ProviderInstanceConfigMap,
   ServerSettings,
 } from "@ankielcode/contracts";
-import * as NodeUtil from "node:util";
 
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -20,7 +19,6 @@ import * as Path from "effect/Path";
 import * as Stream from "effect/Stream";
 
 import * as Settings from "../serverSettings.ts";
-import * as SecretResolver from "../secrets/SecretResolver.ts";
 import { BUILT_IN_DRIVERS, type BuiltInDriversEnv } from "./builtInDrivers.ts";
 import * as ProviderInstanceRegistry from "./ProviderInstanceRegistry.ts";
 import * as ProviderInstanceRegistryMutator from "./ProviderInstanceRegistryMutator.ts";
@@ -126,39 +124,21 @@ export const seedDevReplayInstance = Effect.fn(
   });
 });
 
-// A label is display-only, so only kind and config can change what a vault returns.
-const vaultConfigs = (settings: ServerSettings) =>
-  Object.entries(settings.secretProviders).map(([id, { kind, config }]) => [id, kind, config]);
-
 // A host built earlier (for the ACP registry) lacks PortDiscovery; build this one fresh.
 export const providerHostLayer = Layer.fresh(ProviderHostLive.layer);
 
-export const layerSettingsWatcher = (
-  settingsChanges: Stream.Stream<ServerSettings>,
-  // The settings the registry was built from: a change queued during startup differs from these.
-  initialSettings: ServerSettings | undefined,
-) =>
+export const layerSettingsWatcher = (settingsChanges: Stream.Stream<ServerSettings>) =>
   Layer.effectDiscard(
     Effect.gen(function* () {
       const mutator = yield* ProviderInstanceRegistryMutator.ProviderInstanceRegistryMutator;
       const serverSettings = yield* Settings.ServerSettingsService;
-      let secretProviders = initialSettings && vaultConfigs(initialSettings);
       yield* settingsChanges.pipe(
         Stream.runForEach(() =>
           // The subscription predates the seed read, so a queued change can be
           // older than the seed. A failed current read must leave the registry intact.
           serverSettings.getSettings.pipe(
             Effect.flatMap((current) =>
-              Effect.gen(function* () {
-                yield* mutator.reconcile(deriveProviderInstanceConfigMap(current));
-                // Reconcile leaves instances parked on an unreadable secret alone,
-                // and a corrected secret provider is what can make them readable.
-                const next = vaultConfigs(current);
-                if (!NodeUtil.isDeepStrictEqual(secretProviders, next)) {
-                  secretProviders = next;
-                  yield* mutator.reloadSecrets();
-                }
-              }),
+              mutator.reconcile(deriveProviderInstanceConfigMap(current)),
             ),
             Effect.catchCause((cause) =>
               Effect.logError("ProviderInstanceRegistry reconcile failed", cause),
@@ -200,12 +180,9 @@ export const layer: Layer.Layer<
       Layer.provide(AcpRegistrySupport.layerFromHost),
       Layer.provide(providerHostLayer),
       Layer.provide(Layer.succeed(HostProcess.Environment, hostEnvironment)),
-      Layer.provide(SecretResolver.layer),
     );
 
-    return layerSettingsWatcher(settingsChanges, initialSettings).pipe(
-      Layer.provideMerge(layerMutable),
-    );
+    return layerSettingsWatcher(settingsChanges).pipe(Layer.provideMerge(layerMutable));
   }),
 ) as Layer.Layer<
   | ProviderInstanceRegistry.ProviderInstanceRegistry

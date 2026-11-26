@@ -678,7 +678,6 @@ export type ServerEventLoopStall = typeof ServerEventLoopStall.Type;
 
 /** The boolean `ANKIEL_FEATURE_FLAGS` a server started with. Unset flags are off. */
 export const ServerFeatureFlags = Schema.Struct({
-  secretProviders: Schema.optionalKey(Schema.Boolean),
   tanstackSource: Schema.optionalKey(Schema.Boolean),
 });
 export type ServerFeatureFlags = typeof ServerFeatureFlags.Type;
@@ -719,12 +718,6 @@ export const ServerConfig = Schema.Struct({
   threadFind: Schema.optionalKey(Schema.Boolean),
   threadFindProgressive: Schema.optionalKey(Schema.Boolean),
   featureFlags: Schema.optionalKey(ServerFeatureFlags),
-  /** Settings patches may carry `secretProviders`; older servers drop the key without an error. */
-  secretProviderSettings: Schema.optionalKey(Schema.Boolean),
-  /** Secret settings may point at a secret provider; older servers drop the reference. */
-  secretReferences: Schema.optionalKey(Schema.Boolean),
-  /** A secret request card may be answered with a secret provider reference. */
-  secretRequestReferences: Schema.optionalKey(Schema.Boolean),
   scratchWorkspaceRoot: Schema.optionalKey(TrimmedNonEmptyString),
   newProjectsRoot: Schema.optionalKey(TrimmedNonEmptyString),
   /**

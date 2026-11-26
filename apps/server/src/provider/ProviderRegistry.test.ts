@@ -89,7 +89,6 @@ import * as ProviderRegistry from "./ProviderRegistry.ts";
 import { ProviderDriverError } from "@ankielcode/provider-core/server/errors";
 import { mergeProviderInstanceEnvironment } from "@ankielcode/provider-core/server/instanceEnvironment";
 import { makeManualOnlyProviderMaintenanceCapabilities } from "@ankielcode/provider-core/server/maintenanceResolver";
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import * as ProviderHostPathWatcher from "./ProviderHostPathWatcher.ts";
 import * as DesktopTelemetryReceiver from "../resourceTelemetry/DesktopTelemetryReceiver.ts";
 vi.mock("@anthropic-ai/claude-agent-sdk", { spy: true });
@@ -1900,7 +1899,7 @@ it.layer(
         const built = yield* ProviderInstanceRegistry.makeProviderInstanceRegistry({
           drivers: [driver],
           configMap: { [instanceId]: { driver: driverKind, enabled: true } },
-        }).pipe(Effect.provide(Layer.mock(SecretResolver.SecretResolver)({})));
+        });
         yield* Effect.gen(function* () {
           const registry = yield* ProviderRegistry.ProviderRegistry;
           const running = replay ? undefined : yield* registry.refresh().pipe(Effect.forkScoped);

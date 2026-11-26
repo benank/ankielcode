@@ -312,7 +312,6 @@
   "610aea624f895a78": "Sparad säkert och hålls privat",
   "8cc00444f7443feb": "Avböjd",
   "acd01e781e2355cc": "Begäran avslutades",
-  "329b7854b7e0546e": "Använd en 1Password-referens som {example}.",
   "97e4c50a99272f63": "Kunde inte svara på begäran. Försök igen.",
   "420bea546d5f8802": "Tråden kopierades",
   "2efb2dd3bf170f67": "Det gick inte att kopiera tråden",
@@ -6818,9 +6817,9 @@
   "ef5fef499da688e8": "Ersätt API-nyckel",
   "cad38c8893ab98e4": "API-nyckel",
   "42ec8bbd6819af00": "API-nyckel för {company}",
-  "03d751a890780a70": "Referens till API-nyckel för {company}",
   "2db595fcf95d3ff6": "Ange API-nyckel",
   "7aa0d5470ed46175": "Ange en API-nyckel, inte en URL eller en hemlighetsreferens.",
+  "cfacaad3134382ef": "Read from the secret provider “{provider}”, which Ankiel Code no longer supports. Enter the value to replace it.",
   "dad7aceef19f0f5b": "Om du uppdaterar nyckeln förblir diktering aktiverad.",
   "015e394f14d5ede0": "Lämna tomt för att behålla den sparade nyckeln.",
   "0a9e4d44c145cd07": "Alla med dikteringsåtkomst till {environment} kan debitera den här nyckeln.",
@@ -7342,7 +7341,6 @@
   "287b18c47ec92be0": "Inloggad som {account} med åtkomsttoken som sparats här.",
   "9f07a56693256c4d": "Inloggad som {account} med EXPO_TOKEN på servern.",
   "ba4c99506ff9822a": "Inloggad som {account} med serverns eas login.",
-  "972be7e4b4a995a0": "Ange en giltig hemlighetsreferens.",
   "aa4df315152b7b70": "Antalet inaktiva minuter måste vara mindre än sessionsminuterna.",
   "e96801c9ea01d761": "Ge värden en etikett och gränser inom de visade intervallen.",
   "c2839b56a6559626": "Lägg till Expo-värd",
@@ -8589,80 +8587,6 @@
   "a8fad08ceff4e04f": "Inaktiverade uppgifter sparas men körs inte.",
   "af3bf76ebab013ff": "Sparad hemlighet, ange ett nytt värde för att ersätta den",
   "6d5cbb6a55929e77": "Inte angiven",
-  "6855de06fd5c0e7f": "Ange ett namn.",
-  "eb91d60b57d46345": "Ange 1Password-kontot.",
-  "67678fd68bb24d27": "Namnet måste innehålla minst en bokstav eller siffra.",
-  "fe6fc15c3bb8022e": "Det finns redan en hemlighetsleverantör med det här namnet.",
-  "0c816bce39329beb": "Redigera {label}",
-  "02f531b974fc3dd5": "Lägg till en 1Password-leverantör",
-  "acbf0b4710755dc1": "Personlig",
-  "bc714daca44e1826": "Spara ändringar",
-  "787b3fff435313e4": [
-    "Leverantörsvariabler på ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " kan läsa värden från den via namn. Värden läses med op-CLI:t på den servern när en leverantör startar."
-  ],
-  "daf8daec701f0863": "Konto",
-  "c3d6c8494c7d4b8f": "Kontots kortnamn, inloggningsadressen utan https:// eller id:t som op account list visar.",
-  "afa8b4a2e025dd36": "Värde",
-  "13f8f1e086293635": "Källa för {label}",
-  "4579dce838e7c0a3": "Kunde inte nå servern",
-  "72906d2339314412": "Du kan inte kontrollera hemligheter i den här miljön",
-  "314546d4d3481e1f": "Kontrollera att hemligheten kan lösas",
-  "957c652364c674b4": "Kontrollerar hemligheten",
-  "d4ce4e6e4826e278": "Hemligheten löstes",
-  "40916e46dfac8738": "{label} misslyckades: {detail}",
-  "9064b191dab9f782": "{label} löstes",
-  "4d12d2e6d168fdb5": "Referens för {label}",
-  "f7b9aef971c1ce37": "Kontrollera {label}",
-  "3e3cabe47b0b5c07": "Röst · {provider}",
-  "cd90b098a17bca20": "Inga hemlighetsleverantörer konfigurerade.",
-  "1c9374501ee389d3": "Lägg till ett 1Password-konto och välj det sedan som källa för en leverantörsvariabel.",
-  "382541febe15f472": "Växla kontots synlighet",
-  "40426afd511710f8": "Leverantör som inte stöds ({kind})",
-  "bc57b89d73b712d1": [
-    "Uppdatera Ankiel Code på ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " för att hantera dess hemlighetsleverantörer."
-  ],
-  "13d4f258e93f1dc1": "Anslut en miljö för att hantera de hemlighetsleverantörer som dess leverantörsvariabler läser från.",
-  "88466f5a03be2419": "Inställning för hela miljön. Välj en miljö för att ändra den.",
-  "a3538ba5ca802bd7": [
-    "Ta bort ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    "?"
-  ],
-  "0d5b3b39f92c04e4": "Ta bort leverantör",
-  "c52bdbe39649742c": [
-    "Inget läser från ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    ". Själva hemligheterna påverkas inte."
-  ],
-  "59c40978bc7c05ad": [
-    "De här läser från ",
-    {
-      "i": 1,
-      "k": "_gt_value_1",
-      "v": "v"
-    },
-    " och kommer att avmarkeras. Själva hemligheterna påverkas inte."
-  ],
   "910a79263d640e22": "Tillåtet",
   "43e5c059e5308eee": "Inte beviljat",
   "32659cddbd37d220": "De här behörigheterna gäller din aktiva rutt. Andra rutter kan ha andra behörigheter.",
@@ -9372,6 +9296,7 @@
     "-värd använder, eller stäng av en värd."
   ],
   "9e8b725de0072098": "Inloggad som",
+  "daf8daec701f0863": "Konto",
   "25d2d58cd2a8f103": [
     "Aktivt ",
     {
@@ -9945,6 +9870,7 @@
   "1d4f61e89b446440": "Minimera temaredigeraren",
   "13e2b78d333a32ee": "Stäng temaredigeraren",
   "9137253dc9576644": "Slå ihop med ”{label}”",
+  "bc714daca44e1826": "Spara ändringar",
   "e80f1a3dfabdbae1": "Lägg till ljus palett",
   "e86fd314d1599271": "Lägg till mörk palett",
   "f2ba1c687d850d82": "Temanamn",
@@ -10029,6 +9955,7 @@
   "d4d21ada26ceeb4e": "Använd temat {label}, aktivt nu",
   "1ad8f0ea72e46432": "Använd temat {label}",
   "8ef2b7c62fc504fa": "Duplicera {label}",
+  "0c816bce39329beb": "Redigera {label}",
   "885721ab59f2647b": "Exportera {label}",
   "161ae90f23219c76": "Ta bort teman från {collectionLabel}",
   "0a539f726e6982d3": "Ta bort {label}",
@@ -10122,6 +10049,15 @@
   ],
   "f54364b854a07918": "Inga hubbar konfigurerade.",
   "4cf6a373a7535324": "{name} · Inaktiverad",
+  "a3538ba5ca802bd7": [
+    "Ta bort ",
+    {
+      "i": 1,
+      "k": "_gt_value_1",
+      "v": "v"
+    },
+    "?"
+  ],
   "1d1e9cda847bd398": "Hubbens hanteringsnyckel tas bort från den här servern. Dess konton försvinner från vyn Gränser; själva hubben påverkas inte. Lägg till den igen med URL och nyckel för att få tillbaka dem.",
   "c9bee4f93481b77a": "Ta bort hubb",
   "0424112d5a0ecd71": "Auto",
@@ -10394,7 +10330,6 @@
   "2ab325baee3ec9a3": "Schemalagda uppgifter",
   "0a59e086514a62a9": "Versionshantering och ärenden",
   "1de0df2b8a4fb96e": "Delning och åtkomst",
-  "4c70e3e7b3e6c493": "Hemligheter",
   "79b768229c9ef672": "Underhåll",
   "f41ea186c275b56e": "Om",
   "af4b7734da1d5ce7": "Röst",
@@ -10580,10 +10515,6 @@
   "cbf49f84e7f456e5": "Lastbalansering",
   "6f1a769805a28197": "automatisk dator miljö resurser cpu minne kapacitet preferens vikt delade projekt",
   "563b1163723f019b": "Delning av pull requests",
-  "40c9f6f66a0139ff": "Hemlighetsleverantörer",
-  "fd4ec272764a2405": "1password valv autentiseringsuppgifter api-nyckel",
-  "ff679e74f97044e6": "Lägg till hemlighetsleverantör",
-  "ddd5990f613aebb4": "nytt 1password valv op cli konto",
   "b9b1dccabd2ed00d": "Arkiverade trådar",
   "f505371f6f6fd624": "återställ öppna igen borttagen historik projekt",
   "2ed592dc3ae2e382": "Ge värden en etikett.",

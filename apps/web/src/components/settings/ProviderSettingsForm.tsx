@@ -5,7 +5,6 @@ import {
   acceptsSecretReference,
   isSecretReference,
   isSecretSetting,
-  type EnvironmentId,
   type ProviderSettingsFormAnnotation,
   type ProviderSettingsFormControl,
   type ProviderSettingsFormOption,
@@ -21,7 +20,7 @@ import { Button } from "../ui/button";
 import { DraftInput } from "../ui/draft-input";
 import { Input } from "../ui/input";
 import { SecretInput } from "./SecretInput";
-import { SecretSourceInput, useSecretSources } from "./SecretSourceInput";
+import { SecretSourceInput } from "./SecretSourceInput";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
@@ -506,8 +505,6 @@ interface ProviderSettingsFormProps {
   readonly idPrefix: string;
   readonly variant: "card" | "dialog" | "settings";
   readonly onChange: (nextConfig: Record<string, unknown> | undefined) => void;
-  /** Where the secret providers offered for `SettingsSecretValue` fields are configured. */
-  readonly environmentId?: EnvironmentId | undefined;
 }
 
 function SecretSettingsControl({
@@ -515,18 +512,15 @@ function SecretSettingsControl({
   value,
   inputId,
   descriptionId,
-  environmentId,
   onChange,
 }: {
   readonly field: ProviderSettingsFieldModel;
   readonly value: unknown;
   readonly inputId: string;
   readonly descriptionId: string | undefined;
-  readonly environmentId: EnvironmentId;
   readonly onChange: ProviderSettingsFormProps["onChange"];
 }) {
   const gt = useGT();
-  const sources = useSecretSources(environmentId);
   const saved =
     value !== null && typeof value === "object"
       ? (value as Record<string, unknown>)[field.key]
@@ -543,12 +537,7 @@ function SecretSettingsControl({
         className="min-w-0 flex-1"
         value={reference ?? ""}
         configured={reference === undefined && configured}
-        sources={sources}
-        environmentId={environmentId}
         onCommit={(next) => onChange(nextProviderConfigWithFieldValue(value, field, next))}
-        onSecretChange={(secret) =>
-          onChange(nextProviderConfigWithFieldValue(value, field, secret ?? ""))
-        }
       />
       {configured ? (
         <Button
@@ -668,7 +657,6 @@ interface ProviderSettingsFieldRowProps {
   readonly idPrefix: string;
   readonly variant: ProviderSettingsFormProps["variant"];
   readonly onChange: ProviderSettingsFormProps["onChange"];
-  readonly environmentId: EnvironmentId | undefined;
 }
 
 function ProviderSettingsFieldRow({
@@ -677,7 +665,6 @@ function ProviderSettingsFieldRow({
   idPrefix,
   variant,
   onChange,
-  environmentId,
 }: ProviderSettingsFieldRowProps) {
   const gt = useGT();
   const inputId = `${idPrefix}-${field.key}`;
@@ -725,13 +712,12 @@ function ProviderSettingsFieldRow({
           placeholder={field.placeholder}
           spellCheck={false}
         />
-      ) : field.acceptsSecretReference && environmentId !== undefined ? (
+      ) : field.acceptsSecretReference ? (
         <SecretSettingsControl
           field={field}
           value={value}
           inputId={inputId}
           descriptionId={descriptionId}
-          environmentId={environmentId}
           onChange={onChange}
         />
       ) : field.secret ? (
@@ -884,7 +870,6 @@ export function ProviderSettingsForm({
   idPrefix,
   variant,
   onChange,
-  environmentId,
 }: ProviderSettingsFormProps) {
   const resolve = useMessages();
   const fields = deriveProviderSettingsFields(definition, value, resolve);
@@ -906,7 +891,6 @@ export function ProviderSettingsForm({
           idPrefix={idPrefix}
           variant={variant}
           onChange={onChange}
-          environmentId={environmentId}
         />
       ))}
       {isLocalAcp ? <ProviderCommandArguments value={value} onChange={onChange} /> : null}

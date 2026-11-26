@@ -37,7 +37,6 @@ import * as ThreadManagementService from "../orchestration-v2/ThreadManagementSe
 import * as ServerSettings from "../serverSettings.ts";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import * as McpProviderSessions from "@ankielcode/provider-core/server/McpProviderSessions";
-import * as SecretResolver from "@ankielcode/secret-provider-core/server/SecretResolver";
 import { checkpointWorkspace } from "@ankielcode/provider-testing/replayWorkspace";
 import * as ProviderReplayHarness from "../orchestration-v2/testkit/ProviderReplayHarness.ts";
 import {
@@ -277,7 +276,6 @@ describe("orchestrator MCP toolkit", () => {
         Layer.provideMerge(
           SecretRequests.layer.pipe(
             Layer.provide(layerMemorySecretStore),
-            Layer.provide(Layer.mock(SecretResolver.SecretResolver)({})),
             Layer.provide(layerOrchestration),
           ),
         ),

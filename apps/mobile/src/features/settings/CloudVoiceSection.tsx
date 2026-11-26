@@ -2,13 +2,7 @@ import { T, useGT, useMessages } from "gt-react-native";
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { cloudSpeechDisclosure } from "@ankielcode/shared/speechCopy";
 import { setCloudSpeechKey } from "@ankielcode/client-runtime/voice-input";
-import { hasFeatureFlag } from "@ankielcode/client-runtime/state/server";
 import {
-  configuredSecretSources,
-  secretRequestReference,
-} from "@ankielcode/client-runtime/secret-request";
-import {
-  AuthProvidersManageScope,
   AuthSettingsWriteScope,
   CLOUD_SPEECH_LABELS,
   CLOUD_SPEECH_PROVIDER_NAMES,
@@ -17,8 +11,6 @@ import {
   CloudSpeechModelId,
   isSecretReference,
   type CloudSpeechModel,
-  type SecretProviderId,
-  type SettingsSecretValue,
   type VoiceTranscriptionDestination,
 } from "@ankielcode/contracts";
 import * as Schema from "effect/Schema";
@@ -31,7 +23,6 @@ import { ProviderIcon } from "../../components/ProviderIcon";
 import { AppText as Text } from "../../components/ui/AppText";
 import { ListActionRow } from "../../components/ui/ListActionRow";
 import { ListChoiceRow } from "../../components/ui/ListChoiceRow";
-import { Chip } from "../../components/ui/Chip";
 import { ListSection } from "../../components/ui/ListSection";
 import type { EnvironmentPresentation } from "../../state/environments";
 import { useEnvironmentScope } from "../../state/session";
@@ -189,7 +180,6 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
   const keys = useAtomValue(cloudVoiceKeysAtom(id));
   const reload = useAtomRefresh(cloudVoiceKeysAtom(id));
   const canManage = useEnvironmentScope(id, AuthSettingsWriteScope);
-  const canUseReferences = useEnvironmentScope(id, AuthProvidersManageScope);
   const [editing, setEditing] = useState<{
     provider: CloudSpeechProvider;
     enable: boolean;
@@ -199,20 +189,7 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
   const reloadModels = useAtomRefresh(catalogAtom);
   const [draft, setDraft] = useState("");
   const [model, setModel] = useState("");
-  const [sourceId, setSourceId] = useState<SecretProviderId | null>(null);
-  const sources =
-    canUseReferences &&
-    hasFeatureFlag(environment.serverConfig, "secretProviders") &&
-    environment.serverConfig?.secretReferences
-      ? configuredSecretSources(environment.serverConfig.settings.secretProviders, messages)
-      : [];
-  const source = sources.find((candidate) => candidate.id === sourceId);
-  const credential =
-    sourceId !== null
-      ? source && secretRequestReference(source, draft)
-      : isApiKey(draft.trim())
-        ? draft.trim()
-        : undefined;
+  const credential = isApiKey(draft.trim()) ? draft.trim() : undefined;
   const [saving, setSaving] = useState(false);
   const activeModel = active?.provider === "openrouter" ? active.model : undefined;
   const enable = (commit: () => void) => {
@@ -226,13 +203,7 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
     }
   };
   const edit = (provider: CloudSpeechProvider, enable: boolean) => {
-    const stored = environment.serverConfig?.settings.cloudSpeechCredentials?.[provider];
-    const ref =
-      isSecretReference(stored) && sources.some((candidate) => candidate.id === stored.provider)
-        ? stored
-        : null;
-    setSourceId(ref?.provider ?? null);
-    setDraft(ref?.reference ?? "");
+    setDraft("");
     setModel(provider === "openrouter" ? (activeModel ?? "") : "");
     setEditing({ provider, enable });
   };
@@ -243,7 +214,7 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
   };
   const changeKey = async (
     provider: CloudSpeechProvider,
-    value: SettingsSecretValue | null,
+    value: string | null,
     chosen?: CloudSpeechModelId,
   ) => {
     if (!connection || !canManage || saving) return;
@@ -361,15 +332,10 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
     const isActive = active?.provider === provider;
     const modelChosen = isModelId(model) && (catalog?.some((entry) => entry.id === model) ?? false);
     const modelChanged = model !== (activeModel ?? "");
-    const original = environment.serverConfig?.settings.cloudSpeechCredentials?.[provider];
-    const keyChanged =
-      credential !== undefined &&
-      !(
-        isSecretReference(credential) &&
-        isSecretReference(original) &&
-        original.provider === credential.provider &&
-        original.reference === credential.reference
-      );
+    // Saved by a build that read keys from a secret provider; this one cannot read it.
+    const stored = environment.serverConfig?.settings.cloudSpeechCredentials?.[provider];
+    const unsupported = isSecretReference(stored) ? stored : null;
+    const keyChanged = credential !== undefined;
     const routedReady =
       modelChosen &&
       (draft.trim() ? credential !== undefined : Boolean(key)) &&
@@ -389,23 +355,28 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
     };
     const keyFooter =
       draft && !credential
-        ? (source?.invalidReferenceMessage ?? gt("Enter a valid API key."))
-        : routed
-          ? key && !credential
-            ? gt(
-                "Uses the API key saved on this environment. The model choice applies only to this device.",
-              )
-            : gt("Anyone with dictation access to {environment} can bill this key.", {
-                environment: environment.label,
-              })
-          : editing.enable
-            ? gt("Anyone with dictation access to {environment} can bill this key.", {
-                environment: environment.label,
-              })
-            : gt(
-                "Updates the {company} key on {environment}. Your dictation destination stays the same.",
-                { company, environment: environment.label },
-              );
+        ? gt("Enter a valid API key.")
+        : unsupported !== null
+          ? gt(
+              "Read from the secret provider “{provider}”, which Ankiel Code no longer supports. Enter the value to replace it.",
+              { provider: unsupported.provider },
+            )
+          : routed
+            ? key && !credential
+              ? gt(
+                  "Uses the API key saved on this environment. The model choice applies only to this device.",
+                )
+              : gt("Anyone with dictation access to {environment} can bill this key.", {
+                  environment: environment.label,
+                })
+            : editing.enable
+              ? gt("Anyone with dictation access to {environment} can bill this key.", {
+                  environment: environment.label,
+                })
+              : gt(
+                  "Updates the {company} key on {environment}. Your dictation destination stays the same.",
+                  { company, environment: environment.label },
+                );
     return (
       <>
         <Text className="px-2 text-sm text-foreground-muted">{disclosure}</Text>
@@ -435,45 +406,14 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
         {canManage ? (
           <ListSection title={gt("API key")} footer={keyFooter}>
             <View className="gap-3 px-4 py-3">
-              {sources.length > 0 && (
-                <View className="flex-row flex-wrap gap-2">
-                  <Chip
-                    label={gt("Value", { $context: "enter the secret value directly" })}
-                    size="small"
-                    selected={sourceId === null}
-                    disabled={saving}
-                    onPress={() => {
-                      setDraft("");
-                      setSourceId(null);
-                    }}
-                  />
-                  {sources.map((candidate) => (
-                    <Chip
-                      key={candidate.id}
-                      label={candidate.label}
-                      size="small"
-                      selected={sourceId === candidate.id}
-                      disabled={saving}
-                      onPress={() => {
-                        setDraft("");
-                        setSourceId(candidate.id);
-                      }}
-                    />
-                  ))}
-                </View>
-              )}
               <TextInput
-                key={sourceId ?? "literal"}
-                accessibilityLabel={
-                  sourceId
-                    ? gt("{provider} API key reference", { provider: label })
-                    : gt("{provider} API key", { provider: label })
-                }
+                accessibilityLabel={gt("{provider} API key", { provider: label })}
                 placeholder={
-                  source?.referencePlaceholder ??
-                  (key ? gt("Saved key · enter a new one to replace") : gt("API key"))
+                  key && unsupported === null
+                    ? gt("Saved key · enter a new one to replace")
+                    : gt("API key")
                 }
-                secureTextEntry={sourceId === null}
+                secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoComplete="off"
