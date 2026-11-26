@@ -1,8 +1,8 @@
 diff --git a/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsUtils.h b/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsUtils.h
-index 675b1b7..dea79ba 100644
+index cda418f2f0fa35550f72d9f82a35dc01a2237bfe..ec404030ba6ff68579acdf7405dc830a7f652854 100644
 --- a/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsUtils.h
 +++ b/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsUtils.h
-@@ -247,7 +247,9 @@ static inline bool isRNSScreenOrStack(const std::shared_ptr<LightNode> &node) {
+@@ -460,7 +460,9 @@ static inline bool isRNSScreenOrStack(const std::shared_ptr<LightNode> &node) {
    const auto componentName = node->current.componentName;
    react_native_assert(componentName && "Component name is nullptr");
    return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
