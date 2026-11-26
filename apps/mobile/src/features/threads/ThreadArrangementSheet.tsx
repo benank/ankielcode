@@ -1,5 +1,5 @@
 import { LegendList, type LegendListRef } from "@legendapp/list/react-native";
-import { SheetHeader } from "../../components/ui/SheetHeader";
+import { FullSheet } from "../../components/ui/FullSheet";
 import { appAtomRegistry } from "../../state/atom-registry";
 import { useAtomValue } from "@effect/atom-react";
 import type { EnvironmentThreadShell } from "@ankielcode/client-runtime/state/shell";
@@ -7,11 +7,10 @@ import { effectiveSnoozed } from "@ankielcode/client-runtime/state/thread-settle
 import { sortInboxThreadsByReturn } from "@ankielcode/client-runtime/state/thread-inbox";
 import { msg, T, useGT, useMessages } from "gt-react-native";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Modal, Pressable, useWindowDimensions, View } from "react-native";
-import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
+import { Animated, Pressable, useWindowDimensions, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Reanimated, { ReduceMotion, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { threadDragGapOffset } from "./threadDragGap";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView } from "../../components/ui/AppSymbol";
@@ -270,6 +269,7 @@ function ThreadArrangementSheet(props: { onClose: () => void }) {
   const drag = useRef<Drag | null>(null);
   const frame = useRef<number | null>(null);
   const [preview, setPreview] = useState<Drag | null>(null);
+  const [held, setHeld] = useState(false);
   const [translateY] = useState(() => new Animated.Value(0));
   const latest = useRef({ rows, planners, moveThread });
   // oxlint-disable-next-line react/refs -- The autoscroll rAF loop started at drag start reads the current rows and planners on every frame.
@@ -280,6 +280,7 @@ function ThreadArrangementSheet(props: { onClose: () => void }) {
     frame.current = null;
     drag.current = null;
     setPreview(null);
+    setHeld(false);
   }
   const orderVersion = rows
     .map(
@@ -349,6 +350,7 @@ function ThreadArrangementSheet(props: { onClose: () => void }) {
       destination: null,
     };
     setPreview({ ...drag.current });
+    setHeld(true);
     update(0);
     // oxlint-disable-next-line react/purity -- runs in an event handler (oxc#27309)
     let last = performance.now();
@@ -395,228 +397,205 @@ function ThreadArrangementSheet(props: { onClose: () => void }) {
       (!targetRow.thread || destination?.placement === "after" ? targetRow.height : 0)
     : sourceRow?.offset;
   return (
-    <Modal
-      visible
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={props.onClose}
+    <FullSheet
+      title={gt("Arrange threads")}
+      accessibilityLabel={gt("Close arrange threads")}
+      onClose={props.onClose}
+      // The finger on a handle would otherwise also drag the sheet away.
+      dismissDisabled={held}
     >
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        {/* A Modal is its own native hierarchy, so measure its own safe area, including side
-            insets for the camera, instead of the presenting screen's. */}
-        <SafeAreaProvider style={{ flex: 1 }}>
-          <View className="flex-1 bg-screen">
-            <SafeAreaView style={{ flex: 1 }}>
-              <SheetHeader
-                presentation="inline"
-                title={gt("Arrange threads")}
-                onClose={props.onClose}
-                accessibilityLabel={gt("Close arrange threads")}
-              />
-              <Text className="px-5 pb-3 text-sm text-foreground-muted">
-                <T>Drag to reorder, pin, or settle. Changes save when you drop.</T>
-              </Text>
-              <View
-                onLayout={(event) => {
-                  geometry.current.height = event.nativeEvent.layout.height;
-                }}
-                className="flex-1"
-                style={{ overflow: "hidden" }}
+      <Text className="px-5 pb-3 text-sm text-foreground-muted">
+        <T>Drag to reorder, pin, or settle. Changes save when you drop.</T>
+      </Text>
+      <View
+        onLayout={(event) => {
+          geometry.current.height = event.nativeEvent.layout.height;
+        }}
+        className="flex-1"
+        style={{ overflow: "hidden" }}
+      >
+        {/* oxlint-disable-next-line ankielcode/require-registered-list-scroll -- The list sits below the sheet's bar, never under it: the drag maps touches to rows from an unpadded scroll offset. */}
+        <LegendList
+          ref={list}
+          data={rows}
+          keyExtractor={(row) => row.key}
+          extraData={{
+            visiblePreview,
+            insertionOffset,
+            dropBusy,
+            pendingOrder,
+            listEnvironments,
+            planners,
+            configs,
+          }}
+          // Rows hold their drag gesture, so each keeps its own view.
+          recycleItems={false}
+          scrollEnabled={visiblePreview === null}
+          onScroll={(event) => {
+            geometry.current.offset = event.nativeEvent.contentOffset.y;
+          }}
+          scrollEventThrottle={16}
+          getFixedItemSize={(row) => row.height}
+          renderItem={({ item }) => {
+            const thread = item.thread;
+            const planner =
+              item.section === "pinned" || item.section === "active"
+                ? planners[item.section]
+                : null;
+            const configLoaded = thread ? configs.has(thread.environmentId) : false;
+            const sectionActions = thread
+              ? (["pinned", "active", "settled"] as const).flatMap<{
+                  name: "pinned" | "active" | "settled";
+                  label: string;
+                }>((section) => {
+                  if (section === item.section) return [];
+                  const label = threadDragAction(item.section, section, m);
+                  if (!label) return [];
+                  if (section === "settled") return configLoaded ? [{ name: section, label }] : [];
+                  if (
+                    ((section === "pinned" || thread.pinnedAt != null) && !configLoaded) ||
+                    (section === "active" && item.section === "settled" && !configLoaded) ||
+                    (section === "active" && item.section === "snoozed" && !configLoaded)
+                  )
+                    return [];
+                  return planners[section](item.key, {
+                    section,
+                    targetId: null,
+                    placement: "before",
+                  })
+                    ? [{ name: section, label }]
+                    : [];
+                })
+              : [];
+            return (
+              <ArrangementRow
+                height={item.height}
+                dragging={visiblePreview !== null}
+                lifted={item.key === sourceRow?.key}
+                offset={
+                  sourceRow && insertionOffset !== undefined
+                    ? threadDragGapOffset(
+                        item.offset,
+                        sourceRow.offset,
+                        sourceRow.height,
+                        insertionOffset,
+                      )
+                    : 0
+                }
               >
-                {/* oxlint-disable-next-line ankielcode/require-registered-list-scroll -- A full-screen Modal with an inline header; there is no navigation header to register with. */}
-                <LegendList
-                  ref={list}
-                  data={rows}
-                  keyExtractor={(row) => row.key}
-                  extraData={{
-                    visiblePreview,
-                    insertionOffset,
-                    dropBusy,
-                    pendingOrder,
-                    listEnvironments,
-                    planners,
-                    configs,
-                  }}
-                  // Rows hold their drag gesture, so each keeps its own view.
-                  recycleItems={false}
-                  scrollEnabled={visiblePreview === null}
-                  onScroll={(event) => {
-                    geometry.current.offset = event.nativeEvent.contentOffset.y;
-                  }}
-                  scrollEventThrottle={16}
-                  getFixedItemSize={(row) => row.height}
-                  renderItem={({ item }) => {
-                    const thread = item.thread;
-                    const planner =
-                      item.section === "pinned" || item.section === "active"
-                        ? planners[item.section]
-                        : null;
-                    const configLoaded = thread ? configs.has(thread.environmentId) : false;
-                    const sectionActions = thread
-                      ? (["pinned", "active", "settled"] as const).flatMap<{
-                          name: "pinned" | "active" | "settled";
-                          label: string;
-                        }>((section) => {
-                          if (section === item.section) return [];
-                          const label = threadDragAction(item.section, section, m);
-                          if (!label) return [];
-                          if (section === "settled")
-                            return configLoaded ? [{ name: section, label }] : [];
-                          if (
-                            ((section === "pinned" || thread.pinnedAt != null) && !configLoaded) ||
-                            (section === "active" && item.section === "settled" && !configLoaded) ||
-                            (section === "active" && item.section === "snoozed" && !configLoaded)
-                          )
-                            return [];
-                          return planners[section](item.key, {
-                            section,
-                            targetId: null,
-                            placement: "before",
-                          })
-                            ? [{ name: section, label }]
-                            : [];
-                        })
-                      : [];
-                    return (
-                      <ArrangementRow
-                        height={item.height}
-                        dragging={visiblePreview !== null}
-                        lifted={item.key === sourceRow?.key}
-                        offset={
-                          sourceRow && insertionOffset !== undefined
-                            ? threadDragGapOffset(
-                                item.offset,
-                                sourceRow.offset,
-                                sourceRow.height,
-                                insertionOffset,
-                              )
-                            : 0
-                        }
-                      >
-                        {thread ? (
-                          <>
-                            <Text numberOfLines={2} className="flex-1 text-base">
-                              {thread.title}
-                            </Text>
-                            <DragHandle
-                              title={thread.title}
-                              disabled={
-                                dropBusy ||
-                                pendingOrder !== null ||
-                                holdingRows ||
-                                (!listEnvironments.pinReorderEnvironmentIds.has(
-                                  thread.environmentId,
-                                ) &&
-                                  !listEnvironments.activeReorderEnvironmentIds.has(
-                                    thread.environmentId,
-                                  ))
-                              }
-                              sectionActions={sectionActions}
-                              onSectionMove={(section) => {
-                                void moveThread(thread, {
-                                  section,
-                                  targetId: null,
-                                  placement: "before",
-                                });
-                              }}
-                              canMoveUp={planner?.(item.key, "up") != null}
-                              canMoveDown={planner?.(item.key, "down") != null}
-                              onStep={(direction) => {
-                                void moveThread(thread, direction);
-                              }}
-                              onStart={() => start(item)}
-                              onMove={update}
-                              onEnd={(cancelled) => {
-                                const current = drag.current;
-                                if (cancelled || !current?.destination) {
-                                  stop();
-                                  return;
-                                }
-                                if (frame.current !== null) cancelAnimationFrame(frame.current);
-                                frame.current = null;
-                                drag.current = null;
-                                void moveThread(current.thread, current.destination).finally(stop);
-                              }}
-                            />
-                          </>
-                        ) : item.more ? (
-                          <Pressable
-                            disabled={olderSettledShelf.loading}
-                            className="flex-1 justify-center self-stretch"
-                            onPress={() => {
-                              olderSettledShelf.retry();
-                              setSettledVisibleCount(
-                                (count) => count + THREAD_LIST_V2_SETTLED_PAGE_COUNT,
-                              );
-                            }}
-                          >
-                            <Text className="text-sm text-foreground-muted">
-                              {olderSettledShelf.loading
-                                ? gt("Loading", { $context: "older threads are loading" })
-                                : olderSettledShelf.failed
-                                  ? gt("Could not load older threads. Retry")
-                                  : gt(
-                                      "{count, plural, one {Show more ({count} settled hidden)} other {Show more ({count} settled hidden)}}",
-                                      {
-                                        count: settledCount - visibleSettled.length,
-                                      },
-                                    )}
-                            </Text>
-                          </Pressable>
-                        ) : (
-                          <Pressable
-                            disabled={item.section === "pinned" || item.section === "active"}
-                            className="flex-1 justify-center self-stretch"
-                            onPress={() => {
-                              const section = item.section;
-                              if (section === "snoozed" || section === "settled")
-                                setExpanded((value) => ({ ...value, [section]: !value[section] }));
-                            }}
-                          >
-                            <Text className="text-sm font-ankiel-semibold text-foreground-muted">
-                              {gt("{section} ({count})", {
-                                section: m(SECTION_LABELS[item.section]),
-                                count:
-                                  item.section === "settled"
-                                    ? settledCount
-                                    : sections[item.section].length,
-                              })}
-                            </Text>
-                          </Pressable>
-                        )}
-                      </ArrangementRow>
-                    );
-                  }}
-                />
-                {visiblePreview ? (
-                  <Animated.View
-                    pointerEvents="none"
-                    className="absolute left-5 right-5 justify-center rounded-xl border border-border bg-screen px-4"
-                    style={{ top: 0, height: rowHeight, transform: [{ translateY }] }}
-                  >
-                    <Text
-                      numberOfLines={visiblePreview.destination?.section ? 1 : 2}
-                      className="text-base font-ankiel-medium"
-                    >
-                      {visiblePreview.thread.title}
+                {thread ? (
+                  <>
+                    <Text numberOfLines={2} className="flex-1 text-base">
+                      {thread.title}
                     </Text>
-                    {visiblePreview.destination?.section ? (
-                      <Text className="text-xs text-foreground-muted">
-                        {threadDragAction(
-                          visiblePreview.sourceSection,
-                          visiblePreview.destination.section,
-                          m,
-                        )}
-                      </Text>
-                    ) : null}
-                  </Animated.View>
-                ) : null}
-              </View>
-            </SafeAreaView>
-          </View>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
-    </Modal>
+                    <DragHandle
+                      title={thread.title}
+                      disabled={
+                        dropBusy ||
+                        pendingOrder !== null ||
+                        holdingRows ||
+                        (!listEnvironments.pinReorderEnvironmentIds.has(thread.environmentId) &&
+                          !listEnvironments.activeReorderEnvironmentIds.has(thread.environmentId))
+                      }
+                      sectionActions={sectionActions}
+                      onSectionMove={(section) => {
+                        void moveThread(thread, {
+                          section,
+                          targetId: null,
+                          placement: "before",
+                        });
+                      }}
+                      canMoveUp={planner?.(item.key, "up") != null}
+                      canMoveDown={planner?.(item.key, "down") != null}
+                      onStep={(direction) => {
+                        void moveThread(thread, direction);
+                      }}
+                      onStart={() => start(item)}
+                      onMove={update}
+                      onEnd={(cancelled) => {
+                        const current = drag.current;
+                        if (cancelled || !current?.destination) {
+                          stop();
+                          return;
+                        }
+                        if (frame.current !== null) cancelAnimationFrame(frame.current);
+                        frame.current = null;
+                        drag.current = null;
+                        setHeld(false);
+                        void moveThread(current.thread, current.destination).finally(stop);
+                      }}
+                    />
+                  </>
+                ) : item.more ? (
+                  <Pressable
+                    disabled={olderSettledShelf.loading}
+                    className="flex-1 justify-center self-stretch"
+                    onPress={() => {
+                      olderSettledShelf.retry();
+                      setSettledVisibleCount((count) => count + THREAD_LIST_V2_SETTLED_PAGE_COUNT);
+                    }}
+                  >
+                    <Text className="text-sm text-foreground-muted">
+                      {olderSettledShelf.loading
+                        ? gt("Loading", { $context: "older threads are loading" })
+                        : olderSettledShelf.failed
+                          ? gt("Could not load older threads. Retry")
+                          : gt(
+                              "{count, plural, one {Show more ({count} settled hidden)} other {Show more ({count} settled hidden)}}",
+                              {
+                                count: settledCount - visibleSettled.length,
+                              },
+                            )}
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    disabled={item.section === "pinned" || item.section === "active"}
+                    className="flex-1 justify-center self-stretch"
+                    onPress={() => {
+                      const section = item.section;
+                      if (section === "snoozed" || section === "settled")
+                        setExpanded((value) => ({ ...value, [section]: !value[section] }));
+                    }}
+                  >
+                    <Text className="text-sm font-ankiel-semibold text-foreground-muted">
+                      {gt("{section} ({count})", {
+                        section: m(SECTION_LABELS[item.section]),
+                        count:
+                          item.section === "settled" ? settledCount : sections[item.section].length,
+                      })}
+                    </Text>
+                  </Pressable>
+                )}
+              </ArrangementRow>
+            );
+          }}
+        />
+        {visiblePreview ? (
+          <Animated.View
+            pointerEvents="none"
+            className="absolute left-5 right-5 justify-center rounded-xl border border-border bg-screen px-4"
+            style={{ top: 0, height: rowHeight, transform: [{ translateY }] }}
+          >
+            <Text
+              numberOfLines={visiblePreview.destination?.section ? 1 : 2}
+              className="text-base font-ankiel-medium"
+            >
+              {visiblePreview.thread.title}
+            </Text>
+            {visiblePreview.destination?.section ? (
+              <Text className="text-xs text-foreground-muted">
+                {threadDragAction(
+                  visiblePreview.sourceSection,
+                  visiblePreview.destination.section,
+                  m,
+                )}
+              </Text>
+            ) : null}
+          </Animated.View>
+        ) : null}
+      </View>
+    </FullSheet>
   );
 }
 
