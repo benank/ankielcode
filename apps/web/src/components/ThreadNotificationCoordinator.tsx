@@ -237,22 +237,12 @@ export function startThreadNotifications(
   ) => {
     const previous = entry.previous;
     const next = new Map<ThreadId, NotificationState>();
-    // A parent here also hears of what its tasks on linked environments ask.
     const subagentRequests = registry.get(
       environmentThreadShells.pendingSubagentRequestsAtom(environmentId),
     );
-    const delegatedUnderParent = registry.get(environmentThreadShells.delegatedUnderParentAtom);
     const changed: Array<[NotificationState | undefined, NotificationState]> = [];
     for (const rawThread of threads) {
-      if (
-        isShownUnderParent(
-          { environmentId, threadId: rawThread.id },
-          rawThread.lineage,
-          delegatedUnderParent,
-        )
-      ) {
-        continue;
-      }
+      if (isShownUnderParent(rawThread.lineage)) continue;
       const prior = previous.get(rawThread.id);
       const subagentRequest = subagentRequests.get(rawThread.id) ?? null;
       if (
@@ -341,14 +331,9 @@ export function startThreadNotifications(
       environmentThreadShells.pendingSubagentRequestsAtom(environmentId),
       reobserve,
     );
-    const unsubscribeDelegated = registry.subscribe(
-      environmentThreadShells.delegatedUnderParentAtom,
-      reobserve,
-    );
     entry.unsubscribe = () => {
       unsubscribeShell();
       unsubscribeRequests();
-      unsubscribeDelegated();
       entry.gate.clear();
     };
     return entry;

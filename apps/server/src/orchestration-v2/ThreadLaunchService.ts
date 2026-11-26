@@ -9,9 +9,7 @@ import {
   type ModelSelection,
   type OrchestrationV2Actor,
   type OrchestrationV2CreationSource,
-  type OrchestrationV2DelegatedFrom,
   type OrchestrationV2WorkflowOrigin,
-  type OrchestrationV2LinkOrigin,
   type OrchestrationV2ProviderThreadNativeMetadata,
   type OrchestrationV2ThreadProjection,
   type ProviderDriverKind,
@@ -121,17 +119,13 @@ export interface ThreadLaunchInput {
   };
   readonly createdBy: OrchestrationV2Actor;
   readonly creationSource: OrchestrationV2CreationSource;
-  /** The linked environment this launch is for, if one asked for it. */
-  readonly linkOrigin?: OrchestrationV2LinkOrigin;
-  /** The parent there, when that environment's agent delegated this as a task. */
-  readonly delegatedFrom?: OrchestrationV2DelegatedFrom;
   /** The workflow run this thread is an agent step of. */
   readonly workflowRun?: OrchestrationV2WorkflowOrigin;
 }
 
 type PreparationInput = Pick<
   ThreadLaunchInput,
-  "commandId" | "projectId" | "workspaceStrategy" | "initialMessage" | "linkOrigin"
+  "commandId" | "projectId" | "workspaceStrategy" | "initialMessage"
 > & {
   readonly reusedWorktree?: { readonly baseRef: string };
 };
@@ -853,7 +847,7 @@ const make = Effect.gen(function* () {
                   projectStart: { refName: startRef, baseRefName },
                   baseBranch: input.workspaceStrategy.baseRef,
                   startFromOrigin: input.workspaceStrategy.startFromOrigin === true,
-                  projectCommands: TaskFolders.linkRunsProjectCommands(input.linkOrigin),
+                  projectCommands: true,
                   projectProgress: progress,
                   onClaimed: (taskFolder, claimedBranch) =>
                     Effect.sync(() => {
@@ -1178,7 +1172,7 @@ const make = Effect.gen(function* () {
                       root: removedTaskFolder,
                       force: true,
                       forget: true,
-                      projectCommands: TaskFolders.linkRunsProjectCommands(input.linkOrigin),
+                      projectCommands: true,
                       deleteBranch: removedBranch ?? undefined,
                     })
                     .pipe(
@@ -1497,10 +1491,6 @@ const make = Effect.gen(function* () {
                 ...(input.importedNativeThread === undefined
                   ? {}
                   : { importedNativeThread: input.importedNativeThread }),
-                ...(input.linkOrigin === undefined ? {} : { linkOrigin: input.linkOrigin }),
-                ...(input.delegatedFrom === undefined
-                  ? {}
-                  : { delegatedFrom: input.delegatedFrom }),
                 ...(input.workflowRun === undefined ? {} : { workflowRun: input.workflowRun }),
                 createdBy: input.createdBy,
                 creationSource: input.creationSource,
@@ -1611,17 +1601,8 @@ const make = Effect.gen(function* () {
                       branch: workspaceStrategy.branch,
                     }
                   : workspaceStrategy;
-            // The thread's link decides, as it does when preparation is retried: a request
-            // that reuses a thread names none.
-            const { linkOrigin: _requestLinkOrigin, ...preparation } = input;
             yield* schedulePreparation(
-              {
-                ...preparation,
-                workspaceStrategy: preparationStrategy,
-                ...(committedThread.linkOrigin === undefined
-                  ? {}
-                  : { linkOrigin: committedThread.linkOrigin }),
-              },
+              { ...input, workspaceStrategy: preparationStrategy },
               threadId,
               runId,
             );
@@ -1716,7 +1697,6 @@ const make = Effect.gen(function* () {
         commandId: input.commandId,
         projectId: thread.projectId,
         workspaceStrategy: reuse?.strategy ?? workspacePreparation,
-        ...(thread.linkOrigin === undefined ? {} : { linkOrigin: thread.linkOrigin }),
         ...(reuse === null ? {} : { reusedWorktree: reuse.reusedWorktree }),
         ...(message === undefined
           ? {}

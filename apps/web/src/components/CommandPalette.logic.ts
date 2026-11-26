@@ -39,7 +39,6 @@ import { formatRelativeTimeLabel } from "../timestampFormat";
 import { type Project, type SidebarThreadSummary, type Thread } from "../types";
 
 export const RECENT_THREAD_LIMIT = 12;
-const NO_THREAD_KEYS: ReadonlySet<string> = new Set();
 export const ITEM_ICON_CLASS = "size-4 text-icon-muted";
 export const ADDON_ICON_CLASS = "size-4";
 
@@ -448,21 +447,12 @@ export function buildThreadActionItems<TThread extends BuildThreadActionItemsThr
     runThread: (thread: TThread) => Promise<void>;
     /** Makes the environment searchable; pass it only with two or more environments. */
     environmentLabelOf?: (thread: TThread) => string | null;
-    /** Tasks linked environments run for a listed thread; they open from under that thread. */
-    delegatedUnderParent?: ReadonlySet<string>;
   },
   resolve: MessageResolver = m,
 ): CommandPaletteActionItem[] {
-  const delegatedUnderParent = input.delegatedUnderParent ?? NO_THREAD_KEYS;
   // Callers order these: recents by last use, search results by rank.
   const visibleThreads = input.threads.filter(
-    (thread) =>
-      thread.archivedAt === null &&
-      !isShownUnderParent(
-        { environmentId: thread.environmentId, threadId: thread.id },
-        thread.lineage,
-        delegatedUnderParent,
-      ),
+    (thread) => thread.archivedAt === null && !isShownUnderParent(thread.lineage),
   );
 
   return visibleThreads.map((thread) => {

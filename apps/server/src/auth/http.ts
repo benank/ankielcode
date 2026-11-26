@@ -17,7 +17,6 @@ import {
   EnvironmentScopeRequiredError,
   EnvironmentAuthenticatedAuth,
   EnvironmentAuthenticatedPrincipal,
-  mcpClientScopes,
 } from "@ankielcode/contracts";
 import type { AuthEnvironmentScope, DpopFailureReason } from "@ankielcode/contracts";
 import { parseOAuthScope } from "@ankielcode/shared/oauthScope";
@@ -490,10 +489,10 @@ export const layer = HttpApiBuilder.group(
           function* (args) {
             yield* annotateEnvironmentRequest(args.endpoint.name);
             const session = yield* requireEnvironmentScope(AuthAccessWriteScope);
-            const delegatedScopes = args.payload.access
-              ? mcpClientScopes(args.payload.access)
-              : (args.payload.scopes ?? AuthStandardClientScopes);
+            const delegatedScopes = args.payload.scopes ?? AuthStandardClientScopes;
             if (
+              args.payload.access !== undefined ||
+              args.payload.purpose !== undefined ||
               delegatedScopes.length === 0 ||
               new Set<AuthEnvironmentScope>(delegatedScopes).size !== delegatedScopes.length
             ) {

@@ -2189,7 +2189,7 @@ it.effect("starts, finishes and follows up a task without reading the parent's h
   }).pipe(Effect.provide(layerTest)),
 );
 
-it.effect("records a secret and a link card without reading the thread's history", () =>
+it.effect("records a secret card without reading the thread's history", () =>
   Effect.gen(function* () {
     const orchestrator = yield* Orchestrator.OrchestratorV2;
     const projections = yield* ProjectionStore.ProjectionStoreV2;
@@ -2215,7 +2215,7 @@ it.effect("records a secret and a link card without reading the thread's history
       commandId: CommandId.make("start-long-cards"),
       threadId,
       messageId: MessageId.make("message:long-cards"),
-      text: "Ask for a token and a link",
+      text: "Ask for a token",
       attachments: [],
       dispatchMode: { type: "start_immediately" },
       createdBy: "user",
@@ -2242,10 +2242,7 @@ it.effect("records a secret and a link card without reading the thread's history
       },
     });
 
-    const cardSpans = [
-      "orchestrationV2.dispatch.secretRequestRecord",
-      "orchestrationV2.dispatch.linkRequestRecord",
-    ];
+    const cardSpans = ["orchestrationV2.dispatch.secretRequestRecord"];
     const statements: Array<readonly [string, ReadonlyArray<unknown>]> = [];
     const recordStatements = Effect.provideService(
       Statement.CurrentTransformer,
@@ -2279,25 +2276,12 @@ it.effect("records a secret and a link card without reading the thread's history
         secretStatus: "pending",
       })
       .pipe(recordStatements);
-    yield* orchestrator
-      .dispatch({
-        ...card,
-        type: "link_request.record",
-        commandId: CommandId.make("record-long-cards:link"),
-        turnItemId: TurnItemId.make("item:long-cards:link"),
-        url: "https://example.test",
-        linkStatus: "pending",
-      })
-      .pipe(recordStatements);
     const { turnItems } = yield* projections.getThreadRecords(threadId, ["turnItems"], {
-      turnItemTypes: ["secret_request", "link_request"],
+      turnItemTypes: ["secret_request"],
     });
     assert.deepEqual(
       turnItems.map((item) => [item.type, item.providerTurnId]),
-      [
-        ["secret_request", providerTurnId],
-        ["link_request", providerTurnId],
-      ],
+      [["secret_request", providerTurnId]],
     );
 
     // A card reads its own run, so the rows and VM steps of its reads, which are deterministic,

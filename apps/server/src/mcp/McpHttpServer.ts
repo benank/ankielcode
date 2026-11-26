@@ -2,7 +2,6 @@ import * as Cache from "effect/Cache";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
-import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
@@ -22,14 +21,12 @@ import {
   DeviceToolError,
   OrchestratorMcpFailure,
   PreviewAutomationError,
-  ProviderInteractionMode,
-  RuntimeMode,
-  OrchestrationV2LinkedSender,
   ThreadId,
 } from "@ankielcode/contracts";
 
 import packageJson from "../../package.json" with { type: "json" };
-import { parseBearerToken } from "../auth/EnvironmentAuth.ts";
+import * as EnvironmentAuth from "../auth/EnvironmentAuth.ts";
+import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
 import * as SessionStore from "../auth/SessionStore.ts";
 import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
@@ -96,29 +93,9 @@ import { HtmlPreviewTool, HtmlPreviewToolkit, HtmlRenderToolkit } from "./toolki
 import { MCP_HTTP_PATH } from "../httpCors.ts";
 import { requestUrl } from "../requestUrl.ts";
 
-const mcpResourceMetadataUrl = (request: HttpServerRequest.HttpServerRequest) =>
-  requestUrl(request).pipe(
-    Option.map((url) => `${url.origin}/.well-known/oauth-protected-resource/mcp`),
-  );
-
-/** Launched agents cannot open OAuth browsers; OAuth would mint credentials outliving their session. */
-const unauthorized = (input: {
-  readonly request: HttpServerRequest.HttpServerRequest;
-  readonly presentedToken: boolean;
-  readonly offerOAuth: boolean;
-}) => {
-  const metadataUrl = input.offerOAuth
-    ? Option.getOrUndefined(mcpResourceMetadataUrl(input.request))
-    : undefined;
-  const challenge = [
-    "Bearer",
-    [
-      ...(metadataUrl === undefined ? [] : [`resource_metadata="${metadataUrl}"`]),
-      ...(input.presentedToken ? ['error="invalid_token"'] : []),
-    ].join(", "),
-  ]
-    .filter((part) => part.length > 0)
-    .join(" ");
+/** `/mcp` takes only credentials Ankiel hands out itself, so the challenge names no sign-in. */
+const unauthorized = (input: { readonly presentedToken: boolean }) => {
+  const challenge = input.presentedToken ? 'Bearer error="invalid_token"' : "Bearer";
   return HttpServerResponse.jsonUnsafe(
     {
       error: "invalid_mcp_credential",
@@ -134,6 +111,7 @@ const unauthorized = (input: {
   );
 };
 
+/** Admits the local CLI's `/mcp` sessions (`ankiel thread`, `ankiel workflow`). */
 export class McpClientAuthenticator extends Context.Service<
   McpClientAuthenticator,
   {
@@ -201,88 +179,13 @@ const isUndefinedNotification = Effect.fnUntraced(function* (
   );
 });
 
-// Session tokens are `<payload>.<signature>`; registry tokens are a bare base64url secret.
-const looksLikeProviderToken = (token: string) => token.length > 0 && !token.includes(".");
-
-const decodeModeLimit = Schema.decodeUnknownOption(
-  Schema.Struct({ runtimeMode: RuntimeMode, interactionMode: ProviderInteractionMode }),
-);
-const parseModeLimit = (value: string) => {
-  const [runtimeMode, interactionMode, ...rest] = value.trim().split("/");
-  return rest.length === 0 ? decodeModeLimit({ runtimeMode, interactionMode }) : Option.none();
-};
-
-const invalidModeLimit = HttpServerResponse.jsonUnsafe(
-  {
-    error: "invalid_mode_limit",
-    message: "Ankiel-Mode-Limit must be <runtimeMode>/<interactionMode>, e.g. auto/default.",
-  },
-  { status: 400, headers: { "cache-control": "no-store" } },
-);
-
-/** Applies a client's requested mode limit; undefined when the header is malformed. */
-const withModeLimit = (
-  invocation: McpInvocationContext.McpInvocationScope,
-  request: HttpServerRequest.HttpServerRequest,
-): McpInvocationContext.McpInvocationScope | undefined => {
-  const header = request.headers[McpInvocationContext.MODE_LIMIT_HEADER];
-  if (header === undefined || invocation.client === undefined) return invocation;
-  const limit = parseModeLimit(header);
-  return Option.isNone(limit)
-    ? undefined
-    : { ...invocation, client: { ...invocation.client, narrowedTo: limit.value } };
-};
-
-const decodeSenderThread = Schema.decodeUnknownOption(OrchestrationV2LinkedSender);
-
-/** Records the thread a linked environment calls for; a malformed header only loses the name. */
-const withSenderThread = (
-  invocation: McpInvocationContext.McpInvocationScope,
-  request: HttpServerRequest.HttpServerRequest,
-): McpInvocationContext.McpInvocationScope => {
-  const header = request.headers[McpInvocationContext.SENDER_THREAD_HEADER];
-  if (header === undefined || invocation.client?.linked !== true) return invocation;
-  const [environmentId, threadId, title, ...rest] = header.trim().split("/");
-  if (environmentId === undefined || threadId === undefined || title === undefined)
-    return invocation;
-  if (rest.length > 0) return invocation;
-  let decoded: Option.Option<OrchestrationV2LinkedSender>;
-  try {
-    decoded = decodeSenderThread({
-      environmentId: decodeURIComponent(environmentId),
-      threadId: decodeURIComponent(threadId),
-      title: decodeURIComponent(title),
-    });
-  } catch {
-    return invocation;
-  }
-  return Option.isNone(decoded)
-    ? invocation
-    : { ...invocation, client: { ...invocation.client, senderThread: decoded.value } };
-};
-
-// The Linked environments beta is off here: links wait until it is on again.
-const linkedEnvironmentsOff = HttpServerResponse.jsonUnsafe(
-  {
-    error: "linked_environments_off",
-    message: "Linked environments is off on this machine. Turn it on in its Settings → Labs.",
-  },
-  { status: 403, headers: { "cache-control": "no-store" } },
-);
-
 const makeMcpAuthMiddleware = Effect.gen(function* () {
   const registry = yield* McpSessionRegistry.McpSessionRegistry;
   const clients = yield* Effect.serviceOption(McpClientAuthenticator);
   const serverSettings = yield* ServerSettings.ServerSettingsService;
-  const settingsFlags = serverSettings.getSettings.pipe(
-    Effect.map((settings) => ({
-      linkedEnvironments: settings.linkedEnvironmentsEnabled,
-      workflows: settings.workflowsEnabled,
-    })),
-    Effect.orElseSucceed(() => ({
-      linkedEnvironments: false,
-      workflows: false,
-    })),
+  const workflowsEnabled = serverSettings.getSettings.pipe(
+    Effect.map((settings) => settings.workflowsEnabled),
+    Effect.orElseSucceed(() => false),
   );
   const pullRequests = yield* Effect.serviceOption(PullRequestService.PullRequestService);
   const projections = yield* Effect.serviceOption(ProjectionStore.ProjectionStoreV2);
@@ -330,7 +233,7 @@ const makeMcpAuthMiddleware = Effect.gen(function* () {
     request: HttpServerRequest.HttpServerRequest,
   ) {
     const authorization = request.headers.authorization;
-    const token = parseBearerToken(request) ?? "";
+    const token = EnvironmentAuth.parseBearerToken(request) ?? "";
     const invocation =
       (yield* registry.resolve(token)) ??
       (Option.isSome(clients) && token.length > 0
@@ -347,24 +250,16 @@ const makeMcpAuthMiddleware = Effect.gen(function* () {
                 ? "missing_bearer_token"
                 : "unknown_or_expired_token",
       });
-      return unauthorized({
-        request,
-        presentedToken: token.length > 0,
-        offerOAuth: Option.isSome(clients) && !looksLikeProviderToken(token),
-      });
+      return unauthorized({ presentedToken: token.length > 0 });
     }
-    const limited = withModeLimit(withSenderThread(invocation, request), request);
-    if (limited === undefined) return invalidModeLimit;
-    const { linkedEnvironments, workflows } = yield* settingsFlags;
-    if (limited.client?.linked === true && !linkedEnvironments) return linkedEnvironmentsOff;
+    const workflows = yield* workflowsEnabled;
     const origin = Option.getOrUndefined(Option.map(requestUrl(request), (url) => url.origin));
     const forge =
-      limited.thread === undefined
+      invocation.thread === undefined
         ? undefined
-        : yield* Cache.get(forgeOfThread, limited.thread.threadId);
+        : yield* Cache.get(forgeOfThread, invocation.thread.threadId);
     return {
-      ...limited,
-      linkedEnvironments,
+      ...invocation,
       workflows,
       origin,
       ...(forge === undefined ? {} : { forge }),
@@ -378,23 +273,56 @@ const makeMcpAuthMiddleware = Effect.gen(function* () {
     const admitted = yield* authenticateRequest(request);
     if (HttpServerResponse.isHttpServerResponse(admitted)) return admitted;
     if (yield* isUndefinedNotification(request)) return HttpServerResponse.empty({ status: 202 });
-    const linkExpiresAt = admitted.client?.linkExpiresAt;
     return yield* httpEffect.pipe(
       Effect.provideService(McpInvocationContext.McpInvocationContext, admitted),
       Effect.map(normalizeMcpHttpResponse),
       Effect.map((response) => endWithSession(response, request, admitted.client)),
-      Effect.map((response) =>
-        linkExpiresAt === undefined
-          ? response
-          : HttpServerResponse.setHeader(
-              response,
-              McpInvocationContext.LINK_EXPIRES_AT_HEADER,
-              DateTime.formatIso(linkExpiresAt),
-            ),
-      ),
     );
   }) satisfies McpAuthMiddleware;
 }).pipe(Effect.withSpan("McpHttpServer.makeAuthMiddleware"));
+
+export const layerCliClientAuthenticator = Layer.effect(
+  McpClientAuthenticator,
+  Effect.gen(function* () {
+    const environmentAuth = yield* EnvironmentAuth.EnvironmentAuth;
+    const environment = yield* ServerEnvironment.ServerEnvironment;
+    const environmentId = yield* environment.getEnvironmentId;
+    return McpClientAuthenticator.of({
+      authenticate: Effect.fn("McpHttpServer.McpClientAuthenticator.authenticate")(
+        function (request) {
+          return environmentAuth.authenticateCliMcpClient(request).pipe(
+            Effect.flatMap((client) =>
+              Clock.currentTimeMillis.pipe(
+                Effect.map((issuedAt): McpInvocationContext.McpInvocationScope => ({
+                  environmentId,
+                  requestNamespace: `client:${client.sessionId}`,
+                  thread: undefined,
+                  client: {
+                    sessionId: client.sessionId,
+                    label: client.label,
+                    access: "full-access",
+                  },
+                  capabilities: new Set<McpInvocationContext.McpCapability>([
+                    "orchestration",
+                    "worktree",
+                    "pull-requests",
+                  ]),
+                  issuedAt,
+                })),
+              ),
+            ),
+            Effect.catch((error) =>
+              (EnvironmentAuth.isServerAuthCredentialError(error)
+                ? Effect.void
+                : Effect.logWarning("MCP client authentication failed.", { cause: error })
+              ).pipe(Effect.as(undefined)),
+            ),
+          );
+        },
+      ),
+    });
+  }),
+);
 
 const layerMcpAuthMiddleware = HttpRouter.middleware<{
   provides: McpInvocationContext.McpInvocationContext;
@@ -1214,7 +1142,7 @@ const layerThemeToolkit = toolkitRegistration(ThemeToolkit, ThemeHandlers.layer)
   Layer.provide(ThreadCommandExecutor.layer),
 );
 
-export const layerProjectRegistration = toolkitRegistration(ProjectToolkit, ProjectHandlers.layer);
+const layerProjectRegistration = toolkitRegistration(ProjectToolkit, ProjectHandlers.layer);
 
 export const layerAttachmentToolkit = toolkitRegistration(
   AttachmentToolkit,

@@ -17,11 +17,10 @@ import {
 } from "./Errors.ts";
 
 /**
- * These subjects are reserved for one kind and level of MCP authorization.
- * Keep peer-link subjects under the same prefix so older servers refuse them too.
+ * Codes of the removed outside-agent sign-in and environment links. No exchange spends one, and
+ * startup revokes any left.
  */
 export const MCP_APPROVAL_SUBJECT_PREFIX = "mcp-approval:";
-export const PEER_LINK_PAIRING_SUBJECT_PREFIX = `${MCP_APPROVAL_SUBJECT_PREFIX}peer-link:`;
 
 const SqliteFlag = Schema.Literals([0, 1]);
 
@@ -63,7 +62,6 @@ export const ConsumeAuthPairingLinkInput = Schema.Struct({
   requestedScopes: Schema.optionalKey(AuthEnvironmentScopes),
   requiredScopes: Schema.optionalKey(AuthEnvironmentScopes),
   /** Allow a purpose-bound code only when its subject matches the request. */
-  allowedSubject: Schema.optionalKey(Schema.String),
   consumedAt: Schema.DateTimeUtcFromString,
   now: Schema.DateTimeUtcFromString,
 });
@@ -209,7 +207,6 @@ export const make = Effect.gen(function* () {
       proofKeyThumbprint,
       requestedScopes,
       requiredScopes,
-      allowedSubject,
       consumedAt,
       now,
     }) =>
@@ -220,10 +217,7 @@ export const make = Effect.gen(function* () {
           AND revoked_at IS NULL
           AND consumed_at IS NULL
           AND expires_at > ${now}
-          AND (
-            subject NOT LIKE ${`${MCP_APPROVAL_SUBJECT_PREFIX}%`}
-            OR subject = ${allowedSubject ?? null}
-          )
+          AND subject NOT LIKE ${`${MCP_APPROVAL_SUBJECT_PREFIX}%`}
           AND (
             proof_key_thumbprint IS NULL
             OR proof_key_thumbprint = ${proofKeyThumbprint}

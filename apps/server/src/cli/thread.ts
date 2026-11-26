@@ -246,8 +246,8 @@ const makeThreadTools = (session: McpToolSession, origin: string) => {
 export type ThreadTools = ReturnType<typeof makeThreadTools>;
 
 /**
- * Signs in as a short-lived MCP client of the running server, the same way an
- * outside agent does, and revokes that session when the command ends.
+ * Signs in to the running server's `/mcp` with a short-lived CLI session and
+ * revokes that session when the command ends.
  */
 export const withThreadTools = Effect.fn("cli.thread.withThreadTools")(function* <A, E, R>(
   flags: {
@@ -268,13 +268,10 @@ export const withThreadTools = Effect.fn("cli.thread.withThreadTools")(function*
     const origin = runtimeState.value.origin;
     const environmentAuth = yield* EnvironmentAuth.EnvironmentAuth;
     const issued = yield* Effect.acquireRelease(
-      environmentAuth.issueMcpClientSession({
+      // The CLI runs as the machine's owner. New threads still start at
+      // the project's default mode, never at full access by default.
+      environmentAuth.issueCliMcpClientSession({
         label: flags.clientLabel ?? "ankiel thread cli",
-        // The CLI runs as the machine's owner. New threads still start at
-        // the project's default mode, never at this ceiling by default.
-        access: "full-access",
-        peerLink: false,
-        client: { deviceType: "bot" },
       }),
       (session) =>
         environmentAuth.revokeSession(session.sessionId).pipe(Effect.ignore({ log: true })),

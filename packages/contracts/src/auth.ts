@@ -265,6 +265,7 @@ export type AuthWebSocketTicketUse = typeof AuthWebSocketTicketUse.Type;
 
 export const AuthWebSocketTicketParams = Schema.Struct({ use: AuthWebSocketTicketUse });
 
+/** How far an MCP caller outside a thread may act; stored on `link_request` items in old threads. */
 export const AuthMcpClientAccess = Schema.Literals([
   "read-only",
   "approval-required",
@@ -274,61 +275,15 @@ export const AuthMcpClientAccess = Schema.Literals([
 ]);
 export type AuthMcpClientAccess = typeof AuthMcpClientAccess.Type;
 
-/** The scopes an agent session gets for an access level, and a pairing code must carry. */
-export const mcpClientScopes = (access: AuthMcpClientAccess): ReadonlyArray<AuthGrantScope> =>
-  access === "read-only"
-    ? [AuthOrchestrationReadScope]
-    : access === "full-access"
-      ? [
-          AuthOrchestrationReadScope,
-          AuthOrchestrationOperateScope,
-          AuthSettingsWriteScope,
-          AuthSourceControlWriteScope,
-        ]
-      : [AuthOrchestrationReadScope, AuthOrchestrationOperateScope];
-
 /** The random part of a one-time pairing code: this many characters from this alphabet. */
 export const PAIRING_CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 export const PAIRING_CODE_LENGTH = 12;
-
-const MCP_APPROVAL_CODE_PREFIXES = {
-  "read-only": "READ",
-  "approval-required": "SUPERVISED",
-  "auto-accept-edits": "EDITS",
-  auto: "AUTO",
-  "full-access": "FULL",
-} as const satisfies Record<AuthMcpClientAccess, string>;
-
-const MCP_APPROVAL_CODE_PATTERN = new RegExp(
-  `^(${Object.values(MCP_APPROVAL_CODE_PREFIXES).join("|")})-([${PAIRING_CODE_ALPHABET}]{${PAIRING_CODE_LENGTH}})$`,
-  "i",
-);
-
-/** A pairing code that approves one agent sign-in at `access`, such as `AUTO-Q8RZ3NWD5KTC`. */
-export const mcpApprovalCode = (access: AuthMcpClientAccess, token: string): string =>
-  `${MCP_APPROVAL_CODE_PREFIXES[access]}-${token}`;
-
-/** The level a code approves and the code as issued, or undefined for any other code. */
-export function parseMcpApprovalCode(
-  code: string,
-): { readonly access: AuthMcpClientAccess; readonly code: string } | undefined {
-  const match = MCP_APPROVAL_CODE_PATTERN.exec(code.trim());
-  if (match === null) return undefined;
-  const prefix = match[1]!.toUpperCase();
-  const access = AuthMcpClientAccess.literals.find(
-    (level) => MCP_APPROVAL_CODE_PREFIXES[level] === prefix,
-  );
-  return access && { access, code: mcpApprovalCode(access, match[2]!.toUpperCase()) };
-}
 
 export const AuthPairingCredentialResult = Schema.Struct({
   id: TrimmedNonEmptyString,
   credential: TrimmedNonEmptyString,
   label: Schema.optionalKey(TrimmedNonEmptyString),
   expiresAt: Schema.DateTimeUtc,
-  purpose: Schema.optionalKey(Schema.Literal("peer-link")),
-  /** Set when the code approves one agent sign-in at this level. Older servers omit it. */
-  access: Schema.optionalKey(AuthMcpClientAccess),
 });
 export type AuthPairingCredentialResult = typeof AuthPairingCredentialResult.Type;
 
@@ -458,18 +413,15 @@ const pairingCredentialFields = {
   scopes: Schema.optionalKey(AuthGrantScopes),
 };
 
-export const AuthCreatePairingCredentialInput = Schema.Union([
-  Schema.Struct({
-    ...pairingCredentialFields,
-    access: Schema.optionalKey(AuthMcpClientAccess),
-    purpose: Schema.optionalKey(Schema.Undefined),
-  }),
-  Schema.Struct({
-    ...pairingCredentialFields,
-    access: AuthMcpClientAccess,
-    purpose: Schema.Literal("peer-link"),
-  }),
-]);
+export const AuthCreatePairingCredentialInput = Schema.Struct({
+  ...pairingCredentialFields,
+  /**
+   * Retired agent sign-in (`access`) and environment link (`purpose`) codes. Older clients still
+   * send them, and the server refuses such a request rather than mint an ordinary credential.
+   */
+  access: Schema.optionalKey(AuthMcpClientAccess),
+  purpose: Schema.optionalKey(Schema.Literal("peer-link")),
+});
 export type AuthCreatePairingCredentialInput = typeof AuthCreatePairingCredentialInput.Type;
 
 export const AuthSessionState = Schema.Struct({
@@ -481,163 +433,3 @@ export const AuthSessionState = Schema.Struct({
   expiresAt: Schema.optionalKey(Schema.DateTimeUtc),
 });
 export type AuthSessionState = typeof AuthSessionState.Type;
-
-export const AuthMcpProtectedResourceMetadata = Schema.Struct({
-  resource: Schema.String,
-  authorization_servers: Schema.Array(Schema.String),
-  scopes_supported: Schema.Array(AuthEnvironmentScope),
-  bearer_methods_supported: Schema.Array(Schema.Literal("header")),
-  resource_name: Schema.String,
-});
-export type AuthMcpProtectedResourceMetadata = typeof AuthMcpProtectedResourceMetadata.Type;
-
-export const AuthMcpAuthorizationServerMetadata = Schema.Struct({
-  issuer: Schema.String,
-  authorization_endpoint: Schema.String,
-  token_endpoint: Schema.String,
-  registration_endpoint: Schema.String,
-  // Older environments do not serve one.
-  revocation_endpoint: Schema.optionalKey(Schema.String),
-  response_types_supported: Schema.Array(Schema.Literal("code")),
-  grant_types_supported: Schema.Array(Schema.Literal("authorization_code")),
-  code_challenge_methods_supported: Schema.Array(Schema.Literal("S256")),
-  token_endpoint_auth_methods_supported: Schema.Array(Schema.Literal("none")),
-  scopes_supported: Schema.Array(AuthEnvironmentScope),
-  authorization_response_iss_parameter_supported: Schema.Boolean,
-});
-export type AuthMcpAuthorizationServerMetadata = typeof AuthMcpAuthorizationServerMetadata.Type;
-
-/**
- * The `software_id` another Ankiel Code environment registers with when it links
- * to this one. Its session is then a peer link: the work it starts here stays
- * within that link. Claiming it only ever adds limits.
- */
-export const MCP_PEER_LINK_SOFTWARE_ID = "ankielcode-peer-link";
-
-export const AuthMcpClientRegistration = Schema.Struct({
-  client_name: Schema.optionalKey(Schema.String),
-  software_id: Schema.optionalKey(Schema.String),
-  redirect_uris: Schema.optionalKey(Schema.Array(Schema.String)),
-  token_endpoint_auth_method: Schema.optionalKey(Schema.String),
-});
-export type AuthMcpClientRegistration = typeof AuthMcpClientRegistration.Type;
-
-export const AuthMcpRegisteredClient = Schema.Struct({
-  client_id: Schema.String,
-  client_name: Schema.String,
-  redirect_uris: Schema.Array(Schema.String),
-  grant_types: Schema.Array(Schema.Literal("authorization_code")),
-  response_types: Schema.Array(Schema.Literal("code")),
-  token_endpoint_auth_method: Schema.Literal("none"),
-}).pipe(HttpApiSchema.status(201));
-export type AuthMcpRegisteredClient = typeof AuthMcpRegisteredClient.Type;
-
-export class AuthMcpRegistrationError extends Schema.Error<AuthMcpRegistrationError>(
-  "AuthMcpRegistrationError",
-)(
-  {
-    error: Schema.Literals(["invalid_client_metadata", "invalid_redirect_uri"]),
-    error_description: Schema.String,
-  },
-  { httpApiStatus: 400 },
-) {
-  override get message(): string {
-    return this.error_description;
-  }
-}
-
-/** Fields are optional here because the server validates them. */
-export const AuthMcpAuthorizationRequest = Schema.Struct({
-  response_type: Schema.optionalKey(Schema.String),
-  client_id: Schema.optionalKey(Schema.String),
-  redirect_uri: Schema.optionalKey(Schema.String),
-  code_challenge: Schema.optionalKey(Schema.String),
-  code_challenge_method: Schema.optionalKey(Schema.String),
-  state: Schema.optionalKey(Schema.RedactedFromValue(Schema.String)),
-  resource: Schema.optionalKey(Schema.String),
-});
-export type AuthMcpAuthorizationRequest = typeof AuthMcpAuthorizationRequest.Type;
-
-/** Server-validated request details, trusted by the client only for display. */
-export const AuthMcpApprovalDetails = Schema.Struct({
-  /** Self-declared by the client, so shown as such. */
-  clientName: Schema.String,
-  redirectHost: Schema.String,
-  environmentHost: Schema.String,
-  csrfToken: Schema.optionalKey(Schema.String),
-  /** Only scopes held by this session qualify; others need a pairing code. Absent with `csrfToken`. */
-  oneClickAccess: Schema.optionalKey(Schema.Array(AuthMcpClientAccess)),
-});
-export type AuthMcpApprovalDetails = typeof AuthMcpApprovalDetails.Type;
-
-export const AuthMcpApprovalRedirect = Schema.Struct({
-  redirectTo: Schema.String,
-});
-export type AuthMcpApprovalRedirect = typeof AuthMcpApprovalRedirect.Type;
-
-export const AuthMcpApprovalDecision = Schema.Union([
-  Schema.TaggedStruct("deny", {}),
-  Schema.TaggedStruct("pairing-code", {
-    access: AuthMcpClientAccess,
-    code: TrimmedNonEmptyString,
-  }),
-  Schema.TaggedStruct("browser-session", {
-    access: AuthMcpClientAccess,
-    csrfToken: Schema.String,
-  }),
-]);
-export type AuthMcpApprovalDecision = typeof AuthMcpApprovalDecision.Type;
-
-export const AuthMcpApprovalDecisionRequest = Schema.Struct({
-  authorization: AuthMcpAuthorizationRequest,
-  decision: AuthMcpApprovalDecision,
-});
-export type AuthMcpApprovalDecisionRequest = typeof AuthMcpApprovalDecisionRequest.Type;
-
-export class AuthMcpApprovalError extends Schema.TaggedError<AuthMcpApprovalError>()(
-  "AuthMcpApprovalError",
-  { message: Schema.String },
-  { httpApiStatus: 400 },
-) {}
-
-export const AuthMcpTokenRequest = Schema.Struct({
-  grant_type: Schema.optionalKey(Schema.String),
-  code: Schema.optionalKey(Schema.RedactedFromValue(Schema.String)),
-  redirect_uri: Schema.optionalKey(Schema.String),
-  client_id: Schema.optionalKey(Schema.String),
-  code_verifier: Schema.optionalKey(Schema.RedactedFromValue(Schema.String)),
-  resource: Schema.optionalKey(Schema.String),
-}).pipe(HttpApiSchema.asFormUrlEncoded());
-export type AuthMcpTokenRequest = typeof AuthMcpTokenRequest.Type;
-
-/** RFC 7009: the holder of an access token ends its session. */
-export const AuthMcpRevokeRequest = Schema.Struct({
-  token: Schema.optionalKey(Schema.RedactedFromValue(Schema.String)),
-  token_type_hint: Schema.optionalKey(Schema.String),
-}).pipe(HttpApiSchema.asFormUrlEncoded());
-export type AuthMcpRevokeRequest = typeof AuthMcpRevokeRequest.Type;
-
-export const AuthMcpTokenResult = Schema.Struct({
-  access_token: Schema.String,
-  token_type: Schema.Literal("Bearer"),
-  expires_in: Schema.Number,
-  scope: Schema.String,
-});
-export type AuthMcpTokenResult = typeof AuthMcpTokenResult.Type;
-
-export class AuthMcpTokenError extends Schema.Error<AuthMcpTokenError>("AuthMcpTokenError")(
-  {
-    error: Schema.Literals([
-      "invalid_request",
-      "invalid_client",
-      "invalid_grant",
-      "unsupported_grant_type",
-    ]),
-    error_description: Schema.String,
-  },
-  { httpApiStatus: 400 },
-) {
-  override get message(): string {
-    return this.error_description;
-  }
-}

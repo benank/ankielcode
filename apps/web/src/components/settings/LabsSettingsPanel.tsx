@@ -13,47 +13,12 @@ export function LabsSettingsPanel() {
   return (
     <SettingsPageContainer>
       <SettingsSection id="beta" title={gt("Labs")} hideTitle>
-        <LinkedEnvironmentsRow />
         <WorkflowsRow />
         <PromptSuggestionsRow />
         <SimlockHostsRow />
         <FastWorktreeCheckoutRow />
       </SettingsSection>
     </SettingsPageContainer>
-  );
-}
-
-function LinkedEnvironmentsRow() {
-  const searchableSetting = useSearchableSetting();
-  const settings = useScopedSettings();
-  const updateSettings = useUpdateScopedSettings();
-  const gt = useGT();
-  return (
-    <SettingsRow
-      serverScoped
-      {...searchableSetting("linked-environments-beta")}
-      settingKeys={["linkedEnvironmentsEnabled"]}
-      description={
-        <T>
-          Let agents here work on your other machines, and theirs here. Turn it on for each machine,
-          then link them in{" "}
-          <Link to="/settings/connections" className="underline underline-offset-2">
-            Connections
-          </Link>
-          . While off, nothing new starts over a link; running tasks finish.
-        </T>
-      }
-      control={
-        <ScopedSwitch
-          settingKeys={["linkedEnvironmentsEnabled"]}
-          checked={settings.linkedEnvironmentsEnabled}
-          onCheckedChange={(checked) =>
-            updateSettings({ linkedEnvironmentsEnabled: Boolean(checked) })
-          }
-          aria-label={gt("Linked environments")}
-        />
-      }
-    />
   );
 }
 

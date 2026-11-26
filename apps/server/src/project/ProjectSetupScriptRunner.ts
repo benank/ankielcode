@@ -1,4 +1,4 @@
-import { linkOriginIsFenced, ProjectId, type ProjectScript, ThreadId } from "@ankielcode/contracts";
+import { ProjectId, type ProjectScript } from "@ankielcode/contracts";
 import { splitsSurrogatePair } from "@ankielcode/shared/assistantCitations";
 import {
   projectScriptRuntimeEnv,
@@ -18,7 +18,6 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import * as ProjectionStore from "../orchestration-v2/ProjectionStore.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as TerminalManager from "../terminal/Manager.ts";
 import * as ProjectService from "./ProjectService.ts";
@@ -48,18 +47,8 @@ export interface ProjectSetupScriptOutputLine {
   readonly line: string;
 }
 
-/**
- * A thread a link below full access started does not run this project's setup
- * script: the script is the user's own code, and such a link only grants Ankiel's
- * tools (see `mcp/linkOrigin.ts`).
- */
-export interface ProjectSetupScriptRunnerResultSkippedForLink {
-  readonly status: "skipped-for-link";
-}
-
 export type ProjectSetupScriptRunnerResult =
   | ProjectSetupScriptRunnerResultNoScript
-  | ProjectSetupScriptRunnerResultSkippedForLink
   | ProjectSetupScriptRunnerResultStarted;
 
 export interface ProjectSetupScriptRunnerInput {
@@ -85,7 +74,7 @@ export class ProjectSetupScriptOperationError extends Schema.TaggedError<Project
     projectId: Schema.optional(Schema.String),
     projectCwd: Schema.optional(Schema.String),
     worktreePath: Schema.String,
-    operation: Schema.Literals(["readThread", "resolveProject", "readSettings", "openTerminal"]),
+    operation: Schema.Literals(["resolveProject", "readSettings", "openTerminal"]),
     cause: Schema.Defect(),
   },
 ) {
@@ -261,7 +250,6 @@ function wrapCommandForCompletion(
 /** @public */
 export const make = Effect.gen(function* () {
   const projects = yield* ProjectService.ProjectService;
-  const threads = yield* ProjectionStore.ProjectionStoreV2;
   const terminalManager = yield* TerminalManager.TerminalManager;
   const serverSettings = yield* ServerSettings.ServerSettingsService;
   const random = yield* SecureRandom.SecureRandom;
@@ -432,19 +420,6 @@ export const make = Effect.gen(function* () {
       ...(input.projectId === undefined ? {} : { projectId: input.projectId }),
       ...(input.projectCwd === undefined ? {} : { projectCwd: input.projectCwd }),
     };
-    // A thread whose origin cannot be read might be a link's: run nothing.
-    const thread = yield* threads.getThreadShell(ThreadId.make(input.threadId)).pipe(
-      Effect.mapError(
-        (cause) =>
-          new ProjectSetupScriptOperationError({
-            ...errorContext,
-            operation: "readThread",
-            cause,
-          }),
-      ),
-    );
-    if (thread?.linkOrigin !== undefined && linkOriginIsFenced(thread.linkOrigin))
-      return { status: "skipped-for-link" } as const;
     const suppliedProject = input.project;
     const projectById =
       suppliedProject ??

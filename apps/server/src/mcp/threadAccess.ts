@@ -26,7 +26,6 @@ import * as Effect from "effect/Effect";
 import type { OrchestratorV2Error } from "../orchestration-v2/Orchestrator.ts";
 import * as ThreadManagement from "../orchestration-v2/ThreadManagementService.ts";
 import { resolveInteractionMode, resolveRuntimeMode } from "./delegatedTaskModes.ts";
-import { fencingLinkOrigin } from "./linkOrigin.ts";
 import * as McpInvocationContext from "./McpInvocationContext.ts";
 
 const delegatedTaskPrefix = "thread:delegated-task:";
@@ -58,7 +57,7 @@ const candidateThreadIds = (threadId: ThreadId, environmentId: EnvironmentId) =>
  * Agents paste bare uuids for `mcp:<uuid>` threads, unencoded delegated-task ids, and thread links.
  * The id is never rewritten, so permission checks keyed on it still hold; the miss
  * only names a live thread the caller could read by its full id. Ids from another
- * machine miss here too. The link hint is static: listing links probes peers.
+ * machine miss here too.
  */
 export const threadNotFound = Effect.fn("OrchestratorMcpService.threadNotFound")(function* (
   threads: Pick<ThreadManagement.ThreadManagementService["Service"], "getThreadShell">,
@@ -81,20 +80,9 @@ export const threadNotFound = Effect.fn("OrchestratorMcpService.threadNotFound")
     });
   }
   const mcpHint = suggested === null ? "" : ` Did you mean \`${suggested}\`?`;
-  const caller =
-    scope.thread === undefined
-      ? null
-      : yield* threads.getThreadShell(scope.thread.threadId).pipe(Effect.orElseSucceed(() => null));
-  // A peer link's caller would be pointed at this machine's links, and a fenced one may not use them.
-  const linksHint =
-    scope.linkedEnvironments === false ||
-    scope.client?.linked === true ||
-    fencingLinkOrigin({ scope, caller: caller ?? undefined }) !== undefined
-      ? ""
-      : " Thread ids belong to one environment: for a thread on a linked one, find it with `ankiel_environment_links` and pass its `environmentId` to a tool that takes one.";
   return yield* new OrchestratorMcpFailure({
     code: "thread_not_found",
-    message: `${message}${mcpHint}${linksHint}`,
+    message: `${message}${mcpHint}`,
   });
 });
 
@@ -182,7 +170,7 @@ export const assertTargetWithinLimits = (
       (error) =>
         new OrchestratorMcpFailure({
           code: error.code,
-          message: `Thread "${target.id}" runs in ${target.runtimeMode}/${target.interactionMode}, above this caller's ${limits.runtimeMode}/${limits.interactionMode} limit. For linked calls, this limit is also capped by the link's approved access. This call does not create an approval request. Have the user act directly in the target thread through an authorized client.`,
+          message: `Thread "${target.id}" runs in ${target.runtimeMode}/${target.interactionMode}, above this caller's ${limits.runtimeMode}/${limits.interactionMode} limit. This call does not create an approval request. Have the user act directly in the target thread through an authorized client.`,
         }),
     ),
   );

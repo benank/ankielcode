@@ -23,8 +23,6 @@ import {
   type PullRequestContextMetadata,
   type ReviewCommentContextRecord,
   type ServerProviderSkill,
-  type EnvironmentContextRecord,
-  type EnvironmentId,
 } from "@ankielcode/contracts";
 import * as Schema from "effect/Schema";
 import {
@@ -121,20 +119,6 @@ export function createComposerContextHistory() {
       records.delete(oldest);
     }
     return referencedComposerContext(text, { version: 1, records: [...records.values()] });
-  };
-}
-
-/** Same identity as web: one record per machine, so mentioning it again reuses the chip. */
-export function environmentComposerContext(
-  environmentId: EnvironmentId,
-  label: string,
-): EnvironmentContextRecord {
-  return {
-    version: 1,
-    kind: "environment",
-    contextId: ComposerContextId.make(`environment_${environmentId}`),
-    label: sanitizeComposerContextLabel(label, "environment"),
-    environmentId,
   };
 }
 

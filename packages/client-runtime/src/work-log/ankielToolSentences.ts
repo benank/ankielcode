@@ -725,30 +725,6 @@ const ANKIEL_TOOL_SENTENCES: ReadonlyMap<string, AnkielToolSentence> = new Map<
     },
   ],
   [
-    "List\nListing\nListed\nlinked environments",
-    {
-      detail: msg(
-        "{status, select, inProgress {Listing linked environments} completed {Listed linked environments} failed {Failed to list linked environments} declined {Declined to list linked environments} stopped {Stopped listing linked environments} other {Listing linked environments}}",
-      ),
-    },
-  ],
-  [
-    "Ask to link\nAsking to link\nAsked to link\nan environment",
-    {
-      detail: msg(
-        "{status, select, inProgress {Asking to link an environment} completed {Asked to link an environment} failed {Failed to ask to link an environment} declined {Declined to ask to link an environment} stopped {Stopped asking to link an environment} other {Asking to link an environment}}",
-      ),
-    },
-  ],
-  [
-    "Forget\nForgetting\nForgot\na linked environment",
-    {
-      detail: msg(
-        "{status, select, inProgress {Forgetting a linked environment} completed {Forgot a linked environment} failed {Failed to forget a linked environment} declined {Declined to forget a linked environment} stopped {Stopped forgetting a linked environment} other {Forgetting a linked environment}}",
-      ),
-    },
-  ],
-  [
     "Update\nUpdating\nUpdated\nenvironment preferences",
     {
       detail: msg(

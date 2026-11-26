@@ -46,7 +46,6 @@ import { scopedProjectKey, scopedThreadKey } from "../../lib/scopedEntities";
 import { useNativeLayoutMetrics } from "../../native/native-layout-metrics";
 import { AnkielKeyboardCommands } from "../../native/AnkielKeyboardCommands";
 import {
-  useDelegatedUnderParent,
   useProjects,
   useServerConfigs,
   useThreadShell,
@@ -236,7 +235,6 @@ export function CommandPalette(props: {
   const runCommand = props.onCommand;
   const projects = useProjects();
   const threads = useVisibleThreadShells();
-  const delegatedUnderParent = useDelegatedUnderParent();
   const activeThreadRef = parseActiveThreadPath(props.pathname);
   const activeThread = useThreadShell(activeThreadRef);
   const visitThread = useAtomCommand(threadEnvironment.visit, { reportFailure: false });
@@ -443,15 +441,7 @@ export function CommandPalette(props: {
         }),
     }));
     const threadItems: CommandPaletteItem[] = threads
-      .filter(
-        (thread) =>
-          thread.archivedAt === null &&
-          !isShownUnderParent(
-            { environmentId: thread.environmentId, threadId: thread.id },
-            thread.lineage,
-            delegatedUnderParent,
-          ),
-      )
+      .filter((thread) => thread.archivedAt === null && !isShownUnderParent(thread.lineage))
       .map((thread) => {
         const project = projectByKey.get(scopedProjectKey(thread.environmentId, thread.projectId));
         const environment =
@@ -498,7 +488,6 @@ export function CommandPalette(props: {
     selectDetail,
     startTriage,
     threads,
-    delegatedUnderParent,
     triageEnvironmentId,
     gt,
   ]);

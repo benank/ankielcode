@@ -8,7 +8,6 @@ import type * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as NodeCrypto from "node:crypto";
 import * as NodeNet from "node:net";
 import { normalizeHostname } from "@ankielcode/shared/hostClassification";
-import * as Mac from "effect/crypto/Mac";
 import * as Base64Url from "effect/encoding/Base64Url";
 import * as Result from "effect/Result";
 
@@ -78,16 +77,6 @@ export function base64UrlEncode(input: string | Uint8Array): string {
 
 export function base64UrlDecodeUtf8(input: string): string {
   return Result.getOrThrow(Base64Url.decodeString(input));
-}
-
-export function timingSafeEqualBase64Url(left: string, right: string): boolean {
-  const leftBytes = Base64Url.decode(left);
-  const rightBytes = Base64Url.decode(right);
-  return (
-    Result.isSuccess(leftBytes) &&
-    Result.isSuccess(rightBytes) &&
-    Mac.timingSafeEqual(leftBytes.success, rightBytes.success)
-  );
 }
 
 function normalizeNonEmptyString(value: string | null | undefined): string | undefined {

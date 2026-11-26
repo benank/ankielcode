@@ -22,31 +22,29 @@ revocation and ceilings hold, not what a full-scope session can do once issued.
 
 ## Principals
 
-| Principal                                                                         | How it gets in                                                           | What it may do                                                                                                                                         |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Anyone who reaches the port                                                       | Network                                                                  | Read the redacted environment descriptor (no computer name or hardware details), pair with a valid one-time credential, run OAuth flows. Nothing else. |
-| Full-scope client (desktop, paired browser or phone, `ankiel auth session issue`) | Pairing, token exchange                                                  | Everything the server's OS user can do. This is the default grant.                                                                                     |
-| Narrow client                                                                     | Pairing link with explicit scopes                                        | Only the RPCs and routes its scopes allow. Can never widen its own grant.                                                                              |
-| MCP client (outside agent, subject `mcp-client`)                                  | OAuth on `/mcp`                                                          | Only `/mcp`, within a read-only grant or a runtime-mode ceiling. Every other route rejects it.                                                         |
-| Linked environment (peer link)                                                    | OAuth client `ankielcode-peer-link`                                      | Work it starts carries an immutable `linkOrigin` and never exceeds the access it was paired with.                                                      |
-| Agent run by Ankiel                                                               | Thread's runtime mode and thread credential                              | Within its runtime mode and the MCP access declared per tool.                                                                                          |
-| Signed asset URL                                                                  | Minted with `filesystem:read`                                            | One file, by device and inode identity, until it expires.                                                                                              |
-| Webhook sender                                                                    | A task's webhook URL, plus its signing secret when the task requires one | Start that one task's run with content of its choosing. Nothing in the request is trusted beyond the signature check.                                  |
-| Preview pages, HTML renders, file previews, agent output                          | Rendered by clients                                                      | Untrusted content. It must never run script in the app's origin or reach Electron IPC or Node.                                                         |
+| Principal                                                                          | How it gets in                                                           | What it may do                                                                                                                        |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Anyone who reaches the port                                                        | Network                                                                  | Read the redacted environment descriptor (no computer name or hardware details), pair with a valid one-time credential. Nothing else. |
+| Full-scope client (desktop, paired browser or phone, `ankiel auth session issue`)  | Pairing, token exchange                                                  | Everything the server's OS user can do. This is the default grant.                                                                    |
+| Narrow client                                                                      | Pairing link with explicit scopes                                        | Only the RPCs and routes its scopes allow. Can never widen its own grant.                                                             |
+| Local CLI on `/mcp` (`ankiel thread`, `ankiel workflow`, subject `cli-mcp-client`) | Issued by the CLI as the server's OS user, revoked when the command ends | Only `/mcp`, as a full-access caller outside any thread. Every other route rejects it.                                                |
+| Agent run by Ankiel                                                                | Thread's runtime mode and thread credential                              | Within its runtime mode and the MCP access declared per tool.                                                                         |
+| Signed asset URL                                                                   | Minted with `filesystem:read`                                            | One file, by device and inode identity, until it expires.                                                                             |
+| Webhook sender                                                                     | A task's webhook URL, plus its signing secret when the task requires one | Start that one task's run with content of its choosing. Nothing in the request is trusted beyond the signature check.                 |
+| Preview pages, HTML renders, file previews, agent output                           | Rendered by clients                                                      | Untrusted content. It must never run script in the app's origin or reach Electron IPC or Node.                                        |
 
 ## A real finding crosses one of these
 
 1. **No credential → session.** Any route or socket granting access without
    a valid credential, or a pairing credential redeemable twice.
 2. **Scope escalation.** An RPC, HTTP route, or MCP tool running without its
-   declared scope; pairing or token exchange widening a grant; an
-   `mcp-client` session reaching a non-`/mcp` route; a read-only MCP grant
-   calling a write tool.
-3. **Mode or policy escalation.** An agent, MCP client, or peer link acting
-   above its runtime-mode ceiling, `linkOrigin`, `Ankiel-Mode-Limit`, or managed
-   policy.
-4. **Revocation that doesn't take effect.** A revoked session, device key,
-   pairing link, or peer link that still works. Documented exception: signed
+   declared scope; pairing or token exchange widening a grant; a CLI MCP
+   session reaching a non-`/mcp` route; a leftover `mcp-client` session (from
+   the removed outside-agent sign-in or linked environments) reaching any route.
+3. **Mode escalation.** An agent acting above its runtime-mode ceiling or the
+   MCP access declared per tool.
+4. **Revocation that doesn't take effect.** A revoked session, device key, or
+   pairing link that still works. Documented exception: signed
    asset URLs last until they expire.
 5. **Credential exposure.** Tokens or secrets reaching logs, traces, socket URLs (outside short-lived tickets), the access read model,
    or error messages. A token sent to an address that has not answered as the
@@ -102,7 +100,7 @@ revocation and ceilings hold, not what a full-scope session can do once issued.
   arguments, an environment variable, a binary path, or the endpoint or file Ankiel
   Code points at already holds the OS account, so a value weakening their own
   setup is their choice. It is a finding when a narrower principal can set it
-  for them (a narrow client, an MCP client, an agent below full access,
+  for them (a narrow client, an agent below full access,
   repository content), or when the value leaks (see 5).
   Choosing a host does not make it trusted: what a configured endpoint can do
   to the server or its clients stays in scope.
@@ -117,7 +115,7 @@ revocation and ceilings hold, not what a full-scope session can do once issued.
 
 - Session issuance, pairing, token exchange: [`auth/http.ts`](apps/server/src/auth/http.ts), [`auth/EnvironmentAuth.ts`](apps/server/src/auth/EnvironmentAuth.ts), [`auth/dpop.ts`](apps/server/src/auth/dpop.ts)
 - Per-RPC scopes: [`auth/RpcAuthorization.ts`](apps/server/src/auth/RpcAuthorization.ts). [`clientRpcPermissions.ts`](packages/contracts/src/clientRpcPermissions.ts) only drives client UI and is never the boundary.
-- MCP: [`auth/McpOAuth.ts`](apps/server/src/auth/McpOAuth.ts), [`mcp/McpToolAccess.ts`](apps/server/src/mcp/McpToolAccess.ts), [`mcp/threadAccess.ts`](apps/server/src/mcp/threadAccess.ts), [`mcp/linkOrigin.ts`](apps/server/src/mcp/linkOrigin.ts)
+- MCP: [`mcp/McpHttpServer.ts`](apps/server/src/mcp/McpHttpServer.ts), [`mcp/McpToolAccess.ts`](apps/server/src/mcp/McpToolAccess.ts), [`mcp/threadAccess.ts`](apps/server/src/mcp/threadAccess.ts)
 - Files and assets: [`workspace/WorkspaceFileSystem.ts`](apps/server/src/workspace/WorkspaceFileSystem.ts), [`assets/AssetAccess.ts`](apps/server/src/assets/AssetAccess.ts)
 - Desktop preview isolation: [`preview/WebviewPreferences.ts`](apps/desktop/src/preview/WebviewPreferences.ts)
 

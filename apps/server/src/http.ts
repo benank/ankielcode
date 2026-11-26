@@ -291,7 +291,7 @@ export const assetFileResponse = Effect.fn("assetFileResponse")(function* (
 });
 
 // The default body limit for API routes. Routes that take more set their own limit.
-export const API_MAX_BODY_BYTES = 1024 * 1024;
+const API_MAX_BODY_BYTES = 1024 * 1024;
 export const layerApiBodyLimit = HttpRouter.middleware(
   Effect.provideService(HttpIncomingMessage.MaxBodySize, ByteSize.bytes(API_MAX_BODY_BYTES)),
 ).layer;
@@ -414,12 +414,7 @@ export const layerServerEnvironmentHttpApi = HttpApiBuilder.group(
         const authenticated = Option.isSome(serverAuth)
           ? yield* serverAuth.value.authenticateHttpRequest(request).pipe(
               Effect.as(true),
-              Effect.catch(() =>
-                serverAuth.value.authenticateMcpClient(request).pipe(
-                  Effect.as(true),
-                  Effect.orElseSucceed(() => false),
-                ),
-              ),
+              Effect.orElseSucceed(() => false),
             )
           : false;
         if (authenticated) {

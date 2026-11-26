@@ -1739,47 +1739,6 @@ it.effect("a continued thread keeps how it started", () =>
   }).pipe(Effect.provide(NodeServices.layer), Effect.scoped),
 );
 
-it.effect("an agent step in a linked environment keeps its thread there", () =>
-  Effect.gen(function* () {
-    const { boot, agents } = yield* harness();
-    yield* boot(
-      Effect.gen(function* () {
-        const workflows = yield* Workflows.Workflows;
-        const run = yield* workflows.start(
-          "fix",
-          { project: "/work/app", environment: "env-b" },
-          { idempotencyKey: "e1" },
-        );
-        const write = yield* agents.started(run.runId, "write/0");
-        assert.equal(write.environment, "env-b");
-        yield* agents.end(run.runId, "write/0", { output: { branch: "fix/1" } });
-        yield* workflows.waitFor(run.runId, status("waiting"));
-        yield* workflows.signal(
-          { runId: run.runId, wait: "merge" },
-          { choice: "Merge" },
-          { id: "m1" },
-        );
-
-        // The step that continues the thread names no environment: the thread carries it.
-        const land = yield* agents.started(run.runId, "land/0");
-        assert.equal(land.environment, "env-b");
-        assert.equal(land.thread, "thread-1");
-        yield* workflows.waitFor(run.runId, (current) => current.detail === "agent land");
-        const { steps } = yield* workflows.get(run.runId);
-        assert.deepStrictEqual(
-          steps.filter((step) => step.kind === "agent").map((step) => step.environmentId),
-          ["env-b", "env-b"],
-        );
-        yield* workflows.cancel(run.runId, "not needed");
-        // Only the step's own turn: someone else's turn on that thread is left alone.
-        assert.deepStrictEqual(agents.interrupted, [
-          { threadId: "thread-1", environment: "env-b", turnId: `${run.runId}/land/0` },
-        ]);
-      }),
-    );
-  }).pipe(Effect.provide(NodeServices.layer), Effect.scoped),
-);
-
 it.effect("cancelling a run stops its agent, and a turn a person stopped is not tried again", () =>
   Effect.gen(function* () {
     const { boot, agents } = yield* harness();

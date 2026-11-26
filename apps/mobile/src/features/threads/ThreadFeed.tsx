@@ -40,7 +40,6 @@ import {
   ThreadHandoffRow,
   ThreadModelSwitchDivider,
 } from "./thread-handoff-row";
-import { LinkRequestCard } from "./LinkRequestCard";
 import { SecretRequestCard } from "./SecretRequestCard";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import {
@@ -82,12 +81,7 @@ import {
 } from "@ankielcode/contracts";
 import type { ToolCallVisibility } from "@ankielcode/contracts/settings";
 import { encodeComposerContextFragment } from "@ankielcode/shared/composerContextClipboard";
-import {
-  hasThreadLinks,
-  formatThreadLink,
-  parseThreadLinkHref,
-  threadLinkRefs,
-} from "@ankielcode/shared/threadLinks";
+import { formatThreadLink, parseThreadLinkHref } from "@ankielcode/shared/threadLinks";
 import {
   parseComposerContextHref,
   collectComposerContextReferences,
@@ -243,7 +237,6 @@ import {
   threadFeedRunIsUnsettled,
   isContextCompactionActivityGroup,
   isContextHandoffActivityGroup,
-  isLinkRequestActivityGroup,
   isSecretRequestActivityGroup,
   type ThreadFeedEntry,
   type ThreadFeedLatestRun,
@@ -293,10 +286,8 @@ import {
   useQuietThreadShell,
   useThreadChipIcons,
 } from "../../state/entities";
-import { useEnvironmentPresentation } from "../../state/presentation";
 import { useThreadSelection } from "../../state/use-thread-selection";
 import { useEnvironmentQuery } from "../../state/query";
-import { useLinkedEnvironments } from "../../state/peerLinks";
 import { serverEnvironment } from "../../state/server";
 import { useModelMentions } from "../../state/model-mentions";
 import { composerDocumentAttachmentRecord } from "../../lib/composerContext";
@@ -321,7 +312,6 @@ import { waitForThreadShell } from "./threadForkNavigation";
 import { fileChipClipboardPath, fileChipMenu, resolveFileChipTarget } from "./fileChipMenu";
 import { useFileChipShare } from "./useFileChipShare";
 import { useOpenLinkedThread } from "./useOpenLinkedThread";
-import { useOpenThreadLink } from "./useOpenThreadLink";
 import {
   MarkdownImageAvailableWidthContext,
   ThreadMarkdownImage,
@@ -338,11 +328,6 @@ import {
   THREAD_FEED_MAINTAIN_SCROLL_AT_END_THRESHOLD,
 } from "./threadFeedEndFollow";
 import { useMessageTimeFormatter } from "./useMessageTimeFormatter";
-
-const linkedThreadEnvironmentIds = (markdown: string, environmentId: EnvironmentId) =>
-  hasThreadLinks(markdown)
-    ? threadLinkRefs(markdown, environmentId).map((ref) => ref.environmentId)
-    : [];
 
 const WIDE_MARKDOWN_BLOCK_OPTIONS = {
   // iOS blockquotes and selectable text measure separately; definite bubble width matches UIKit's drawing width.
@@ -1292,14 +1277,7 @@ const AssistantMarkdownContent = memo(function AssistantMarkdownContent(props: {
   readonly skills?: ReadonlyArray<SelectableMarkdownSkill> | undefined;
 }) {
   const gt = useGT();
-  const liveMarkdown = useLiveThreadLinkLabels(
-    props.markdown,
-    props.environmentId,
-    useLinkedEnvironments(
-      hasThreadLinks(props.markdown) ? props.environmentId : null,
-      linkedThreadEnvironmentIds(props.markdown, props.environmentId),
-    ),
-  );
+  const liveMarkdown = useLiveThreadLinkLabels(props.markdown, props.environmentId);
   const [quoteSelection, setQuoteSelection] = useState<{
     markdown: string;
     selectors: ReturnType<typeof collectMobileAssistantTextSelectors>;
@@ -1591,8 +1569,6 @@ function useMarkdownStyles(): MarkdownStyleSets {
 function AgentMessageFoldHeader(props: {
   readonly environmentId: EnvironmentId;
   readonly senderThreadId?: ThreadId;
-  /** A linked environment's sender title, for when this client cannot reach it. */
-  readonly senderTitle?: string;
   readonly summary: string;
   readonly expanded: boolean;
   readonly onToggle: () => void;
@@ -1602,7 +1578,7 @@ function AgentMessageFoldHeader(props: {
     props.senderThreadId ? scopeThreadRef(props.environmentId, props.senderThreadId) : null,
   );
   const gt = useGT();
-  const label = senderShell?.title.trim() || props.senderTitle?.trim() || gt("Agent");
+  const label = senderShell?.title.trim() || gt("Agent");
   return (
     <Pressable
       accessibilityRole="button"
@@ -1649,12 +1625,8 @@ function AgentMessageFoldHeader(props: {
 function OpenSenderThreadButton(props: {
   readonly environmentId: EnvironmentId;
   readonly senderThreadId: ThreadId;
-  /** In a linked environment, shown only when this client is connected to it. */
-  readonly linked?: boolean;
 }) {
   const openLinkedThread = useOpenLinkedThread();
-  const linkedEnvironment = useEnvironmentPresentation(props.linked ? props.environmentId : null);
-  if (props.linked && linkedEnvironment.presentation === null) return null;
   return (
     <Pressable
       accessibilityRole="link"
@@ -2239,16 +2211,6 @@ function renderFeedEntry(
     );
   }
 
-  if (entry.type === "activity-group" && isLinkRequestActivityGroup(entry)) {
-    return (
-      <LinkRequestCard
-        environmentId={props.environmentId}
-        projectedItem={entry.activities[0]!.projectedItem}
-        iconColor={iconSubtleColor}
-      />
-    );
-  }
-
   if (entry.type === "activity-group" && isContextCompactionActivityGroup(entry)) {
     const label = entry.activities[0]!.summary;
     const item = entry.activities[0]!.projectedItem.item;
@@ -2359,12 +2321,9 @@ function renderFeedEntry(
     if (isUser) {
       const enterAnimated = isFreshTimestamp(message.createdAt);
       const foldRowId = presentation.attribution === "agent" ? `agent:${message.id}` : null;
-      // A linked environment's agent sent it from a thread there.
-      const senderRef =
-        message.linkedSender ??
-        (message.senderThreadId
-          ? scopeThreadRef(props.environmentId, message.senderThreadId)
-          : null);
+      const senderRef = message.senderThreadId
+        ? scopeThreadRef(props.environmentId, message.senderThreadId)
+        : null;
       const foldExpanded = foldRowId !== null && (props.expandedWorkRows[foldRowId] ?? false);
       const bubbleBodyVisible = foldRowId === null || foldExpanded;
       const receipt = resolveUserMessageReceipt(
@@ -2483,7 +2442,6 @@ function renderFeedEntry(
                 <AgentMessageFoldHeader
                   environmentId={senderRef?.environmentId ?? props.environmentId}
                   senderThreadId={senderRef?.threadId}
-                  {...(message.linkedSender ? { senderTitle: message.linkedSender.title } : {})}
                   summary={
                     replaceComposerContextReferences(presentation.text, (ref) => ref.label)
                       .split(/\r?\n/)
@@ -2612,7 +2570,6 @@ function renderFeedEntry(
                     <OpenSenderThreadButton
                       environmentId={senderRef.environmentId}
                       senderThreadId={senderRef.threadId}
-                      linked={message.linkedSender !== undefined}
                     />
                   ) : null}
                   <Text className="font-ankiel-medium text-xs tabular-nums text-foreground-secondary">
@@ -2771,16 +2728,9 @@ function UserMessageContent(props: UserMessageContentProps) {
   const gt = useGT();
   const [selected, setSelected] = useState<{ contextId: string; label: string } | null>(null);
   const navigation = useNavigation();
-  const openThreadLink = useOpenThreadLink(props.environmentId);
+  const openLinkedThread = useOpenLinkedThread();
   const { selectedThread } = useThreadSelection();
-  const liveText = useLiveThreadLinkLabels(
-    props.text,
-    props.environmentId,
-    useLinkedEnvironments(
-      hasThreadLinks(props.text) ? props.environmentId : null,
-      linkedThreadEnvironmentIds(props.text, props.environmentId),
-    ),
-  );
+  const liveText = useLiveThreadLinkLabels(props.text, props.environmentId);
   const threadIcons = useThreadChipIcons(props.environmentId, liveText, props.context?.records);
   const text = replaceComposerContextReferences(liveText, (ref) => {
     const available = props.context?.records.some((record) => record.contextId === ref.contextId);
@@ -2798,7 +2748,10 @@ function UserMessageContent(props: UserMessageContentProps) {
       return;
     }
     if (record?.kind === "thread" && "threadId" in record) {
-      openThreadLink(scopeThreadRef(record.environmentId, record.threadId));
+      openLinkedThread({
+        environmentId: String(record.environmentId),
+        threadId: String(record.threadId),
+      });
       return;
     }
     const document = composerDocumentAttachmentRecord(record);
@@ -3111,7 +3064,7 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
   const duoColumns = useNativeWorkspaceColumnsSupported() && isDuoDevice(deviceType);
   const openPullRequest = useOpenPullRequest();
   const navigation = useNavigation();
-  const openThreadLink = useOpenThreadLink(props.environmentId);
+  const openLinkedThread = useOpenLinkedThread();
   const openLocalPreview = useOpenLocalPreview();
   const previewTunnelOff = useEnvironmentPreviewTunnelOff(props.environmentId);
   // Without the tunnel, loopback links fall through to the system browser like any other link.
@@ -3397,7 +3350,12 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
     }
     if (parseThreadLinkHref(href)) {
       const target = resolveLinkedThread(href);
-      if (target) openThreadLink(target);
+      if (target) {
+        openLinkedThread({
+          environmentId: String(target.environmentId),
+          threadId: String(target.threadId),
+        });
+      }
       return;
     }
     const media = resolveMarkdownMediaPreview(href, {

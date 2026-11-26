@@ -33,17 +33,8 @@ vi.mock(import("@ankielcode/client-runtime/state/thread-workflows"), async (impo
 
 vi.mock(import("../../state/entities"), async (importOriginal) => ({
   ...(await importOriginal()),
-  // The linked environment is connected, but its thread is not in the loaded shell.
   useQuietThreadShell: ((target: { readonly environmentId: string } | null) =>
-    target === null || target.environmentId === "environment:linked"
-      ? null
-      : { title: "Release lead" }) as never,
-}));
-
-vi.mock(import("../../state/environments"), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useEnvironment: ((environmentId: string | null) =>
-    environmentId === "environment:linked" ? { environmentId } : null) as never,
+    target === null ? null : { title: "Release lead" }) as never,
 }));
 
 vi.mock(import("../../state/query"), async (importOriginal) => ({
@@ -270,16 +261,11 @@ it("shows who sent a queued message and folds automation and agent prompts", asy
         },
       ],
       [
-        "run:linked",
-        "Linked review finished.",
+        "run:tool",
+        "Tool review finished.",
         {
           createdBy: "agent",
           creationSource: "mcp",
-          linkedSender: {
-            environmentId: "environment:linked",
-            threadId: "thread:linked-lead",
-            title: "Title when sent",
-          },
         },
       ],
       [
@@ -312,10 +298,6 @@ it("shows who sent a queued message and folds automation and agent prompts", asy
   await expect.element(page.getByRole("button", { name: /Release lead/ })).toBeVisible();
   await page.getByRole("button", { name: "Open thread" }).nth(0).click({ force: true });
   expect(onOpenThread).toHaveBeenCalledExactlyOnceWith("thread:lead", "environment:test");
-  // A sender in a connected linked environment keeps the title it sent and opens there.
-  await expect.element(page.getByRole("button", { name: /Title when sent/ })).toBeVisible();
-  await page.getByRole("button", { name: "Open thread" }).nth(1).click({ force: true });
-  expect(onOpenThread).toHaveBeenLastCalledWith("thread:linked-lead", "environment:linked");
 
   await expect.element(page.getByText("Sent by Ankiel Code")).toBeVisible();
   await expect.element(page.getByText("Continue where you left off.")).toBeVisible();

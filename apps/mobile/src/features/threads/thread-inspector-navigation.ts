@@ -9,15 +9,9 @@ import { useWorkspacePaneState } from "../layout/AdaptiveWorkspaceLayout";
 export type ThreadInspectorMode = "route" | "git" | "files" | "preview";
 
 export type ThreadInspectorTarget = {
-  /** "linkedThread" is a thread on a linked environment, read through `linked.viaEnvironmentId`. */
-  readonly type: "thread" | "linkedThread" | "device" | "localPreview";
+  readonly type: "thread" | "device" | "localPreview";
   readonly environmentId: string;
   readonly threadId: string;
-  readonly linked?: {
-    readonly viaEnvironmentId: string;
-    readonly label: string;
-    readonly title?: string;
-  };
   readonly deviceKey?: string;
   /** The environment's localhost page a "localPreview" shows. */
   readonly url?: string;

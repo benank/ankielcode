@@ -53,7 +53,6 @@ describe("sideThreadComposer", () => {
     ["side-chat", "composer"],
     ["subagent", "composer"],
     ["provider-subagent", "read-only"],
-    ["linked", "read-only-connect"],
   ] as const)("gives %s the %s", (kind, composer) => {
     expect(sideThreadComposer(kind)).toBe(composer);
   });

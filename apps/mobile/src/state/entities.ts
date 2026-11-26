@@ -27,7 +27,7 @@ import {
 import { relabelThreadLinks } from "@ankielcode/shared/threadLinksCopy";
 import * as Schema from "effect/Schema";
 import { AsyncResult, Atom } from "effect/reactivity";
-import { msg, useGT, useMessages } from "gt-react-native";
+import { msg, useMessages } from "gt-react-native";
 
 import { threadChipTargets } from "../lib/enrichedLinkPresentation";
 import { resolveProjectChipIcon } from "../lib/projectIcon";
@@ -205,11 +205,6 @@ export function useVisibleThreadShells(): ReadonlyArray<EnvironmentThreadShell> 
   return useAtomValue(environmentThreadShells.visibleThreadShellsAtom);
 }
 
-/** Tasks linked environments run for a listed thread, by thread key; lists show them under it. */
-export function useDelegatedUnderParent(): ReadonlySet<string> {
-  return useAtomValue(environmentThreadShells.delegatedUnderParentAtom);
-}
-
 export function useNavigationThreadShells(): ReadonlyArray<EnvironmentThreadShell> {
   return useAtomValue(environmentThreadShells.navigationThreadShellsAtom);
 }
@@ -239,16 +234,8 @@ export function useSideChats(ref: ScopedThreadRef) {
   return useAtomValue(environmentThreadShells.sideChatsAtom(ref));
 }
 
-const NO_LINKED_ENVIRONMENTS: ReadonlyMap<EnvironmentId, string> = new Map();
-
-/** `linked` names the machines `environmentId` links to, whose threads open read-only. */
-export function useLiveThreadLinkLabels(
-  markdown: string,
-  environmentId: EnvironmentId,
-  linked = NO_LINKED_ENVIRONMENTS,
-): string {
+export function useLiveThreadLinkLabels(markdown: string, environmentId: EnvironmentId): string {
   const resolve = useMessages();
-  const gt = useGT();
   const titles = useAtomValue(
     hasThreadLinks(markdown)
       ? threadLinkTitlesAtom(JSON.stringify(threadLinkRefs(markdown, environmentId).map(threadKey)))
@@ -257,14 +244,9 @@ export function useLiveThreadLinkLabels(
   return relabelThreadLinks(
     markdown,
     environmentId,
-    (ref, label) => {
+    (ref) => {
       const title = titles.get(threadKey(ref));
       if (typeof title === "string") return title;
-      // A thread only the message's environment can reach keeps its written name.
-      const machine = linked.get(ref.environmentId);
-      if (machine !== undefined) {
-        return label?.trim() || gt("Thread on {label}", { label: machine });
-      }
       return title && resolve(msg("Thread", { $context: "fallback title of a linked thread" }));
     },
     resolve,

@@ -67,7 +67,6 @@ export interface SettingsSearchItem {
   readonly localEnvironmentOnly?: boolean;
   readonly primaryEnvironmentOnly?: boolean;
   readonly wslAvailableOnly?: boolean;
-  readonly peerLinksOnly?: boolean;
   readonly fastWorktreeCheckoutOnly?: boolean;
   readonly textGeneratorsOnly?: boolean;
   readonly secondary?: boolean;
@@ -81,7 +80,6 @@ export interface SettingsSearchAvailability {
   readonly canManageLocalBackend: boolean;
   readonly isWslSettingsRowVisible: boolean;
   readonly hasThreadAutoSettlement: boolean;
-  readonly hasPeerLinkHost?: boolean;
   readonly hasFastWorktreeCheckoutEnvironment?: boolean;
   /** An environment without a provider allow-list, which hides text generators. */
   readonly hasTextGeneratorsEnvironment?: boolean;
@@ -529,13 +527,6 @@ export const SETTINGS_SEARCH_ITEMS = [
         "accessibility a11y screen reader nvda jaws voiceover orca narrator window title tab title alt tab taskbar thread status order working approval",
       ),
     ],
-  },
-  {
-    id: "linked-environments-beta",
-    title: msg("Linked environments"),
-    to: "/settings/labs",
-    scope: "environment",
-    searchTerms: [msg("link another machine vps peer agents work there delegate")],
   },
   {
     id: "workflows-beta",
@@ -1384,14 +1375,6 @@ export const SETTINGS_SEARCH_ITEMS = [
     ],
   },
   {
-    id: "linked-environments",
-    peerLinksOnly: true,
-    title: msg("Linked environments"),
-    to: "/settings/connections",
-    targetId: "linked-environments",
-    searchTerms: [msg("link peer another machine vps agents work there handoff pairing code")],
-  },
-  {
     id: "remote-environments",
     title: msg("Environments"),
     to: "/settings/connections",
@@ -1597,7 +1580,6 @@ export function filterAvailableSettingsSearchItems(
       (!item.primaryEnvironmentOnly || availability.hasPrimaryEnvironment === true) &&
       (!item.wslAvailableOnly || availability.isWslSettingsRowVisible) &&
       (!item.requiresThreadAutoSettlement || availability.hasThreadAutoSettlement) &&
-      (!item.peerLinksOnly || availability.hasPeerLinkHost === true) &&
       (!item.fastWorktreeCheckoutOnly ||
         availability.hasFastWorktreeCheckoutEnvironment === true) &&
       (!item.textGeneratorsOnly || availability.hasTextGeneratorsEnvironment === true) &&

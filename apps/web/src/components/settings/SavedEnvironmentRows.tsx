@@ -13,7 +13,6 @@ import {
   hasSavedBearerRoute,
   connectionErrorText,
   connectionStatusText,
-  environmentMcpUrl,
 } from "@ankielcode/client-runtime/connection";
 import { msg, T, useGT, useMessages } from "gt-react";
 import { m, type MessageResolver } from "../../i18n/messages";
@@ -57,11 +56,9 @@ type SavedBackendListRowProps = {
   onSetEnabled: (environmentId: EnvironmentId, enabled: boolean) => void;
   onRemove: (environment: EnvironmentPresentation) => void;
   onAddRoute: (environment: EnvironmentPresentation) => void;
-  /** The map's details open on a machine's routes; the list keeps them folded. */
-  initialRoutesOpen?: boolean;
 };
 
-export function savedBackendStatus(
+function savedBackendStatus(
   environment: EnvironmentPresentation,
   resolve: MessageResolver = m,
 ): {
@@ -106,11 +103,10 @@ export function SavedBackendListRow({
   onSetEnabled,
   onRemove,
   onAddRoute,
-  initialRoutesOpen = false,
 }: SavedBackendListRowProps) {
   const messages = useMessages();
   const gt = useGT();
-  const [routesOpen, setRoutesOpen] = useState(initialRoutesOpen);
+  const [routesOpen, setRoutesOpen] = useState(false);
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [diagnosisOpen, setDiagnosisOpen] = useState(false);
   const environmentId = environment.environmentId;
@@ -139,31 +135,6 @@ export function SavedBackendListRow({
   const copyTraceId = (traceId: string) => {
     copyTraceIdToClipboard(traceId, { traceId });
   };
-  const { copyToClipboard: copyMcpUrl } = useCopyToClipboard<{ url: string }>({
-    target: {
-      target: "MCP URL",
-      unavailableMessage: msg("Clipboard API is unavailable while copying MCP URL."),
-      failureMessage: msg("Failed to copy MCP URL to the clipboard."),
-    },
-    onCopy: ({ url }) => {
-      toastManager.add({
-        type: "success",
-        title: gt("MCP URL copied"),
-        description: gt("Add it to an agent, e.g. claude mcp add --transport http ankiel {url}", {
-          url,
-        }),
-      });
-    },
-    onError: (error) => {
-      toastManager.add(
-        stackedThreadToast({
-          type: "error",
-          title: gt("Could not copy MCP URL"),
-          description: error.message,
-        }),
-      );
-    },
-  });
   const versionMismatch = resolveServerConfigVersionMismatch(environment.serverConfig, messages);
   const serverUpdateState = useAtomValue(serverEnvironment.updateStateAtom(environmentId));
   const resumingServerUpdate =
@@ -176,10 +147,6 @@ export function SavedBackendListRow({
   const diagnosis = resumingServerUpdate ? null : currentDiagnosis;
   const prepared = usePreparedConnection(environmentId);
   const connectedTarget = isConnected && prepared._tag === "Some" ? prepared.value.target : null;
-  const mcpUrl = environmentMcpUrl({
-    entry: environment.entry,
-    connectedTarget,
-  });
   const machineKind = resolveEnvironmentMachineKind(environment.serverConfig);
   const routeCount = connectionRoutes(environment.entry).length;
   const subtitleText = [
@@ -403,11 +370,6 @@ export function SavedBackendListRow({
             <RouteIcon />
             {routesOpen ? gt("Hide routes") : gt("Routes")}
           </MenuItem>
-          {mcpUrl ? (
-            <MenuItem onClick={() => copyMcpUrl(mcpUrl, { url: mcpUrl })}>
-              <T>Copy MCP URL</T>
-            </MenuItem>
-          ) : null}
           {errorTraceId ? (
             <MenuItem onClick={() => copyTraceId(errorTraceId)}>
               <T>Copy trace ID</T>

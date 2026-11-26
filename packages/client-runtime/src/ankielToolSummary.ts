@@ -545,40 +545,6 @@ export function summarizeAnkielToolCalls(
           );
       break;
     }
-    case "environment-link": {
-      const count = selected.length;
-      label = done
-        ? resolve(
-            msg(
-              "{count, plural, one {Asked to link {count} environment} other {Asked to link {count} environments}}",
-              { count },
-            ),
-          )
-        : resolve(
-            msg(
-              "{count, plural, one {Tried to ask to link {count} environment} other {Tried to ask to link {count} environments}}",
-              { count },
-            ),
-          );
-      break;
-    }
-    case "environment-unlink": {
-      const count = countEntities(entityIds("environmentId"));
-      label = done
-        ? resolve(
-            msg(
-              "{count, plural, one {Forgot {count} linked environment} other {Forgot {count} linked environments}}",
-              { count },
-            ),
-          )
-        : resolve(
-            msg(
-              "{count, plural, one {Tried to forget {count} linked environment} other {Tried to forget {count} linked environments}}",
-              { count },
-            ),
-          );
-      break;
-    }
     case "attachment-prepare": {
       const count = countEntities(entityIds("attachmentId"));
       label = done
@@ -1151,23 +1117,6 @@ export function summarizeAnkielToolCalls(
         : resolve(
             msg(
               "{count, plural, one {Tried to set the theme {count} time} other {Tried to set the theme {count} times}}",
-              { count },
-            ),
-          );
-      break;
-    }
-    case "environment-links": {
-      const count = selected.length;
-      label = done
-        ? resolve(
-            msg(
-              "{count, plural, one {Listed linked environments {count} time} other {Listed linked environments {count} times}}",
-              { count },
-            ),
-          )
-        : resolve(
-            msg(
-              "{count, plural, one {Tried to list linked environments {count} time} other {Tried to list linked environments {count} times}}",
               { count },
             ),
           );

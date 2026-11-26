@@ -13,7 +13,6 @@ import type {
   ProviderInteractionMode,
   RunId,
   RuntimeMode,
-  OrchestrationV2LinkedSender,
   ScheduledTaskId,
   ThreadId,
 } from "@ankielcode/contracts";
@@ -84,7 +83,6 @@ export interface ChatMessage {
   readonly creationSource?: OrchestrationV2CreationSource;
   readonly scheduledTaskId?: ScheduledTaskId;
   readonly senderThreadId?: ThreadId;
-  readonly linkedSender?: OrchestrationV2LinkedSender;
   readonly idleCompaction?: import("@ankielcode/contracts").OrchestrationV2IdleCompaction;
   readonly createdAt: string;
   readonly updatedAt: string;

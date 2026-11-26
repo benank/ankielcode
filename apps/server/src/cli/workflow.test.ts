@@ -25,7 +25,7 @@ vi.mock("../auth/EnvironmentAuth.ts", async (importOriginal) => {
   return {
     ...actual,
     layerRuntime: Layer.mock(actual.EnvironmentAuth)({
-      issueMcpClientSession: () =>
+      issueCliMcpClientSession: () =>
         Effect.map(DateTime.now, (expiresAt) => ({
           sessionId: AuthSessionId.make("test-session"),
           token: "synthetic-token",

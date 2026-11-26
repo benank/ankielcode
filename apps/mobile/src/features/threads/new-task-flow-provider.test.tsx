@@ -103,7 +103,6 @@ vi.mock("../../state/use-composer-drafts", () => ({
     draft.text === "" && draft.attachments.length === 0,
 }));
 
-vi.mock("../../state/peerLinks", () => ({ useLinkedEnvironments: () => new Map() }));
 vi.mock("../../state/project-has-threads", () => ({ useProjectHasThreads: () => false }));
 vi.mock("../../state/workspace", () => ({
   useConnectionsReady: () => true,

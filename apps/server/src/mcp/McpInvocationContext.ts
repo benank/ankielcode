@@ -6,13 +6,11 @@ import {
   PreviewAutomationUnavailableError,
   type ProviderInstanceId,
   type ProviderInteractionMode,
-  type OrchestrationV2LinkedSender,
   type RuntimeMode,
   type ThreadId,
 } from "@ankielcode/contracts";
 import { formatThreadLink } from "@ankielcode/shared/threadLinks";
 import * as Context from "effect/Context";
-import type * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 
@@ -34,85 +32,28 @@ export interface McpThreadCaller {
   readonly subagent?: boolean;
 }
 
+/** A caller outside any thread: the local CLI (`ankiel thread`, `ankiel workflow`). */
 export interface McpClientCaller {
   readonly sessionId: string;
   readonly label: string;
   readonly access: AuthMcpClientAccess;
-  /**
-   * Another Ankiel Code environment's peer link. What it starts here carries its
-   * session as `linkOrigin`, and it changes only that work (`linkOrigin.ts`).
-   */
-  readonly linked?: boolean | undefined;
-  /** When a peer link's session ends unless it is used again, answered as `Ankiel-Link-Expires-At`. */
-  readonly linkExpiresAt?: DateTime.Utc | undefined;
-  /**
-   * Narrower modes the client asked for on this request (`Ankiel-Mode-Limit`):
-   * another environment passing on the limits of the agent it calls for.
-   */
-  readonly narrowedTo?: ClientModes | undefined;
-  /** A linked environment's thread this request is made for (`Ankiel-Sender-Thread`). */
-  readonly senderThread?: OrchestrationV2LinkedSender | undefined;
 }
-
-/**
- * `Ankiel-Mode-Limit: <runtimeMode>/<interactionMode>` lets an OAuth client cap
- * a request below what it was approved with: another environment passes on
- * the limits of the agent it calls for. It can only narrow (see
- * `clientModeCeiling`), so a client gains nothing by sending a broad one.
- */
-export const MODE_LIMIT_HEADER = "ankiel-mode-limit";
-
-/**
- * `Ankiel-Link-Expires-At: <ISO time>` answers a peer link's request with when its
- * session now ends. Using a link renews it, so the linking side keeps this.
- */
-export const LINK_EXPIRES_AT_HEADER = "ankiel-link-expires-at";
-
-/**
- * `Ankiel-Sender-Thread: <environmentId>/<threadId>/<title>`, each URI-encoded: the
- * thread another environment makes a request for, so what it sends here can name
- * it. Read only from a linked client.
- */
-export const SENDER_THREAD_HEADER = "ankiel-sender-thread";
 
 export interface ClientModes {
   readonly runtimeMode: RuntimeMode;
   readonly interactionMode: ProviderInteractionMode;
 }
 
-const runtimeModeRank: Record<RuntimeMode, number> = {
-  "approval-required": 0,
-  "auto-accept-edits": 1,
-  auto: 2,
-  "full-access": 3,
-};
-const interactionModeRank: Record<ProviderInteractionMode, number> = { plan: 0, default: 1 };
-
 /**
- * The modes a client caller's writes are capped at: what it was approved
- * with, narrowed by what it asked for on this request. A read-only client
- * never reaches a write (`McpToolAccess` refuses it first), so it maps to the
- * lowest runtime mode rather than to nothing.
+ * The modes a client caller's writes are capped at. A read-only client never
+ * reaches a write (`McpToolAccess` refuses it first), so it maps to the lowest
+ * runtime mode rather than to nothing.
  */
-export const clientModeCeiling = (client: McpClientCaller | undefined): ClientModes => {
-  const approved: ClientModes = {
-    runtimeMode:
-      client === undefined || client.access === "read-only" ? "approval-required" : client.access,
-    interactionMode: "default",
-  };
-  const asked = client?.narrowedTo;
-  if (asked === undefined) return approved;
-  return {
-    runtimeMode:
-      runtimeModeRank[asked.runtimeMode] < runtimeModeRank[approved.runtimeMode]
-        ? asked.runtimeMode
-        : approved.runtimeMode,
-    interactionMode:
-      interactionModeRank[asked.interactionMode] < interactionModeRank[approved.interactionMode]
-        ? asked.interactionMode
-        : approved.interactionMode,
-  };
-};
+export const clientModeCeiling = (client: McpClientCaller | undefined): ClientModes => ({
+  runtimeMode:
+    client === undefined || client.access === "read-only" ? "approval-required" : client.access,
+  interactionMode: "default",
+});
 
 /** Thread callers default to their own thread; client callers need thread for tools that act as the caller. */
 export interface McpInvocationScope {
@@ -122,8 +63,6 @@ export interface McpInvocationScope {
   readonly requestNamespace: string;
   readonly thread: McpThreadCaller | undefined;
   readonly client: McpClientCaller | undefined;
-  /** False while the Linked environments beta is off here; `/mcp` reads it per request. */
-  readonly linkedEnvironments?: boolean;
   /** True while Labs → Workflows is on here; `/mcp` reads it per request. Unset is off. */
   readonly workflows?: boolean;
   /**
@@ -181,13 +120,6 @@ export const hiddenFromThreads = (): boolean => {
   const fiber = Fiber.getCurrent();
   const scope = fiber && Context.getOrUndefined(fiber.context, McpInvocationContext);
   return scope?.thread === undefined;
-};
-
-/** `McpSchema.EnabledWhen` for tools that only serve links, hidden while the beta is off. */
-export const hiddenWhileLinksOff = (): boolean => {
-  const fiber = Fiber.getCurrent();
-  const scope = fiber && Context.getOrUndefined(fiber.context, McpInvocationContext);
-  return scope?.linkedEnvironments !== false;
 };
 
 /** `McpSchema.EnabledWhen` for workflow event types: outside clients only, while Workflows is on. */

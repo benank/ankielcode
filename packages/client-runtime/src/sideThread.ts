@@ -1,10 +1,7 @@
 import type { OrchestrationV2AppThread, SideThreadOpenTarget } from "@ankielcode/contracts";
 
-/**
- * A thread that opens beside the one you are in. `linked` lives on a linked environment this client
- * has no connection to; the others are threads of a connected environment.
- */
-export type SideThreadKind = "side-chat" | "subagent" | "provider-subagent" | "linked";
+/** A thread that opens beside the one you are in. */
+export type SideThreadKind = "side-chat" | "subagent" | "provider-subagent";
 
 /**
  * Which side thread `thread` is, or null for a thread that opens like any other. A row that does
@@ -16,7 +13,7 @@ export function sideThreadKindOf(
         Partial<Pick<OrchestrationV2AppThread, "creationSource">>)
     | null
     | undefined,
-): Exclude<SideThreadKind, "linked"> | null {
+): SideThreadKind | null {
   if (!thread) return null;
   if (thread.lineage.sideChat === true && thread.lineage.parentThreadId !== null) {
     return "side-chat";
@@ -29,15 +26,11 @@ export type SideThreadComposer =
   /** The normal composer. */
   | "composer"
   /** A bar that says the thread takes no messages. */
-  | "read-only"
-  /** The same bar, offering to connect to the environment the thread is on. */
-  | "read-only-connect";
+  | "read-only";
 
 /** What stands at the bottom of a side thread, in the panel and on the main screen alike. */
 export function sideThreadComposer(kind: SideThreadKind): SideThreadComposer {
   switch (kind) {
-    case "linked":
-      return "read-only-connect";
     case "provider-subagent":
       return "read-only";
     case "side-chat":

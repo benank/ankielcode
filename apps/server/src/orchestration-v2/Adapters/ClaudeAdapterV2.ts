@@ -2831,7 +2831,6 @@ export const CLAUDE_READ_ONLY_ANKIEL_MCP_ALLOWED_TOOLS: ReadonlyArray<string> = 
   "mcp__ankiel-code__ankiel_thread_search",
   "mcp__ankiel-code__ankiel_preview_list",
   "mcp__ankiel-code__ankiel_environment_read",
-  "mcp__ankiel-code__ankiel_environment_links",
   "mcp__ankiel-code__ankiel_theme_read",
   "mcp__ankiel-code__html_preview",
   "mcp__ankiel-code__html_render",

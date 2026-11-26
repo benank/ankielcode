@@ -60,7 +60,7 @@ export function ThreadWorkflowGroup(props: {
   const rail = workflowRail(group, m);
   const open = rail.find((item) => item.key === selected);
   const label = group.workflow.workflowName ?? group.workflow.title;
-  const statusLabel = resolveSubagentRowPresentation(props.subagent, false, m).statusLabel;
+  const statusLabel = resolveSubagentRowPresentation(props.subagent, m).statusLabel;
 
   return (
     <View className="my-2">
@@ -182,7 +182,6 @@ function WorkflowMemberRow(props: {
       result: null,
       childThreadId: threadId,
     },
-    false,
     m,
   );
   const { detail, error } = workflowMemberDetail(member);

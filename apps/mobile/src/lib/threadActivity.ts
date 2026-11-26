@@ -2,7 +2,6 @@ import type {
   ThreadPendingApproval,
   ThreadPendingUserInput,
 } from "@ankielcode/client-runtime/state/thread-requests";
-import { linkRequestTargetName } from "@ankielcode/client-runtime/link-request";
 import { turnItemIsWorkspacePreparation } from "@ankielcode/client-runtime/state/turn-item-presentation";
 import { formatSubagentDisplayTitle } from "@ankielcode/client-runtime/state/subagent-display";
 import {
@@ -153,7 +152,6 @@ export interface ThreadFeedMessage {
   readonly creationSource?: OrchestrationV2CreationSource;
   readonly scheduledTaskId?: ScheduledTaskId;
   readonly senderThreadId?: ThreadId;
-  readonly linkedSender?: import("@ankielcode/contracts").OrchestrationV2LinkedSender;
   readonly idleCompaction?: import("@ankielcode/contracts").OrchestrationV2IdleCompaction;
   readonly visibility: OrchestrationV2ProjectedTurnItem["visibility"];
   readonly sourceThreadId: ThreadId;
@@ -456,12 +454,6 @@ export function isSecretRequestActivityGroup(entry: ThreadFeedActivityGroup): bo
   );
 }
 
-export function isLinkRequestActivityGroup(entry: ThreadFeedActivityGroup): boolean {
-  return (
-    entry.activities.length === 1 && entry.activities[0]?.projectedItem.item.type === "link_request"
-  );
-}
-
 function isUserInputActivityGroup(entry: ThreadFeedActivityGroup): boolean {
   return entry.activities.some((activity) => activity.workEntry.questionAnswer !== undefined);
 }
@@ -503,8 +495,7 @@ function itemIsProminent(item: OrchestrationV2TurnItem): boolean {
     item.type === "thread_created" ||
     item.type === "system_notice" ||
     item.type === "proposed_plan" ||
-    item.type === "secret_request" ||
-    item.type === "link_request"
+    item.type === "secret_request"
   );
 }
 
@@ -701,7 +692,7 @@ function itemSummary(
     case "secret_request":
       return item.label;
     case "link_request":
-      return resolve(msg("Link {target}", { target: linkRequestTargetName(item, resolve) }));
+      return item.reason;
     case "dynamic_tool": {
       const classified = classifyToolActivity({
         itemType: "dynamic_tool_call",
@@ -2584,7 +2575,9 @@ export function buildThreadFeed(
     const row = visibleTurnItems[index]!;
     const item = row.item;
     if (turnItemIsWorkspacePreparation(item) && !item.deferredWork) continue;
-    if (item.type === "todo_list" || item.type === "checkpoint") continue;
+    // Old threads keep requests to link another environment, a feature since removed.
+    if (item.type === "todo_list" || item.type === "checkpoint" || item.type === "link_request")
+      continue;
     if (
       item.type === "user_message" &&
       item.inputIntent === "queued_turn" &&
@@ -2670,7 +2663,6 @@ export function buildThreadFeed(
                 creationSource: item.creationSource,
                 ...(item.scheduledTaskId ? { scheduledTaskId: item.scheduledTaskId } : {}),
                 ...(item.senderThreadId ? { senderThreadId: item.senderThreadId } : {}),
-                ...(item.linkedSender ? { linkedSender: item.linkedSender } : {}),
                 ...(item.idleCompaction ? { idleCompaction: item.idleCompaction } : {}),
               }
             : {}),

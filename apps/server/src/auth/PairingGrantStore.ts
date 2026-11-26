@@ -1,12 +1,9 @@
 import {
   AuthStandardClientScopes,
   type AuthEnvironmentScope,
-  type AuthMcpClientAccess,
   type AuthPairingLink,
-  mcpApprovalCode,
   PAIRING_CODE_ALPHABET,
   PAIRING_CODE_LENGTH,
-  parseMcpApprovalCode,
   type ServerAuthBootstrapMethod,
 } from "@ankielcode/contracts";
 import {
@@ -232,8 +229,6 @@ export class PairingGrantStore extends Context.Service<
       readonly label?: string;
       readonly proofKeyThumbprint?: string;
       readonly purpose?: "startup";
-      /** Issues a hidden `<LEVEL>-` code that only an agent sign-in at this level can spend. */
-      readonly mcpApproval?: AuthMcpClientAccess;
     }) => Effect.Effect<IssuedBootstrapCredential, BootstrapCredentialInternalError>;
     /** Revokes every unspent code except those bound to the kept proof key. */
     readonly revokeUnspentLinksExcept: (
@@ -252,7 +247,6 @@ export class PairingGrantStore extends Context.Service<
         readonly requestedScopes?: ReadonlyArray<AuthEnvironmentScope>;
         /** All scopes must be granted; requestedScopes only requires an overlap for OAuth. */
         readonly requiredScopes?: ReadonlyArray<AuthEnvironmentScope>;
-        readonly allowedSubject?: string;
       },
     ) => Effect.Effect<BootstrapGrant, BootstrapCredentialError>;
   }
@@ -405,8 +399,7 @@ const make = Effect.gen(function* () {
         ),
       );
     const token = yield* generatePairingToken;
-    const mcpApproval = input?.mcpApproval;
-    const credential = mcpApproval ? mcpApprovalCode(mcpApproval, token) : token;
+    const credential = token;
     const isDevStartupToken = config.devUrl !== undefined && input?.purpose === "startup";
     const ttl =
       input?.ttl ??
@@ -420,9 +413,7 @@ const make = Effect.gen(function* () {
       ...(input?.proofKeyThumbprint ? { proofKeyThumbprint: input.proofKeyThumbprint } : {}),
       expiresAt,
     };
-    const subject = mcpApproval
-      ? `${AuthPairingLinks.MCP_APPROVAL_SUBJECT_PREFIX}${mcpApproval}`
-      : (input?.subject ?? "one-time-token");
+    const subject = input?.subject ?? "one-time-token";
     yield* pairingLinks
       .create({
         id,
@@ -446,17 +437,14 @@ const make = Effect.gen(function* () {
             }),
         ),
       );
-    // Purpose-bound codes stay out of the pairing links and QR codes that clients show.
-    if (!subject.startsWith(AuthPairingLinks.MCP_APPROVAL_SUBJECT_PREFIX)) {
-      yield* emitUpsert({
-        id,
-        scopes: input?.scopes ?? AuthStandardClientScopes,
-        subject,
-        ...(input?.label ? { label: input.label } : {}),
-        createdAt: now,
-        expiresAt,
-      });
-    }
+    yield* emitUpsert({
+      id,
+      scopes: input?.scopes ?? AuthStandardClientScopes,
+      subject,
+      ...(input?.label ? { label: input.label } : {}),
+      createdAt: now,
+      expiresAt,
+    });
     return issued;
   });
 
@@ -571,7 +559,7 @@ const make = Effect.gen(function* () {
       const compactCredential = credential.replace(/[\s-]/g, "");
       const pairingCredential = PAIRING_TOKEN_PATTERN.test(compactCredential)
         ? compactCredential.toUpperCase()
-        : (parseMcpApprovalCode(credential)?.code ?? credential);
+        : credential;
 
       // Check scopes in the UPDATE so rejected requests cannot spend one-time links.
       const consumed = yield* pairingLinks
@@ -582,16 +570,13 @@ const make = Effect.gen(function* () {
             ? { requestedScopes: input.requestedScopes }
             : {}),
           ...(input?.requiredScopes !== undefined ? { requiredScopes: input.requiredScopes } : {}),
-          ...(input?.allowedSubject ? { allowedSubject: input.allowedSubject } : {}),
           consumedAt: now,
           now,
         })
         .pipe(Effect.mapError((cause) => new BootstrapCredentialConsumeAvailableError({ cause })));
 
       if (Option.isSome(consumed)) {
-        if (!consumed.value.subject.startsWith(AuthPairingLinks.MCP_APPROVAL_SUBJECT_PREFIX)) {
-          yield* emitRemoved(consumed.value.id);
-        }
+        yield* emitRemoved(consumed.value.id);
         return {
           method: consumed.value.method,
           scopes: consumed.value.scopes,

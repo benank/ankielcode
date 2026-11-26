@@ -1,7 +1,5 @@
 import {
   GitCommandError,
-  linkOriginIsFenced,
-  type OrchestrationV2LinkOrigin,
   type ProjectId,
   type ProjectTrackedFolder,
   TASK_FOLDER_DEFAULT_REPOSITORIES_MAX,
@@ -201,13 +199,6 @@ export class TaskFolders extends Context.Service<
 >()("@ankielcode/cli/workspace/TaskFolders") {}
 
 const isTaskFolderError = Schema.is(TaskFolderError);
-
-/**
- * A layout command is the project owner's own code. A link paired below full access grants Ankiel's
- * tools only (see `mcp/linkOrigin.ts`), so work it started never runs one.
- */
-export const linkRunsProjectCommands = (origin: OrchestrationV2LinkOrigin | undefined) =>
-  origin === undefined || !linkOriginIsFenced(origin);
 
 const failureDetail = (cause: unknown) =>
   typeof cause === "object" &&

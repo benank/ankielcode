@@ -33,7 +33,7 @@ import * as WorkflowStore from "./WorkflowStore.ts";
 /** A thread an agent step ran in, to hand to a later step that should continue it. */
 export interface AgentThread {
   readonly threadId: string;
-  /** The linked environment it is in. Absent for this one. */
+  /** Another environment, set only by runs from before linked environments were removed. */
   readonly environment?: string | undefined;
 }
 
@@ -50,7 +50,7 @@ export interface AgentOptions<A, I> extends AgentLaunch {
   readonly thread?: AgentThread;
   /**
    * The issue this job is about. Its thread shows the issue, and the issue's page lists the
-   * thread. Only for a thread on this server, not one in a linked `environment`.
+   * thread.
    */
   readonly issue?: IssueAddress;
   /** How long the agent has. Past it the thread is stopped and the step has failed. */
@@ -490,8 +490,8 @@ const orPause = <A = string, I = string>(
 
 /**
  * An agent doing one job in a thread a person can open. It returns data checked against `returns`,
- * or its last message without one. It starts a thread in `project`, in the linked `environment`
- * when one is named, or continues `thread` where that is. Past `timeout` it is stopped. A turn
+ * or its last message without one. It starts a thread in `project`, or continues `thread`.
+ * A step that names another `environment` fails: steps run only on this one. Past `timeout` it is stopped. A turn
  * that dies is tried once more, then the run pauses at this step.
  */
 export const agent = Object.assign(orPause, {

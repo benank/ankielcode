@@ -121,7 +121,6 @@ import {
 import { appAtomRegistry } from "../../rpc/atomRegistry";
 import { countPreparingComposerImages, holdComposerSend } from "./preparingComposerImages";
 import { fileAttachmentCapabilityBlockReason } from "./composerAttachmentFiles";
-import { useLinkedEnvironments } from "../../state/peerLinks";
 import { readEnvironmentScope } from "../../state/session";
 import { useOrchestrationCommand } from "../../state/use-orchestration-command";
 import {
@@ -375,7 +374,6 @@ export function useComposerSend(input: ComposerSendInput) {
     persistThreadSettingsForNextTurn,
     linkCheckoutPullRequest,
   } = input;
-  const linkedEnvironments = useLinkedEnvironments(environmentId);
   const handleNewThread = useNewThreadHandler();
   const navigate = useNavigate();
   const clientSettingsHydrated = useClientSettingsHydrated();
@@ -588,7 +586,6 @@ export function useComposerSend(input: ComposerSendInput) {
         text,
         records,
         environmentId,
-        linkedEnvironments,
       })[0];
       if (!strandedThread) return false;
       const owner =

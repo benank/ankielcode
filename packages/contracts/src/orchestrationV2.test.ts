@@ -3,7 +3,6 @@ import * as DateTime from "effect/DateTime";
 import * as Schema from "effect/Schema";
 
 import {
-  EnvironmentId,
   NodeId,
   RunAttemptId,
   RunId,
@@ -508,6 +507,59 @@ describe("thread open stats", () => {
   });
 });
 
+describe("items stored while linked environments existed", () => {
+  const stored = {
+    threadId: "parent",
+    runId: null,
+    nodeId: null,
+    providerThreadId: null,
+    providerTurnId: null,
+    nativeItemRef: null,
+    parentItemId: null,
+    ordinal: 1,
+    status: "completed",
+    title: null,
+    startedAt: null,
+    completedAt: null,
+    updatedAt: "2026-09-09T00:00:00.000Z",
+  };
+
+  it("still decodes a link request card", () => {
+    expect(
+      decodeOrchestrationV2TurnItemJson({
+        ...stored,
+        id: "link",
+        type: "link_request",
+        reason: "Run the suite on the VPS",
+        hint: "vps",
+        requestedAccess: "auto",
+        linkStatus: "linked",
+        linkedEnvironmentId: "env-vps",
+        linkedLabel: "VPS",
+        linkedAccess: "auto",
+      }),
+    ).toMatchObject({ type: "link_request", linkStatus: "linked" });
+  });
+
+  it("drops a remote task's linked thread from its subagent item", () => {
+    const item = decodeOrchestrationV2TurnItemJson({
+      ...stored,
+      id: "task",
+      type: "subagent",
+      subagentId: "task-1",
+      origin: "app_owned",
+      driver: "codex",
+      providerInstanceId: "codex",
+      childThreadId: null,
+      remoteChild: { environmentId: "env-vps", threadId: "there", label: "VPS" },
+      prompt: "Run the suite",
+      result: "Passed",
+    });
+    expect(item).toMatchObject({ type: "subagent", childThreadId: null });
+    expect(item).not.toHaveProperty("remoteChild");
+  });
+});
+
 describe("background work kinds from older or newer servers", () => {
   const storedNotification = (source: unknown) => ({
     id: "notification",
@@ -719,19 +771,6 @@ describe("withMessageSenderNote", () => {
       thread,
       "$25 left",
       '[Ankiel Code: the agent in Ankiel thread "t" sent this message, not the user.]\n\n$25 left',
-    ],
-    [
-      {
-        createdBy: "agent",
-        creationSource: "mcp",
-        linkedSender: {
-          environmentId: EnvironmentId.make("e"),
-          threadId: ThreadId.make("r"),
-          title: "x",
-        },
-      },
-      "Hi",
-      '[Ankiel Code: the agent in Ankiel thread "r" on linked environment "e" sent this message, not the user.]\n\nHi',
     ],
     [
       { createdBy: "user", creationSource: "web", scheduledTaskId: ScheduledTaskId.make("s") },

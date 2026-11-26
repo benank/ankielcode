@@ -69,7 +69,6 @@ import { GitOverviewSheet } from "./features/threads/git/GitOverviewSheet";
 import { ThreadPullRequestsSheet } from "./features/threads/ThreadPullRequestsSheet";
 import { ThreadAgentsSheet } from "./features/threads/ThreadAgentsSheet";
 import { UsageLimitsSheet } from "./features/usage/HeaderUsageLimits";
-import { LinkedThreadSheet } from "./features/threads/LinkedThreadSheet";
 import { ThreadBackgroundWorkSheet } from "./features/threads/ThreadBackgroundWorkSheet";
 import { ThreadQueueSheet } from "./features/threads/ThreadQueueControl";
 import {
@@ -787,15 +786,6 @@ const RootStackConfig = createWorkspaceStackNavigator({
     UsageLimits: createNativeStackScreen({
       screen: UsageLimitsSheet,
       options: sheetRoute({ detent: 0.65, androidMaxDetent: 0.9 }),
-    }),
-    LinkedThread: createNativeStackScreen({
-      screen: LinkedThreadSheet,
-      options: sheetRoute({ detent: 0.9, android: "fullScreen" }),
-    }),
-    // Maximized from the inspector, like ThreadInspectorFullscreen.
-    LinkedThreadFullscreen: createNativeStackScreen({
-      screen: LinkedThreadSheet,
-      options: modalRoute({ header: "glass", itemStyle: "editor", duoMinimize: "onScrollUp" }),
     }),
     GitOverview: createNativeStackScreen({
       screen: GitOverviewSheet,

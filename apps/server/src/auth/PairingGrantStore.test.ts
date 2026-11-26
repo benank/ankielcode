@@ -235,11 +235,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("PairingGrantStor
         Stream.runForEach((change) => Queue.offer(changes, change)),
         Effect.forkScoped({ startImmediately: true }),
       );
-      // An app approval code sends no update, issued or spent; the next belongs to a plain code.
-      const approval = yield* grants.issueOneTimeToken({ mcpApproval: "auto" });
-      yield* grants.consume(approval.credential, {
-        allowedSubject: `${MCP_APPROVAL_SUBJECT_PREFIX}auto`,
-      });
       for (const input of [{}, { label: "Synthetic phone" }]) {
         const issued = yield* grants.issueOneTimeToken(input);
         const change = yield* Queue.take(changes);
@@ -255,5 +250,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("PairingGrantStor
         expect(yield* Queue.take(changes)).toEqual({ type: "pairingLinkRemoved", id: issued.id });
       }
     }).pipe(Effect.scoped, Effect.provide(layerPairingGrantStore())),
+  );
+
+  it.effect("never spends a code left by the removed agent sign-in or environment links", () =>
+    Effect.gen(function* () {
+      const grants = yield* PairingGrantStore.PairingGrantStore;
+      for (const subject of [
+        `${MCP_APPROVAL_SUBJECT_PREFIX}auto`,
+        `${MCP_APPROVAL_SUBJECT_PREFIX}peer-link:full-access`,
+      ]) {
+        const legacy = yield* grants.issueOneTimeToken({ subject });
+        expect((yield* grants.consume(legacy.credential).pipe(Effect.exit))._tag).toBe("Failure");
+      }
+    }).pipe(Effect.provide(layerPairingGrantStore())),
   );
 });

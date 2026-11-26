@@ -40,7 +40,7 @@ vi.mock("../auth/EnvironmentAuth.ts", async (importOriginal) => {
   return {
     ...actual,
     layerRuntime: Layer.mock(actual.EnvironmentAuth)({
-      issueMcpClientSession: () =>
+      issueCliMcpClientSession: () =>
         Effect.map(DateTime.now, (expiresAt) => ({
           sessionId: AuthSessionId.make("test-session"),
           token: "synthetic-token",
@@ -54,7 +54,7 @@ vi.mock("../auth/EnvironmentAuth.ts", async (importOriginal) => {
 const threadId = ThreadId.make("thread-1");
 const runId = RunId.make("run-1");
 
-it.effect("list includes delegated threads across pages and still leaves out subagents", () =>
+it.effect("list pages through every top-level thread and still leaves out subagents", () =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -91,10 +91,7 @@ it.effect("list includes delegated threads across pages and still leaves out sub
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
     const root = item("root");
-    const delegated = {
-      ...item("delegated"),
-      delegatedFrom: { environmentId: "env-1", threadId: "remote", title: "Remote" },
-    };
+    const delegated = item("delegated");
     const subagent = { ...item("child"), parentThreadId: "root", relationshipToParent: "subagent" };
     using _session = vi.spyOn(McpBridge, "mcpToolSession").mockReturnValue(
       Effect.succeed({

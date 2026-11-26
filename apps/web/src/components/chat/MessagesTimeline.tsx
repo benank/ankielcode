@@ -280,8 +280,6 @@ interface MessagesTimelineProps {
     readonly title: string;
     /** A side chat's inherited rows collapse into this link. */
     readonly sideChat?: boolean;
-    /** Where it runs, when that is another environment. */
-    readonly environmentLabel?: string;
     /** What this thread is to it, when not its subagent or side chat: `Step of`, say. */
     readonly relation?: { readonly label: string; readonly actionLabel: string };
     readonly open?: () => void;
@@ -1190,14 +1188,7 @@ const ConversationTimeline = memo(function ConversationTimeline({
                     $context: "divider label; the parent thread title follows as a link",
                   }))
             }
-            detail={
-              parentThreadLink.environmentLabel === undefined
-                ? parentThreadLink.title
-                : gt("{title} on {environment}", {
-                    title: parentThreadLink.title,
-                    environment: parentThreadLink.environmentLabel,
-                  })
-            }
+            detail={parentThreadLink.title}
             icon={parentThreadLink.sideChat ? MessagesSquareIcon : BotIcon}
             {...(parentThreadLink.open === undefined
               ? {}

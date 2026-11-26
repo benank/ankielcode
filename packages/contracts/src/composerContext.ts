@@ -243,8 +243,6 @@ export const ResponseContextRecord = Schema.Struct({
       Schema.Struct({
         threadId: ThreadId,
         title: ContextLabel,
-        /** Set when the subagent's thread lives on a linked environment. */
-        environmentId: Schema.optional(EnvironmentId),
       }),
     ).check(Schema.isMaxLength(20)),
   ),

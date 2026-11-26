@@ -46,8 +46,12 @@ describe("useSidebarRowThreadKey", () => {
     const childThread = makeThreadShellFixture({
       environmentId: envId,
       id: childId,
-      title: "Delegated child",
-      delegatedFrom: { environmentId: envId, threadId: parentId, title: "Parent" },
+      title: "Subagent child",
+      lineage: {
+        rootThreadId: parentId,
+        parentThreadId: parentId,
+        relationshipToParent: "subagent",
+      },
     });
     const otherThread = (title: string) =>
       makeThreadShellFixture({ environmentId: envId, id: ThreadId.make("thread-other"), title });
@@ -84,11 +88,7 @@ describe("useSidebarRowThreadKey", () => {
     await setShells([parentThread, childThread, otherThread("v3")]);
     expect(seen).toEqual([null, parentKey]);
 
-    await setShells([
-      { ...parentThread, archivedAt: "2026-01-02T00:00:00.000Z" },
-      childThread,
-      otherThread("v3"),
-    ]);
+    await setShells([childThread, otherThread("v3")]);
     expect(seen).toEqual([null, parentKey, childKey]);
   });
 });

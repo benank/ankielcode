@@ -3,7 +3,6 @@ import * as NodeModule from "node:module";
 import * as React from "react";
 import { act, useLayoutEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { EnvironmentId, ThreadId } from "@ankielcode/contracts";
 import { expect, it, vi } from "vite-plus/test";
 
 const harness = vi.hoisted(() => ({
@@ -30,7 +29,7 @@ vi.mock("@react-navigation/native", async () => {
 });
 
 import { useOpenThreadInspector, useReturnToThread } from "./thread-inspector-navigation";
-import { useOpenLinkedThread, useOpenLinkedThreadRead } from "./useOpenLinkedThread";
+import { useOpenLinkedThread } from "./useOpenLinkedThread";
 
 const requireNavigation = NodeModule.createRequire(
   NodeModule.createRequire(import.meta.url).resolve("@react-navigation/native/package.json"),
@@ -50,7 +49,6 @@ function setup(fromAgents: boolean, fullscreen = false, inspectorSupported = tru
       "Thread",
       "ThreadAgents",
       "ThreadInspectorFullscreen",
-      "LinkedThread",
       "ThreadReview",
       "GitConfirm",
     ],
@@ -77,17 +75,14 @@ function setup(fromAgents: boolean, fullscreen = false, inspectorSupported = tru
     );
   let openInspector: ReturnType<typeof useOpenThreadInspector>;
   let openLinkedThread: ReturnType<typeof useOpenLinkedThread>;
-  let openLinkedThreadRead: ReturnType<typeof useOpenLinkedThreadRead>;
   let returnToThread: ReturnType<typeof useReturnToThread>;
   function Probe() {
     const open = useOpenThreadInspector();
     const openLinked = useOpenLinkedThread();
-    const openLinkedRead = useOpenLinkedThreadRead();
     const returnTo = useReturnToThread();
     useLayoutEffect(() => {
       openInspector = open;
       openLinkedThread = openLinked;
-      openLinkedThreadRead = openLinkedRead;
       returnToThread = returnTo;
     });
     return null;
@@ -110,9 +105,6 @@ function setup(fromAgents: boolean, fullscreen = false, inspectorSupported = tru
     },
     openLinked(threadId: string) {
       act(() => openLinkedThread({ environmentId: source.environmentId, threadId }));
-    },
-    openLinkedRead(...input: Parameters<typeof openLinkedThreadRead>) {
-      act(() => openLinkedThreadRead(...input));
     },
     returnTo(thread: Parameters<typeof returnToThread>[0]) {
       act(() => returnToThread(thread));
@@ -156,53 +148,6 @@ it("opens a completion link in the parent inspector", () => {
     },
   });
 });
-
-it.each([
-  { inspectorSupported: true, fromAgents: false },
-  { inspectorSupported: true, fromAgents: true },
-  { inspectorSupported: false, fromAgents: false },
-  { inspectorSupported: false, fromAgents: true },
-])(
-  "opens a linked environment's thread in the inspector where there is one ($inspectorSupported, from Agents $fromAgents)",
-  ({ inspectorSupported, fromAgents }) => {
-    using screen = setup(fromAgents, false, inspectorSupported);
-    const thread = {
-      environmentId: EnvironmentId.make("linked-vm"),
-      threadId: ThreadId.make("there"),
-    };
-    const linked = { viaEnvironmentId: EnvironmentId.make("remote-environment"), label: "fs-17" };
-    screen.openLinkedRead(thread, linked, "Fix the build", {
-      source: screen.source,
-      replace: fromAgents,
-    });
-    if (inspectorSupported) {
-      // Beside the parent, like a subagent or a side chat; the Agents sheet gives way.
-      expect(screen.state.routes.map((route) => route.name)).toEqual(["Home", "Thread"]);
-      expect(screen.state.routes.at(-1)).toMatchObject({
-        key: screen.parentKey,
-        params: {
-          inspector: {
-            type: "linkedThread",
-            ...thread,
-            linked: { ...linked, title: "Fix the build" },
-          },
-        },
-      });
-      return;
-    }
-    // A phone has no inspector: the read-only thread takes the screen, replacing the sheet.
-    expect(screen.state.routes.map((route) => route.name)).toEqual([
-      "Home",
-      "Thread",
-      "LinkedThread",
-    ]);
-    expect(screen.state.routes.at(-1)?.params).toEqual({
-      ...thread,
-      ...linked,
-      title: "Fix the build",
-    });
-  },
-);
 
 it.each([
   { confirmFrom: "parent", routes: ["Home", "Thread"] },

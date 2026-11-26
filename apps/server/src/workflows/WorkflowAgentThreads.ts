@@ -27,7 +27,6 @@ import * as ProjectService from "../project/ProjectService.ts";
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
-import * as WorkflowAgentLinks from "./WorkflowAgentLinks.ts";
 import {
   isProjectPath,
   launchOnContinue,
@@ -52,7 +51,6 @@ const make = Effect.gen(function* () {
   const providers = yield* ProviderRegistry.ProviderRegistry;
   const settings = yield* ServerSettings.ServerSettingsService;
   const digest = yield* Digest.Digest;
-  const linked = yield* WorkflowAgentLinks.make;
   const forge = yield* WorkflowForge;
   const threadIssues = yield* ThreadIssueService.ThreadIssueService;
   // A tracker that is down must not cost the step its agent.
@@ -98,9 +96,15 @@ const make = Effect.gen(function* () {
   const here = yield* ServerEnvironment.ServerEnvironment.pipe(
     Effect.flatMap((environment) => environment.getEnvironmentId),
   );
-  /** The linked environment a step names, or nothing when it names this one. */
-  const elsewhere = (environment: string | undefined) =>
-    environment === here ? undefined : environment;
+  /** Steps run only here; linked environments were removed, so a step naming another fails. */
+  const requireHere = (environment: string | undefined) =>
+    environment === undefined || environment === here
+      ? Effect.void
+      : Effect.fail(
+          new WorkflowAgentError({
+            reason: `This step names environment ${environment}. Workflow steps run only on this environment.`,
+          }),
+        );
 
   // Thread, message and command ids all derive from the step's key, so a start that is asked for
   // again after a crash finds the turn it already started.
@@ -142,8 +146,7 @@ const make = Effect.gen(function* () {
   return WorkflowAgents.of({
     start: Effect.fn("WorkflowAgentThreads.start")(function* (input) {
       const id = yield* idOf(input.key);
-      const environment = elsewhere(input.environment);
-      if (environment !== undefined) return yield* linked.start(input, environment, id, here);
+      yield* requireHere(input.environment);
       const commandId = CommandId.make(id);
       const messageId = MessageId.make(id);
       const outputSchema =
@@ -233,8 +236,7 @@ const make = Effect.gen(function* () {
       return { threadId: launched.threadId, turnId: run.id };
     }),
     result: Effect.fn("WorkflowAgentThreads.result")(function* (turn, options) {
-      const environment = elsewhere(turn.environment);
-      if (environment !== undefined) return yield* linked.result(turn, environment, options);
+      yield* requireHere(turn.environment);
       const threadId = ThreadId.make(turn.threadId);
       const shell = yield* threads
         .getThreadShell(threadId)
@@ -307,9 +309,8 @@ const make = Effect.gen(function* () {
       }
     }),
     interrupt: Effect.fn("WorkflowAgentThreads.interrupt")(function* (target) {
-      const environment = elsewhere(target.environment);
-      if (environment !== undefined)
-        return yield* linked.interrupt(target.threadId, environment, target.turnId);
+      // Nothing here can reach a turn another environment ran, so there is nothing to stop.
+      if (target.environment !== undefined && target.environment !== here) return "ended" as const;
       const thread = target.threadId;
       const threadId = ThreadId.make(thread);
       const shell = yield* threads

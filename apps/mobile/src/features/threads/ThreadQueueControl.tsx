@@ -80,10 +80,8 @@ function QueuedRunSender(props: {
   const gt = useGT();
   const { attribution, scheduledTaskId } = resolveUserMessagePresentation(props.message);
   const senderThreadId = attribution === "agent" ? props.message.senderThreadId : undefined;
-  // A linked environment's agent sent it from a thread there.
-  const linkedSender = attribution === "agent" ? props.message.linkedSender : undefined;
   const senderShell = useQuietThreadShell(
-    linkedSender ?? (senderThreadId ? scopeThreadRef(props.environmentId, senderThreadId) : null),
+    senderThreadId ? scopeThreadRef(props.environmentId, senderThreadId) : null,
   );
   const tasks = useEnvironmentQuery(
     scheduledTaskId
@@ -101,7 +99,7 @@ function QueuedRunSender(props: {
       : attribution === "agent"
         ? {
             icon: "bubble.left.and.bubble.right" as const,
-            label: senderShell?.title.trim() || linkedSender?.title.trim() || gt("Agent"),
+            label: senderShell?.title.trim() || gt("Agent"),
           }
         : attribution === "ankielcode"
           ? { icon: null, label: gt("Sent by Ankiel Code") }

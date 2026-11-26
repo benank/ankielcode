@@ -13,8 +13,6 @@ import {
   ThreadInspectorNavigationContext,
   type ThreadInspectorTarget,
 } from "./thread-inspector-navigation";
-import { linkedThreadRouteParams } from "./linkedThreadRoute";
-import { LinkedThreadView } from "./LinkedThreadSheet";
 import type { ThreadInspectorPresentation } from "./thread-inspector-header";
 import { ThreadPreviewRoute } from "./thread-preview-route";
 
@@ -68,12 +66,6 @@ export function ThreadInspectorPreview(props: {
               });
             }}
           />
-        ) : target.type === "linkedThread" && target.linked ? (
-          <LinkedThread
-            key={`${target.linked.viaEnvironmentId}:${target.environmentId}:${target.threadId}`}
-            thread={target}
-            linked={target.linked}
-          />
         ) : target.type === "device" ? (
           <DevicePreviewScreen
             key={`${target.environmentId}:${target.threadId}`}
@@ -103,36 +95,5 @@ export function ThreadInspectorPreview(props: {
         )}
       </InspectorContentScope>
     </ThreadInspectorNavigationContext>
-  );
-}
-
-/** A linked environment's read-only thread in the inspector; Maximize gives it the whole screen. */
-function LinkedThread(props: {
-  readonly thread: Pick<ThreadInspectorTarget, "environmentId" | "threadId">;
-  readonly linked: NonNullable<ThreadInspectorTarget["linked"]>;
-}) {
-  const navigation = useNavigation();
-  const params = linkedThreadRouteParams(
-    {
-      environmentId: EnvironmentId.make(props.thread.environmentId),
-      threadId: ThreadId.make(props.thread.threadId),
-    },
-    {
-      viaEnvironmentId: EnvironmentId.make(props.linked.viaEnvironmentId),
-      label: props.linked.label,
-    },
-    props.linked.title ?? null,
-  );
-  return (
-    <LinkedThreadView
-      target={{
-        viaEnvironmentId: EnvironmentId.make(params.viaEnvironmentId),
-        environmentId: EnvironmentId.make(params.environmentId),
-        threadId: ThreadId.make(params.threadId),
-        label: params.label,
-        title: params.title ?? null,
-      }}
-      presentation={{ onMaximize: () => navigation.navigate("LinkedThreadFullscreen", params) }}
-    />
   );
 }

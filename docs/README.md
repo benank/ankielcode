@@ -22,7 +22,6 @@
 - [Usage and limits](./user/usage.md)
 - [Secrets](./user/secrets.md)
 - [Remote access](./user/remote-access.md)
-- [Outside agents (MCP)](./user/outside-agents.md)
 - [Running in the background](./user/background-service.md)
 - [Updating Ankiel Code](./user/updating.md)
 - [Triage an issue](./user/triage.md)

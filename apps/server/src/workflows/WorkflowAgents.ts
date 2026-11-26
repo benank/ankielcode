@@ -39,7 +39,7 @@ export interface AgentLaunch {
 export const AgentTurn = Schema.Struct({
   threadId: Schema.String,
   turnId: Schema.String,
-  /** The linked environment the thread is in. Absent for this one. */
+  /** Another environment, set only by runs from before linked environments were removed. */
   environment: Schema.optional(Schema.String),
   /** When the step's first turn started, which its time limit counts from. */
   startedAt: Schema.optional(Schema.Number),
@@ -86,7 +86,7 @@ export class WorkflowAgents extends Context.Service<
       readonly model: AgentModel | undefined;
       /** The project a new thread is made in: its id, or its folder. Not needed to continue `thread`. */
       readonly project: string | undefined;
-      /** The linked environment to run in. Absent for this one. */
+      /** An environment the step names. Only this one, or none, can run it. */
       readonly environment: string | undefined;
       /** Continue this thread instead of starting one. */
       readonly thread: string | undefined;

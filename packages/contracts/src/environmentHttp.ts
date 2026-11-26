@@ -14,20 +14,6 @@ import {
   AuthBrowserSessionRequest,
   AuthBrowserSessionResult,
   AuthCreatePairingCredentialInput,
-  AuthMcpApprovalDecisionRequest,
-  AuthMcpApprovalDetails,
-  AuthMcpApprovalError,
-  AuthMcpApprovalRedirect,
-  AuthMcpAuthorizationRequest,
-  AuthMcpAuthorizationServerMetadata,
-  AuthMcpClientRegistration,
-  AuthMcpProtectedResourceMetadata,
-  AuthMcpRegisteredClient,
-  AuthMcpRegistrationError,
-  AuthMcpTokenError,
-  AuthMcpRevokeRequest,
-  AuthMcpTokenRequest,
-  AuthMcpTokenResult,
   AuthPairingCredentialResult,
   AuthRevokeClientSessionInput,
   AuthRevokePairingLinkInput,
@@ -67,7 +53,6 @@ import {
   EnvironmentSpeechStatus,
   EnvironmentSpeechTranscriptionResult,
 } from "./speech.ts";
-import { PeerLinkClientPairingCredential, PeerLinkClientPairingRequest } from "./peerLink.ts";
 import { SecretReference } from "./secretReference.ts";
 import {
   OrchestrationV2ShellHttpSnapshot,
@@ -286,42 +271,6 @@ export class EnvironmentHttpBadRequestError extends Schema.TaggedError<Environme
   }
 }
 
-export class EnvironmentHttpUnauthorizedError extends Schema.TaggedError<EnvironmentHttpUnauthorizedError>()(
-  "EnvironmentHttpUnauthorizedError",
-  {
-    message: Schema.String,
-  },
-  { httpApiStatus: 401 },
-) {
-  [HttpServerRespondable.symbol]() {
-    return HttpServerResponse.schemaJson(EnvironmentHttpUnauthorizedError)(this, { status: 401 });
-  }
-}
-
-export class EnvironmentHttpForbiddenError extends Schema.TaggedError<EnvironmentHttpForbiddenError>()(
-  "EnvironmentHttpForbiddenError",
-  {
-    message: Schema.String,
-  },
-  { httpApiStatus: 403 },
-) {
-  [HttpServerRespondable.symbol]() {
-    return HttpServerResponse.schemaJson(EnvironmentHttpForbiddenError)(this, { status: 403 });
-  }
-}
-
-export class EnvironmentHttpInternalServerError extends Schema.TaggedError<EnvironmentHttpInternalServerError>()(
-  "EnvironmentHttpInternalServerError",
-  {
-    message: Schema.String,
-  },
-  { httpApiStatus: 500 },
-) {
-  [HttpServerRespondable.symbol]() {
-    return HttpServerResponse.schemaJson(EnvironmentHttpInternalServerError)(this, { status: 500 });
-  }
-}
-
 export class EnvironmentHttpConflictError extends Schema.TaggedError<EnvironmentHttpConflictError>()(
   "EnvironmentHttpConflictError",
   {
@@ -485,61 +434,6 @@ class EnvironmentAuthHttpApi extends HttpApiGroup.make("auth")
       success: AuthOtherClientSessionsRevokeResult,
       error: EnvironmentScopedOperationErrors,
     }).middleware(EnvironmentAuthenticatedAuth),
-  ) {}
-
-class EnvironmentMcpOAuthHttpApi extends HttpApiGroup.make("mcpOAuth")
-  .add(
-    HttpApiEndpoint.get("protectedResource", "/.well-known/oauth-protected-resource", {
-      success: AuthMcpProtectedResourceMetadata,
-    }),
-  )
-  .add(
-    HttpApiEndpoint.get("mcpProtectedResource", "/.well-known/oauth-protected-resource/mcp", {
-      success: AuthMcpProtectedResourceMetadata,
-    }),
-  )
-  .add(
-    HttpApiEndpoint.get("authorizationServer", "/.well-known/oauth-authorization-server", {
-      success: AuthMcpAuthorizationServerMetadata,
-    }),
-  )
-  .add(
-    HttpApiEndpoint.post("register", "/oauth/mcp/register", {
-      payload: AuthMcpClientRegistration,
-      success: AuthMcpRegisteredClient,
-      error: AuthMcpRegistrationError,
-    }),
-  )
-  .add(HttpApiEndpoint.get("authorize", "/oauth/mcp/authorize"))
-  .add(HttpApiEndpoint.post("authorizeForm", "/oauth/mcp/authorize"))
-  .add(
-    HttpApiEndpoint.post("approval", "/oauth/mcp/approval", {
-      headers: OptionalBearerHeaders,
-      payload: AuthMcpAuthorizationRequest,
-      success: [AuthMcpApprovalDetails, AuthMcpApprovalRedirect],
-      error: AuthMcpApprovalError,
-    }),
-  )
-  .add(
-    HttpApiEndpoint.post("decision", "/oauth/mcp/decision", {
-      headers: OptionalBearerHeaders,
-      payload: AuthMcpApprovalDecisionRequest,
-      success: AuthMcpApprovalRedirect,
-      error: AuthMcpApprovalError,
-    }),
-  )
-  .add(
-    HttpApiEndpoint.post("token", "/oauth/mcp/token", {
-      payload: AuthMcpTokenRequest,
-      success: AuthMcpTokenResult,
-      error: AuthMcpTokenError,
-    }),
-  )
-  .add(
-    HttpApiEndpoint.post("revoke", "/oauth/mcp/revoke", {
-      payload: AuthMcpRevokeRequest,
-      success: HttpApiSchema.Empty(200),
-    }),
   ) {}
 
 const EnvironmentOrchestrationThreadSnapshotParams = Schema.Struct({
@@ -801,23 +695,6 @@ export class EnvironmentVoiceHttpApi extends HttpApiGroup.make("voice")
     }).middleware(EnvironmentAuthenticatedAuth),
   ) {}
 
-/**
- * What a linking environment asks of this one over its link, outside `/mcp`. The handler accepts
- * only a peer link's own session, so no agent's tool list ever carries it.
- */
-class EnvironmentPeerLinkHttpApi extends HttpApiGroup.make("peerLink").add(
-  HttpApiEndpoint.post("clientPairing", "/api/peer-link/client-pairing", {
-    headers: OptionalBearerHeaders,
-    payload: PeerLinkClientPairingRequest,
-    success: PeerLinkClientPairingCredential,
-    error: [
-      EnvironmentHttpUnauthorizedError,
-      EnvironmentHttpForbiddenError,
-      EnvironmentHttpInternalServerError,
-    ],
-  }),
-) {}
-
 // Path tokens and optional body signatures authenticate webhooks; read raw bytes to verify signatures.
 const WebhookParams = Schema.Struct({
   hookId: TrimmedNonEmptyString,
@@ -842,10 +719,8 @@ class EnvironmentWebhooksHttpApi extends HttpApiGroup.make("webhooks")
 export class EnvironmentHttpApi extends HttpApi.make("environment")
   .add(EnvironmentMetadataHttpApi)
   .add(EnvironmentAuthHttpApi)
-  .add(EnvironmentMcpOAuthHttpApi)
   .add(EnvironmentOrchestrationHttpApi)
   .add(EnvironmentPullRequestsHttpApi)
   .add(EnvironmentProjectsHttpApi)
   .add(EnvironmentVoiceHttpApi)
-  .add(EnvironmentWebhooksHttpApi)
-  .add(EnvironmentPeerLinkHttpApi) {}
+  .add(EnvironmentWebhooksHttpApi) {}

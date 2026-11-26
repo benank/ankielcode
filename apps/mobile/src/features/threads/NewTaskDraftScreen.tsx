@@ -658,7 +658,6 @@ export function NewTaskDraftScreen(props: {
       text: draft.text,
       records: draft.context?.records ?? [],
       environmentId: selectedProject.environmentId,
-      linkedEnvironments: flow.linkedEnvironments,
     })[0];
     if (strandedThread) {
       const owner = flow.environments.find(

@@ -77,12 +77,9 @@ export const layer: Layer.Layer<ThreadForkServiceV2> = Layer.succeed(
     plan: Effect.fn("ThreadForkService.plan")(function* (input) {
       const { sourceRun } = input;
       const sourceLineage = input.sourceProjection.thread.lineage;
-      // A task a linked environment delegated here is a subagent of a remote thread.
       if (
         input.sideChat &&
-        (sourceLineage.sideChat ||
-          sourceLineage.relationshipToParent === "subagent" ||
-          input.sourceProjection.thread.delegatedFrom !== undefined)
+        (sourceLineage.sideChat || sourceLineage.relationshipToParent === "subagent")
       ) {
         return yield* new ThreadForkPlanError({
           sourceThreadId: input.sourceProjection.thread.id,
@@ -99,13 +96,8 @@ export const layer: Layer.Layer<ThreadForkServiceV2> = Layer.succeed(
           cause: forkableSourceRunStatusError(sourceRun),
         });
       }
-      // The remote parent delegated the source thread, not its forks.
-      // Nor is a fork a step of the run its source was one of.
-      const {
-        delegatedFrom: _delegatedFrom,
-        workflowRun: _workflowRun,
-        ...inherited
-      } = input.sourceProjection.thread;
+      // A fork is not a step of the run its source was one of.
+      const { workflowRun: _workflowRun, ...inherited } = input.sourceProjection.thread;
       const targetThread: OrchestrationV2AppThread = {
         ...inherited,
         // PR context follows the conversation; watching remains the source thread's responsibility.

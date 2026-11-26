@@ -164,6 +164,18 @@ it.effect("sets the selected browser session cookies through the HTTP route", ()
           expect(restrictedCookies).toHaveLength(1);
           expect(restrictedCookies[0]).toMatch(/^ankiel_session_/);
           expect(restrictedCookies[0]).not.toContain("ankiel_dev_session_");
+          // Older clients still ask for agent sign-in and link codes; those are refused, not
+          // answered with an ordinary credential.
+          for (const retired of [
+            { access: "auto" },
+            { access: "full-access", purpose: "peer-link" },
+          ]) {
+            const refused = await environmentA.handler(
+              postJson("/api/auth/pairing-token", retired, { cookie: devCookieHeader }),
+              requestContext,
+            );
+            expect(refused.status).toBe(400);
+          }
         }),
       ([environmentA, environmentB]) =>
         Effect.promise(() => Promise.all([environmentA.dispose(), environmentB.dispose()])),

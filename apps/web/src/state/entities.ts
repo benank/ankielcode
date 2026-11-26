@@ -23,7 +23,6 @@ import type { ScopedProjectRef, ScopedThreadRef } from "@ankielcode/contracts";
 import type {
   EnvironmentId,
   OrchestrationV2ProjectedTurnItem,
-  OrchestrationV2RemoteTaskChild,
   OrchestrationV2ThreadShell,
   NodeId,
   ThreadId,
@@ -138,11 +137,6 @@ export function useAllEnvironmentShellsBootstrapped(): boolean {
 
 export function useAllEnvironmentProjectSnapshotsReady(): boolean {
   return useAtomValue(allEnvironmentProjectSnapshotsReadyAtom);
-}
-
-/** Tasks linked environments run for a listed thread, by thread key; lists show them under it. */
-export function useDelegatedUnderParent(): ReadonlySet<string> {
-  return useAtomValue(environmentThreadShells.delegatedUnderParentAtom);
 }
 
 export function useThreadShellsForProjectRefs(
@@ -396,10 +390,6 @@ export function readThreadShells(): ReadonlyArray<EnvironmentThreadShell> {
   return appAtomRegistry.get(environmentThreadShells.threadShellsAtom);
 }
 
-export function readDelegatedUnderParent(): ReadonlySet<string> {
-  return appAtomRegistry.get(environmentThreadShells.delegatedUnderParentAtom);
-}
-
 function shellParentThreadId(
   thread: Pick<OrchestrationV2ThreadShell, "forkedFrom" | "lineage">,
 ): ThreadId | null {
@@ -468,8 +458,6 @@ export function useThreadRelationshipShells(
 
 interface SubagentChild {
   readonly threadId: ThreadId;
-  /** Set when the task ran on a linked environment, which holds its thread. */
-  readonly environmentId?: EnvironmentId;
   readonly title: string | null | undefined;
 }
 
@@ -495,34 +483,25 @@ export function readResponseSubagents(
 
   const byTask = new Map<NodeId, SubagentChild>();
   const local = new Map<ThreadId, SubagentChild>();
-  const remember = (
-    taskId: NodeId,
-    childThreadId: ThreadId | null,
-    remote: OrchestrationV2RemoteTaskChild | undefined,
-    title: string | null,
-  ) => {
+  const remember = (taskId: NodeId, childThreadId: ThreadId | null, title: string | null) => {
     if (childThreadId !== null) {
       const child = { threadId: childThreadId, title };
       byTask.set(taskId, child);
       local.set(childThreadId, child);
-    } else if (remote) {
-      // A task sent to a linked environment has no thread here; its thread lives there.
-      const { threadId, environmentId } = remote;
-      byTask.set(taskId, { threadId, environmentId, title: title ?? remote.title });
     }
   };
   for (const { item } of items) {
     if (item.type === "subagent") {
-      remember(item.subagentId, item.childThreadId, item.remoteChild, null);
+      remember(item.subagentId, item.childThreadId, null);
     }
   }
   for (const subagent of projection.subagents) {
-    remember(subagent.id, subagent.childThreadId, subagent.remoteChild, subagent.title);
+    remember(subagent.id, subagent.childThreadId, subagent.title);
   }
 
   const found = new Map<string, SubagentChild>();
   const add = (child: SubagentChild | undefined) => {
-    if (child) found.set(`${child.environmentId ?? ""}:${child.threadId}`, child);
+    if (child) found.set(child.threadId, child);
   };
   for (; index >= 0 && isInput(index); index -= 1) {
     const item = items[index]!.item;
@@ -549,7 +528,7 @@ export function readResponseSubagents(
       appAtomRegistry
         .get(
           environmentThreadShells.quietThreadShellAtom({
-            environmentId: child.environmentId ?? ref.environmentId,
+            environmentId: ref.environmentId,
             threadId: child.threadId,
           }),
         )

@@ -1,7 +1,6 @@
 import {
   isListedThreadLineage,
   type EnvironmentId,
-  type EnvironmentMachineKind,
   type ScopedThreadRef,
   type ThreadId,
 } from "@ankielcode/contracts";
@@ -32,15 +31,12 @@ export interface ComposerThreadItem {
 /**
  * Threads to reference from the composer, matched and ranked like the command
  * palette, without subagent threads or other threads' side chats. The agent reads threads
- * on its own server and on the machines it links to, so candidates stay within those, and a
- * linked machine's threads say which machine they are on.
+ * only on its own server, so candidates stay within it.
  */
 export function matchComposerThreadItems(
   input: {
     shells: ReadonlyArray<ComposerThreadCandidate>;
     environmentId: EnvironmentId;
-    /** The machines the composer's environment links to, by name. */
-    linkedEnvironments: ReadonlyMap<EnvironmentId, string>;
     excludeThreadId: ThreadId | null;
     query: string;
     /** Recency is measured against this time. */
@@ -58,8 +54,7 @@ export function matchComposerThreadItems(
     shell.latestUserMessageAt !== null;
   const candidates = input.shells.filter(
     (shell) =>
-      (shell.environmentId === input.environmentId ||
-        input.linkedEnvironments.has(shell.environmentId)) &&
+      shell.environmentId === input.environmentId &&
       shell.id !== input.excludeThreadId &&
       shell.archivedAt === null &&
       (isListedThreadLineage(shell.lineage) || isOwnSideChat(shell)),
@@ -71,75 +66,13 @@ export function matchComposerThreadItems(
     }),
   )
     .slice(0, COMPOSER_THREAD_RESULT_LIMIT)
-    .map(({ item: shell }) => {
-      const machine =
-        shell.environmentId === input.environmentId
-          ? undefined
-          : input.linkedEnvironments.get(shell.environmentId);
-      return {
-        id: `thread:${shell.environmentId}:${shell.id}`,
-        type: "thread",
-        thread: { environmentId: shell.environmentId, threadId: shell.id },
-        label: shell.title,
-        description: isOwnSideChat(shell)
-          ? resolve(msg("Side chat"))
-          : machine === undefined
-            ? resolve(msg("Thread", { $context: "noun, search result type" }))
-            : resolve(msg("Thread on {machine}", { machine })),
-      };
-    });
-}
-
-export interface ComposerEnvironmentCandidate {
-  readonly environmentId: EnvironmentId;
-  readonly label: string;
-  readonly machine: EnvironmentMachineKind;
-}
-
-export interface ComposerEnvironmentItem {
-  readonly id: string;
-  readonly type: "environment";
-  readonly environmentId: EnvironmentId;
-  readonly machine: EnvironmentMachineKind;
-  readonly label: string;
-  readonly description: string;
-}
-
-/**
- * The machines the `@` picker offers, so the agent can link or work there: the client's paired
- * machines and those the composer's environment links to. The composer's own environment is
- * left out. Like threads, they need a query: bare `@` stays a file picker.
- */
-export function matchComposerEnvironmentItems(
-  input: {
-    environments: ReadonlyArray<ComposerEnvironmentCandidate>;
-    /** The machines the composer's environment links to, by name. */
-    linkedEnvironments: ReadonlyMap<EnvironmentId, string>;
-    environmentId: EnvironmentId;
-    query: string;
-  },
-  resolve: MFunctionType = mFallback,
-): ComposerEnvironmentItem[] {
-  const query = input.query.trim().toLowerCase();
-  if (query.length === 0) return [];
-  const paired = new Set(input.environments.map((environment) => environment.environmentId));
-  const linkedOnly = Array.from(input.linkedEnvironments, ([environmentId, label]) => ({
-    environmentId,
-    label,
-    machine: "server" as const,
-  })).filter((environment) => !paired.has(environment.environmentId));
-  return [...input.environments, ...linkedOnly]
-    .filter(
-      (environment) =>
-        environment.environmentId !== input.environmentId &&
-        environment.label.toLowerCase().includes(query),
-    )
-    .map((environment) => ({
-      id: `environment:${environment.environmentId}`,
-      type: "environment",
-      environmentId: environment.environmentId,
-      machine: environment.machine,
-      label: environment.label,
-      description: resolve(msg("Machine", { $context: "noun, search result type" })),
+    .map(({ item: shell }) => ({
+      id: `thread:${shell.environmentId}:${shell.id}`,
+      type: "thread",
+      thread: { environmentId: shell.environmentId, threadId: shell.id },
+      label: shell.title,
+      description: isOwnSideChat(shell)
+        ? resolve(msg("Side chat"))
+        : resolve(msg("Thread", { $context: "noun, search result type" })),
     }));
 }

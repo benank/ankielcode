@@ -10,7 +10,7 @@ import {
 } from "@ankielcode/client-runtime/state/subagent-display";
 import { formatSubagentEffort } from "@ankielcode/client-runtime/state/thread-execution";
 import type { EnvironmentId, OrchestrationV2Subagent } from "@ankielcode/contracts";
-import { msg, T, useMessages, Var } from "gt-react-native";
+import { msg, useMessages } from "gt-react-native";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 
@@ -35,22 +35,15 @@ type SubagentRowSubagent = Pick<
   | "status"
   | "progress"
   | "result"
-  | "remoteChild"
 >;
 
 export function SubagentRow(props: {
   readonly environmentId: EnvironmentId;
   readonly subagent: SubagentRowSubagent;
   readonly elapsed: ReactNode;
-  /** The task runs in a linked environment this app is connected to. */
-  readonly canOpenRemote?: boolean;
 }) {
   const messages = useMessages();
-  const presentation = resolveSubagentRowPresentation(
-    props.subagent,
-    props.canOpenRemote,
-    messages,
-  );
+  const presentation = resolveSubagentRowPresentation(props.subagent, messages);
   const detail = subagentCardDetail(presentation.detail);
   return (
     <View className="flex-row gap-3">
@@ -88,13 +81,6 @@ export function SubagentRow(props: {
                 </Text>
               </>
             )}
-            {presentation.runsOn !== null ? (
-              <Text numberOfLines={1} className="shrink text-xs text-foreground-muted">
-                <T>
-                  on <Var>{presentation.runsOn}</Var>
-                </T>
-              </Text>
-            ) : null}
           </View>
           {props.elapsed}
           {presentation.canOpenThread ? (
@@ -124,8 +110,7 @@ function SubagentMetadata(props: {
 }) {
   const { environmentId, subagent } = props;
   const messages = useMessages();
-  // A task in a linked environment runs a provider instance of that environment.
-  const config = useEnvironmentServerConfig(subagent.remoteChild?.environmentId ?? environmentId);
+  const config = useEnvironmentServerConfig(environmentId);
   const providers = (config?.providers ?? []).map((candidate) => {
     const rawConfig = config?.settings.providerInstances[candidate.instanceId]?.config;
     const instanceConfig =
@@ -144,9 +129,7 @@ function SubagentMetadata(props: {
     (candidate) => candidate.instanceId === subagent.providerInstanceId,
   );
   const showBadge = provider !== undefined && shouldShowInstanceBadge(provider, providers);
-  // A remote task's own driver is only a "remote" label.
-  const driver =
-    provider?.driver ?? (subagent.remoteChild === undefined ? subagent.driver : undefined);
+  const driver = provider?.driver ?? subagent.driver;
   const parent = useThreadShell(scopeThreadRef(environmentId, subagent.threadId))?.source;
   const child = useThreadShell(
     subagent.childThreadId === null ? null : scopeThreadRef(environmentId, subagent.childThreadId),
@@ -181,8 +164,6 @@ function SubagentMetadata(props: {
           accentColor={provider.accentColor}
           showBadge
         />
-      ) : driver === undefined ? (
-        <SymbolView name="robot" size={11} tintColorClassName="accent-icon-muted" />
       ) : (
         <ProviderIcon provider={driver} iconUrl={provider?.iconUrl} size={12} />
       )}

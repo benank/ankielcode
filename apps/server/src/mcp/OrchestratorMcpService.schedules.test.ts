@@ -8,7 +8,6 @@ import * as Layer from "effect/Layer";
 import * as ProviderAdapters from "../orchestration-v2/ProviderAdapterRegistry.ts";
 import * as Launch from "../orchestration-v2/ThreadLaunchService.ts";
 import * as Threads from "../orchestration-v2/ThreadManagementService.ts";
-import * as RemoteDelegation from "../peer/RemoteDelegation.ts";
 import * as Sqlite from "../persistence/Sqlite.ts";
 import * as ManagedProjectFolders from "../project/ManagedProjectFolders.ts";
 import * as Projects from "../project/ProjectService.ts";
@@ -37,7 +36,6 @@ const dependencies = Layer.mergeAll(
   Layer.mock(Launch.ThreadLaunchService)({}),
   Layer.mock(Git.GitVcsDriver)({}),
   Layer.mock(Secrets.SecretRequests)({}),
-  Layer.mock(RemoteDelegation.RemoteDelegation)({}),
   Layer.mock(Scheduler.Scheduler)({ register: () => Effect.void }),
 );
 

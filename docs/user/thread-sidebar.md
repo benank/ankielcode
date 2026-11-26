@@ -313,9 +313,7 @@ back the standard rows.
 
 ## Open a thread beside the one you are in
 
-On desktop, a subagent, a side chat, and a
-[thread on a linked machine](remote-access.md#read-a-linked-machines-threads)
-all open the same way. Click one to open it as a tab in the right panel, so the
+On desktop, a subagent and a side chat open the same way. Click one to open it as a tab in the right panel, so the
 thread you are in stays in view. Hold ⌘ (Ctrl on Windows and Linux) while you
 click, or middle-click, to open it in the main view instead. With the keyboard,
 Enter and ⌘/Ctrl + Enter do the same. Right-click for **Open in side panel** and
@@ -327,9 +325,8 @@ the side panel.
 
 From a tab, **Open in main view** at the top of the tab, or in the tab's
 right-click menu, moves it to the main view. The bottom of the view depends on
-the thread: a side chat or a subagent you delegated has a composer, a subagent
-the agent started is read-only, and a thread on a linked machine is read-only
-with **Connect to interact**.
+the thread: a side chat or a subagent you delegated has a composer, and a
+subagent the agent started is read-only.
 
 Other thread links open in the main view as before.
 
@@ -384,3 +381,33 @@ A snoozed thread keeps working and stays hidden until its wake time, even while
 its agent wakes itself for background work. It comes back early for an approval,
 a new question, a failed run, or a message or answer you send. You can snooze an existing
 question and answer when the thread wakes; the question stays unanswered.
+
+## Script threads from the host
+
+On the machine that runs the environment, `ankiel thread` starts and drives
+threads from a terminal:
+
+```sh
+id=$(ankiel thread start . "Find why the tests are slow")
+ankiel thread send "$id" "Now fix it" --wait
+ankiel thread show "$id"
+ankiel thread list
+```
+
+`.` means the project that contains the current folder, or a git worktree of
+its repository; a project id also works. A new thread uses the project's
+default model and permission mode, and runs in the project folder unless you
+pass `--worktree <base-branch>`. Its title is the message's first line, or
+`--title`; add `--generate-title` to have it named from the message, as threads
+started in the app are. `send` never interrupts: a busy thread gets the message
+as its next turn. Pass `-` as the message to read it from stdin.
+
+To choose the model, pass `--provider <instance-id> --model <slug>`. Add
+`--option id=value` for each model option. For reasoning effort, Codex uses
+`--option reasoningEffort=high`, while Claude uses `--option effort=high`.
+Option ids and allowed values depend on the provider and model; use those
+reported by `orchestrator_capabilities`. `true` and `false` set on/off options.
+
+`--wait` prints the agent's reply. It exits 1 when the run fails or stops, and
+2 when the agent waits for an answer you give in the app. Add `--json` for a
+result that always includes the thread id.

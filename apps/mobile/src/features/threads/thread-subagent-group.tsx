@@ -24,15 +24,11 @@ import type { ThreadFeedActivity } from "../../lib/threadActivity";
 import { serverEnvironment } from "../../state/server";
 import { environmentThreadDetails } from "../../state/threads";
 import { subagentCardElapsed } from "./subagent-card-presentation";
-import { useServerConfigs } from "../../state/entities";
 import { SubagentRow } from "./SubagentRow";
 import { useVisibleSecondClock } from "./use-visible-second-clock";
 import { subagentThreadTarget } from "./threadAgentsPresentation";
-import { useLinkedThreadReach } from "../../state/linkedThread";
 import { WorkLogBlock } from "./work-log-layout";
-
 import { useOpenThreadInspector } from "./thread-inspector-navigation";
-import { useOpenLinkedThreadRead } from "./useOpenLinkedThread";
 
 type SubagentItem = Extract<OrchestrationV2TurnItem, { type: "subagent" }>;
 type AgentTiming = Pick<OrchestrationV2Subagent, "status" | "startedAt" | "completedAt">;
@@ -55,9 +51,7 @@ function SubagentAvatar(props: {
   const provider = providers.find(
     (candidate) => candidate.instanceId === props.item.providerInstanceId,
   );
-  // A remote task's own driver is only a "remote" label.
-  const driver =
-    provider?.driver ?? (props.item.remoteChild === undefined ? props.item.driver : undefined);
+  const driver = provider?.driver ?? props.item.driver;
   const badgeEntries = providers.map((candidate) => {
     const rawConfig = props.config?.settings.providerInstances[candidate.instanceId]?.config;
     const instanceConfig =
@@ -92,8 +86,6 @@ function SubagentAvatar(props: {
           accentColor={provider.accentColor}
           showBadge
         />
-      ) : driver === undefined ? (
-        <SymbolView name="robot" size={13} tintColorClassName="accent-icon-muted" />
       ) : (
         <ProviderIcon provider={driver} iconUrl={provider?.iconUrl} size={15} />
       )}
@@ -114,7 +106,6 @@ export function ThreadSubagentGroup(props: {
   const config = useAtomValue(serverEnvironment.configValueAtom(props.environmentId));
   const navigation = useNavigation();
   const openInspector = useOpenThreadInspector();
-  const openLinkedRead = useOpenLinkedThreadRead();
   const members = props.activities.flatMap(({ projectedItem }) =>
     projectedItem.item.type === "subagent" ? [projectedItem.item] : [],
   );
@@ -136,7 +127,6 @@ export function ThreadSubagentGroup(props: {
       modelSelection: live?.modelSelection,
     };
   });
-  const reach = useLinkedThreadReach(props.environmentId, agents);
   const grouped = agents.length > 1;
   const label = gt("{count, plural, one {{count} subagent} other {{count} subagents}}", {
     count: agents.length,
@@ -146,10 +136,6 @@ export function ThreadSubagentGroup(props: {
     messages,
   );
   const expanded = props.expandedRows[props.anchorKey] ?? false;
-  const serverConfigs = useServerConfigs();
-  // A task in a linked environment runs a provider instance of that environment.
-  const configOf = (item: SubagentItem) =>
-    item.remoteChild === undefined ? config : serverConfigs.get(item.remoteChild.environmentId);
   return (
     <WorkLogBlock>
       {grouped ? (
@@ -163,7 +149,7 @@ export function ThreadSubagentGroup(props: {
           <View className="flex-row items-center">
             {agents.slice(0, 3).map((agent, index) => (
               <View key={agent.item.id} style={{ marginLeft: index === 0 ? 0 : -7 }}>
-                <SubagentAvatar item={agent.item} config={configOf(agent.item)} />
+                <SubagentAvatar item={agent.item} config={config} />
               </View>
             ))}
             {agents.length > 3 ? (
@@ -200,39 +186,18 @@ export function ThreadSubagentGroup(props: {
       {!grouped || expanded ? (
         <View className="mb-1 gap-px rounded-xl border border-border bg-card/30 p-1">
           {agents.map((agent) => {
-            // A task in a linked environment opens there, if this app is connected to it.
-            const target = subagentThreadTarget(
-              agent,
-              props.environmentId,
-              reach.ownConnection,
-              reach.isLinked,
-            );
+            const target = subagentThreadTarget(agent, props.environmentId);
             return (
               <Pressable
                 key={agent.item.id}
                 accessible
                 accessibilityRole={target === null ? undefined : "link"}
                 accessibilityHint={
-                  target === null
-                    ? gt("Provider-managed agent")
-                    : target.linked === undefined
-                      ? gt("Opens this agent's thread")
-                      : gt("Opens a read-only view of this agent's thread on {label}", {
-                          label: target.linked.label,
-                        })
+                  target === null ? gt("Provider-managed agent") : gt("Opens this agent's thread")
                 }
                 disabled={target === null}
                 onPress={() => {
                   if (target === null) return;
-                  if (target.linked !== undefined) {
-                    openLinkedRead(target, target.linked, agent.title, {
-                      source: {
-                        environmentId: props.environmentId,
-                        threadId: members[0]!.threadId,
-                      },
-                    });
-                    return;
-                  }
                   if (
                     openInspector(
                       { environmentId: props.environmentId, threadId: members[0]!.threadId },
@@ -256,7 +221,6 @@ export function ThreadSubagentGroup(props: {
                 <SubagentRow
                   environmentId={props.environmentId}
                   subagent={agent}
-                  canOpenRemote={target !== null}
                   elapsed={<SubagentElapsed agents={[agent]} />}
                 />
               </Pressable>

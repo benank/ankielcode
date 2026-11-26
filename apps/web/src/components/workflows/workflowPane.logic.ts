@@ -3,7 +3,7 @@
  * lives in the address, so a reload or a shared link opens the same tabs.
  */
 export type WorkflowPaneTab =
-  /** An agent's thread, and the linked environment it is in when not the run's own. */
+  /** An agent's thread, and the environment it is in when not the run's own. */
   | { readonly thread: string; readonly env?: string }
   /** One of the run's references, by its kind and key. */
   | { readonly kind: string; readonly key: string };

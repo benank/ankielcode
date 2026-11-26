@@ -110,17 +110,13 @@ function isNonterminalTurnItemStatus(status: string): boolean {
 
 /**
  * A delegate_task child. Its own thread is reconciled and continued on its own
- * (here, or in the linked environment it runs in) and reports back through
- * the app, so it is not provider background work.
+ * and reports back through the app, so it is not provider background work.
  */
 function isAppOwnedDelegation(task: {
   readonly origin: OrchestrationV2Subagent["origin"];
   readonly childThreadId: ThreadId | null;
-  readonly remoteChild?: OrchestrationV2Subagent["remoteChild"];
 }): boolean {
-  return (
-    task.origin === "app_owned" && (task.childThreadId !== null || task.remoteChild !== undefined)
-  );
+  return task.origin === "app_owned" && task.childThreadId !== null;
 }
 
 function isAppOwnedDelegationItem(
@@ -759,7 +755,7 @@ export const make = Effect.gen(function* () {
             !unsentResumePromptIds.has(candidate.id) &&
             (candidate.nodeId === null || !messageRequestNodeIds.has(candidate.nodeId)) &&
             !isAppOwnedDelegationItem(candidate) &&
-            // A link card waits on the user, not the run, and answers by message.
+            // An old link card waits on nothing in memory; stopping or archiving closes it.
             candidate.type !== "link_request" &&
             // The orchestrator queues a steer the provider never reported reading.
             !(

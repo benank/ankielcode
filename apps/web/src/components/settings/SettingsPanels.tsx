@@ -1319,11 +1319,11 @@ export function ChatSettingsPanel() {
           description={
             settings.sideThreadOpenTarget === "panel"
               ? gt(
-                  "Where a click opens a subagent, a side chat, or a thread on a linked environment. {modifier}-click or middle-click opens it in the main view instead.",
+                  "Where a click opens a subagent or a side chat. {modifier}-click or middle-click opens it in the main view instead.",
                   { modifier: modifierLabel },
                 )
               : gt(
-                  "Where a click opens a subagent, a side chat, or a thread on a linked environment. {modifier}-click or middle-click opens it in the side panel instead.",
+                  "Where a click opens a subagent or a side chat. {modifier}-click or middle-click opens it in the side panel instead.",
                   { modifier: modifierLabel },
                 )
           }

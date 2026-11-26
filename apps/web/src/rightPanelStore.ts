@@ -11,12 +11,6 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { useClosedViewStore } from "./closedViewStore";
 import { m } from "./i18n/messages";
 import { resolveStorage } from "./lib/storage";
-import type { LinkedThreadTarget } from "@ankielcode/client-runtime/linked-thread";
-import {
-  decodeLinkedThreadSurface,
-  linkedThreadSurface,
-  type LinkedThreadSurface,
-} from "./linkedThreadSurface";
 import type { ThreadPanelPresentation } from "./rightPanelLayout";
 import type { ChatFileAttachment } from "./types";
 
@@ -31,7 +25,6 @@ const RIGHT_PANEL_KINDS = [
   "pull-requests",
   "issue",
   "thread",
-  "linked-thread",
 ] as const;
 export type RightPanelKind = (typeof RIGHT_PANEL_KINDS)[number];
 
@@ -107,9 +100,7 @@ export type RightPanelSurface =
    * A thread of the panel's environment shown beside it: a side chat or a subagent. Which one is
    * the thread's own lineage, so the surface only names it.
    */
-  | ThreadSurface
-  /** A linked environment's thread, read through `viaEnvironmentId`; it has no thread here. */
-  | LinkedThreadSurface;
+  | ThreadSurface;
 
 export type ThreadSurface = { id: `thread:${string}`; kind: "thread"; threadId: ThreadId };
 
@@ -185,16 +176,10 @@ interface RightPanelStoreState {
   ) => boolean;
   open: (
     ref: ScopedThreadRef,
-    kind: Exclude<
-      RightPanelKind,
-      "file" | "terminal" | "pull-request" | "issue" | "thread" | "linked-thread"
-    >,
+    kind: Exclude<RightPanelKind, "file" | "terminal" | "pull-request" | "issue" | "thread">,
   ) => void;
   /** Opens a side chat or subagent of `ref`'s environment as a tab; `ref` itself has no tab. */
   openThread: (ref: ScopedThreadRef, threadId: ThreadId) => void;
-  openLinkedThread: (ref: ScopedThreadRef, target: LinkedThreadTarget) => void;
-  /** Records the title the linked environment gave, so the tab and a reopened one show it. */
-  setLinkedThreadTitle: (ref: ScopedThreadRef, surfaceId: string, title: string) => void;
   openDevice: (ref: ScopedThreadRef, target: DeviceTabTarget, automatic?: boolean) => void;
   renameDevice: (ref: ScopedThreadRef, surfaceId: string, title: string) => void;
   openBrowser: (ref: ScopedThreadRef, tabId: string | null) => void;
@@ -259,10 +244,7 @@ interface RightPanelStoreState {
   toggleVisibility: (ref: ScopedThreadRef) => void;
   toggle: (
     ref: ScopedThreadRef,
-    kind: Exclude<
-      RightPanelKind,
-      "file" | "terminal" | "pull-request" | "issue" | "thread" | "linked-thread"
-    >,
+    kind: Exclude<RightPanelKind, "file" | "terminal" | "pull-request" | "issue" | "thread">,
   ) => void;
   setThreadPanelOpen: (
     ref: ScopedThreadRef,
@@ -287,7 +269,7 @@ const DEFAULT_THREAD_PANEL_VISIBILITY: ThreadPanelVisibility = {
 const singletonSurface = (
   kind: Exclude<
     RightPanelKind,
-    "file" | "preview" | "terminal" | "pull-request" | "issue" | "thread" | "linked-thread"
+    "file" | "preview" | "terminal" | "pull-request" | "issue" | "thread"
   >,
 ): RightPanelSurface => {
   switch (kind) {
@@ -616,10 +598,6 @@ export function migratePersistedRightPanelState(persistedState: unknown): {
                     }
                     // Also drops kinds this build does not know, such as one a newer build saved.
                     if (!(RIGHT_PANEL_KINDS as ReadonlyArray<unknown>).includes(kind)) return [];
-                    if (surface.kind === "linked-thread") {
-                      const decoded = decodeLinkedThreadSurface(surface);
-                      return decoded === null ? [] : [decoded];
-                    }
                     if (
                       (surface.kind === "file" || surface.kind === "files") &&
                       "folderTrail" in surface &&
@@ -880,38 +858,6 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
                 upsertSurface(current, threadSurface(threadId)),
               ),
         ),
-      openLinkedThread: (ref, target) =>
-        set((state) =>
-          userAction(state, scopedThreadKey(ref), (current) => {
-            const surface = linkedThreadSurface(target);
-            const next = upsertSurface(current, surface);
-            return {
-              ...next,
-              // A later click may know the title or label an earlier one did not.
-              surfaces: next.surfaces.map((entry) =>
-                entry.id === surface.id && entry.kind === "linked-thread"
-                  ? { ...surface, title: surface.title ?? entry.title }
-                  : entry,
-              ),
-            };
-          }),
-        ),
-      setLinkedThreadTitle: (ref, surfaceId, title) =>
-        set((state) => {
-          const threadKey = scopedThreadKey(rightPanelHostRef(ref));
-          const existing = state.byThreadKey[threadKey]?.surfaces.find(
-            (surface) => surface.id === surfaceId,
-          );
-          if (existing?.kind !== "linked-thread" || existing.title === title) return state;
-          return automaticUpdate(state, threadKey, (current) => ({
-            ...current,
-            surfaces: current.surfaces.map((surface) =>
-              surface.id === surfaceId && surface.kind === "linked-thread"
-                ? { ...surface, title }
-                : surface,
-            ),
-          }));
-        }),
       renameDevice: (ref, surfaceId, title) =>
         set((state) =>
           userAction(state, scopedThreadKey(ref), (current) => ({

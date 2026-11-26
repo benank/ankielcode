@@ -6,7 +6,6 @@ import { AutoSettleDaysField } from "./components/AutoSettleDaysField";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { useAtomValue } from "@effect/atom-react";
 import { AsyncResult } from "effect/reactivity";
-import type { ComponentProps } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -37,20 +36,8 @@ export function SettingsLabsRouteScreen() {
         contentContainerClassName="gap-6 px-5 pt-4"
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) + 18 }}
       >
-        <MachineLabSection
-          title={gt("Linked environments")}
-          icon="link"
-          capability="peerLinks"
-          setting="linkedEnvironmentsEnabled"
-          description={gt(
-            "Let agents on a machine work on your other machines, and theirs on it. Turn it on for each machine. While off, nothing new starts over a link; running tasks finish.",
-          )}
-        />
-        <MachineLabSection
+        <FastWorktreeCheckoutSection
           title={gt("Fast worktree checkout")}
-          icon="bolt.circle"
-          capability="fastWorktreeCheckout"
-          setting="fastWorktreeCheckout"
           description={gt(
             "On a Mac, clone new worktrees from a checkout cached in the Ankiel home folder instead of writing every file. Uses Git’s normal checkout when it can’t. Turning it off deletes the cache.",
           )}
@@ -221,30 +208,22 @@ export function NewThreadSettingsSection() {
   );
 }
 
-type MachineLabSetting = "linkedEnvironmentsEnabled" | "fastWorktreeCheckout";
-
-function MachineLabSection({
+function FastWorktreeCheckoutSection({
   title,
-  icon,
-  capability,
-  setting,
   description,
 }: {
   readonly title: string;
-  readonly icon: ComponentProps<typeof SettingsSwitchRow>["icon"];
-  readonly capability: "peerLinks" | "fastWorktreeCheckout";
-  readonly setting: MachineLabSetting;
   readonly description: string;
 }) {
   const { environments } = useEnvironments();
   const supported = environments.filter(
     (environment) =>
       environment.connection.phase === "connected" &&
-      environment.serverConfig?.environment.capabilities[capability] === true,
+      environment.serverConfig?.environment.capabilities.fastWorktreeCheckout === true,
   );
   const writable = useEnvironmentsWithScope(supported, AuthSettingsWriteScope);
   const updateSettings = useAtomCommand(serverEnvironment.updateSettings, {
-    label: `${setting} update`,
+    label: "fastWorktreeCheckout update",
     reportFailure: true,
   });
   if (supported.length === 0) return null;
@@ -254,19 +233,14 @@ function MachineLabSection({
         {supported.map((environment) => (
           <SettingsSwitchRow
             key={environment.environmentId}
-            icon={icon}
+            icon="bolt.circle"
             label={environment.label}
-            value={environment.serverConfig?.settings[setting] === true}
+            value={environment.serverConfig?.settings.fastWorktreeCheckout === true}
             disabled={!writable.has(environment.environmentId)}
             onValueChange={(value) =>
               void updateSettings({
                 environmentId: environment.environmentId,
-                input: {
-                  patch:
-                    setting === "linkedEnvironmentsEnabled"
-                      ? { linkedEnvironmentsEnabled: value }
-                      : { fastWorktreeCheckout: value },
-                },
+                input: { patch: { fastWorktreeCheckout: value } },
               })
             }
           />

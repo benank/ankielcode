@@ -61,7 +61,6 @@ Ankiel Code needs one agent that is installed and signed in. For example, instal
 - [Remote access from a phone or another machine](./docs/user/remote-access.md)
 - [Permission modes](./docs/user/permission-modes.md)
 - [Source control](./docs/user/source-control.md)
-- [Connect outside agents over MCP](./docs/user/outside-agents.md)
 - [FAQ](./docs/user/faq.md)
 
 [All docs](./docs/README.md) has the full list.

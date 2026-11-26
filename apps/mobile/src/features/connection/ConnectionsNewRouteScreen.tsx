@@ -26,7 +26,6 @@ import { buildPairingUrl, extractPairingUrlFromQrPayload, parsePairingUrl } from
 import { useRemoteConnections } from "../../state/use-remote-environment-registry";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { autoConnectReport, devAutoConnectAttemptAtom } from "./devAutoConnect";
-import { linkedEnvironmentPrefillAtom } from "./linkedEnvironmentPrefill";
 import { leaveSettingsPage } from "../settings/settings-navigation";
 import { workspaceHasColumns } from "../layout/workspace/workspace-selection-store";
 import { m } from "../../i18n/messages";
@@ -36,8 +35,6 @@ type ConnectionsNewRouteParams = {
   readonly pairingUrl?: string;
   readonly autoConnect?: string;
   readonly routeFor?: EnvironmentId;
-  /** A linked machine this app chose to pair with; its details come from app state, never the link. */
-  readonly linked?: string;
 };
 
 export function ConnectionsNewRouteScreen({
@@ -46,15 +43,12 @@ export function ConnectionsNewRouteScreen({
   const params = route.params ?? {};
   // Dev-only prefill prevents production links from supplying an attacker-chosen host and token.
   const routePairingUrl = __DEV__ ? (params.pairingUrl?.trim() ?? "") : "";
-  const known = useAtomValue(linkedEnvironmentPrefillAtom);
-  const linked = known !== null && known.environmentId === params.linked ? known : null;
   // A new prefill link replaces whatever the form held.
   return (
     <PairingForm
-      key={`${routePairingUrl}:${linked?.environmentId ?? ""}`}
+      key={routePairingUrl}
       routePairingUrl={routePairingUrl}
-      routeFor={params.routeFor ?? linked?.environmentId}
-      linked={linked}
+      routeFor={params.routeFor}
     />
   );
 }
@@ -62,11 +56,9 @@ export function ConnectionsNewRouteScreen({
 function PairingForm({
   routePairingUrl,
   routeFor,
-  linked,
 }: {
   readonly routePairingUrl: string;
   readonly routeFor: EnvironmentId | undefined;
-  readonly linked: { readonly label: string; readonly host: string | null } | null;
 }) {
   const gt = useGT();
   const { connectionPairingUrl, onChangeConnectionPairingUrl, onConnectPress } =
@@ -74,7 +66,7 @@ function PairingForm({
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [initialPairing] = useState(() => parsePairingUrl(routePairingUrl || connectionPairingUrl));
-  const [hostInput, setHostInput] = useState(linked?.host ?? initialPairing.host);
+  const [hostInput, setHostInput] = useState(initialPairing.host);
   const [codeInput, setCodeInput] = useState(initialPairing.code);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -191,11 +183,7 @@ function PairingForm({
 
   return (
     <SettingsScreen
-      title={
-        linked
-          ? gt("Connect to {environment}", { environment: linked.label })
-          : gt("Add environment")
-      }
+      title={gt("Add environment")}
       actions={[
         {
           accessibilityLabel: connecting
@@ -270,14 +258,9 @@ function PairingForm({
               )}
             >
               {pairingConnectionError ??
-                (linked
-                  ? gt(
-                      "Create a pairing code on {environment}, in its Settings → Sharing & access or with `ankiel auth pairing create`, and enter it here.",
-                      { environment: linked.label },
-                    )
-                  : gt(
-                      "For machines on your local network or tailnet. The machine keeps its own provider credentials.",
-                    ))}
+                gt(
+                  "For machines on your local network or tailnet. The machine keeps its own provider credentials.",
+                )}
             </Text>
           </View>
         </View>

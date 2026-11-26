@@ -76,7 +76,7 @@ import {
 import type { WorkflowPaneTab } from "./workflowPane.logic";
 import { WorkflowReferenceChip } from "./WorkflowReferences";
 
-/** An agent's thread, as a step names it: the linked environment it is in, or null for this one. */
+/** An agent's thread, as a step names it: the environment it is in, or null for this one. */
 export interface WorkflowThreadTarget {
   readonly threadId: string;
   readonly environmentId: string | null;

@@ -55,8 +55,6 @@ import { LoadingScreen } from "../../components/LoadingScreen";
 import { scopedThreadKey } from "../../lib/scopedEntities";
 import { useDelayedStatus } from "../../lib/useDelayedStatus";
 import { connectionRetryLabel } from "./floating-working-status";
-import { scopeThreadRef } from "@ankielcode/client-runtime/environment";
-import { useThreadShell } from "../../state/entities";
 import { NATIVE_LIQUID_GLASS_SUPPORTED } from "../../native/native-glass";
 import { connectionTone } from "../connection/connectionTone";
 import { runtimeConnectionErrorText } from "../connection/environmentStatusText";
@@ -539,22 +537,9 @@ function ThreadRouteContent(
     : null;
 
   const usesNativeHeaderGlass = NATIVE_LIQUID_GLASS_SUPPORTED;
-  const delegatedFrom = selectedThread?.delegatedFrom ?? null;
-  const delegatedFromRef =
-    delegatedFrom === null
-      ? null
-      : scopeThreadRef(delegatedFrom.environmentId, delegatedFrom.threadId);
-  // The title it had at delegation, until this client sees the parent itself.
-  const delegatedFromThread = useThreadShell(delegatedFromRef);
   const headerSubtitle = [
     selectedThreadProject?.title ?? null,
     selectedEnvironmentConnection?.environmentLabel ?? null,
-    // A linked environment's delegated task names its parent; other linked work its origin.
-    delegatedFrom !== null
-      ? gt("Subagent of {title}", { title: delegatedFromThread?.title ?? delegatedFrom.title })
-      : selectedThread?.linkOrigin
-        ? gt("From {origin}", { origin: selectedThread.linkOrigin.label })
-        : null,
   ]
     .filter(Boolean)
     .join(" · ");

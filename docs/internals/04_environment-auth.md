@@ -9,8 +9,7 @@ The environment issues its own sessions and enforces their capabilities. See
   narrow a grant, never widen it. Client labels and device metadata have no authorization role.
 - **`access:write` hands out what the session holds and revokes anything.** Every route that
   returns a credential to the caller requires `access:write` and every scope that credential
-  carries: a pairing link, an MCP sign-in approval, and a link code from a linked environment.
-  Revoking is not capped by the caller's scopes.
+  carries. Revoking is not capped by the caller's scopes.
 - **Why the default grant includes management scopes.** `terminal:operate` and
   `orchestration:operate` already grant OS-user execution (which can invoke `ankiel auth session issue`),
   so withholding access management from the default grant would not be a real boundary.
@@ -34,27 +33,24 @@ The environment issues its own sessions and enforces their capabilities. See
   `settings:write`, whether it arrives in a settings patch or a project update.
 - **Backward-compatible scope evolution.** Token exchange intersects requested scopes with the
   pairing grant, dropping retired/unknown names and failing before consuming a link if none remain.
-  Stored grants are never expanded when scopes split. Auth responses preserve legacy `scopes`
+  Stored grants are never expanded when scopes split. A pairing request that still names the
+  retired `access` or `purpose` fields is refused rather than answered with an ordinary credential. Auth responses preserve legacy `scopes`
   alongside exact `permissions` so older clients and servers stay compatible.
 
 ## Non-standard principals
 
-- **MCP clients (`mcp-client`) are a separate audience.** Outside agents authenticate on `/mcp` via
-  PKCE OAuth ([McpOAuth](../../apps/server/src/auth/McpOAuth.ts)), with stateless client
-  registration so unauthenticated callers cannot grow server state. Users grant read-only access or
-  a runtime-mode ceiling rather than raw scopes. Every non-`/mcp` HTTP and WebSocket route rejects
-  `mcp-client` sessions (except the read-only thread relay and client-pairing routes restricted to
-  [peer links](./05_remote.md#peer-links)). Every MCP tool must statically declare its access level in
-  [`McpToolAccess.ts`](../../apps/server/src/mcp/McpToolAccess.ts), and thread-only tools must still
-  refuse outside callers in handlers—hiding from tool listings is only discovery. A workflow run
-  picks its own modes, so only a caller at the broadest mode a thread may run in here (full access,
-  or an administrator's ceiling below it) can start or change runs, change what workflows store, or
-  read webhook paths. Narrower callers can still read runs.
-- **Peer-link client pairing.** Only a full-access peer link may mint a one-time client pairing on
-  the linked environment (since full-access agents can already run `ankiel auth pairing create`). The
-  linked side enforces this itself, and the operation stays a human-triggered RPC/HTTP route rather
-  than an MCP tool. The same route mints a code that links another environment at a chosen access
-  level, and the linking side's RPC requires the caller to hold that level's scopes.
+- **`/mcp` takes only credentials Ankiel hands out itself.** Agents Ankiel launches present
+  per-thread registry tokens; `ankiel thread` and `ankiel workflow` present a short-lived
+  full-access CLI session (`cli-mcp-client`) that the command revokes when it ends. There is no
+  OAuth sign-in for outside agents, so a 401 names no authorization server. Every non-`/mcp` HTTP
+  and WebSocket route rejects CLI sessions, and every route rejects `mcp-client` sessions left by
+  the removed outside-agent sign-in and linked environments; startup also revokes those sessions
+  and their unspent codes. Every MCP tool must statically declare its access level in
+  [`McpToolAccess.ts`](../../apps/server/src/mcp/McpToolAccess.ts), and thread-only tools must
+  still refuse callers outside a thread in handlers—hiding from tool listings is only discovery.
+  A workflow run picks its own modes, so only a caller at the broadest mode a thread may run in
+  here (full access, or an administrator's ceiling below it) can start or change runs, change
+  what workflows store, or read webhook paths. Narrower callers can still read runs.
 
 ### Reusable dev credential
 

@@ -28,8 +28,7 @@ import type { TurnItemDetailSource } from "../../state/queries";
 import { type HandoffTimelineRun } from "./V2LifecycleRow";
 
 /**
- * Where an expanded row reads an item's detail and a command's output. The owner's rows read them
- * from the environment; a linked environment's thread reads them through its own routes.
+ * Where an expanded row reads an item's detail and a command's output, from the environment.
  */
 export interface TurnItemSource {
   readonly detail: TurnItemDetailSource;
@@ -42,7 +41,7 @@ export interface TurnItemSource {
 
 export interface TimelineRowSharedState {
   citationRequest: AssistantCitationTarget | null;
-  /** Absent hides "Reply", as in a linked thread. */
+  /** Absent hides "Reply". */
   onReplyToResponse: ((response: ResponseContextRecord) => boolean) | undefined;
   listRef: React.RefObject<LegendListRef | null>;
   timestampFormat: TimestampFormat;
@@ -63,10 +62,7 @@ export interface TimelineRowSharedState {
   onImageExpand: (preview: ExpandedImagePreview) => void;
   displayThreadKey?: string;
   onOpenToolDiff: ((target: ToolCallDiffTarget) => void) | undefined;
-  /**
-   * Draws a published HTML visual. Unset, the row loads it from the environment; a linked
-   * thread loads it through its own route.
-   */
+  /** Draws a published HTML visual. Unset, the row loads it from the environment. */
   renderHtmlRender: ((row: Extract<TimelineRow, { kind: "html-render" }>) => ReactNode) | undefined;
   /** Unset, expanded rows read detail and command output from the environment. */
   turnItemSource: TurnItemSource | undefined;

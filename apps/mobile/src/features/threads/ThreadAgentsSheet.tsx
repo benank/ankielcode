@@ -30,10 +30,8 @@ import { SubagentStopButton } from "./SubagentStopButton";
 import { ThreadWorkflowGroup } from "./ThreadWorkflowGroup";
 import { ScreenContent } from "../../components/ui/ScreenContent";
 import { subagentThreadTarget, type SubagentThreadTarget } from "./threadAgentsPresentation";
-import { useLinkedThreadReach } from "../../state/linkedThread";
 
 import { useOpenThreadInspector } from "./thread-inspector-navigation";
-import { useOpenLinkedThreadRead } from "./useOpenLinkedThread";
 
 type AgentsTarget = { readonly environmentId: EnvironmentId; readonly threadId: ThreadId };
 
@@ -53,7 +51,6 @@ export function ThreadAgentsSheet({ route }: StaticScreenProps<AgentsTarget>) {
   const target = route.params;
   const navigation = useNavigation();
   const openInspector = useOpenThreadInspector();
-  const openLinkedRead = useOpenLinkedThreadRead();
   const insets = useSafeAreaInsets();
   const gt = useGT();
   const messages = useMessages();
@@ -71,12 +68,8 @@ export function ThreadAgentsSheet({ route }: StaticScreenProps<AgentsTarget>) {
     [messages, subagents],
   );
 
-  const openChildThread = (child: SubagentThreadTarget, title: string | null = null) => {
+  const openChildThread = (child: SubagentThreadTarget) => {
     void Haptics.selectionAsync();
-    if (child.linked !== undefined) {
-      openLinkedRead(child, child.linked, title, { source: target, replace: true });
-      return;
-    }
     if (
       openInspector(target, {
         type: "thread",
@@ -147,24 +140,17 @@ function AgentRow(props: {
   readonly environmentId: EnvironmentId;
   readonly subagent: OrchestrationV2Subagent;
   readonly tickSeconds: boolean;
-  readonly onOpen: (child: SubagentThreadTarget, title: string | null) => void;
+  readonly onOpen: (child: SubagentThreadTarget) => void;
 }) {
   const { subagent } = props;
   const gt = useGT();
-  const reach = useLinkedThreadReach(props.environmentId, [subagent]);
-  const target = subagentThreadTarget(
-    subagent,
-    props.environmentId,
-    reach.ownConnection,
-    reach.isLinked,
-  );
+  const target = subagentThreadTarget(subagent, props.environmentId);
 
   const row = (
     <View className="py-3.5">
       <SubagentRow
         environmentId={props.environmentId}
         subagent={subagent}
-        canOpenRemote={target !== null}
         elapsed={<AgentElapsed subagent={subagent} tickSeconds={props.tickSeconds} />}
       />
     </View>
@@ -182,14 +168,8 @@ function AgentRow(props: {
     ) : (
       <Pressable
         accessibilityRole="link"
-        accessibilityHint={
-          target.linked === undefined
-            ? gt("Opens this agent's thread")
-            : gt("Opens a read-only view of this agent's thread on {label}", {
-                label: target.linked.label,
-              })
-        }
-        onPress={() => props.onOpen(target, subagent.title)}
+        accessibilityHint={gt("Opens this agent's thread")}
+        onPress={() => props.onOpen(target)}
         className="min-w-0 flex-1 active:opacity-70"
       >
         {row}

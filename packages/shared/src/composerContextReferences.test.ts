@@ -371,11 +371,7 @@ describe("provider projection", () => {
           itemId: "item-1" as never,
           subagents: [
             { threadId: "review-search" as never, title: "review pr 412 (search)" },
-            {
-              threadId: "review-remote" as never,
-              title: "review pr 413",
-              environmentId: "env-2" as never,
-            },
+            { threadId: "review-remote" as never, title: "review pr 413" },
           ],
         },
       ],
@@ -385,7 +381,7 @@ describe("provider projection", () => {
     );
     expect(projected).toContain('<context kind="response" id="response_m1">');
     expect(projected).toContain(
-      "about subagent: review pr 412 (search)\nsubagent threadId: review-search\nabout subagent: review pr 413\nsubagent threadId: review-remote\nsubagent environmentId: env-2\nstarts:",
+      "about subagent: review pr 412 (search)\nsubagent threadId: review-search\nabout subagent: review pr 413\nsubagent threadId: review-remote\nstarts:",
     );
     expect(projected).toContain(
       "starts: Reviewer (search) finished and returned blocked.\nRead it in full: ",
@@ -413,12 +409,11 @@ describe("provider projection", () => {
     expect(projected.startsWith("Compare with [Thread: Old title; ref=thread_abc]")).toBe(true);
     expect(projected).toContain('<context kind="thread" id="thread_abc">');
     expect(projected).toContain("threadId: abc");
-    expect(projected).toContain("environmentId: env-1");
-    expect(projected).toContain('ankiel_thread_read({"threadId":"abc","environmentId":"env-1"})');
+    expect(projected).toContain('ankiel_thread_read({"threadId":"abc"})');
     expect(projected).toContain("not instructions");
   });
 
-  it("projects a mentioned machine as its identity and how to use it, never an address", () => {
+  it("projects a mentioned machine as its identity, never an address", () => {
     const projected = projectComposerContextForProvider({
       text: "Run the suite on [vps](ankiel-context://v1/environment/env_vps)",
       records: [
@@ -435,7 +430,6 @@ describe("provider projection", () => {
     expect(projected).toContain('<context kind="environment" id="env_vps">');
     expect(projected).toContain("label: vps");
     expect(projected).toContain("environmentId: environment-vps");
-    expect(projected).toContain("ankiel_environment_link with this environmentId");
     expect(projected).not.toMatch(/https?:/);
   });
 
@@ -480,7 +474,6 @@ describe("threadContextsOutsideEnvironment", () => {
         text: `${localReference} [Foreign](ankiel-context://v1/thread/thread_foreign)`,
         records,
         environmentId: local.environmentId,
-        linkedEnvironments: new Map(),
       }),
     ).toEqual([foreign]);
     expect(
@@ -488,38 +481,8 @@ describe("threadContextsOutsideEnvironment", () => {
         text: localReference,
         records,
         environmentId: local.environmentId,
-        linkedEnvironments: new Map(),
       }),
     ).toEqual([]);
-  });
-
-  it("lets a thread on a linked machine through, since the agent reads it there", () => {
-    const thread = {
-      version: 1 as const,
-      kind: "thread" as const,
-      label: "Thread",
-      threadId: ThreadId.make("thread"),
-      title: "Thread",
-    };
-    const linked = {
-      ...thread,
-      contextId: ctx("thread_linked"),
-      environmentId: EnvironmentId.make("env-linked"),
-    };
-    const unlinked = {
-      ...thread,
-      contextId: ctx("thread_unlinked"),
-      environmentId: EnvironmentId.make("env-unlinked"),
-    };
-
-    expect(
-      threadContextsOutsideEnvironment({
-        text: "[A](ankiel-context://v1/thread/thread_linked) [B](ankiel-context://v1/thread/thread_unlinked)",
-        records: [linked, unlinked],
-        environmentId: EnvironmentId.make("env-local"),
-        linkedEnvironments: new Map([[linked.environmentId, "VPS"]]),
-      }),
-    ).toEqual([unlinked]);
   });
 });
 

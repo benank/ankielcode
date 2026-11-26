@@ -51,9 +51,6 @@ export type AnkielMcpToolSummaryAction =
   | "project-delete"
   | "project-clone"
   | "environment-read"
-  | "environment-links"
-  | "environment-link"
-  | "environment-unlink"
   | "environment-update"
   | "theme-read"
   | "theme-set"
@@ -430,18 +427,6 @@ const ANKIEL_MCP_TOOLS: Readonly<Record<string, AnkielMcpToolDefinition>> = {
   ankiel_environment_read: tool(
     ["Read", "Reading", "Read", "environment preferences"],
     "environment-read",
-  ),
-  ankiel_environment_links: tool(
-    ["List", "Listing", "Listed", "linked environments"],
-    "environment-links",
-  ),
-  ankiel_environment_link: tool(
-    ["Ask to link", "Asking to link", "Asked to link", "an environment"],
-    "environment-link",
-  ),
-  ankiel_environment_unlink: tool(
-    ["Forget", "Forgetting", "Forgot", "a linked environment"],
-    "environment-unlink",
   ),
   ankiel_environment_preferences_update: tool(
     ["Update", "Updating", "Updated", "environment preferences"],

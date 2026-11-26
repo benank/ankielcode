@@ -34,7 +34,8 @@ import * as HttpApi from "effect/http-api/HttpApi";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 import * as ServerEnvironment from "./environment/ServerEnvironment.ts";
 import * as EnvironmentAuth from "./auth/EnvironmentAuth.ts";
-import { layerEnvironmentAuth } from "./peer/PeerLinks.testkit.ts";
+import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
+import * as Sqlite from "./persistence/Sqlite.ts";
 import {
   DESKTOP_READINESS_PROOF_PATH,
   isValidDesktopReadinessProof,
@@ -1030,6 +1031,16 @@ describe("downloadContentDisposition", () => {
   });
 });
 
+const layerEnvironmentAuth = (prefix: string) =>
+  EnvironmentAuth.layer.pipe(
+    Layer.provide(Sqlite.layerMemory),
+    Layer.provideMerge(ServerSecretStore.layer),
+    Layer.provideMerge(ServerEnvironment.layerIdentity),
+    Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix })),
+    Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)),
+    Layer.fresh,
+  );
+
 describe("environment descriptor redaction", () => {
   it.live(
     "redacts computer label and platform for unauthenticated requests and returns them when authenticated",
@@ -1098,12 +1109,8 @@ describe("environment descriptor redaction", () => {
             platform: { os: "darwin", arch: "arm64", machine: "mac-mini" },
           });
 
-          const mcp = yield* auth.issueMcpClientSession({
-            label: "Peer",
-            access: "auto",
-            peerLink: true,
-            client: { deviceType: "desktop" },
-          });
+          // The CLI's `/mcp` session is no environment session, so it reads the redacted one.
+          const mcp = yield* auth.issueCliMcpClientSession({ label: "ankiel thread cli" });
           const mcpRes = yield* Effect.promise(() =>
             handler(
               new Request("http://127.0.0.1/.well-known/ankiel/environment", {
@@ -1115,8 +1122,8 @@ describe("environment descriptor redaction", () => {
           const mcpJson = yield* Effect.promise(() => mcpRes.json());
           expect(mcpJson).toMatchObject({
             environmentId: "env-secret-box",
-            label: "Hyperspeed",
-            platform: { os: "darwin", arch: "arm64", machine: "mac-mini" },
+            label: "Ankiel Code",
+            platform: { os: "unknown", arch: "other" },
           });
         }),
       ),

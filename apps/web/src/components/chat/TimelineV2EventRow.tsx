@@ -33,13 +33,7 @@ export function V2EventTimelineRow({ row }: { row: Extract<TimelineRow, { kind: 
     );
   }
   if (item.type === "link_request") {
-    return (
-      <LinkRequestCard
-        environmentId={ctx.activeThreadEnvironmentId}
-        item={item}
-        visibility={visibility}
-      />
-    );
+    return <LinkRequestCard item={item} />;
   }
   return (
     <V2LifecycleRow
@@ -117,7 +111,6 @@ const V2SubagentGroup = memo(function V2SubagentGroup({
                 environmentId={ctx.activeThreadEnvironmentId}
                 providerInstanceId={item.providerInstanceId}
                 driver={item.driver}
-                remote={item.remoteChild}
                 status={agents.length === 1 ? status : undefined}
               />
             ))}

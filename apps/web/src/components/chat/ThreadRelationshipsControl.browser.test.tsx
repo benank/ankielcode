@@ -1,5 +1,4 @@
 import "~/index.css";
-import * as DateTime from "effect/DateTime";
 import { EnvironmentId, NodeId, ThreadId } from "@ankielcode/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
@@ -48,10 +47,6 @@ vi.mock(import("../../state/environments"), () => ({
   useEnvironment: (() => null) as never,
   useEnvironmentProviders: (() => new Map()) as never,
 }));
-vi.mock(import("../../state/peerLinks"), () => ({
-  peerLinkEnvironment: { readThread: {} } as never,
-  useLinkedEnvironments: (() => new Map()) as never,
-}));
 vi.mock(import("../../lib/archivedThreadsState"), () => ({
   useArchivedThreadSnapshots: (() => ({
     snapshots: [{ environmentId: "environment", snapshot: { threads: state.archivedThreads } }],
@@ -66,7 +61,7 @@ vi.mock(import("../../state/use-atom-command"), () => ({
 
 import { scopeThreadRef } from "@ankielcode/client-runtime/environment";
 
-import { fakeTimers, render } from "../../../test/render";
+import { render } from "../../../test/render";
 import { isMacPlatform } from "../../lib/utils";
 import { selectThreadRightPanelState, useRightPanelStore } from "../../rightPanelStore";
 import { makeThreadProjectionFixture } from "../../test-fixtures";
@@ -333,130 +328,6 @@ it("shows a side chat's full title in its tooltip", async () => {
   );
 });
 
-it("shows a remote subagent's full title in its tooltip even when its environment is unavailable", async () => {
-  setup();
-  const longTitle = "Investigate a remote subagent issue across linked environments";
-  const remoteEnvId = EnvironmentId.make("remote-env");
-  const remoteThreadId = ThreadId.make("remote-thread");
-  const now = DateTime.makeUnsafe("2026-10-31T20:00:00.000Z");
-  state.projection = {
-    ...(state.projection as Record<string, unknown>),
-    subagents: [
-      {
-        id: NodeId.make("remote-agent"),
-        threadId,
-        runId: null,
-        parentNodeId: NodeId.make("parent"),
-        origin: "app_owned",
-        createdBy: "agent",
-        driver: "codex",
-        providerInstanceId: "provider",
-        providerThreadId: null,
-        childThreadId: null,
-        nativeTaskRef: null,
-        prompt: "Run remote task",
-        title: longTitle,
-        model: null,
-        status: "completed",
-        result: null,
-        startedAt: null,
-        completedAt: null,
-        updatedAt: now,
-        remoteChild: {
-          environmentId: remoteEnvId,
-          threadId: remoteThreadId,
-          label: "Remote VM with a long machine name in the office",
-        },
-      },
-    ],
-  };
-  await using screen = await render(
-    <div style={{ width: 320 }}>
-      <ThreadRelationshipsPanel
-        environmentId={environmentId}
-        threadId={threadId}
-        showLineage
-        showSideChats={false}
-      />
-    </div>,
-    { router: "/environment/fork" },
-  );
-
-  // A finished remote task sits with the other finished agents, not in its own list.
-  await expect
-    .element(screen.getByRole("button", { name: new RegExp(longTitle) }))
-    .not.toBeInTheDocument();
-  await screen.getByRole("button", { name: /Previous agents/ }).click();
-  const row = screen.getByRole("button", { name: new RegExp(longTitle) });
-  // A long environment label must not squeeze the title out of the row.
-  expect(
-    page.getByText(longTitle, { exact: true }).element().getBoundingClientRect().width,
-  ).toBeGreaterThan(0);
-  await userEvent.hover(row);
-  await vi.waitFor(() =>
-    expect(document.querySelector('[data-slot="tooltip-popup"]')?.textContent).toContain(longTitle),
-  );
-  // This client is not connected there, so the row reads the thread through this environment.
-  expect(document.querySelector('[data-slot="tooltip-popup"]')?.textContent).toContain(
-    "Read the thread on Remote VM with a long machine name in the office",
-  );
-
-  await row.click({ force: true });
-  expect(screen.router?.state.location.pathname).toBe("/environment/fork");
-});
-
-it("shows how long a running remote subagent has been running, as a local one does", async () => {
-  setup();
-  const remoteTitle = "Remote subagent running on a linked machine";
-  using _timers = fakeTimers();
-  vi.setSystemTime(new Date("2026-11-23T12:12:00.000Z"));
-  const startedAt = DateTime.makeUnsafe("2026-11-23T12:00:00.000Z");
-  state.projection = {
-    ...(state.projection as Record<string, unknown>),
-    subagents: [
-      {
-        id: NodeId.make("remote-agent"),
-        threadId,
-        runId: null,
-        parentNodeId: NodeId.make("parent"),
-        origin: "app_owned",
-        createdBy: "agent",
-        driver: "remote",
-        providerInstanceId: "provider",
-        providerThreadId: null,
-        childThreadId: null,
-        nativeTaskRef: null,
-        prompt: "Run remote task",
-        title: remoteTitle,
-        model: null,
-        status: "running",
-        result: null,
-        startedAt,
-        completedAt: null,
-        updatedAt: startedAt,
-        remoteChild: {
-          environmentId: EnvironmentId.make("remote-env"),
-          threadId: ThreadId.make("remote-thread"),
-          label: "127x05",
-        },
-      },
-    ],
-  };
-  await using screen = await render(
-    <ThreadRelationshipsPanel
-      environmentId={environmentId}
-      threadId={threadId}
-      showLineage
-      showSideChats={false}
-    />,
-    { router: "/environment/fork" },
-  );
-
-  // Assert synchronously: expect.element polls on timers this test fakes.
-  const row = screen.getByRole("button", { name: new RegExp(remoteTitle) });
-  expect(row.element().textContent).toContain("12m");
-});
-
 it("explains why Merge back is unavailable before the fork completes a run", async () => {
   setup();
   state.projection = { ...(state.projection as Record<string, unknown>), runs: [] };
@@ -480,43 +351,6 @@ it("explains why Merge back is unavailable before the fork completes a run", asy
 
   state.commandSucceeds = true;
   await mergeBack.click({ force: true });
-  expect(screen.router?.state.location.pathname).toBe("/environment/fork");
-});
-
-it("shows a delegated-from thread's full title in its tooltip even when its environment is unavailable", async () => {
-  setup();
-  const longTitle = "Parent task delegated from another machine that has a long description";
-  state.projection = {
-    ...(state.projection as Record<string, unknown>),
-    thread: {
-      ...(state.projection as { thread: Record<string, unknown> }).thread,
-      delegatedFrom: {
-        environmentId: EnvironmentId.make("parent-env"),
-        threadId: ThreadId.make("parent-thread"),
-        title: longTitle,
-      },
-    },
-  };
-  await using screen = await render(
-    <ThreadRelationshipsPanel
-      environmentId={environmentId}
-      threadId={threadId}
-      showLineage
-      showSideChats={false}
-    />,
-    { router: "/environment/fork" },
-  );
-
-  const row = screen.getByRole("button", { name: new RegExp(longTitle) });
-  await userEvent.hover(row);
-  await vi.waitFor(() =>
-    expect(document.querySelector('[data-slot="tooltip-popup"]')?.textContent).toContain(longTitle),
-  );
-  expect(document.querySelector('[data-slot="tooltip-popup"]')?.textContent).toContain(
-    "Delegated from a linked environment. Connect to it to open the parent thread.",
-  );
-
-  await row.click({ force: true });
   expect(screen.router?.state.location.pathname).toBe("/environment/fork");
 });
 

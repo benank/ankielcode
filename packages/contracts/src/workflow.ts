@@ -49,7 +49,7 @@ export const WorkflowStep = Schema.Struct({
   detail: Schema.NullOr(Schema.String),
   /** The thread an agent step ran in. */
   threadId: Schema.NullOr(Schema.String),
-  /** The linked environment that thread is in; null when it is this one. */
+  /** Another environment, only on runs from before linked environments were removed; else null. */
   environmentId: Schema.NullOr(Schema.String),
   /** What it produced: a step's value, an agent's data or reply, the answer to a question. */
   result: Schema.NullOr(Schema.Json),
