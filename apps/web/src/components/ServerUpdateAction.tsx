@@ -277,37 +277,25 @@ export function ServerUpdateAction({
 }: ServerUpdateTarget & UpdateButtonProps) {
   const gt = useGT();
   const isDesktopAppUpdate = selfUpdate === "desktop-managed";
-  const serverVersion = useServerConfigs().get(environmentId)?.environment.serverVersion;
+  const serverEnvironmentConfig = useServerConfigs().get(environmentId)?.environment;
+  const serverVersion = serverEnvironmentConfig?.serverVersion;
   const sessionStateAtom = environmentSession.sessionStateAtom(environmentId);
   const canUpdate = useAtomValue(sessionStateAtom, canUpdateServer);
   const update = useServerUpdate();
-  const updatesInstall =
-    installation?.kind === "npm-global" || installation?.kind === "ankiel-launcher";
   const { copyToClipboard } = useCopyToClipboard<{ command: string }>({
-    target: updatesInstall
-      ? {
-          target: "update command",
-          unavailableMessage: msg("Clipboard API is unavailable while copying update command."),
-          failureMessage: msg("Failed to copy update command to the clipboard."),
-        }
-      : {
-          target: "relaunch command",
-          unavailableMessage: msg("Clipboard API is unavailable while copying relaunch command."),
-          failureMessage: msg("Failed to copy relaunch command to the clipboard."),
-        },
+    target: {
+      target: "update command",
+      unavailableMessage: msg("Clipboard API is unavailable while copying update command."),
+      failureMessage: msg("Failed to copy update command to the clipboard."),
+    },
     onCopy: ({ command }) => {
       toastManager.add({
         type: "success",
-        title: updatesInstall ? gt("Update command copied") : gt("Relaunch command copied"),
-        description: updatesInstall
-          ? gt("Run `{command}` on {serverLabel}, then restart ankiel with your usual options.", {
-              command,
-              serverLabel,
-            })
-          : gt(
-              "Stop ankiel on {serverLabel}, then relaunch with `{command}` using the same subcommand and options. This does not update an installed ankiel command.",
-              { command, serverLabel },
-            ),
+        title: gt("Update command copied"),
+        description: gt(
+          "Run `{command}` on {serverLabel}, then restart ankiel with your usual options.",
+          { command, serverLabel },
+        ),
       });
     },
     onError: (error) => {
@@ -362,12 +350,16 @@ export function ServerUpdateAction({
   }
 
   const manualCommand =
-    selfUpdate === null ? manualServerUpdateCommand(targetVersion, installation) : null;
+    selfUpdate === null
+      ? manualServerUpdateCommand(
+          targetVersion,
+          installation,
+          serverEnvironmentConfig?.platform.os === "windows",
+        )
+      : null;
   const actionLabel =
     manualCommand !== null
-      ? updatesInstall
-        ? gt("Copy update command")
-        : gt("Copy relaunch command")
+      ? gt("Copy update command")
       : (label ?? gt("Update", { $context: "verb, updates the server" }));
   const onClick =
     manualCommand !== null

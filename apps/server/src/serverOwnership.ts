@@ -59,7 +59,7 @@ export class OlderBootServiceError extends Schema.TaggedError<OlderBootServiceEr
   override readonly [Runtime.errorExitCode] = SERVER_EXIT_CODE_STATE_DIR_OWNED;
 
   override get message(): string {
-    return `An Ankiel Code background service set up for ${this.baseDir} may still run a release without the ownership lock. On that machine, try \`ankiel update\` and let it restart (or run \`ankiel service restart\` if the update is already installed). If the older launcher cannot update, run \`ankiel service uninstall\`, then reinstall with \`ankiel service install\` from a current CLI. You can also leave the service uninstalled. Pass \`--base-dir ${this.baseDir}\` to each command, and use \`npx @ankielcode/cli@latest\` if \`ankiel\` is not installed or is outdated. Then retry. No server was stopped.`;
+    return `An Ankiel Code background service set up for ${this.baseDir} may still run a release without the ownership lock. On that machine, try \`ankiel update\` and let it restart (or run \`ankiel service restart\` if the update is already installed). If the older launcher cannot update, run \`ankiel service uninstall\`, then reinstall with \`ankiel service install\` from a current CLI. You can also leave the service uninstalled. Pass \`--base-dir ${this.baseDir}\` to each command, and if \`ankiel\` is not installed or is outdated, install it with \`curl -fsSL https://code.ankiel.com/install.sh | sh\`. Then retry. No server was stopped.`;
   }
 }
 

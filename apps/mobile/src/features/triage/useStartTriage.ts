@@ -21,7 +21,7 @@ import {
 import { useSelectWorkspaceDetail } from "../layout/workspace/useSelectWorkspaceDetail";
 import { usePrepareTriage } from "./usePrepareTriage";
 
-const CLI_COMMAND = "npx @ankielcode/cli triage";
+const CLI_COMMAND = "ankiel triage";
 
 /**
  * In-app `ankiel triage`, as on web: the server writes the session files and

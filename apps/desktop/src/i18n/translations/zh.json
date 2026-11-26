@@ -19,7 +19,7 @@
   "0d639e3abc79a911": "本次启动 Ankiel Code 将使用 Windows 后端，并在下次启动应用时重试 WSL。",
   "b5435aa5b470bafd": "WSL 后端无法启动",
   "485488b8c30b460e": "正在回退到 Windows 后端，以便打开 Ankiel Code。修复 WSL 发行版后，请在“设置 > 共享与访问”中重新启用 WSL 后端。",
-  "dd14f2e334fd3a80": "另一个 Ankiel Code 服务器（例如后台服务）正在使用此数据目录，或此目录已配置旧版后台服务。请停止该服务器，或尝试 `ankiel update`。如果旧版启动器无法更新，请运行 `ankiel service uninstall`，并可使用当前 CLI 运行 `ankiel service install` 重新安装。如果 `ankiel` 缺失或过旧，请使用 `npx @ankielcode/cli@latest`，并在每条命令中通过 `--base-dir` 指定该服务的 Ankiel 主目录。然后重新打开 Ankiel Code。你也可以设置单独的 ANKIEL_HOME，并与正在运行的服务器配对。",
+  "dc1c2d81c8deee70": "另一个 Ankiel Code 服务器（例如后台服务）正在使用此数据目录，或此目录已配置旧版后台服务。请停止该服务器，或尝试 `ankiel update`。如果旧版启动器无法更新，请运行 `ankiel service uninstall`，并可使用当前 CLI 运行 `ankiel service install` 重新安装。如果 `ankiel` 缺失或过旧，请使用 `curl -fsSL https://code.ankiel.com/install.sh | sh` 安装，并在每条命令中通过 `--base-dir` 指定该服务的 Ankiel 主目录。然后重新打开 Ankiel Code。你也可以设置单独的 ANKIEL_HOME，并与正在运行的服务器配对。",
   "32e07b8e0dd7fa99": "Ankiel Code 后台服务正在使用此 Ankiel 主目录（PID {pid}，端口 {port}，版本 {version}）。请使用 `ankiel service uninstall` 停止它，并通过 `--base-dir` 传入此 Ankiel 主目录，然后重新打开 Ankiel Code。你也可以设置单独的 ANKIEL_HOME 并与正在运行的服务器配对。",
   "0332038eb29ff32b": "Ankiel Code 后台服务正在使用此 Ankiel 主目录（PID {pid}，端口 {port}）。请使用 `ankiel service uninstall` 停止它，并通过 `--base-dir` 传入此 Ankiel 主目录，然后重新打开 Ankiel Code。你也可以设置单独的 ANKIEL_HOME 并与正在运行的服务器配对。",
   "c11ee45d88c74f85": "另一个 Ankiel Code 服务器（例如 `ankiel serve`，或通过 SSH 启动的服务器）正在使用此 Ankiel 主目录（PID {pid}，端口 {port}，版本 {version}）。如果是另一台机器上的 Ankiel Code 应用通过 SSH 启动了它，该应用会重新启动它：请在那里移除或断开该 SSH 环境，或退出该应用。然后停止该服务器，并重新打开 Ankiel Code。你也可以设置单独的 ANKIEL_HOME 并与正在运行的服务器配对。",

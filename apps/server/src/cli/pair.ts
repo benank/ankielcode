@@ -6,6 +6,7 @@ import {
   PortSchema,
 } from "@ankielcode/contracts";
 import { resolveWorktreeAnkielHome } from "@ankielcode/shared/devHome";
+import { cliInstallCommand } from "@ankielcode/shared/cliRelease";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { formatHostForUrl, isWildcardHost } from "@ankielcode/shared/hostClassification";
 import { DEFAULT_SIGNAL_EXPORT } from "@ankielcode/shared/observability";
@@ -23,14 +24,17 @@ import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Path from "effect/Path";
 import * as References from "effect/References";
 import * as Schema from "effect/Schema";
 import { Command, Flag, GlobalFlag } from "effect/cli";
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
 import * as EnvironmentAuth from "../auth/EnvironmentAuth.ts";
+import { pinnedRuntimePaths } from "../cloud/pinnedRuntime.ts";
 import * as ServerConfig from "../config.ts";
 import { resolveStoredRelayPublicUrl } from "../relay/relayProtocol.ts";
 import { resolveBaseDir } from "../os-jank.ts";
@@ -553,10 +557,22 @@ export const pairCommand = Command.make("pair", {
           explicitBaseDir !== undefined && explicitBaseDir.trim().length > 0
             ? ` --base-dir ${hostShellWord(platform, explicitBaseDir)}`
             : "";
+        const serverVersion = target.descriptor.serverVersion;
+        // The server's own runtime, as the install script and service leave it in this home.
+        const runtime = pinnedRuntimePaths(
+          yield* Path.Path,
+          target.baseDir,
+          serverVersion,
+          platform,
+        ).entryPath;
+        const fs = yield* FileSystem.FileSystem;
+        const pairCommand = (yield* fs.exists(runtime).pipe(Effect.orElseSucceed(() => false)))
+          ? `${hostShellWord(platform, runtime)} pair${baseDirArgs}`
+          : `${cliInstallCommand(platform === "win32", serverVersion)}${platform === "win32" ? ";" : " &&"} ankiel pair${baseDirArgs}`;
         return yield* new IncompatibleServerProtocolError({
-          serverVersion: target.descriptor.serverVersion,
+          serverVersion,
           serverProtocolVersion,
-          pairCommand: `npx @ankielcode/cli@${target.descriptor.serverVersion} pair${baseDirArgs}`,
+          pairCommand,
         });
       }
 

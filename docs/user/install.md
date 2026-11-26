@@ -24,8 +24,8 @@ This installs the `ankiel` command to `~/.local/bin`. If that folder is not on y
 `PATH` yet, the installer says so and, for zsh, bash on Linux, and fish, prints
 a command to add it. On Windows, `ankiel` works in the same PowerShell window right
 away; add the folder to your `PATH` for new windows. If a `ankiel` that the
-installer or the desktop app did not create is already there, it leaves that
-one alone and stops. Set `ANKIEL_CHANNEL=nightly` to install the nightly train, or
+installer or an earlier desktop app did not create is already there, it leaves
+that one alone and stops. Set `ANKIEL_CHANNEL=nightly` to install the nightly train, or
 `ANKIEL_VERSION` to pin an exact version.
 
 | Task                              | Command                                                                     |
@@ -37,21 +37,19 @@ one alone and stops. Set `ANKIEL_CHANNEL=nightly` to install the nightly train, 
 | Reclaim database space            | `ankiel doctor` ([details](./background-service.md#reclaim-database-space)) |
 | Remove it again                   | `ankiel uninstall`                                                          |
 
-Run `ankiel help` or `ankiel --help` for the full reference. To start in a new working
-directory, use an explicit path such as `ankiel ./my-project`. A bare directory name
-is accepted only if it already exists.
+Run `ankiel help` or `ankiel --help` for the full reference. `ankiel` on its own runs
+the server like `ankiel serve` and also adds the current directory as a project; it
+never opens a browser. To start in a new working directory, use an explicit path such
+as `ankiel ./my-project`. A bare directory name is accepted only if it already exists.
 
 If `ankiel` or `ankiel start` reports an already running server, run the `ankiel pair`
 command it names and open the pairing URL to connect to that server. Stop it
 before starting a replacement, or use a different `--base-dir` for an
 independent server.
 
-To try Ankiel Code once without installing it, run `npx @ankielcode/cli@latest` instead (needs
-Node.js for `npx`). It offers to install the `ankiel` command first. If you say no,
-it asks again at the next minor release, and `npx @ankielcode/cli install` installs it later.
-`npx @ankielcode/cli` always runs the version npm picked, even when a `ankiel` is installed. On
-the nightly train, run your installed `ankiel` (for example `ankiel up`), not
-`npx @ankielcode/cli`, which runs the latest stable release.
+Ankiel Code is no longer published to npm. If you installed it with
+`npm install -g @ankielcode/cli`, that install keeps running the version it has but no
+longer updates. Run `npm uninstall -g @ankielcode/cli`, then the install command above.
 
 ### Intel Macs
 
@@ -95,14 +93,17 @@ update fails. Download the new `.deb` and install it the same way.
 
 ### The `ankiel` command
 
-The desktop app includes the `ankiel` command-line tool. A new install sets it up
-on first launch; after an update, or any time, choose **Install** next to
-**ankiel command** in **Settings → About**. On macOS and Linux it adds a `ankiel` link
-in `~/.local/bin` (or `~/bin`); on Windows it adds the app's command folder to
-your `PATH`. Open a new terminal afterwards. If the folder is not on your
-`PATH`, **Add to PATH** on the Welcome page or in **Settings → About** adds one
-line to your shell's startup file. **Remove** takes it off, and the app does not
-add it again. If you already have another `ankiel`, it stays as it is.
+The desktop app does not need the `ankiel` command. For commands such as
+`ankiel triage` or `ankiel doctor` on the same machine, install it with the
+[command line](#command-line) installer.
+
+Earlier desktop releases installed their own `ankiel`: a launcher in
+`~/.ankiel/bin`, linked from `~/.local/bin` or `~/bin` on macOS and Linux, or added
+to your `PATH` on Windows. The app no longer updates it, so it stops working once
+the app moves or an AppImage update changes its file name. On macOS and Linux the
+installer replaces the link in `~/.local/bin`. On Windows, remove
+`%USERPROFILE%\.ankiel\bin` from your `PATH` if the installer says another `ankiel`
+runs first.
 
 ### Windows Subsystem for Linux
 
@@ -111,24 +112,10 @@ there. Install the provider CLIs inside that distro. Ankiel Code installs its ow
 server runtime there automatically; the first launch after an app update can
 take longer.
 
-### Open a project from a terminal
-
-With the desktop app already running on the same machine:
-
-```bash
-ankiel app
-```
-
-This opens a new thread for the current directory, adding the project if needed.
-Pass a path, such as `ankiel app ../my-project`, to open another directory. It requires
-the desktop app, so a standalone server or an SSH session is not enough. If the
-command cannot reach the app, start or update the desktop app and try again.
-
 ### Drop a folder on the sidebar
 
 Drag one or more folders from Finder, Explorer, or your file manager onto the
-sidebar. Each one opens as a project on this computer, the same as `ankiel app`.
-Files dropped on a thread still attach to that thread.
+sidebar. Each one opens as a project on this computer. Files dropped on a thread still attach to that thread.
 
 ## Mobile app
 

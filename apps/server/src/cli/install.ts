@@ -1,15 +1,13 @@
+import { cliInstallCommand } from "@ankielcode/shared/cliRelease";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { pathSetupCommand, resolveCommandPath } from "@ankielcode/shared/shell";
 import * as Console from "effect/Console";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
-import { Command, Prompt } from "effect/cli";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import { Command } from "effect/cli";
 
 import packageJson from "../../package.json" with { type: "json" };
 import {
@@ -19,7 +17,6 @@ import {
   recordPinnedRuntimeLauncher,
   writePosixLauncher,
 } from "../cloud/pinnedRuntime.ts";
-import { detectCliRunner, resolveCliCommand, resolveEntryPath } from "./invocation.ts";
 
 export class CliInstallError extends Schema.TaggedError<CliInstallError>()("CliInstallError", {
   reason: Schema.String,
@@ -30,7 +27,7 @@ export class CliInstallError extends Schema.TaggedError<CliInstallError>()("CliI
   }
 }
 
-/** `<Ankiel home>/runtime/versions/<version>/ankiel`: the layout the install scripts and npm launcher share. */
+/** `<Ankiel home>/runtime/versions/<version>/ankiel`: the layout the install scripts use. */
 const standaloneRuntime = Effect.gen(function* () {
   const path = yield* Path.Path;
   if (!(yield* HostProcess.IsExecutable)) return Option.none();
@@ -53,18 +50,15 @@ export const installCli = Effect.fn("cli.install.install")(function* () {
   const runtime = yield* standaloneRuntime;
   const windows = platform === "win32";
   if (Option.isNone(runtime)) {
-    const script = windows
-      ? "irm https://code.ankiel.com/install.ps1 | iex"
-      : "curl -fsSL https://code.ankiel.com/install.sh | sh";
     return yield* new CliInstallError({
-      reason: `Only the standalone ankiel can install itself. Use \`${script}\`, or Settings in the desktop app.`,
+      reason: `Only the standalone ankiel can install itself. Use \`${cliInstallCommand(windows)}\`.`,
     });
   }
   const { executable, versionsDir, runtimeDir } = runtime.value;
   // cmd.exe expands `%` and reads the shim in the OEM code page, so such a path would not run.
   if (windows && /[%\u0080-\uffff]/.test(executable)) {
     return yield* new CliInstallError({
-      reason: `An ankiel.cmd cannot run ${executable}, because the path has % or non-ASCII characters. Keep using npx @ankielcode/cli.`,
+      reason: `An ankiel.cmd cannot run ${executable}, because the path has % or non-ASCII characters. Run it by its full path instead.`,
     });
   }
   // Absolute, so the PATH hint never adds a folder that changes with the working directory.
@@ -149,14 +143,13 @@ export const installCli = Effect.fn("cli.install.install")(function* () {
   const rawPath = environment.PATH ?? environment.Path ?? "";
   const entries = rawPath === "" ? [] : rawPath.split(windows ? ";" : ":");
   let cwd = yield* Effect.catchDefect(HostProcess.WorkingDirectory, () => Effect.undefined);
-  // An ankiel earlier on PATH runs instead, and an added folder goes last. Runner caches (npx's own
-  // .bin) are not installs.
+  // An ankiel earlier on PATH runs instead, and an added folder goes last.
   const firstOther = Effect.gen(function* () {
     for (const entry of entries) {
       const absolute = path.isAbsolute(entry);
       if ((windows || absolute) && same(entry)) return null;
       const dir = absolute ? entry : windows || !cwd ? undefined : path.resolve(cwd, entry);
-      if (dir === undefined || detectCliRunner(`${dir}/`) !== null) continue;
+      if (dir === undefined) continue;
       for (const name of windows ? ["ankiel.cmd", "ankiel.exe"] : ["ankiel"]) {
         const candidate = path.join(dir, name);
         if (!(yield* resolveCommandPath(candidate, { env: environment }))) continue;
@@ -225,158 +218,3 @@ export const installCommand = Command.make("install").pipe(
   Command.withDescription("Install this version as the `ankiel` command."),
   Command.withHandler(() => installCli().pipe(Effect.flatMap(reportInstalled))),
 );
-
-/** Saying no lasts until the next minor release: `0.2` covers `0.2.5` and `0.2.6-nightly.…`. */
-const minorRelease = (version: string) => version.split(".").slice(0, 2).join(".");
-
-const SKIPPED_ARGUMENTS = new Set([
-  "help",
-  "--help",
-  "-h",
-  "--version",
-  "-v",
-  "--completions",
-  // Scripts and machine-readable output; a prompt would stall them or corrupt their output.
-  "--json",
-  "--yes",
-  "-y",
-]);
-
-/** The subcommand, past global flags that may come first (two take a value). */
-const topLevelCommand = (args: ReadonlyArray<string>) => {
-  for (let index = 0; index < args.length; index++) {
-    const arg = args[index]!;
-    if (arg === "--log-level" || arg === "--completions") index++;
-    else if (!arg.startsWith("-")) return arg;
-  }
-  return undefined;
-};
-
-/** Agents can run commands in a terminal that nobody answers; no answer counts as no. */
-const PROMPT_TIMEOUT = Duration.seconds(30);
-
-/** `/proc/<pid>/stat` fields after the parenthesized command name: state ppid pgrp session tty_nr tpgid. */
-export const isForegroundProcStat = (stat: string) => {
-  const fields = stat.slice(stat.lastIndexOf(")") + 2).split(" ");
-  return fields[2] !== undefined && fields[2] !== "" && fields[2] === fields[5];
-};
-
-/** Output of `ps -o tpgid=,pgid=`; tpgid is -1 without a controlling terminal. */
-export const isForegroundPs = (output: string) => {
-  const [tpgid, pgid] = output.trim().split(/\s+/);
-  return tpgid !== undefined && tpgid !== "" && tpgid === pgid;
-};
-
-/**
- * A background job (`npx @ankielcode/cli serve &`) that reads the terminal is stopped by the shell, so only
- * the terminal's foreground process group may prompt. Unknown counts as background.
- */
-export const inTerminalForeground = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const platform = yield* HostProcess.Platform;
-  if (platform === "win32") return true;
-  if (platform === "linux") {
-    return isForegroundProcStat(
-      yield* fs.readFileString("/proc/self/stat").pipe(Effect.orElseSucceed(() => "")),
-    );
-  }
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  return isForegroundPs(
-    yield* spawner
-      .string(
-        // Absolute: under npx, PATH starts with a project's node_modules/.bin.
-        ChildProcess.make("/bin/ps", ["-o", "tpgid=,pgid=", "-p", String(process.pid)], {
-          stdin: "ignore",
-          stderr: "ignore",
-        }),
-      )
-      .pipe(Effect.orElseSucceed(() => "")),
-  );
-});
-
-/**
- * Before a command run through npx, pnpm dlx, or bunx at a terminal, asks to install the `ankiel`
- * command. Yes is the default. No, no answer, or a failed install is saved in the Ankiel home until
- * the next minor release. Returns false when the user quits the prompt, so the command does not run.
- */
-export const offerCliInstall = Effect.fn("cli.install.offer")(function* <E, R, E2, R2>(input: {
-  readonly args: ReadonlyArray<string>;
-  readonly interactive: boolean;
-  readonly foreground: Effect.Effect<boolean, E2, R2>;
-  /** Undefined when the user quits the prompt. */
-  readonly confirm: Effect.Effect<boolean | void, E, R>;
-}) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const platform = yield* HostProcess.Platform;
-  const environment = yield* HostProcess.Environment;
-  if (!input.interactive || environment.CI || environment.SUDO_USER) return true;
-  if (environment.TERM === "dumb") return true;
-  // `npx --yes` asks for no prompts; npm passes it on to the command as npm_config_yes.
-  if (environment.npm_config_yes === "true") return true;
-  // `--json=true` and `-y=true` are the same flags.
-  if (input.args.some((arg) => SKIPPED_ARGUMENTS.has(arg.split("=")[0]!))) return true;
-  const command = topLevelCommand(input.args);
-  if (command === "install" || command === "uninstall") return true;
-  if (detectCliRunner(yield* resolveEntryPath) === null) return true;
-  const runtime = yield* standaloneRuntime;
-  if (Option.isNone(runtime)) return true;
-  const { runtimeDir } = runtime.value;
-
-  // Any ankiel already installed means no prompt: ours (even when off PATH) or another on PATH.
-  // Runners put their own cache's node_modules/.bin on PATH, so skip those.
-  const windows = platform === "win32";
-  const names = windows ? ["ankiel.cmd", "ankiel.exe"] : ["ankiel"];
-  const launchers = yield* fs
-    .readFileString(path.join(runtimeDir, "launchers"))
-    .pipe(Effect.orElseSucceed(() => ""));
-  const candidates = [
-    ...launchers.split(/\r?\n/).filter((launcher) => path.isAbsolute(launcher)),
-    path.join(path.dirname(runtimeDir), "bin", windows ? "ankiel.cmd" : "ankiel"),
-    ...(environment.PATH ?? environment.Path ?? "")
-      .split(windows ? ";" : ":")
-      .filter(
-        (directory) => path.isAbsolute(directory) && detectCliRunner(`${directory}/`) === null,
-      )
-      .flatMap((directory) => names.map((name) => path.join(directory, name))),
-  ];
-  for (const candidate of candidates) {
-    if (yield* resolveCommandPath(candidate, { env: environment })) return true;
-  }
-
-  const declinedFile = path.join(runtimeDir, "install-prompt-declined");
-  const declined = yield* fs.readFileString(declinedFile).pipe(Effect.orElseSucceed(() => ""));
-  const minor = minorRelease(packageJson.version);
-  if (declined.trim() === minor) return true;
-  if (!(yield* input.foreground)) return true;
-
-  const installHint = `Run \`${yield* resolveCliCommand("install")}\` any time.`;
-  const saveDecline = fs.writeFileString(declinedFile, `${minor}\n`).pipe(Effect.ignore);
-  const answer = yield* input.confirm.pipe(Effect.timeoutOption(PROMPT_TIMEOUT));
-  if (Option.isNone(answer)) {
-    yield* saveDecline;
-    yield* Console.log(`\nNo answer, so ankiel was not installed. ${installHint}\n`);
-    return true;
-  }
-  if (answer.value === undefined) return false;
-  if (!answer.value) {
-    yield* saveDecline;
-    yield* Console.log(`Skipped. ${installHint}\n`);
-    return true;
-  }
-  yield* installCli().pipe(
-    Effect.flatMap(reportInstalled),
-    Effect.catch((error) =>
-      Effect.andThen(saveDecline, Console.error(`Could not install ankiel: ${error.message}`)),
-    ),
-  );
-  yield* Console.log("");
-  return true;
-});
-
-export const confirmCliInstall = Prompt.run(
-  Prompt.Confirm({
-    message: "Install the ankiel command? Then you can run `ankiel` directly.",
-    initial: true,
-  }),
-).pipe(Effect.catchTags({ QuitError: () => Effect.void }));

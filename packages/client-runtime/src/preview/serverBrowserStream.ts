@@ -468,7 +468,7 @@ const decodeHostSetup = (reason: string): PreviewStreamHostSetup => {
       return { need: value.need, command: value.command };
     }
   } catch {}
-  return { need: "sandbox", command: "sudo npx @ankielcode/cli browser setup" };
+  return { need: "sandbox", command: "sudo ankiel browser setup" };
 };
 
 export const previewStreamHostSetupMessage = (

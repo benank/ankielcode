@@ -24,7 +24,6 @@ import { buildTriageLaunchPrompt } from "../triage/triagePrompt.ts";
 import { describeServerProcess, writeTriageSession } from "../triage/triageSession.ts";
 import { baseDirFlag } from "./config.ts";
 import { interactiveStdin } from "./consoleStdin.ts";
-import { resolveCliCommand } from "./invocation.ts";
 
 interface TriageAgent {
   readonly id: "claude" | "codex" | "antigravity";
@@ -183,7 +182,7 @@ export const triageCommand = Command.make("triage", {
         entry: {
           kind: "cli",
           cliVersion: packageJson.version,
-          launchedAs: yield* resolveCliCommand("triage"),
+          launchedAs: "ankiel triage",
         },
         server: yield* describeServerProcess(paths.serverRuntimeStatePath),
       });

@@ -28,8 +28,8 @@ the database.
 
 Its triage CLI version (called "Installed version" in older context files) is only
 the version of the \`ankiel\` that ran \`ankiel triage\`. It is often not the build the bug
-happened on: \`npx @ankielcode/cli triage\` runs whatever \`@ankielcode/cli\` npm resolves, while the user may
-run the desktop app, the background service, or a nightly. The server process line
+happened on: the \`ankiel\` on PATH can be older or newer than the desktop app, the
+background service, or the nightly the user actually ran. The server process line
 gives the local server's version when the server recorded one.
 
 ## 3. Check for a newer playbook
@@ -69,7 +69,7 @@ Diagnosis grounded in source beats guessing.
 First establish the shape of the install, because the same symptom points at
 different code depending on it:
 
-- How is Ankiel Code running on this machine: \`npx @ankielcode/cli serve\` in a terminal, the
+- How is Ankiel Code running on this machine: \`ankiel serve\` in a terminal, the
   background service, or the desktop app?
 - Which surface is the user connecting from: the desktop app with a local server, the
   desktop app with a remote server, or the mobile app?

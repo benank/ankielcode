@@ -216,9 +216,10 @@ command to run on the host:
 sudo ankiel browser setup
 ```
 
-The server shows the exact line for how you started it, and keeps your `PATH`
-when you started it with `npx` and Node is installed only for your user. Where `ankiel` is not on your `PATH`, such as with only the
-desktop app installed, it names the full path of the app's own `ankiel` instead. It allows Chrome's sandbox with an AppArmor profile and installs
+The server shows the exact line for how you started it. Where `ankiel` is not on
+your `PATH`, it names the full path of the running `ankiel` instead; with only the
+desktop app installed, install the [`ankiel` command](./install.md#command-line)
+first. It allows Chrome's sandbox with an AppArmor profile and installs
 any missing libraries and system fonts with apt; pages that load without text
 can mean the host has no fonts. It is safe to run again, and each run reloads
 the AppArmor profile: run it again if the browser reports a blocked sandbox on a

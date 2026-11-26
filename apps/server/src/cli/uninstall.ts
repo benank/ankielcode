@@ -109,7 +109,7 @@ const ownsLauncher = Effect.fn("cli.uninstall.owns_launcher")(function* (
 
 /**
  * Launchers recorded in `runtime/launchers` by the install scripts and `ankiel install` that still
- * point into this home's runtime/versions. npx can run a different version than the installed
+ * point into this home's runtime/versions. A runtime started by its own path is not the installed
  * one, so the launcher this process started from does not always name them.
  */
 export const findRecordedLaunchers = Effect.fn("cli.uninstall.find_recorded_launchers")(function* (
@@ -228,7 +228,7 @@ const runUninstall = Effect.fn("cli.uninstall.run")(function* (input: {
     yield* Console.log(`Nothing to remove: ankiel is not installed for ${input.baseDir}.`);
     if (!(yield* HostProcess.IsExecutable)) {
       yield* Console.log(
-        "  This ankiel runs from a Node script, so it was installed by npm or built from source. Remove it the same way (`npm uninstall -g @ankielcode/cli`, or delete the checkout).",
+        "  This ankiel runs from a Node script, such as a source checkout or the desktop app, so it was not installed here.",
       );
     }
     yield* logOtherHomeService(plan);

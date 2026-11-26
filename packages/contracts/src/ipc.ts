@@ -16,11 +16,6 @@ import { type ClientSettings, type QuitConfirmationMode, SnapShotShortcut } from
 import type { EditorId } from "./editor.ts";
 import { KeybindingShortcut, type PreviewForwardedShortcut } from "./keybindings.ts";
 
-import type {
-  DesktopAppActivationRequest,
-  DesktopAppActivationResponse,
-} from "./desktopAppActivation.ts";
-
 export interface ContextMenuItem<T extends string = string> {
   id: T;
   label: string;
@@ -341,18 +336,6 @@ export const DesktopUpdateStateSchema = Schema.Struct({
   notAppliedVersion: Schema.optionalKey(Schema.String),
   trackMismatch: Schema.optionalKey(Schema.Struct({ buildChannel: DesktopUpdateChannelSchema })),
 });
-
-export const DesktopCliCommandStateSchema = Schema.Struct({
-  supported: Schema.Boolean,
-  installedPath: Schema.NullOr(Schema.String),
-  onPath: Schema.Boolean,
-  shadowedBy: Schema.optionalKey(Schema.String),
-  /** For an installed `ankiel` that is off PATH: the shell startup file that adds it, and whether it has. */
-  pathSetup: Schema.optionalKey(Schema.Struct({ file: Schema.String, added: Schema.Boolean })),
-  /** The app's bundled `ankiel` launcher, which runs without Node or a PATH entry. */
-  launcherPath: Schema.NullOr(Schema.String),
-});
-export type DesktopCliCommandState = typeof DesktopCliCommandStateSchema.Type;
 
 export interface DesktopUpdateActionResult {
   accepted: boolean;
@@ -1219,20 +1202,9 @@ export interface DesktopBridge {
   /** With a version, installs only that downloaded build. */
   installUpdate: (expectedVersion?: string) => Promise<DesktopUpdateActionResult>;
   onUpdateState: (listener: (state: DesktopUpdateState) => void) => () => void;
-  cliCommand: {
-    getState: () => Promise<DesktopCliCommandState>;
-    install: () => Promise<DesktopCliCommandState>;
-    uninstall: () => Promise<DesktopCliCommandState>;
-    addToPath: () => Promise<DesktopCliCommandState>;
-  };
   webLinks: {
     setReady: (ready: boolean) => Promise<void>;
     onOpen: (listener: (url: string) => void) => () => void;
-  };
-  appActivation: {
-    setReady: (ready: boolean) => Promise<void>;
-    complete: (response: DesktopAppActivationResponse) => Promise<void>;
-    onRequest: (listener: (request: DesktopAppActivationRequest) => void) => () => void;
   };
   preview: DesktopPreviewBridge;
   /** On-device dictation through macOS 26 SpeechAnalyzer; absent in older desktop builds. */

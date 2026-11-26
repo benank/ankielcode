@@ -374,14 +374,6 @@ export default defineConfig({
         rules: { "ankielcode/no-global-process-runtime": "off" },
       },
       {
-        // The `ankiel` npm launcher is published as plain, dependency-free Node.
-        files: ["scripts/npm-launcher/**"],
-        rules: {
-          "ankielcode/no-global-process-runtime": "off",
-          "ankielcode/namespace-node-imports": "off",
-        },
-      },
-      {
         files: ["apps/server/src/mcp/McpHttpServer.ts"],
         rules: { "ankielcode/no-raw-mcp-registration": "off" },
       },

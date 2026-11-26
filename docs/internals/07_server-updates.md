@@ -11,8 +11,8 @@ Remote updates replace only the server child, not the launcher, so every existin
 lags behind after a launcher-protocol bump. Keep new server runtimes compatible with the previous
 launcher protocol unless impossible, and validate protocol compatibility during preflight.
 
-Installations use exact versions and stage/preflight before publishing an immutable runtime so
-restarts never depend on npm cache eviction or a moving tag.
+Installations use exact GitHub release archives and stage/preflight before publishing an immutable
+runtime so restarts never depend on a moving tag. Releases are never distributed through npm.
 
 ## Commit boundary and database rollback
 

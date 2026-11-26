@@ -13,7 +13,7 @@ import { APP_VERSION } from "~/branding";
 import { isLocalEnvironmentDisabled } from "~/localEnvironment";
 import { useDesktopUpdateState } from "~/state/desktopUpdate";
 import { useEnvironments } from "~/state/environments";
-import { npmReleaseAtom, npmReleaseFailureMessage } from "~/state/npmRelease";
+import { serverReleaseAtom, serverReleaseFailureMessage } from "~/state/serverRelease";
 import { downloadLocalUpdate, installLocalUpdate } from "../sidebar/SidebarUpdatePill";
 import { UpdateEverythingDialog } from "../sidebar/UpdateEverythingDialog";
 import {
@@ -45,8 +45,7 @@ export function UpdateTrackSwitchDialog({
 }) {
   const gt = useGT();
   const m = useMessages();
-  // npm dist-tags match the desktop channel names.
-  const release = useAtomValue(npmReleaseAtom(channel));
+  const release = useAtomValue(serverReleaseAtom(channel));
   if (AsyncResult.isSuccess(release) && release.value !== null) {
     return <SwitchPlan release={{ channel, ...release.value }} onClose={onClose} />;
   }
@@ -62,14 +61,9 @@ export function UpdateTrackSwitchDialog({
           </AlertDialogTitle>
           <AlertDialogDescription>
             {AsyncResult.isFailure(release)
-              ? npmReleaseFailureMessage(release.cause, m)
+              ? serverReleaseFailureMessage(release.cause, m)
               : AsyncResult.isSuccess(release)
-                ? gt(
-                    "Could not find the latest {label} release in this environment's npm registry.",
-                    {
-                      label,
-                    },
-                  )
+                ? gt("Could not find a published {label} release.", { label })
                 : gt("Checking releases…")}
           </AlertDialogDescription>
         </AlertDialogHeader>

@@ -138,13 +138,23 @@ export function newestCliReleaseVersion(
   return undefined;
 }
 
-const NpmReleaseMigrationManifest = Schema.Struct({
-  ankielcode: Schema.Struct({ databaseMigration: Schema.Int }),
-});
-const decodeNpmReleaseMigrationManifest = Schema.decodeUnknownOption(NpmReleaseMigrationManifest);
+/** The install script command, pinned to `version` when given. */
+export function cliInstallCommand(windows: boolean, version?: string): string {
+  if (windows) {
+    const script = "irm https://code.ankiel.com/install.ps1 | iex";
+    return version === undefined ? script : `$env:ANKIEL_VERSION='${version}'; ${script}`;
+  }
+  return `curl -fsSL https://code.ankiel.com/install.sh | ${version === undefined ? "" : `ANKIEL_VERSION=${version} `}sh`;
+}
 
-/** Highest database migration a release's server knows, from its npm `ankiel` manifest. */
-export function npmReleaseDatabaseMigration(manifest: unknown): number | undefined {
-  return Option.getOrUndefined(decodeNpmReleaseMigrationManifest(manifest))?.ankielcode
-    .databaseMigration;
+/** Release asset beside SHA256SUMS that names the highest database migration the release's server knows. */
+export const CLI_RELEASE_METADATA_FILE = "ankiel-release.json";
+
+const CliReleaseMetadata = Schema.Struct({ databaseMigration: Schema.Int });
+const decodeCliReleaseMetadata = Schema.decodeUnknownOption(
+  Schema.fromJsonString(CliReleaseMetadata),
+);
+
+export function cliReleaseDatabaseMigration(json: string): number | undefined {
+  return Option.getOrUndefined(decodeCliReleaseMetadata(json))?.databaseMigration;
 }

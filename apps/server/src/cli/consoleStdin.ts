@@ -17,7 +17,7 @@ function needsConsoleStdin(input: {
 }): boolean {
   return (
     input.platform === "win32" &&
-    // Set only by the launcher (DesktopCliShim), never for the desktop backend.
+    // Set only by the ankiel.cmd that older desktop apps installed, never for the desktop backend.
     input.env.ANKIEL_DESKTOP_CLI_LAUNCHER === "1" &&
     input.stdinMissing &&
     input.stdoutIsConsole

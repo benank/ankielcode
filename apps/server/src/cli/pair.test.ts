@@ -462,7 +462,22 @@ describe("ankiel pair", () => {
           if (Exit.isFailure(exit)) {
             assert.include(
               String(Cause.squash(exit.cause)),
-              `@ankielcode/cli@0.0.45 pair --base-dir ${baseDir}`,
+              `curl -fsSL https://code.ankiel.com/install.sh | ANKIEL_VERSION=0.0.45 sh && ankiel pair --base-dir ${baseDir}`,
+            );
+          }
+
+          // With that release's runtime in this home, its own `ankiel` pairs directly.
+          const runtime = NodePath.join(baseDir, "runtime", "versions", "0.0.45", "ankiel");
+          NodeFS.mkdirSync(NodePath.dirname(runtime), { recursive: true });
+          NodeFS.writeFileSync(runtime, "");
+          const withRuntime = yield* provideCliTestLayers(
+            runCli(["pair", "--base-dir", baseDir]).pipe(Effect.exit),
+          );
+          assert.isTrue(Exit.isFailure(withRuntime));
+          if (Exit.isFailure(withRuntime)) {
+            assert.include(
+              String(Cause.squash(withRuntime.cause)),
+              `/runtime/versions/0.0.45/ankiel pair --base-dir ${baseDir}`,
             );
           }
         }),

@@ -1,6 +1,6 @@
 import type { DesktopBridge, DesktopUpdateState } from "@ankielcode/contracts";
 
-const FALLBACK_TRIAGE_COMMAND = "npx @ankielcode/cli triage";
+const TRIAGE_COMMAND = "ankiel triage";
 const DOWNLOAD_URL = "https://code.ankiel.com/download";
 const ISSUE_URL = "https://github.com/benank/ankielcode/issues/new";
 const LAST_FAILURE_KEY = "ankielcode:boot-failed-at";
@@ -10,32 +10,6 @@ const MAX_ERROR_CHARS = 6_000;
 const COPY_BLOCKED = "Copy was blocked. The text is selected so you can copy it manually.";
 const UPDATE_DOWNLOAD_FAILED = "The update download failed. Try Download update again.";
 const UPDATE_INSTALL_FAILED = "The update install failed. Try Restart to update again.";
-
-/** The Windows launcher is a `.cmd` run from PowerShell, which needs `&` to run a quoted path. */
-function launcherCommand(launcherPath: string) {
-  if (launcherPath.endsWith(".cmd")) {
-    return /^[\w:\\.-]+$/.test(launcherPath)
-      ? launcherPath
-      : `& '${launcherPath.replace(/['\u2018\u2019\u201A\u201B]/g, "$&$&")}'`;
-  }
-  return /^[\w@%+=:,./-]+$/.test(launcherPath)
-    ? launcherPath
-    : `'${launcherPath.replaceAll("'", `'"'"'`)}'`;
-}
-
-/** Desktop can run its bundled launcher without Node; everything else falls back to npx. */
-export async function resolveTriageCommand(bridge: DesktopBridge | undefined) {
-  try {
-    const state = await bridge?.cliCommand.getState();
-    // Windows reports onPath from its PATH entry alone; only an existing launcher proves it runs.
-    if (state?.launcherPath) {
-      return state.onPath ? "ankiel triage" : `${launcherCommand(state.launcherPath)} triage`;
-    }
-  } catch (error) {
-    console.warn("Could not read the desktop CLI state.", error);
-  }
-  return FALLBACK_TRIAGE_COMMAND;
-}
 
 /** The update button only appears when the desktop updater has a newer build to offer. */
 export function updateActionFor(state: DesktopUpdateState | null | undefined) {
@@ -296,7 +270,7 @@ export function showBootError(error: unknown) {
   const updateNote = element("p", { id: "boot-error-update-note", hidden: true });
   if (bridge) mountUpdateButton(bridge, update, updateNote, announce);
 
-  const command = element("code", { textContent: FALLBACK_TRIAGE_COMMAND });
+  const command = element("code", { textContent: TRIAGE_COMMAND });
   const copyCommand = element("button", {
     className: "boot-error-icon",
     type: "button",
@@ -325,7 +299,6 @@ export function showBootError(error: unknown) {
       },
     ),
   );
-  void resolveTriageCommand(bridge).then((value) => (command.textContent = value));
 
   let report = "(no error message)";
   try {

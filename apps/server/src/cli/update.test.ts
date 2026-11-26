@@ -504,6 +504,8 @@ it.layer(NodeServices.layer)("ankiel update with a background service", (it) => 
         output,
         `Background service still running the version before ${version}. Run \`ankiel service restart\` when you are ready to switch it to ${version}.`,
       );
+      // Nothing on PATH runs this home's runtimes, as for an old npm install, so it says how to fix that.
+      assert.include(output, "reinstall with: curl -fsSL https://code.ankiel.com/install.sh | sh");
     }).pipe(
       Effect.provideService(HostProcess.Platform, "linux"),
       Effect.provideService(HostProcess.Environment, { PATH: "" }),

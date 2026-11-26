@@ -96,7 +96,7 @@ export const homeOwnedMessage = (owner: Option.Option<HomeOwner>): string =>
     onNone: () =>
       m(
         msg(
-          "Another Ankiel Code server, such as the background service, is using this data directory, or an older background service is set up for it. Stop that server or try `ankiel update`. If the older launcher cannot update, run `ankiel service uninstall` and optionally reinstall with `ankiel service install` from a current CLI. Use `npx @ankielcode/cli@latest` if `ankiel` is missing or outdated, and pass `--base-dir` with the service's Ankiel home to each command. Then reopen Ankiel Code. You can also set a separate ANKIEL_HOME and pair with the running server.",
+          "Another Ankiel Code server, such as the background service, is using this data directory, or an older background service is set up for it. Stop that server or try `ankiel update`. If the older launcher cannot update, run `ankiel service uninstall` and optionally reinstall with `ankiel service install` from a current CLI. If `ankiel` is missing or outdated, install it with `curl -fsSL https://code.ankiel.com/install.sh | sh`, and pass `--base-dir` with the service's Ankiel home to each command. Then reopen Ankiel Code. You can also set a separate ANKIEL_HOME and pair with the running server.",
         ),
       ),
     onSome: (owner) => {

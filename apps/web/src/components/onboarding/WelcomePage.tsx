@@ -66,7 +66,7 @@ import {
 import { newProjectId, randomUUID } from "../../lib/utils";
 import { agentSessionImport } from "../../state/agentSessions";
 import { readProjects, useProjects, waitForProject } from "../../state/entities";
-import { useEnvironments, usePrimaryEnvironmentId } from "../../state/environments";
+import { useEnvironments } from "../../state/environments";
 import { useProjectScans } from "../../onboarding/useProjectScans";
 import { projectEnvironment } from "../../state/projects";
 import { serverEnvironment } from "../../state/server";
@@ -80,7 +80,6 @@ import { useThreadRunningTerminalIds } from "../../state/terminalSessions";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { getProviderSummary } from "../settings/providerStatus";
 import { AddProviderInstanceDialog } from "../settings/AddProviderInstanceDialog";
-import { useDesktopCliCommand } from "../settings/CliCommandSettingsRow";
 import { CodexSetupSection } from "../settings/CodexSetupSection";
 import { readCodexSetupMode } from "../settings/CodexSetupSection.logic";
 import { TerminalViewport } from "../ThreadTerminalDrawer";
@@ -119,8 +118,6 @@ export function WelcomePage({
     environments.find((environment) => environment.environmentId === environmentId)?.label ??
     gt("this computer");
   const agentReady = useWelcomeAgents(environmentId).readyCount > 0;
-  // `ankiel` on PATH belongs to the primary computer, so only it offers it.
-  const isPrimary = usePrimaryEnvironmentId() === environmentId;
   const scans = useProjectScans([environmentId]);
   const [storedSelection, storeSelection] = useLocalStorage(
     welcomeImportSelectionKey(environmentId),
@@ -266,7 +263,6 @@ export function WelcomePage({
               <AgentsSection
                 environmentId={environmentId}
                 label={label}
-                isPrimary={isPrimary}
                 onImportSourceEnabled={() => scans[0]?.refresh()}
               />
               <ProjectsSection
@@ -370,12 +366,10 @@ const revealOnMount = (node: HTMLElement | null) => node?.scrollIntoView({ block
 function AgentsSection({
   environmentId,
   label,
-  isPrimary,
   onImportSourceEnabled,
 }: {
   readonly environmentId: EnvironmentId;
   readonly label: string;
-  readonly isPrimary: boolean;
   // The project scan only reads agents that are on, so turning one on can find more history.
   readonly onImportSourceEnabled: () => void;
 }) {
@@ -651,7 +645,6 @@ function AgentsSection({
           />
         </div>
       ) : null}
-      {isPrimary ? <CliPathSetup /> : null}
       {terminalSession !== null ? (
         <AgentInstallTerminal
           key={`${terminalSession.environmentId}:${terminalSession.providerInstanceId}:${terminalSession.driver}`}
@@ -1756,37 +1749,5 @@ function ImportRowMeta({
       <span className="text-right">{threadCount}</span>
       <span className="text-right whitespace-nowrap">{age}</span>
     </span>
-  );
-}
-
-/** The desktop app links `ankiel` on a fresh install; this puts its folder on PATH when it is not. */
-function CliPathSetup() {
-  const { state, busy, run } = useDesktopCliCommand();
-  const setup = state?.pathSetup;
-  if (!setup) return null;
-  return (
-    <div className="flex min-h-10 items-center gap-3">
-      <RowIcon>
-        <TerminalIcon className="size-4" />
-      </RowIcon>
-      <p className="min-w-0 flex-1 text-sm text-muted-foreground">
-        {setup.added ? (
-          <T>
-            Added to <Var>{setup.file}</Var>. Open a new terminal to use{" "}
-            <code className="font-mono">ankiel</code>.
-          </T>
-        ) : (
-          <T>
-            Use <code className="font-mono">ankiel</code> from any terminal. Adds one line to{" "}
-            <Var>{setup.file}</Var>.
-          </T>
-        )}
-      </p>
-      {setup.added ? null : (
-        <Button size="xs" variant="outline" disabled={busy} onClick={() => run("addToPath")}>
-          <T>Add to PATH</T>
-        </Button>
-      )}
-    </div>
   );
 }

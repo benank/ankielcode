@@ -16,18 +16,17 @@ const descriptor = {
 describe("ExecutionEnvironmentDescriptor", () => {
   it("decodes old, recognized and future manual installation descriptors", () => {
     expect(decodeDescriptor(descriptor).capabilities.serverInstallation).toBeUndefined();
-    for (const installation of [
-      { kind: "npx" },
-      { kind: "npm-global", prefix: "/opt/node" },
-      { kind: "ankiel-launcher", launcher: "/opt/bin/ankiel", baseDir: "/data/ankiel" },
-    ]) {
-      expect(
-        decodeDescriptor({
-          ...descriptor,
-          capabilities: { ...descriptor.capabilities, serverInstallation: installation },
-        }).capabilities.serverInstallation,
-      ).toEqual(installation);
-    }
+    const launcher = {
+      kind: "ankiel-launcher",
+      launcher: "/opt/bin/ankiel",
+      baseDir: "/data/ankiel",
+    };
+    expect(
+      decodeDescriptor({
+        ...descriptor,
+        capabilities: { ...descriptor.capabilities, serverInstallation: launcher },
+      }).capabilities.serverInstallation,
+    ).toEqual(launcher);
     const spaced = {
       kind: "ankiel-launcher",
       launcher: "/opt/bin/ankiel ",
@@ -39,9 +38,11 @@ describe("ExecutionEnvironmentDescriptor", () => {
         capabilities: { ...descriptor.capabilities, serverInstallation: spaced },
       }).capabilities.serverInstallation,
     ).toEqual(spaced);
+    // Older servers reported npm installs, which clients now treat as unknown.
     for (const installation of [
       { kind: "future-manager" },
-      { kind: "npm-global" },
+      { kind: "npx" },
+      { kind: "npm-global", prefix: "/opt/node" },
       { kind: "ankiel-launcher", launcher: "ankiel" },
     ]) {
       expect(

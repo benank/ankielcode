@@ -45,8 +45,6 @@ On Windows, in PowerShell:
 irm https://code.ankiel.com/install.ps1 | iex
 ```
 
-To try it once without an install, run `npx @ankielcode/cli@latest`.
-
 ### Phone
 
 The mobile app is a React Native client for any Ankiel Code server. It is not in the app stores yet. See [apps/mobile](./apps/mobile/README.md) to build it, then follow [remote access](./docs/user/remote-access.md) to connect it to your computer.

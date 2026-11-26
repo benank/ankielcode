@@ -226,7 +226,7 @@ it.layer(NodeServices.layer)("ankiel uninstall launcher", (it) => {
       assert.equal(yield* windowsOwner(`@echo off\r\n"${exe}" %*`), shim);
       assert.isUndefined(yield* windowsOwner(`@echo off\r\nset FOO=1\r\n"${exe}" %*`));
 
-      // npx can run another version than the installed one, so uninstall also reads the
+      // A runtime started by its own path is not the installed one, so uninstall also reads the
       // recorded launchers: through a symlinked home, and dangling after a prune.
       const throughAlias = path.join(root, "bin/ankiel-alias");
       const pruned = path.join(root, "bin/ankiel-pruned");

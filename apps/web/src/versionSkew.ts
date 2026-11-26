@@ -5,6 +5,7 @@ import type {
   ServerSelfUpdateCapability,
 } from "@ankielcode/contracts";
 import type { ServerUpdateState } from "@ankielcode/client-runtime/state/server";
+import { cliInstallCommand } from "@ankielcode/shared/cliRelease";
 import { compareSemverVersions, parseSemver } from "@ankielcode/shared/semver";
 import * as Schema from "effect/Schema";
 import { msg } from "gt-react";
@@ -103,19 +104,16 @@ export function supportsDesktopAppUpdate(
 
 export function manualServerUpdateCommand(
   targetVersion: string,
-  installation?: ServerInstallation,
+  installation: ServerInstallation | undefined,
+  windows: boolean,
 ): string {
-  const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
-  if (installation?.kind === "npm-global") {
-    return `npm install --global --prefix ${quote(installation.prefix)} @ankielcode/cli@${targetVersion}`;
-  }
-  if (installation?.kind === "ankiel-launcher") {
+  if (installation !== undefined) {
+    const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
     // An inherited ANKIEL_HOME would otherwise send the update to a home the launcher is not in.
     return `${quote(installation.launcher)} update --base-dir ${quote(installation.baseDir)} ${targetVersion}`;
   }
-  const runner =
-    installation?.kind === "pnpm-dlx" ? "pnpm dlx" : installation?.kind === "bunx" ? "bunx" : "npx";
-  return `${runner} @ankielcode/cli@${targetVersion}`;
+  // Any other install, including an older npm one, reinstalls from the release.
+  return cliInstallCommand(windows, targetVersion);
 }
 
 export function buildVersionMismatchDismissalKey(

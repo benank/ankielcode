@@ -498,6 +498,20 @@ jobs:
           sha256sum "${installers[@]}" > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
+      # Update track switches read the highest server migration from this asset before they
+      # move a database to this release (packages/shared/src/cliRelease.ts).
+      - name: Write release metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          migration=$(ls apps/server/src/persistence/Migrations | sed -nE 's/^([0-9]+)_[A-Za-z0-9_]+\.ts$/\1/p' | sort -n | tail -1)
+          if [[ -z "$migration" ]]; then
+            echo "No server migrations found." >&2
+            exit 1
+          fi
+          printf '{"databaseMigration":%d}\n' "$((10#$migration))" > release-assets/ankiel-release.json
+          cat release-assets/ankiel-release.json
+
       - name: Upload assets to release
         uses: actions/github-script@v7
         env:
@@ -549,7 +563,9 @@ jobs:
                 ? 'text/yaml'
                 : fileName.endsWith('.txt')
                   ? 'text/plain'
-                  : 'application/octet-stream';
+                  : fileName.endsWith('.json')
+                    ? 'application/json'
+                    : 'application/octet-stream';
 
               core.info(`Uploading ${fileName} (${data.byteLength} bytes)...`);
               await github.rest.repos.uploadReleaseAsset({

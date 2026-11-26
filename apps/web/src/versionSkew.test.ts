@@ -21,25 +21,33 @@ const MISMATCH_HINT =
 
 describe("versionSkew", () => {
   it("updates only the proven install and safely quotes its paths", () => {
-    expect(manualServerUpdateCommand("0.0.45", { kind: "npm-global", prefix: "/opt/node" })).toBe(
-      "npm install --global --prefix '/opt/node' @ankielcode/cli@0.0.45",
+    expect(manualServerUpdateCommand("0.0.45", undefined, false)).toBe(
+      "curl -fsSL https://code.ankiel.com/install.sh | ANKIEL_VERSION=0.0.45 sh",
+    );
+    expect(manualServerUpdateCommand("0.0.45", undefined, true)).toBe(
+      "$env:ANKIEL_VERSION='0.0.45'; irm https://code.ankiel.com/install.ps1 | iex",
     );
     expect(
-      manualServerUpdateCommand("0.0.45", { kind: "npm-global", prefix: "/opt/maria's node" }),
-    ).toBe("npm install --global --prefix '/opt/maria'\\''s node' @ankielcode/cli@0.0.45");
-    expect(
-      manualServerUpdateCommand("0.0.45", {
-        kind: "ankiel-launcher",
-        launcher: "ankiel",
-        baseDir: "/home/u/.ankiel",
-      }),
+      manualServerUpdateCommand(
+        "0.0.45",
+        {
+          kind: "ankiel-launcher",
+          launcher: "ankiel",
+          baseDir: "/home/u/.ankiel",
+        },
+        false,
+      ),
     ).toBe("'ankiel' update --base-dir '/home/u/.ankiel' 0.0.45");
     expect(
-      manualServerUpdateCommand("0.0.45", {
-        kind: "ankiel-launcher",
-        launcher: "/opt/maria's bin/ankiel",
-        baseDir: "/data/ankiel home",
-      }),
+      manualServerUpdateCommand(
+        "0.0.45",
+        {
+          kind: "ankiel-launcher",
+          launcher: "/opt/maria's bin/ankiel",
+          baseDir: "/data/ankiel home",
+        },
+        false,
+      ),
     ).toBe("'/opt/maria'\\''s bin/ankiel' update --base-dir '/data/ankiel home' 0.0.45");
   });
   beforeEach(() => {

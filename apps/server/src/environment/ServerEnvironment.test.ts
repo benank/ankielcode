@@ -76,18 +76,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("ServerEnvironmen
       const fs = yield* FileSystem.FileSystem;
       const platform = yield* HostProcess.Platform;
       const baseDir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
-      const prefix = `${baseDir}/node`;
-      const entry = `${prefix}/lib/node_modules/@ankielcode/cli/dist/bin.mjs`;
-      yield* fs.makeDirectory(`${prefix}/lib/node_modules/@ankielcode/cli/dist`, {
-        recursive: true,
-      });
-      yield* fs.makeDirectory(`${prefix}/bin`, { recursive: true });
-      yield* fs.writeFileString(entry, "");
-      yield* fs.writeFileString(
-        `${prefix}/lib/node_modules/@ankielcode/cli/package.json`,
-        '{"name":"@ankielcode/cli","version":"0.0.45","bin":{"ankiel":"./dist/bin.mjs"}}',
-      );
-      yield* fs.symlink(entry, `${prefix}/bin/ankiel`);
+      const home = `${baseDir}/home`;
+      const executable = `${home}/runtime/versions/0.0.45/ankiel`;
+      const launcher = `${baseDir}/bin/ankiel`;
+      yield* fs.makeDirectory(`${home}/runtime/versions/0.0.45`, { recursive: true });
+      yield* fs.makeDirectory(`${baseDir}/bin`, { recursive: true });
+      yield* fs.writeFileString(executable, "", { mode: 0o755 });
+      yield* fs.symlink(executable, launcher);
       const config = yield* makeServerConfig(baseDir);
       yield* fs.makeDirectory(config.stateDir, { recursive: true });
       for (const mode of ["web", "desktop"] as const) {
@@ -101,12 +96,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("ServerEnvironmen
               Layer.provide(ServerConfig.layer({ ...config, mode })),
             ),
           ),
-          Effect.provideService(HostProcess.Arguments, ["node", entry]),
-          Effect.provideService(HostProcess.IsExecutable, false),
+          Effect.provideService(HostProcess.ExecutablePath, executable),
+          Effect.provideService(HostProcess.IsExecutable, true),
+          Effect.provideService(HostProcess.InvokedAs, launcher),
           Effect.provideService(HostProcess.Environment, {}),
         );
         expect(descriptor.capabilities.serverInstallation).toEqual(
-          mode === "web" && platform !== "win32" ? { kind: "npm-global", prefix } : undefined,
+          mode === "web" && platform !== "win32"
+            ? { kind: "ankiel-launcher", launcher, baseDir: home }
+            : undefined,
         );
         expect(descriptor.capabilities.serverSelfUpdate).toBe(
           mode === "web" ? undefined : "desktop-managed",

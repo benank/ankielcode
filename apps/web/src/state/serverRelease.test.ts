@@ -1,6 +1,6 @@
 import * as NodeAssert from "node:assert/strict";
 
-import { EnvironmentId, ServerConfig, ServerNpmReleaseError } from "@ankielcode/contracts";
+import { EnvironmentId, ServerConfig, ServerReleaseError } from "@ankielcode/contracts";
 import { expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
@@ -8,12 +8,12 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { vi } from "vite-plus/test";
 
-import { npmReleaseAtom, npmReleaseFailureMessage } from "./npmRelease";
+import { serverReleaseAtom, serverReleaseFailureMessage } from "./serverRelease";
 import { primaryEnvironmentIdAtom } from "./primaryEnvironment";
 import { serverEnvironment } from "./server";
 
 vi.mock("./server", () => ({
-  serverEnvironment: { npmRelease: vi.fn(), configValueAtom: vi.fn() },
+  serverEnvironment: { release: vi.fn(), configValueAtom: vi.fn() },
 }));
 vi.mock("./presentation", () => ({
   environmentSummaries: { connectedEnvironmentIdsAtom: Atom.make(["first", "second"]) },
@@ -36,7 +36,7 @@ const configFor = (environmentId: EnvironmentId | null, supported = true) =>
       serverVersion: version,
       capabilities: {
         repositoryIdentity: true,
-        ...(supported ? { npmReleaseLookup: true } : {}),
+        ...(supported ? { releaseLookup: true } : {}),
       },
     },
     auth: {
@@ -64,7 +64,7 @@ function setup(supported = true) {
   vi.mocked(serverEnvironment.configValueAtom)
     .mockReset()
     .mockImplementation((environmentId) => Atom.make(configFor(environmentId, supported)));
-  return vi.mocked(serverEnvironment.npmRelease).mockReset();
+  return vi.mocked(serverEnvironment.release).mockReset();
 }
 
 it.effect(
@@ -78,7 +78,7 @@ it.effect(
         ),
       );
       const registry = AtomRegistry.make();
-      const release = npmReleaseAtom("nightly");
+      const release = serverReleaseAtom("nightly");
       NodeAssert.ok(
         Atom.isWritable<EnvironmentId | null, EnvironmentId | null>(primaryEnvironmentIdAtom),
         "Expected the mocked primary environment atom to be writable.",
@@ -116,14 +116,14 @@ it.effect("resolves track metadata through a supporting server when there is no 
     );
     query.mockReturnValue(Atom.make(AsyncResult.success({ version })));
     const registry = AtomRegistry.make();
-    const release = npmReleaseAtom("nightly");
+    const release = serverReleaseAtom("nightly");
     const unmount = registry.mount(release);
     try {
       expect(yield* AtomRegistry.getResult(registry, release, { suspendOnWaiting: true })).toEqual({
         version,
         databaseMigration: undefined,
       });
-      expect(query).toHaveBeenCalledWith({ environmentId: second, input: { spec: "nightly" } });
+      expect(query).toHaveBeenCalledWith({ environmentId: second, input: { channel: "nightly" } });
     } finally {
       unmount();
       registry.dispose();
@@ -131,7 +131,7 @@ it.effect("resolves track metadata through a supporting server when there is no 
   }),
 );
 
-it.effect("does not call an unsupported RPC or fetch public npm for an older primary server", () =>
+it.effect("does not call an unsupported RPC or fetch GitHub for an older primary server", () =>
   Effect.gen(function* () {
     const query = setup(false);
     using fetch = vi
@@ -143,11 +143,11 @@ it.effect("does not call an unsupported RPC or fetch public npm for an older pri
       "Expected the mocked primary environment atom to be writable.",
     );
     registry.set(primaryEnvironmentIdAtom, first);
-    const release = npmReleaseAtom("latest");
+    const release = serverReleaseAtom("latest");
     const unmount = registry.mount(release);
     try {
       const error = yield* AtomRegistry.getResult(registry, release).pipe(Effect.flip);
-      expect(npmReleaseFailureMessage(Cause.fail(error))).toContain(
+      expect(serverReleaseFailureMessage(Cause.fail(error))).toContain(
         "Update it before switching tracks",
       );
       expect(query).not.toHaveBeenCalled();
@@ -160,9 +160,9 @@ it.effect("does not call an unsupported RPC or fetch public npm for an older pri
 );
 
 it("only displays the safe release error, not arbitrary transport diagnostics", () => {
-  const error = new ServerNpmReleaseError({ reason: "Install npm on the server's PATH." });
-  expect(npmReleaseFailureMessage(Cause.fail(error))).toBe(error.message);
+  const error = new ServerReleaseError({ reason: "Could not list ankiel releases." });
+  expect(serverReleaseFailureMessage(Cause.fail(error))).toBe(error.message);
   expect(
-    npmReleaseFailureMessage(Cause.fail(new Error("sensitive transport details"))),
+    serverReleaseFailureMessage(Cause.fail(new Error("sensitive transport details"))),
   ).not.toContain("sensitive");
 });

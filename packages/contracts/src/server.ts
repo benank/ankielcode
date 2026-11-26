@@ -1014,31 +1014,26 @@ export class ServerProviderUpdateError extends Schema.TaggedError<ServerProvider
   }
 }
 
-export const ServerNpmReleaseInput = Schema.Struct({
-  spec: Schema.String.check(
-    Schema.isMaxLength(64),
-    Schema.isPattern(/^(?:latest|nightly|\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/),
-  ),
-});
-export type ServerNpmReleaseInput = typeof ServerNpmReleaseInput.Type;
+export const ServerReleaseInput = Schema.Struct({ channel: DesktopUpdateChannelSchema });
+export type ServerReleaseInput = typeof ServerReleaseInput.Type;
 
-export const ServerNpmRelease = Schema.Struct({
+export const ServerRelease = Schema.Struct({
   version: Schema.String,
   databaseMigration: Schema.optionalKey(Schema.Int),
 });
-export type ServerNpmRelease = typeof ServerNpmRelease.Type;
+export type ServerRelease = typeof ServerRelease.Type;
 
-export class ServerNpmReleaseError extends Schema.TaggedError<ServerNpmReleaseError>()(
-  "ServerNpmReleaseError",
+export class ServerReleaseError extends Schema.TaggedError<ServerReleaseError>()(
+  "ServerReleaseError",
   { reason: Schema.String },
 ) {
   override get message(): string {
-    return `Could not check the configured npm registry: ${this.reason}`;
+    return `Could not check Ankiel Code releases: ${this.reason}`;
   }
 }
 
 export const ServerSelfUpdateInput = Schema.Struct({
-  /** Exact npm version, never a dist-tag, so server and client agree on the request. */
+  /** Exact release version, never a track name, so server and client agree on the request. */
   targetVersion: TrimmedNonEmptyString,
   /** Desktop-managed hosts move their app to this update track first. Sent only for a track switch. */
   channel: Schema.optionalKey(DesktopUpdateChannelSchema),

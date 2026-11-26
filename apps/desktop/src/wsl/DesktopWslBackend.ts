@@ -128,7 +128,7 @@ export const layer = Layer.effect(
                 Ref.set(
                   preflightErrorRef,
                   Option.some(
-                    "Another Ankiel Code server is using this distro's Ankiel home, or an older background service is set up for it. Stop that server or pair with it, or try `ankiel update` in the distro. If the older launcher cannot update, run `ankiel service uninstall` and optionally reinstall with `ankiel service install` from a current CLI in the distro. Use `npx @ankielcode/cli@latest` if `ankiel` is missing or outdated, and pass `--base-dir` with the service's Ankiel home to each command.",
+                    "Another Ankiel Code server is using this distro's Ankiel home, or an older background service is set up for it. Stop that server or pair with it, or try `ankiel update` in the distro. If the older launcher cannot update, run `ankiel service uninstall` and optionally reinstall with `ankiel service install` from a current CLI in the distro. If `ankiel` is missing or outdated, install it with `curl -fsSL https://code.ankiel.com/install.sh | sh`, and pass `--base-dir` with the service's Ankiel home to each command.",
                   ),
                 ),
               ),

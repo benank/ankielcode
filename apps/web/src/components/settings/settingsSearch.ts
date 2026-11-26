@@ -944,13 +944,6 @@ export const SETTINGS_SEARCH_ITEMS = [
     releaseChannelOnly: true,
   },
   {
-    id: "cli-command",
-    title: msg("ankiel command"),
-    to: "/settings/about",
-    searchTerms: [msg("cli terminal shell path install command line")],
-    desktopOnly: true,
-  },
-  {
     id: "mobile-app",
     title: msg("Mobile app"),
     to: "/settings/about",

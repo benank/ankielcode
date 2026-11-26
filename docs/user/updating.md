@@ -101,12 +101,11 @@ Update the side the notice names, then reconnect.
 
 The offered action depends on how the server runs:
 
-| Action                     | What to do                                                                                                                                                                                      |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Update server**          | Keep the client open while it installs and reconnects. Supported background services update remotely. For a desktop-hosted server, this also closes and relaunches the desktop app on the host. |
-| **Update the desktop app** | Update the desktop app on the machine running the server, then reopen it if needed.                                                                                                             |
-| **Copy update command**    | Run the command on the named host to update the detected global npm install or installed `ankiel` command, then restart the server with your usual options.                                     |
-| **Copy relaunch command**  | Stop the command-line server on its host and relaunch with the copied command, keeping your usual subcommand and options. This does not update an installed `ankiel` command.                   |
+| Action                     | What to do                                                                                                                                                                                                                 |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Update server**          | Keep the client open while it installs and reconnects. Supported background services update remotely. For a desktop-hosted server, this also closes and relaunches the desktop app on the host.                            |
+| **Update the desktop app** | Update the desktop app on the machine running the server, then reopen it if needed.                                                                                                                                        |
+| **Copy update command**    | Run the command on the named host to update its installed `ankiel` command, or to reinstall it from the install script when Ankiel Code cannot tell how it was installed, then restart the server with your usual options. |
 
 On the host, run:
 
@@ -124,9 +123,10 @@ If you decline the restart for a background service installed by an older
 release, the service can stay down after a crash or reboot until you run
 `ankiel service restart`.
 
-If you run the server with `npx` rather than an installed `ankiel`, there is
-nothing to update on the host: stop the server and relaunch it as
-`npx @ankielcode/cli@<client-version>` with the same subcommand and options.
+A server installed with npm, which Ankiel Code no longer publishes to, cannot update
+itself. Run `npm uninstall -g @ankielcode/cli` on the host, install the `ankiel`
+command with the [install script](./install.md#command-line), and start the server
+again with your usual options.
 
 ## If an update fails
 
@@ -163,13 +163,16 @@ details** to include the error in a bug report.
 
 ## Registries and proxies
 
-Each server checks Ankiel Code releases, and providers installed with npm, through
-its own npm, so the checks use npm's configured registry, authentication, and
-proxy settings. Providers installed with Homebrew or pnpm check through those
-tools.
-Configure npm on the server's machine. If that registry cannot be reached, the
-release shows as unavailable; Ankiel Code does not try the public registry instead.
-Machines without npm check the public npm registry directly.
+Each server checks Ankiel Code releases on GitHub, and downloads updates from
+there or from the mirror in `ANKIEL_RELEASE_BASE_URL`. Set `GH_TOKEN` on the
+server if GitHub rate-limits its checks.
+
+Providers installed with npm check through the server's own npm, so the checks
+use npm's configured registry, authentication, and proxy settings. Configure npm
+on the server's machine. If that registry cannot be reached, the update shows as
+unavailable; Ankiel Code does not try the public registry instead. Machines
+without npm check the public npm registry directly. Providers installed with
+Homebrew or pnpm check through those tools.
 
 ## Update providers
 

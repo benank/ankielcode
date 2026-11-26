@@ -64,16 +64,13 @@ export type ServerSelfUpdateMethod = typeof ServerSelfUpdateMethod.Type;
 // Not trimmed: a path that differs from the installed one would update the wrong home.
 const InstalledPath = Schema.String.check(Schema.isNonEmpty());
 
-export const ServerInstallation = Schema.Union([
-  Schema.Struct({ kind: Schema.Literals(["npx", "pnpm-dlx", "bunx"]) }),
-  Schema.Struct({ kind: Schema.Literal("npm-global"), prefix: TrimmedNonEmptyString }),
-  // A launcher (script, or a legacy symlink) into a downloaded runtime, as the install script and `ankiel update` leave.
-  Schema.Struct({
-    kind: Schema.Literal("ankiel-launcher"),
-    launcher: InstalledPath,
-    baseDir: InstalledPath,
-  }),
-]);
+// A launcher (script, or a legacy symlink) into a downloaded runtime, as the install script and
+// `ankiel update` leave. Older servers also reported npm kinds, which now decode as unknown.
+export const ServerInstallation = Schema.Struct({
+  kind: Schema.Literal("ankiel-launcher"),
+  launcher: InstalledPath,
+  baseDir: InstalledPath,
+});
 export type ServerInstallation = typeof ServerInstallation.Type;
 
 export const ServerSelfUpdateCapability = Schema.Literals([
@@ -152,8 +149,8 @@ export const ExecutionEnvironmentCapabilities = Schema.Struct({
   threadPullRequestWatch: Schema.optionalKey(Schema.Boolean),
   pullRequestStackActions: Schema.optionalKey(Schema.Boolean),
   serverSelfUpdate: Schema.optionalKey(ServerSelfUpdateCapability),
-  /** Server answers server.getNpmRelease using its configured npm registry. */
-  npmReleaseLookup: Schema.optionalKey(Schema.Boolean),
+  /** Server answers server.getRelease from the GitHub releases it updates from. */
+  releaseLookup: Schema.optionalKey(Schema.Boolean),
   /** Manual commands must update this install, not the host's default global prefix. */
   serverInstallation: ForwardCompatibleOptional(ServerInstallation),
   serverSelfUpdateProgress: Schema.optionalKey(Schema.Boolean),
