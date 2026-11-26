@@ -429,7 +429,7 @@ To list Linear issues beside a project's, connect Linear with an API key under
 Settings → Source control & issues, then pick one or more teams for that project there. Pick
 another team at any time to add it; uncheck every team to unbind the project. Each team's
 issues appear in the Linear group of the issue list, sorted with the rest by last update, and
-each can be loaded further on its own. Agents file new issues in the first team picked unless you name another bound team. To
+each can be loaded further on its own. To
 connect another Linear workspace or user, add another account in the same place; each project
 reads its teams through the account you picked them under.
 
@@ -444,8 +444,7 @@ tracker records one. An issue read through a project that does not own its repos
 An issue can be kept with a thread the way a pull request can: open it beside the thread (issue
 links in the conversation open there) and use **Link to this thread** in its header; **Unlink**
 undoes it. Click the issue badge in the thread sidebar to see its issues and pull requests in
-**Linked items**. Select an issue there to open it beside the thread. Agents link the issues they
-work on with the `link_issue` tool.
+**Linked items**. Select an issue there to open it beside the thread.
 
 Writing to a tracker over a remote connection requires the `source-control:write` scope.
 

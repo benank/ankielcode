@@ -749,13 +749,6 @@ export interface AcpAdapterV2Flavor {
    * fail before `session/prompt`.
    */
   readonly supportsImagePrompts?: boolean;
-  /**
-   * True when this session's native system prompt carries Ankiel's PR-linking instructions, so
-   * turns omit them. Must use the same negotiated check that sent them on session setup.
-   */
-  readonly sessionCarriesPullRequestLinking?: (
-    initializeResult: EffectAcpSchema.InitializeResponse,
-  ) => boolean;
 }
 
 /**
@@ -9311,14 +9304,10 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
               ? {}
               : { previousState: previousInstructionState }),
           });
-          const sessionSetup = yield* Ref.get(activeSessionSetup);
           const runtimeInstructions = buildRuntimeInstructions({
             harness: flavor.runtimeHarness ?? driver,
             model: turnInput.modelSelection.model,
             runtimePolicy: turnInput.runtimePolicy,
-            pullRequestLinking:
-              sessionSetup === null ||
-              flavor.sessionCarriesPullRequestLinking?.(sessionSetup.initializeResult) !== true,
           });
           // The agent keeps its own history, so resend only after compaction or when the text changes.
           const sendRuntimeInstructions =

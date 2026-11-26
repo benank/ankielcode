@@ -5,7 +5,6 @@ import * as NodeOS from "node:os";
 import * as NodeModule from "node:module";
 import * as NodeVM from "node:vm";
 import { assert, describe, it } from "@effect/vitest";
-import { PULL_REQUEST_LINKING_INSTRUCTIONS } from "@ankielcode/provider-core/server/runtimeInstructions";
 
 import {
   PI_ANKIEL_MCP_EXTENSION_SOURCE,
@@ -83,7 +82,7 @@ describe("Pi orchestration prompt section", () => {
       assert.isDefined(result);
       assert.isTrue(result!.systemPrompt.startsWith(`${event.systemPrompt}\n\n`));
       assert.include(result!.systemPrompt, "orchestrator_capabilities");
-      assert.include(result!.systemPrompt, PULL_REQUEST_LINKING_INSTRUCTIONS);
+      assert.notInclude(result!.systemPrompt, "pull_request_linking");
     }
   });
 
@@ -96,7 +95,7 @@ describe("Pi orchestration prompt section", () => {
     );
     assert.isUndefined(result);
     assert.include(sections.ankiel_code_orchestration, "orchestrator_capabilities");
-    assert.include(sections.ankiel_code_orchestration, PULL_REQUEST_LINKING_INSTRUCTIONS);
+    assert.notInclude(sections.ankiel_code_orchestration, "pull_request_linking");
   });
 });
 
