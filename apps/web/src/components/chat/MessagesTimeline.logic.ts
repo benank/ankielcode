@@ -770,6 +770,8 @@ function deriveTerminalAssistantMessageIds(timelineEntries: ReadonlyArray<Timeli
 
 interface TurnFold {
   runId: RunId;
+  /** Labeled "You stopped …", so the run's interrupt divider would repeat it. */
+  stopped: boolean;
   anchorEntryId: string;
   createdAt: string;
   hiddenEntryIds: ReadonlySet<string>;
@@ -959,6 +961,21 @@ function timelineEntryFoldRunId(entry: TimelineEntry, runlessKey: RunId | null):
     return entry.projectedItem.item.runId ?? runlessKey;
   }
   return null;
+}
+
+/** Runs the user asked to stop; their fold says so, which makes the interrupt divider redundant. */
+function userStoppedRunIds(entries: ReadonlyArray<TimelineEntry>): ReadonlySet<RunId> {
+  const runIds = new Set<RunId>();
+  for (const entry of entries) {
+    if (
+      entry.kind === "event" &&
+      entry.projectedItem.item.type === "run_interrupt_request" &&
+      entry.projectedItem.item.runId !== null
+    ) {
+      runIds.add(entry.projectedItem.item.runId);
+    }
+  }
+  return runIds;
 }
 
 function timelineEntryIsSteer(entry: TimelineEntry): boolean {
@@ -1167,6 +1184,7 @@ function deriveTurnFolds(input: {
   }
 
   const foldsByAnchorEntryId = new Map<string, TurnFold>();
+  const stoppedRunIds = userStoppedRunIds(input.timelineEntries);
   for (const [runId, group] of groupsByRunId) {
     if (
       input.unfoldedRunIds.has(runId) ||
@@ -1224,7 +1242,8 @@ function deriveTurnFolds(input: {
     }
 
     const isLatestInterruptedTurn =
-      input.latestRun?.runId === runId && input.latestRun.status === "interrupted";
+      stoppedRunIds.has(runId) ||
+      (input.latestRun?.runId === runId && input.latestRun.status === "interrupted");
     // A turn cut short by a steer leaves trailing work entries behind its
     // terminal message — take whichever ended last. A subagent card after it was
     // spawned by background work once the turn settled, so it adds no turn time.
@@ -1266,6 +1285,7 @@ function deriveTurnFolds(input: {
     const firstSegment = group.entries.slice(0, group.steerSegments[0]?.startIndex);
     foldsByAnchorEntryId.set(group.anchorEntryId, {
       runId,
+      stopped: isLatestInterruptedTurn,
       anchorEntryId: group.anchorEntryId,
       createdAt: group.startBoundary ?? firstEntry.createdAt,
       hiddenEntryIds: segmentHiddenIds(firstSegment),
@@ -1285,6 +1305,7 @@ function deriveTurnFolds(input: {
       );
       foldsByAnchorEntryId.set(anchorEntry.id, {
         runId: RunId.make(`${runId}:steer:${steer.id}`),
+        stopped: false,
         anchorEntryId: anchorEntry.id,
         createdAt: steer.createdAt,
         hiddenEntryIds: segmentHiddenIds(entries),
@@ -1680,10 +1701,10 @@ export function deriveMessagesTimelineRows(
   const timelineEntryById = new Map(timelineEntries.map((entry) => [entry.id, entry]));
   const collapsedEntryIds = new Set<string>();
   const collapsedFoldMemberIds = new Set<string>();
-  const collapsedFoldRunIds = new Set<RunId>();
+  const foldedStoppedRunIds = new Set<RunId>();
   for (const fold of foldsByAnchorEntryId.values()) {
+    if (fold.stopped) foldedStoppedRunIds.add(fold.runId);
     if (!input.expandedRunIds?.has(fold.runId)) {
-      collapsedFoldRunIds.add(fold.runId);
       for (const entryId of fold.hiddenEntryIds) {
         collapsedEntryIds.add(entryId);
       }
@@ -1915,13 +1936,13 @@ export function deriveMessagesTimelineRows(
       appendActiveWorkRows();
     }
 
-    // A stopped compaction's own divider, or a collapsed turn's "You stopped" label, already says it stopped.
+    // A stopped compaction's own divider, or a stopped turn's "You stopped" fold, already says it stopped.
     if (
       timelineEntry.kind === "event" &&
       (timelineEntry.projectedItem.item.type === "run_interrupt_request" ||
         (timelineEntry.projectedItem.item.type === "run_interrupt_result" &&
           timelineEntry.projectedItem.item.runId !== null &&
-          (collapsedFoldRunIds.has(timelineEntry.projectedItem.item.runId) ||
+          (foldedStoppedRunIds.has(timelineEntry.projectedItem.item.runId) ||
             (compactionRuns.has(timelineEntry.projectedItem.item.runId) &&
               compactedRunIds.has(timelineEntry.projectedItem.item.runId)))))
     ) {

@@ -128,10 +128,14 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
         return;
       }
       if (event.key === "Enter") {
-        // Enter from an option or the page submits; the composer handles its own Enter.
+        // Enter on an unchosen option chooses it like a click; on the chosen one or the page it
+        // submits. The composer handles its own Enter.
+        const option =
+          target instanceof HTMLElement ? target.closest("[data-pending-user-input-option]") : null;
         if (
-          target !== document.body &&
-          !(target instanceof HTMLElement && target.closest("[data-pending-user-input-option]"))
+          option === null
+            ? target !== document.body
+            : option.getAttribute("aria-pressed") !== "true"
         )
           return;
         event.preventDefault();

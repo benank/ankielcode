@@ -4,6 +4,7 @@ import { expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser";
 
 import { render } from "../../../test/render";
+import type { PendingUserInputDraftAnswer } from "@ankielcode/client-runtime/state/pending-user-input";
 import type { PendingUserInput } from "../../session-logic";
 import { Select, SelectTrigger } from "../ui/select";
 import { ComposerPendingUserInputPanel } from "./ComposerPendingUserInputPanel";
@@ -114,7 +115,7 @@ it.each<{ focus: string; control: ReactNode; toggles: boolean }>([
   },
 );
 
-it("selects an option on click without answering until Enter", async () => {
+it("selects an option on click without answering", async () => {
   const onToggleOption = vi.fn();
   const onAdvance = vi.fn();
   await using screen = await render(
@@ -136,8 +137,35 @@ it("selects an option on click without answering until Enter", async () => {
   await screen.getByRole("button", { name: /Incremental/ }).click();
   expect(onToggleOption.mock.calls).toEqual([["question", "Incremental"]]);
   expect(onAdvance).not.toHaveBeenCalled();
+});
+
+it("chooses a focused option with Enter, and submits on Enter once it is chosen", async () => {
+  const onToggleOption = vi.fn();
+  const onAdvance = vi.fn();
+  const singleSelect = { ...prompt, questions: [{ ...prompt.questions[0]!, multiSelect: false }] };
+  const panel = (answers: Record<string, PendingUserInputDraftAnswer>) => (
+    <ComposerPendingUserInputPanel
+      pendingUserInputs={[singleSelect]}
+      cwd={undefined}
+      threadRef={threadRef}
+      respondingRequestIds={[]}
+      answers={answers}
+      questionIndex={0}
+      onToggleOption={onToggleOption}
+      onAdvance={onAdvance}
+      onDismiss={vi.fn()}
+    />
+  );
+  await using screen = await render(panel({}));
+  const option = screen.getByRole("button", { name: /Incremental/ });
+  option.element().focus();
 
   await userEvent.keyboard("{Enter}");
+  expect(onToggleOption.mock.calls).toEqual([["question", "Incremental"]]);
+  expect(onAdvance).not.toHaveBeenCalled();
+
+  await screen.rerender(panel({ question: { selectedOptionValues: ["Incremental"] } }));
+  option.element().focus();
+  await userEvent.keyboard("{Enter}");
   expect(onAdvance).toHaveBeenCalledOnce();
-  expect(onToggleOption).toHaveBeenCalledOnce();
 });

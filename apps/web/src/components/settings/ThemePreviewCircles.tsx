@@ -2,6 +2,10 @@ import { useGT } from "gt-react";
 import { MoonIcon, SunIcon } from "lucide-react";
 import type { CSSProperties } from "react";
 import {
+  ANKIEL_CODE_DARK_THEME_COLORS,
+  ANKIEL_CODE_LIGHT_THEME_COLORS,
+} from "@ankielcode/shared/themePalettes";
+import {
   STANDARD_THEME_PREVIEW_COLORS as SHARED_STANDARD_THEME_PREVIEW_COLORS,
   THEME_PREVIEW_RENDER_SPECS,
 } from "@ankielcode/shared/themePreview";
@@ -41,17 +45,17 @@ const STANDARD_THEME_PREVIEW_COLORS: Record<
   Readonly<Record<ThemePreviewRole, string>>
 > = {
   light: {
-    sidebar: "#fafafa",
-    surface: "#ffffff",
-    accentSurface: "#f4f4f5",
-    messageSurface: "#e4e4e7",
+    sidebar: ANKIEL_CODE_LIGHT_THEME_COLORS.sidebar,
+    surface: ANKIEL_CODE_LIGHT_THEME_COLORS.surface,
+    accentSurface: ANKIEL_CODE_LIGHT_THEME_COLORS.accentSurface,
+    messageSurface: ANKIEL_CODE_LIGHT_THEME_COLORS.messageSurface,
     ...SHARED_STANDARD_THEME_PREVIEW_COLORS.light,
   },
   dark: {
-    sidebar: "#0f0f10",
-    surface: "#121212",
-    accentSurface: "#27272a",
-    messageSurface: "#27272a",
+    sidebar: ANKIEL_CODE_DARK_THEME_COLORS.sidebar,
+    surface: ANKIEL_CODE_DARK_THEME_COLORS.surface,
+    accentSurface: ANKIEL_CODE_DARK_THEME_COLORS.accentSurface,
+    messageSurface: ANKIEL_CODE_DARK_THEME_COLORS.messageSurface,
     ...SHARED_STANDARD_THEME_PREVIEW_COLORS.dark,
   },
 };

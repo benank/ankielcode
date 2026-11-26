@@ -3613,11 +3613,7 @@ describe("v2 run and attempt history", () => {
       supportsConversationRollback: false,
       expandedRunIds: new Set([runId]),
     });
-    expect(stoppedRows.map((row) => row.id)).toEqual([
-      "turn-fold:turn-1",
-      "stopped-command-entry",
-      "interrupt-result",
-    ]);
+    expect(stoppedRows.map((row) => row.id)).toEqual(["turn-fold:turn-1", "stopped-command-entry"]);
     expect(stoppedRows[1]).toMatchObject({
       kind: "work",
       displayLabel: "sleep 90 && echo slept",
