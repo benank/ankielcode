@@ -6,6 +6,18 @@ interface ObservedAnimation {
 const animations = new Map<Element, ObservedAnimation>();
 let observer: IntersectionObserver | null = null;
 let reducedMotion: MediaQueryList | null = null;
+let windowFocusTracked = false;
+
+// Animations that should hold still in an unfocused window key off this in index.css.
+function trackWindowFocus() {
+  if (windowFocusTracked) return;
+  windowFocusTracked = true;
+  const update = () =>
+    document.documentElement.toggleAttribute("data-window-blurred", !document.hasFocus());
+  window.addEventListener("focus", update);
+  window.addEventListener("blur", update);
+  update();
+}
 
 function updateAnimation(animation: ObservedAnimation) {
   const running =
@@ -23,6 +35,7 @@ function updateAnimations() {
 
 export function observeVisibleAnimation(element: HTMLElement | SVGElement | null) {
   if (element === null) return;
+  trackWindowFocus();
   element.style.setProperty("--visible-animation-state", "paused");
   element.style.setProperty("--visible-animation-will-change", "auto");
   if (typeof IntersectionObserver === "undefined") return;

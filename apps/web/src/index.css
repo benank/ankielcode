@@ -659,8 +659,9 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
   }
 }
 
-/* An unfocused window holds its pixels still. */
-:root[data-window-blurred] .pixel-status-strip {
+/* An unfocused window holds its pixels and shimmers still. */
+:root[data-window-blurred]
+  :is(.pixel-status-strip, .live-activity-focus, .live-activity-focus-counter) {
   animation-play-state: paused;
 }
 

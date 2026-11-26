@@ -30,25 +30,6 @@ export const STATUS_TONE_DOT_CLASS: Record<PixelStatusTone, string> = {
   done: "bg-muted-foreground/60",
 };
 
-let windowFocusTracked = false;
-
-// Unfocused windows pause their pixels (see index.css).
-function trackWindowFocus() {
-  if (windowFocusTracked) return;
-  windowFocusTracked = true;
-  const update = () =>
-    document.documentElement.toggleAttribute("data-window-blurred", !document.hasFocus());
-  window.addEventListener("focus", update);
-  window.addEventListener("blur", update);
-  update();
-}
-
-function observeStrip(element: SVGSVGElement | null) {
-  if (element === null) return;
-  trackWindowFocus();
-  return observeVisibleAnimation(element);
-}
-
 /**
  * A small glowing dot-matrix that animates a thread's state. The glow is baked into a
  * sprite strip that slides by whole frames, so playing it repaints nothing.
@@ -88,7 +69,7 @@ export function PixelStatus(props: { kind: PixelStatusKind; className?: string }
       <svg
         // Keyed so a kind change restarts the strip from its first frame.
         key={props.kind}
-        ref={animated ? observeStrip : undefined}
+        ref={animated ? observeVisibleAnimation : undefined}
         width={BOX}
         height={strip.height}
         viewBox={`0 0 ${BOX} ${strip.height}`}
