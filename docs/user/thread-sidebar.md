@@ -136,9 +136,9 @@ open.
 
 On desktop and mobile, active threads sit in a folder for each project. Each row is just the
 thread's title; hover it for the project, branch, model, and other details. A small animated
-light left of the title shows what the thread is doing: blue while it works, yellow when it
-needs an approval, an answer, or your attention, red when it failed, and a steady green when
-it finished and you have not opened it yet. A thread with nothing going on shows no light.
+light left of the title shows what the thread is doing: cyan while it works, amber when it
+needs an approval, an answer, or your attention, red when it failed, and a steady dim light
+when it finished and you have not opened it yet. A thread with nothing going on shows no light.
 The lights hold still while the window is in the background.
 
 Inside a folder, the thread with the newest activity comes first: your messages, the agent's
