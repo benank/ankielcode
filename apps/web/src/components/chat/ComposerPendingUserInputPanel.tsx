@@ -1,9 +1,8 @@
 import { type RuntimeRequestId, type ScopedThreadRef } from "@ankielcode/contracts";
 import { markdownProseDirection, textDirection } from "~/textDirection";
 import { useGT } from "gt-react";
-import { memo, use, useEffect, useEffectEvent, useRef, useState } from "react";
+import { memo, use, useEffect, useEffectEvent, useState } from "react";
 import { BackgroundThreadContext } from "./backgroundThread";
-import { useStableCallback } from "~/hooks/useStableCallback";
 import { type PendingUserInput } from "../../session-logic";
 import type { PendingUserInputDraftAnswer } from "@ankielcode/client-runtime/state/pending-user-input";
 import { derivePendingUserInputProgress } from "../../pendingUserInput";
@@ -88,12 +87,6 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
   // Message-mode requests remain answerable after their provider turn ends.
   const canRespond = prompt.responseCapability !== "not_resumable";
   const responseDisabled = disabled || isResponding || !canRespond;
-  const autoAdvanceTimerRef = useRef<number | null>(null);
-  const advance = useStableCallback(onAdvance);
-  const [optimisticSingleSelect, setOptimisticSingleSelect] = useState<{
-    questionId: string;
-    optionValue: string;
-  } | null>(null);
   const [collapsedQuestionId, setCollapsedQuestionId] = useState<string | null>(null);
   // Keep question identity stable for its shortcut listener.
   const progress = derivePendingUserInputProgress(prompt.questions, answers, questionIndex);
@@ -106,50 +99,17 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
   );
   const isCollapsed = collapsedQuestionId !== null && collapsedQuestionId === activeQuestion?.id;
 
-  if (
-    optimisticSingleSelect &&
-    activeQuestion &&
-    !activeQuestion.multiSelect &&
-    (optimisticSingleSelect.questionId !== activeQuestion.id ||
-      (!customAnswerActive &&
-        progress.selectedOptionValues.includes(optimisticSingleSelect.optionValue)))
-  ) {
-    setOptimisticSingleSelect(null);
-  }
-
-  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- clears the auto-advance timer when the question changes, input is disabled, or the panel unmounts
-  useEffect(() => {
-    const clearAutoAdvance = () => {
-      if (autoAdvanceTimerRef.current !== null) {
-        window.clearTimeout(autoAdvanceTimerRef.current);
-        autoAdvanceTimerRef.current = null;
-      }
-    };
-    if (disabled || activeQuestion?.id === undefined) clearAutoAdvance();
-    return clearAutoAdvance;
-  }, [activeQuestion?.id, disabled]);
-
+  // Choosing only selects; Enter or the composer's Submit sends, so a stray click can't answer.
   const handleOptionSelection = (questionId: string, optionValue: string) => {
     if (disabled || isResponding) return;
-    if (activeQuestion?.multiSelect) {
-      onToggleOption(questionId, optionValue);
-      return;
-    }
-    setOptimisticSingleSelect({ questionId, optionValue });
     onToggleOption(questionId, optionValue);
-    if (autoAdvanceTimerRef.current !== null) {
-      window.clearTimeout(autoAdvanceTimerRef.current);
-    }
-    autoAdvanceTimerRef.current = window.setTimeout(() => {
-      autoAdvanceTimerRef.current = null;
-      advance();
-    }, 200);
   };
 
   const selectOptionFromShortcut = useEffectEvent(handleOptionSelection);
+  const advanceFromShortcut = useEffectEvent(onAdvance);
   const backgroundThread = use(BackgroundThreadContext);
 
-  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- subscribes a document keydown listener for digit shortcuts while a question is answerable
+  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- subscribes a document keydown listener for digit and Enter shortcuts while a question is answerable
   useEffect(() => {
     if (!activeQuestion || responseDisabled || isCollapsed || backgroundThread) return;
     const handler = (event: globalThis.KeyboardEvent) => {
@@ -165,6 +125,17 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
           'select, [contenteditable]:not([contenteditable="false"]), [role="dialog"], [aria-modal="true"], [role="menu"], [role="combobox"], [data-slot$="popup"]',
         )
       ) {
+        return;
+      }
+      if (event.key === "Enter") {
+        // Enter from an option or the page submits; the composer handles its own Enter.
+        if (
+          target !== document.body &&
+          !(target instanceof HTMLElement && target.closest("[data-pending-user-input-option]"))
+        )
+          return;
+        event.preventDefault();
+        advanceFromShortcut();
         return;
       }
       const digit = Number.parseInt(event.key, 10);
@@ -275,15 +246,11 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
             <div className="-ms-2 mt-1.5 sm:-ms-1.5">
               {activeQuestion.options.map((option, index) => {
                 const optionValue = option.value ?? option.label;
-                const isOptimisticallySelected =
-                  optimisticSingleSelect?.questionId === activeQuestion.id &&
-                  optimisticSingleSelect.optionValue === optionValue;
-                const isSelected =
-                  isOptimisticallySelected || draftSelectedOptions?.[index] === true;
+                const isSelected = draftSelectedOptions?.[index] === true;
                 const className = cn(
                   questionTextAlign,
-                  "group flex w-full items-start gap-2.5 rounded-md bg-transparent py-1.5 ps-2 sm:ps-1.5 outline-none transition-colors duration-150 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-primary/25",
-                  isSelected ? "text-foreground" : "text-foreground/70 hover:bg-muted/30",
+                  "group flex w-full items-start gap-2.5 rounded-md py-1.5 ps-2 text-foreground sm:ps-1.5 outline-none transition-colors duration-150 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
+                  isSelected ? "bg-accent" : "bg-transparent hover:bg-accent/50",
                   (disabled || isResponding) && "opacity-50 cursor-not-allowed",
                   !disabled && !isResponding && "cursor-pointer",
                 );
@@ -311,18 +278,19 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
                       ) : null}
                     </div>
                     {index < 9 ? (
-                      <span className="flex h-5 w-7 shrink-0 items-center justify-center sm:w-6">
+                      <span className="flex h-5 w-7 shrink-0 items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 sm:w-6">
                         <Kbd>{index + 1}</Kbd>
                       </span>
                     ) : null}
                   </>
                 );
-                // The preview sits outside the button: it can hold links, and a click on a single-select option advances.
+                // The preview sits outside the button because it can hold links.
                 return (
                   <div key={`${activeQuestion.id}:${optionValue}`}>
                     <button
                       type="button"
                       aria-pressed={isSelected}
+                      data-pending-user-input-option
                       disabled={disabled || isResponding}
                       onClick={() => {
                         handleOptionSelection(activeQuestion.id, optionValue);

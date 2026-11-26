@@ -30,7 +30,7 @@ const commandApproval: PendingApproval = {
 it("renders command approval as a popup card with full command, warning, and action buttons", async () => {
   const onRespondToApproval = vi.fn(async () => {});
   await using screen = await render(
-    <ComposerBanner.Root variant="warning" density="spacious">
+    <ComposerBanner.Root density="spacious">
       <ComposerPendingApprovalPanel
         approval={commandApproval}
         pendingCount={2}
@@ -41,7 +41,6 @@ it("renders command approval as a popup card with full command, warning, and act
   );
 
   await expect.element(screen.getByRole("group", { name: "Command approval" })).toBeVisible();
-  await expect.element(screen.getByText("Approval needed")).toBeVisible();
   await expect.element(screen.getByText("1/2")).toBeVisible();
   await expect
     .element(screen.getByLabelText("Command", { exact: true }))
@@ -77,7 +76,7 @@ it("disables controls while responding or read-only and hides actions when not r
     disabled?: boolean;
     isResponding?: boolean;
   }) => (
-    <ComposerBanner.Root variant="warning" density="spacious">
+    <ComposerBanner.Root density="spacious">
       <ComposerPendingApprovalPanel
         approval={overrides.approval ?? commandApproval}
         pendingCount={1}

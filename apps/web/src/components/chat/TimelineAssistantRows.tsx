@@ -69,11 +69,6 @@ export function AssistantTimelineRow({ row }: { row: Extract<TimelineRow, { kind
             />
           </AssistantCitationSource>
         </div>
-        {!row.showAssistantMeta && row.projectedItem?.item.status === "interrupted" ? (
-          <div className="mt-1.5 flex">
-            <AssistantStatusBadge status="interrupted" />
-          </div>
-        ) : null}
         {row.showAssistantMeta ? (
           <AssistantMessageMeta
             className="mt-1.5"
@@ -220,9 +215,6 @@ function AssistantMessageMeta({
         className,
       )}
     >
-      {projectedItem && projectedItem.item.status !== "completed" ? (
-        <AssistantStatusBadge status={projectedItem.item.status} />
-      ) : null}
       <AssistantCopyButton
         message={message}
         showCopyButton={showCopyButton}
@@ -300,14 +292,6 @@ function AssistantReplyButton({ message, itemId }: { message: ChatMessage; itemI
         <T>Reply to this response</T>
       </TooltipPopup>
     </Tooltip>
-  );
-}
-
-function AssistantStatusBadge({ status }: { status: string }) {
-  return (
-    <span className="rounded-full border border-border/70 px-1.5 py-0.5 font-mono text-3xs text-muted-foreground">
-      {status}
-    </span>
   );
 }
 

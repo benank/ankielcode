@@ -14,7 +14,7 @@ export function ControlPill(props: {
   readonly accessibilityLabel?: string;
   readonly onPress?: () => void;
   readonly activateOnPressIn?: boolean;
-  readonly variant?: "circle" | "pill" | "primary" | "danger";
+  readonly variant?: "circle" | "pill" | "primary";
   readonly disabled?: boolean;
   readonly className?: string;
 }) {
@@ -44,25 +44,16 @@ export function ControlPill(props: {
       ? props.disabled
         ? "accent-icon-subtle"
         : "accent-primary-foreground"
-      : variant === "danger"
-        ? "accent-danger-foreground"
-        : "accent-icon";
+      : "accent-icon";
 
-  const isCircle =
-    variant === "circle" || variant === "danger" || (variant === "primary" && !props.label);
+  const isCircle = variant === "circle" || (variant === "primary" && !props.label);
   const containerClassName = cn(
     isCircle
       ? "h-[44px] w-[44px] items-center justify-center rounded-full android:h-[48px] android:w-[48px]"
       : variant === "primary"
         ? "h-[44px] flex-row items-center justify-center gap-2 rounded-full px-5 android:h-[48px]"
         : "h-[44px] flex-row items-center justify-center gap-2 rounded-full px-3.5 android:h-[48px]",
-    variant === "primary"
-      ? props.disabled
-        ? "bg-subtle-strong"
-        : "bg-primary"
-      : variant === "danger"
-        ? "bg-danger"
-        : "bg-subtle",
+    variant === "primary" ? (props.disabled ? "bg-subtle-strong" : "bg-primary") : "bg-subtle",
     props.className,
   );
   const labelClassName = cn(
@@ -71,9 +62,7 @@ export function ControlPill(props: {
       ? props.disabled
         ? "text-foreground-muted"
         : "text-primary-foreground"
-      : variant === "danger"
-        ? "text-danger-foreground"
-        : "text-foreground",
+      : "text-foreground",
   );
 
   if (
@@ -112,7 +101,7 @@ export function ControlPill(props: {
         icon={props.icon}
         onPress={props.onPress}
         disabled={props.disabled}
-        variant={variant === "primary" ? "primary" : variant === "danger" ? "danger" : "tonal"}
+        variant={variant === "primary" ? "primary" : "tonal"}
       />
     );
   }

@@ -5,6 +5,7 @@ import type {
   RuntimeRequestId,
 } from "@ankielcode/contracts";
 import {
+  APPROVAL_REQUEST_LABEL,
   FULL_ACCESS_OVERRIDE_QUESTION,
   fullAccessOverrideExplanation,
 } from "@ankielcode/client-runtime/state/thread-requests";
@@ -13,6 +14,7 @@ import { useState } from "react";
 import { Pressable, View } from "react-native";
 
 import { AppText as Text } from "../../components/ui/AppText";
+import { PixelStatus } from "../../components/PixelStatus";
 import type { PendingApproval } from "../../lib/threadActivity";
 
 export interface PendingApprovalCardProps {
@@ -23,6 +25,12 @@ export interface PendingApprovalCardProps {
     requestId: RuntimeRequestId,
     decision: ProviderApprovalDecision,
   ) => Promise<unknown>;
+}
+
+function optionTone(decision: ProviderApprovalDecision) {
+  if (decision === "accept") return "primary" as const;
+  if (decision === "acceptForSession") return "secondary" as const;
+  return "text" as const;
 }
 
 export function PendingApprovalCard(props: PendingApprovalCardProps) {
@@ -42,19 +50,22 @@ export function PendingApprovalCard(props: PendingApprovalCardProps) {
   const [explanationOpen, setExplanationOpen] = useState(false);
   return (
     <View className="gap-2.5 rounded-[20px] border border-border bg-card-alt p-4">
-      <Text className="font-ankiel-bold text-2xs uppercase tracking-[1.1px] text-foreground-secondary">
-        <T>Approval needed</T>
-      </Text>
-      <Text className="font-ankiel-bold text-lg text-foreground">
-        {props.approval.appName ?? props.approval.requestKind}
-      </Text>
+      <View className="flex-row items-center gap-2">
+        <PixelStatus kind="attention" />
+        <Text className="min-w-0 flex-1 font-ankiel-medium text-base text-foreground">
+          {m(APPROVAL_REQUEST_LABEL[props.approval.requestKind])}
+        </Text>
+      </View>
+      {props.approval.appName ? (
+        <Text className="font-sans text-sm text-foreground-muted">{props.approval.appName}</Text>
+      ) : null}
       {props.approval.detail ? (
-        <Text className="font-sans text-sm leading-normal text-foreground-secondary">
+        <Text className="font-mono text-sm leading-normal text-foreground">
           {props.approval.detail}
         </Text>
       ) : null}
       {props.approval.reason ? (
-        <Text className="font-sans text-xs leading-normal text-warning-foreground">
+        <Text className="font-sans text-sm leading-normal text-foreground-muted">
           {props.approval.reason}
         </Text>
       ) : null}
@@ -64,7 +75,7 @@ export function PendingApprovalCard(props: PendingApprovalCardProps) {
           accessibilityState={{ expanded: explanationOpen }}
           onPress={() => setExplanationOpen((open) => !open)}
         >
-          <Text className="font-ankiel-bold text-xs text-foreground-secondary underline">
+          <Text className="font-ankiel-medium text-xs text-foreground-secondary underline">
             {m(FULL_ACCESS_OVERRIDE_QUESTION)}
           </Text>
           {explanationOpen ? (
@@ -83,20 +94,14 @@ export function PendingApprovalCard(props: PendingApprovalCardProps) {
         </Text>
       ) : null}
       {warning ? (
-        <Text className="font-sans text-xs leading-normal text-warning-foreground">{warning}</Text>
+        <Text className="font-sans text-xs leading-normal text-foreground-muted">{warning}</Text>
       ) : null}
       <View className="gap-2">
         {options.map((option) => (
           <Button
             key={option.decision}
             label={option.label}
-            tone={
-              option.decision === "accept"
-                ? "primary"
-                : option.decision === "decline"
-                  ? "danger"
-                  : "secondary"
-            }
+            tone={optionTone(option.decision)}
             disabled={disabled || !props.canOperateThread}
             onPress={() => void props.onRespond(props.approval.requestId, option.decision)}
             fullWidth

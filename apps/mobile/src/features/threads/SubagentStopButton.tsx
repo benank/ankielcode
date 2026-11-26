@@ -50,7 +50,7 @@ export function SubagentStopButton(props: {
     <View className={props.className}>
       <IconButton
         icon="stop.fill"
-        variant="danger"
+        variant="tonal"
         accessibilityLabel={
           workflow
             ? stopping
@@ -68,7 +68,6 @@ export function SubagentStopButton(props: {
               ? gt("Every running agent in {label} stops.", { label })
               : gt("Stop {label}?", { label }),
             confirmText: gt("Stop", { $context: "verb, confirm button" }),
-            destructive: true,
             onConfirm: () => void stop(),
           })
         }

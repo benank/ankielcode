@@ -401,7 +401,6 @@ export function ThreadDetailsPrRow({
           label: gt("Resolve", { $context: "verb, resolves merge conflicts" }),
           pendingLabel: gt("Preparing..."),
           pending: handoff === "conflicts",
-          destructive: true,
           suffix: newThreadSuffix,
           tooltip:
             composerTarget === undefined
@@ -414,7 +413,6 @@ export function ThreadDetailsPrRow({
             label: gt("Ready", { $context: "verb, marks a draft pull request ready for review" }),
             pendingLabel: gt("Marking..."),
             pending: actionPending,
-            destructive: false,
             suffix: null,
             tooltip: gt(
               "Mark this {term, select, mr {merge request} cr {change request} other {pull request}} as ready for review",
@@ -427,7 +425,6 @@ export function ThreadDetailsPrRow({
               label: gt("Fix", { $context: "verb, fixes failing checks" }),
               pendingLabel: gt("Fix", { $context: "verb, fixes failing checks" }),
               pending: handoff === "findings",
-              destructive: true,
               suffix:
                 handoff === "findings" ? (
                   <Spinner size="xs" aria-label={gt("Preparing fix")} />
@@ -445,7 +442,6 @@ export function ThreadDetailsPrRow({
                 label: gt("Merge", { $context: "verb, merges a pull request" }),
                 pendingLabel: gt("Merging..."),
                 pending: actionPending,
-                destructive: false,
                 suffix: null,
                 tooltip: gt(
                   "Merge this {term, select, mr {merge request} cr {change request} other {pull request}} ({method, select, merge {merge} squash {squash} rebase {rebase} fastForward {fast-forward} other {merge}})",
@@ -562,7 +558,7 @@ export function ThreadDetailsPrRow({
                       variant="ghost"
                       size="sm"
                       part="meta"
-                      tone={trailingAction.destructive ? "destructive" : "primary"}
+                      tone="primary"
                       disabled={actionPending || handoff !== null}
                       onClick={trailingAction.onClick}
                     />

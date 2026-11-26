@@ -46,7 +46,7 @@ export function ThreadDetailsControl({
   panel?: boolean;
   part?: keyof typeof parts;
   multiline?: boolean;
-  tone?: "default" | "muted" | "primary" | "destructive";
+  tone?: "default" | "muted" | "primary";
 }) {
   const control = useRender({
     defaultTagName: "button",
@@ -63,15 +63,10 @@ export function ThreadDetailsControl({
           tone === "primary" &&
             // The row surface forces a faint hover fill with !important; the pill keeps its own.
             "bg-black/[0.035] text-foreground/80 hover:text-foreground hover:!bg-black/[0.06] data-pressed:!bg-black/[0.06] dark:bg-white/[0.08] dark:hover:!bg-white/[0.12] dark:data-pressed:!bg-white/[0.12]",
-          tone === "destructive" &&
-            "text-destructive hover:text-destructive data-pressed:text-destructive",
           // Keep the inset focus ring clear of the 20px PR action label.
           part === "meta" &&
-            (tone === "primary" || tone === "destructive") &&
+            tone === "primary" &&
             "h-5 focus-visible:ring-1 focus-visible:ring-offset-0",
-          part === "meta" &&
-            tone === "destructive" &&
-            "bg-destructive/10 hover:!bg-destructive/16 data-pressed:!bg-destructive/16 dark:hover:!bg-destructive/16 dark:data-pressed:!bg-destructive/16",
           className,
         ),
       },

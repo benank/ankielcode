@@ -36,7 +36,7 @@ function ChildApproval({ entry }: { entry: ChildThreadApproval }) {
       </pre>
       {approval.appName ? <p className="mt-2 text-muted-foreground">{approval.appName}</p> : null}
       {approval.responseCapability !== "live" ? (
-        <p className="mt-2 text-warning">
+        <p className="mt-2 text-muted-foreground">
           <T>Provider process is gone. Interrupt or restart the child thread to respond.</T>
         </p>
       ) : null}
@@ -48,7 +48,6 @@ function ChildApproval({ entry }: { entry: ChildThreadApproval }) {
       ) : null}
       <div className="mt-2 flex flex-wrap gap-2">
         <ComposerPendingApprovalActions
-          presentation="composer"
           requestId={approval.requestId}
           isResponding={responding}
           canRespond={approval.responseCapability === "live"}

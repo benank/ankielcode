@@ -300,7 +300,7 @@ function ThreadServersList(props: ThreadServersPanelProps) {
                             size="icon-xs"
                             variant="ghost"
                             part="icon"
-                            tone="destructive"
+                            tone="muted"
                             aria-label={gt("Stop localhost:{port}", { port: server.port })}
                             disabled={stoppingKey !== null}
                             onClick={() => void stop(server)}

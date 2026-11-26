@@ -273,7 +273,7 @@ export function ConnectionEnvironmentRow(props: {
               <IconButton
                 accessibilityLabel={gt("Remove environment")}
                 icon="trash"
-                variant="danger"
+                variant="tonal"
                 onPress={() => props.onRemove(props.environment.environmentId)}
               />
             </View>

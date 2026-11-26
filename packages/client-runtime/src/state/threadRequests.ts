@@ -66,6 +66,15 @@ export interface ThreadPendingApproval {
 
 export const FULL_ACCESS_OVERRIDE_QUESTION = msg("Why am I being asked this?");
 
+/** What each approval asks for, shared so every client titles a request the same way. */
+export const APPROVAL_REQUEST_LABEL = {
+  command: msg("Command approval"),
+  "file-change": msg("File change approval"),
+  "file-read": msg("File read approval"),
+  permission: msg("App permission approval"),
+  "mcp-elicitation": msg("App access approval"),
+} satisfies Record<ProviderRequestKind, string>;
+
 export function fullAccessOverrideExplanation(
   override: ProviderApprovalFullAccessOverride,
   resolve: MFunctionType = mFallback,

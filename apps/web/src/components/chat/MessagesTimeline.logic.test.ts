@@ -3512,7 +3512,7 @@ describe("v2 run and attempt history", () => {
     );
   });
 
-  it("hides the interruption request while keeping intervening work and the result", () => {
+  it("folds a stopped turn under its stopped label and hides the interruption rows", () => {
     const runId = "turn-1" as never;
     const interruptEvent = (type: "run_interrupt_request" | "run_interrupt_result") => ({
       position: type === "run_interrupt_request" ? 0 : 2,
@@ -3576,8 +3576,9 @@ describe("v2 run and attempt history", () => {
       supportsConversationRollback: false,
     });
 
-    expect(rows.map((row) => row.id)).toEqual(["work-entry", "interrupt-result"]);
-    expect(rows.some((row) => row.kind === "turn-fold")).toBe(false);
+    expect(rows).toEqual([
+      expect.objectContaining({ kind: "turn-fold", runId, label: "You stopped after 3s" }),
+    ]);
 
     const stoppedRows = deriveMessagesTimelineRows({
       timelineEntries: [
@@ -3612,9 +3613,14 @@ describe("v2 run and attempt history", () => {
       isWorking: false,
       turnDiffSummaries: [],
       supportsConversationRollback: false,
+      expandedRunIds: new Set([runId]),
     });
-    expect(stoppedRows.map((row) => row.id)).toEqual(["stopped-command-entry", "interrupt-result"]);
-    expect(stoppedRows[0]).toMatchObject({
+    expect(stoppedRows.map((row) => row.id)).toEqual([
+      "turn-fold:turn-1",
+      "stopped-command-entry",
+      "interrupt-result",
+    ]);
+    expect(stoppedRows[1]).toMatchObject({
       kind: "work",
       displayLabel: "sleep 90 && echo slept",
     });

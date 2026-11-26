@@ -113,3 +113,31 @@ it.each<{ focus: string; control: ReactNode; toggles: boolean }>([
     expect(onToggleOption.mock.calls).toEqual(toggles ? [["question", "Incremental"]] : []);
   },
 );
+
+it("selects an option on click without answering until Enter", async () => {
+  const onToggleOption = vi.fn();
+  const onAdvance = vi.fn();
+  await using screen = await render(
+    <ComposerPendingUserInputPanel
+      pendingUserInputs={[
+        { ...prompt, questions: [{ ...prompt.questions[0]!, multiSelect: false }] },
+      ]}
+      cwd={undefined}
+      threadRef={threadRef}
+      respondingRequestIds={[]}
+      answers={{}}
+      questionIndex={0}
+      onToggleOption={onToggleOption}
+      onAdvance={onAdvance}
+      onDismiss={vi.fn()}
+    />,
+  );
+
+  await screen.getByRole("button", { name: /Incremental/ }).click();
+  expect(onToggleOption.mock.calls).toEqual([["question", "Incremental"]]);
+  expect(onAdvance).not.toHaveBeenCalled();
+
+  await userEvent.keyboard("{Enter}");
+  expect(onAdvance).toHaveBeenCalledOnce();
+  expect(onToggleOption).toHaveBeenCalledOnce();
+});

@@ -291,14 +291,13 @@ export function ComposerActionButton(props: {
   readonly disabled?: boolean;
   readonly icon: ComponentProps<typeof SymbolView>["name"];
   readonly onPress: () => void;
-  readonly variant?: "primary" | "danger";
   // Menu injects onLongPress on Android and onTouchStart/onPress on iOS.
   readonly onLongPress?: PressableProps["onLongPress"];
   readonly onTouchStart?: PressableProps["onTouchStart"];
 }) {
   const { scale, smallIconSize } = useAndroidControlSizing();
   const circleSize = Math.round((props.size === "large" ? 44 : 30) * scale);
-  const fadeIcon = props.disabled === true && props.variant !== "danger";
+  const fadeIcon = props.disabled === true;
   return (
     <Pressable
       accessibilityLabel={props.accessibilityLabel}
@@ -315,11 +314,7 @@ export function ComposerActionButton(props: {
         style={{ width: circleSize, height: circleSize }}
         className={cn(
           "items-center justify-center rounded-full",
-          props.variant === "danger"
-            ? "bg-danger"
-            : props.disabled
-              ? "bg-foreground/12"
-              : "bg-primary",
+          props.disabled ? "bg-foreground/12" : "bg-primary",
         )}
       >
         {/* Fade the icon as one layer: a translucent tint, or opacity on a Tabler icon (which
@@ -332,13 +327,7 @@ export function ComposerActionButton(props: {
             name={props.icon}
             size={props.size === "large" ? Math.round(20 * scale) : smallIconSize}
             weight="semibold"
-            tintColorClassName={
-              props.variant === "danger"
-                ? "accent-danger-foreground"
-                : props.disabled
-                  ? "accent-foreground"
-                  : "accent-primary-foreground"
-            }
+            tintColorClassName={props.disabled ? "accent-foreground" : "accent-primary-foreground"}
             type="monochrome"
           />
         </View>
@@ -359,7 +348,7 @@ export function ComposerToolbarButton(props: {
   readonly onPress?: () => void;
   readonly showChevron?: boolean;
   readonly textTransform?: "none" | "uppercase";
-  readonly variant?: "default" | "primary" | "danger";
+  readonly variant?: "default" | "primary";
   readonly className?: string;
   readonly style?: StyleProp<ViewStyle>;
 }) {
@@ -370,9 +359,7 @@ export function ComposerToolbarButton(props: {
       ? props.disabled
         ? "accent-icon-subtle"
         : "accent-primary-foreground"
-      : variant === "danger"
-        ? "accent-danger-foreground"
-        : "accent-icon";
+      : "accent-icon";
 
   return (
     <Pressable
@@ -389,20 +376,16 @@ export function ComposerToolbarButton(props: {
           ? props.disabled
             ? "bg-subtle-strong"
             : "bg-primary"
-          : variant === "danger"
-            ? "bg-danger"
-            : props.active
-              ? "bg-primary"
-              : "bg-subtle",
+          : props.active
+            ? "bg-primary"
+            : "bg-subtle",
         variant === "default"
           ? props.active
             ? "border-primary"
             : "border-border-subtle"
-          : variant === "danger"
-            ? "border-danger-border"
-            : props.disabled
-              ? "border-border-subtle"
-              : "border-primary-foreground/20",
+          : props.disabled
+            ? "border-border-subtle"
+            : "border-primary-foreground/20",
         props.className,
       )}
       style={({ pressed }) => [

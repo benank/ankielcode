@@ -23,20 +23,14 @@ export function IconButton(props: IconButtonProps) {
         ? FilledTonalIconButton
         : FilledIconButton;
   const containerColor =
-    variant === "primary"
-      ? colors["--color-primary"]
-      : variant === "danger"
-        ? colors["--color-danger"]
-        : colors["--color-secondary"];
+    variant === "primary" ? colors["--color-primary"] : colors["--color-secondary"];
   const iconTint = props.disabled
     ? "accent-icon-subtle"
     : variant === "primary"
       ? "accent-primary-foreground"
-      : variant === "danger"
-        ? "accent-danger-foreground"
-        : variant === "tonal"
-          ? "accent-secondary-foreground"
-          : (props.tintColorClassName ?? "accent-foreground");
+      : variant === "tonal"
+        ? "accent-secondary-foreground"
+        : (props.tintColorClassName ?? "accent-foreground");
   return (
     <View
       accessible

@@ -229,7 +229,6 @@ function SendActionButton(props: {
       accessibilityLabel={props.accessibilityLabel}
       size={props.size}
       icon={presentation.icon}
-      variant="primary"
       disabled={props.disabled}
       onPress={() => props.onSend()}
     />
@@ -1106,7 +1105,6 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
                     size={usesLargeControls ? "large" : "regular"}
                     accessibilityLabel={gt("Stop agent")}
                     icon="stop.fill"
-                    variant="danger"
                     disabled={!props.canOperateThread}
                     onPress={props.onStopThread}
                   />
@@ -1174,7 +1172,6 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
                       size={usesLargeControls ? "large" : "regular"}
                       accessibilityLabel={gt("Stop agent")}
                       icon="stop.fill"
-                      variant="danger"
                       disabled={!props.canOperateThread}
                       onPress={props.onStopThread}
                     />

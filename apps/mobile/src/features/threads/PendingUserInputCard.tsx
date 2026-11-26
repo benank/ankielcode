@@ -21,6 +21,7 @@ import Animated, {
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
 import { ControlPill } from "../../components/ui/ControlPill";
+import { PixelStatus } from "../../components/PixelStatus";
 import { cn } from "../../lib/cn";
 import { resolveMarkdownLinkPresentation } from "../../lib/markdownLinks";
 import { SelectableMarkdownText } from "../../native/SelectableMarkdownText";
@@ -177,7 +178,6 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
     <ControlPill
       accessibilityLabel={gt("Stop", { $context: "verb, stops the thread" })}
       icon="stop.fill"
-      variant="danger"
       className="h-9 w-9"
       disabled={!props.canOperateThread}
       onPress={props.onStopThread}
@@ -200,7 +200,8 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
         onPress={props.onToggleCollapsed}
         className="min-h-10 flex-1 flex-row items-center gap-2 active:opacity-70"
       >
-        <Text className="font-ankiel-bold text-2xs uppercase tracking-[1.1px] text-foreground-secondary">
+        <PixelStatus kind="attention" />
+        <Text className="font-ankiel-medium text-sm text-foreground">
           <T>User input needed</T>
         </Text>
         <Text className="font-sans text-xs text-foreground-muted">
@@ -247,12 +248,10 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
           onPress={props.onToggleCollapsed}
           className="flex-1 flex-row items-start gap-2"
         >
-          <View className="flex-1 gap-2.5">
-            <Text className="font-ankiel-bold text-2xs uppercase tracking-[1.1px] text-foreground-secondary">
+          <View className="min-h-8 flex-1 flex-row items-center gap-2">
+            <PixelStatus kind="attention" />
+            <Text className="font-ankiel-medium text-base text-foreground">
               <T>User input needed</T>
-            </Text>
-            <Text className="font-ankiel-bold text-lg text-foreground">
-              <T>Fill in the pending answers</T>
             </Text>
           </View>
           <View className="h-8 w-8 items-center justify-center rounded-full bg-subtle-strong">
@@ -288,7 +287,7 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
           return (
             <View key={question.id} className="gap-2 pt-1">
               <Text
-                className="font-ankiel-bold text-xs uppercase tracking-[1px] text-foreground-muted"
+                className="font-ankiel-medium text-xs text-foreground-muted"
                 style={proseDirectionStyle(question.header, setDirection)}
               >
                 {question.header}
@@ -315,7 +314,7 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
                         disabled={responseDisabled}
                         className={cn(
                           "min-h-12 w-full rounded-2xl border px-3.5 py-3",
-                          selected ? "border-primary bg-primary/10" : "border-border bg-input",
+                          selected ? "border-foreground bg-input" : "border-border bg-input",
                         )}
                         onPress={() =>
                           props.onSelectOption(
@@ -382,7 +381,7 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
       <Button
         label={gt("Submit answers")}
         fullWidth
-        tone={props.answers ? "primary" : "secondary"}
+        tone="primary"
         disabled={!props.canOperateThread || responseDisabled || props.answers === null}
         onPress={() => void props.onSubmit()}
       />

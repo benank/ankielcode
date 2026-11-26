@@ -105,7 +105,6 @@ export function IssueCommentComposer(props: {
       size={chrome.controlSize}
       accessibilityLabel={props.posting ? gt("Posting comment") : gt("Post comment")}
       icon="arrow.up"
-      variant="primary"
       disabled={!canSend}
       onPress={() => void send()}
     />

@@ -1078,20 +1078,11 @@ function deriveTurnFolds(input: {
   retainedAssistantReplyEntryIds: ReadonlySet<string>;
   resolve: MessageResolver;
 }): ReadonlyMap<string, TurnFold> {
-  const interruptedRunIds = new Set<RunId>();
   const promptIndexByRunId = new Map<RunId, number>();
   for (const [index, entry] of input.timelineEntries.entries()) {
     if (timelineEntryStartsResponse(entry)) {
       const runId = responseBoundaryRunId(entry);
       if (runId !== null && !promptIndexByRunId.has(runId)) promptIndexByRunId.set(runId, index);
-    }
-    if (
-      entry.kind === "event" &&
-      entry.projectedItem.item.runId !== null &&
-      (entry.projectedItem.item.type === "run_interrupt_request" ||
-        entry.projectedItem.item.type === "run_interrupt_result")
-    ) {
-      interruptedRunIds.add(entry.projectedItem.item.runId);
     }
   }
 
@@ -1178,7 +1169,6 @@ function deriveTurnFolds(input: {
   for (const [runId, group] of groupsByRunId) {
     if (
       input.unfoldedRunIds.has(runId) ||
-      interruptedRunIds.has(runId) ||
       runlessFailedKeys.has(runId) ||
       (input.runlessWorkActive && runId === runlessKey)
     ) {
@@ -1689,8 +1679,10 @@ export function deriveMessagesTimelineRows(
   const timelineEntryById = new Map(timelineEntries.map((entry) => [entry.id, entry]));
   const collapsedEntryIds = new Set<string>();
   const collapsedFoldMemberIds = new Set<string>();
+  const collapsedFoldRunIds = new Set<RunId>();
   for (const fold of foldsByAnchorEntryId.values()) {
     if (!input.expandedRunIds?.has(fold.runId)) {
+      collapsedFoldRunIds.add(fold.runId);
       for (const entryId of fold.hiddenEntryIds) {
         collapsedEntryIds.add(entryId);
       }
@@ -1923,14 +1915,15 @@ export function deriveMessagesTimelineRows(
       appendActiveWorkRows();
     }
 
-    // A stopped compaction's own divider already says it stopped.
+    // A stopped compaction's own divider, or a collapsed turn's "You stopped" label, already says it stopped.
     if (
       timelineEntry.kind === "event" &&
       (timelineEntry.projectedItem.item.type === "run_interrupt_request" ||
         (timelineEntry.projectedItem.item.type === "run_interrupt_result" &&
           timelineEntry.projectedItem.item.runId !== null &&
-          compactionRuns.has(timelineEntry.projectedItem.item.runId) &&
-          compactedRunIds.has(timelineEntry.projectedItem.item.runId)))
+          (collapsedFoldRunIds.has(timelineEntry.projectedItem.item.runId) ||
+            (compactionRuns.has(timelineEntry.projectedItem.item.runId) &&
+              compactedRunIds.has(timelineEntry.projectedItem.item.runId)))))
     ) {
       continue;
     }

@@ -8,7 +8,6 @@ import { SymbolView } from "./AppSymbol";
 const VARIANT_CLASS_NAMES = {
   standard: ["", "accent-foreground"],
   primary: ["rounded-full bg-primary", "accent-primary-foreground"],
-  danger: ["rounded-full bg-danger", "accent-danger-foreground"],
   tonal: ["rounded-full bg-secondary", "accent-secondary-foreground"],
 } as const;
 

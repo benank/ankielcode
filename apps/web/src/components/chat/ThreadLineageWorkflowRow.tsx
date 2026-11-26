@@ -174,7 +174,7 @@ export function ThreadLineageWorkflowRow({
                     size="icon-xs"
                     variant="ghost"
                     part="icon"
-                    tone="destructive"
+                    tone="muted"
                     aria-label={gt("Stop workflow {label}", { label })}
                     disabled={stopDisabled}
                     onClick={onStop}

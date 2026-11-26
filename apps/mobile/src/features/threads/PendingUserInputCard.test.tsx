@@ -37,6 +37,7 @@ vi.mock("../../components/ui/AppText", () => ({
   AppText: ({ children }: Children) => <span>{children}</span>,
 }));
 vi.mock("../../components/ui/ControlPill", () => ({ ControlPill: () => null }));
+vi.mock("../../components/PixelStatus", () => ({ PixelStatus: () => null }));
 vi.mock("../../components/ui/Button", () => ({ Button: () => null }));
 vi.mock("./QuestionAttachments", () => ({ QuestionAttachments: () => null }));
 vi.mock("../files/FileMarkdownPreview", () => ({

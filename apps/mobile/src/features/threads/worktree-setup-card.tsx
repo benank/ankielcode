@@ -336,7 +336,7 @@ function SetupDetailsSheet({
           <View className="mt-3 flex-row items-center justify-end gap-4 border-t border-border pt-1">
             <Button
               label={gt("Cancel setup")}
-              tone="danger"
+              tone="secondary"
               accessibilityLabel={gt("Cancel worktree setup")}
               onPress={() => {
                 onClose();

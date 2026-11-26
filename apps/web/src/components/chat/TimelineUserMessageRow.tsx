@@ -46,6 +46,7 @@ import {
   CheckCheckIcon,
   CheckIcon,
   ChevronDownIcon,
+  CircleSlashIcon,
   DownloadIcon,
   EyeIcon,
   type LucideIcon,
@@ -438,20 +439,15 @@ export function FoldedMessageHeader(props: {
   );
 }
 
+// A steer still waiting when the run stopped never reached the agent; say so quietly, like a receipt.
 function UserMessageProjectedStatus({ row }: { row: Extract<TimelineRow, { kind: "message" }> }) {
+  const gt = useGT();
   const status = row.projectedItem?.item.status;
-  if (
-    status === undefined ||
-    status === "completed" ||
-    status === "pending" ||
-    status === "waiting"
-  )
-    return null;
+  if (status !== "failed" && status !== "cancelled" && status !== "interrupted") return null;
   return (
-    <div className="me-1 flex items-center gap-1.5">
-      <span className="rounded-full border border-destructive/25 bg-destructive/8 px-1.5 py-0.5 text-3xs font-medium text-destructive">
-        {status}
-      </span>
+    <div className="me-1 flex items-center gap-1 text-2xs text-muted-foreground">
+      <CircleSlashIcon aria-hidden="true" className="size-3" />
+      {gt("Not delivered", { $context: "message receipt, the agent never received this message" })}
     </div>
   );
 }

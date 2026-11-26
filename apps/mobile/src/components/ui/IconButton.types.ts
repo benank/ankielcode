@@ -6,7 +6,7 @@ export interface IconButtonProps {
   readonly onPress?: () => void;
   readonly disabled?: boolean;
   readonly selected?: boolean;
-  readonly variant?: "standard" | "primary" | "tonal" | "danger";
+  readonly variant?: "standard" | "primary" | "tonal";
   readonly tintColorClassName?: string;
   /** Android only. */
   readonly iconScale?: number;

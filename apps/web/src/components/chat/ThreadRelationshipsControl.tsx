@@ -816,7 +816,7 @@ export function ThreadRelationshipsPanel(props: {
                     size="icon-xs"
                     variant="ghost"
                     part="icon"
-                    tone="destructive"
+                    tone="muted"
                     aria-label={gt("Stop subagent {threadTitle}", { threadTitle })}
                     disabled={stoppingId !== null}
                     onClick={() => void stopSubagent(threadId, agent)}
