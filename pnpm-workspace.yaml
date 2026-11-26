@@ -96,7 +96,7 @@ overrides:
   "@legendapp/list": 3.9.1
   "@pierre/diffs": 1.7.0-beta.4
   "@react-native-menu/menu": 2.0.0
-  "@react-navigation/native-stack": 7.21.0
+  "@react-navigation/native-stack": 7.21.1
   dbus-next: 0.10.2
   node-pty: 1.2.0-beta.15
   react-native-gesture-handler: 3.5.0
@@ -115,7 +115,7 @@ overrides:
   # Earlier React Navigation declarations create a circular type alias in TypeScript 7.
   # Move this with @react-navigation/native: an older core than it requires crashes
   # every native stack at launch.
-  "@react-navigation/core": 7.24.0
+  "@react-navigation/core": 7.25.0
   # The dbus-next patch drops usocket from the package, but pnpm resolves from the
   # registry manifest, so the edge has to be cut here as well.
   "dbus-next>usocket": "-"
@@ -205,7 +205,7 @@ patchedDependencies:
   # and keeps drag selections intact across virtualized scroll renders.
   "@pierre/diffs@1.7.0-beta.4": patches/@pierre__diffs@1.7.0-beta.4.patch
   "@react-native-menu/menu@2.0.0": patches/@react-native-menu__menu@2.0.0.patch
-  "@react-navigation/native-stack@7.21.0": patches/@react-navigation%2Fnative-stack@7.21.0.patch
+  "@react-navigation/native-stack@7.21.1": patches/@react-navigation%2Fnative-stack@7.21.1.patch
   dbus-next@0.10.2: patches/dbus-next@0.10.2.patch
   node-pty@1.2.0-beta.15: patches/node-pty@1.2.0-beta.15.patch
   react-native-gesture-handler@3.5.0: patches/react-native-gesture-handler@3.5.0.patch
