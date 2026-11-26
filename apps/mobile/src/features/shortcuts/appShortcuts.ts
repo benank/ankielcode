@@ -4,6 +4,7 @@ import type { NavigationState } from "@react-navigation/native";
 import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@ankielcode/contracts";
 
 import { m } from "../../i18n/messages";
+import type { DonatedThread } from "../../native/appIntents";
 import type { RecentThreadShortcut } from "../../persistence/imperative";
 
 const MAX_RECENT_THREAD_SHORTCUTS = 3;
@@ -63,14 +64,29 @@ function threadShortcutLabel(thread: RecentThreadShortcut): string {
     : m(msg("Thread", { $context: "fallback name for an untitled thread" }));
 }
 
-/** Launcher shortcuts survive updates; allowlist destinations so malformed or stale paths cannot navigate. */
-export function shortcutHref(action: Action): string | null {
-  const href = action.params?.href;
+/** Launcher shortcuts, App Shortcuts and Spotlight entries outlive updates; allowlist destinations so malformed or stale paths cannot navigate. */
+export function allowedShortcutHref(href: unknown): string | null {
   if (typeof href !== "string") {
     return null;
   }
 
   return href === NEW_TASK_SHORTCUT_HREF || THREAD_SHORTCUT_HREF_PATTERN.test(href) ? href : null;
+}
+
+export function shortcutHref(action: Action): string | null {
+  return allowedShortcutHref(action.params?.href);
+}
+
+export function recentThreadKey(thread: RecentThreadShortcut): string {
+  return threadShortcutHref(thread);
+}
+
+/** Spotlight and Siri get only titles the app already shows; an untitled thread has nothing to find. */
+export function buildDonatedThreads(recents: ReadonlyArray<RecentThreadShortcut>): DonatedThread[] {
+  return recents.slice(0, MAX_RECENT_THREAD_SHORTCUTS).flatMap((thread) => {
+    const title = thread.title.trim();
+    return title.length > 0 ? [{ path: threadShortcutHref(thread), title }] : [];
+  });
 }
 
 export function withRecentThreadShortcut(

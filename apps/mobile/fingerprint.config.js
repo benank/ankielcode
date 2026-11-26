@@ -22,5 +22,11 @@ module.exports = {
       filePath: "../../native/apple-speech/AppleSpeechEngine.swift",
       reasons: ["appleSpeech"],
     },
+    // Copied into the iOS app target by plugins/withIosAppShortcuts.cjs rather than built as a pod.
+    {
+      type: "dir",
+      filePath: "modules/ankiel-app-intents/app-target",
+      reasons: ["appShortcuts"],
+    },
   ],
 };

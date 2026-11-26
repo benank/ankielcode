@@ -422,6 +422,7 @@ const config: ExpoConfig = {
       },
     ],
     "./plugins/withIosCocoaPodsUuidCache.cjs",
+    "./plugins/withIosAppShortcuts.cjs",
     "./plugins/withIosDevLauncherPhaseAlwaysRuns.cjs",
     // Compile out the unused pedometer to avoid an iOS motion purpose string.
     ["expo-sensors", { motionPermission: false }],

@@ -5,6 +5,7 @@ included:
   - modules/ankiel-terminal/ios
   - modules/ankiel-review-diff/ios
   - modules/ankiel-voice-transcription/ios
+  - modules/ankiel-app-intents
 
 excluded:
   - ios/Pods

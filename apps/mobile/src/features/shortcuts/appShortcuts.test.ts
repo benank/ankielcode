@@ -4,6 +4,8 @@ import type { NavigationState } from "@react-navigation/native";
 import type { RecentThreadShortcut } from "../../persistence/imperative";
 import {
   activeThreadRef,
+  allowedShortcutHref,
+  buildDonatedThreads,
   buildShortcutActions,
   shortcutHref,
   withRecentThreadShortcut,
@@ -37,6 +39,33 @@ describe("buildShortcutActions", () => {
     ]);
     expect(actions[1]?.params?.href).toBe("/threads/env%201/thread%2F2");
     expect(actions[1]?.title).toBe("Spaced out");
+  });
+});
+
+describe("buildDonatedThreads", () => {
+  it("donates the launcher's titled threads under the paths the app opens", () => {
+    const donated = buildDonatedThreads([
+      { environmentId: "env 1", threadId: "thread/2", title: "  Fix the build " },
+      thread("untitled", "   "),
+      thread("b"),
+      thread("c"),
+      thread("past-the-cap"),
+    ]);
+    expect(donated).toEqual([
+      { path: "/threads/env%201/thread%2F2", title: "Fix the build" },
+      { path: "/threads/env-b/thread-b", title: "Thread b" },
+    ]);
+    for (const { path } of donated) expect(allowedShortcutHref(path)).toBe(path);
+  });
+});
+
+describe("allowedShortcutHref", () => {
+  it("passes the paths App Shortcuts and Spotlight hand back and drops anything else", () => {
+    expect(allowedShortcutHref("/new")).toBe("/new");
+    expect(allowedShortcutHref("/threads/env-1/thread-2")).toBe("/threads/env-1/thread-2");
+    for (const path of [null, undefined, "", "/settings", "ankielcode://new", "/threads/a"]) {
+      expect(allowedShortcutHref(path)).toBe(null);
+    }
   });
 });
 
