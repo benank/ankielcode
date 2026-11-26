@@ -54,7 +54,10 @@ export function SubagentRow(props: {
   const detail = subagentCardDetail(presentation.detail);
   return (
     <View className="flex-row gap-3">
-      <View className="h-5 justify-center">
+      <View
+        accessibilityLabel={presentation.statusLabel}
+        className="h-5 w-4 items-center justify-center"
+      >
         <SubagentStatusDot tone={presentation.tone} placement="sheet" />
       </View>
       <View className="min-w-0 flex-1 gap-1">
@@ -66,21 +69,27 @@ export function SubagentRow(props: {
             >
               {presentation.title}
             </Text>
-            <Text
-              accessibilityElementsHidden
-              importantForAccessibility="no"
-              className="shrink-0 text-xs text-foreground-muted"
-            >
-              ·
-            </Text>
-            <Text
-              className={cn(
-                "shrink-0 text-xs font-ankiel-medium",
-                SUBAGENT_TONE_TEXT_CLASS[presentation.tone],
-              )}
-            >
-              {presentation.statusLabel}
-            </Text>
+            {presentation.tone === "working" ? null : (
+              <>
+                <Text
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                  className="shrink-0 text-xs text-foreground-muted"
+                >
+                  ·
+                </Text>
+                <Text
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                  className={cn(
+                    "shrink-0 text-xs font-ankiel-medium",
+                    SUBAGENT_TONE_TEXT_CLASS[presentation.tone],
+                  )}
+                >
+                  {presentation.statusLabel}
+                </Text>
+              </>
+            )}
             {presentation.runsOn !== null ? (
               <Text numberOfLines={1} className="shrink text-xs text-foreground-muted">
                 <T>

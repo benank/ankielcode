@@ -1,5 +1,6 @@
 import { View } from "react-native";
 
+import { PixelStatus } from "../../components/PixelStatus";
 import { cn } from "../../lib/cn";
 import type { SubagentRowTone } from "./threadAgentsPresentation";
 
@@ -24,6 +25,8 @@ export function SubagentStatusDot({
   readonly tone: SubagentRowTone;
   readonly placement?: "inline" | "sheet";
 }) {
+  // A working agent shows the sidebar's pixel light; its name carries no status word.
+  if (tone === "working") return <PixelStatus kind="working" />;
   return (
     <View
       className={cn(

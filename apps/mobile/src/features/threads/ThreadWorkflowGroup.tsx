@@ -205,7 +205,7 @@ function WorkflowMemberRow(props: {
       onPress={() => threadId !== null && props.onOpen(threadId)}
       className="min-h-11 flex-row gap-3 border-t border-border-subtle px-4 py-3 active:opacity-70"
     >
-      <View className="h-5 justify-center">
+      <View className="h-5 w-4 items-center justify-center">
         <SubagentStatusDot tone={presentation.tone} placement="sheet" />
       </View>
       <View className="min-w-0 flex-1 gap-1">
@@ -218,23 +218,27 @@ function WorkflowMemberRow(props: {
             >
               {presentation.title}
             </Text>
-            <Text
-              accessibilityElementsHidden
-              importantForAccessibility="no"
-              textRole="label"
-              className="shrink-0 text-foreground-muted"
-            >
-              ·
-            </Text>
-            <Text
-              textRole="label"
-              className={cn(
-                "shrink-0 font-ankiel-medium",
-                SUBAGENT_TONE_TEXT_CLASS[presentation.tone],
-              )}
-            >
-              {presentation.statusLabel}
-            </Text>
+            {presentation.tone === "working" ? null : (
+              <>
+                <Text
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                  textRole="label"
+                  className="shrink-0 text-foreground-muted"
+                >
+                  ·
+                </Text>
+                <Text
+                  textRole="label"
+                  className={cn(
+                    "shrink-0 font-ankiel-medium",
+                    SUBAGENT_TONE_TEXT_CLASS[presentation.tone],
+                  )}
+                >
+                  {presentation.statusLabel}
+                </Text>
+              </>
+            )}
           </View>
           <WorkflowElapsed timing={member} />
           {canOpen ? (
