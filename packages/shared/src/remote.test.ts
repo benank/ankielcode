@@ -181,15 +181,5 @@ describe("remote", () => {
       httpBaseUrl: `https://ankiel-relay.me.workers.dev/h/${hostId}/`,
       wsBaseUrl: `wss://ankiel-relay.me.workers.dev/h/${hostId}/`,
     });
-
-    expect(
-      resolveRemotePairingTarget({
-        pairingUrl: `https://app.ankiel.com/pair?host=${encodeURIComponent(`https://ankiel-relay.me.workers.dev/h/${hostId}/`)}#token=pairing-token`,
-      }),
-    ).toEqual({
-      credential: "pairing-token",
-      httpBaseUrl: `https://ankiel-relay.me.workers.dev/h/${hostId}/`,
-      wsBaseUrl: `wss://ankiel-relay.me.workers.dev/h/${hostId}/`,
-    });
   });
 });

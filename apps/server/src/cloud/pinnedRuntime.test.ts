@@ -790,6 +790,8 @@ it.layer(NodeServices.layer)("prunePinnedRuntimes", (it) => {
         ? path.join(yield* fs.makeTempDirectoryScoped({ prefix: "ankiel-pinned-link-" }), "home")
         : baseDir;
       if (linkedHome) yield* fs.symlink(baseDir, home);
+      // macOS's temp directory is itself behind the /var symlink.
+      const pathDir = linkedHome ? yield* fs.realPath(ownDir) : ownDir;
 
       // The launch agent puts the running runtime's own directory on PATH.
       const removed = yield* prunePinnedRuntimes({ baseDir: home, keep: ["2.0.0"] }).pipe(
@@ -800,7 +802,7 @@ it.layer(NodeServices.layer)("prunePinnedRuntimes", (it) => {
         Effect.provideService(HostProcess.Platform, "darwin"),
         Effect.provideService(HostProcess.Environment, {
           ANKIEL_INSTALL_BIN_DIR: binDir,
-          PATH: onPath ? `${ownDir}:/usr/bin:/bin` : "/usr/bin:/bin",
+          PATH: onPath ? `${pathDir}:/usr/bin:/bin` : "/usr/bin:/bin",
         }),
       );
       assert.deepEqual(removed, ["1.0.0"]);

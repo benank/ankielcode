@@ -1689,11 +1689,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         assert.isAbove(String(clientTokens["github.com"]).length, 0);
 
         yield* serverSettings.updateSettings({ sourceControlHosts: forClient });
+        yield* serverSettings.updateSettings({
+          sourceControlHosts: { github: { hosts: { "github.com": { account: "work" } } } },
+        });
         const kept = (yield* serverSettings.getSettings).sourceControlHosts;
+        assert.deepEqual(kept.github?.hosts, { "github.com": { account: "work" } });
         assert.deepEqual(kept.github?.tokens, {
           "github.com": "ghp_dotcom",
           "ghe.acme.test": "ghp_ghe",
         });
+        assert.include(
+          yield* fileSystem.readFileString(serverConfig.settingsPath),
+          '"account": "work"',
+        );
 
         const cleared = yield* serverSettings.updateSettings({
           sourceControlHosts: {
