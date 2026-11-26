@@ -6,7 +6,7 @@ import { T, useGT, useLocale, useMessages } from "gt-react-native";
 import * as Dialog from "../../components/ui/Dialog";
 import { createV5StackNavigator as createNativeStackNavigator } from "../../native/createV5StackNavigator";
 import { useSheetStackOptions } from "../layout/nested-stacks";
-import { DEFAULT_SERVER_SETTINGS, ProviderInstanceId } from "@ankielcode/contracts";
+import { ProviderInstanceId } from "@ankielcode/contracts";
 import {
   modelPreferencesMigrationPatch,
   resolveModelPreferences,
@@ -98,9 +98,9 @@ import { useSelectedThreadWorktree } from "../../state/use-selected-thread-workt
 import { providerWorkspaceSnapshotRefresh } from "../../state/provider-workspace-snapshot-refresh";
 import { threadAllowsProviderSwitch } from "../../state/thread-provider-switching";
 import { environmentServerConfigsAtom, serverEnvironment } from "../../state/server";
-import { mobilePreferencesAtom } from "../../state/preferences";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { useNewTaskFlow } from "./new-task-flow-provider";
+import { useModelFavorites } from "./use-model-favorites";
 import { ScreenContent } from "../../components/ui/ScreenContent";
 import {
   createProviderCatalogRefreshRunner,
@@ -118,7 +118,6 @@ import {
 import {
   canCommitPendingModel,
   findReasoningDescriptor,
-  modelFavoriteKey,
   partitionCatalogModels,
   pendingModelAfterPress,
   providerSectionIsCollapsed,
@@ -142,10 +141,6 @@ const THREAD_SETTINGS_CATALOG_EXIT_TRANSITION = FadeOut.duration(120);
 const THREAD_SETTINGS_OPTIONS_LAYOUT_TRANSITION = LinearTransition.duration(180);
 const THREAD_SETTINGS_OPTION_ENTER_TRANSITION = FadeIn.duration(140);
 const THREAD_SETTINGS_OPTION_EXIT_TRANSITION = FadeOut.duration(100);
-const EMPTY_MODEL_FAVORITES: ReadonlyArray<{
-  readonly provider: ProviderInstanceId;
-  readonly model: string;
-}> = [];
 const FAVORITES_SECTION_KEY = "__favorites__";
 // Servers that predate `migrateModelPreferences` drop it and keep reporting null favorites.
 const attemptedMigrationGenerations = new Map<EnvironmentId, number>();
@@ -363,7 +358,12 @@ function ThreadSettingsSessionProvider(
 ) {
   const gt = useGT();
   const registry = use(RegistryContext);
-  const preferences = useAtomValue(mobilePreferencesAtom);
+  const {
+    preferences,
+    legacyFavorites,
+    loaded: favoritesLoaded,
+    favoriteKeys,
+  } = useModelFavorites(props.environmentId);
   const configs = useAtomValue(environmentServerConfigsAtom);
   const config = props.environmentId ? configs.get(props.environmentId) : undefined;
   const settings = config?.settings;
@@ -389,14 +389,6 @@ function ThreadSettingsSessionProvider(
           ),
         )
       : props.providerGroups;
-  const legacyFavorites = AsyncResult.isSuccess(preferences)
-    ? (preferences.value.modelFavorites ?? EMPTY_MODEL_FAVORITES)
-    : EMPTY_MODEL_FAVORITES;
-  const favoritesLoaded =
-    settings !== undefined && (settings.favorites !== null || AsyncResult.isSuccess(preferences));
-  const modelFavorites = resolveModelPreferences(settings ?? DEFAULT_SERVER_SETTINGS, {
-    favorites: legacyFavorites,
-  }).favorites;
   const saveSettings = useAtomCommand(serverEnvironment.updateSettings, "model favorites update");
   const saveDefaultPermission = useAtomCommand(serverEnvironment.updateSettings);
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- writes the one-time legacy model favorites migration to server settings once per connection
@@ -421,9 +413,6 @@ function ThreadSettingsSessionProvider(
     saveSettings,
     settings,
   ]);
-  const favoriteKeys = new Set(
-    modelFavorites.map((favorite) => modelFavoriteKey(favorite.provider, favorite.model)),
-  );
   const toggleFavorite = async (option: ModelOption) => {
     const environmentId = props.environmentId;
     if (!favoritesLoaded || !environmentId) return;

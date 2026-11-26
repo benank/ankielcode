@@ -72,7 +72,7 @@ using the executable you selected.
 ## Models and threads
 
 The model list comes from your Antigravity account, including Claude and GPT models
-when your plan has them. The thinking slider in the composer shows the levels the selected model supports. A resumed thread keeps its
+when your plan has them. The composer's thinking control shows the levels the selected model supports. A resumed thread keeps its
 selected model. If access to that model ends, select another available model
 before continuing.
 

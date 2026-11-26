@@ -80,7 +80,8 @@ import {
   ComposerToolbarRow,
 } from "../../components/ComposerToolbar";
 import { formatTokens } from "@ankielcode/shared/usageFormat";
-import { ComposerModelPicker, type ComposerModelPickerPage } from "./ComposerModelPicker";
+import { COMPOSER_MODEL_COMMAND_OPENS_SETTINGS, ComposerModelPicker } from "./ComposerModelPicker";
+import type { ComposerModelPickerPage } from "./ComposerModelPicker.types";
 import { rememberModelOptions } from "../../state/use-model-option-memory";
 import { selectThreadCatalogModel, selectThreadModel } from "../../state/thread-model-selection";
 import {
@@ -443,7 +444,9 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
     offersUsageLimits: usageLimitsOffered,
     onUsageLimits:
       usageLimitsOffered && draftAttachments.length === 0 ? openUsageLimits : undefined,
-    onOpenModelPicker: () => setModelPickerPage("models"),
+    onOpenModelPicker: COMPOSER_MODEL_COMMAND_OPENS_SETTINGS
+      ? () => openSettings()
+      : () => setModelPickerPage("models"),
     modelOptions: mentionModelOptions,
     modelProviders: props.serverConfig?.providers,
     ...(props.onFreshSession === undefined ? {} : { onFreshSession: props.onFreshSession }),

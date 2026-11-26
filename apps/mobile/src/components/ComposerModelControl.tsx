@@ -10,18 +10,15 @@ import { AppText as Text } from "./ui/AppText";
 import { ComposerInlineControl } from "./ComposerToolbar";
 import { ProviderIcon, ProviderInstanceIcon, providerInstanceNameLabel } from "./ProviderIcon";
 
-export function ComposerModelControl(props: {
+type ComposerModelControlState = {
   readonly modelOption: ModelOption | null;
   readonly selection: ModelSelection | null;
   readonly provider: ProviderDriverKind | undefined;
   readonly reportedSelection?: ModelSelection | null | undefined;
   readonly prompt: string;
-  readonly surfaceColor: string;
-  readonly disabled?: boolean;
-  readonly size?: "regular" | "large";
-  readonly iconOnly?: boolean;
-  readonly onPress: () => void;
-}) {
+};
+
+function useComposerModelControlLabels(props: ComposerModelControlState) {
   const gt = useGT();
   const m = useMessages();
   const descriptors = resolveProviderOptionDescriptors({
@@ -51,17 +48,38 @@ export function ComposerModelControl(props: {
         showBadge: badge.showBadge,
       })
     : null;
+  const accessibilityLabel = [
+    gt("Model and reasoning settings"),
+    label,
+    badge?.showBadge ? badge.displayName : null,
+    summary,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  return { summary, badge, label, providerNameLabel, accessibilityLabel };
+}
+
+/** The control's spoken label, for a native menu that wraps it and takes its touches. */
+export function useComposerModelControlAccessibilityLabel(props: ComposerModelControlState) {
+  return useComposerModelControlLabels(props).accessibilityLabel;
+}
+
+export function ComposerModelControl(
+  props: ComposerModelControlState & {
+    readonly surfaceColor: string;
+    readonly disabled?: boolean;
+    readonly size?: "regular" | "large";
+    readonly iconOnly?: boolean;
+    /** Omitted when a native menu wraps the control and takes its touches. */
+    readonly onPress?: () => void;
+  },
+) {
+  const { summary, badge, label, providerNameLabel, accessibilityLabel } =
+    useComposerModelControlLabels(props);
   const shortLabel = props.modelOption?.shortName ?? label;
   return (
     <ComposerInlineControl
-      accessibilityLabel={[
-        gt("Model and reasoning settings"),
-        label,
-        badge?.showBadge ? badge.displayName : null,
-        summary,
-      ]
-        .filter(Boolean)
-        .join(", ")}
+      accessibilityLabel={accessibilityLabel}
       size={props.size}
       disabled={props.disabled}
       emphasized
