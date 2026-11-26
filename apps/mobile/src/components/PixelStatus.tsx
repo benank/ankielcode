@@ -16,6 +16,7 @@ import Svg, { Path } from "react-native-svg";
 
 import { useAppearancePreferences } from "../features/settings/appearance/AppearancePreferencesProvider";
 import type { MobileThemeVariables } from "../lib/mobileTheme";
+import { useScreenVisible } from "../lib/useScreenVisible";
 
 export type { PixelStatusKind };
 
@@ -34,12 +35,15 @@ export const STATUS_TONE_VARIABLE: Record<PixelStatusTone, keyof MobileThemeVari
 export function PixelStatus(props: { readonly kind: PixelStatusKind }) {
   const { themeVariables } = useAppearancePreferences();
   const reduceMotion = useReducedMotion();
+  const visible = useScreenVisible();
   const animation = PIXEL_ANIMATIONS[props.kind];
   const strip = pixelSpriteStrip(props.kind);
   const color = themeVariables[STATUS_TONE_VARIABLE[animation.tone]];
   const frames = strip.frameCount;
   const lastFrameY = -(frames - 1) * PITCH;
-  const animated = frames > 1 && !reduceMotion;
+  // Only endless loops pause off screen; a finite flourish would replay on every return.
+  const infinite = animation.iterations === "infinite";
+  const animated = frames > 1 && !reduceMotion && (visible || !infinite);
   const [progress] = useState(() => new Animated.Value(0));
 
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- drives a native-driver animation, which lives outside React
@@ -53,13 +57,13 @@ export function PixelStatus(props: { readonly kind: PixelStatusKind }) {
       useNativeDriver: true,
     });
     const loop = Animated.loop(step, {
-      iterations: animation.iterations === "infinite" ? -1 : animation.iterations,
+      iterations: infinite ? -1 : animation.iterations,
     });
     loop.start();
     return () => loop.stop();
-  }, [animated, animation.durationMs, animation.iterations, progress]);
+  }, [animated, animation.durationMs, animation.iterations, infinite, progress]);
 
-  const restY = animation.iterations === "infinite" ? 0 : lastFrameY;
+  const restY = infinite ? 0 : lastFrameY;
   const translateY = animated ? progress.interpolate(pixelStripSteps(frames)) : restY;
 
   return (

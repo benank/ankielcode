@@ -3,9 +3,22 @@ import { AccessibilityInfo, AppState } from "react-native";
 
 type Listener = () => void;
 
+// Every list row that gates motion subscribes, so they share one native listener.
+const appStateListeners = new Set<Listener>();
+let appStateSubscription: { remove: () => void } | null = null;
+
 export function subscribeAppState(onChange: Listener): () => void {
-  const subscription = AppState.addEventListener("change", () => onChange());
-  return () => subscription.remove();
+  const listener = () => onChange();
+  appStateListeners.add(listener);
+  appStateSubscription ??= AppState.addEventListener("change", () => {
+    for (const notify of appStateListeners) notify();
+  });
+  return () => {
+    appStateListeners.delete(listener);
+    if (appStateListeners.size > 0) return;
+    appStateSubscription?.remove();
+    appStateSubscription = null;
+  };
 }
 
 export function isAppActive(): boolean {

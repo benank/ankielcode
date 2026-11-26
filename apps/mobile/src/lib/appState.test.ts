@@ -3,10 +3,17 @@ import { describe, expect, it, vi } from "vite-plus/test";
 const native = vi.hoisted(() => ({
   enabled: false,
   listeners: new Set<(enabled: boolean) => void>(),
+  appStateListeners: new Set<() => void>(),
 }));
 
 vi.mock("react-native", () => ({
-  AppState: { currentState: "active", addEventListener: vi.fn() },
+  AppState: {
+    currentState: "active",
+    addEventListener: (_event: string, listener: () => void) => {
+      native.appStateListeners.add(listener);
+      return { remove: () => native.appStateListeners.delete(listener) };
+    },
+  },
   AccessibilityInfo: {
     addEventListener: (_event: string, listener: (enabled: boolean) => void) => {
       native.listeners.add(listener);
@@ -16,7 +23,30 @@ vi.mock("react-native", () => ({
   },
 }));
 
-import { readReduceMotionEnabled, subscribeReduceMotion } from "./appState";
+import { readReduceMotionEnabled, subscribeAppState, subscribeReduceMotion } from "./appState";
+
+describe("app state store", () => {
+  it("fans one native listener out to every subscriber", () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const unsubscribeFirst = subscribeAppState(first);
+    const unsubscribeSecond = subscribeAppState(second);
+    expect(native.appStateListeners.size).toBe(1);
+
+    for (const emit of native.appStateListeners) emit();
+    expect(first).toHaveBeenCalledOnce();
+    expect(second).toHaveBeenCalledOnce();
+
+    unsubscribeFirst();
+    expect(native.appStateListeners.size).toBe(1);
+    unsubscribeSecond();
+    expect(native.appStateListeners.size).toBe(0);
+
+    const unsubscribeAgain = subscribeAppState(first);
+    expect(native.appStateListeners.size).toBe(1);
+    unsubscribeAgain();
+  });
+});
 
 describe("reduce motion store", () => {
   it("reseeds from native after observation stops and restarts", async () => {

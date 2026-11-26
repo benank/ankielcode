@@ -23,7 +23,6 @@ import { type AppSymbolName, SymbolView } from "../../components/ui/AppSymbol";
 import { MaskedView } from "@expo/ui/community/masked-view";
 import type { LegendListRef } from "@legendapp/list/react-native";
 import { AnimatedLegendList } from "@legendapp/list/reanimated";
-import { useIsFocused } from "@react-navigation/native";
 import {
   useEffect,
   useId,
@@ -71,7 +70,8 @@ import {
 import { AppText as Text } from "../../components/ui/AppText";
 import { AnkielWordmark } from "../../components/AnkielWordmark";
 import { BrowserAppIcon } from "./BrowserAppIcon";
-import { useAppActive, useReduceMotionEnabled } from "../../lib/appState";
+import { useReduceMotionEnabled } from "../../lib/appState";
+import { useScreenVisible } from "../../lib/useScreenVisible";
 import { cn } from "../../lib/cn";
 import { THREAD_WORK_ROW_MIN_HEIGHT, type deriveThreadWorkLogSizing } from "../../lib/layout";
 import {
@@ -282,9 +282,8 @@ export function ShimmeringWorkContent(props: {
 }) {
   const [availableWidth, setAvailableWidth] = useState(0);
   const [textWidth, setTextWidth] = useState(0);
-  const appIsActive = useAppActive();
   const reducedMotion = useReduceMotionEnabled();
-  const screenIsFocused = useIsFocused();
+  const visible = useScreenVisible();
   const progress = useAnimatedValue(0);
   const gradientId = `work-shimmer-${useId().replaceAll(":", "")}`;
   const contentWidth = Math.min(
@@ -298,7 +297,7 @@ export function ShimmeringWorkContent(props: {
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- starts the native-driver shimmer loop while visible and active, and stops it on cleanup
   useEffect(() => {
     progress.setValue(0);
-    if (contentWidth <= 0 || reducedMotion || !appIsActive || !screenIsFocused) return;
+    if (contentWidth <= 0 || reducedMotion || !visible) return;
     const loop = NativeAnimated.loop(
       NativeAnimated.timing(progress, {
         toValue: 1,
@@ -309,7 +308,7 @@ export function ShimmeringWorkContent(props: {
     );
     loop.start();
     return () => loop.stop();
-  }, [appIsActive, contentWidth, progress, reducedMotion, screenIsFocused]);
+  }, [contentWidth, progress, reducedMotion, visible]);
 
   // One timing covers the sweep and the pause, so the native driver loops it
   // without JS. The React Compiler memoizes these, so re-renders don't rebuild
@@ -343,7 +342,7 @@ export function ShimmeringWorkContent(props: {
         toolIcon={props.toolIcon}
         onTextLayout={(event) => setTextWidth(event.nativeEvent.lines[0]?.width ?? 0)}
       />
-      {!reducedMotion && appIsActive && screenIsFocused && contentWidth > 0 ? (
+      {!reducedMotion && visible && contentWidth > 0 ? (
         <NativeAnimated.View
           pointerEvents="none"
           accessible={false}
