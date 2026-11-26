@@ -7,7 +7,11 @@ const publishedThemes = vi.hoisted(() => ({
 vi.mock(import("../state/server"), async () => {
   const { Atom } = await import("effect/reactivity");
   publishedThemes.atom = Atom.make<ReadonlyArray<EnvironmentTheme> | null>([]);
-  return { themeServerEnvironmentThemesAtom: publishedThemes.atom } as never;
+  return {
+    themeServerEnvironmentThemesAtom: publishedThemes.atom,
+    // Source control state, loaded beside the theme, reads each environment's config.
+    serverEnvironment: { configValueAtom: Atom.family(() => Atom.make(null)) },
+  } as never;
 });
 const refreshTheme = vi.hoisted(() => vi.fn());
 vi.mock(import("./useTheme"), () => ({ refreshTheme }) as never);

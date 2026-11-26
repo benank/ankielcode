@@ -1,5 +1,4 @@
-import { SourceControlProviderKind, type VcsStatusResult } from "@ankielcode/contracts";
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
+import type { VcsStatusResult } from "@ankielcode/contracts";
 import { resolveAutoFeatureBranchName } from "@ankielcode/shared/git";
 import { assert, describe, it } from "vite-plus/test";
 import {
@@ -8,7 +7,6 @@ import {
   hasUsableGitMenuContent,
   requiresDefaultBranchConfirmation,
   resolveChangesTotals,
-  resolveDefaultBranchActionDialogCopy,
   resolveFeatureBranchUnavailableReason,
   resolveLiveThreadBranchUpdate,
   resolveQuickAction,
@@ -223,35 +221,6 @@ describe("when: ref has no upstream configured", () => {
       label: "Publish repository",
       disabled: false,
     });
-  });
-});
-
-describe("when: the ref is on GitLab", () => {
-  const gitLab = {
-    sourceControlProvider: {
-      kind: SourceControlProviderKind.make("gitlab"),
-      name: "GitLab",
-      baseUrl: "https://gitlab.com",
-    },
-  };
-
-  it("names merge requests in actions and the default-ref dialog", () => {
-    const ahead = status({ ...gitLab, hasUpstream: false, aheadCount: 2 });
-    assert.equal(resolveQuickAction(ahead, false).label, "Push & create MR");
-    assert.equal(
-      resolveQuickAction(status({ ...gitLab, hasWorkingTreeChanges: true }), false).label,
-      "Commit, push & MR",
-    );
-    assert.equal(buildMenuItems(ahead, false).find((item) => item.id === "pr")?.label, "Create MR");
-
-    const copy = resolveDefaultBranchActionDialogCopy({
-      action: "create_pr",
-      branchName: "main",
-      includesCommit: false,
-      terminology: sourceControlClients.get("gitlab").changeRequest,
-    });
-    assert.equal(copy.title, "Push & create MR from default ref?");
-    assert.include(copy.description, "create a merge request on");
   });
 });
 

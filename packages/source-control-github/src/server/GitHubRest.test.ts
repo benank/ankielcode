@@ -17,7 +17,7 @@ import * as Redacted from "effect/Redacted";
 import * as TestClock from "effect/testing/TestClock";
 import * as Tracer from "effect/Tracer";
 import { ChildProcessSpawner } from "effect/process";
-import { VcsProcessTimeoutError } from "@ankielcode/contracts";
+import { DEFAULT_SERVER_SETTINGS, VcsProcessTimeoutError } from "@ankielcode/contracts";
 import { HttpClient, HttpClientResponse, HttpClientRequest } from "effect/http";
 import { GraphQLClient } from "effect/graphql";
 
@@ -222,6 +222,7 @@ describe("GitHubRest", () => {
         }),
       );
       const host = TestSourceControlHost.layer({
+        settings: { ...DEFAULT_SERVER_SETTINGS, githubIntegrationEnabled: true },
         process: {
           run: (input) => {
             expect(input.command).toBe("gh");

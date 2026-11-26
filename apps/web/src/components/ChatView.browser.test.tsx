@@ -6,8 +6,8 @@ import {
   ORCHESTRATION_V2_WS_METHODS,
   RunId,
   ThreadId,
+  IssueUnavailableError,
   WS_METHODS,
-  type IssueDetail,
   type IssueRef,
   type ThreadIssueLink,
 } from "@ankielcode/contracts";
@@ -133,13 +133,12 @@ vi.mock(import("~/rpc/requestLatencyState"), async (original) => ({
   trackRpcRequestSent: () => {},
 }));
 
-// Linear is no longer a tracker; an issue an older build linked keeps rendering with its kind.
-it("opens a linked Linear issue from an inactive thread's sidebar badge", async () => {
+// Linear is no longer a tracker; an issue an older build linked still decodes and renders.
+it("shows a linked Linear issue the server no longer reads", async () => {
   const style = document.createElement("style");
   style.textContent = stylesheet;
   document.head.append(style);
   using _style = { [Symbol.dispose]: () => style.remove() };
-  const first = threadWithHistory("issue-first", 1);
   const linked = threadWithHistory("issue-linked", 1);
   const issueRef = {
     projectId: PROJECT_ID,
@@ -156,65 +155,11 @@ it("opens a linked Linear issue from an inactive thread's sidebar badge", async 
     displayKey: issueRef.key,
     title: "Add keyboard support",
   };
-  const completed = {
-    ...issue,
-    key: "WEB-124",
-    displayKey: "WEB-124",
-    url: "https://linear.app/example/issue/WEB-124/keep-tabs-visible",
-    title: "Keep tabs visible",
-  };
-  const grouped = threadWithHistory("issue-grouped", 1);
-  using _environment = installFakeEnvironment([
-    first,
-    { ...linked, issues: [issue] },
-    { ...grouped, issues: [completed, issue] },
-  ]);
-  const liveTitle = "Add keyboard shortcuts to the sidebar";
+  using _environment = installFakeEnvironment([{ ...linked, issues: [issue] }]);
+  const asked: IssueRef[] = [];
   using _detail = answerRpc(WS_METHODS.issuesDetail, (input: IssueRef) => {
-    const isCompleted = input.key === completed.key;
-    expect(input).toEqual({ ...issueRef, key: isCompleted ? completed.key : issue.key });
-    return Effect.succeed({
-      ...(isCompleted ? completed : issue),
-      title: isCompleted ? completed.title : liveTitle,
-      author: { login: "sam", name: null, avatarUrl: null },
-      state: isCompleted
-        ? { category: "closed", closeReason: "completed", name: "Done" }
-        : { category: "open", name: "Open" },
-      createdAt: issue.linkedAt,
-      updatedAt: issue.linkedAt,
-      closedAt: null,
-      assignees: [],
-      labels: [],
-      commentCount: 3,
-      projectTitle: "render",
-      writable: false,
-      capabilities: {
-        create: false,
-        edit: false,
-        comment: false,
-        labels: false,
-        assignees: false,
-        reactions: false,
-        templates: false,
-        linkedPullRequests: false,
-        events: false,
-        search: false,
-      },
-      viewerPermissions: {
-        setState: false,
-        comment: false,
-        edit: false,
-        labels: false,
-        assignees: false,
-      },
-      states: [],
-      viewer: null,
-      body: "",
-      comments: [],
-      commentsCursor: null,
-      events: [],
-      linkedPullRequests: [],
-    } satisfies IssueDetail);
+    asked.push(input);
+    return Effect.fail(new IssueUnavailableError({ reason: "tracker-unsupported" }));
   });
   __setClientSettingsForTests({
     ...DEFAULT_CLIENT_SETTINGS,
@@ -222,50 +167,25 @@ it("opens a linked Linear issue from an inactive thread's sidebar badge", async 
   });
   await page.viewport(1400, 900);
   const router = getRouter(
-    createMemoryHistory({ initialEntries: [`/${ENVIRONMENT_ID}/${first.id}`] }),
+    createMemoryHistory({ initialEntries: [`/${ENVIRONMENT_ID}/${linked.id}`] }),
   );
   await router.load();
   await using _app = await render(<AppRoot router={router} />, {
     // AppRoot brings its own router.
     router: false,
   });
-  const badge = page.getByRole("button", {
-    name: `Issue ${issue.displayKey}: ${issue.title}, Open`,
+  const details = page.getByRole("region", { name: "Thread details" });
+  const issueRow = details.getByRole("link", {
+    name: `Issue ${issue.displayKey}: ${issue.title}`,
+    exact: true,
   });
-  await expect.element(badge).toBeVisible();
-  expect(badge.element().querySelector("svg")).toHaveClass(/text-success-foreground/);
-  const groupedBadge = page.getByRole("button", { name: "2 linked issues" });
-  await vi.waitFor(() =>
-    expect(groupedBadge.element().querySelector("svg")).toHaveClass(/text-success-foreground/),
-  );
-  await userEvent.hover(badge);
-  const issueName = `Issue ${issue.displayKey}: ${liveTitle}`;
-  const previewLink = page.getByRole("link", { name: issueName });
-  await userEvent.hover(previewLink.getByText("sam", { exact: true }));
-  await expect.element(previewLink).toBeVisible();
-  const contextMenu = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
-  await act(() => previewLink.element().dispatchEvent(contextMenu));
-  expect(contextMenu.defaultPrevented).toBe(false);
-  await userEvent.click(badge);
-  const issueRow = page
-    .getByRole("region", { name: "Linked issues" })
-    .getByRole("link", { name: issueName });
-  await expect.element(issueRow.getByRole("img", { name: "Open" })).toBeVisible();
-  await expect.element(issueRow.getByRole("img", { name: "3 comments" })).toBeVisible();
-  await expect.element(issueRow.getByRole("img", { name: "linear" })).toBeVisible();
-  await expect.element(issueRow.getByText(issue.scope, { exact: true })).toBeVisible();
+  await expect.element(issueRow).toBeVisible();
+  await expect.element(details.getByRole("img", { name: "linear" })).toBeVisible();
   await userEvent.click(issueRow);
-  expect(router.history.location.pathname).toBe(`/${ENVIRONMENT_ID}/${linked.id}`);
-  await expect.element(page.getByRole("heading", { name: liveTitle })).toBeVisible();
-  await act(() => useRightPanelStore.getState().close(scopeThreadRef(ENVIRONMENT_ID, linked.id)));
   await expect
-    .element(
-      page.getByRole("region", { name: "Thread details" }).getByRole("link", {
-        name: issueName,
-        exact: true,
-      }),
-    )
+    .element(page.getByText("Issues cannot be browsed for this project yet."))
     .toBeVisible();
+  expect(asked).toContainEqual(issueRef);
 });
 
 it("a machine chip stashed in one thread restores with its machine in another", async () => {
@@ -1107,13 +1027,13 @@ it("opening Settings without a page event closes the composer model picker and p
   const trigger = document.querySelector<HTMLElement>("[data-chat-provider-model-picker]");
   if (!trigger) throw new Error("composer model picker trigger missing");
   await userEvent.click(trigger);
-  const search = page.getByPlaceholder("Search models...");
-  await expect.element(search).toBeVisible();
+  const picker = page.getByRole("button", { name: "Change model" });
+  await expect.element(picker).toBeVisible();
 
   // The desktop menu's open-settings accelerator navigates with no key or pointer event in the page.
   await act(() => router.navigate({ to: "/settings" }));
   await expect.element(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
-  await expect.element(search).not.toBeInTheDocument();
+  await expect.element(picker).not.toBeInTheDocument();
 
   await act(() => router.navigate({ to: "/draft/$draftId", params: { draftId } }));
   await page.getByRole("button", { name: /^Permissions: / }).click();

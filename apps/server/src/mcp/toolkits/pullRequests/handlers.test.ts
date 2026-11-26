@@ -315,71 +315,15 @@ describe("pull request toolkit handlers", () => {
     }),
   );
 
-  it.effect("canonicalizes GitCafe links independently of the thread's project host", () =>
-    Effect.gen(function* () {
-      for (const host of ["git.cafe", "staging.git.cafe"]) {
-        for (const project of [makeProject(), makeProject(null)]) {
-          for (const target of [
-            { host, repository: "Benank/AnkielCode", number: 21353 },
-            { url: `https://${host}/Benank/AnkielCode/pull/21353` },
-            { url: `https://${host}/Benank/AnkielCode/pulls/21353` },
-          ]) {
-            const harness = yield* makeHarness({ project });
-            const result = yield* harness.call("link_pull_request", target);
-            const url = `https://${host}/benank/ankielcode/pulls/21353`;
-            expect(result).toMatchObject({
-              host,
-              repository: "benank/ankielcode",
-              number: 21353,
-              url,
-            });
-            expect(yield* Ref.get(harness.commands)).toMatchObject([
-              {
-                type: "thread.pull-request.link",
-                host,
-                repository: "benank/ankielcode",
-                number: 21353,
-                url,
-              },
-            ]);
-          }
-        }
-      }
-    }),
-  );
-
   it.effect("builds the URL in the project host's own shape", () =>
     Effect.gen(function* () {
-      const harness = yield* makeHarness({
-        project: makeProject({
-          canonicalKey: "gitlab.com/group/sub/project",
-          locator: {
-            source: "git-remote",
-            remoteName: "origin",
-            remoteUrl: "git@gitlab.com:group/sub/project.git",
-          },
-          provider: SourceControlProviderKind.make("gitlab"),
-          displayName: "group/sub/project",
-        }),
-      });
+      const harness = yield* makeHarness({ project: makeProject() });
       const result = yield* harness.call("link_pull_request", {
-        repository: "group/sub/project",
-        number: 42,
-      });
-      expect(result.url).toBe("https://gitlab.com/group/sub/project/-/merge_requests/42");
-      expect(result.host).toBe("gitlab.com");
-      const other = yield* harness.call("link_pull_request", {
-        host: "gitlab.example.test",
-        repository: "team/repo",
-        number: 7,
-      });
-      expect(other.url).toBe("https://gitlab.example.test/team/repo/-/merge_requests/7");
-      const onGitHub = yield* harness.call("link_pull_request", {
-        host: "github.com",
         repository: "acme/web",
         number: 9,
       });
-      expect(onGitHub.url).toBe("https://github.com/acme/web/pull/9");
+      expect(result.url).toBe("https://github.com/acme/web/pull/9");
+      expect(result.host).toBe("github.com");
     }),
   );
 
@@ -402,11 +346,11 @@ describe("pull request toolkit handlers", () => {
         .pipe(Effect.flip);
       expect(error).toMatchObject({ _tag: "PullRequestUrlUnavailableError" });
 
-      const supplied = "https://scm.example.test/tfs/Collection/Project/_git/Repo/pullrequest/123";
+      const supplied = "https://github.com/acme/web/pull/123";
       const fromUrl = yield* harness.call("link_pull_request", { url: supplied });
       expect(fromUrl).toEqual({
-        host: "scm.example.test",
-        repository: "tfs/collection/project/_git/repo",
+        host: "github.com",
+        repository: "acme/web",
         number: 123,
         url: supplied,
         alreadyLinked: false,
@@ -540,18 +484,6 @@ describe("pull request toolkit handlers", () => {
       ]);
     }),
   );
-
-  it("reports an older Forgejo link's HTTP port when listing thread links", () => {
-    const result = listThreadPullRequests(
-      makeThread([
-        makeLink(42, {
-          host: "forge.example",
-          url: "http://forge.example:3000/benank/ankielcode/pulls/42",
-        }),
-      ]),
-    );
-    expect(result.pullRequests[0]?.host).toBe("forge.example:3000");
-  });
 
   it.effect("lists visible links with host state and derived chain order", () =>
     Effect.gen(function* () {
@@ -780,57 +712,29 @@ describe("pull request guide tools", () => {
     () =>
       Effect.gen(function* () {
         const api = makeProject({
-          canonicalKey: "bitbucket.org/acme/api",
+          canonicalKey: "github.com/acme/api",
           locator: {
             source: "git-remote",
             remoteName: "origin",
-            remoteUrl: "git@bitbucket.org:acme/api.git",
+            remoteUrl: "git@github.com:acme/api.git",
           },
-          provider: SourceControlProviderKind.make("bitbucket"),
+          provider: SourceControlProviderKind.make("github"),
           displayName: "acme/api",
           owner: "acme",
           name: "api",
         });
         const harness = yield* makeHarness({ project: api });
         const result = yield* harness.call("read_pull_request_guide", {
-          url: "https://bitbucket.org/acme/web/pull-requests/123",
+          url: "https://github.com/acme/web/pull/123",
         });
         expect(result).toMatchObject({
-          host: "bitbucket.org",
+          host: "github.com",
           repository: "acme/web",
           number: 123,
           guide: null,
           currentHeadSha: "head-1",
         });
       }),
-  );
-
-  it.effect("finds an Azure DevOps checkout for a pull request named by its full path", () =>
-    Effect.gen(function* () {
-      const azure = {
-        ...makeProject({
-          canonicalKey: "dev.azure.com/org/project/_git/web",
-          locator: {
-            source: "git-remote",
-            remoteName: "origin",
-            remoteUrl: "https://dev.azure.com/org/project/_git/web",
-          },
-          provider: SourceControlProviderKind.make("azure-devops"),
-          displayName: "org/project/_git/web",
-          owner: "org",
-          name: "web",
-        }),
-        id: ProjectId.make("project-azure"),
-      };
-      const harness = yield* makeHarness({ projects: [makeProject(), azure] });
-      const result = yield* harness.call("write_pull_request_guides", {
-        pullRequests: [{ host: "dev.azure.com", repository: "org/project/_git/web", number: 9 }],
-      });
-      expect(result.guides.map((guide) => guide.outcome)).toEqual(["started"]);
-      expect((yield* Ref.get(harness.guideRequests)).map((ref) => ref.projectId)).toEqual([
-        "project-azure",
-      ]);
-    }),
   );
 });
 
@@ -939,40 +843,6 @@ describe("source control tools", () => {
       expect(commentsOnly.conversation?.truncated).toBe(false);
       const threadsOnly = yield* harness.call("pull_request_read", { include: ["threads"] });
       expect(threadsOnly.conversation?.truncated).toBe(true);
-    }),
-  );
-
-  it.effect("reads an Azure DevOps PR by number at its organization and project", () =>
-    Effect.gen(function* () {
-      const asked: Array<PullRequestRef> = [];
-      const harness = yield* makeHarness({
-        project: makeProject({
-          canonicalKey: "dev.azure.com/contoso/project/_git/repo",
-          locator: {
-            source: "git-remote",
-            remoteName: "origin",
-            remoteUrl: "https://contoso@dev.azure.com/contoso/project/_git/repo",
-          },
-          provider: SourceControlProviderKind.make("azure-devops"),
-          displayName: "contoso/project/_git/repo",
-          owner: "contoso",
-          name: "repo",
-        }),
-        pullRequests: {
-          detail: (ref) => Effect.sync(() => asked.push(ref)).pipe(Effect.as(detail)),
-          activity: () => Effect.succeed(activity),
-        },
-      });
-      const result = yield* harness.call("pull_request_read", { number: 123 });
-      expect(result).toMatchObject({
-        host: "dev.azure.com",
-        repository: "contoso/project/_git/repo",
-        number: 123,
-        url: "https://dev.azure.com/contoso/project/_git/repo/pullrequest/123",
-      });
-      expect(asked).toMatchObject([
-        { host: "dev.azure.com", repository: "contoso/project/_git/repo", number: 123 },
-      ]);
     }),
   );
 
