@@ -13,7 +13,7 @@ import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-const UPSTREAM_REF = "687a119f0fcaace47e1f1abcc77cec6c813fd6da";
+const UPSTREAM_REF = "3d86e43b075adeba2193ec5c22ac92f55afd82e6";
 const USER_AGENT = "effect-codex-app-server-generator";
 const GITHUB_API_BASE =
   "https://api.github.com/repos/openai/codex/contents/codex-rs/app-server-protocol";
@@ -191,48 +191,6 @@ const DefinitionOverrides: Record<string, Schema.Json> = {
     ],
   },
 };
-
-// Codex sends error codes this ref does not list yet (e.g. `modelNotFound`). A closed enum
-// fails the whole notification decode, which drops a failed `turn/completed` and leaves the turn running.
-const OpenStringEnumDefinitions = new Set(["CodexErrorInfo"]);
-
-function openStringEnum(schema: Schema.Json): Schema.Json {
-  if (!isJsonSchemaNode(schema) || !Array.isArray(schema.oneOf)) return schema;
-  return {
-    ...schema,
-    oneOf: schema.oneOf.map((variant: Schema.Json) =>
-      isJsonSchemaNode(variant) && variant.type === "string" && Array.isArray(variant.enum)
-        ? { type: "string" }
-        : variant,
-    ),
-  };
-}
-
-// Newer Codex identifies a generated image by `fileId` and omits the inline `result`.
-// Requiring `result` fails the whole notification decode and drops the finished image.
-function acceptImageFileIds(schema: Schema.Json): Schema.Json {
-  if (!isJsonSchemaNode(schema) || !Array.isArray(schema.oneOf)) return schema;
-  return {
-    ...schema,
-    oneOf: schema.oneOf.map((variant: Schema.Json) => {
-      if (
-        !isJsonSchemaNode(variant) ||
-        !isJsonSchemaNode(variant.properties) ||
-        !isJsonSchemaNode(variant.properties.type) ||
-        !Array.isArray(variant.properties.type.enum) ||
-        !variant.properties.type.enum.includes("imageGeneration") ||
-        !Array.isArray(variant.required)
-      ) {
-        return variant;
-      }
-      return {
-        ...variant,
-        properties: { ...variant.properties, fileId: { type: "string" } },
-        required: variant.required.filter((key: Schema.Json) => key !== "result"),
-      };
-    }),
-  };
-}
 
 const getGeneratedPaths = Effect.fn("getGeneratedPaths")(function* () {
   const path = yield* Path.Path;
@@ -420,9 +378,7 @@ function adaptSchemaForEffect(value: Schema.Json): Schema.Json {
   if (
     !isJsonSchemaNode(properties) ||
     !Array.isArray(alternatives) ||
-    !alternatives.every(
-      (alternative) => isJsonSchemaNode(alternative) && alternative.type === "object",
-    )
+    !alternatives.every(isObjectAlternative)
   ) {
     return node;
   }
@@ -436,16 +392,39 @@ function adaptSchemaForEffect(value: Schema.Json): Schema.Json {
   const sharedRequired = Array.isArray(required) ? required : [];
   return {
     ...rest,
-    [alternativesKey]: alternatives.map((alternative) => {
-      const branch = alternative as JsonSchemaNode;
-      const branchProperties = isJsonSchemaNode(branch.properties) ? branch.properties : {};
-      const branchRequired = Array.isArray(branch.required) ? branch.required : [];
-      return {
-        ...branch,
-        properties: { ...properties, ...branchProperties },
-        required: [...new Set([...sharedRequired, ...branchRequired])],
-      };
-    }),
+    [alternativesKey]: alternatives.map((alternative) =>
+      foldSharedFields(alternative as JsonSchemaNode, properties, sharedRequired),
+    ),
+  };
+}
+
+// An alternative may itself be a union of objects, as when a variant's own shared fields were folded first.
+function isObjectAlternative(value: Schema.Json): boolean {
+  if (!isJsonSchemaNode(value)) return false;
+  if (value.type === "object") return true;
+  const nested = value.anyOf ?? value.oneOf;
+  return Array.isArray(nested) && nested.every(isObjectAlternative);
+}
+
+function foldSharedFields(
+  branch: JsonSchemaNode,
+  properties: JsonSchemaNode,
+  sharedRequired: ReadonlyArray<Schema.Json>,
+): JsonSchemaNode {
+  if (branch.type !== "object") {
+    const key = "anyOf" in branch ? "anyOf" : "oneOf";
+    const nested = branch[key] as ReadonlyArray<JsonSchemaNode>;
+    return {
+      ...branch,
+      [key]: nested.map((child) => foldSharedFields(child, properties, sharedRequired)),
+    };
+  }
+  const branchProperties = isJsonSchemaNode(branch.properties) ? branch.properties : {};
+  const branchRequired = Array.isArray(branch.required) ? branch.required : [];
+  return {
+    ...branch,
+    properties: { ...properties, ...branchProperties },
+    required: [...new Set([...sharedRequired, ...branchRequired])],
   };
 }
 
@@ -519,13 +498,16 @@ function resolveResponseTypeName(
     "account/gatewayOAuth/read": "GatewayOAuthReadResponse",
     "account/logout": "LogoutAccountResponse",
     "account/rateLimits/read": "GetAccountRateLimitsResponse",
+    "account/securitySetup/read": "GetAccountSecuritySetupResponse",
     "account/usage/read": "GetAccountTokenUsageResponse",
     "account/workspaceMessages/read": "GetWorkspaceMessagesResponse",
+    "accountSession/list": "AccountSessionsResponse",
     "config/batchWrite": "ConfigWriteResponse",
     "config/mcpServer/reload": "McpServerRefreshResponse",
     "config/value/write": "ConfigWriteResponse",
     "configRequirements/read": "ConfigRequirementsReadResponse",
     "externalAgentConfig/import/readHistories": "ExternalAgentConfigImportHistoriesReadResponse",
+    "modelProvider/default/set": "ConfigWriteResponse",
   };
 
   const override = overrides[method];
@@ -727,12 +709,7 @@ const generateFiles = Effect.fn("generateFiles")(function* () {
     for (const [definitionName, definitionSchema] of Object.entries(parsed.definitions ?? {})) {
       aggregateSchemas[localDefinitionNames.get(definitionName)!] = pipe(
         rewriteExternalRefs(
-          DefinitionOverrides[definitionName] ??
-            (OpenStringEnumDefinitions.has(definitionName)
-              ? openStringEnum(definitionSchema)
-              : definitionName === "ThreadItem"
-                ? acceptImageFileIds(definitionSchema)
-                : definitionSchema),
+          DefinitionOverrides[definitionName] ?? definitionSchema,
           localDefinitionNames,
           file.namespace,
           exportNameByQualifiedName,
@@ -767,16 +744,18 @@ const generateFiles = Effect.fn("generateFiles")(function* () {
     }
   }
 
-  const generator = makeJsonSchemaGenerator();
-  for (const [name, schema] of Object.entries(aggregateSchemas).toSorted(([left], [right]) =>
+  const schemaNames = Object.keys(aggregateSchemas).toSorted((left, right) =>
     left.localeCompare(right),
-  )) {
-    aggregateSchemas[name] = adaptSchemaForEffect(schema);
-    generator.addSchema(name, aggregateSchemas[name] as never);
+  );
+  for (const name of schemaNames) {
+    aggregateSchemas[name] = adaptSchemaForEffect(aggregateSchemas[name]!);
   }
 
+  // Every schema is also a component; a named root would duplicate each one under a suffixed name.
   const generatedEntries = new Map<string, string>();
-  const output = generator.generate("openapi-3.1", aggregateSchemas as never, false).trim();
+  const output = makeJsonSchemaGenerator()
+    .generate("openapi-3.1", aggregateSchemas as never, false, { includeSchemas: schemaNames })
+    .trim();
   if (output.length > 0) {
     for (const entry of collectSchemaEntries(output)) {
       if (!generatedEntries.has(entry.name)) {

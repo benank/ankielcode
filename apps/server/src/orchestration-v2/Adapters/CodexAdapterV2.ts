@@ -1341,11 +1341,19 @@ type CodexErrorInfo = CodexSchema.ServerNotification__CodexErrorInfo;
  * state and resume controls; other statuses stay provider or transport errors.
  */
 function codexExhaustionHttpStatus(errorInfo: CodexErrorInfo | null | undefined): number | null {
-  return typeof errorInfo === "object" &&
-    errorInfo !== null &&
-    "responseTooManyFailedAttempts" in errorInfo
-    ? (errorInfo.responseTooManyFailedAttempts.httpStatusCode ?? null)
-    : null;
+  return codexErrorDetail(errorInfo, "responseTooManyFailedAttempts")?.httpStatusCode ?? null;
+}
+
+/** Codex keeps CodexErrorInfo open to unknown objects, so a variant's detail is read structurally. */
+function codexErrorDetail(
+  errorInfo: CodexErrorInfo | null | undefined,
+  key: string,
+): { readonly httpStatusCode: number | null } | undefined {
+  if (typeof errorInfo !== "object" || errorInfo === null) return undefined;
+  const detail = Object.entries(errorInfo).find(([name]) => name === key)?.[1];
+  if (typeof detail !== "object" || detail === null || Array.isArray(detail)) return undefined;
+  const status = "httpStatusCode" in detail ? detail.httpStatusCode : undefined;
+  return { httpStatusCode: typeof status === "number" ? status : null };
 }
 
 function codexErrorHttpStatus(errorInfo: CodexErrorInfo | null | undefined): number | null {
@@ -1375,17 +1383,11 @@ function codexTerminalFailureClass(
   code: string | null,
 ) {
   if (codexUsageLimitError(code, errorInfo)) return "usage_limit";
-  if (typeof errorInfo === "object" && errorInfo !== null) {
-    const transport =
-      "responseStreamDisconnected" in errorInfo
-        ? errorInfo.responseStreamDisconnected
-        : "responseStreamConnectionFailed" in errorInfo
-          ? errorInfo.responseStreamConnectionFailed
-          : "httpConnectionFailed" in errorInfo
-            ? errorInfo.httpConnectionFailed
-            : undefined;
-    if (transport !== undefined && transport.httpStatusCode == null) return "transport_error";
-  }
+  const transport =
+    codexErrorDetail(errorInfo, "responseStreamDisconnected") ??
+    codexErrorDetail(errorInfo, "responseStreamConnectionFailed") ??
+    codexErrorDetail(errorInfo, "httpConnectionFailed");
+  if (transport !== undefined && transport.httpStatusCode === null) return "transport_error";
   return "provider_error";
 }
 
