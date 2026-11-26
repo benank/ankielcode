@@ -137,7 +137,7 @@
     "remark-parse": "catalog:",
     "tailwind-merge": "^3.5.0",
     "unified": "catalog:",
-    "uniwind": "1.13.2"
+    "uniwind": "1.14.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
