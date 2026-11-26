@@ -619,7 +619,8 @@ export function useThreadComposerState(input: {
       text: string,
       hasAttachmentsOrContext: boolean,
     ) => Promise<boolean | "responded">,
-    onWillEnqueue?: () => void,
+    /** Called just before the message enters the outbox; `startsTurn` is false for a steer or queued send. */
+    onWillEnqueue?: (dispatch: { readonly startsTurn: boolean }) => void,
   ) => {
     if (
       selectedThreadShell &&
@@ -894,7 +895,7 @@ export function useThreadComposerState(input: {
       appAtomRegistry.get(fullHistoryThreadKeysAtom)[threadKey] !== true &&
       resumeCompactionTokens(modelSelection, text, metadata.createdAt) !== null;
     const messageId = MessageId.make(metadata.messageId);
-    onWillEnqueue?.();
+    onWillEnqueue?.({ startsTurn: followUpDispatchMode === null && !compactBeforeSend });
     clearThreadComposerError(threadKey);
     const enqueuePromise = enqueueThreadOutboxMessage({
       environmentId: selectedThreadShell.environmentId,

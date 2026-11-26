@@ -109,10 +109,7 @@ import {
   renderCodexInlineDirectivesAsMarkdown,
   splitCodexArtifactTemplateMarkdown,
 } from "@ankielcode/shared/codexMarkdownDirectives";
-import {
-  CHAT_LIST_ANCHOR_OFFSET,
-  resolveChatListAnchoredEndSpace,
-} from "@ankielcode/shared/chatList";
+import { CHAT_LIST_ANCHOR_OFFSET } from "@ankielcode/shared/chatList";
 import { imageMimeType } from "@ankielcode/shared/image";
 import { videoMimeType } from "@ankielcode/shared/video";
 import { SymbolView, type AppSymbolName } from "../../components/ui/AppSymbol";
@@ -243,7 +240,12 @@ import {
   messageFoldRunId,
 } from "../../lib/threadActivity";
 import type { ThreadContentPresentation } from "./threadContentPresentation";
-import { type ThreadWorkGroupScrollPosition } from "./thread-feed-scroll-position";
+import {
+  retargetThreadFeedAnchor,
+  settleThreadFeedAnchorHold,
+  type ThreadFeedAnchor,
+  type ThreadWorkGroupScrollPosition,
+} from "./thread-feed-scroll-position";
 import {
   collapsedWorkLogHeight,
   ThreadDisclosureChevron,
@@ -3736,9 +3738,21 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
   // still leave it hundreds of points short of the end; isAtEnd stays true through that.
   const settling = props.feed.length > 0 && landedListKey !== feedThreadKey;
   const landingFallback = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [feedAnchor, setFeedAnchor] = useState<ThreadFeedAnchor<MessageId> | null>(null);
+  const anchorBlankSpace = useRef(0);
+  const anchorReadyKey = useRef<string | undefined>(undefined);
   const reportMetrics = (ready: boolean) => {
     const state = listRef.current?.getState();
     if (!state) return;
+    const anchorView = {
+      anchorReady: feedAnchor !== null && anchorReadyKey.current === feedAnchor.messageId,
+      blankSpace: anchorBlankSpace.current,
+      // The observed offset only reaches the end once the native inset holds the blank space.
+      atEnd: !settling && state.distanceFromEnd <= 1,
+    };
+    if (settleThreadFeedAnchorHold(feedAnchor, anchorView) !== feedAnchor) {
+      setFeedAnchor((current) => settleThreadFeedAnchorHold(current, anchorView));
+    }
     if (
       settling &&
       ready &&
@@ -3748,7 +3762,10 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
     }
     // Offset 0 before the first positioning, and the gaps while rows measure in, are not the
     // user leaving the end; only a scroll away stops end following.
-    onIsAtEndChange?.(settling || state.isAtEnd || state.isFollowingEnd);
+    // A held anchor turns end follow off without clearing the list's isFollowingEnd.
+    onIsAtEndChange?.(
+      settling || state.isAtEnd || (feedAnchor?.hold !== "held" && state.isFollowingEnd),
+    );
   };
   const handleMetricsChange = () => reportMetrics(loadedListKey === feedThreadKey);
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -3868,12 +3885,15 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
     setViewportHeight((current) => (Math.abs(current - nextHeight) > 1 ? nextHeight : current));
   };
 
-  const anchoredEndSpace = resolveChatListAnchoredEndSpace(
-    presentedFeed,
-    props.anchorMessageId,
-    (entry) => (entry.type === "message" ? entry.id : null),
-    { anchorOffset: anchorTopInset + CHAT_LIST_ANCHOR_OFFSET },
+  const isMessageRow = (messageId: MessageId) => (entry: (typeof presentedFeed)[number]) =>
+    entry.type === "message" && entry.id === messageId;
+  const nextFeedAnchor = retargetThreadFeedAnchor(feedAnchor, props.anchorMessageId, (messageId) =>
+    presentedFeed.some(isMessageRow(messageId)),
   );
+  if (nextFeedAnchor !== feedAnchor) setFeedAnchor(nextFeedAnchor);
+  const anchorIndex =
+    nextFeedAnchor === null ? -1 : presentedFeed.findIndex(isMessageRow(nextFeedAnchor.messageId));
+  const endFollowHeld = anchorIndex >= 0 && nextFeedAnchor?.hold === "held";
   const failedRunIds = failedFeedRunIds(props.feed, props.latestRun);
   const terminalAssistantMessageIds = (() => {
     const terminalIdsByTurn = new Map<RunId, string>();
@@ -3956,7 +3976,11 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
     const list = listRef.current;
     const working = props.activeWorkStartedAt !== null || props.runlessWorkActive === true;
     // An anchor ends end-follow until the reader scrolls, so a streaming turn keeps the live end.
-    if (anchorKey !== null && list && !(working && list.getState().isFollowingEnd)) {
+    if (
+      anchorKey !== null &&
+      list &&
+      !(working && !endFollowHeld && list.getState().isFollowingEnd)
+    ) {
       list.cancelScroll();
       list.anchorVisibleContent({ key: anchorKey });
     }
@@ -4271,12 +4295,33 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
             contentInsetAdjustmentBehavior="never"
             automaticallyAdjustsScrollIndicatorInsets={usesNativeAutomaticInsets}
             scrollIndicatorInsets={{ top: anchorTopInset, bottom: 0 }}
-            {...(anchoredEndSpace ? { anchoredEndSpace } : {})}
+            {...(anchorIndex >= 0
+              ? {
+                  anchoredEndSpace: {
+                    anchorIndex,
+                    anchorOffset: anchorTopInset + CHAT_LIST_ANCHOR_OFFSET,
+                    onSizeChanged: (size: number) => {
+                      anchorBlankSpace.current = size;
+                    },
+                    // A size change only reaches a mounted config, so take the ready size too.
+                    onReady: (info: {
+                      readonly anchorKey: string | undefined;
+                      readonly size: number;
+                    }) => {
+                      anchorBlankSpace.current = info.size;
+                      anchorReadyKey.current = info.anchorKey;
+                      handleMetricsChange();
+                    },
+                  },
+                }
+              : {})}
             contentInsetEndAdjustment={props.contentInsetEndAdjustment}
             keyboardOffset={props.keyboardOffset}
             {...(usesNativeAutomaticInsets ? { contentInset: { top: anchorTopInset } } : {})}
             freeze={props.freeze}
-            maintainScrollAtEnd={jumpReady ? false : THREAD_FEED_MAINTAIN_SCROLL_AT_END}
+            maintainScrollAtEnd={
+              jumpReady || endFollowHeld ? false : THREAD_FEED_MAINTAIN_SCROLL_AT_END
+            }
             maintainScrollAtEndThreshold={THREAD_FEED_MAINTAIN_SCROLL_AT_END_THRESHOLD}
             maintainVisibleContentPosition
             data={groupedFeed}

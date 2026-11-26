@@ -313,7 +313,7 @@ export interface ThreadDetailScreenProps {
       text: string,
       hasAttachmentsOrContext: boolean,
     ) => Promise<boolean | "responded">,
-    onWillEnqueue?: () => void,
+    onWillEnqueue?: (dispatch: { readonly startsTurn: boolean }) => void,
   ) => Promise<MessageId | null>;
   /** Queues a standalone text command, such as `/goal clear`, without touching the draft. */
   readonly onSendCommand: (text: string) => Promise<MessageId | null>;
@@ -1338,7 +1338,10 @@ function ThreadDetailBody(
           }
         : undefined;
     let dismissingKeyboard = false;
-    const messageId = await props.onSendMessage(followUp, declineBeforeDispatch, () => {
+    // The new-task draft starts its thread without reporting a dispatch.
+    let startsTurn = true;
+    const messageId = await props.onSendMessage(followUp, declineBeforeDispatch, (dispatch) => {
+      startsTurn = dispatch.startsTurn;
       if (
         scope.aborted ||
         Platform.OS !== "ios" ||
@@ -1358,16 +1361,14 @@ function ThreadDetailBody(
     const nextAnchorMessageId = resolveThreadFeedSubmissionAnchor({
       currentAnchorMessageId: anchorMessageId,
       submittedMessageId: messageId,
-      hasStartedTurn: props.selectedThread.latestRun !== null,
-      hasUserMessage,
+      startsTurn,
       queuedMessageCount: props.selectedThreadQueueCount,
       deliveryDeferred: props.connectionStateLabel !== "connected",
     });
     setAnchorMessageId(nextAnchorMessageId);
     if (!dismissingKeyboard) composerEditorRef.current?.blur();
-    const followSubmission =
-      contentPresentationKind === "ready" &&
-      (dismissingKeyboard || nextAnchorMessageId === messageId);
+    // Every send scrolls to what it sent; a held anchor no longer follows the end on its own.
+    const followSubmission = contentPresentationKind === "ready";
     if (dismissingKeyboard || followSubmission) {
       // Commit the optimistic row before UIKit chooses the closing scroll offset.
       requestAnimationFrame(() => {
