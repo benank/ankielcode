@@ -332,12 +332,10 @@ const REVIEW_OUTCOME_PRESENTATION = {
       $context: "tooltip: this approval was given before the latest commits were pushed",
     }),
     Icon: CircleCheckIcon,
-    toneClassName: "text-emerald-600 dark:text-emerald-300/90",
-    ringClassName: "ring-2 ring-emerald-500 dark:ring-emerald-400",
-    staleRingClassName:
-      "ring-2 ring-[color-mix(in_srgb,var(--color-emerald-500)_35%,var(--background))] dark:ring-[color-mix(in_srgb,var(--color-emerald-400)_35%,var(--background))]",
-    fillClassName: "fill-emerald-500 dark:fill-emerald-400",
-    badgeVariant: "success",
+    toneClassName: "text-success-foreground",
+    ringClassName: "ring-2 ring-success",
+    staleRingClassName: "ring-2 ring-[color-mix(in_srgb,var(--success)_35%,var(--background))]",
+    fillClassName: "fill-success",
   },
   "changes-requested": {
     label: msg("Changes requested"),
@@ -350,7 +348,6 @@ const REVIEW_OUTCOME_PRESENTATION = {
     ringClassName: "ring-2 ring-destructive",
     staleRingClassName: "ring-2 ring-[color-mix(in_srgb,var(--destructive)_35%,var(--background))]",
     fillClassName: "fill-destructive",
-    badgeVariant: "error",
   },
   dismissed: {
     label: msg("Review dismissed"),
@@ -363,7 +360,6 @@ const REVIEW_OUTCOME_PRESENTATION = {
     staleRingClassName:
       "ring-2 ring-[color-mix(in_srgb,var(--contrast-muted-foreground)_30%,var(--background))]",
     fillClassName: "fill-muted-foreground",
-    badgeVariant: "outline",
   },
 } as const satisfies Record<
   PullRequestReviewOutcome,
@@ -375,7 +371,6 @@ const REVIEW_OUTCOME_PRESENTATION = {
     ringClassName: string;
     staleRingClassName: string;
     fillClassName: string;
-    badgeVariant: "success" | "error" | "outline";
   }
 >;
 
@@ -454,9 +449,12 @@ export function PullRequestReviewOutcomeBadge({
   const m = useMessages();
   const presentation = REVIEW_OUTCOME_PRESENTATION[outcome];
   return (
-    <Badge size="sm" variant={presentation.badgeVariant} className={className}>
+    <Badge size="sm" variant="outline" className={className}>
       <span className="inline-flex items-baseline gap-1">
-        <presentation.Icon aria-hidden className="size-3 self-center" />
+        <presentation.Icon
+          aria-hidden
+          className={cn("size-3 self-center", presentation.toneClassName)}
+        />
         <span>{m(presentation.label)}</span>
       </span>
     </Badge>

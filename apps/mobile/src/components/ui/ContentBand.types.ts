@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 export interface ContentBandProps {
-  readonly tone?: "card" | "warning";
   /** "roomy" for a band holding a block of content, such as a raw patch. */
   readonly spacing?: "compact" | "roomy";
   readonly children: ReactNode;

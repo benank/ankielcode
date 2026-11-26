@@ -363,18 +363,7 @@ export function ScheduledRelativeLabel(props: { value: string | null }) {
 }
 
 function deliveryOutcomeVariant(outcome: string) {
-  if (outcome === "accepted") return "success";
-  if (
-    outcome === "duplicate" ||
-    outcome === "coalesced" ||
-    outcome === "disabled" ||
-    outcome === "rate_limited" ||
-    outcome === "expired"
-  ) {
-    return "warning";
-  }
-  if (outcome === "dispatch_failed" || outcome === "rejected_signature") return "error";
-  return "outline";
+  return outcome === "dispatch_failed" || outcome === "rejected_signature" ? "error" : "outline";
 }
 
 const RUN_STATUS_LABELS: Record<ScheduledTask["lastRunStatus"], string> = {
@@ -385,10 +374,7 @@ const RUN_STATUS_LABELS: Record<ScheduledTask["lastRunStatus"], string> = {
 };
 
 function statusVariant(status: ScheduledTask["lastRunStatus"]) {
-  if (status === "failed") return "error";
-  if (status === "succeeded") return "success";
-  if (status === "running") return "info";
-  return "outline";
+  return status === "failed" ? "error" : "outline";
 }
 
 export function ScheduledTasksSettings(target: {

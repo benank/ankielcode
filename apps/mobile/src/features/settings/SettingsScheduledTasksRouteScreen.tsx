@@ -1538,7 +1538,6 @@ function WebhookScheduleDetails({
           ) : null}
           <Button
             label={rotating ? gt("Rotating…") : gt("Rotate URL")}
-            tone="danger"
             disabled={disabled || rotating}
             onPress={() =>
               Dialog.alert(gt("Rotate URL?"), gt("The current URL stops working immediately."), [

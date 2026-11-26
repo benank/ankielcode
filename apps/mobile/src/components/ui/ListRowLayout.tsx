@@ -26,8 +26,7 @@ export function ListRowLayout({
   meta,
   disabled,
   accessory,
-  tone = "default",
-}: ListRowContentProps & { readonly accessory?: ReactNode; readonly tone?: "default" | "danger" }) {
+}: ListRowContentProps & { readonly accessory?: ReactNode }) {
   const { fontScale } = useWindowDimensions();
   const stackDetail = fontScale >= 1.5;
   return (
@@ -43,7 +42,7 @@ export function ListRowLayout({
           <SymbolView
             name={icon}
             size={Platform.OS === "android" ? 24 : 22}
-            tintColorClassName={tone === "danger" ? "accent-danger-foreground" : "accent-icon"}
+            tintColorClassName="accent-icon"
             type="monochrome"
             weight="regular"
           />
@@ -52,10 +51,7 @@ export function ListRowLayout({
         <View className="size-6 items-center justify-center">{leading}</View>
       ) : null}
       <View className="min-w-0 flex-1 gap-1">
-        <AppText
-          textRole="body"
-          className={tone === "danger" ? "text-danger-foreground" : "text-foreground"}
-        >
+        <AppText textRole="body" className="text-foreground">
           {label}
         </AppText>
         {description ? (

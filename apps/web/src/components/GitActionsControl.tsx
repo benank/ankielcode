@@ -677,7 +677,7 @@ export function PublishRepositoryDialog(props: PublishRepositoryDialogProps) {
                         <TooltipTrigger
                           render={
                             <Button
-                              variant="warning-outline"
+                              variant="outline"
                               size="micro"
                               onClick={(event) => {
                                 event.preventDefault();

@@ -518,7 +518,6 @@ function CloudChoices({ environment, active, onClose }: Props & { onClose: () =>
             {key && canManage ? (
               <Separated>
                 <ListActionRow
-                  tone="danger"
                   label={gt("Remove key from environment")}
                   disabled={saving}
                   onPress={() =>

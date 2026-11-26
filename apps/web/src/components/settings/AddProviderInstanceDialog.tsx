@@ -133,7 +133,7 @@ function ProviderOptionGrid({
             <CheckIcon className="size-3.5 shrink-0" />
           </RadioPrimitive.Indicator>
           {option.badgeLabel ? (
-            <Badge variant="warning" size="sm">
+            <Badge variant="secondary" size="sm">
               {option.badgeLabel}
             </Badge>
           ) : null}

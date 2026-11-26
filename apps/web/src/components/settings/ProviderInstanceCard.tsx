@@ -1228,7 +1228,7 @@ export function ProviderInstanceCard({
   const editorHeaderAction = (
     <div className="flex shrink-0 items-center gap-1.5">
       {driverOption?.badgeLabel ? (
-        <Badge variant="warning" size="sm" className="shrink-0">
+        <Badge variant="secondary" size="sm" className="shrink-0">
           {driverOption.badgeLabel}
         </Badge>
       ) : null}

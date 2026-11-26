@@ -14,7 +14,7 @@ export interface ButtonProps {
   readonly accessibilityHint?: string;
   readonly loading?: boolean;
   readonly haptics?: boolean;
-  readonly tone?: "primary" | "secondary" | "danger" | "text" | "contrast";
+  readonly tone?: "primary" | "secondary" | "text" | "contrast";
   readonly fullWidth?: boolean;
   readonly size?: "default" | "compact";
 }
@@ -23,7 +23,6 @@ const TONE_CLASS_NAMES = {
   contrast: ["bg-foreground", "text-screen"],
   primary: ["bg-primary", "text-primary-foreground"],
   secondary: ["bg-secondary", "text-secondary-foreground"],
-  danger: ["bg-danger", "text-danger-foreground"],
   text: ["bg-transparent", "text-primary-text"],
 } as const;
 

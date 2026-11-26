@@ -241,7 +241,7 @@ export function PullRequestPrimaryAction({
         <Tooltip>
           <TooltipTrigger
             render={
-              <Badge size="control" variant="info" role="img" aria-label={armedAutoMergeLabel}>
+              <Badge size="control" variant="secondary" role="img" aria-label={armedAutoMergeLabel}>
                 <PullRequestGlyph.merged aria-hidden className="size-3.5" />
                 <span className="@max-[30rem]/pr-header:hidden">{armedAutoMergeLabel}</span>
               </Badge>
@@ -341,7 +341,7 @@ export function PullRequestPrimaryAction({
         <Tooltip>
           <TooltipTrigger
             render={
-              <Badge size="control" variant="info" role="img" aria-label={armedAutoMergeLabel}>
+              <Badge size="control" variant="secondary" role="img" aria-label={armedAutoMergeLabel}>
                 <PullRequestGlyph.merged aria-hidden className="size-3.5" />
                 <span className="@max-[30rem]/pr-header:hidden">{armedAutoMergeLabel}</span>
               </Badge>
@@ -439,7 +439,7 @@ export function PullRequestApproveWorkflowsButton({
           <span className="ml-auto inline-flex shrink-0">
             <Button
               size="xs"
-              variant="warning-outline"
+              variant="outline"
               disabled={actionPending}
               {...inlineConfirm.props("approve-workflows", () => void perform("approve-workflows"))}
               aria-label={

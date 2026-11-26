@@ -285,7 +285,6 @@ export function EnvironmentRelaySection({
         <SettingsActionRow
           icon="xmark"
           label={isDisconnecting ? gt("Disconnecting…") : gt("Disconnect remote relay")}
-          tone="danger"
           disabled={isSaving || isDisconnecting}
           loading={isDisconnecting}
           onPress={confirmDisconnect}

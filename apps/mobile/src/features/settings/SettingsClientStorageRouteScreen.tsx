@@ -150,7 +150,6 @@ export function SettingsClientStorageRouteScreen() {
                   ? gt("Clear {size}", { size: formatBytes(summary.payloadBytes) })
                   : gt("Clear caches")
               }
-              tone="danger"
               disabled={isClearing || !summary || summary.recordCount === 0}
               loading={isClearing}
               onPress={confirmClearAll}
@@ -190,7 +189,6 @@ function CacheEnvironmentRow(props: {
         description={gt("Clear {size} of cached data", {
           size: formatBytes(props.environment.payloadBytes),
         })}
-        tone="danger"
         disabled={props.disabled}
         onPress={props.onClear}
       />

@@ -123,12 +123,7 @@ export function ComponentCatalogScreen() {
                   onValueChange={setEnabled}
                 />
                 <ListChoiceRow label="Selected option" selected onPress={announceAction} />
-                <ListActionRow
-                  icon="trash"
-                  label="Discard changes"
-                  tone="danger"
-                  onPress={confirm}
-                />
+                <ListActionRow icon="trash" label="Discard changes" onPress={confirm} />
               </ListSection>
               <SegmentedControl
                 options={CHOICES}

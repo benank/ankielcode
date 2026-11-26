@@ -482,7 +482,6 @@ function ProjectOverviewContent(props: {
                   )
                 : gt("Deletes the project entry and its threads. Files on disk are not touched.")
           }
-          tone="danger"
           disabled={!canRemoveGroup || isRemoving}
           loading={isRemoving}
           onPress={() => removeMembers(props.members)}

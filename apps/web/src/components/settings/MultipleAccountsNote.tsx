@@ -31,7 +31,7 @@ export function MultipleAccountsNote({
     );
   if (!hasSignedInAccount) return null;
   return (
-    <Alert variant="info" role="note">
+    <Alert role="note">
       <InfoIcon aria-hidden />
       <AlertDescription>
         <p>

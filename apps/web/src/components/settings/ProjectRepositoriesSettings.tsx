@@ -170,7 +170,7 @@ function CheckoutRepositories({ member }: { member: SidebarProjectGroupMember })
               <span className="flex min-w-0 items-center gap-2">
                 <span className="min-w-0 truncate">{folder.name}</span>
                 {folder.state ? (
-                  <Badge size="sm" variant={folder.state === "missing" ? "warning" : "outline"}>
+                  <Badge size="sm" variant="outline">
                     {m(FOLDER_STATE_LABELS[folder.state])}
                   </Badge>
                 ) : null}

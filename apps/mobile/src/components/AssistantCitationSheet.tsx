@@ -120,12 +120,7 @@ export function AssistantCitationSheet(props: {
             onPress={() => copyTextWithHaptic(citation.text)}
           />
           {props.onRemove ? (
-            <ListActionRow
-              icon="trash"
-              label={gt("Remove from draft")}
-              tone="danger"
-              onPress={props.onRemove}
-            />
+            <ListActionRow icon="trash" label={gt("Remove from draft")} onPress={props.onRemove} />
           ) : null}
         </ListSection>
       </ScrollView>

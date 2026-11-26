@@ -122,6 +122,7 @@ import {
   FileSurfaceAction,
   FileSurfaceFailure,
   FileSurfaceLoading,
+  FileSurfaceNotice,
 } from "./fileSurfaceChrome";
 import SourceFilePreview from "./ReadOnlySourcePreview";
 import LargeFilePreview from "./LargeFilePreview";
@@ -1687,9 +1688,9 @@ export default function FilePreviewPanel({
         </div>
       ) : null}
       {relativePath && !attachment && !isHostFile && !canWriteFiles && !fileAccess.isPending ? (
-        <div className="shrink-0 border-b px-3 py-1.5 text-2xs text-muted-foreground">
+        <FileSurfaceNotice>
           <T>Read-only connection. Unsaved edits are kept until write access returns.</T>
-        </div>
+        </FileSurfaceNotice>
       ) : null}
       {previewPath &&
       attachment === undefined &&
@@ -1697,12 +1698,12 @@ export default function FilePreviewPanel({
       !renderBrowserFile &&
       file.data?.truncated &&
       renderMermaid ? (
-        <div className="shrink-0 border-b border-warning/20 bg-warning-surface px-3 py-1.5 text-2xs text-warning-foreground">
+        <FileSurfaceNotice>
           {gt(
             "{count, plural, one {Preview limited to the first 1 MB of a {formatted} byte file.} other {Preview limited to the first 1 MB of a {formatted} byte file.}}",
             { count: file.data.byteLength, formatted: file.data.byteLength.toLocaleString() },
           )}
-        </div>
+        </FileSurfaceNotice>
       ) : null}
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div

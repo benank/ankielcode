@@ -1341,7 +1341,7 @@ function WorkflowBeatRow({
 const CARD_TONE = {
   plain: "",
   quiet: "",
-  ask: "rounded-xl border border-warning/30 bg-warning-surface px-3 py-2.5",
+  ask: "rounded-xl border bg-card px-3 py-2.5",
   failed: "",
   done: "",
 } as const;

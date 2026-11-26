@@ -7,7 +7,6 @@ import { RowPressable } from "./RowPressable";
 
 export function ListActionRow(
   props: ListRowContentProps & {
-    readonly tone?: "default" | "danger";
     readonly loading?: boolean;
     readonly onPress: () => void;
   },
@@ -30,11 +29,7 @@ export function ListActionRow(
         {...props}
         disabled={disabled}
         accessory={
-          props.loading ? (
-            <AppActivityIndicator
-              colorClassName={props.tone === "danger" ? "accent-danger-foreground" : "accent-icon"}
-            />
-          ) : undefined
+          props.loading ? <AppActivityIndicator colorClassName="accent-icon" /> : undefined
         }
       />
     </RowPressable>

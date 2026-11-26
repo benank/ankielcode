@@ -6,6 +6,17 @@ import { CircleAlertIcon, XIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { VoiceInputPill } from "./VoiceInputPill";
+import { cn } from "~/lib/utils";
+
+// Outcomes the user can simply retry; only real failures earn a red icon.
+const ROUTINE_VOICE_OUTCOMES: ReadonlySet<VoiceInputErrorCode> = new Set([
+  "already-recording",
+  "still-transcribing",
+  "interrupted",
+  "draft-changed",
+  "draft-unavailable",
+  "no-speech",
+]);
 
 const VOICE_ERROR_LABELS: Readonly<Record<VoiceInputErrorCode, string>> = {
   "microphone-blocked": msg("Mic blocked"),
@@ -50,7 +61,7 @@ export function VoiceInputErrorPill(props: {
         }
       : { label: gt("Record again"), text: gt("Record again") };
   return (
-    <VoiceInputPill tone="error" size={props.size}>
+    <VoiceInputPill size={props.size}>
       <Tooltip>
         <TooltipTrigger
           render={
@@ -84,7 +95,15 @@ export function VoiceInputErrorPill(props: {
             />
           }
         >
-          <CircleAlertIcon aria-hidden className="size-3.5 shrink-0" />
+          <CircleAlertIcon
+            aria-hidden
+            className={cn(
+              "size-3.5 shrink-0",
+              props.errorCode !== undefined && ROUTINE_VOICE_OUTCOMES.has(props.errorCode)
+                ? "text-muted-foreground"
+                : "text-destructive",
+            )}
+          />
           <span className="truncate">{errorLabel ? m(errorLabel) : gt("Voice input failed")}</span>
         </TooltipTrigger>
         <TooltipPopup side="top">{message}</TooltipPopup>

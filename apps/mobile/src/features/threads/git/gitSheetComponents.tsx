@@ -11,7 +11,7 @@ export function SheetActionButton(props: {
   readonly icon: ComponentProps<typeof SymbolView>["name"];
   readonly label: string;
   readonly disabled?: boolean;
-  readonly tone?: "primary" | "secondary" | "danger";
+  readonly tone?: "primary" | "secondary";
   readonly onPress: () => void;
 }) {
   return (

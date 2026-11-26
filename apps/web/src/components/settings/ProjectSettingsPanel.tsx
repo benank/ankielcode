@@ -537,7 +537,7 @@ function ProjectDetail({
   return (
     <>
       <SettingsPageContainer className="gap-6">
-        <Alert variant="info">
+        <Alert>
           <InfoIcon aria-hidden />
           <AlertDescription>
             <T>

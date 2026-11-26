@@ -176,7 +176,7 @@ function TrackerRow({
               <span className="truncate text-xs text-muted-foreground">{tracker.workspace}</span>
             ) : null}
             {tracker.connected && tracker.account === null ? (
-              <Badge variant="destructive" size="sm">
+              <Badge variant="error" size="sm">
                 <T>Credential rejected</T>
               </Badge>
             ) : null}

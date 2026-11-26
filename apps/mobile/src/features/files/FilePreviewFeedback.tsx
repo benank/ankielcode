@@ -23,13 +23,11 @@ export function FilePreviewLoading(props: {
 
 export function FilePreviewNotice(props: { readonly title?: string; readonly children: string }) {
   return (
-    <View className="border-b border-warning-border bg-warning px-4 py-2">
+    <View className="border-b border-border bg-card px-4 py-2">
       {props.title ? (
-        <Text className="text-2xs font-ankiel-bold uppercase text-warning-foreground">
-          {props.title}
-        </Text>
+        <Text className="text-xs font-ankiel-medium text-foreground">{props.title}</Text>
       ) : null}
-      <Text className="text-xs leading-snug text-warning-foreground">{props.children}</Text>
+      <Text className="text-xs leading-snug text-foreground-muted">{props.children}</Text>
     </View>
   );
 }

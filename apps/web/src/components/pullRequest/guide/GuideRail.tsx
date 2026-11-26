@@ -31,7 +31,7 @@ export function GuideRail({
         detail={
           <>
             {stop.attention !== null ? (
-              <Badge size="sm" variant="warning">
+              <Badge size="sm" variant="secondary">
                 <T>Look closely</T>
               </Badge>
             ) : null}

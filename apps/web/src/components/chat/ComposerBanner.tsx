@@ -23,18 +23,6 @@ const neutralOutline = cn(
   "dark:[html[data-theme-id=orchid]_&]:[--chat-composer-attached-outline:#241e28]",
 );
 
-const errorColors =
-  "[--chat-composer-attached-outline:color-mix(in_srgb,var(--error)_32%,transparent)] [--chat-composer-attached-tint:color-mix(in_srgb,var(--error)_8%,transparent)]";
-
-const variantColors: Record<ComposerBannerVariant, string> = {
-  default: neutralOutline,
-  error: errorColors,
-  info: neutralOutline,
-  success: neutralOutline,
-  warning:
-    "[--chat-composer-attached-outline:color-mix(in_srgb,var(--warning)_28%,transparent)] [--chat-composer-attached-tint:color-mix(in_srgb,var(--warning)_8%,transparent)]",
-};
-
 /**
  * An attached surface tucks its bottom under the card below it. A detached one is a whole card
  * of its own, for a notice that sits apart from the composer.
@@ -55,7 +43,8 @@ function Surface({
       className={cn(
         surfaceColors,
         "relative isolate border-0 bg-transparent shadow-none [--chat-composer-attached-tint:transparent]",
-        variantColors[variant],
+        // Banners stay neutral at any severity; their icon carries the state.
+        neutralOutline,
         detached
           ? "[--chat-composer-attachment-overlap:0px] before:rounded-2xl"
           : // Bleed the mask 1px past the seam to cover Chromium's fractional-pixel backdrop loss.

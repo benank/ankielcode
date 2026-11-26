@@ -25,7 +25,7 @@ export function StatusPill(
     >
       <Text
         className={cn(
-          "font-ankiel-bold",
+          "font-ankiel-medium",
           size === "compact" ? "text-2xs" : "text-xs",
           props.textClassName,
         )}

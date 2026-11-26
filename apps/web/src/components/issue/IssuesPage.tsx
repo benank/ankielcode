@@ -550,7 +550,7 @@ export function IssuesPage() {
   ) : (
     <div className="flex flex-col gap-6">
       {list.error ? (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-warning/30 bg-warning-surface px-3 py-2 text-xs">
+        <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs text-muted-foreground">
           <span>
             <T>
               <Var>{list.error}</Var> Showing the issues that loaded.

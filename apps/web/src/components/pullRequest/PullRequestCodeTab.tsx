@@ -2115,7 +2115,7 @@ function WithheldFileNotice({
       {onLoad === undefined || status === "empty" ? null : (
         <Button
           size="micro"
-          variant="warning-outline"
+          variant="outline"
           disabled={status === "loading"}
           onClick={() => onLoad(path)}
         >

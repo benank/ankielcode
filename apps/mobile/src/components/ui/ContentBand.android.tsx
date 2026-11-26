@@ -13,7 +13,7 @@ export function ContentBand(props: ContentBandProps) {
       className={cn(
         "m-2 rounded-[20px] px-4",
         props.spacing === "roomy" ? "gap-3 py-4" : "py-3",
-        props.tone === "warning" ? "bg-warning" : "bg-card",
+        "bg-card",
       )}
     >
       {props.children}

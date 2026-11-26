@@ -1224,7 +1224,7 @@ export function PullRequestSummaryTab({
         ) : (
           <>
             {detail.commentsTruncated ? (
-              <p className="mb-2 rounded-md border border-warning/30 bg-warning-surface px-2 py-1.5 text-xs">
+              <p className="mb-2 rounded-md border px-2 py-1.5 text-xs text-muted-foreground">
                 {gt(
                   "{count, plural, one {This conversation is only partially loaded. {count} comment is loaded; open it on the host to read the rest.} other {This conversation is only partially loaded. {count} comments are loaded; open it on the host to read the rest.}}",
                   { count: commentCount },

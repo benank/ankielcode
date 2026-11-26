@@ -32,7 +32,7 @@ export function PullRequestDiffUnavailableState({
 
   return (
     <Empty size="compact" className="min-h-full" role="status">
-      <div className="flex size-11 items-center justify-center rounded-full bg-warning-surface text-warning">
+      <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
         <TriangleAlertIcon aria-hidden className="size-5" />
       </div>
       <EmptyHeader>

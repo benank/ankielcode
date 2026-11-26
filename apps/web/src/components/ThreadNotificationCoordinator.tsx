@@ -13,12 +13,7 @@ import { monitorHoldsWakeCompletion } from "@ankielcode/shared/orchestrationV2Pe
 import type { ClientSettings } from "@ankielcode/contracts/settings";
 import * as Option from "effect/Option";
 import type { AtomRegistry } from "effect/reactivity";
-import {
-  CircleAlertIcon,
-  CircleCheckIcon,
-  MessageCircleQuestionIcon,
-  ShieldQuestionIcon,
-} from "lucide-react";
+import { PixelStatus } from "./PixelStatus";
 
 import { getClientSettings, subscribeClientSettings } from "../hooks/useSettings";
 import { isWindowsPlatform } from "../lib/utils";
@@ -173,18 +168,11 @@ export function startThreadNotifications(
         description: thread.title,
         data: {
           hideCopyButton: true,
-          leadingIcon:
-            kind === "completion" ? (
-              <CircleCheckIcon aria-hidden className="size-4 text-success-foreground" />
-            ) : status === "approval" ? (
-              <ShieldQuestionIcon aria-hidden className="size-4 text-warning-foreground" />
-            ) : status === "limited" ? (
-              <CircleAlertIcon aria-hidden className="size-4 text-warning-foreground" />
-            ) : status === "failed" ? (
-              <CircleAlertIcon aria-hidden className="size-4 text-destructive-foreground" />
-            ) : (
-              <MessageCircleQuestionIcon aria-hidden className="size-4 text-info-foreground" />
-            ),
+          leadingIcon: (
+            <PixelStatus
+              kind={kind === "completion" ? "done" : status === "failed" ? "failed" : "attention"}
+            />
+          ),
         },
         actionProps: {
           children: m(msg("Open thread")),

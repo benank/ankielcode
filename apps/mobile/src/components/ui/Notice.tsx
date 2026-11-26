@@ -17,7 +17,9 @@ export function Notice(props: {
   readonly dismissLabel?: string;
 }) {
   const gt = useGT();
-  const danger = props.tone === "danger";
+  // A failure is one red icon on the same neutral card, never a red card.
+  const danger = props.tone === "danger" || props.iconTone === "danger";
+  const icon = props.icon ?? (props.tone === "danger" ? "exclamationmark.circle" : undefined);
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- announces the message to VoiceOver through AccessibilityInfo
   useEffect(() => {
     // Live regions reach TalkBack; VoiceOver needs an explicit announcement.
@@ -26,16 +28,12 @@ export function Notice(props: {
 
   const content = (
     <View className="flex-row items-start gap-3">
-      {props.icon ? (
+      {icon ? (
         <View className="pt-0.5">
           <SymbolView
-            name={props.icon}
+            name={icon}
             size={16}
-            tintColorClassName={
-              danger || props.iconTone === "danger"
-                ? "accent-danger-foreground"
-                : "accent-icon-muted"
-            }
+            tintColorClassName={danger ? "accent-danger-foreground" : "accent-icon-muted"}
           />
         </View>
       ) : null}
@@ -43,11 +41,7 @@ export function Notice(props: {
         selectable
         textRole="footnote"
         accessibilityLiveRegion="polite"
-        className={cn(
-          "min-w-0 flex-1",
-          danger ? "text-danger-foreground" : "text-foreground",
-          !props.floating && "font-ankiel-medium",
-        )}
+        className={cn("min-w-0 flex-1 text-foreground", !props.floating && "font-ankiel-medium")}
       >
         {props.message}
       </AppText>
@@ -59,11 +53,7 @@ export function Notice(props: {
           hitSlop={10}
           className="min-h-6 min-w-6 items-center justify-center active:opacity-60"
         >
-          <SymbolView
-            name="xmark"
-            size={14}
-            tintColorClassName={danger ? "accent-danger-foreground" : "accent-icon-muted"}
-          />
+          <SymbolView name="xmark" size={14} tintColorClassName="accent-icon-muted" />
         </Pressable>
       ) : null}
     </View>
@@ -77,8 +67,7 @@ export function Notice(props: {
   return (
     <View
       className={cn(
-        "rounded-2xl border px-3.5 py-3",
-        danger ? "border-danger-border bg-danger" : "border-border bg-card",
+        "rounded-2xl border border-border bg-card px-3.5 py-3",
         props.floating && "p-4",
       )}
     >
