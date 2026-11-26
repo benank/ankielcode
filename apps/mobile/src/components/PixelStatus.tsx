@@ -13,15 +13,17 @@ import { Animated, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
+import { SIGNAL_COLORS } from "@ankielcode/shared/themePalettes";
+
 import { useAppearancePreferences } from "../features/settings/appearance/AppearancePreferencesProvider";
+import type { MobileThemeVariables } from "../lib/mobileTheme";
 
 export type { PixelStatusKind };
 
-const TONE_COLOR: Record<PixelStatusTone, { readonly light: string; readonly dark: string }> = {
-  cyan: { light: "#06b6d4", dark: "#67e8f9" },
-  amber: { light: "#f59e0b", dark: "#fcd34d" },
-  red: { light: "#ef4444", dark: "#f87171" },
-  emerald: { light: "#10b981", dark: "#34d399" },
+const TONE_VARIABLE: Record<Exclude<PixelStatusTone, "active">, keyof MobileThemeVariables> = {
+  attention: "--color-warning-foreground",
+  failed: "--color-danger-foreground",
+  done: "--color-foreground-muted",
 };
 
 /**
@@ -29,12 +31,14 @@ const TONE_COLOR: Record<PixelStatusTone, { readonly light: string; readonly dar
  * native driver slides a whole frame at a time, so a playing light costs no JS or commits.
  */
 export function PixelStatus(props: { readonly kind: PixelStatusKind }) {
-  const { themeAppearance } = useAppearancePreferences();
+  const { themeAppearance, themeVariables } = useAppearancePreferences();
   const reduceMotion = useReducedMotion();
   const animation = PIXEL_ANIMATIONS[props.kind];
   const strip = pixelSpriteStrip(props.kind);
-  const tone = TONE_COLOR[animation.tone];
-  const color = themeAppearance === "dark" ? tone.dark : tone.light;
+  const color =
+    animation.tone === "active"
+      ? SIGNAL_COLORS.active[themeAppearance]
+      : themeVariables[TONE_VARIABLE[animation.tone]];
   const frames = strip.frameCount;
   const lastFrameY = -(frames - 1) * PITCH;
   const animated = frames > 1 && !reduceMotion;

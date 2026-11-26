@@ -1,3 +1,7 @@
+import {
+  ANKIEL_CODE_DARK_THEME_COLORS,
+  ANKIEL_CODE_LIGHT_THEME_COLORS,
+} from "@ankielcode/shared/themePalettes";
 import type { DesktopUpdateState } from "@ankielcode/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -285,7 +289,10 @@ export const listen: Effect.Effect<
           show: false,
           title: m(msg("Ankiel Code could not start")),
           autoHideMenuBar: true,
-          backgroundColor: shouldUseDarkColors ? "#000000" : "#ffffff",
+          backgroundColor: (shouldUseDarkColors
+            ? ANKIEL_CODE_DARK_THEME_COLORS
+            : ANKIEL_CODE_LIGHT_THEME_COLORS
+          ).canvas,
           webPreferences: {
             contextIsolation: true,
             nodeIntegration: false,

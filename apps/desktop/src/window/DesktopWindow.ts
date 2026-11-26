@@ -1,3 +1,7 @@
+import {
+  ANKIEL_CODE_DARK_THEME_COLORS,
+  ANKIEL_CODE_LIGHT_THEME_COLORS,
+} from "@ankielcode/shared/themePalettes";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -165,7 +169,8 @@ function getIconOption(
 }
 
 function getInitialWindowBackgroundColor(shouldUseDarkColors: boolean): string {
-  return shouldUseDarkColors ? "#000000" : "#ffffff";
+  return (shouldUseDarkColors ? ANKIEL_CODE_DARK_THEME_COLORS : ANKIEL_CODE_LIGHT_THEME_COLORS)
+    .canvas;
 }
 
 type DisplayBounds = Pick<Electron.Rectangle, "x" | "y" | "width" | "height">;

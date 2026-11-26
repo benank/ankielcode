@@ -16,10 +16,10 @@ import { observeVisibleAnimation } from "~/lib/visibleAnimation";
 export type { PixelStatusKind };
 
 const TONE_CLASS_NAME: Record<PixelStatusTone, string> = {
-  cyan: "text-cyan-500 dark:text-cyan-300",
-  amber: "text-amber-500 dark:text-amber-300",
-  red: "text-red-500 dark:text-red-400",
-  emerald: "text-emerald-500 dark:text-emerald-400",
+  active: "text-signal-active",
+  attention: "text-warning",
+  failed: "text-destructive",
+  done: "text-muted-foreground",
 };
 
 let windowFocusTracked = false;

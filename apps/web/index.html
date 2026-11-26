@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
     />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#121211" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <script>
       (() => {
@@ -14,8 +14,9 @@
           document.documentElement.dataset.desktop = "";
         }
 
-        const LIGHT_BACKGROUND = "#ffffff";
-        const DARK_BACKGROUND = "#000000";
+        // The default theme's canvas and text, from packages/shared/src/themePalettes.ts.
+        const LIGHT_BACKGROUND = "#fbfbfa";
+        const DARK_BACKGROUND = "#121211";
         const CUSTOM_THEMES_STORAGE_KEY = "ankielcode:themes:v1";
         const ENVIRONMENT_THEMES_STORAGE_KEY = "ankielcode:environment-themes:v1";
         const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "ankielcode:theme-follow-system";
@@ -23,14 +24,14 @@
         const THEME_HALVES_STORAGE_KEY = "ankielcode:theme-halves:v1";
         const SPLASH_COLORS = {
           light: {
-            background: "#ffffff",
-            foreground: "#262626",
-            accent: "#4f46e5",
+            background: "#fbfbfa",
+            foreground: "#161615",
+            accent: "#161615",
           },
           dark: {
-            background: "#000000",
-            foreground: "#f5f5f5",
-            accent: "#818cf8",
+            background: "#121211",
+            foreground: "#f2f1ed",
+            accent: "#ecebe7",
           },
         };
         // These are the runtime defaults used to complete a custom palette
@@ -408,15 +409,20 @@
       }
 
       body {
-        background: #ffffff;
-        color: #262626;
+        background: #fbfbfa;
+        color: #161615;
         font-family:
-          -apple-system, BlinkMacSystemFont, "Inter Variable", "Segoe UI", system-ui, sans-serif;
+          "DM Sans Variable",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          system-ui,
+          sans-serif;
       }
 
       html.dark body {
-        background: #000000;
-        color: #f5f5f5;
+        background: #121211;
+        color: #f2f1ed;
       }
 
       #boot-shell {

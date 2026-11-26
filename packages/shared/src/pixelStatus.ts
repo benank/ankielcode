@@ -144,7 +144,11 @@ const DONE = [
   ],
 ] satisfies PixelFrame[];
 
-export type PixelStatusTone = "cyan" | "amber" | "red" | "emerald";
+/**
+ * Live work glows the fixed signal cyan; attention and failure take the theme's warning and error;
+ * done settles into a dim silver, so the only hue left on a settled list is something that needs you.
+ */
+export type PixelStatusTone = "active" | "attention" | "failed" | "done";
 
 export interface PixelAnimation {
   readonly frames: readonly PixelFrame[];
@@ -157,12 +161,12 @@ export interface PixelAnimation {
 }
 
 export const PIXEL_ANIMATIONS: Record<PixelStatusKind, PixelAnimation> = {
-  working: { frames: WORKING, durationMs: 1200, iterations: "infinite", tone: "cyan" },
-  thinking: { frames: THINKING, durationMs: 1100, iterations: "infinite", tone: "cyan" },
-  waiting: { frames: WAITING, durationMs: 1800, iterations: "infinite", tone: "cyan", dim: true },
-  attention: { frames: ATTENTION, durationMs: 1300, iterations: "infinite", tone: "amber" },
-  failed: { frames: FAILED, durationMs: 1500, iterations: 3, tone: "red" },
-  done: { frames: DONE, durationMs: 0, iterations: 1, tone: "emerald" },
+  working: { frames: WORKING, durationMs: 1200, iterations: "infinite", tone: "active" },
+  thinking: { frames: THINKING, durationMs: 1100, iterations: "infinite", tone: "active" },
+  waiting: { frames: WAITING, durationMs: 1800, iterations: "infinite", tone: "active", dim: true },
+  attention: { frames: ATTENTION, durationMs: 1300, iterations: "infinite", tone: "attention" },
+  failed: { frames: FAILED, durationMs: 1500, iterations: 3, tone: "failed" },
+  done: { frames: DONE, durationMs: 0, iterations: 1, tone: "done" },
 };
 
 export const PIXEL_LEVEL_OPACITY = { 1: 0.4, 2: 0.7, 3: 1 } as const;

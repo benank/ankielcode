@@ -10,8 +10,9 @@ import {
   MIN_PROMPT_FONT_SIZE,
 } from "@ankielcode/contracts";
 
+// DM Sans covers Latin scripts; other scripts fall through to the platform UI font.
 export const DEFAULT_SANS_FONT_STACK =
-  '-apple-system, BlinkMacSystemFont, "Inter Variable", "Segoe UI", system-ui, sans-serif';
+  '"DM Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
 
 // Some engines map `ui-monospace` to a proportional font, so prefer concrete names.
 export const DEFAULT_CODE_FONT_STACK =

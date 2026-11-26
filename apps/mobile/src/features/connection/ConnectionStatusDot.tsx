@@ -1,3 +1,4 @@
+import { SIGNAL_COLORS } from "@ankielcode/shared/themePalettes";
 import { View } from "react-native";
 
 import type { RemoteClientConnectionState } from "../../lib/connection";
@@ -23,8 +24,8 @@ function statusDotTone(
       };
     case "connected":
       return {
-        dotColor: dark ? "#34d399" : "#059669",
-        haloColor: themeColorWithAlpha(dark ? "#34d399" : "#059669", 0.48),
+        dotColor: SIGNAL_COLORS.success[dark ? "dark" : "light"],
+        haloColor: themeColorWithAlpha(SIGNAL_COLORS.success[dark ? "dark" : "light"], 0.48),
       };
     case "connecting":
     case "reconnecting":

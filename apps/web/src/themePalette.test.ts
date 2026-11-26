@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 import { converter } from "culori/fn";
-import { BUILT_IN_THEMES } from "@ankielcode/shared/themePalettes";
+import {
+  ANKIEL_CODE_DARK_THEME_COLORS,
+  ANKIEL_CODE_LIGHT_THEME_COLORS,
+  BUILT_IN_THEMES,
+  type ThemeColors,
+} from "@ankielcode/shared/themePalettes";
 
 import { CONTEXT_CHIP_ACCENTS, contextChipColorVariable } from "./lib/contextChipAccents";
 import { appAtomRegistry } from "./rpc/atomRegistry";
@@ -654,9 +659,15 @@ describe("context chip colors", () => {
   });
 
   it("reads at 5:1 on the standard surfaces as index.css paints them", () => {
+    const surfaces = (colors: ThemeColors) => [
+      colors.canvas,
+      colors.surface,
+      colors.surfaceRaised,
+      colors.messageSurface,
+    ];
     const painted = {
-      light: ["#fcfcfc", "#ffffff", "#ebebed"],
-      dark: ["#000000", "#0a0a0a", "#111111", "#141414", "#1e1e1e"],
+      light: surfaces(ANKIEL_CODE_LIGHT_THEME_COLORS),
+      dark: surfaces(ANKIEL_CODE_DARK_THEME_COLORS),
     } as const;
     const properties = new Map<string, string>();
     vi.stubGlobal("window", { localStorage: { getItem: () => null } });

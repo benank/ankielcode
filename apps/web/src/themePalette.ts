@@ -16,6 +16,7 @@ import {
   ORCHID_THEME,
   ANKIEL_CODE_LIGHT_THEME_COLORS,
   ANKIEL_CODE_DARK_THEME_COLORS,
+  THEME_CSS_VARIABLES,
   RESERVED_THEME_IDS,
   THEME_COLOR_ROLES,
   type ThemeAppearance,
@@ -434,23 +435,9 @@ function legacyThemeMode(theme: ThemePreference): ThemeAppearance | null {
 
 export function getStandardThemeColors(appearance: ThemeAppearance): ThemeColors {
   if (appearance === "dark") {
-    return (standardDarkThemeColors ??= decodeThemeColors({
-      ...ANKIEL_CODE_DARK_THEME_COLORS,
-      canvas: "#000000",
-    }));
+    return (standardDarkThemeColors ??= decodeThemeColors(ANKIEL_CODE_DARK_THEME_COLORS));
   }
   return (standardLightThemeColors ??= decodeThemeColors(ANKIEL_CODE_LIGHT_THEME_COLORS));
-}
-
-// index.css paints the light bubble a step darker than the shared palette mobile uses.
-const STANDARD_WEB_PAINTED_COLORS: Record<ThemeAppearance, Partial<ThemeColors>> = {
-  light: { messageSurface: "#ebebed" },
-  dark: { canvas: "#000000", messageSurface: "#1e1e1e" },
-};
-
-/** The standard theme as index.css paints it, for solves that measure the page. */
-export function getStandardPaintedThemeColors(appearance: ThemeAppearance): ThemeColors {
-  return { ...getStandardThemeColors(appearance), ...STANDARD_WEB_PAINTED_COLORS[appearance] };
 }
 
 type ThemeRgbColor = {
@@ -1650,69 +1637,7 @@ export function serializeThemeFile(theme: ThemeDefinition): string {
   return `${JSON.stringify(file, null, 2)}\n`;
 }
 
-const APP_THEME_VARIABLES: Readonly<Record<ThemeColorRole, string>> = {
-  canvas: "--app-theme-canvas",
-  chrome: "--app-theme-chrome",
-  toolbar: "--app-theme-toolbar",
-  toolbarForeground: "--app-theme-toolbar-foreground",
-  toolbarBorder: "--app-theme-toolbar-border",
-  toolbarControl: "--app-theme-toolbar-control",
-  toolbarControlForeground: "--app-theme-toolbar-control-foreground",
-  toolbarControlHover: "--app-theme-toolbar-control-hover",
-  surface: "--app-theme-surface",
-  surfaceRaised: "--app-theme-surface-raised",
-  surfaceOverlay: "--app-theme-surface-overlay",
-  text: "--app-theme-text",
-  textMuted: "--app-theme-text-muted",
-  border: "--app-theme-border",
-  input: "--app-theme-input",
-  focus: "--app-theme-focus",
-  accent: "--app-theme-accent",
-  accentForeground: "--app-theme-accent-foreground",
-  secondary: "--app-theme-secondary",
-  secondaryForeground: "--app-theme-secondary-foreground",
-  muted: "--app-theme-muted",
-  mutedForeground: "--app-theme-muted-foreground",
-  placeholder: "--app-theme-placeholder",
-  secondaryLabel: "--app-theme-secondary-label",
-  iconMuted: "--app-theme-icon-muted",
-  error: "--app-theme-error",
-  errorForeground: "--app-theme-error-foreground",
-  errorSurface: "--app-theme-error-surface",
-  warning: "--app-theme-warning",
-  warningForeground: "--app-theme-warning-foreground",
-  warningSurface: "--app-theme-warning-surface",
-  update: "--app-theme-update",
-  updateForeground: "--app-theme-update-foreground",
-  updateSurface: "--app-theme-update-surface",
-  accentSurface: "--app-theme-accent-surface",
-  accentSurfaceForeground: "--app-theme-accent-surface-foreground",
-  messageSurface: "--app-theme-message-surface",
-  messageForeground: "--app-theme-message-foreground",
-  messageAction: "--app-theme-message-action",
-  messageActionForeground: "--app-theme-message-action-foreground",
-  messageActionHover: "--app-theme-message-action-hover",
-  codeBackground: "--app-theme-code-background",
-  codeForeground: "--app-theme-code-foreground",
-  searchMatchBackground: "--app-theme-search-match-background",
-  searchMatchForeground: "--app-theme-search-match-foreground",
-  searchMatchActiveBackground: "--app-theme-search-match-active-background",
-  searchMatchActiveForeground: "--app-theme-search-match-active-foreground",
-  sidebar: "--app-theme-sidebar",
-  sidebarForeground: "--app-theme-sidebar-foreground",
-  sidebarMutedForeground: "--app-theme-sidebar-muted-foreground",
-  sidebarControlSurface: "--app-theme-sidebar-control-surface",
-  sidebarRowHover: "--app-theme-sidebar-row-hover",
-  sidebarRowActive: "--app-theme-sidebar-row-active",
-  sidebarRowSelected: "--app-theme-sidebar-row-selected",
-  sidebarBorder: "--app-theme-sidebar-border",
-  terminalBackground: "--app-theme-terminal-background",
-  terminalForeground: "--app-theme-terminal-foreground",
-  terminalCursor: "--app-theme-terminal-cursor",
-  terminalSelection: "--app-theme-terminal-selection-background",
-  terminalScrollbar: "--app-theme-terminal-scrollbar",
-  terminalScrollbarHover: "--app-theme-terminal-scrollbar-hover",
-};
+const APP_THEME_VARIABLES = THEME_CSS_VARIABLES;
 
 export function getThemeColorVariable(role: ThemeColorRole): string {
   return APP_THEME_VARIABLES[role];
@@ -1766,7 +1691,7 @@ export function applyThemePalette(theme: ThemePreference, appearance?: ThemeAppe
   for (const variable of Object.values(APP_THEME_VARIABLES)) {
     root.style.removeProperty(variable);
   }
-  applyContextChipVariables(root, getStandardPaintedThemeColors(appearance ?? "light"));
+  applyContextChipVariables(root, getStandardThemeColors(appearance ?? "light"));
 }
 
 export function resolveThemeAppearance(
