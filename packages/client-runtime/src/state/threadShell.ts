@@ -65,8 +65,7 @@ export function isShownUnderParent(lineage: OrchestrationV2ThreadShell["lineage"
 
 export interface ThreadNavigationBranch {
   readonly parentKey: string;
-  readonly ancestorGuides: ReadonlyArray<{ readonly key: string; readonly continues: boolean }>;
-  readonly hasNextSibling: boolean;
+  readonly depth: number;
 }
 
 export function buildThreadNavigationTree<
@@ -112,24 +111,20 @@ export function buildThreadNavigationTree<
   for (const root of roots) {
     if (!childrenByParent.has(root)) continue;
     const rows: Array<{ key: string; thread: T; branch: ThreadNavigationBranch }> = [];
-    const visit = (parentKey: string, ancestorGuides: ThreadNavigationBranch["ancestorGuides"]) => {
+    const visit = (parentKey: string, depth: number) => {
       const children = childrenByParent.get(parentKey);
       if (children === undefined) return;
       children.sort(
         (a, b) =>
           a.thread.createdAt.localeCompare(b.thread.createdAt) || a.key.localeCompare(b.key),
       );
-      for (const [index, child] of children.entries()) {
-        const hasNextSibling = index < children.length - 1;
+      for (const child of children) {
         rootByChild.set(child.key, root);
-        rows.push({ ...child, branch: { parentKey, ancestorGuides, hasNextSibling } });
-        visit(
-          child.key,
-          [...ancestorGuides, { key: child.key, continues: hasNextSibling }].slice(-3),
-        );
+        rows.push({ ...child, branch: { parentKey, depth } });
+        visit(child.key, Math.min(depth + 1, 4));
       }
     };
-    visit(root, []);
+    visit(root, 1);
     rowsByRoot.set(root, rows);
   }
   return { rowsByRoot, rootByChild };

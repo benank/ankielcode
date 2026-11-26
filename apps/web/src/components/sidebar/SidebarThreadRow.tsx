@@ -851,38 +851,20 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
   return (
     <li
       data-thread-item={branch ? undefined : threadKey}
+      style={
+        branch
+          ? { paddingInlineStart: `calc(var(--spacing) * ${2.5 + branch.depth * 3.5})` }
+          : undefined
+      }
       {...sortableRootProps}
       {...(!props.children && fileDropHandlers)}
       className={cn(
         "list-none",
         !props.children && "[content-visibility:auto] [contain-intrinsic-size:auto_--spacing(8)]",
-        branch && "flex ps-2.5",
+        branch && "flex",
         sortable?.isDragging && "relative z-20",
       )}
     >
-      {branch ? (
-        <span aria-hidden className="pointer-events-none -mt-px flex shrink-0 self-stretch">
-          {branch.ancestorGuides.map(({ key, continues }) => (
-            <span
-              key={key}
-              className={cn("w-3.5", continues && "border-s border-sidebar-foreground/30")}
-            />
-          ))}
-          <span
-            className={cn(
-              "relative w-3.5",
-              branch.hasNextSibling && "border-s border-sidebar-foreground/30",
-            )}
-          >
-            <span
-              className={cn(
-                "absolute inset-x-0 top-0 h-1/2 border-b border-sidebar-foreground/30",
-                !branch.hasNextSibling && "rounded-es-sm border-s",
-              )}
-            />
-          </span>
-        </span>
-      ) : null}
       <Tooltip disabled={isRenaming || sortable?.isDragging}>
         <TooltipTrigger
           render={

@@ -1377,7 +1377,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
     </RowPressable>
   );
 
-  const branchInset = branch === undefined ? 0 : 10 + (branch.ancestorGuides.length + 1) * 14;
+  const branchInset = branch === undefined ? 0 : 10 + branch.depth * 14;
   const row = canOperateThread ? (
     <View collapsable={false}>
       {customSnoozeOpen && (
@@ -1419,22 +1419,5 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
     <View style={rowAppearance.swipeContainerStyle}>{rowContent(() => {})}</View>
   );
   if (branch === undefined) return row;
-  return (
-    <View className="flex-row ps-2.5">
-      <View accessible={false} pointerEvents="none" className="flex-row self-stretch">
-        {branch.ancestorGuides.map(({ key, continues }) => (
-          <View key={key} className={cn("w-3.5", continues && "border-s border-foreground/30")} />
-        ))}
-        <View className={cn("w-3.5", branch.hasNextSibling && "border-s border-foreground/30")}>
-          <View
-            className={cn(
-              "h-1/2 border-b border-foreground/30",
-              !branch.hasNextSibling && "border-s",
-            )}
-          />
-        </View>
-      </View>
-      <View className="min-w-0 flex-1">{row}</View>
-    </View>
-  );
+  return <View style={{ paddingStart: branchInset }}>{row}</View>;
 });

@@ -104,17 +104,10 @@ describe("v2 thread shell lists", () => {
     const rootKey = `${environmentId}:${root.id}`;
     const tree = buildThreadNavigationTree(registry.get(threads.quietThreadShellsAtom));
     const rows = tree.rowsByRoot.get(rootKey);
-    expect(
-      rows?.map(({ key, branch }) => [
-        key,
-        branch.parentKey,
-        branch.ancestorGuides.map((guide) => guide.continues),
-        branch.hasNextSibling,
-      ]),
-    ).toEqual([
-      [`${environmentId}:agent`, rootKey, [], true],
-      [`${environmentId}:nested`, `${environmentId}:agent`, [true], false],
-      [`${environmentId}:side`, rootKey, [], false],
+    expect(rows?.map(({ key, branch }) => [key, branch.parentKey, branch.depth])).toEqual([
+      [`${environmentId}:agent`, rootKey, 1],
+      [`${environmentId}:nested`, `${environmentId}:agent`, 2],
+      [`${environmentId}:side`, rootKey, 1],
     ]);
     expect(tree.rootByChild.get(`${environmentId}:nested`)).toBe(rootKey);
     registry.dispose();

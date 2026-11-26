@@ -665,13 +665,7 @@ function sameBranch(
     (left !== undefined &&
       right !== undefined &&
       left.parentKey === right.parentKey &&
-      left.hasNextSibling === right.hasNextSibling &&
-      left.ancestorGuides.length === right.ancestorGuides.length &&
-      left.ancestorGuides.every(
-        ({ key, continues }, index) =>
-          key === right.ancestorGuides[index]?.key &&
-          continues === right.ancestorGuides[index]?.continues,
-      ))
+      left.depth === right.depth)
   );
 }
 
