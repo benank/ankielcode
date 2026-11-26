@@ -1,5 +1,6 @@
 import { Button } from "../../components/ui/Button";
 import * as Dialog from "../../components/ui/Dialog";
+import * as Haptics from "expo-haptics";
 import type { ComposerTextPaste } from "../../native/AnkielComposerEditor.types";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 import type { EnvironmentThreadShell } from "@ankielcode/client-runtime/state/shell";
@@ -225,13 +226,17 @@ function SendActionButton(props: {
   const { presentation } = props;
   const gt = useGT();
   const m = useMessages();
+  const send = (followUp?: ActiveTurnComposerAction) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+    props.onSend(followUp);
+  };
   const button = (
     <ComposerActionButton
       accessibilityLabel={props.accessibilityLabel}
       size={props.size}
       icon={presentation.icon}
       disabled={props.disabled}
-      onPress={() => props.onSend()}
+      onPress={() => send()}
     />
   );
   if (!presentation.offersFollowUpChoice || presentation.action === null || props.disabled) {
@@ -250,9 +255,7 @@ function SendActionButton(props: {
         subtitle: m(FOLLOW_UP_ACTION_SUBTITLE[action]),
         state: action === presentation.action ? ("on" as const) : ("off" as const),
       }))}
-      onPressAction={({ nativeEvent }) =>
-        props.onSend(nativeEvent.event as ActiveTurnComposerAction)
-      }
+      onPressAction={({ nativeEvent }) => send(nativeEvent.event as ActiveTurnComposerAction)}
     >
       {button}
     </Menu>

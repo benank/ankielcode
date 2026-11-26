@@ -1,3 +1,4 @@
+import * as Haptics from "expo-haptics";
 import { use } from "react";
 // oxlint-disable-next-line eslint/no-restricted-imports -- The wrapper every screen must use.
 import { RefreshControl as NativeRefreshControl } from "react-native";
@@ -18,5 +19,12 @@ export function RefreshControl(props: RefreshControlProps) {
       </View>
     );
   }
-  return <NativeRefreshControl {...props} />;
+  // UIRefreshControl plays a haptic when a pull triggers; SwipeRefreshLayout does not.
+  const onRefresh =
+    props.onRefresh &&
+    (() => {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+      props.onRefresh?.();
+    });
+  return <NativeRefreshControl {...props} onRefresh={onRefresh} />;
 }

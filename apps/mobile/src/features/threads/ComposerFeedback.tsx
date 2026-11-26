@@ -53,7 +53,6 @@ export function ComposerFeedback({
         {submission.status === "sent" ? (
           <Button
             label={gt("Copy ID")}
-            haptics={false}
             tone="text"
             onPress={() =>
               copyTextWithHaptic(submission.feedbackId, { target: "Codex feedback thread ID" })

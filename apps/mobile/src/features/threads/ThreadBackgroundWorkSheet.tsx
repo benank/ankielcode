@@ -6,7 +6,6 @@ import {
   type PendingBackgroundWorkItem,
 } from "@ankielcode/client-runtime/state/thread-execution";
 import type { EnvironmentId, ThreadId } from "@ankielcode/contracts";
-import * as Haptics from "expo-haptics";
 import { msg, T, useGT, useMessages } from "gt-react-native";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -37,7 +36,6 @@ export function ThreadBackgroundWorkSheet({ route }: StaticScreenProps<Backgroun
   );
   const presentation = presentPendingBackgroundWork(thread?.pendingBackgroundTasks ?? [], m);
   const openThread = (threadId: ThreadId) => {
-    void Haptics.selectionAsync();
     // A thread replaces the leaf sheet so workspace back navigation still works.
     navigation.dispatch(
       StackActions.replace("Thread", { environmentId: target.environmentId, threadId }),

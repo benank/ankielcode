@@ -3077,6 +3077,9 @@
   "79e87310525279f8": "Redirigir",
   "a1e23f7b109d5925": "Tu mensaje llega al agente al instante y cambia aquello en lo que está trabajando.",
   "683838755eb7fe37": "Mientras el agente trabaja",
+  "dd07d4bfcda07a8d": "Háptica",
+  "2933e38a37b43dcc": "Respuestas en streaming",
+  "5e06d5a9d07c8a72": "Siente toques suaves mientras el agente escribe una respuesta.",
   "afda415d2d75a5d3": "Chat",
   "85163bc64c8c56a1": [
     "Mantén pulsado el botón de enviar para usar la otra opción con un solo mensaje. Con un teclado físico, mantén ",
@@ -3602,6 +3605,8 @@
   "4c2495d10dfbf72f": "cola",
   "4ebe2aa17b91e168": "redirigir",
   "48f04bb3132077ef": "mientras el agente trabaja",
+  "b67f1a33f664c870": "háptica",
+  "a1acef2bc14b6fda": "vibración",
   "ffb1ded95eb81974": "archivar",
   "3d5aeb06f2128b12": "archivados",
   "2a34f68d985e9fde": "restaurar",

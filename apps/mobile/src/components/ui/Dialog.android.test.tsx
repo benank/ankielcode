@@ -39,6 +39,10 @@ vi.mock("../../features/settings/appearance/useScaledTextRole", () => ({
   useScaledTextRole: () => ({}),
 }));
 vi.mock("../../lib/mobileTheme", () => ({ themeColorWithContrast: () => "#ffffff" }));
+vi.mock("expo-haptics", () => ({
+  impactAsync: async () => {},
+  ImpactFeedbackStyle: { Medium: "medium" },
+}));
 
 import * as Dialog from "./Dialog.android";
 

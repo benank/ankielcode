@@ -130,7 +130,8 @@ function useThreadActionExecutor(
 
     const pending = { action };
     latestPendingActions.current.set(key, pending);
-    selectionHaptic();
+    // Delete is confirmed in a destructive dialog, which already played its haptic.
+    if (action !== "delete") selectionHaptic();
     const succeeded = await (async () => {
       if (
         (action === "settle" || action === "unsettle") &&

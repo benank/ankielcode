@@ -2,9 +2,11 @@
 import { parseThreadKey, threadKey } from "@ankielcode/client-runtime/state/entities";
 import type { EnvironmentThread } from "@ankielcode/client-runtime/state/shell";
 import type { ScopedThreadRef } from "@ankielcode/contracts";
-import { Atom } from "effect/reactivity";
+import { AsyncResult, Atom } from "effect/reactivity";
 import * as Haptics from "expo-haptics";
 
+import type { Preferences } from "../../persistence/mobile-preferences";
+import { mobilePreferencesAtom } from "../../state/preferences";
 import { environmentThreadDetails } from "../../state/threads";
 
 export interface StreamingMessageMark {
@@ -44,9 +46,22 @@ export function shouldTickStreamHaptic(input: {
   return input.now - input.lastTickAt >= STREAM_HAPTIC_THROTTLE_MS;
 }
 
+/** On unless the user turned it off: the haptic shipped before the setting did. */
+export function streamHapticsEnabled(preferences: Preferences): boolean {
+  return preferences.streamHapticsEnabled !== false;
+}
+
+// A boolean, so rewrites of unrelated preferences do not rebuild the tracker and reset its mark.
+// Until preferences load it reads off; the rebuild after loading only seeds.
+export const streamHapticsEnabledAtom = Atom.make((get) => {
+  const preferences = get(mobilePreferencesAtom);
+  return AsyncResult.isSuccess(preferences) && streamHapticsEnabled(preferences.value);
+}).pipe(Atom.withLabel("thread-stream-haptics:enabled"));
+
 const streamHapticsFamily = Atom.family((key: string) => {
   const ref = parseThreadKey(key);
   return Atom.make((get) => {
+    if (!get(streamHapticsEnabledAtom)) return;
     // The first snapshot only seeds the mark: opening a thread mid-stream is silent.
     let seeded = false;
     let previous: StreamingMessageMark | null = null;

@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 import { ProviderDriverKind, ProviderInstanceId, type ServerProvider } from "@ankielcode/contracts";
 
+vi.mock("expo-haptics", () => ({
+  impactAsync: async () => {},
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium" },
+}));
 vi.mock("react-native", () => ({ Alert: { alert: vi.fn() } }));
 
 vi.mock("../../state/queries", () => ({

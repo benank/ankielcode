@@ -1141,7 +1141,6 @@ const ThreadWorkLogRow = function ThreadWorkLogRow(
             return;
           }
           if (opensMcpSignIn) {
-            void Haptics.selectionAsync();
             setMcpSignInOpen(true);
             return;
           }

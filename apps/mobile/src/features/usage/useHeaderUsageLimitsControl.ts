@@ -1,7 +1,6 @@
 import { collectLimitAccounts } from "@ankielcode/shared/usageLimits";
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigation } from "@react-navigation/native";
-import * as Haptics from "expo-haptics";
 import { useGT } from "gt-react-native";
 import type { ReactNode } from "react";
 
@@ -63,7 +62,6 @@ export function useHeaderUsageLimitsControl(): HeaderUsageLimitsControl {
       },
       separateBackground: false,
       onPress: () => {
-        void Haptics.selectionAsync();
         navigation.navigate("UsageLimits", usageLimitsRouteParams(selectedThreadDetailRef));
       },
     },

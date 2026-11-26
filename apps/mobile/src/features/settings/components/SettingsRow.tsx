@@ -6,7 +6,6 @@ import { ListRow } from "../../../components/ui/ListRow";
 import { ListRowLayout } from "../../../components/ui/ListRowLayout";
 import { RowPressable } from "../../../components/ui/RowPressable";
 import { cn } from "../../../lib/cn";
-import { playSelectionHaptic } from "../../../lib/playSelectionHaptic";
 import type { SettingsLegalDocumentTarget, SettingsPageTarget } from "./settings-page-targets";
 import { SettingsSidebarContext } from "./SettingsSection";
 import { openSettings } from "../settings-navigation";
@@ -37,11 +36,9 @@ export function SettingsRow(props: {
   };
   const onPress = () => {
     if (props.target) {
-      playSelectionHaptic();
       if (inList) openSettings(navigation, props.target);
       else navigation.navigate(props.target);
     } else if (props.fullScreenTarget) {
-      playSelectionHaptic();
       navigation.navigate(props.fullScreenTarget);
     } else {
       props.onPress?.();

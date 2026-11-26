@@ -15,7 +15,6 @@ import { formatDuration } from "@ankielcode/shared/orchestrationTimingCopy";
 import { StackActions, useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import * as DateTime from "effect/DateTime";
 import { Atom } from "effect/reactivity";
-import * as Haptics from "expo-haptics";
 import { T, useGT, useMessages } from "gt-react-native";
 import { useMemo } from "react";
 import { Pressable, ScrollView, View } from "react-native";
@@ -69,7 +68,6 @@ export function ThreadAgentsSheet({ route }: StaticScreenProps<AgentsTarget>) {
   );
 
   const openChildThread = (child: SubagentThreadTarget) => {
-    void Haptics.selectionAsync();
     if (
       openInspector(target, {
         type: "thread",

@@ -52,6 +52,10 @@ function loadRouters() {
   };
 }
 
+vi.mock("expo-haptics", () => ({
+  impactAsync: async () => {},
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium" },
+}));
 vi.mock("../layout/workspace/useSelectWorkspaceDetail", async () => {
   const { selectWorkspaceDetail } = await import("../layout/workspace/workspace-detail-selection");
   return {

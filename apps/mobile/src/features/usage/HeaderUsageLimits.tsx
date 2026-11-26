@@ -13,7 +13,6 @@ import {
 import { collectLimitNotices } from "@ankielcode/shared/usageLimitsCopy";
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
-import * as Haptics from "expo-haptics";
 import { T, useGT, useLocale, useMessages, Var } from "gt-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
@@ -73,10 +72,9 @@ export function HeaderUsageLimitsButton() {
       accessibilityRole="button"
       accessibilityLabel={summary}
       hitSlop={6}
-      onPress={() => {
-        void Haptics.selectionAsync();
-        navigation.navigate("UsageLimits", usageLimitsRouteParams(selectedThreadDetailRef));
-      }}
+      onPress={() =>
+        navigation.navigate("UsageLimits", usageLimitsRouteParams(selectedThreadDetailRef))
+      }
       className="size-9 items-center justify-center rounded-full active:opacity-60 android:size-10"
     >
       <Svg width={20} height={20} viewBox="0 0 20 20" fill="none">

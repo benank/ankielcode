@@ -22,6 +22,10 @@ const native = vi.hoisted(() => ({
     vi.fn<(uri: string, url: string, options: UploadOptions) => Promise<{ status: number }>>(),
 }));
 
+vi.mock("expo-haptics", () => ({
+  impactAsync: async () => {},
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium" },
+}));
 vi.mock("react-native", () => ({ Alert: { alert: vi.fn() } }));
 vi.mock("@effect/atom-react", () => ({
   useAtomValue: (atom: Parameters<typeof appAtomRegistry.get>[0]) => appAtomRegistry.get(atom),

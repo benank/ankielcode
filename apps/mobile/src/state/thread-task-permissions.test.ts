@@ -80,6 +80,10 @@ const state = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("expo-haptics", () => ({
+  impactAsync: async () => {},
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium" },
+}));
 vi.mock("react", () => ({
   useCallback: <A>(callback: A) => callback,
   useEffect: () => {},

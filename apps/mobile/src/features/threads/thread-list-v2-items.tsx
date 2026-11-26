@@ -41,7 +41,6 @@ import { useNowAfter } from "../../lib/clock";
 import { cn } from "../../lib/cn";
 import { copyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 import { copyThreadReference } from "../../lib/copyThreadReference";
-import { playSelectionHaptic } from "../../lib/playSelectionHaptic";
 import { useUniwindTheme } from "../../lib/useUniwindTheme";
 import { useEnvironmentScope } from "../../state/session";
 import type { PendingNewTask } from "../../state/use-pending-new-tasks";
@@ -203,10 +202,7 @@ function ThreadListV2Section(props: {
       }}
       className={className}
       disabled={props.disclosure.disabled}
-      onPress={() => {
-        playSelectionHaptic();
-        props.disclosure?.onToggle();
-      }}
+      onPress={props.disclosure.onToggle}
       style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
     >
       {content}
@@ -324,10 +320,7 @@ export const ThreadListV2ShowMoreRow = memo(function ThreadListV2ShowMoreRow(pro
           : label
       }
       disabled={props.state === "loading"}
-      onPress={() => {
-        playSelectionHaptic();
-        props.onPress();
-      }}
+      onPress={props.onPress}
       className="mx-4 mt-2 items-center justify-center rounded-lg border border-dashed border-border py-2.5 ios:min-h-[44px]"
       style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
     >
@@ -374,10 +367,7 @@ export const ThreadListV2ProjectFolderHeader = memo(
         accessibilityRole="button"
         accessibilityLabel={`${title}${item.hiddenStatus ? m(FOLDER_STATUS_LABEL[item.hiddenStatus]) : ""}`}
         accessibilityState={{ expanded: !item.collapsed }}
-        onPress={() => {
-          playSelectionHaptic();
-          props.onToggle(item.folderKey);
-        }}
+        onPress={() => props.onToggle(item.folderKey)}
         className={cn(
           "mt-2 min-h-[40px] flex-row items-center gap-2.5 rounded-[10px] px-3",
           !sidebarPane && "mx-2",
@@ -625,10 +615,7 @@ export const ThreadListV2PendingRow = memo(function ThreadListV2PendingRow(props
                 interactionClassName={rowAppearance.interactionClassName}
                 interactionOpacity={rowAppearance.interactionOpacity}
                 highlighted={highlighted}
-                onPress={() => {
-                  playSelectionHaptic();
-                  onSelectPendingTask(pendingTask);
-                }}
+                onPress={() => onSelectPendingTask(pendingTask)}
                 style={rowAppearance.style}
               >
                 <View className={THREAD_LIST_V2_ROW_CONTENT_CLASS_NAME}>{rowContent}</View>
@@ -730,10 +717,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   const snoozedRow = props.snoozed === true;
   const dormant = useSwipeRowDormant(props.activationKey);
 
-  const selectThread = () => {
-    playSelectionHaptic();
-    onSelectThread(thread);
-  };
+  const selectThread = () => onSelectThread(thread);
   const providerIconUrl = useMemo(
     () =>
       props.providers?.find(
@@ -756,10 +740,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   const pr = useThreadPr(thread);
   const prBadgeLabel = pr ? resolveThreadPrBadgeAction(pr, m).accessibilityLabel : null;
   const handleOpenPullRequests = useCallback(() => {
-    if (pr) {
-      playSelectionHaptic();
-      onOpenThreadPullRequests(thread, pr);
-    }
+    if (pr) onOpenThreadPullRequests(thread, pr);
   }, [onOpenThreadPullRequests, pr, thread]);
 
   const theme = useUniwindTheme();

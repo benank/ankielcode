@@ -3077,6 +3077,9 @@
   "79e87310525279f8": "Réorienter",
   "a1e23f7b109d5925": "Votre message parvient immédiatement à l’agent et modifie ce sur quoi il travaille.",
   "683838755eb7fe37": "Pendant que l’agent travaille",
+  "dd07d4bfcda07a8d": "Retour haptique",
+  "2933e38a37b43dcc": "Réponses en streaming",
+  "5e06d5a9d07c8a72": "Ressentez de légères vibrations pendant que l’agent rédige une réponse.",
   "afda415d2d75a5d3": "Discussion",
   "85163bc64c8c56a1": [
     "Appuyez longuement sur le bouton d’envoi pour utiliser l’autre option pour un seul message. Avec un clavier physique, maintenez ",
@@ -3602,6 +3605,8 @@
   "4c2495d10dfbf72f": "file d’attente",
   "4ebe2aa17b91e168": "réorienter",
   "48f04bb3132077ef": "pendant que l’agent travaille",
+  "b67f1a33f664c870": "haptique",
+  "a1acef2bc14b6fda": "vibration",
   "ffb1ded95eb81974": "archiver",
   "3d5aeb06f2128b12": "archivés",
   "2a34f68d985e9fde": "restaurer",

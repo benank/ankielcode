@@ -1,6 +1,5 @@
 import * as Hash from "effect/Hash";
 import { File, Paths } from "expo-file-system";
-import * as Haptics from "expo-haptics";
 import { T, useGT, Var } from "gt-react-native";
 import type { DiagramType } from "pele/lazy";
 import { Suspense, use, useRef, useState } from "react";
@@ -246,7 +245,6 @@ function MermaidBlock(props: MermaidCodeBlockProps & { readonly diagram: Diagram
               accessibilityHint={gt("Opens the diagram full screen")}
               onPress={() => {
                 if (expansion) return;
-                void Haptics.selectionAsync();
                 setExpansion({ status: "exporting" });
               }}
               style={{

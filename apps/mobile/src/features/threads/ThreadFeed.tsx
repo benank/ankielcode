@@ -3195,7 +3195,6 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
   const screenColor = theme["--color-screen"];
   const userBubbleColor = theme["--color-user-bubble"];
   const openSkillInstructions = (path: string) => {
-    void Haptics.selectionAsync();
     navigation.navigate("ThreadFile", {
       environmentId: String(props.environmentId),
       threadId: String(props.threadId),
@@ -3365,7 +3364,6 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
       imageEmbed,
     });
     if (media && media.kind !== "file") {
-      void Haptics.selectionAsync();
       const scope = markdownLinkScope;
       const openMediaPreview = () => {
         if (request.signal.aborted) return;
@@ -3409,7 +3407,6 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
       if (path === null) return;
       void findFileLinkTarget(presentation.path, path, request.signal, reply).then((target) => {
         if (request.signal.aborted) return;
-        void Haptics.selectionAsync();
         navigation.navigate("ThreadFile", {
           environmentId: String(props.environmentId),
           threadId: String(props.threadId),

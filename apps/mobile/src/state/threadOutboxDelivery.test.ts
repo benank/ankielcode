@@ -68,6 +68,10 @@ const harness = vi.hoisted(() => ({
   })(),
 }));
 
+vi.mock("expo-haptics", () => ({
+  impactAsync: async () => {},
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium" },
+}));
 vi.mock("react-native", () => ({ Alert: { alert: vi.fn() } }));
 
 vi.mock("expo-file-system", () => ({

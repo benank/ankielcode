@@ -17,6 +17,10 @@ const { Children, mocks } = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("expo-haptics", () => ({
+  impactAsync: async () => {},
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium" },
+}));
 vi.mock("react-native", () => ({
   View: Children,
   Alert: { alert: mocks.alert },

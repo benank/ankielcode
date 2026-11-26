@@ -1,3 +1,4 @@
+import * as Haptics from "expo-haptics";
 import { msg } from "gt-react-native";
 import { Alert } from "react-native";
 
@@ -16,7 +17,12 @@ export function confirm(request: ConfirmDialogRequest): void {
     {
       text: request.confirmText,
       style: request.destructive ? "destructive" : "default",
-      onPress: request.onConfirm,
+      onPress: () => {
+        if (request.destructive) {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
+        }
+        request.onConfirm();
+      },
     },
   ]);
 }

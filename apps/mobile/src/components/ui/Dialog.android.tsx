@@ -10,6 +10,7 @@ import {
   useNativeState,
 } from "@expo/ui/jetpack-compose";
 import { verticalScroll } from "@expo/ui/jetpack-compose/modifiers";
+import * as Haptics from "expo-haptics";
 
 import { useAppearancePreferences } from "../../features/settings/appearance/AppearancePreferencesProvider";
 import { useScaledTextRole } from "../../features/settings/appearance/useScaledTextRole";
@@ -110,6 +111,9 @@ export function Host() {
   const handleConfirm = (nativeInputValue?: string) => {
     if (!presented || !dismiss(presented.id)) return;
     if (presented.kind === "confirm") {
+      if (presented.request.destructive) {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
+      }
       presented.request.onConfirm();
     } else if (presented.kind === "text-input") {
       presented.request.onConfirm(nativeInputValue ?? presented.request.initialValue);

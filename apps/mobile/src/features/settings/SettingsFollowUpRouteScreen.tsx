@@ -2,7 +2,7 @@ import { msg, T, useGT, useMessages, Var } from "gt-react-native";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { useAtomValue } from "@effect/atom-react";
 import { AsyncResult } from "effect/reactivity";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText as Text } from "../../components/ui/AppText";
@@ -10,8 +10,10 @@ import { DEFAULT_FOLLOW_UP_BEHAVIOR, type FollowUpBehavior } from "../../lib/fol
 import { mobilePreferencesAtom, saveMobilePreferences } from "../../state/preferences";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { ListChoiceRow as SettingsChoiceRow } from "../../components/ui/ListChoiceRow";
+import { streamHapticsEnabled } from "../threads/threadStreamHaptics";
 import { SettingsSection } from "./components/SettingsSection";
 import { SettingsScreen } from "./components/SettingsScreen";
+import { SettingsSwitchRow } from "./components/SettingsSwitchRow";
 
 const FOLLOW_UP_OPTIONS: ReadonlyArray<{
   readonly behavior: FollowUpBehavior;
@@ -40,6 +42,8 @@ export function SettingsFollowUpRouteScreen() {
   const selectedBehavior = AsyncResult.isSuccess(preferencesResult)
     ? (preferencesResult.value.followUpBehavior ?? DEFAULT_FOLLOW_UP_BEHAVIOR)
     : null;
+  const streamHaptics =
+    AsyncResult.isSuccess(preferencesResult) && streamHapticsEnabled(preferencesResult.value);
 
   const content = (
     <ScrollView
@@ -70,6 +74,20 @@ export function SettingsFollowUpRouteScreen() {
           keyboard, hold <Var>{Platform.OS === "android" ? "Ctrl" : "Command"}</Var> while sending.
         </T>
       </Text>
+      <View className="mt-3">
+        <SettingsSection title={gt("Haptics")}>
+          <SettingsSwitchRow
+            icon={{ ios: "iphone.radiowaves.left.and.right", android: "smartphone" }}
+            label={gt("Streaming replies", { $context: "haptics setting" })}
+            subtitle={gt("Feel light taps while the agent writes a reply.")}
+            value={streamHaptics}
+            disabled={!preferencesReady}
+            onValueChange={(value) => {
+              void savePreferences({ streamHapticsEnabled: value });
+            }}
+          />
+        </SettingsSection>
+      </View>
     </ScrollView>
   );
 

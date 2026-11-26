@@ -1,3 +1,4 @@
+import * as Haptics from "expo-haptics";
 import { useGT } from "gt-react-native";
 import { useRef, useState } from "react";
 import { Platform, View } from "react-native";
@@ -106,7 +107,10 @@ export function IssueCommentComposer(props: {
       accessibilityLabel={props.posting ? gt("Posting comment") : gt("Post comment")}
       icon="arrow.up"
       disabled={!canSend}
-      onPress={() => void send()}
+      onPress={() => {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+        void send();
+      }}
     />
   );
 

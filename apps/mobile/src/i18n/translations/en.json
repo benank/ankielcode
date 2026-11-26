@@ -3084,6 +3084,9 @@
   "79e87310525279f8": "Steer",
   "a1e23f7b109d5925": "Your message reaches the agent right away, changing what it is working on.",
   "683838755eb7fe37": "While the agent is running",
+  "dd07d4bfcda07a8d": "Haptics",
+  "2933e38a37b43dcc": "Streaming replies",
+  "5e06d5a9d07c8a72": "Feel light taps while the agent writes a reply.",
   "afda415d2d75a5d3": "Chat",
   "85163bc64c8c56a1": [
     "Long-press the send button to use the other option for a single message. With a hardware keyboard, hold ",
@@ -3609,6 +3612,8 @@
   "4c2495d10dfbf72f": "queue",
   "4ebe2aa17b91e168": "steer",
   "48f04bb3132077ef": "while the agent is running",
+  "b67f1a33f664c870": "haptics",
+  "a1acef2bc14b6fda": "vibration",
   "ffb1ded95eb81974": "archive",
   "3d5aeb06f2128b12": "archived",
   "2a34f68d985e9fde": "restore",

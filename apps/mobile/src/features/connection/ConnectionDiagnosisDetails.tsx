@@ -93,7 +93,6 @@ export function ConnectionDiagnosisDetails(props: {
       </Text>
       <Button
         label={gt("Copy diagnostics")}
-        haptics={false}
         icon="doc.on.doc"
         onPress={() => {
           copyTextWithHaptic(connectionDiagnosisText(props.hostLabel, diagnosis), {

@@ -3077,6 +3077,9 @@
   "79e87310525279f8": "Direcionar",
   "a1e23f7b109d5925": "Sua mensagem chega ao agente imediatamente, mudando o que ele está fazendo.",
   "683838755eb7fe37": "Enquanto o agente está em execução",
+  "dd07d4bfcda07a8d": "Háptica",
+  "2933e38a37b43dcc": "Respostas em streaming",
+  "5e06d5a9d07c8a72": "Sinta toques leves enquanto o agente escreve uma resposta.",
   "afda415d2d75a5d3": "Chat",
   "85163bc64c8c56a1": [
     "Mantenha pressionado o botão de enviar para usar a outra opção em uma única mensagem. Com um teclado físico, segure ",
@@ -3602,6 +3605,8 @@
   "4c2495d10dfbf72f": "fila",
   "4ebe2aa17b91e168": "direcionar",
   "48f04bb3132077ef": "enquanto o agente está em execução",
+  "b67f1a33f664c870": "háptica",
+  "a1acef2bc14b6fda": "vibração",
   "ffb1ded95eb81974": "arquivar",
   "3d5aeb06f2128b12": "arquivadas",
   "2a34f68d985e9fde": "restaurar",

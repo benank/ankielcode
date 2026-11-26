@@ -62,6 +62,10 @@ const state = vi.hoisted(() => ({
     environment: { capabilities: {} },
   },
 }));
+vi.mock("expo-haptics", () => ({
+  impactAsync: async () => {},
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium" },
+}));
 vi.mock("react-native", () => ({ Alert: { alert: vi.fn() } }));
 vi.mock("./session", async () => {
   const { Atom } = await import("effect/reactivity");
