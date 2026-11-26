@@ -41,6 +41,7 @@ import {
   resolveThreadListV2SnoozeMenuSelection,
   resolveThreadListV2SwipeActions,
   resolveThreadListV2SnoozePresets,
+  resolveThreadListV2PixelKind,
   resolveThreadListV2RowStatus,
   resolveThreadListV2Status,
   resolveThreadListV2WokeAt,
@@ -175,6 +176,18 @@ describe("resolveThreadListV2Status", () => {
     expect(resolveThreadListV2Status(present({ ...raw, blockedOnThreadWait: false }))).toBe(
       "working",
     );
+  });
+
+  it("lights a provider-native subagent's row while its own turn runs", () => {
+    const present = (shell: unknown) => presentThreadShell(environmentId, decodeThreadShell(shell));
+    const child = makeRawThreadShell({ latestRunId: null, status: "idle" });
+
+    const working = present({ ...child, subagentTurnActive: true });
+    expect(working.runtime).toBeNull();
+    expect(resolveThreadListV2PixelKind(working, null)).toBe("working");
+    expect(
+      resolveThreadListV2PixelKind(present({ ...child, subagentTurnActive: false }), null),
+    ).toBe(null);
   });
 
   it("settles a failure the user opened to ready in the row, keeping the raw status", () => {

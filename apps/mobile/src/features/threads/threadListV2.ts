@@ -287,6 +287,7 @@ export function resolveThreadListV2Status(
     | "pendingSubagentRequest"
     | "runtime"
     | "blockedOnThreadWait"
+    | "subagentTurnActive"
   >,
 ): ThreadListV2Status {
   if (thread.hasPendingApprovals || thread.pendingSubagentRequest === "approval") {
@@ -299,8 +300,9 @@ export function resolveThreadListV2Status(
     return "waiting";
   }
   if (
-    thread.runtime !== null &&
-    ["preparing", "queued", "starting", "running", "waiting"].includes(thread.runtime.status)
+    thread.subagentTurnActive === true ||
+    (thread.runtime !== null &&
+      ["preparing", "queued", "starting", "running", "waiting"].includes(thread.runtime.status))
   ) {
     return "working";
   }

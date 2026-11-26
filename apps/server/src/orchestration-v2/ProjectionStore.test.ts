@@ -1655,6 +1655,57 @@ it.effect("SQL queue readiness skips held runs without bypassing active work", (
   }).pipe(Effect.provide(layerTest)),
 );
 
+it.effect("shells mark a native subagent thread active only while its run-less turn is live", () =>
+  Effect.gen(function* () {
+    const store = yield* ProjectionStore.ProjectionStoreV2;
+    const threadId = yield* addRolledBackRecoveryCandidate("subagent-turn");
+    const at = (yield* store.getThreadProjection(threadId)).updatedAt;
+    const nodeId = NodeId.make("node:subagent-turn:thread-root");
+    const assertActive = Effect.fnUntraced(function* (expected: boolean) {
+      const listed = (yield* store.getShellSnapshot()).threads.find((row) => row.id === threadId);
+      const shells = [
+        yield* store.getThreadShell(threadId),
+        listed,
+        ProjectionStore.threadShellFromProjection(yield* store.getThreadProjection(threadId)),
+      ];
+      assert.deepEqual(
+        shells.map((shell) => shell?.subagentTurnActive ?? false),
+        [expected, expected, expected],
+      );
+      yield* assertShellIndexCoversShells();
+    });
+    yield* assertActive(false);
+    for (const status of ["running", "completed"] as const) {
+      yield* store.apply({
+        id: EventId.make(`event:subagent-turn:${status}`),
+        type: "node.updated",
+        threadId,
+        nodeId,
+        driver,
+        occurredAt: at,
+        payload: {
+          id: nodeId,
+          threadId,
+          runId: null,
+          rootNodeId: nodeId,
+          parentNodeId: null,
+          kind: "root_turn",
+          status,
+          countsForRun: false,
+          providerThreadId: null,
+          providerTurnId: null,
+          nativeItemRef: null,
+          runtimeRequestId: null,
+          checkpointScopeId: null,
+          startedAt: at,
+          completedAt: status === "completed" ? at : null,
+        },
+      });
+      yield* assertActive(status === "running");
+    }
+  }).pipe(Effect.provide(layerTest)),
+);
+
 it.effect("SQL shells flag only an active turn blocked solely on Ankiel thread waits", () =>
   Effect.gen(function* () {
     const store = yield* ProjectionStore.ProjectionStoreV2;

@@ -929,6 +929,7 @@ type SidebarThreadStatusInput = Pick<
   | "pendingSubagentRequest"
   | "runtime"
   | "blockedOnThreadWait"
+  | "subagentTurnActive"
 >;
 
 export function resolveSidebarThreadStatus(thread: SidebarThreadStatusInput): SidebarThreadStatus {
@@ -945,8 +946,9 @@ export function resolveSidebarThreadStatus(thread: SidebarThreadStatusInput): Si
     return "preparing";
   }
   if (
-    thread.runtime !== null &&
-    ["queued", "starting", "running", "waiting"].includes(thread.runtime.status)
+    thread.subagentTurnActive === true ||
+    (thread.runtime !== null &&
+      ["queued", "starting", "running", "waiting"].includes(thread.runtime.status))
   ) {
     return "working";
   }

@@ -1,5 +1,8 @@
 import type { ProjectThreadAwarenessV2Input } from "@ankielcode/shared/agentAwareness";
-import { applyOrchestrationV2ThreadVisit } from "@ankielcode/contracts";
+import {
+  applyOrchestrationV2ThreadVisit,
+  isOrchestrationV2WorkActive,
+} from "@ankielcode/contracts";
 import { applyThreadPullRequestLinkUpdate } from "../sourceControl/threadPullRequests.ts";
 import { projectTurnItemForWire } from "./WireProjection.ts";
 import * as Stream from "effect/Stream";
@@ -1274,6 +1277,7 @@ type ShellThreadRow = {
   readonly active_run_status: string | null;
   readonly activity_run_status: string | null;
   readonly activity_run_started_at: string | null;
+  readonly subagent_turn_active: number;
   readonly last_error: string | null;
   readonly terminal_failure_payload_json: string | null;
   readonly blocking_run_id: string | null;
@@ -1984,6 +1988,12 @@ export function threadShellFromProjection(
       latestRun != null && isBackgroundWakeRunForShell(latestRun, projection),
     activeRunId: activeRun?.id ?? null,
     blockedOnThreadWait: deriveBlockedOnThreadWait({ activeRun, turnItems: projection.turnItems }),
+    subagentTurnActive: projection.nodes.some(
+      (node) =>
+        node.kind === "root_turn" &&
+        node.runId === null &&
+        isOrchestrationV2WorkActive(node.status),
+    ),
     activityRunStatus: activityRun?.status ?? null,
     activityRunStartedAt:
       activityRun === null ? null : orchestrationV2RunWorkStartedAt(activityRun),
@@ -2121,6 +2131,7 @@ type ShellThreadState = {
   readonly latestRunBackgroundWake: boolean;
   readonly activeRunId: RunId | null;
   readonly blockedOnThreadWait: boolean;
+  readonly subagentTurnActive: boolean;
   readonly activityRunStatus: ShellActivityRunStatus | null;
   readonly activityRunStartedAt: DateTime.Utc | null;
   readonly lastError: string | null;
@@ -2295,6 +2306,7 @@ function shellFromState(input: {
     latestRunBackgroundWake: input.state.latestRunBackgroundWake,
     activeRunId: input.state.activeRunId,
     blockedOnThreadWait: input.state.blockedOnThreadWait,
+    subagentTurnActive: input.state.subagentTurnActive,
     activityRunStatus: input.state.activityRunStatus,
     activityRunStartedAt: input.state.activityRunStartedAt,
     status: input.state.latestRunStatus,
@@ -8489,6 +8501,16 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                 ORDER BY r.ordinal DESC, r.run_id DESC
                 LIMIT 1
               ) AS activity_run_started_at,
+              -- A native subagent's turn has no run of its own. The status list matches the
+              -- live index's predicate, which SQLite needs to use it.
+              EXISTS (
+                SELECT 1 FROM orchestration_v2_projection_nodes AS node
+                  ${LIVE_NODES_INDEX}
+                WHERE node.thread_id = t.thread_id
+                  AND node.status IN ('pending', 'starting', 'running', 'waiting')
+                  AND node.run_id IS NULL
+                  AND node.kind = 'root_turn'
+              ) AS subagent_turn_active,
               (
                 SELECT json_extract(session.payload_json, '$.lastError')
                 -- Keep bindings outermost: one provider instance can hold every session.
@@ -9236,6 +9258,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           latestRunStopRequested,
           latestRunBackgroundWake,
           activeRunId: row.active_run_id === null ? null : RunId.make(row.active_run_id),
+          subagentTurnActive: row.subagent_turn_active === 1,
           blockedOnThreadWait: deriveBlockedOnThreadWait({
             activeRun:
               row.active_run_id === null || row.active_run_status !== "running"
