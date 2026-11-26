@@ -252,16 +252,12 @@ export function defaultWorkflowListTab(groups: WorkflowRunGroups): WorkflowListT
   return groups.workflows.some((section) => section.active.length > 0) ? "running" : "all";
 }
 
-const CHIP_TONES = 5;
-
-/** A workflow's mark in the list: two letters and one of a few colours, the same every time. */
-export function workflowChip(name: string): { readonly letters: string; readonly tone: number } {
+/** A workflow's mark in the list: two letters, the same every time. */
+export function workflowChip(name: string): { readonly letters: string } {
   const parts = name.split(/[^\p{L}\p{N}]+/u).filter((part) => part !== "");
   const letters =
     parts.length > 1 ? `${parts[0]![0]}${parts[1]![0]}` : (parts[0] ?? name).slice(0, 2);
-  let hash = 0;
-  for (const char of name) hash = (hash * 31 + char.codePointAt(0)!) % 9973;
-  return { letters: letters.toUpperCase(), tone: hash % CHIP_TONES };
+  return { letters: letters.toUpperCase() };
 }
 
 export type WorkflowRunTone = "input" | "failed" | "working" | "quiet" | "done";

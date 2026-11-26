@@ -7,7 +7,7 @@ import { View } from "react-native";
  */
 export function ReadOnlyComposerBar(props: { readonly children: ReactNode }) {
   return (
-    <View className="flex-row items-center gap-3 rounded-[20px] border border-border-subtle bg-card-alt py-2 pe-2 ps-4">
+    <View className="flex-row items-center gap-3 rounded-card border border-border-subtle bg-card-alt py-2 pe-2 ps-4">
       {props.children}
     </View>
   );

@@ -510,6 +510,17 @@ export default defineConfig({
         rules: { "shadcn/no-raw-colors": "error" },
       },
       {
+        // Status and surface colors come from theme tokens; identity palettes pick from hues by design.
+        files: ["apps/web/src/**", "apps/mobile/src/**"],
+        excludeFiles: [
+          "**/*.{test,spec}.{ts,tsx}",
+          "apps/mobile/src/features/development/**",
+          "apps/web/src/projectIconColors.ts",
+          "apps/mobile/src/lib/projectIcon.ts",
+        ],
+        rules: { "ankielcode/no-palette-color-classes": "error" },
+      },
+      {
         // Third-party marks must retain their exact colors.
         files: ["apps/web/src/components/Icons.tsx", "apps/web/src/components/JetBrainsIcons.tsx"],
         rules: { "shadcn/no-raw-colors": "off" },

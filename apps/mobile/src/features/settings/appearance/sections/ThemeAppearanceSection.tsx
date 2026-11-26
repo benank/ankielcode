@@ -177,7 +177,7 @@ function ThemeCard(props: {
   );
 
   return (
-    <View className="min-w-36 flex-1 basis-[47%] gap-3 rounded-[24px] border border-border bg-grouped-card px-2 py-4">
+    <View className="min-w-36 flex-1 basis-[47%] gap-3 rounded-panel border border-border bg-grouped-card px-2 py-4">
       <Pressable
         accessibilityHint={gt("Sets both light and dark appearances")}
         accessibilityLabel={gt("{theme} theme", { theme: props.label })}
@@ -186,7 +186,7 @@ function ThemeCard(props: {
           disabled: props.disabled,
           selected: props.lightSelected && props.darkSelected,
         }}
-        className="absolute inset-0 rounded-[24px] active:bg-subtle"
+        className="absolute inset-0 rounded-panel active:bg-subtle"
         disabled={props.disabled}
         onPress={props.onSelectBoth}
       />
@@ -285,7 +285,7 @@ function ModeCard(props: {
       accessibilityRole="radio"
       accessibilityState={{ checked: props.selected, disabled: props.disabled }}
       className={cn(
-        "min-w-0 flex-1 gap-2 rounded-[24px] p-2 active:scale-[0.97]",
+        "min-w-0 flex-1 gap-2 rounded-panel p-2 active:scale-[0.97]",
         props.selected
           ? "border-2 border-primary bg-subtle"
           : "border border-border bg-grouped-card",

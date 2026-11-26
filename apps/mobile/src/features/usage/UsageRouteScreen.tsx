@@ -368,7 +368,7 @@ function UsageScreen(props: {
                         {wide ? (
                           <View className="flex-row gap-6">
                             <View className="w-72 gap-6">
-                              <View className="rounded-[24px] border-continuous bg-grouped-card p-4">
+                              <View className="rounded-panel border-continuous bg-grouped-card p-4">
                                 <UsageSummary merged={merged} metric={metric} />
                               </View>
                               {providers}
@@ -489,7 +489,7 @@ function ChartCard(props: {
 
   return (
     <View
-      className={`gap-4 rounded-[24px] border-continuous bg-grouped-card p-4${props.fill ? " flex-1" : ""}`}
+      className={`gap-4 rounded-panel border-continuous bg-grouped-card p-4${props.fill ? " flex-1" : ""}`}
     >
       {props.title ? (
         <Text className="text-sm font-ankiel-medium text-foreground">{props.title}</Text>

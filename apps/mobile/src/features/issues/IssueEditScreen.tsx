@@ -85,8 +85,8 @@ export function IssueEditScreen({ route }: StaticScreenProps<IssueEditParams>) {
         onSubmitEditing={isTitle ? () => void save() : undefined}
         className={
           isTitle
-            ? "min-h-12 rounded-[20px] bg-grouped-card px-4 text-base text-foreground"
-            : "min-h-48 rounded-[20px] bg-grouped-card p-4 text-base text-foreground"
+            ? "min-h-12 rounded-card bg-grouped-card px-4 text-base text-foreground"
+            : "min-h-48 rounded-card bg-grouped-card p-4 text-base text-foreground"
         }
         style={isTitle ? undefined : { textAlignVertical: "top" }}
       />

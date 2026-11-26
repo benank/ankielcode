@@ -82,6 +82,7 @@ export function PullRequestDiffStats(props: {
     <View className="shrink-0 flex-row items-center gap-2">
       {!props.compact || props.additions > 0 ? (
         <Text
+          // oxlint-disable-next-line ankielcode/no-palette-color-classes -- diff additions keep their conventional green
           className={cn(textSize, "font-ankiel-medium tabular-nums text-adaptive-emerald-600-400")}
         >
           +{props.additions.toLocaleString()}

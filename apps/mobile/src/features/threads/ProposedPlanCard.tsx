@@ -58,7 +58,7 @@ export function ProposedPlanCard(props: {
   };
 
   return (
-    <View className="mb-3 gap-3 rounded-[20px] border border-border bg-card-alt p-4">
+    <View className="mb-3 gap-3 rounded-card border border-border bg-card-alt p-4">
       <View className="flex-row items-center gap-2">
         <Text
           accessibilityRole="header"

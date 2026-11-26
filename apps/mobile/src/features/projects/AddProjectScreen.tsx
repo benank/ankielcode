@@ -197,8 +197,8 @@ function ListSection(props: { readonly children: ReactNode }) {
     <View
       className={
         Platform.OS === "android"
-          ? "overflow-hidden rounded-[28px] bg-grouped-card"
-          : "overflow-hidden rounded-[24px] bg-grouped-card"
+          ? "overflow-hidden rounded-sheet bg-grouped-card"
+          : "overflow-hidden rounded-panel bg-grouped-card"
       }
     >
       {props.children}
@@ -319,7 +319,7 @@ function ProjectPathInput(props: {
 }) {
   return (
     <TextInput
-      className="h-12 min-h-12 rounded-[24px] px-4 py-0 text-base leading-snug"
+      className="h-12 min-h-12 rounded-panel px-4 py-0 text-base leading-snug"
       value={props.value}
       onChangeText={(text) => props.onChangeText(resolvePastedPath(props.value, text))}
       autoCapitalize="none"
@@ -1010,7 +1010,7 @@ export function AddProjectRepositoryScreen(props: {
       {environment ? (
         <>
           <TextInput
-            className="h-12 min-h-12 rounded-[24px] px-4 py-0 text-base leading-snug"
+            className="h-12 min-h-12 rounded-panel px-4 py-0 text-base leading-snug"
             value={repositoryInput}
             onChangeText={setRepositoryInput}
             autoCapitalize="none"
@@ -1323,7 +1323,7 @@ export function AddProjectNewScreen(props: { readonly environmentId?: string | s
       {environment ? (
         <>
           <TextInput
-            className="h-12 min-h-12 rounded-[24px] px-4 py-0 text-base leading-snug"
+            className="h-12 min-h-12 rounded-panel px-4 py-0 text-base leading-snug"
             value={name}
             onChangeText={setName}
             autoCorrect={false}
@@ -1652,7 +1652,7 @@ export function AddProjectDestinationScreen(props: {
     <AddProjectShell title={gt("Clone destination")}>
       {error ? <ErrorBanner message={error} /> : null}
       {repositoryTitle ? (
-        <View className="rounded-[24px] bg-grouped-card px-4 py-3">
+        <View className="rounded-panel bg-grouped-card px-4 py-3">
           <Text className="text-base font-ankiel-bold">{repositoryTitle}</Text>
           <Text className="mt-0.5 text-xs text-foreground-muted" numberOfLines={2}>
             {remoteUrl}

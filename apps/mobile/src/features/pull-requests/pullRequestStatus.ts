@@ -21,6 +21,7 @@ const STATES = {
   merged: {
     label: msg("Merged", { $context: "pull request state" }),
     icon: PullRequestGlyph.merged,
+    // oxlint-disable-next-line ankielcode/no-palette-color-classes -- pull request merged glyph keeps forge violet
     tint: "accent-adaptive-violet-600-400",
   },
   closed: {

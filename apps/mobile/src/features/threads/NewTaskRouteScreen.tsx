@@ -392,7 +392,7 @@ export function NewTaskRouteScreen({ route }: StaticScreenProps<NewTaskRoutePara
         >
           {scratchOption !== null && listScopes.length > 0 ? (
             Platform.OS === "android" ? (
-              <View collapsable={false} className="overflow-hidden rounded-[28px] bg-grouped-card">
+              <View collapsable={false} className="overflow-hidden rounded-sheet bg-grouped-card">
                 <NavigationRow
                   className="bg-grouped-card"
                   title={gt("No project")}
@@ -410,7 +410,7 @@ export function NewTaskRouteScreen({ route }: StaticScreenProps<NewTaskRoutePara
                 />
               </View>
             ) : (
-              <View collapsable={false} className="overflow-hidden rounded-[24px] bg-grouped-card">
+              <View collapsable={false} className="overflow-hidden rounded-panel bg-grouped-card">
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={gt("No project")}
@@ -452,7 +452,7 @@ export function NewTaskRouteScreen({ route }: StaticScreenProps<NewTaskRoutePara
               collapsable={false}
               className={cn(
                 "items-center gap-3 px-6 py-8",
-                Platform.OS !== "android" && "rounded-[24px] bg-grouped-card",
+                Platform.OS !== "android" && "rounded-panel bg-grouped-card",
               )}
             >
               {projectEmptyState.loading ? (
@@ -534,8 +534,8 @@ export function NewTaskRouteScreen({ route }: StaticScreenProps<NewTaskRoutePara
               collapsable={false}
               className={
                 Platform.OS === "android"
-                  ? "overflow-hidden rounded-[28px] bg-grouped-card"
-                  : "overflow-hidden rounded-[24px] bg-grouped-card"
+                  ? "overflow-hidden rounded-sheet bg-grouped-card"
+                  : "overflow-hidden rounded-panel bg-grouped-card"
               }
             >
               {visibleScopes.map((scope, scopeIndex) => {

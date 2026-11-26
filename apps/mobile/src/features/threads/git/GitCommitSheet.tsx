@@ -201,9 +201,11 @@ export function GitCommitSheet(props: GitCommitSheetProps) {
                   ) : null}
                 </View>
                 <View className="flex-row gap-2">
+                  {/* oxlint-disable-next-line ankielcode/no-palette-color-classes -- diff additions and deletions keep their conventional green and red */}
                   <Text className="text-xs text-adaptive-emerald-700-300">
                     +{formatDiffCount(file.insertions)}
                   </Text>
+                  {/* oxlint-disable-next-line ankielcode/no-palette-color-classes -- diff additions and deletions keep their conventional green and red */}
                   <Text className="text-xs text-adaptive-rose-700-300">
                     −{formatDiffCount(file.deletions)}
                   </Text>

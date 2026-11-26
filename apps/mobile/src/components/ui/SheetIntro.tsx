@@ -8,9 +8,7 @@ export function SheetIntro(props: SheetIntroProps) {
   return (
     <View className="items-center gap-1 pt-2 pb-1">
       {props.eyebrow ? (
-        <Text className="text-xs font-ankiel-bold tracking-[1px] uppercase text-foreground-muted">
-          {props.eyebrow}
-        </Text>
+        <Text className="text-xs font-ankiel-medium text-foreground-muted">{props.eyebrow}</Text>
       ) : null}
       <Text className="text-center text-3xl font-ankiel-bold">{props.title}</Text>
       <Text className="text-center text-sm font-medium leading-normal text-foreground-secondary">

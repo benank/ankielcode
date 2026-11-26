@@ -256,7 +256,7 @@ export function ReviewCommentComposerSheet(props: ReviewCommentComposerSheetProp
               <Text className="text-sm font-ankiel-bold text-foreground">
                 <T context="noun, field label">Comment</T>
               </Text>
-              <View className="min-h-[132px] flex-1 overflow-hidden rounded-[20px] border border-border bg-card">
+              <View className="min-h-[132px] flex-1 overflow-hidden rounded-card border border-border bg-card">
                 <View className="min-h-0 flex-1 px-4 pt-3.5">
                   <TextInputWrapper onPaste={handleNativePaste} style={{ flex: 1, minHeight: 0 }}>
                     <TextInput

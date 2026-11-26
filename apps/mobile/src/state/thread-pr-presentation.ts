@@ -38,8 +38,11 @@ export interface ThreadPrPresentation {
 }
 
 const PR_STATE_TEXT_CLASS: Record<ThreadPr["state"], string> = {
+  // oxlint-disable-next-line ankielcode/no-palette-color-classes -- pull request open, merged and closed glyphs keep forge colors
   open: "text-adaptive-emerald-600-400",
+  // oxlint-disable-next-line ankielcode/no-palette-color-classes -- pull request open, merged and closed glyphs keep forge colors
   merged: "text-adaptive-violet-600-400",
+  // oxlint-disable-next-line ankielcode/no-palette-color-classes -- pull request open, merged and closed glyphs keep forge colors
   closed: "text-adaptive-rose-600-400",
 };
 

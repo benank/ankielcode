@@ -42,7 +42,7 @@ export function ScreenContent({
   return (
     <View className={fitToContents ? "shrink bg-header" : "flex-1 bg-header"}>
       <View
-        className={`overflow-hidden rounded-t-[28px] ${SURFACE_CLASS_NAMES[surface]}`}
+        className={`overflow-hidden rounded-t-sheet ${SURFACE_CLASS_NAMES[surface]}`}
         collapsable={false}
         onLayout={onLayout}
         style={{

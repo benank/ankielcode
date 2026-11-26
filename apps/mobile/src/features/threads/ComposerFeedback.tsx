@@ -23,7 +23,7 @@ export function ComposerFeedback({
   if (!notice) return null;
   return (
     <View className="px-4 pb-3">
-      <View className="gap-2 rounded-[20px] border-continuous bg-card p-4">
+      <View className="gap-2 rounded-card border-continuous bg-card p-4">
         <View className="flex-row items-center gap-3">
           <Text accessibilityLiveRegion="polite" className="min-w-0 flex-1 text-sm text-foreground">
             {notice.title}

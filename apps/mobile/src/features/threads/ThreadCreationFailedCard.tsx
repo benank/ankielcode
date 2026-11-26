@@ -11,7 +11,7 @@ export function ThreadCreationFailedCard(props: {
 }) {
   const gt = useGT();
   return (
-    <View className="gap-2.5 rounded-[20px] border border-border-subtle bg-card-alt p-4">
+    <View className="gap-2.5 rounded-card border border-border-subtle bg-card-alt p-4">
       <View className="flex-row items-center gap-2">
         <SymbolView
           name="exclamationmark.circle"

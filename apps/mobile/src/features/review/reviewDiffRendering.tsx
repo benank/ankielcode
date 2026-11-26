@@ -20,13 +20,17 @@ export function renderVisibleWhitespace(value: string): string {
 }
 
 export function changeTone(change: ReviewRenderableLineRow["change"]): string {
+  // oxlint-disable-next-line ankielcode/no-palette-color-classes -- diff additions and deletions keep their conventional green and red
   if (change === "add") return "bg-emerald-500/10";
+  // oxlint-disable-next-line ankielcode/no-palette-color-classes -- diff additions and deletions keep their conventional green and red
   if (change === "delete") return "bg-rose-500/10";
   return "bg-card";
 }
 
 function changeBarTone(change: ReviewRenderableLineRow["change"]): string {
+  // oxlint-disable-next-line ankielcode/no-palette-color-classes -- diff additions and deletions keep their conventional green and red
   if (change === "add") return "bg-emerald-400";
+  // oxlint-disable-next-line ankielcode/no-palette-color-classes -- diff additions and deletions keep their conventional green and red
   if (change === "delete") return "bg-rose-400";
   return "bg-border/50";
 }
@@ -48,6 +52,7 @@ export function ReviewChangeBar(props: {
         <View>
           {Array.from({ length: Math.ceil(height / 2) }, (_, index) => (
             <View key={index}>
+              {/* oxlint-disable-next-line ankielcode/no-palette-color-classes -- diff additions and deletions keep their conventional green and red */}
               <View className="h-px w-[5px] bg-rose-400" />
               <View className="h-px" />
             </View>

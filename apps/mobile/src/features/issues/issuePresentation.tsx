@@ -41,6 +41,7 @@ export function issueStatus(state: IssueState): {
   return {
     label,
     icon: "checkmark.circle",
+    // oxlint-disable-next-line ankielcode/no-palette-color-classes -- closed-as-completed issue glyph keeps forge violet
     tint: "accent-adaptive-violet-600-400",
   };
 }

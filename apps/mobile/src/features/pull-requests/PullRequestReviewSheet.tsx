@@ -220,7 +220,7 @@ export function PullRequestReviewSheet({
         value={body}
         maxLength={65536}
         onChangeText={setBody}
-        className="min-h-36 rounded-[20px] bg-grouped-card p-4 text-base text-foreground"
+        className="min-h-36 rounded-card bg-grouped-card p-4 text-base text-foreground"
         style={{ textAlignVertical: "top" }}
       />
       {reviewing && store.draft.comments.length ? (
@@ -255,7 +255,7 @@ export function PullRequestReviewSheet({
                     }),
                   );
               }}
-              className="gap-1 rounded-[20px] bg-grouped-card p-4"
+              className="gap-1 rounded-card bg-grouped-card p-4"
             >
               <Text className="font-mono text-xs text-foreground-muted">
                 {draft.path} · {reviewPositionLabel(draft.position, m)}

@@ -11,7 +11,7 @@ export function ContentBand(props: ContentBandProps) {
   return (
     <View
       className={cn(
-        "m-2 rounded-[20px] px-4",
+        "m-2 rounded-card px-4",
         props.spacing === "roomy" ? "gap-3 py-4" : "py-3",
         "bg-card",
       )}

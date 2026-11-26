@@ -6,7 +6,7 @@ export type { FormFieldProps, FormSectionProps } from "./FormSection.types";
 
 export function FormSection(props: FormSectionProps) {
   return (
-    <View className="gap-3 rounded-[20px] bg-card p-4">
+    <View className="gap-3 rounded-card bg-card p-4">
       <Text className="text-base font-ankiel-medium text-foreground">{props.title}</Text>
       {props.children}
     </View>

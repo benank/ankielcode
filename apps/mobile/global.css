@@ -17,6 +17,11 @@
 
 /* ─── Typography ────────────────────────────────────────────────────── */
 @theme {
+  /* The surface radius scale: cards, larger panels, and sheets. Nested controls inset from these. */
+  --radius-card: 20px;
+  --radius-panel: 24px;
+  --radius-sheet: 28px;
+
   /* Keep these native family names aligned with app.config.ts. */
   --font-sans: "DMSans-Regular";
   --font-medium: "DMSans-Medium";

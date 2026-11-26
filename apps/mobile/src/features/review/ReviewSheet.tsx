@@ -297,9 +297,11 @@ const ReviewFileNavigatorRow = function ReviewFileNavigatorRow(props: {
         {file.path}
       </Text>
       <View className="mt-1 flex-row gap-2">
+        {/* oxlint-disable-next-line ankielcode/no-palette-color-classes -- diff additions and deletions keep their conventional green and red */}
         <Text className="text-2xs font-ankiel-bold text-adaptive-emerald-700-300">
           +{formatDiffCount(file.additions)}
         </Text>
+        {/* oxlint-disable-next-line ankielcode/no-palette-color-classes -- diff additions and deletions keep their conventional green and red */}
         <Text className="text-2xs font-ankiel-bold text-adaptive-rose-700-300">
           -{formatDiffCount(file.deletions)}
         </Text>
