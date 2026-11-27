@@ -171,6 +171,17 @@ struct ChatSettingsPage: View {
       } footer: {
         Text("The other choice stays one tap away, in the small button beside Send.")
       }
+
+      Section {
+        Toggle(isOn: $preferences.values.streamHapticsEnabled) {
+          Text("Streaming replies", comment: "haptics setting")
+        }
+        .accessibilityIdentifier("chat.streamHaptics")
+      } header: {
+        Text("Haptics")
+      } footer: {
+        Text("A light tap while the agent’s reply streams in, in the thread you are looking at.")
+      }
     }
     .navigationTitle("Chat")
     .navigationBarTitleDisplayMode(.inline)

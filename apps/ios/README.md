@@ -545,3 +545,17 @@ feed. `--workflow-setup <file.ts>` turns the Labs switch on and saves a definiti
 
 `WorkflowUITests` (live, with `ANKIEL_TEST_WORKFLOWS=1`) answers "Ship tide chart v1.4?" and
 cancels the paused "Tide chart v1.5", runs of a throwaway `ios-check` definition started as above.
+
+## Chat and thread preferences
+
+- **Response streaming** (Threads page, per computer): `responseStreamingMode` `paragraph` or
+  `turn`, written with `server.updateSettings`. `ankiel-probe --streaming-setting` flips it and
+  puts it back.
+- **Use last project** (Threads → New threads, this device): off, New thread starts with "No
+  project" unless a project is picked.
+- **Streaming replies** haptic (Chat → Haptics, this device): a soft tap as the open thread's reply
+  streams, throttled like RN (`StreamHaptics`, 320 ms).
+- **Apply auto-settle defaults to all** (Threads, all connected computers, when they differ).
+
+Not built: tool-call visibility (the thread feed is being rebuilt separately) and project-scoped
+overrides of model and permission defaults (RN's project overview).

@@ -43,7 +43,10 @@ struct NewThreadView: View {
 
   private var project: ProjectShell? {
     guard let computer, draft.noProject != true || !computer.offersNoProject else { return nil }
-    return computer.projects.first { $0.id == draft.projectId } ?? computer.projects.first
+    if let chosen = computer.projects.first(where: { $0.id == draft.projectId }) { return chosen }
+    // "Use last project" off: nothing is preselected where "No project" exists.
+    if !model.preferences.values.useLastProjectForNewThreads, computer.offersNoProject { return nil }
+    return computer.projects.first
   }
 
   private var target: ComposerTarget {

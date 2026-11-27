@@ -328,10 +328,10 @@ enum SettingsSearch {
     [
       (.general, [String(localized: "Language"), String(localized: "Project grouping"), String(localized: "Group by repository")]),
       (.appearance, [String(localized: "Theme"), String(localized: "Dark"), String(localized: "Light"), String(localized: "Code and diffs"), String(localized: "Font size"), String(localized: "Word break"), String(localized: "Text size")]),
-      (.chat, [String(localized: "While the agent is running"), String(localized: "Steer", comment: "verb, follow-up behavior"), String(localized: "Queue", comment: "verb, follow-up behavior")]),
+      (.chat, [String(localized: "While the agent is running"), String(localized: "Steer", comment: "verb, follow-up behavior"), String(localized: "Queue", comment: "verb, follow-up behavior"), String(localized: "Haptics")]),
       (.notifications, [String(localized: "Push notifications")]),
       (.providers, [String(localized: "Signed in"), String(localized: "Models")]),
-      (.threads, [String(localized: "Default permissions"), String(localized: "Usage limits"), String(localized: "Auto-settle")]),
+      (.threads, [String(localized: "Default permissions"), String(localized: "Usage limits"), String(localized: "Auto-settle"), String(localized: "Response streaming"), String(localized: "Use last project")]),
       (.about, [String(localized: "Version"), String(localized: "Legal"), String(localized: "Source code"), String(localized: "Remove all computers")]),
       (.storage, [String(localized: "Clear caches"), String(localized: "Drafts")]),
       (.diagnostics, [String(localized: "Copy diagnostics")]),

@@ -16,6 +16,8 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
   public var autoResumeLimitedThreads = false
   public var snoozeLimitedThreads = false
   public var snoozePresets: [SnoozePresetSetting] = SnoozePresetSetting.defaults
+  /// `responseStreamingMode`: how the computer streams replies (server default `paragraph`).
+  public var responseStreaming: ResponseStreamingMode = .paragraph
   /// `enablePreviewTunnel` (default on): whether device previews may reach the computer's localhost.
   public var enablePreviewTunnel = true
 
@@ -31,6 +33,7 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
   enum CodingKeys: String, CodingKey {
     case defaultModelSelection, fallbackModelSelection, defaultRuntimeMode, providerModelPreferences
     case sidebarAutoSettleOnMerge, sidebarAutoSettleAfterDays, autoResumeLimitedThreads, snoozeLimitedThreads, snoozePresets
+    case responseStreamingMode
     case enablePreviewTunnel
   }
 
@@ -55,6 +58,7 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
       autoSettleAfterDays = c.loose(Double.self, .sidebarAutoSettleAfterDays).map { Int($0) } ?? Self.defaultAutoSettleDays
     }
     autoResumeLimitedThreads = c.loose(Bool.self, .autoResumeLimitedThreads) ?? false
+    responseStreaming = c.loose(String.self, .responseStreamingMode).flatMap(ResponseStreamingMode.init(rawValue:)) ?? .paragraph
     snoozeLimitedThreads = c.loose(Bool.self, .snoozeLimitedThreads) ?? false
     enablePreviewTunnel = c.loose(Bool.self, .enablePreviewTunnel) ?? true
     let presets = c.loose(LossyArray<WirePreset>.self, .snoozePresets)?.elements.compactMap(\.setting)
@@ -92,6 +96,8 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
       case "autoResumeLimitedThreads": if let value = value.boolValue { next.autoResumeLimitedThreads = value }
       case "snoozeLimitedThreads": if let value = value.boolValue { next.snoozeLimitedThreads = value }
       case "defaultRuntimeMode": if let mode = value.stringValue.flatMap(RuntimeMode.init(rawValue:)) { next.defaultRuntimeMode = mode }
+      case "responseStreamingMode":
+        if let mode = value.stringValue.flatMap(ResponseStreamingMode.init(rawValue:)) { next.responseStreaming = mode }
       default: break
       }
     }
@@ -120,6 +126,15 @@ public struct ServerSettingsPatch: Sendable, Hashable, Encodable {
   public static func autoResumeLimitedThreads(_ on: Bool) -> Self { Self(["autoResumeLimitedThreads": .bool(on)]) }
   public static func snoozeLimitedThreads(_ on: Bool) -> Self { Self(["snoozeLimitedThreads": .bool(on)]) }
   public static func defaultRuntimeMode(_ mode: RuntimeMode) -> Self { Self(["defaultRuntimeMode": .string(mode.rawValue)]) }
+  public static func responseStreaming(_ mode: ResponseStreamingMode) -> Self { Self(["responseStreamingMode": .string(mode.rawValue)]) }
+
+  /// The auto-settle and usage-limit values of `settings` as one patch, to make other computers
+  /// match it (RN "Apply auto-settle defaults").
+  public static func autoSettle(matching settings: ServerSettings) -> Self {
+    var fields = autoSettleAfterDays(settings.autoSettleAfterDays).fields
+    fields["sidebarAutoSettleOnMerge"] = .bool(settings.autoSettleOnMerge)
+    return Self(fields)
+  }
 
   public var keys: Set<String> { Set(fields.keys) }
 
@@ -137,4 +152,12 @@ public struct UpdateSettingsRequest: Sendable, Encodable {
   }
 
   public static let rpcTag = "server.updateSettings"
+}
+
+/// `ResponseStreamingMode`: when replies appear while the agent writes.
+public enum ResponseStreamingMode: String, Sendable, Hashable, CaseIterable {
+  /// The whole answer when the turn ends.
+  case turn
+  /// Each finished paragraph or code block.
+  case paragraph
 }

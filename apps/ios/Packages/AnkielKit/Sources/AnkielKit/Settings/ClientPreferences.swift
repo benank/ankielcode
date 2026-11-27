@@ -29,6 +29,10 @@ public struct ClientPreferenceValues: Sendable, Hashable, Codable {
   public var codeWordBreak = false
   public var followUpBehavior: FollowUpBehavior = .steer
   public var projectGroupingMode: ProjectGroupingMode = .repository
+  /// New threads start in the last project used on this device (RN `useLastProjectForNewThreads`).
+  public var useLastProjectForNewThreads = true
+  /// A light tick while a reply streams in (RN `streamHapticsEnabled`, on unless turned off).
+  public var streamHapticsEnabled = true
 
   // Thread list options.
   public var threadListEnvironmentId: String?
@@ -41,6 +45,7 @@ public struct ClientPreferenceValues: Sendable, Hashable, Codable {
 
   enum CodingKeys: String, CodingKey {
     case themeMode, codeFontSize, codeWordBreak, followUpBehavior, projectGroupingMode
+    case useLastProjectForNewThreads, streamHapticsEnabled
     case threadListEnvironmentId, threadListProjectKey, snoozedShelfExpanded, settledShelfExpanded, collapsedProjectGroups
   }
 
@@ -51,6 +56,8 @@ public struct ClientPreferenceValues: Sendable, Hashable, Codable {
     codeWordBreak = c.loose(Bool.self, .codeWordBreak) ?? false
     followUpBehavior = c.loose(FollowUpBehavior.self, .followUpBehavior) ?? .steer
     projectGroupingMode = c.loose(ProjectGroupingMode.self, .projectGroupingMode) ?? .repository
+    useLastProjectForNewThreads = c.loose(Bool.self, .useLastProjectForNewThreads) ?? true
+    streamHapticsEnabled = c.loose(Bool.self, .streamHapticsEnabled) ?? true
     threadListEnvironmentId = c.loose(String.self, .threadListEnvironmentId)
     threadListProjectKey = c.loose(String.self, .threadListProjectKey)
     snoozedShelfExpanded = c.loose(Bool.self, .snoozedShelfExpanded) ?? false

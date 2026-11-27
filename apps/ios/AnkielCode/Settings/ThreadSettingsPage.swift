@@ -41,7 +41,17 @@ struct ThreadSettingsPage: View {
   private var canWrite: Bool { !targets.isEmpty && targets.allSatisfy(\.canWriteSettings) }
 
   var body: some View {
+    @Bindable var preferences = model.preferences
     List {
+      Section {
+        Toggle(isOn: $preferences.values.useLastProjectForNewThreads) {
+          SettingText("Use last project", "Start new threads in the last project you used on this device.")
+        }
+        .accessibilityIdentifier("threads.useLastProject")
+      } header: {
+        Text("New threads")
+      }
+
       if computers.count > 1 || resolvedScope == nil {
         Section {
           Picker("Computer", selection: Binding(get: { resolvedScope }, set: { scope = $0 })) {
@@ -70,6 +80,7 @@ struct ThreadSettingsPage: View {
 
       if let reference, reference.hasConfig {
         permissionsSection
+        streamingSection
         usageLimitsSection
         autoSettleSection
         if let differing, !differing.isEmpty {
@@ -77,6 +88,11 @@ struct ThreadSettingsPage: View {
             Text("\(differing.map(\.label).formatted(.list(type: .and))) use different values. These rows show \(reference.label).")
               .font(Typography.footnote)
               .foregroundStyle(Palette.textSecondary)
+            Button("Apply \(reference.label)’s auto-settle defaults to all", systemImage: "arrow.triangle.2.circlepath") {
+              send(.autoSettle(matching: reference.effectiveSettings))
+            }
+            .disabled(!canWrite)
+            .accessibilityIdentifier("threads.applyAutoSettle")
           }
         }
       }
@@ -103,6 +119,17 @@ struct ThreadSettingsPage: View {
       Text("Default permissions")
     } footer: {
       Text("New threads start with these permissions. You can change them for one thread from its composer.")
+    }
+  }
+
+  private var streamingSection: some View {
+    Section {
+      ChoiceRows(selection: write(\.responseStreaming) { .responseStreaming($0) }, options: Self.streamingModes)
+        .disabled(!canWrite)
+    } header: {
+      Text("Response streaming")
+    } footer: {
+      Text("How \(reference?.label ?? String(localized: "the computer")) sends a reply while the agent writes it.")
     }
   }
 
@@ -159,6 +186,12 @@ struct ThreadSettingsPage: View {
     Binding(get: { settings[keyPath: key] ?? fallback }, set: { send(patch($0)) })
   }
 
+  private func write(
+    _ key: KeyPath<ServerSettings, ResponseStreamingMode>, _ patch: @escaping (ResponseStreamingMode) -> ServerSettingsPatch
+  ) -> Binding<ResponseStreamingMode> {
+    Binding(get: { settings[keyPath: key] }, set: { send(patch($0)) })
+  }
+
   private func write(_ key: KeyPath<ServerSettings, Bool>, _ patch: @escaping (Bool) -> ServerSettingsPatch) -> Binding<Bool> {
     Binding(get: { settings[keyPath: key] }, set: { send(patch($0)) })
   }
@@ -201,9 +234,14 @@ struct ThreadSettingsPage: View {
       let other = target.effectiveSettings
       return other.defaultRuntimeMode != shown.defaultRuntimeMode || other.autoSettleAfterDays != shown.autoSettleAfterDays
         || other.autoSettleOnMerge != shown.autoSettleOnMerge || other.autoResumeLimitedThreads != shown.autoResumeLimitedThreads
-        || other.snoozeLimitedThreads != shown.snoozeLimitedThreads
+        || other.snoozeLimitedThreads != shown.snoozeLimitedThreads || other.responseStreaming != shown.responseStreaming
     }
   }
+
+  static let streamingModes: [(ResponseStreamingMode, LocalizedStringResource, LocalizedStringResource)] = [
+    (.paragraph, "Finished paragraphs", "Show each paragraph or code block as it completes."),
+    (.turn, "After the turn", "Show the answer when the agent finishes."),
+  ]
 
   static let runtimeModes: [(RuntimeMode, LocalizedStringResource, LocalizedStringResource)] = [
     (.approvalRequired, "Supervised", "Ask before commands and file changes."),

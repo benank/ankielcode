@@ -18,6 +18,7 @@ struct ThreadDetailView: View {
     Group {
       if let shown = detail ?? placeholder {
         ThreadScreen(threadRef: threadRef, detail: shown, awaitingCreation: detail == nil)
+          .streamHaptics(shown)
       } else {
         Palette.canvas
       }

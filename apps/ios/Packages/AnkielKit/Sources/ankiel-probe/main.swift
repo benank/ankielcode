@@ -92,6 +92,11 @@ func run() async throws {
     await session.close()
     return
   }
+  if CommandLine.arguments.contains("--streaming-setting") {
+    try await probeStreamingSetting(session)
+    await session.close()
+    return
+  }
   if CommandLine.arguments.contains("--access") {
     try await probeAccess(session, environment: environment, connector: connector)
     await session.close()
