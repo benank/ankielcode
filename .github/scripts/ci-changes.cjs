@@ -1,5 +1,5 @@
 // Unknown paths run every job; recognized packages pull in their dependents.
-// scripts/check-changed.ts shares these decisions so local checks match CI.
+// scripts/check-changed.ts reads these decisions to pick what to check.
 const fs = require("node:fs");
 const path = require("node:path");
 

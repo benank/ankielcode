@@ -28,7 +28,6 @@
         "mobile-native-client.ts",
         // e2e loads its config and the scenarios by path, and starts the app script.
         "e2e.config.ts",
-        "prove-scenario.ts",
         "resolve-nightly-release.ts",
         "scenarios/*.ts",
         "setup-worktree.ts",
@@ -51,7 +50,6 @@
         "scripts/cli.ts",
         "scripts/fetch-expo-schema.ts",
         "scripts/probe-claude-fork-local-rollback-replay.ts",
-        "scripts/update-test-shard-weights.ts",
         "scripts/verify-background-live.ts",
         "src/provider/testFixtures/*.mjs",
         // graphqlgen reads its config.

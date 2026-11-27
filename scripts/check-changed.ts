@@ -1,18 +1,18 @@
 // @effect-diagnostics nodeBuiltinImport:off - hashes inputs with node:crypto and sizes the budget with node:os.
-// Runs CI's fast checks for this branch's changes: format and lint of the
+// Runs the checks for this branch's changes: format and lint of the
 // changed files, knip, generated GraphQL operations, typecheck of the affected
 // packages and their dependents, the test files beside the changed files, and
 // the cross-file checks those miss (agent context budget, React Compiler
 // coverage of the changed client files).
-// A dependency change also gets the unused-patch install check below. CI still
-// runs the full test suites and the jobs listed in the summary.
+// A dependency change also gets the unused-patch install check below. CI runs
+// no tests, so this is the only test run a change gets.
 //
 //   vp run check:changed                  compare against the closest merge base with any remote main
 //   vp run check:changed <ref>            compare against the merge base with <ref>
 //   vp run check:changed --concurrency 1  run the steps one at a time
 //
 // Uncommitted and untracked files count. Affected packages come from
-// .github/scripts/ci-changes.cjs, the same mapping CI uses to gate its jobs.
+// .github/scripts/ci-changes.cjs.
 // The steps run side by side within a budget derived from the machine's cores
 // and available memory, and each prints its output when it finishes. A step
 // running past the timeout is killed with its process group and reported as
@@ -226,15 +226,6 @@ export const comparisonBase = Effect.fn("checkChanged.comparisonBase")(function*
 // CI's lint and knip also read Astro components' frontmatter.
 const CODE = /\.(?:[cm]?[jt]sx?|astro)$/;
 const TEST = /\.test\.[cm]?[jt]sx?$/;
-// CI runs the .github/scripts tests with `node --test`; vitest passes a failing node:test file.
-const NODE_TEST = /^\.github[/\\]scripts[/\\]/;
-export const splitTests = (tests: Iterable<string>) => {
-  const all = [...tests];
-  return {
-    vitestTests: all.filter((file) => !NODE_TEST.test(file)),
-    nodeTests: all.filter((file) => NODE_TEST.test(file)),
-  };
-};
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // A flag wins over its environment variable; either must be a positive integer.
@@ -363,7 +354,7 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
   // It reads files other than the ones beside it, so no changed file selects it.
   if (affected.includes("@ankielcode/server"))
     tests.add("apps/server/src/provider/AgentContextBudget.test.ts");
-  const { vitestTests, nodeTests } = splitTests(tests);
+  const vitestTests = [...tests];
 
   // React Compiler coverage compiles every client source file, so run only the
   // changed files' cases, in one extra step: a -t filter in the main test step
@@ -548,16 +539,6 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
           },
         ]
       : []),
-    ...(nodeTests.length > 0
-      ? [
-          command(`node --test (${nodeTests.length} files)`, [
-            "exec",
-            "node",
-            "--test",
-            ...nodeTests,
-          ]),
-        ]
-      : []),
     ...(compilerApps.length > 0
       ? [
           {
@@ -587,7 +568,6 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
     );
   }
   const ciOnly = Object.entries({
-    "full test suites": outputs.test || outputs.test_web || outputs.test_server,
     build: outputs.build,
     "mobile native lint": outputs.mobile_native,
   }).flatMap(([job, runs]) => (runs ? [job] : []));
@@ -642,7 +622,7 @@ export const checkChangedCommand = Command.make(
         }),
       ),
     ),
-).pipe(Command.withDescription("Run CI's fast checks for this branch's changes."));
+).pipe(Command.withDescription("Run the checks for this branch's changes."));
 
 if (import.meta.main) {
   Command.run(checkChangedCommand, { version: "0.0.0" }).pipe(

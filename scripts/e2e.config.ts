@@ -27,7 +27,7 @@ const resolved = await Effect.gen(function* () {
   return {
     node: yield* HostProcess.ExecutablePath,
     scripts,
-    /** The checkout whose app runs. `prove-scenario.ts` points it at a base or head worktree. */
+    /** The checkout whose app runs; ANKIEL_SCENARIO_APP_DIR can point it at another worktree. */
     appDir: path.resolve(scripts, env.ANKIEL_SCENARIO_APP_DIR ?? ".."),
     home,
     startApp: path.join(scripts, "scenarios/start-app.ts"),

@@ -1,60 +1,49 @@
 # Testing
 
-Rules for writing tests, and for asking for them in review.
+CI runs no tests. `vp run check:changed` runs the tests beside the files you changed, and that is the only test run a change gets. So every test has to earn its runtime.
 
 ## What to test
 
-- Test behavior that can break, such as orchestration and event-sourcing, provider protocol translation, auth and permission guards, persistence and migrations, external-format parsing, race fixes, and the logic a bug fix changed. Leave out tests for what types already guarantee, trivial logic, copy text, smoke runs, mock-call mirrors, callback wiring, and props rendered to static markup.
-- Extend before you add. When an existing test or table covers the behavior, add a row or an assertion there. Write a new `it` only when no case fits.
-- Test at one layer: the lowest one that fails on `main`. Do not repeat the case in a wrapper test, at each call site, or in web and mobile copies of the same logic.
-- Write a browser test only for behavior that needs a real browser: layout and scrolling, focus and pointer input, real workers, or a component wired to its hooks. Logic a component calls gets a unit test beside it (`*.logic.test.ts`). A browser test file spends seconds in CI loading its module graph before its first test runs; a unit test takes milliseconds.
-- In review, ask for a missing test only when it would catch a real regression. Do not ask for one assertion per constant, label, or `switch` case. Flag a new test that breaks the rules above, and name the fix: fold it into the existing case or table, delete it, keep one layer, or move a browser test whose assertions would pass without rendering into a unit test.
-- Backend behavior changes ship with focused tests for that behavior.
-- Proof for a bug fix depends on the bug. Logic, data, state, and protocol bugs get a failing test first (the fewest that fail on `main` for that reason, in an existing case of the module's test file where one fits), then the fix. Purely visual bugs (spacing, colour, alignment, a layout shift) get before/after captures as their proof and no test: do not add UI tests for nitpicks, and do not ask for one in review when a capture already shows it. A server-only fix with no visible surface ships the test plus a short runtime transcript.
+- Test what would hurt if it broke silently: orchestration and event-sourcing, provider protocol translation, auth and permission guards, persistence and migrations, external-format parsing, and race fixes. Skip what types already guarantee, trivial logic, copy, smoke runs, mock-call mirrors, callback wiring, and static markup.
+- Extend before you add. Add a row or an assertion to an existing case or table before writing a new `it`.
+- Test at one layer: the lowest one that fails on `main`. Do not repeat the case in a wrapper, at each call site, or in web and mobile copies of the same logic.
+- Write a browser test only for behavior that needs a real browser (layout and scrolling, focus and pointer input, real workers). Logic a component calls gets a unit test beside it (`*.logic.test.ts`); a browser test file costs seconds before its first test runs.
+- Bug fixes: a logic, data, state, or protocol bug gets the fewest tests that fail on `main`, then the fix. A purely visual bug gets before/after captures and no test.
+- In review, ask for a test only when it would catch a real regression.
 
 ## Waiting for work
 
-- The server is event-sourced, and side effects run after the command commits. In tests, drain the effect worker (`OrchestrationEffectWorkerV2.drain`) or await the specific persisted event or `Deferred` that marks the milestone. Never wait on sleeps or polling. A test that needs a timeout to pass is wrong. Concretely:
-  - `it.effect` runs on a `TestClock`; `Effect.sleep` only advances through `TestClock.adjust`. `it.live` is wall-clock and only for subprocess or network fixtures.
-  - No `yieldNow` or `sleep` polling loops. Await the `Deferred`, take from the `Queue`, or drain the worker.
-  - No per-test timeout argument or `retry`. The project timeout is the ceiling, and flaky tests are fixed, not retried.
-  - No `performance.now()` or `Date.now()` deltas. Assert on events and counts, not elapsed time.
-  - Browser tests assert through `expect.element` or `vi.waitFor`, never `requestAnimationFrame` or `transitionend`.
-  - `vi.mock` factories must not spread a real module that pulls in Shiki or the diff workers.
-  - No committed `.only`, `fit`, or `fdescribe`; it silently skips the rest of the file. Say why a test is skipped in a comment above it.
-  - Lint enforces this: `ankielcode/no-test-timeout-or-focus`, `ankielcode/no-frame-waits-in-browser-tests`, `ankielcode/no-wall-clock-in-tests`, `ankielcode/no-real-time-wait-in-tests`, `ankielcode/no-polling-loop-in-tests`.
+The server is event-sourced, and side effects run after the command commits. Drain the effect worker (`OrchestrationEffectWorkerV2.drain`) or await the persisted event or `Deferred` that marks the milestone. A test that needs a sleep, a poll, or a longer timeout to pass is wrong.
+
+- `it.effect` runs on a `TestClock`; `Effect.sleep` advances only through `TestClock.adjust`. `it.live` is for subprocess or network fixtures.
+- No per-test timeouts or `retry`, and no `performance.now()` / `Date.now()` deltas. Flaky tests are fixed, not retried.
+- Browser tests assert through `expect.element` or `vi.waitFor`, never `requestAnimationFrame` or `transitionend`. `vi.mock` factories must not spread a real module that pulls in Shiki or the diff workers.
+- No committed `.only`, `fit`, or `fdescribe`. Say why a skipped test is skipped in a comment above it.
+- Lint enforces these: `ankielcode/no-test-timeout-or-focus`, `ankielcode/no-frame-waits-in-browser-tests`, `ankielcode/no-wall-clock-in-tests`, `ankielcode/no-real-time-wait-in-tests`, `ankielcode/no-polling-loop-in-tests`.
 
 ## Web browser tests
 
-- Web browser tests are `*.browser.test.tsx` or `*.browser.test.ts` and render with `await using screen = await render(...)` from `apps/web/test/render.tsx`. `ankielcode/require-disposable-render` errors on the old patterns.
-  - Acquire what the test drives after mounting (fake timers it advances, spies it sets up after mounting) after the render, so it disposes before the unmount. Anything the first render reads comes before it.
-  - A helper that renders and then waits or clicks puts the screen in an `AsyncDisposableStack` and `move()`s it out only on success, so a failed wait still unmounts.
-  - `rerender` needs a fresh element on every call.
-  - No lifecycle hooks and no module-level mutable state. Shared mock state that `vi.mock` factories read is reset by a `setup()` call at the top of the test.
-  - `router` is on by default. Pass `router: false` only with a one-line comment saying why.
+Web browser tests are `*.browser.test.{ts,tsx}` and render with `await using screen = await render(...)` from `apps/web/test/render.tsx` (`ankielcode/require-disposable-render` enforces it).
 
-  ```tsx
-  it("saves on Enter", async () => {
-    const onSave = vi.fn();
-    using _now = vi.spyOn(Date, "now").mockReturnValue(0);
-    await using screen = await render(<TitleEditor onSave={onSave} />, { router: "/threads/1" });
-    await userEvent.type(screen.getByRole("textbox"), "Title{Enter}");
-    expect(onSave).toHaveBeenCalledWith("Title");
-  });
-  ```
+- Set up what the test drives after mounting (fake timers, late spies) after the render, so it disposes before the unmount.
+- A helper that renders and then waits puts the screen in an `AsyncDisposableStack` and `move()`s it out only on success, so a failed wait still unmounts.
+- No lifecycle hooks and no module-level mutable state; reset shared mock state with a `setup()` call at the top of the test.
+- `router` is on by default. Pass `router: false` only with a one-line comment saying why.
+
+```tsx
+it("saves on Enter", async () => {
+  const onSave = vi.fn();
+  await using screen = await render(<TitleEditor onSave={onSave} />, { router: "/threads/1" });
+  await userEvent.type(screen.getByRole("textbox"), "Title{Enter}");
+  expect(onSave).toHaveBeenCalledWith("Title");
+});
+```
 
 ## Scenarios
 
-Scenarios are [e2e](https://e2e.com/docs) tests in [`scripts/scenarios`](../../scripts/scenarios) (`*.e2e.ts`) that drive the real app (server, HTTP/WS, web browser or pooled iOS simulator) using the free `Replay (dev)` agent. Use one as real-app proof for a user-reproducible bug fix:
+Scenarios are [e2e](https://e2e.com/docs) tests in [`scripts/scenarios`](../../scripts/scenarios) (`*.e2e.ts`) that drive the real app (server, HTTP/WS, web browser or a Simlock iOS simulator) with the free `Replay (dev)` agent. Run them with `vp run scenarios`, one run at a time per checkout.
 
-```sh
-vp run scenarios                                                  # run all
-vp run scenarios:prove scripts/scenarios/<name>.e2e.ts --base main --upload-command "ghdrop upload"
-```
-
-- One test per file (`WEB` from `./ankiel.ts` or `IOS` from `./ankiel-mobile.ts`). Seed projects and threads via `ankiel.project` / `ankiel.thread` before calling `ankiel.open(...)` so the app does not land on first-run setup.
-- In web scenarios, navigate directly with `ankiel.open(thread)` or `ankiel.open("/settings/...")` unless the scenario exercises sidebar navigation.
-- Put `expect` assertions only on the behavior the bug breaks, and take `app.screenshot("label")` where the bug shows so `scenarios:prove` pairs base and head captures. Never call `agent.act` or `agent.assert` (no model is configured).
-- The app starts with a minimal env (`PATH`, `HOME`, temp dir); pass extra env vars via `ANKIEL_SCENARIO_INHERIT_ENV='VAR,PREFIX_*'`. Run one scenario run at a time per checkout.
-- `scenarios:prove` exits `0` only when the test fails on base and passes on head (`1` = did not prove, `2` = app failed to start, `3` = scenario failed before its assertion). iOS scenarios lease a Simlock simulator and require `SIMLOCK_AGENT_DEVICE_URL` and `AGENT_DEVICE_DAEMON_AUTH_TOKEN`.
-- Scenarios cannot cover desktop shell/IPC, Android, provider-specific protocol behavior (replay speaks generic ACP), or timing/perf regressions.
+- One test per file (`WEB` from `./ankiel.ts` or `IOS` from `./ankiel-mobile.ts`). Seed projects and threads with `ankiel.project` / `ankiel.thread` before `ankiel.open(...)` so the app skips first-run setup.
+- Never call `agent.act` or `agent.assert`; no model is configured.
+- The app starts with only `PATH`, `HOME` and a temp dir; pass more with `ANKIEL_SCENARIO_INHERIT_ENV='VAR,PREFIX_*'`. iOS scenarios need `SIMLOCK_AGENT_DEVICE_URL` and `AGENT_DEVICE_DAEMON_AUTH_TOKEN`.
+- Scenarios cannot cover the desktop shell, Android, provider-specific protocols, or timing.
