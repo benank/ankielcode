@@ -110,18 +110,6 @@ function parseEntries(patch: string): ReadonlyArray<Omit<Entry, "inBody">> {
   return entries;
 }
 
-/** Head blob IDs by head path (old path for deletions); omit files without index lines. */
-export function parseDiffFileRevisions(patch: string): ReadonlyMap<string, string> {
-  const revisions = new Map<string, string>();
-  for (const entry of parseEntries(patch)) {
-    const path = entry.deleted ? entry.oldPath : (entry.newPath ?? entry.oldPath);
-    if (path !== null && path.length > 0 && entry.revision !== null) {
-      revisions.set(path, entry.revision);
-    }
-  }
-  return revisions;
-}
-
 export function parseDiffFilePaths(
   patch: string,
 ): ReadonlyArray<{ readonly oldPath: string | null; readonly newPath: string | null }> {

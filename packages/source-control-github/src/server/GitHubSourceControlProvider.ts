@@ -113,7 +113,7 @@ function authAccounts(accounts: ReadonlyArray<GitHubAuthStatusAccount>) {
   }));
 }
 
-export function parseGitHubAuth(
+function parseGitHubAuth(
   input: SourceControlAuthProbeInput,
   settings: GitHubClient.GitHubSettings = readSourceControlHostSettings(GitHubClient.settings, {}),
 ) {
@@ -192,7 +192,7 @@ export function parseGitHubAuth(
   });
 }
 
-export const discovery = {
+const discovery = {
   type: "cli",
   kind: SourceControlProviderKind.make("github"),
   label: "GitHub",
@@ -533,7 +533,7 @@ function toPullRequestRecord(node: PullRequestNode): NormalizedGitHubPullRequest
   });
 }
 
-export function pullRequestCheckoutBranchName(input: {
+function pullRequestCheckoutBranchName(input: {
   readonly headRefName: string;
   readonly headOwner: string | null;
   readonly isCrossRepository: boolean;

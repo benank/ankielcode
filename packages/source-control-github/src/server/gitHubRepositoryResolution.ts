@@ -22,7 +22,7 @@ export function parseFetchRemotes(
 }
 
 /** gh priority: marked default, upstream/github/origin, sole remote. Null if ambiguous. */
-export function selectGitHubBaseRepository(input: {
+function selectGitHubBaseRepository(input: {
   readonly remotes: string;
   readonly resolved: string;
   readonly host: string;

@@ -604,15 +604,6 @@ export function unknownRemoteProvider(remote: GitRemoteHost): SourceControlProvi
   };
 }
 
-/** What `definition` alone makes of a remote, for a host's own code that asks only about itself. */
-export function recognizeRemoteWith(
-  definition: Pick<SourceControlDefinition, "recognizeRemote">,
-  remoteUrl: string,
-): SourceControlProviderInfo | null {
-  const remote = parseGitRemoteHost(remoteUrl);
-  return remote === null ? null : definition.recognizeRemote(remote);
-}
-
 function defaultRepositorySelector(
   identity: RepositorySelectorIdentity | null | undefined,
 ): string | null {
