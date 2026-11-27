@@ -53,7 +53,7 @@ final class PullRequestUITests: HomeUITestCase {
     shot("thread-chip")
     chip.tap()
     XCTAssertTrue(app.descendants(matching: .any)["pr.description"].waitForExistence(timeout: 10), "the chip opened the pull request")
-    app.navigationBars.buttons.element(boundBy: 0).tap()
+    // One Close returns to where the chip was: there is no list behind it.
     let close = app.buttons["pr.close"]
     XCTAssertTrue(close.waitForExistence(timeout: 5))
     close.tap()
@@ -67,6 +67,8 @@ final class PullRequestUITests: HomeUITestCase {
     shot("thread-header-chip")
     header.tap()
     XCTAssertTrue(app.descendants(matching: .any)["pr.description"].waitForExistence(timeout: 10))
+    app.buttons["pr.close"].tap()
+    XCTAssertTrue(header.waitForExistence(timeout: 5), "Close returns to the thread")
   }
 
   /// A pasted link opens its pull request.

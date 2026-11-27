@@ -11,7 +11,19 @@ struct PullRequestsRoot: View {
     let feature = model.pullRequests
     @Bindable var bindable = feature
     Group {
-      if sizeClass == .regular {
+      if let target = feature.standalone {
+        NavigationStack(path: $bindable.path) {
+          PullRequestDetailScreen(target: target)
+            .id(target.id)
+            .navigationDestination(for: PullRequestRoute.self) { PullRequestRouteView(route: $0) }
+            .toolbar {
+              ToolbarItem(placement: .topBarLeading) {
+                Button("Close", systemImage: "xmark") { feature.close() }
+                  .accessibilityIdentifier("pr.close")
+              }
+            }
+        }
+      } else if sizeClass == .regular {
         NavigationSplitView {
           PullRequestsScreen(split: true)
             .navigationSplitViewColumnWidth(min: 340, ideal: 400, max: 480)

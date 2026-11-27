@@ -16,8 +16,6 @@ struct ThreadListScreen: View {
   @State private var deleting: ThreadRow?
   @State private var snoozing: ThreadRow?
   @State private var actionCount = 0
-  @State private var issuesShown = IssuesDebug.opensAtLaunch
-  @State private var workflowsShown = WorkflowsDebug.opensAtLaunch
   @FocusState private var searchFocused: Bool
 
   private struct RenameRequest: Identifiable {
@@ -43,8 +41,12 @@ struct ThreadListScreen: View {
           await home.refresh()
         }
         .overlay { emptyState }
-        .fullScreenCover(isPresented: $issuesShown) { IssuesRoot() }
-        .fullScreenCover(isPresented: $workflowsShown) { WorkflowsRoot() }
+        .fullScreenCover(item: Bindable(model.navigator).cover) { cover in
+          switch cover {
+          case .issues: IssuesRoot()
+          case .workflows: WorkflowsRoot()
+          }
+        }
         .navigationTitle("Threads")
         .navigationSubtitle(statusText ?? "")
         .toolbar { toolbar }
@@ -237,10 +239,10 @@ struct ThreadListScreen: View {
         if showsGitHub {
           Button("Pull requests", systemImage: "arrow.triangle.pull") { model.pullRequests.openList() }
             .accessibilityIdentifier("home.pullRequests")
-          Button("Issues", systemImage: "smallcircle.filled.circle") { issuesShown = true }
+          Button("Issues", systemImage: "smallcircle.filled.circle") { model.navigator.cover = .issues }
             .accessibilityIdentifier("home.issues")
         }
-        Button("Workflows", systemImage: "point.3.connected.trianglepath.dotted") { workflowsShown = true }
+        Button("Workflows", systemImage: "point.3.connected.trianglepath.dotted") { model.navigator.cover = .workflows }
           .accessibilityIdentifier("home.workflows")
         Section {
           Button("Settings", systemImage: "gearshape") { model.openSettings() }

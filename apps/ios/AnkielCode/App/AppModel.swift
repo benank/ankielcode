@@ -151,7 +151,18 @@ final class AppModel {
       return
     }
     guard route == .home else { return }
-    sheet = nil
+    // Whatever covers home goes first, so the entry never lands under it. UIKit cannot present
+    // while a dismissal runs, so the entry follows once it has finished.
+    if sheet != nil || navigator.cover != nil || pullRequests.presented {
+      sheet = nil
+      navigator.cover = nil
+      pullRequests.presented = false
+      Task {
+        try? await Task.sleep(for: .milliseconds(450))
+        open(entry)
+      }
+      return
+    }
     switch entry {
     case .thread(let ref):
       navigator.open(ref)

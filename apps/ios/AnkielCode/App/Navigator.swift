@@ -23,6 +23,8 @@ final class Navigator {
   var stack: [ThreadRef] = []
   /// A sheet over home.
   var sheet: HomeSheet?
+  /// A full-screen screen over home (Issues, Workflows). Pull requests keep their own flag.
+  var cover: HomeCover? = HomeCover.atLaunch
   /// Set to focus home's search field (the Search quick action and keyboard command); the list
   /// clears it once focused, so a request made before the list appears still lands.
   var searchRequested = false
@@ -30,6 +32,18 @@ final class Navigator {
   enum HomeSheet: String, Identifiable {
     case newThread
     var id: String { rawValue }
+  }
+
+  enum HomeCover: String, Identifiable {
+    case issues, workflows
+    var id: String { rawValue }
+
+    /// A debug launch that asked for one open.
+    @MainActor static var atLaunch: HomeCover? {
+      if IssuesDebug.opensAtLaunch { return .issues }
+      if WorkflowsDebug.opensAtLaunch { return .workflows }
+      return nil
+    }
   }
 
   /// The split view's columns (the keyboard's Toggle sidebar).

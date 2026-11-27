@@ -30,10 +30,14 @@ final class PullRequestFeature {
   /// Screens pushed on that stack (pull requests and their files), root first.
   var path: [PullRequestRoute] = []
 
+  /// A pull request opened from outside the list (a thread's chip, a link): the cover shows just
+  /// it, and Close leaves (no list to go back through).
+  var standalone: PullRequestTarget?
+
   /// The pull request shown (the split view's selection).
   var selected: PullRequestTarget? {
     for route in path.reversed() { if case .pullRequest(let target) = route { return target } }
-    return nil
+    return standalone
   }
 
   let source: any PullRequestSource
@@ -114,12 +118,14 @@ final class PullRequestFeature {
   // MARK: Presenting
 
   func openList() {
+    standalone = nil
     path = []
     presented = true
   }
 
   func open(_ target: PullRequestTarget) {
-    path = [.pullRequest(target)]
+    standalone = target
+    path = []
     presented = true
   }
 

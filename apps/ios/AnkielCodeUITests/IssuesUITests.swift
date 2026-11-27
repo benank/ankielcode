@@ -68,4 +68,16 @@ final class IssuesUITests: HomeUITestCase {
     XCTAssertTrue(app.staticTexts["Looks like the month table hard-codes 28 days."].waitForExistence(timeout: 10))
     shot("issues-detail")
   }
+
+  /// An entry point (here the New thread intent, as Siri runs it at a cold launch) never lands
+  /// under a cover: Issues closes and the new-thread sheet shows.
+  func testAnEntryPointClosesIssuesFirst() {
+    launch([
+      "ANKIEL_DEBUG_HOME": "sample", "ANKIEL_DEBUG_ISSUES": "fixture", "ANKIEL_DEBUG_ISSUES_OPEN": "list",
+      "ANKIEL_DEBUG_INTENT": "new:Check the leap day", "ANKIEL_DEBUG_COMPOSER": "fake", "ANKIEL_DEBUG_COMPOSER_RESET": "1",
+    ])
+    let field = app.textViews["composer.field"].exists ? app.textViews["composer.field"] : app.textFields["composer.field"]
+    XCTAssertTrue(field.waitForExistence(timeout: 15), "the new-thread sheet shows")
+    XCTAssertFalse(app.buttons["issues.done"].exists, "Issues closed first")
+  }
 }

@@ -44,13 +44,8 @@ struct IssuesRoot: View {
   /// A new thread in the issue's project, its draft holding the issue's title and link.
   private func startThread(_ entry: IssueEntry) {
     guard let environmentId = issues?.environmentId else { return }
-    let model = model
-    dismiss()
-    // Home presents the new-thread sheet once this cover has gone.
-    Task { @MainActor in
-      try? await Task.sleep(for: .milliseconds(450))
-      model.open(.newThread(prompt: IssueCalls.threadPrompt(entry), environmentId: environmentId, projectId: entry.projectId))
-    }
+    // Opening an entry closes this cover first, then shows the new-thread sheet.
+    model.open(.newThread(prompt: IssueCalls.threadPrompt(entry), environmentId: environmentId, projectId: entry.projectId))
   }
 }
 
