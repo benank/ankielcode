@@ -596,3 +596,13 @@ share) and rankings by provider and model. RN merges every computer with source 
 here a picker chooses the computer instead. `ankiel-probe --usage-summary [days]` prints the same
 fold, read only. `ANKIEL_DEBUG_USAGE_TAB=cost|tokens` opens a tab (synthetic data with
 `ANKIEL_DEBUG_SETTINGS`).
+
+## DPoP keys
+
+New pairings bind to the installation's Secure Enclave key (`SystemEnclaveKeys`, usable after
+first unlock without user presence, so background renewals and notification answers keep working);
+its device-bound blob is kept in the Keychain as `dpop-enclave-key`. Sessions are bound to a key
+thumbprint, so each computer records its key in `dpop-key-kind.<environmentId>`: absent means the
+software key (`dpop-proof-key`), which computers paired earlier keep using. Where the enclave is
+missing or fails (the simulator), new pairings use the software key. Removing a computer forgets
+its record. The probe prints "Secure Enclave key" after pairing when it got one.

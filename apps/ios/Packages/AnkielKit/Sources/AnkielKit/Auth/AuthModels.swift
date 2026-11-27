@@ -45,6 +45,10 @@ public enum AccessCredential: Sendable, Hashable, Codable {
     }
   }
 
+  public var isDPoP: Bool {
+    if case .dpop = self { true } else { false }
+  }
+
   /// Renew when within a minute of expiry (`DPOP_ACCESS_TOKEN_REFRESH_SKEW_MS`).
   public func needsRenewal(now: Date = .now) -> Bool {
     guard case .dpop(_, let expiresAt) = self else { return false }

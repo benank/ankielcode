@@ -1,24 +1,52 @@
 import CryptoKit
 import Foundation
 
-/// An ES256 key that signs DPoP proofs (RFC 9449). One key per installation, shared by every
-/// environment; the server only ever sees the public JWK.
+/// An ES256 key that signs DPoP proofs (RFC 9449): a software key kept in the Keychain, or a
+/// Secure Enclave key whose private half never leaves the chip. The server only ever sees the
+/// public JWK and binds each session to its thumbprint.
 public struct DPoPKey: Sendable {
-  public let privateKey: P256.Signing.PrivateKey
+  enum Signer: Sendable {
+    case software(P256.Signing.PrivateKey)
+    case enclave(SecureEnclave.P256.Signing.PrivateKey)
+  }
 
+  let signer: Signer
+
+  /// A new software key.
   public init() {
-    privateKey = P256.Signing.PrivateKey()
+    signer = .software(P256.Signing.PrivateKey())
   }
 
   public init(rawRepresentation: Data) throws {
-    privateKey = try P256.Signing.PrivateKey(rawRepresentation: rawRepresentation)
+    signer = .software(try P256.Signing.PrivateKey(rawRepresentation: rawRepresentation))
   }
 
-  public var rawRepresentation: Data { privateKey.rawRepresentation }
+  init(enclave key: SecureEnclave.P256.Signing.PrivateKey) {
+    signer = .enclave(key)
+  }
+
+  /// The software key's raw bytes; a Secure Enclave key's opaque, device-bound blob.
+  public var rawRepresentation: Data {
+    switch signer {
+    case .software(let key): key.rawRepresentation
+    case .enclave(let key): key.dataRepresentation
+    }
+  }
+
+  public var isHardwareBacked: Bool {
+    if case .enclave = signer { true } else { false }
+  }
+
+  var publicKey: P256.Signing.PublicKey {
+    switch signer {
+    case .software(let key): key.publicKey
+    case .enclave(let key): key.publicKey
+    }
+  }
 
   /// The public JWK coordinates (32 bytes each, from the 65-byte X9.63 point).
   public var publicJWK: PublicJWK {
-    let point = privateKey.publicKey.x963Representation
+    let point = publicKey.x963Representation
     return PublicJWK(
       x: Data(point[1..<33]).base64URLEncoded,
       y: Data(point[33..<65]).base64URLEncoded)
@@ -51,7 +79,11 @@ public struct DPoPKey: Sendable {
     let encoder = JSONEncoder.wire
     let signingInput =
       "\(try encoder.encode(header).base64URLEncoded).\(try encoder.encode(claims).base64URLEncoded)"
-    let signature = try privateKey.signature(for: Data(signingInput.utf8))
+    let signature: P256.Signing.ECDSASignature =
+      switch signer {
+      case .software(let key): try key.signature(for: Data(signingInput.utf8))
+      case .enclave(let key): try key.signature(for: Data(signingInput.utf8))
+      }
     return "\(signingInput).\(signature.rawRepresentation.base64URLEncoded)"
   }
 

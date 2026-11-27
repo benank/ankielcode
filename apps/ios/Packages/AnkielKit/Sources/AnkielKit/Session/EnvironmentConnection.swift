@@ -23,6 +23,8 @@ public struct EnvironmentConnector: Sendable {
   public let store: any CredentialStore
   public let client: ClientIdentity
   public var rpcOptions: RpcClient.Options
+  /// Where new pairings get a hardware key (tests inject fakes).
+  public var enclave: any EnclaveKeys = SystemEnclaveKeys()
   /// Wraps each opened socket (the probe counts raw frames through it); nil in the app.
   public var transportTap: (@Sendable (any RpcTransport) -> any RpcTransport)?
 
@@ -55,7 +57,7 @@ public struct EnvironmentConnector: Sendable {
   public func exchange(
     _ target: PairingTarget, descriptor: EnvironmentDescriptor
   ) async throws(ConnectionError) -> SavedEnvironment {
-    let key = descriptor.capability("accessTokenRenewal") ? try dpopKey() : nil
+    let key = descriptor.capability("accessTokenRenewal") ? try pairingKey() : nil
     let result: AccessTokenResult
     do {
       result = try await http.exchangePairingCode(target.credential, at: target.endpoint, key: key, client: client)
@@ -69,7 +71,13 @@ public struct EnvironmentConnector: Sendable {
       label: result.environmentLabel ?? descriptor.label,
       endpoint: target.endpoint,
       serverVersion: descriptor.serverVersion)
-    try save(AccessCredential(result), for: environment.environmentId)
+    let credential = AccessCredential(result)
+    try save(credential, for: environment.environmentId)
+    do {
+      try store.bind(environment.environmentId, to: credential.isDPoP ? key : nil)
+    } catch {
+      throw .unreachable("Could not save the credential: \(error)")
+    }
     return environment
   }
 
@@ -92,7 +100,7 @@ public struct EnvironmentConnector: Sendable {
   ) async throws(ConnectionError) -> EnvironmentSession {
     _ = try await verifiedDescriptor(endpoint, environmentId: environmentId)
     var credential = try await vault.current(at: endpoint)
-    let key: DPoPKey? = if case .dpop = credential { try dpopKey() } else { nil }
+    let key: DPoPKey? = if case .dpop = credential { try dpopKey(for: environmentId) } else { nil }
 
     var renewed = false
     while true {
@@ -204,7 +212,7 @@ public struct EnvironmentConnector: Sendable {
   public func renew(
     _ credential: AccessCredential, environmentId: String, endpoint: EnvironmentEndpoint
   ) async throws(ConnectionError) -> AccessCredential {
-    let key = try dpopKey()
+    let key = try dpopKey(for: environmentId)
     do {
       let result = try await http.renew(credential.token, at: endpoint, key: key)
       let renewed = AccessCredential(result)
@@ -237,7 +245,7 @@ public struct EnvironmentConnector: Sendable {
     var renewed = false
     while true {
       do {
-        let key: DPoPKey? = if case .dpop = credential { try dpopKey() } else { nil }
+        let key: DPoPKey? = if case .dpop = credential { try dpopKey(for: vault.environmentId) } else { nil }
         return try await http.authorizedSend(request, credential: credential, key: key, as: ShellHTTPSnapshot.self)
       } catch let error as EnvironmentHTTPError {
         let mapped = Self.mapHTTP(error)
@@ -268,7 +276,7 @@ public struct EnvironmentConnector: Sendable {
     var renewed = false
     while true {
       do {
-        let key: DPoPKey? = if case .dpop = credential { try dpopKey() } else { nil }
+        let key: DPoPKey? = if case .dpop = credential { try dpopKey(for: vault.environmentId) } else { nil }
         return try await http.authorizedSend(request, credential: credential, key: key, as: type)
       } catch let error as EnvironmentHTTPError {
         if case .status(let status, let body?) = error, status != 401, body["_tag"]?.stringValue != nil {
@@ -292,7 +300,7 @@ public struct EnvironmentConnector: Sendable {
     request.timeoutInterval = 15
     let credential = try await vault.current(at: endpoint)
     do {
-      let key: DPoPKey? = if case .dpop = credential { try dpopKey() } else { nil }
+      let key: DPoPKey? = if case .dpop = credential { try dpopKey(for: vault.environmentId) } else { nil }
       return try await http.authorizedSend(request, credential: credential, key: key, as: AuthSessionState.self)
     } catch let error as EnvironmentHTTPError {
       throw Self.mapHTTP(error)
@@ -315,6 +323,7 @@ public struct EnvironmentConnector: Sendable {
 
   public func forget(_ environmentId: String) {
     try? store.remove(CredentialKeys.credential(environmentId))
+    try? store.remove(CredentialKeys.keyKind(environmentId))
   }
 
   private func save(_ credential: AccessCredential, for environmentId: String) throws(ConnectionError) {
@@ -325,8 +334,14 @@ public struct EnvironmentConnector: Sendable {
     }
   }
 
-  private func dpopKey() throws(ConnectionError) -> DPoPKey {
-    do { return try store.dpopKey() } catch { throw .unreachable("Could not load the DPoP key: \(error)") }
+  private func dpopKey(for environmentId: String) throws(ConnectionError) -> DPoPKey {
+    do { return try store.dpopKey(for: environmentId, enclave: enclave) } catch {
+      throw .unreachable("Could not load the DPoP key: \(error)")
+    }
+  }
+
+  private func pairingKey() throws(ConnectionError) -> DPoPKey {
+    do { return try store.pairingKey(enclave: enclave) } catch { throw .unreachable("Could not load the DPoP key: \(error)") }
   }
 
   /// 401 is a rejected credential unless the proof's timestamp was the problem.

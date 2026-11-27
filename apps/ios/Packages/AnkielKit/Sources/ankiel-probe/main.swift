@@ -47,7 +47,8 @@ func run() async throws {
     environment = paired
     try store.set(paired, for: "environment")
     let kind = if case .dpop? = try connector.loadCredential(paired.environmentId) { "DPoP" } else { "bearer" }
-    print("paired:            \(paired.label) via \(paired.endpoint.httpBaseURL.absoluteString) (\(kind))")
+    let hardware = (try? store.data(for: CredentialKeys.keyKind(paired.environmentId))) != nil
+    print("paired:            \(paired.label) via \(paired.endpoint.httpBaseURL.absoluteString) (\(kind)\(hardware ? ", Secure Enclave key" : ""))")
   } else if let saved = try store.value(SavedEnvironment.self, for: "environment") {
     environment = saved
     print("reusing:           \(saved.label) via \(saved.endpoint.httpBaseURL.absoluteString)")
