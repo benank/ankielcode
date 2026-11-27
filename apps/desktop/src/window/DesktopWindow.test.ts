@@ -952,6 +952,8 @@ describe("DesktopWindow", () => {
               misspelledWord: "",
               linkURL: "",
               mediaType: "none",
+              selectionText: "",
+              isEditable: true,
               editFlags: { canCut: false, canCopy: true, canPaste: false, canSelectAll: true },
             },
           );
@@ -1828,6 +1830,8 @@ describe("DesktopWindow", () => {
             misspelledWord: "",
             dictionarySuggestions: [],
             mediaType: "none",
+            selectionText: "",
+            isEditable: false,
             editFlags: { canCut: false, canCopy: false, canPaste: false, canSelectAll: true },
           },
         );
@@ -1844,6 +1848,50 @@ describe("DesktopWindow", () => {
           {} as Electron.KeyboardEvent,
         );
         assert.equal(yield* Deferred.await(copied), "restaurant@example.com");
+      }).pipe(Effect.provide(layer));
+    }),
+  );
+
+  it.effect("shows no native menu when a right-click on empty space has nothing to offer", () =>
+    Effect.gen(function* () {
+      const fakeWindow = makeFakeBrowserWindow();
+      const createCount = yield* Ref.make(0);
+      const mainWindow = yield* Ref.make<Option.Option<Electron.BrowserWindow>>(Option.none());
+      const menus = yield* Queue.unbounded<ElectronMenu.ElectronMenuTemplateInput>();
+      const layer = layerTest({
+        window: fakeWindow.window,
+        createCount,
+        mainWindow,
+        onPopupTemplate: (menu) => Queue.offer(menus, menu).pipe(Effect.asVoid),
+      });
+
+      yield* Effect.gen(function* () {
+        const desktopWindow = yield* DesktopWindow.DesktopWindow;
+        yield* desktopWindow.handleBackendReady(new URL("http://127.0.0.1:3773"));
+
+        const contextMenu = fakeWindow.webContentsListeners.get("context-menu");
+        if (!contextMenu) return yield* Effect.die("context-menu listener was not registered");
+        const emptySpace = {
+          misspelledWord: "",
+          dictionarySuggestions: [],
+          linkURL: "",
+          mediaType: "none",
+          selectionText: "",
+          isEditable: false,
+          editFlags: { canCut: false, canCopy: false, canPaste: true, canSelectAll: true },
+        };
+        contextMenu({ preventDefault: vi.fn() }, emptySpace);
+        contextMenu(
+          { preventDefault: vi.fn() },
+          { ...emptySpace, linkURL: "https://example.com/" },
+        );
+
+        const { template } = yield* Queue.take(menus);
+        assert.deepEqual(
+          template.slice(0, 2).map((item) => item.label),
+          ["Open Link", "Copy Link"],
+        );
+        assert.isTrue(Option.isNone(yield* Queue.poll(menus)));
       }).pipe(Effect.provide(layer));
     }),
   );

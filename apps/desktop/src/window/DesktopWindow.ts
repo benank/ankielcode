@@ -13,7 +13,6 @@ import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 
 import * as Electron from "electron";
-import { msg } from "gt-i18n";
 
 import {
   type DesktopSnapShotEvent,
@@ -48,10 +47,10 @@ import * as PreviewPasskeys from "../preview/Passkeys.ts";
 import * as DesktopAppSettings from "../settings/DesktopAppSettings.ts";
 import * as DesktopClientSettings from "../settings/DesktopClientSettings.ts";
 import * as ElectronApp from "../electron/ElectronApp.ts";
-import { m } from "../i18n/messages.ts";
 import * as DesktopRendererHistory from "../telemetry/DesktopRendererHistory.ts";
 import { makeQuitShortcutHandler } from "./QuitHold.ts";
 import { copyContextMenuImage } from "./ContextMenuImage.ts";
+import { buildNativeContextMenuTemplate } from "./NativeContextMenu.ts";
 import { installMainWindowRemoteRequestHeaderPolicy } from "./RemoteRequestHeaders.ts";
 
 const TITLEBAR_HEIGHT = 40;
@@ -67,21 +66,6 @@ class ContextMenuImageCopyError extends Schema.TaggedError<ContextMenuImageCopyE
 // Match --workspace-topbar-height in apps/web/src/index.css; native macOS buttons stay 14 points at any zoom.
 const MACOS_WORKSPACE_TOPBAR_HEIGHT = 52;
 const MACOS_WINDOW_BUTTON_RADIUS = 7;
-
-function parseMailtoAddress(rawUrl: string): Option.Option<string> {
-  let url: URL;
-  try {
-    url = new URL(rawUrl);
-  } catch {
-    return Option.none();
-  }
-  if (url.protocol !== "mailto:" || url.pathname === "") return Option.none();
-  try {
-    return Option.some(decodeURIComponent(url.pathname));
-  } catch {
-    return Option.some(url.pathname);
-  }
-}
 
 function syncMacosWindowButtons(window: Electron.BrowserWindow): void {
   if (window.isDestroyed() || window.isFullScreen()) return;
@@ -696,97 +680,43 @@ export const make = Effect.gen(function* () {
         // Right-clicking a guest may leave native editing roles targeting the host renderer.
         contents.focus();
 
-        const menuTemplate: Electron.MenuItemConstructorOptions[] = [];
-
-        if (isBrowserContents) {
-          menuTemplate.push(
-            {
-              label: m(msg("Reload")),
-              click: () => {
-                if (!contents.isDestroyed()) contents.reload();
-              },
-            },
-            { type: "separator" },
-          );
-        }
-
-        if (params.misspelledWord) {
-          for (const suggestion of params.dictionarySuggestions.slice(0, 5)) {
-            menuTemplate.push({
-              label: suggestion,
-              click: () => {
-                if (!contents.isDestroyed()) contents.replaceMisspelling(suggestion);
-              },
-            });
-          }
-          if (params.dictionarySuggestions.length === 0) {
-            menuTemplate.push({ label: m(msg("No suggestions")), enabled: false });
-          }
-          menuTemplate.push({ type: "separator" });
-        }
-
-        if (Option.isSome(ElectronShell.parseSafeExternalUrl(params.linkURL))) {
-          menuTemplate.push(
-            {
-              label: m(msg("Copy Link")),
-              click: () => {
-                void runPromise(electronShell.copyText(params.linkURL));
-              },
-            },
-            { type: "separator" },
-          );
-        }
-
-        const mailtoAddress = parseMailtoAddress(params.linkURL);
-        if (Option.isSome(mailtoAddress)) {
-          menuTemplate.push(
-            {
-              label: m(msg("Copy Email Address")),
-              click: () => {
-                void runPromise(electronShell.copyText(mailtoAddress.value));
-              },
-            },
-            { type: "separator" },
-          );
-        }
-
-        if (params.mediaType === "image") {
-          menuTemplate.push({
-            label: m(msg("Copy Image")),
-            click: () => {
-              void runPromise(
-                Effect.tryPromise({
-                  try: () => copyContextMenuImage(contents, params),
-                  catch: (cause) => new ContextMenuImageCopyError({ cause }),
-                }).pipe(Effect.catch(() => logWindowWarning("failed to copy context-menu image"))),
-              );
-            },
-          });
-          menuTemplate.push({ type: "separator" });
-        }
-
-        menuTemplate.push(
-          {
-            role: "cut",
-            label: m(msg("Cut", { $context: "Edit menu item" })),
-            enabled: params.editFlags.canCut,
-          },
-          {
-            role: "copy",
-            label: m(msg("Copy", { $context: "Edit menu item" })),
-            enabled: params.editFlags.canCopy,
-          },
-          {
-            role: "paste",
-            label: m(msg("Paste", { $context: "Edit menu item" })),
-            enabled: params.editFlags.canPaste,
-          },
-          {
-            role: "selectAll",
-            label: m(msg("Select All", { $context: "Edit menu item" })),
-            enabled: params.editFlags.canSelectAll,
+        const menuTemplate = buildNativeContextMenuTemplate(
+          { params, platform: environment.platform, isBrowserContents },
+          (action) => {
+            if (contents.isDestroyed()) return;
+            switch (action.type) {
+              case "reload":
+                contents.reload();
+                return;
+              case "replace-misspelling":
+                contents.replaceMisspelling(action.word);
+                return;
+              case "learn-spelling":
+                contents.session.addWordToSpellCheckerDictionary(action.word);
+                return;
+              case "look-up":
+                contents.showDefinitionForSelection();
+                return;
+              case "open-link":
+                void runPromise(electronShell.openExternal(action.url));
+                return;
+              case "copy-text":
+                void runPromise(electronShell.copyText(action.text));
+                return;
+              case "copy-image":
+                void runPromise(
+                  Effect.tryPromise({
+                    try: () => copyContextMenuImage(contents, params),
+                    catch: (cause) => new ContextMenuImageCopyError({ cause }),
+                  }).pipe(
+                    Effect.catch(() => logWindowWarning("failed to copy context-menu image")),
+                  ),
+                );
+                return;
+            }
           },
         );
+        if (menuTemplate.length === 0) return;
 
         void runPromise(
           electronMenu.popupTemplate({
