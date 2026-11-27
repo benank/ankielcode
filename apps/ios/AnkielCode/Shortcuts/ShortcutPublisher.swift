@@ -90,9 +90,10 @@ final class ShortcutPublisher {
     let domains = Array(Set(indexed.compactMap { $0.split(separator: ":").first.map(String.init) } + recents.map(\.environmentId)))
     indexed = identifiers
     let previous = indexing
-    let items = recents.map(Self.item)
-    indexing = Task {
+    // Off the main actor: the index standardizes items synchronously before it sends them.
+    indexing = Task.detached(priority: .utility) {
       await previous?.value
+      let items = recents.map(Self.item)
       let index = CSSearchableIndex.default()
       try? await index.deleteSearchableItems(withDomainIdentifiers: domains)
       guard !items.isEmpty else { return }
@@ -109,7 +110,7 @@ final class ShortcutPublisher {
     }
   }
 
-  private static func item(_ entry: RecentThreads.Entry) -> CSSearchableItem {
+  nonisolated private static func item(_ entry: RecentThreads.Entry) -> CSSearchableItem {
     let attributes = CSSearchableItemAttributeSet(contentType: .text)
     attributes.title = entry.title
     attributes.contentDescription = entry.environmentLabel

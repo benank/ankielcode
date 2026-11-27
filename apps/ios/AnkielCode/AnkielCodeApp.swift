@@ -7,6 +7,13 @@ struct AnkielCodeApp: App {
 
   private var model: AppModel { delegate.model }
 
+  init() {
+    LaunchSignposts.mark("main")
+    #if DEBUG
+      LaunchSignposts.watchStalls()
+    #endif
+  }
+
   var body: some Scene {
     WindowGroup {
       RootView()

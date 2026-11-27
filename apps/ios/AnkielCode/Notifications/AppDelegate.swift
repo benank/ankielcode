@@ -5,15 +5,21 @@ import UserNotifications
 /// Owns the app model so notification callbacks reach it before any scene exists (a button
 /// pressed with the app terminated launches it in the background, with no window).
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
-  let model = AppModel()
+  let model: AppModel = {
+    LaunchSignposts.mark("appModelInit")
+    defer { LaunchSignposts.mark("appModelReady") }
+    return AppModel()
+  }()
   lazy var push = PushCoordinator(model: model)
 
   func application(
     _ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    LaunchSignposts.mark("didFinishLaunching")
     // Set before launch ends, or a cold-start tap is never delivered.
     UNUserNotificationCenter.current().delegate = self
     push.start()
+    LaunchSignposts.mark("pushStarted")
     return true
   }
 

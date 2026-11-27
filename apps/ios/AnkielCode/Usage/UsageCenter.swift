@@ -13,6 +13,7 @@ final class UsageCenter {
   @ObservationIgnored private let registry: EnvironmentRegistry
   @ObservationIgnored private let store = UsageWidgetStore.shared
   @ObservationIgnored private var tasks: [Task<Void, Never>] = []
+  @ObservationIgnored private var writing: Task<Void, Never>?
   /// Canned computers from `ANKIEL_DEBUG_USAGE`, shown instead of the live ones.
   private(set) var fixture: [LimitSource]?
 
@@ -90,8 +91,13 @@ final class UsageCenter {
   /// widget keeps the last snapshot instead of flashing "no limits".
   private func publish(_ sources: [LimitSource]) {
     guard !sources.isEmpty || registry.environments.isEmpty else { return }
-    if store.write(UsageWidgetSnapshot.build(sources)) {
-      WidgetCenter.shared.reloadTimelines(ofKind: UsageWidgetStore.widgetKind)
+    let snapshot = UsageWidgetSnapshot.build(sources)
+    let store = store
+    let previous = writing
+    // Encoding and the file write stay off the main actor; writes keep their order.
+    writing = Task.detached(priority: .utility) {
+      await previous?.value
+      if store.write(snapshot) { WidgetCenter.shared.reloadTimelines(ofKind: UsageWidgetStore.widgetKind) }
     }
   }
 }

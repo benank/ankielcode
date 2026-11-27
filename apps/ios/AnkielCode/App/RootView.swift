@@ -11,12 +11,14 @@ struct RootView: View {
       switch model.route {
       case .launching:
         Color.clear
+          .onAppear { LaunchSignposts.mark("firstFrame") }
       case .onboarding:
         WelcomeView()
           .transition(.opacity)
       case .home:
         HomeView()
           .transition(.opacity)
+          .onAppear { LaunchSignposts.mark("homeAppeared") }
       }
     }
     .animation(Motion.resolve(Motion.transition, reduceMotion: reduceMotion), value: model.route)

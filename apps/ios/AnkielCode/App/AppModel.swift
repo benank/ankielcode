@@ -119,10 +119,14 @@ final class AppModel {
   }
 
   func launch() async {
+    LaunchSignposts.mark("launchTask")
     await registry.load()
+    LaunchSignposts.mark("registryLoaded")
     await composer.load()
+    LaunchSignposts.mark("composerLoaded")
     home.start()
     usage.start()
+    LaunchSignposts.mark("homeStarted")
     #if DEBUG
       applyDebugLaunch()
     #endif
