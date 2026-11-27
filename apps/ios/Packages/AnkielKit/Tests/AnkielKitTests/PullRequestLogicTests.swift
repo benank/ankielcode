@@ -514,3 +514,21 @@ struct PullRequestModelTests {
     #expect(action.expectedHeadSha != nil)
   }
 }
+
+@Suite("Pull request list cache")
+struct PullRequestListCacheTests {
+  @Test("heads and stats survive a save and load")
+  func roundTrip() async throws {
+    let directory = URL.temporaryDirectory.appending(path: "pr-cache-\(UUID().uuidString)")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let cache = PullRequestListCache(directory: directory)
+    var stats = PullRequestStatsCache()
+    stats.answered([PullRequestDiffStat(projectId: "p", repository: "tidewater/tide-chart", number: 7, additions: 3, deletions: 1)])
+    let head = PullRequestListResult(viewers: ["github.com": "mira-dev"], entries: PullRequestFixtures.entries)
+    await cache.save(heads: ["mac|{}": head], stats: stats)
+    let loaded = await cache.load()
+    #expect(loaded.heads["mac|{}"] == head)
+    #expect(loaded.stats == stats)
+    #expect(await PullRequestListCache(directory: nil).load().heads.isEmpty)
+  }
+}

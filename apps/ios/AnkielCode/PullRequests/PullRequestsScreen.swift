@@ -222,7 +222,7 @@ struct PullRequestsScreen: View {
         .listRowSeparator(.hidden)
     } else if let error = list.loadMoreError {
       VStack(spacing: Spacing.sm) {
-        Text(verbatim: error).font(Typography.footnote).foregroundStyle(Palette.textSecondary)
+        Text(PullRequestCopy.error(error)).font(Typography.footnote).foregroundStyle(Palette.textSecondary)
         Button("Try again") { Task { await list.loadMore() } }
           .buttonStyle(.glass)
           .accessibilityLabel(Text("Retry loading more pull requests"))
@@ -395,6 +395,15 @@ struct PullRequestFilterBar: View {
             }
           }
         }
+        if !projects.isEmpty {
+          chip(projectTitle, active: list.controls.projectId != nil) {
+            Picker("Project", selection: projectBinding) {
+              Text("All projects").tag(String?.none)
+              ForEach(projects, id: \.key) { Text(verbatim: $0.title).tag(Optional($0.key)) }
+            }
+          }
+          .accessibilityIdentifier("pr.filter.project")
+        }
         chip(stateLabel(list.controls.state), active: list.controls.state != .open) {
           Picker("State", selection: $list.controls.state) {
             ForEach([PullRequestListState.open, .closed, .merged, .all], id: \.self) { Text(stateLabel($0)).tag($0) }
@@ -464,6 +473,34 @@ struct PullRequestFilterBar: View {
       .padding(.vertical, Spacing.xs)
     }
     .scrollIndicators(.hidden)
+  }
+
+  /// Projects on a source control host, on the computers the list reads.
+  private var projects: [(key: String, environmentId: String, projectId: String, title: String)] {
+    if feature.isFixture {
+      return [("\(PullRequestFixtures.environmentId)|\(PullRequestFixtures.projectId)", PullRequestFixtures.environmentId, PullRequestFixtures.projectId, "tide-chart")]
+    }
+    let serving = Set(feature.targets.map(\.environmentId))
+    return feature.environments.filter { serving.contains($0.id) }.flatMap { environment in
+      (environment.shell.snapshot?.projects ?? []).filter { $0.repositoryIdentity?.provider != nil }.map {
+        ("\(environment.id)|\($0.id)", environment.id, $0.id, serving.count > 1 ? "\($0.title) · \(environment.label)" : $0.title)
+      }
+    }
+  }
+
+  private var projectTitle: String {
+    projects.first { $0.projectId == list.controls.projectId && $0.environmentId == list.controls.projectEnvironmentId }?.title
+      ?? String(localized: "Project", comment: "filter menu")
+  }
+
+  private var projectBinding: Binding<String?> {
+    Binding(
+      get: { list.controls.projectId.map { "\(list.controls.projectEnvironmentId ?? "")|\($0)" } },
+      set: { key in
+        let project = projects.first { $0.key == key }
+        list.controls.projectId = project?.projectId
+        list.controls.projectEnvironmentId = project?.environmentId
+      })
   }
 
   private var typedFilters: PullRequestListFilters {

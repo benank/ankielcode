@@ -199,11 +199,11 @@ struct PullRequestStartWorkMenu: View {
   let threads: [PullRequestLinkedThreadsResult.Thread]
   @Environment(AppModel.self) private var model
 
-  enum Task: String, CaseIterable { case ask, explain, feedback, conflicts }
+  enum WorkTask: String, CaseIterable { case ask, explain, feedback, conflicts }
 
   var body: some View {
     Section {
-      ForEach(Task.allCases, id: \.self) { task in
+      ForEach(WorkTask.allCases, id: \.self) { task in
         let (title, symbol) = Self.title(task)
         let disabled = (task == .feedback && detail.state != .open) || (task == .conflicts && (detail.state != .open || detail.mergeability != .conflicting))
         let open = threads.filter { $0.archivedAt == nil }
@@ -228,7 +228,7 @@ struct PullRequestStartWorkMenu: View {
     }
   }
 
-  static func title(_ task: Task) -> (String, String) {
+  static func title(_ task: WorkTask) -> (String, String) {
     switch task {
     case .ask: (String(localized: "Ask a question"), "bubble.left.and.text.bubble.right")
     case .explain: (String(localized: "Explain this PR"), "book")
@@ -238,7 +238,7 @@ struct PullRequestStartWorkMenu: View {
   }
 
   /// The prompts RN sends (agent-facing, so not translated).
-  static func prompt(_ task: Task) -> String {
+  static func prompt(_ task: WorkTask) -> String {
     switch task {
     case .ask: ""
     case .explain:
@@ -251,23 +251,29 @@ struct PullRequestStartWorkMenu: View {
   }
 
   /// The draft's text: the pull request's reference, then the task.
-  static func draft(_ detail: PullRequestDetail, task: Task) -> String {
+  static func draft(_ detail: PullRequestDetail, task: WorkTask) -> String {
     let reference = "\(detail.url) (#\(detail.number) \(detail.title), \(detail.headBranch) → \(detail.baseBranch))"
     let prompt = prompt(task)
     return prompt.isEmpty ? reference + "\n\n" : reference + "\n\n" + prompt
   }
 
-  private func start(_ task: Task, in thread: PullRequestLinkedThreadsResult.Thread?) {
+  private func start(_ task: WorkTask, in thread: PullRequestLinkedThreadsResult.Thread?) {
     let text = Self.draft(detail, task: task)
+    let model = model
+    let environmentId = target.environmentId
     model.pullRequests.close()
-    if let thread {
-      let ref = ThreadRef(environmentId: target.environmentId, threadId: thread.id)
-      model.composer.updateDraft(ref.key) { draft in
-        if !draft.text.contains(detail.url) { draft.text = draft.text.isEmpty ? text : draft.text + "\n\n" + text }
+    // Home presents the thread or the new-thread sheet once the full-screen cover has gone.
+    Task { @MainActor in
+      try? await Task.sleep(for: .milliseconds(450))
+      if let thread {
+        let ref = ThreadRef(environmentId: environmentId, threadId: thread.id)
+        model.composer.updateDraft(ref.key) { draft in
+          if !draft.text.contains(detail.url) { draft.text = draft.text.isEmpty ? text : draft.text + "\n\n" + text }
+        }
+        model.navigator.open(ref)
+      } else {
+        model.open(.newThread(prompt: text, environmentId: environmentId, projectId: detail.projectId))
       }
-      model.navigator.open(ref)
-    } else {
-      model.open(.newThread(prompt: text, environmentId: target.environmentId, projectId: detail.projectId))
     }
   }
 }

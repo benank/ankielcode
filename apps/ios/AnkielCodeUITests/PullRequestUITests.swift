@@ -50,6 +50,43 @@ final class PullRequestUITests: HomeUITestCase {
     shot("thread-chip")
     chip.tap()
     XCTAssertTrue(app.descendants(matching: .any)["pr.description"].waitForExistence(timeout: 10), "the chip opened the pull request")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    let close = app.buttons["pr.close"]
+    XCTAssertTrue(close.waitForExistence(timeout: 5))
+    close.tap()
+    XCTAssertTrue(app.buttons["home.pullRequests"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["thread.menu"].exists, "the row's thread did not open underneath")
+
+    // The thread's header carries the same chip.
+    app.buttons["thread.done"].tap()
+    let header = app.buttons["thread.pullRequest"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    shot("thread-header-chip")
+    header.tap()
+    XCTAssertTrue(app.descendants(matching: .any)["pr.description"].waitForExistence(timeout: 10))
+  }
+
+  /// A pasted link opens its pull request.
+  func testOpenByLink() {
+    fixture("link:https://github.com/tidewater/tide-chart/pull/127")
+    XCTAssertTrue(app.descendants(matching: .any)["pr.description"].waitForExistence(timeout: 15))
+    XCTAssertTrue(app.staticTexts["Fix the moon phase drifting a day in leap years"].exists)
+  }
+
+  /// Start work fills the new thread's draft with the pull request and the task; nothing is sent.
+  func testStartWorkFillsDraft() {
+    fixture("pr:128", ["ANKIEL_DEBUG_COMPOSER": "fake", "ANKIEL_DEBUG_COMPOSER_RESET": "1"])
+    let menu = app.buttons["pr.menu"]
+    XCTAssertTrue(menu.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.descendants(matching: .any)["pr.description"].waitForExistence(timeout: 10))
+    menu.tap()
+    let explain = app.buttons["Explain this PR"]
+    XCTAssertTrue(explain.waitForExistence(timeout: 5))
+    explain.tap()
+    let draft = app.textViews.containing(NSPredicate(format: "value CONTAINS %@", "tide-chart/pull/128")).firstMatch
+    let field = draft.exists ? draft : app.descendants(matching: .any).matching(NSPredicate(format: "value CONTAINS %@", "tide-chart/pull/128")).firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 10), "the new thread's draft names the pull request")
+    shot("pr-start-work")
   }
 
   /// Typed qualifiers filter the list on the device.

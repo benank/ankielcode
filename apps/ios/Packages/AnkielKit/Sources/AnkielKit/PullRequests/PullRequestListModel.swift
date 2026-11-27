@@ -69,7 +69,7 @@ public final class PullRequestListModel {
   public private(set) var phase: Phase = .idle
   public private(set) var refreshing = false
   public private(set) var loadingMore = false
-  public private(set) var loadMoreError: String?
+  public private(set) var loadMoreError: PullRequestError?
   /// A whole computer that could not answer (signed out, unsupported, offline).
   public private(set) var failures: [String: PullRequestError] = [:]
   public private(set) var projectErrors: [ComputerError] = []
@@ -232,7 +232,7 @@ public final class PullRequestListModel {
         pages[environmentId] = PullRequestList.append(held, page: page, request: next)
         requests[environmentId] = next
       } catch {
-        loadMoreError = PullRequestCopyKey.describe(error)
+        loadMoreError = error
       }
     }
     loadingMore = false
@@ -306,19 +306,6 @@ public final class PullRequestListModel {
   /// Resets the menus (Reset filters).
   public func resetFilters() {
     controls = PullRequestListControls()
-  }
-}
-
-/// Plain-English fallbacks for errors; the app shows its own translated copy for known cases.
-public enum PullRequestCopyKey {
-  public static func describe(_ error: PullRequestError) -> String {
-    switch error {
-    case .notConnected: "Not connected."
-    case .unavailable(let unavailable): unavailable.requirement ?? unavailable.reason.rawValue
-    case .operation(let detail, _): detail
-    case .rejected(let message, let tag): message ?? tag ?? "Refused."
-    case .failed(let message): message
-    }
   }
 }
 

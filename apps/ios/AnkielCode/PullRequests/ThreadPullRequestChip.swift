@@ -35,7 +35,7 @@ struct ThreadPullRequestChip: View {
   }
 }
 
-/// The thread header's pull request button; reads a branch's pull request when no link has one.
+/// The thread header's pull request button (shown only when the thread has one).
 struct ThreadPullRequestToolbarButton: View {
   let threadRef: ThreadRef
   @Environment(AppModel.self) private var model
@@ -47,15 +47,11 @@ struct ThreadPullRequestToolbarButton: View {
       Button {
         feature.open(badge, thread: thread, environmentId: threadRef.environmentId)
       } label: {
-        ThreadPullRequestChip(badge: badge)
+        ThreadPullRequestChip(badge: badge).fixedSize()
       }
       .buttonStyle(.plain)
       .accessibilityHint(Text("Opens the pull request"))
       .accessibilityIdentifier("thread.pullRequest")
-    } else {
-      Color.clear.frame(width: 0, height: 0)
-        .task(id: thread?.branchPullRequest?.number) { feature.loadSummary(for: thread, environmentId: threadRef.environmentId) }
-        .accessibilityHidden(true)
     }
   }
 }

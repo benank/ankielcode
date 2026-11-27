@@ -29,7 +29,8 @@ public enum PullRequestError: Error, Sendable, Hashable {
     switch error {
     case let error as PullRequestError: self = error
     case RpcError.failed(let failure): self = Self(failure: failure.error)
-    case RpcError.connectionClosed: self = .notConnected
+    // The socket closed mid-call: the server may have run it, so this is never "not sent".
+    case RpcError.connectionClosed(let reason): self = .failed(reason)
     case EnvironmentRequestError.notConnected: self = .notConnected
     case EnvironmentRequestError.rejected(let message, let tag): self = .rejected(message: message, tag: tag)
     case EnvironmentRequestError.failed(let message): self = .failed(message)
@@ -54,7 +55,8 @@ public enum PullRequestError: Error, Sendable, Hashable {
     }
   }
 
-  /// Refused before the server ran it, so trying another computer cannot double a write.
+  /// Refused before the server ran it, so trying another computer cannot double a write. Only the
+  /// router's own "no session" check and a typed unavailable-route refusal qualify.
   public var rejectedBeforeDispatch: Bool {
     switch self {
     case .notConnected: true

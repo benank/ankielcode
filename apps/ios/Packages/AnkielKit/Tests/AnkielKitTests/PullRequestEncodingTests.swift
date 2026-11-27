@@ -104,6 +104,8 @@ struct PullRequestEncodingTests {
     let missing: JSONValue = ["_tag": "PullRequestOperationError", "operation": "detail", "detail": "Not found.", "reason": "not-found"]
     #expect(PullRequestError(RpcError.failed(RpcFailure(error: missing))) == .operation(detail: "Not found.", notFound: true))
     #expect(PullRequestError(EnvironmentRequestError.notConnected).rejectedBeforeDispatch)
+    // A socket that drops after the write left the device may have run it: never retried elsewhere.
+    #expect(!PullRequestError(RpcError.connectionClosed("socket closed")).rejectedBeforeDispatch)
     #expect(!PullRequestError.operation(detail: "x", notFound: false).rejectedBeforeDispatch)
   }
 

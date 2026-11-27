@@ -93,6 +93,9 @@ final class PullRequestFeature {
     }
   }
 
+  /// Saved computers (the project filter reads their projects).
+  var environments: [EnvironmentModel] { app?.registry.environments ?? [] }
+
   /// Whether this session may send writes on `environmentId` (`source-control:write`).
   func canWrite(_ environmentId: String) -> Bool {
     if isFixture { return PullRequestDebug.current?.readOnly != true }
