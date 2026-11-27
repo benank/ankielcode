@@ -72,6 +72,10 @@ public final class Dictation {
   /// Settled plus volatile transcript of the current session.
   public private(set) var transcript = ""
   public private(set) var locale: String?
+  /// False once a check found no on-device transcription here; the microphone hides (RN).
+  public private(set) var isSupported = true
+
+  @ObservationIgnored private var checkedSupport = false
 
   @ObservationIgnored private let engine: any DictationEngine
   @ObservationIgnored private let access: @MainActor () async -> MicrophoneAccess
@@ -89,6 +93,13 @@ public final class Dictation {
     self.engine = engine
     self.access = access
     self.locales = locales
+  }
+
+  /// Checks once whether this device can transcribe at all.
+  public func checkSupport() async {
+    guard !checkedSupport else { return }
+    checkedSupport = true
+    isSupported = await engine.availability(locales()) != .unavailable
   }
 
   /// The session is using the microphone or settling (sending waits for it).

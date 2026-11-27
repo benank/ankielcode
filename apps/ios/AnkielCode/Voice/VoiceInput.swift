@@ -44,6 +44,15 @@ enum VoiceInput {
     return await MicrophonePermission.request()
   }
 
+  #if DEBUG
+    /// `ANKIEL_DEBUG_AUDIO_SESSION=1` tries the engine's audio session setup and prints the result
+    /// (the simulator has no on-device transcriber, but the session call itself runs).
+    static func debugAudioSession() {
+      guard ProcessInfo.processInfo.environment["ANKIEL_DEBUG_AUDIO_SESSION"] == "1" else { return }
+      print("audio session: \(AppleDictationEngine.configureSession().map { "failed: \($0)" } ?? "ok")")
+    }
+  #endif
+
   static func openSystemSettings() {
     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
   }

@@ -278,7 +278,8 @@ pushed ~45 s after the test starts.
 **Voice** (`AnkielCode/Voice`, logic in `AnkielKit/Voice`): the composer's microphone dictates on
 the device with iOS 26's `SpeechAnalyzer`/`SpeechTranscriber` in the app's language, downloading
 the language's model first when it is missing. Live text shows after the draft while the field is
-frozen; Done commits it once, Cancel leaves the draft. A call, a lost headset or backgrounding ends
+frozen; Done commits it once, Cancel leaves the draft. Where on-device transcription is unavailable
+(the simulator included) the microphone hides, as in RN. A call, a lost headset or backgrounding ends
 the session and keeps what was heard. Settings → Voice shows the language, the model and microphone
 access. Transcribing on a computer or with a cloud provider (RN's other options) is not here yet.
 
@@ -300,6 +301,7 @@ projects are saved in `UserDefaults` so intents answer from a cold launch. Links
 | `ANKIEL_DEBUG_VOICE` | `listen`, `download`, `unsupported`, `unavailable`, `fail`, `interrupt`, `denied` | A scripted speech engine (the simulator has no microphone to drive and no on-device transcriber): it "hears" a fixed sentence; `download` first fakes a model download; `denied` refuses the microphone. |
 | `ANKIEL_DEBUG_INTENT` | `new`, `new:<prompt>`, `open`, `search:<query>` | Runs that intent's own `perform()` at launch, before the computers load, as Siri does at a cold launch. |
 | `ANKIEL_DEBUG_RECENTS` | `1` | Prints the saved recent threads. |
+| `ANKIEL_DEBUG_AUDIO_SESSION` | `1` | Tries the dictation engine's audio session setup at launch and prints the result. |
 | `ANKIEL_DEBUG_ROUTE` | `settings-voice`, `settings-archive` | Those Settings pages. |
 
 `VoiceUITests` (fake engine), `ArchiveUITests` (live; seed first) and `ShortcutUITests` (live;

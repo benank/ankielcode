@@ -4159,17 +4159,6 @@
     "sv": "Gå till tråd %lld",
     "zh-Hans": "前往线程 %lld"
   },
-  "New thread in ${project}": {
-    "de": "Neuer Thread in ${project}",
-    "es": "Nuevo hilo en ${project}",
-    "fr": "Nouveau fil dans ${project}",
-    "ja": "${project}の新規スレッド",
-    "ko": "${project}에서 새 스레드",
-    "pt-BR": "Novo thread em ${project}",
-    "ru": "Новый тред в ${project}",
-    "sv": "Ny tråd i ${project}",
-    "zh-Hans": "在 ${project} 中新建线程"
-  },
   "Next computer": {
     "de": "Nächster Computer",
     "es": "Siguiente ordenador",

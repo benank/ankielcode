@@ -55,4 +55,16 @@ final class VoiceUITests: HomeUITestCase {
     XCTAssertTrue(app.buttons["dictation.openSettings"].waitForExistence(timeout: 5))
     shot("voice-denied")
   }
+
+  func testBackgroundingKeepsWhatWasHeard() {
+    launchThread(voice: "listen")
+    app.buttons["composer.mic"].tap()
+    let partial = expectation(for: NSPredicate(format: "value CONTAINS 'regression'"), evaluatedWith: field)
+    wait(for: [partial], timeout: 8)
+    XCUIDevice.shared.press(.home)
+    app.activate()
+    XCTAssertTrue(app.buttons["composer.mic"].waitForExistence(timeout: 5), "the session ended")
+    XCTAssertTrue((field.value as? String ?? "").contains("regression"), "the words stayed in the draft")
+    shot("voice-backgrounded")
+  }
 }

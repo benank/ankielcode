@@ -37,4 +37,16 @@ final class KeyboardCommandUITests: HomeUITestCase {
     app.typeKey("0", modifierFlags: .command)
     XCTAssertTrue(row("approval").waitForExistence(timeout: 5), "Command-0 goes home")
   }
+
+  /// The thread commands come from the open composer (a focused scene value); Command-L proves
+  /// the value arrives. (The test runner may not read the app's pasteboard, so Copy link is untested.)
+  func testThreadCommandsReachTheComposer() {
+    app.terminate()
+    launch(["ANKIEL_DEBUG_THREAD": "short", "ANKIEL_DEBUG_COMPOSER": "fake", "ANKIEL_DEBUG_COMPOSER_RESET": "1"])
+    let field = app.descendants(matching: .any).matching(identifier: "composer.field").firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 10))
+    app.typeKey("l", modifierFlags: .command)
+    let focused = expectation(for: NSPredicate(format: "hasKeyboardFocus == true"), evaluatedWith: field)
+    wait(for: [focused], timeout: 3)
+  }
 }

@@ -163,7 +163,9 @@ struct ComposerView: View {
           HStack(spacing: Spacing.sm) {
             modelChip
             Spacer(minLength: 0)
-            DictationMicButton(disabled: !target.canSend, start: startDictation)
+            if dictation.isSupported {
+              DictationMicButton(disabled: !target.canSend, start: startDictation)
+            }
             sendCluster
           }
           .transition(.opacity)

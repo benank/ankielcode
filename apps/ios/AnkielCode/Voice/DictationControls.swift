@@ -201,5 +201,6 @@ struct DictationLifecycle: ViewModifier {
         if phase == .background { dictation.finish(draftKey) }
       }
       .onDisappear { dictation.finish(draftKey) }
+      .task { await dictation.checkSupport() }
   }
 }

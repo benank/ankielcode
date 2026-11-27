@@ -1,4 +1,5 @@
 import AnkielKit
+import AppIntents
 import CoreSpotlight
 import SwiftUI
 import UIKit
@@ -77,6 +78,8 @@ final class ShortcutPublisher {
     }
     UIApplication.shared.shortcutItems = items
     index(recents)
+    // The "Open <thread>" phrase lists the recent threads; Siri re-reads them only when told.
+    AnkielAppShortcuts.updateAppShortcutParameters()
   }
 
   /// Replaces the index after the previous replacement finishes, so a late delete never wipes a
@@ -140,7 +143,10 @@ struct ShortcutSync: ViewModifier {
         if model.registry.isLoaded { ShortcutPublisher.shared.sync(model) }
       }
       #if DEBUG
-        .task { await ShortcutDebug.run() }
+        .task {
+          VoiceInput.debugAudioSession()
+          await ShortcutDebug.run()
+        }
       #endif
       .onContinueUserActivity(CSSearchableItemActionType) { activity in
         if let id = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String, let url = URL(string: id),

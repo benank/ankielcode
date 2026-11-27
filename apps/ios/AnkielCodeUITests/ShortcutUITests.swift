@@ -17,10 +17,13 @@ final class ShortcutUITests: HomeUITestCase {
   private func quickAction(_ title: String) throws {
     XCUIDevice.shared.press(.home)
     let icon = springboard.icons["Ankiel Code"]
-    if !icon.waitForExistence(timeout: 3) {
+    guard icon.waitForExistence(timeout: 5) else { throw XCTSkip("The app icon is not on a Home Screen page.") }
+    for _ in 0..<3 where !icon.isHittable {
       springboard.swipeLeft()
     }
-    guard icon.waitForExistence(timeout: 3) else { throw XCTSkip("The app icon is not on a Home Screen page.") }
+    for _ in 0..<3 where !icon.isHittable {
+      springboard.swipeRight()
+    }
     icon.press(forDuration: 1.3)
     let action = springboard.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
     XCTAssertTrue(action.waitForExistence(timeout: 4), "quick action \(title)")
@@ -88,5 +91,18 @@ final class ShortcutUITests: HomeUITestCase {
     result.tap()
     XCTAssertTrue(app.wait(for: .runningForeground, timeout: 8))
     XCTAssertTrue(menu.waitForExistence(timeout: 8), "the thread opens")
+  }
+
+  /// A quick action that launches the app (the scene delegate's connection options).
+  func testSearchQuickActionFromColdLaunch() throws {
+    launch()
+    XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
+    XCUIDevice.shared.press(.home)
+    app.terminate()
+    try quickAction("Search")
+    let field = app.searchFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 15))
+    let focused = expectation(for: NSPredicate(format: "hasKeyboardFocus == true"), evaluatedWith: field)
+    wait(for: [focused], timeout: 10)
   }
 }

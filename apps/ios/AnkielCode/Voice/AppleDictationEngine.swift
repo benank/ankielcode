@@ -69,12 +69,7 @@ actor AppleDictationEngine: DictationEngine {
     let locale = Locale(identifier: identifier)
     let transcriber = Self.transcriber(locale)
     let session = AVAudioSession.sharedInstance()
-    do {
-      try session.setCategory(.record, mode: .measurement, options: [.duckOthers, .allowBluetoothHFP])
-      try session.setActive(true, options: .notifyOthersOnDeactivation)
-    } catch {
-      throw .startFailed(error.localizedDescription)
-    }
+    if let failure = Self.configureSession() { throw .startFailed(failure) }
     let analyzer = SpeechAnalyzer(modules: [transcriber])
     guard let format = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber]) else {
       throw .startFailed("No audio format for this language.")
@@ -120,6 +115,19 @@ actor AppleDictationEngine: DictationEngine {
     }
     observe(session)
     return events
+  }
+
+  /// Recording for dictation: other audio ducks, Bluetooth headsets' microphones are allowed.
+  /// Returns why it failed, or nil.
+  nonisolated static func configureSession() -> String? {
+    let session = AVAudioSession.sharedInstance()
+    do {
+      try session.setCategory(.record, mode: .measurement, options: [.duckOthers, .allowBluetoothHFP])
+      try session.setActive(true, options: .notifyOthersOnDeactivation)
+      return nil
+    } catch {
+      return error.localizedDescription
+    }
   }
 
   /// Built outside the actor: the tap runs on the audio thread. Converts each buffer to the

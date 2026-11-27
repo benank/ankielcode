@@ -126,12 +126,6 @@ struct NewThreadIntent: AppIntent {
   @Parameter(title: "Project")
   var project: ProjectEntity?
 
-  static var parameterSummary: some ParameterSummary {
-    Summary("New thread in \(\.$project)") {
-      \.$prompt
-    }
-  }
-
   @MainActor
   func perform() async throws -> some IntentResult {
     let text = prompt?.trimmingCharacters(in: .whitespacesAndNewlines)
