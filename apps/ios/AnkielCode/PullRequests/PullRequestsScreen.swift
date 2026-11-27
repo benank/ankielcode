@@ -489,9 +489,11 @@ struct PullRequestFilterBar: View {
 
   /// Projects on a source control host, on the computers the list reads.
   private var projects: [(key: String, environmentId: String, projectId: String, title: String)] {
-    if feature.isFixture {
-      return [("\(PullRequestFixtures.environmentId)|\(PullRequestFixtures.projectId)", PullRequestFixtures.environmentId, PullRequestFixtures.projectId, "tide-chart")]
-    }
+    #if DEBUG
+      if feature.isFixture {
+        return [("\(PullRequestFixtures.environmentId)|\(PullRequestFixtures.projectId)", PullRequestFixtures.environmentId, PullRequestFixtures.projectId, "tide-chart")]
+      }
+    #endif
     let serving = Set(feature.targets.map(\.environmentId))
     return feature.environments.filter { serving.contains($0.id) }.flatMap { environment in
       (environment.shell.snapshot?.projects ?? []).filter { $0.repositoryIdentity?.provider != nil }.map {
@@ -679,11 +681,13 @@ struct PullRequestLinkSheet: View {
 
   private var projects: [PullRequestLinkInput.Project] {
     let feature = model.pullRequests
-    if feature.isFixture {
-      let identity = try? JSONDecoder().decode(
-        RepositoryIdentity.self, from: Data(#"{"canonicalKey":"github.com/tidewater/tide-chart","provider":"github","owner":"tidewater","name":"tide-chart"}"#.utf8))
-      return [.init(environmentId: PullRequestFixtures.environmentId, projectId: PullRequestFixtures.projectId, identity: identity)]
-    }
+    #if DEBUG
+      if feature.isFixture {
+        let identity = try? JSONDecoder().decode(
+          RepositoryIdentity.self, from: Data(#"{"canonicalKey":"github.com/tidewater/tide-chart","provider":"github","owner":"tidewater","name":"tide-chart"}"#.utf8))
+        return [.init(environmentId: PullRequestFixtures.environmentId, projectId: PullRequestFixtures.projectId, identity: identity)]
+      }
+    #endif
     let serving = Set(feature.targets.filter(\.connected).map(\.environmentId))
     return model.registry.environments.filter { serving.contains($0.id) }.flatMap { environment in
       (environment.shell.snapshot?.projects ?? []).map {

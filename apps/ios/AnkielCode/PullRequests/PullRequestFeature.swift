@@ -88,7 +88,9 @@ final class PullRequestFeature {
 
   /// Computers that serve pull requests (their config says `pullRequests`).
   var targets: [AnkielKit.PullRequestTarget] {
-    if isFixture { return [.init(environmentId: PullRequestFixtures.environmentId, label: "Fixture Mac", connected: true)] }
+    #if DEBUG
+      if isFixture { return [.init(environmentId: PullRequestFixtures.environmentId, label: "Fixture Mac", connected: true)] }
+    #endif
     return (app?.registry.environments ?? []).filter { $0.isEnabled && $0.capabilities["pullRequests"]?.boolValue == true }.map {
       .init(environmentId: $0.id, label: $0.label, connected: $0.status.isConnected)
     }
@@ -111,7 +113,9 @@ final class PullRequestFeature {
   }
 
   func label(_ environmentId: String) -> String {
-    if isFixture { return "Fixture Mac" }
+    #if DEBUG
+      if isFixture { return "Fixture Mac" }
+    #endif
     return app?.registry.environment(environmentId)?.label ?? String(localized: "Computer")
   }
 

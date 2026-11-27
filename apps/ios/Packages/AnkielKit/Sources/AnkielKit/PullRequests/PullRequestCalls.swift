@@ -162,6 +162,7 @@ public protocol PullRequestSink: AnyObject {
   func send(_ write: PullRequestWrite, in environmentId: String) async throws(PullRequestError) -> PullRequestSummary?
 }
 
+#if DEBUG
 /// Records every write it is handed and answers as the host would, without sending anything.
 @MainActor
 public final class RecordingPullRequestSink: PullRequestSink {
@@ -190,6 +191,7 @@ public final class RecordingPullRequestSink: PullRequestSink {
     }
   }
 }
+#endif
 
 extension ServerSettingsPatch {
   /// `githubIntegrationEnabled`: whether the computer reads GitHub at all.

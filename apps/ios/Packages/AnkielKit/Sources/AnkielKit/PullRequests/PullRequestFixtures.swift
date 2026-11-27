@@ -1,5 +1,8 @@
 import Foundation
 
+// Debug launches and tests only: Release builds leave the synthetic data out.
+#if DEBUG
+
 /// Synthetic pull requests for tests and debug launches: an invented repository
 /// (`tidewater/tide-chart`, the made-up app the thread fixtures talk about), invented people and
 /// text. Nothing here comes from a real pull request.
@@ -383,3 +386,4 @@ public final class FixturePullRequestSource: PullRequestSource {
     invalidations += 1
   }
 }
+#endif

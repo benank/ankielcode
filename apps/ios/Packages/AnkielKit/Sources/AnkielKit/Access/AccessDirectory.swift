@@ -160,6 +160,7 @@ public final class EnvironmentAccessService: AccessService {
   }
 }
 
+#if DEBUG
 /// Canned access lists for fixtures, screenshots and tests (synthetic devices). Writes change the
 /// fake list like the server would; `fail` refuses them.
 @MainActor
@@ -257,3 +258,4 @@ public final class FakeAccessService: AccessService {
       ])
   }
 }
+#endif
