@@ -27,7 +27,7 @@ final class PreviewBrowser: NSObject {
   private(set) var failure: PreviewFailure?
   /// What the proxy saw at the last failure, so a report carries it.
   private(set) var diagnostics: String?
-  /// Loads through the tunnel since this preview opened (Debug pill and UI tests).
+  /// Pages committed through the tunnel since this preview opened.
   private(set) var tunnelledLoads = 0
   /// The proxy is listening and the web view exists.
   private(set) var isReady = false

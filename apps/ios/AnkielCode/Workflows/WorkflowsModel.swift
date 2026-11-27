@@ -51,6 +51,9 @@ final class WorkflowsModel {
     var label: String
     var snapshot: WorkflowRunsSnapshot?
     var error: String?
+    /// Goes up with every snapshot: steps do not move a run's `updatedAt`, so a run under way is
+    /// read again on any change (RN `workflowRunRefreshKey`).
+    var revision = 0
   }
 
   let source: any WorkflowSource
@@ -75,6 +78,14 @@ final class WorkflowsModel {
   var isSettled: Bool { computers.allSatisfy { $0.snapshot != nil || $0.error != nil } }
 
   func snapshot(_ environmentId: String) -> WorkflowRunsSnapshot? { computers.first { $0.id == environmentId }?.snapshot }
+
+  /// What a run's detail is read again on: every snapshot while it runs, its own change once ended.
+  func refreshKey(_ runId: String, environmentId: String) -> String {
+    guard let computer = computers.first(where: { $0.id == environmentId }),
+      let run = computer.snapshot?.runs.first(where: { $0.runId == runId })
+    else { return "" }
+    return run.hasEnded ? "ended:\(run.updatedAt.rawValue)" : "live:\(computer.revision)"
+  }
 
   /// Whether this device may answer, resume or cancel runs there (RN `permissionAtom`).
   func canOperate(_ environmentId: String) -> Bool {
@@ -109,6 +120,7 @@ final class WorkflowsModel {
           update(environmentId) {
             $0.snapshot = snapshot
             $0.error = nil
+            $0.revision += 1
           }
         }
       } catch is CancellationError {

@@ -89,6 +89,6 @@ private final class Once: @unchecked Sendable {
 /// opening a preview from a real thread in the app. Prints its id; `--preview-delete <id>` removes it.
 func probePreviewSeed(_ session: EnvironmentSession, url: String) async throws {
   let (result, launch) = try await launchReplayThread(
-    session, scenario: "showcase", text: "Check the page at [the tide preview](\(url)) and \(url)", runtimeMode: .fullAccess)
+    session, scenario: "showcase", text: "Check the page at [the tide preview](\(url)) and [the tide docs](https://example.com/)", runtimeMode: .fullAccess)
   print("seeded thread:     \(launch.threadId) (sequence \(result.sequence.map(String.init) ?? "-"))")
 }

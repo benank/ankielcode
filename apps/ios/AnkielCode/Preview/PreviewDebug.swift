@@ -4,7 +4,7 @@ import Foundation
 /// Debug launch hooks for device previews (README, "Previews"), in the thread a launch opens (an
 /// `ANKIEL_OPEN_URL` thread link or `ANKIEL_DEBUG_THREAD` fixture), once per launch:
 /// `ANKIEL_DEBUG_PREVIEW=start` opens the empty browser, `open:<url>` opens that address (a
-/// `localhost` URL goes through the tunnel). `ANKIEL_DEBUG_PREVIEW_STATE=<state>` shows a state
+/// `localhost` URL goes through the tunnel), `host` only installs the link handling. `ANKIEL_DEBUG_PREVIEW_STATE=<state>` shows a state
 /// with no server: `port`, `environment`, `outdated`, `disabled`, `permission`, `setup`, `page`,
 /// `tunnel-off`. `ANKIEL_DEBUG_PREVIEW_TABS=fixture` lists two synthetic browser tabs.
 @MainActor
@@ -59,7 +59,7 @@ enum PreviewDebug {
 
   static func apply(to presenter: PreviewPresenter) {
     #if DEBUG
-      guard !opened, let value = environment["ANKIEL_DEBUG_PREVIEW"] else { return }
+      guard !opened, let value = environment["ANKIEL_DEBUG_PREVIEW"], value != "host" else { return }
       opened = true
       Task {
         try? await Task.sleep(for: .milliseconds(800))

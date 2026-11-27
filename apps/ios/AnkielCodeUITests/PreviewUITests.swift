@@ -63,4 +63,21 @@ final class PreviewUITests: HomeUITestCase {
     app.buttons["preview.close"].tap()
     XCTAssertTrue(menu.waitForExistence(timeout: 5))
   }
+
+}
+
+/// Fixtures only, no server: runs by default.
+final class PreviewLinkUITests: HomeUITestCase {
+  /// With the preview's link handling installed, a link that is not the computer's localhost
+  /// still leaves the app (the fixture thread's https link; no server needed).
+  func testOtherLinksLeaveTheApp() {
+    launch(["ANKIEL_DEBUG_THREAD": "rich-markdown", "ANKIEL_DEBUG_PREVIEW": "host"])
+    let link = app.links["station feed"]
+    XCTAssertTrue(link.waitForExistence(timeout: 20), "the fixture shows its link")
+    for _ in 0..<8 where !link.isHittable { app.swipeDown() }
+    link.tap()
+    let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
+    XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 15), "an https link opens Safari")
+    safari.terminate()
+  }
 }

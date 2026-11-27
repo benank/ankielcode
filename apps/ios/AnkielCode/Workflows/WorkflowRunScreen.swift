@@ -20,13 +20,7 @@ struct WorkflowRunScreen: View {
     return Workflows.group(workflows: snapshot.workflows, runs: snapshot.runs, questions: snapshot.questions).node(route.runId)
   }
 
-  /// What the detail is read again on: any change while the run is under way, its own change once ended.
-  private var refreshKey: String {
-    guard let current = snapshot?.runs.first(where: { $0.runId == route.runId }) else { return "" }
-    return current.hasEnded
-      ? current.updatedAt.rawValue
-      : "\(snapshot?.runs.map(\.updatedAt.rawValue).joined() ?? "")\(snapshot?.questions.count ?? 0)"
-  }
+  private var refreshKey: String { workflows.refreshKey(route.runId, environmentId: route.environmentId) }
 
   var body: some View {
     Group {
