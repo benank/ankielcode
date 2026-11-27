@@ -3,9 +3,12 @@ export const SPLASH_MARK_COLOR = "#F2F2EE";
 // Matches expo-splash-screen `imageWidth` in apps/mobile/app.config.ts for 1:1 handoff.
 export const SPLASH_ICON_SIZE = 100;
 
-export const SPLASH_DIP_SCALE = 0.86;
-export const SPLASH_DIP_DURATION_MS = 140;
-export const SPLASH_EXPAND_DURATION_MS = 420;
+// Motion measured frame by frame from X's iOS launch: an ease-out dip to 70%, then a zoom whose
+// log-scale speed ramps up over 90ms and holds at about 0.41 per 60Hz frame.
+export const SPLASH_DIP_SCALE = 0.7;
+export const SPLASH_DIP_DURATION_MS = 250;
+const EXPAND_RAMP_MS = 90;
+const EXPAND_LOG_SPEED_PER_MS = 0.0246;
 export const SPLASH_REDUCED_MOTION_FADE_MS = 200;
 
 // Non-overlapping 7-vertex outline of the Ankiel A mark normalized to a 200x200 square
@@ -20,25 +23,38 @@ export const ANKIEL_MARK_VERTICES = [
   [-0.475, 0.5],
 ] as const;
 
-// Center of the solid apex (midpoint between top edge -0.5 and inner apex -0.2559) and the
-// radius of the largest circle fully inscribed inside it, both normalized to iconSize.
-export const ANKIEL_MARK_PIVOT_NY = -0.37795;
-export const ANKIEL_MARK_APEX_RADIUS = 0.1055;
-const CORNER_CLEARANCE_MARGIN = 1.12;
-const MARK_FADE_END_PROGRESS = 0.28;
+// The zoom pivots on the mark's center, which sits in the gap under the A's inner apex, so the
+// legs pass off screen and the gap grows to cover it.
+const INNER_APEX_NY = -0.2559;
+const INNER_LEG_SLOPE = 0.31065 / (0.5 - INNER_APEX_NY);
+const TARGET_MARGIN = 1.05;
 
+/** The scale at which the whole viewport sits inside the gap between the A's legs. */
 export function computeSplashTargetScale(width: number, height: number): number {
-  const iconSize = SPLASH_ICON_SIZE;
-  const safeWidth = Math.max(1, width);
-  const safeHeight = Math.max(1, height);
-  const pivotY = safeHeight / 2 + ANKIEL_MARK_PIVOT_NY * iconSize;
-  const maxDx = safeWidth / 2;
-  const maxDy = Math.max(pivotY, safeHeight - pivotY);
-  const maxCornerDistance = Math.hypot(maxDx, maxDy);
-  const apexRadius = ANKIEL_MARK_APEX_RADIUS * iconSize;
-  return Math.max(1, Math.ceil((maxCornerDistance / apexRadius) * CORNER_CLEARANCE_MARGIN));
+  const halfWidth = Math.max(1, width) / 2;
+  const halfHeight = Math.max(1, height) / 2;
+  const scale =
+    (halfWidth + INNER_LEG_SLOPE * halfHeight) /
+    (SPLASH_ICON_SIZE * INNER_LEG_SLOPE * -INNER_APEX_NY);
+  return scale * TARGET_MARGIN;
 }
 
+export function computeSplashExpandDurationMs(targetScale: number): number {
+  "worklet";
+  return EXPAND_RAMP_MS / 2 + Math.log(targetScale / SPLASH_DIP_SCALE) / EXPAND_LOG_SPEED_PER_MS;
+}
+
+/** Log-scale growth after `elapsedMs` of the zoom: a smoothstep speed ramp, then constant speed. */
+function expandLogGrowth(elapsedMs: number): number {
+  "worklet";
+  if (elapsedMs >= EXPAND_RAMP_MS) {
+    return EXPAND_LOG_SPEED_PER_MS * (elapsedMs - EXPAND_RAMP_MS / 2);
+  }
+  const u = elapsedMs / EXPAND_RAMP_MS;
+  return EXPAND_LOG_SPEED_PER_MS * EXPAND_RAMP_MS * (u * u * u - (u * u * u * u) / 2);
+}
+
+/** `dipProgress` is eased; `expandProgress` is linear time over the expand duration. */
 export function computeSplashScale(
   dipProgress: number,
   expandProgress: number,
@@ -48,44 +64,45 @@ export function computeSplashScale(
   if (expandProgress <= 0) {
     return 1 - (1 - SPLASH_DIP_SCALE) * dipProgress;
   }
-  // Exponential interpolation in log-scale keeps visual expansion speed steady across the screen.
-  return SPLASH_DIP_SCALE * Math.pow(targetScale / SPLASH_DIP_SCALE, expandProgress);
+  const durationMs = computeSplashExpandDurationMs(targetScale);
+  return Math.min(
+    targetScale,
+    SPLASH_DIP_SCALE * Math.exp(expandLogGrowth(Math.min(1, expandProgress) * durationMs)),
+  );
 }
 
-export function computeMarkFillOpacity(expandProgress: number): number {
+/**
+ * The dark background stays until the A covers the viewport, then fades while the A grows
+ * past the edges, reaching zero when the viewport sits inside the gap between its legs.
+ */
+export function computeSplashBackgroundOpacity(
+  scale: number,
+  width: number,
+  height: number,
+  targetScale: number,
+): number {
   "worklet";
-  if (expandProgress <= 0) return 1;
-  if (expandProgress >= MARK_FADE_END_PROGRESS) return 0;
-  return 1 - expandProgress / MARK_FADE_END_PROGRESS;
+  const coverScale = Math.max(width / (SPLASH_ICON_SIZE * 0.95), height / SPLASH_ICON_SIZE);
+  if (scale <= coverScale) return 1;
+  if (scale >= targetScale) return 0;
+  return 1 - Math.log(scale / coverScale) / Math.log(targetScale / coverScale);
 }
 
 export function buildAnkielMarkPath(width: number, height: number, scale: number): string {
   "worklet";
-  const iconSize = SPLASH_ICON_SIZE;
   const cx = width / 2;
   const cy = height / 2;
-  const pivotY = cy + ANKIEL_MARK_PIVOT_NY * iconSize;
-  const unit = iconSize * scale;
+  const unit = SPLASH_ICON_SIZE * scale;
 
   const x0 = cx + -0.064 * unit;
-  const y0 = pivotY + (-0.5 - ANKIEL_MARK_PIVOT_NY) * unit;
+  const y0 = cy + -0.5 * unit;
   const x1 = cx + 0.064 * unit;
-  const y1 = y0;
   const x2 = cx + 0.475 * unit;
-  const y2 = pivotY + (0.5 - ANKIEL_MARK_PIVOT_NY) * unit;
+  const y2 = cy + 0.5 * unit;
   const x3 = cx + 0.31065 * unit;
-  const y3 = y2;
-  const x4 = cx;
-  const y4 = pivotY + (-0.2559 - ANKIEL_MARK_PIVOT_NY) * unit;
+  const y4 = cy + INNER_APEX_NY * unit;
   const x5 = cx + -0.31065 * unit;
-  const y5 = y2;
   const x6 = cx + -0.475 * unit;
-  const y6 = y2;
 
-  return `M${x0} ${y0}L${x1} ${y1}L${x2} ${y2}L${x3} ${y3}L${x4} ${y4}L${x5} ${y5}L${x6} ${y6}Z`;
-}
-
-export function buildSplashCutoutPath(width: number, height: number, scale: number): string {
-  "worklet";
-  return `M0 0H${width}V${height}H0Z ${buildAnkielMarkPath(width, height, scale)}`;
+  return `M${x0} ${y0}L${x1} ${y0}L${x2} ${y2}L${x3} ${y2}L${cx} ${y4}L${x5} ${y2}L${x6} ${y2}Z`;
 }

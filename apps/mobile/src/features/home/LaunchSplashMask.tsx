@@ -14,19 +14,17 @@ import Svg, { Path } from "react-native-svg";
 
 import {
   buildAnkielMarkPath,
-  buildSplashCutoutPath,
-  computeMarkFillOpacity,
+  computeSplashBackgroundOpacity,
+  computeSplashExpandDurationMs,
   computeSplashScale,
   computeSplashTargetScale,
   SPLASH_BACKGROUND_COLOR,
   SPLASH_DIP_DURATION_MS,
-  SPLASH_EXPAND_DURATION_MS,
   SPLASH_MARK_COLOR,
   SPLASH_REDUCED_MOTION_FADE_MS,
 } from "./launch-splash-mask-geometry";
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
-const EXPAND_EASING = Easing.bezier(0.55, 0, 0.85, 0.25);
 
 export function LaunchSplashMask({
   ready,
@@ -49,7 +47,7 @@ export function LaunchSplashMask({
   const width = size.width;
   const height = size.height;
   const targetScale = computeSplashTargetScale(width, height);
-  const initialCutoutPath = buildSplashCutoutPath(width, height, 1);
+  const expandDurationMs = computeSplashExpandDurationMs(targetScale);
   const initialMarkPath = buildAnkielMarkPath(width, height, 1);
 
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- drives the one-shot UI-thread splash reveal animation once the app signals readiness
@@ -78,9 +76,7 @@ export function LaunchSplashMask({
     dipProgress.set(
       withTiming(1, {
         duration: SPLASH_DIP_DURATION_MS,
-        // Start from rest: the static native splash hands off to this frame, and an ease-out
-        // would jump most of the dip in the first frame, reading as a cut to a smaller mark.
-        easing: Easing.inOut(Easing.quad),
+        easing: Easing.out(Easing.quad),
       }),
     );
     expandProgress.set(
@@ -88,35 +84,36 @@ export function LaunchSplashMask({
         SPLASH_DIP_DURATION_MS,
         withTiming(
           1,
-          {
-            duration: SPLASH_EXPAND_DURATION_MS,
-            easing: EXPAND_EASING,
-          },
+          // Linear time: computeSplashScale applies the zoom's speed curve.
+          { duration: expandDurationMs, easing: Easing.linear },
           (finished) => {
             if (finished) runOnJS(onComplete)();
           },
         ),
       ),
     );
-  }, [dipProgress, expandProgress, onComplete, overlayOpacity, ready, reducedMotion]);
+  }, [
+    dipProgress,
+    expandDurationMs,
+    expandProgress,
+    onComplete,
+    overlayOpacity,
+    ready,
+    reducedMotion,
+  ]);
 
   const containerStyle = useAnimatedStyle(() => ({
     opacity: overlayOpacity.value,
   }));
 
-  const cutoutProps = useAnimatedProps(() => {
+  const backgroundStyle = useAnimatedStyle(() => {
     const scale = computeSplashScale(dipProgress.value, expandProgress.value, targetScale);
-    return {
-      d: buildSplashCutoutPath(width, height, scale),
-    };
+    return { opacity: computeSplashBackgroundOpacity(scale, width, height, targetScale) };
   }, [height, targetScale, width]);
 
   const markProps = useAnimatedProps(() => {
     const scale = computeSplashScale(dipProgress.value, expandProgress.value, targetScale);
-    return {
-      d: buildAnkielMarkPath(width, height, scale),
-      fillOpacity: computeMarkFillOpacity(expandProgress.value),
-    };
+    return { d: buildAnkielMarkPath(width, height, scale) };
   }, [height, targetScale, width]);
 
   return (
@@ -135,14 +132,9 @@ export function LaunchSplashMask({
         }
       }}
     >
+      <Animated.View style={[StyleSheet.absoluteFill, styles.background, backgroundStyle]} />
       {width > 0 && height > 0 ? (
         <Svg width={width} height={height}>
-          <AnimatedPath
-            d={initialCutoutPath}
-            fill={SPLASH_BACKGROUND_COLOR}
-            fillRule="evenodd"
-            animatedProps={cutoutProps}
-          />
           <AnimatedPath d={initialMarkPath} fill={SPLASH_MARK_COLOR} animatedProps={markProps} />
         </Svg>
       ) : null}
@@ -154,5 +146,8 @@ const styles = StyleSheet.create({
   overlay: {
     zIndex: 9999,
     elevation: 9999,
+  },
+  background: {
+    backgroundColor: SPLASH_BACKGROUND_COLOR,
   },
 });
