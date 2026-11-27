@@ -18,7 +18,7 @@ export interface TerminalContextDraft extends TerminalContextSelection {
   createdAt: string;
 }
 
-export const INLINE_TERMINAL_CONTEXT_PLACEHOLDER = "\uFFFC";
+const INLINE_TERMINAL_CONTEXT_PLACEHOLDER = "\uFFFC";
 
 export interface TerminalContextReferenceSource {
   id: string;

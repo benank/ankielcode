@@ -63,7 +63,7 @@ export function ComposerBannerStack({
 
 const SUBPIXEL_ROUNDING = 0.001;
 
-export function NoticeText({
+function NoticeText({
   children,
   className,
   detailsLabel,

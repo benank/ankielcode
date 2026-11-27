@@ -60,10 +60,7 @@ export function LazyThreadRouteView(props: {
 }
 
 /** Static: same frame, header height and composer slot as ChatView, so its arrival doesn't shift. */
-export function ThreadRoutePlaceholder(props: {
-  readonly draft: boolean;
-  readonly background: boolean;
-}) {
+function ThreadRoutePlaceholder(props: { readonly draft: boolean; readonly background: boolean }) {
   return (
     <SidebarInset
       className="h-svh min-h-0 overflow-hidden overscroll-y-none md:h-dvh"

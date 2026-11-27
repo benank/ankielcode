@@ -335,7 +335,7 @@ function findDiffReviewLineIndex(
     : findOnSide(selectedSide === "left" ? "right" : "left");
 }
 
-export function resolveDiffReviewPosition(
+function resolveDiffReviewPosition(
   fileDiff: FileDiffMetadata,
   lineNumber: number,
   side: SelectionSide | undefined,

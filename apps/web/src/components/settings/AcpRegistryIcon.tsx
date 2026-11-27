@@ -29,7 +29,7 @@ async function checkedIconBlob(response: Response): Promise<Blob> {
   return new Blob([bytes], { type: contentType });
 }
 
-export function loadCachedAcpRegistryIcon(iconUrl: string): Promise<Blob> {
+function loadCachedAcpRegistryIcon(iconUrl: string): Promise<Blob> {
   if (resolveOfficialAcpRegistryIconUrl(iconUrl) !== iconUrl) {
     return Promise.reject(new Error("ACP registry icon URL was not allowed."));
   }

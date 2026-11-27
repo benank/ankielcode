@@ -17,7 +17,7 @@ function missingImageCount(entry: PromptStashEntry): number {
   return entry.droppedImageNames.length + (entry.unreadableImageNames?.length ?? 0);
 }
 
-export function stashEntrySnippet(entry: PromptStashEntry, resolve: MessageResolver = m): string {
+function stashEntrySnippet(entry: PromptStashEntry, resolve: MessageResolver = m): string {
   const trimmed = assistantCitationsToPlainText(
     composerFileLinksToPlainText(
       replaceComposerContextReferences(entry.prompt, (reference) => reference.label),

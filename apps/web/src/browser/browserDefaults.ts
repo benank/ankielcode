@@ -48,7 +48,7 @@ const toBrowserDefaults = (settings: {
   };
 };
 
-export function getBrowserDefaults(): BrowserDefaults {
+function getBrowserDefaults(): BrowserDefaults {
   return toBrowserDefaults(getClientSettings());
 }
 

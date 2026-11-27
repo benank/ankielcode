@@ -409,16 +409,6 @@ export function squashAtomCommandFailure(result: {
   return typeof squashed === "string" ? new Error(squashed) : squashed;
 }
 
-export async function settleAsyncResult<A, E>(
-  execute: () => Promise<Exit.Exit<A, E>>,
-): Promise<SettledAsyncResult<A, E>> {
-  try {
-    return AsyncResult.fromExit(await execute());
-  } catch (defect) {
-    return AsyncResult.failure(Cause.die(defect));
-  }
-}
-
 export interface AtomQueryOptions extends AtomCommandOptions {
   /**
    * Force a fresh execution instead of accepting a value the atom already
@@ -465,7 +455,7 @@ export function executeAtomQuery<A, E>(
 }
 
 /** Runs an effect on the calling fiber with the services of an atom runtime. */
-export const provideAtomRuntime =
+const provideAtomRuntime =
   <R, ER>(registry: AtomRegistry.AtomRegistry, runtime: Atom.AtomRuntime<R, ER>) =>
   <A, E>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | ER> =>
     Effect.scoped(

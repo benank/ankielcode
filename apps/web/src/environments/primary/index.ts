@@ -15,8 +15,6 @@ export {
   DesktopEnvironmentBootstrapIncompleteError,
   PrimaryEnvironmentProtocolUnsupportedError,
   PrimaryEnvironmentUrlInvalidError,
-  readPrimaryEnvironmentTarget,
-  resolvePrimaryEnvironmentHttpUrl,
   isLoopbackHostname,
   type PrimaryEnvironmentTarget,
 } from "./target";

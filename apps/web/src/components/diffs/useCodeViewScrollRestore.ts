@@ -19,7 +19,7 @@ const scrollTopByScopeKey = new Map<string, number>();
  * ref and `flush` its post-render handler; the position waits until the content can reach it,
  * loading more files while any remain, and clamps once nothing is left to load.
  */
-export function createCodeViewScrollRestore() {
+function createCodeViewScrollRestore() {
   let scopeKey: string | null = null;
   let settled = true;
   let loadMore: (() => void) | null = null;

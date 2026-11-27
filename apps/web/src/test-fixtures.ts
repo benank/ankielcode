@@ -10,7 +10,6 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
-  type OrchestrationV2ThreadProjection,
 } from "@ankielcode/contracts";
 import * as DateTime from "effect/DateTime";
 
@@ -22,54 +21,6 @@ export type ThreadFixtureOverrides = Partial<Thread> & {
   readonly messages?: ReadonlyArray<ChatMessage>;
   readonly proposedPlans?: ReadonlyArray<unknown>;
 };
-
-export function makeThreadProjectionFixture(): OrchestrationV2ThreadProjection {
-  const now = DateTime.makeUnsafe(DEFAULT_TIMESTAMP);
-  const id = ThreadId.make("thread-test");
-  const providerInstanceId = ProviderInstanceId.make("codex");
-  return {
-    thread: {
-      id,
-      projectId: ProjectId.make("project-test"),
-      title: "Thread",
-      providerInstanceId,
-      modelSelection: { instanceId: providerInstanceId, model: "gpt-5.4" },
-      runtimeMode: "full-access",
-      interactionMode: "default",
-      branch: null,
-      worktreePath: null,
-      activeProviderThreadId: null,
-      lineage: { rootThreadId: id, parentThreadId: null, relationshipToParent: null },
-      forkedFrom: null,
-      createdBy: "user",
-      creationSource: "web",
-      createdAt: now,
-      updatedAt: now,
-      archivedAt: null,
-      settledOverride: null,
-      settledAt: null,
-      lastVisitedAt: null,
-      deletedAt: null,
-    },
-    runs: [],
-    attempts: [],
-    nodes: [],
-    subagents: [],
-    providerSessions: [],
-    providerThreads: [],
-    providerTurns: [],
-    runtimeRequests: [],
-    messages: [],
-    plans: [],
-    turnItems: [],
-    checkpointScopes: [],
-    checkpoints: [],
-    contextHandoffs: [],
-    contextTransfers: [],
-    visibleTurnItems: [],
-    updatedAt: now,
-  };
-}
 
 export function makeThreadFixture(overrides: ThreadFixtureOverrides = {}): Thread {
   const environmentId = overrides.environmentId ?? EnvironmentId.make("environment-test");

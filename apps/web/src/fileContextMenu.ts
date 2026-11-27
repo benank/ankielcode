@@ -48,7 +48,7 @@ export interface FileContextMenuTarget {
   readonly isDirectory?: boolean;
 }
 
-export function resolveFileContextMenuAbsolutePath(target: FileContextMenuTarget): string | null {
+function resolveFileContextMenuAbsolutePath(target: FileContextMenuTarget): string | null {
   const workspaceFilePath = resolveDiffPathForWorkspace({
     filePath: target.filePath,
     workspaceRoot: target.workspaceRoot,

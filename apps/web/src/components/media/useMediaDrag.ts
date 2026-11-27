@@ -15,7 +15,7 @@ export type MediaDragKind = "html" | "native" | "none";
  * browser's own drag. Anything else may be a signed environment URL, a bearer credential an
  * HTML drag would put on the pasteboard, so it goes as a downloaded file or not at all.
  */
-export function mediaDragKind(
+function mediaDragKind(
   source: Pick<MediaActionSource, "src" | "asset" | "reference">,
   nativeAvailable: boolean,
 ): MediaDragKind {

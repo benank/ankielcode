@@ -32,7 +32,7 @@ export function copyAdminRequest() {
   );
 }
 
-export function getThreadErrorBannerMessage(error: string): string {
+function getThreadErrorBannerMessage(error: string): string {
   let payload: unknown;
   try {
     payload = JSON.parse(error);

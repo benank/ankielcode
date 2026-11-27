@@ -26,7 +26,7 @@ const decodeAssetUrlKey = Schema.decodeUnknownSync(Schema.Tuple([EnvironmentId, 
  * cached URL with `minLifeMs` left is reused; one closer to expiry is re-minted.
  * A node mints at most once, so a skewed client clock cannot mint on every update.
  */
-export function makeLongLivedAssetUrlFamily(
+function makeLongLivedAssetUrlFamily(
   createUrl: (
     target: AssetUrlTarget,
   ) => Atom.Atom<AsyncResult.AsyncResult<AssetCreateUrlResult, unknown>>,

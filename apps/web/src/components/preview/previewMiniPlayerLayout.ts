@@ -9,7 +9,7 @@ import type { PreviewMiniPlayerPosition, PreviewMiniPlayerSize } from "~/preview
 
 import type { DeviceScreenSize } from "@ankielcode/client-runtime/device/stream";
 
-export const PREVIEW_MINI_PLAYER_EDGE_GAP = 12;
+const PREVIEW_MINI_PLAYER_EDGE_GAP = 12;
 export const PREVIEW_MINI_PLAYER_CORNER_RADIUS = 12;
 // The mini-player shell straddles this webview at 47 and 49: above --z-sheet, under dialogs (50).
 export const PREVIEW_MINI_PLAYER_WEBVIEW_Z_INDEX = 48;

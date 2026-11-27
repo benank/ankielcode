@@ -4,7 +4,7 @@ import * as Schema from "effect/Schema";
 import { create } from "zustand";
 import { normalizeProjectPathForComparison } from "@ankielcode/client-runtime/state/projects";
 
-export const PERSISTED_STATE_KEY = "ankielcode:ui-state:v1";
+const PERSISTED_STATE_KEY = "ankielcode:ui-state:v1";
 const LEGACY_PERSISTED_STATE_KEYS = [
   "ankielcode:renderer-state:v8",
   "ankielcode:renderer-state:v7",
@@ -112,7 +112,7 @@ function sanitizeTimestampRecord(value: unknown): Record<string, string> {
   );
 }
 
-export function parsePersistedState(parsed: PersistedUiState): UiState {
+function parsePersistedState(parsed: PersistedUiState): UiState {
   const projectExpandedById =
     parsed.projectExpandedById === undefined
       ? (() => {
@@ -172,7 +172,7 @@ function readPersistedState(): UiState {
   }
 }
 
-export function persistState(state: UiState): void {
+function persistState(state: UiState): void {
   if (typeof window === "undefined") {
     return;
   }
@@ -204,7 +204,7 @@ export function persistState(state: UiState): void {
 
 const debouncedPersistState = new Debouncer(persistState, { wait: 500 });
 
-export function markThreadVisited(state: UiState, threadId: string, visitedAt: string): UiState {
+function markThreadVisited(state: UiState, threadId: string, visitedAt: string): UiState {
   const visitedAtMs = Date.parse(visitedAt);
   if (!Number.isFinite(visitedAtMs)) {
     return state;
@@ -227,7 +227,7 @@ export function markThreadVisited(state: UiState, threadId: string, visitedAt: s
   };
 }
 
-export function markThreadUnread(
+function markThreadUnread(
   state: UiState,
   threadId: string,
   latestTurnCompletedAt: string | null | undefined,
@@ -296,7 +296,7 @@ export function resolveProjectExpanded(
   return projectExpandedById[LEGACY_PROJECT_EXPANSION_DEFAULT_KEY] ?? true;
 }
 
-export function setProjectExpanded(
+function setProjectExpanded(
   state: UiState,
   projectIds: string | readonly string[],
   expanded: boolean,
@@ -316,7 +316,7 @@ export function setProjectExpanded(
   };
 }
 
-export function reorderProjects(
+function reorderProjects(
   state: UiState,
   currentProjectOrder: readonly string[],
   draggedProjectIds: readonly string[],

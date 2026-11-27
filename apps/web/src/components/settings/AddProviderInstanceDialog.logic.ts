@@ -34,7 +34,7 @@ const EMPTY_PROVIDER_IDENTITY_DRAFT: ProviderIdentityDraft = {
   instanceIdOverride: null,
 };
 
-export function getProviderIdentityDraft(
+function getProviderIdentityDraft(
   drafts: Readonly<Record<string, ProviderIdentityDraft>>,
   driver: string,
 ): ProviderIdentityDraft {

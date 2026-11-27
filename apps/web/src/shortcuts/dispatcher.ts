@@ -182,7 +182,7 @@ export function isMenuActionAvailable(action: string): boolean {
 }
 
 /** A menu click runs the command's own handler; menu bar commands fall back to the key scopes. */
-export function dispatchMenuAction(action: string): void {
+function dispatchMenuAction(action: string): void {
   const handler = menuActionHandlers.get(action)?.at(-1);
   if (handler) return handler();
   if (!isDesktopMenuCommand(action)) return;

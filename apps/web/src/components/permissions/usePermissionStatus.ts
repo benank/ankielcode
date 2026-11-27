@@ -18,7 +18,7 @@ interface PermissionSnapshot<Id extends string> {
  * subscribe, every interval, and when the window regains focus or visibility.
  * Checks are skipped while the tab is hidden and never overlap.
  */
-export function createPermissionPoller<Id extends string>(
+function createPermissionPoller<Id extends string>(
   check: () => Promise<Record<Id, boolean>>,
   initialStatus: Record<Id, boolean>,
 ) {

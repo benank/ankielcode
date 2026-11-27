@@ -30,7 +30,7 @@ interface DesktopMenuStateSources {
  * Reports what changed since the last report: one entry per flipped flag or moved binding,
  * gathered over a microtask so re-registering effects net to nothing.
  */
-export function createDesktopMenuStateReporter({
+function createDesktopMenuStateReporter({
   isAvailable,
   keybindings,
   send,
@@ -98,7 +98,7 @@ type CloseChordEvent = Pick<
  * app. The desktop keeps the chord from the menu, so the renderer decides; elsewhere closing
  * the window quits, so Ctrl+W stays a no-op.
  */
-export function isUnclaimedCloseWindowChord(
+function isUnclaimedCloseWindowChord(
   event: CloseChordEvent,
   consumed: boolean,
   platform: string,

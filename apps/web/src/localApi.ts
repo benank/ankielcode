@@ -14,7 +14,7 @@ import { m } from "./i18n/messages";
 
 let cachedApi: LocalApi | undefined;
 
-export function createLocalApi(): LocalApi {
+function createLocalApi(): LocalApi {
   return {
     dialogs: {
       pickFolder: async (options) => {

@@ -32,10 +32,7 @@ export const usePendingUserInputAnswers = create<
 >(() => ({}));
 export const usePendingUserInputQuestionIndex = create<Record<string, number>>(() => ({}));
 
-export function questionAttachmentDraftPrefix(
-  environmentId: EnvironmentId,
-  threadId: ThreadId,
-): string {
+function questionAttachmentDraftPrefix(environmentId: EnvironmentId, threadId: ThreadId): string {
   return `${encodeURIComponent(JSON.stringify(environmentId))}:question-${encodeURIComponent(JSON.stringify(threadId))}-`;
 }
 
@@ -105,7 +102,7 @@ export function changeQuestionAttachmentPreparation(key: DraftId, delta: number)
 }
 
 /** Releases the draft's attachments except `keepIds`, which have moved to another draft. */
-export function clearQuestionAttachmentDraft(
+function clearQuestionAttachmentDraft(
   key: DraftId,
   keepIds: ReadonlySet<string> = new Set(),
 ): void {

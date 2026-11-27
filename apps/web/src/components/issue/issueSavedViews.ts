@@ -9,7 +9,7 @@ import {
   type IssueListPreferences,
 } from "./issueListPreferences";
 
-export function issueViewMatches(
+function issueViewMatches(
   view: SavedView<typeof IssueListPreferencesSchema.Type>,
   preferences: IssueListPreferences,
 ): boolean {

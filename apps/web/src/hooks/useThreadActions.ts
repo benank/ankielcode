@@ -221,7 +221,7 @@ async function requestThreadUnpinConfirmation(input: {
   );
 }
 
-export async function navigateAfterThreadDeletion(navigate: () => Promise<void>) {
+async function navigateAfterThreadDeletion(navigate: () => Promise<void>) {
   const result = await settlePromise(navigate);
   if (result._tag === "Failure") {
     const error = squashAtomCommandFailure(result);

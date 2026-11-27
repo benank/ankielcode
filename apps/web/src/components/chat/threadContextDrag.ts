@@ -3,7 +3,7 @@ import { type RefObject, useEffect, useEffectEvent, useSyncExternalStore } from 
 
 import type { ThreadContextDropRef } from "./threadContextDrop.logic";
 
-export const THREAD_CONTEXT_DROP_EVENT = "ankiel-thread-context-drop";
+const THREAD_CONTEXT_DROP_EVENT = "ankiel-thread-context-drop";
 
 export function useThreadContextDrop(
   targetRef: RefObject<EventTarget | null>,

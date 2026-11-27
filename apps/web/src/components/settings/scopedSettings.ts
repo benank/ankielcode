@@ -541,24 +541,6 @@ type ScopedSettingsPersistServer = (input: {
   readonly value?: ServerSettings;
 }>;
 
-export async function persistScopedSettingsPatch(
-  plan: ScopedSettingsPlan,
-  persistServer: ScopedSettingsPersistServer,
-  persistClient: (patch: ClientSettingsPatch) => void,
-) {
-  return persistScopedSettingsPlan(
-    plan,
-    async (write) => ({
-      write,
-      result: await persistServer({
-        environmentId: write.environmentId,
-        input: { patch: write.patch },
-      }),
-    }),
-    persistClient,
-  );
-}
-
 const OWN_ECHO_LIMIT = 8;
 
 /**

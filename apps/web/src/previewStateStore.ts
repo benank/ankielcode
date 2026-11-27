@@ -533,15 +533,7 @@ export function clearThreadPreviewState(ref: ScopedThreadRef): void {
   );
 }
 
-export function resetPreviewStateForTests(): void {
-  for (const threadKey of appAtomRegistry.get(previewThreadRefsAtom).keys()) {
-    appAtomRegistry.set(previewStateAtom(threadKey), EMPTY_THREAD_PREVIEW_STATE);
-  }
-  appAtomRegistry.set(previewThreadRefsAtom, new Map());
-  appAtomRegistry.set(activePreviewThreadKeysAtom, { keys: new Set<string>() });
-}
-
-export const __testing = {
+const __testing = {
   EMPTY_THREAD_PREVIEW_STATE,
   RECENT_URL_LIMIT: PREVIEW_RECENT_URL_LIMIT,
 };

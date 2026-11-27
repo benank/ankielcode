@@ -34,7 +34,7 @@ import { environmentSummaries } from "../../state/presentation";
  * Shows browsers an agent or another client revealed for a thread: floating
  * over chat, or focusing an existing panel tab when the reveal is forced.
  */
-export function revealServerTabs(
+function revealServerTabs(
   threadRef: ScopedThreadRef,
   sessions: ReadonlyArray<PreviewSessionSnapshot>,
   options: { readonly autoShowFloatingPreview: boolean },
@@ -61,7 +61,7 @@ export function revealServerTabs(
  * preview sessions. Server-hosted sessions are only complete once the first
  * list has loaded; before that, a missing session is not a closed one.
  */
-export function followPreviewSessions(threadRef: ScopedThreadRef, state: ThreadPreviewState): void {
+function followPreviewSessions(threadRef: ScopedThreadRef, state: ThreadPreviewState): void {
   if (readEnvironmentSupportsServerBrowser(threadRef.environmentId) && !state.listLoaded) return;
   const sessions = Object.values(state.sessions);
   useRightPanelStore.getState().reconcileBrowserSurfaces(
@@ -149,7 +149,7 @@ function hasLiveSession(
  * device summary yet stays out of the baseline so a later snapshot opens it.
  * Floating devices whose session ended close here.
  */
-export function applyDeviceSnapshot(
+function applyDeviceSnapshot(
   environmentId: EnvironmentId,
   state: DeviceServiceState,
   options: { readonly sheetLayout: boolean; readonly autoShowFloatingPreview: boolean },
@@ -211,10 +211,6 @@ export function floatDeviceSurface(
 ): void {
   if (state !== null && !hasLiveSession(state, threadRef.threadId, source)) return;
   usePreviewMiniPlayerStore.getState().open(threadRef, source);
-}
-
-export function resetDeviceSessionBaselinesForTests(): void {
-  deviceSessionBaselines.clear();
 }
 
 function watchEnvironmentDevices(environmentId: EnvironmentId): () => void {

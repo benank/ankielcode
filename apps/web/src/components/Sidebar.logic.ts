@@ -1,6 +1,5 @@
 import type { EnvironmentServerConfig } from "@ankielcode/client-runtime/connection";
 import { scopeThreadRef, scopedThreadKey } from "@ankielcode/client-runtime/environment";
-import { resolveThreadWorkingStartedAt } from "@ankielcode/client-runtime/state/models";
 import type { ThreadReadToggle } from "@ankielcode/client-runtime/state/thread-read";
 import { isShownUnderParent } from "@ankielcode/client-runtime/state/threads";
 import { backgroundWorkHoldsCompletion } from "@ankielcode/shared/orchestrationV2PendingBackgroundWork";
@@ -81,7 +80,7 @@ export function shouldNavigateAfterThreadPark(input: {
   );
 }
 
-export const THREAD_JUMP_HINT_SHOW_DELAY_MS = 200;
+const THREAD_JUMP_HINT_SHOW_DELAY_MS = 200;
 
 /**
  * What a key does on a focused sidebar row. On macOS Return renames, as in Finder, and Space or
@@ -944,25 +943,6 @@ export type SidebarThreadStatus =
   | "limited"
   | "ready";
 
-export function shouldRecedeSidebarThread(input: {
-  status: SidebarThreadStatus;
-  isUnread: boolean;
-  isWoke: boolean;
-  isActive: boolean;
-  isSelected: boolean;
-}): boolean {
-  if (input.isActive || input.isSelected || input.status === "input") {
-    return false;
-  }
-  if (input.status === "preparing" || input.status === "working" || input.status === "waiting") {
-    return true;
-  }
-  if (input.status === "ready" || input.status === "approval") {
-    return !input.isUnread && !input.isWoke;
-  }
-  return false;
-}
-
 type SidebarThreadStatusInput = Pick<
   SidebarThreadSummary,
   | "hasPendingApprovals"
@@ -1224,12 +1204,6 @@ export function reduceSidebarProjectScopeMenuState(
     case "project-settings-opened":
       return { open: false, query: "" };
   }
-}
-
-export function resolveWorkingStartedAt(
-  thread: Pick<SidebarThreadSummary, "latestRun" | "runtime">,
-): string | null {
-  return resolveThreadWorkingStartedAt(thread);
 }
 
 export function resolveThreadStatusPill(input: {

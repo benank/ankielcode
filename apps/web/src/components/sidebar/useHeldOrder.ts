@@ -8,7 +8,7 @@ const REORDER_ANIMATION_MS = 280;
  * The held order with today's membership: held keys keep their relative order,
  * and keys the held order has not seen yet take their place in `desired`.
  */
-export function mergeHeldOrder(held: readonly string[], desired: readonly string[]): string[] {
+function mergeHeldOrder(held: readonly string[], desired: readonly string[]): string[] {
   const wanted = new Set(desired);
   const kept = held.filter((key) => wanted.has(key));
   const keptSet = new Set(kept);

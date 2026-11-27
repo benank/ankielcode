@@ -191,7 +191,7 @@ export function sourceControlHostSettingsSearchId(kind: string) {
 }
 
 /** Each host's own settings: its accounts and token, or the fields of its settings form. */
-export function sourceControlHostSearchItems(
+function sourceControlHostSearchItems(
   definitions: ReadonlyArray<SourceControlDefinition>,
 ): ReadonlyArray<
   SettingsSearchItem & { readonly id: ReturnType<typeof sourceControlHostSettingsSearchId> }
@@ -227,7 +227,7 @@ const SOURCE_CONTROL_HOST_TERMS = sourceControlClients.definitions
   .flatMap((definition) => [definition.label, ...(definition.searchKeywords ?? [])])
   .join(" ");
 
-export const SETTINGS_SEARCH_ITEMS = [
+const SETTINGS_SEARCH_ITEMS = [
   {
     id: "storage-worktree-keep-when",
     targetId: "storage-worktrees",

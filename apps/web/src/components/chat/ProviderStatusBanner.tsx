@@ -25,7 +25,7 @@ function getIncompatibleVersion(status: ServerProvider) {
     : null;
 }
 
-export function getProviderStatusBannerKey(status: ServerProvider | null): string | null {
+function getProviderStatusBannerKey(status: ServerProvider | null): string | null {
   if (!status || status.status === "disabled") return null;
   const incompatible = getIncompatibleVersion(status);
   if (incompatible) {
@@ -77,7 +77,7 @@ export function dismissProviderStatusBannerForSession(bannerKey: string | null):
   for (const listener of dismissalListeners) listener();
 }
 
-export function isProviderStatusBannerDismissedForSession(bannerKey: string | null): boolean {
+function isProviderStatusBannerDismissedForSession(bannerKey: string | null): boolean {
   return bannerKey !== null && sessionDismissedProviderStatusBannerKeys.has(bannerKey);
 }
 

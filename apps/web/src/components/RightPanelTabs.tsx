@@ -280,9 +280,10 @@ type SurfaceShortcutEvent = Pick<
 > &
   Partial<Pick<KeyboardEvent, "code" | "getModifierState">>;
 
-export function surfaceShortcutActionForKey<
-  const Action extends { available: boolean; shortcut: string },
->(actions: readonly Action[], event: SurfaceShortcutEvent): Action | null {
+function surfaceShortcutActionForKey<const Action extends { available: boolean; shortcut: string }>(
+  actions: readonly Action[],
+  event: SurfaceShortcutEvent,
+): Action | null {
   if (event.defaultPrevented || event.isComposing) return null;
   if (event.metaKey || event.ctrlKey || event.altKey) return null;
   const key = surfaceShortcutKey(event);
@@ -292,7 +293,7 @@ export function surfaceShortcutActionForKey<
 }
 
 /** Skip contenteditable=false islands to find their editable host, matching the composer typing guard. */
-export function surfaceShortcutTargetsTypingContext(
+function surfaceShortcutTargetsTypingContext(
   target: { closest(selectors: string): unknown } | null,
 ): boolean {
   // A focused sidebar row takes letters for type-to-select.
@@ -770,7 +771,7 @@ function SideChatTabIcon(props: { environmentId: EnvironmentId | null; threadId:
   );
 }
 
-export function resolvePullRequestTabLink(
+function resolvePullRequestTabLink(
   threads: readonly Pick<EnvironmentThreadShell, "environmentId" | "pullRequests">[],
   environmentId: EnvironmentId | null,
   host: string | null,

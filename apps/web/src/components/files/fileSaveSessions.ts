@@ -49,7 +49,7 @@ interface FileSaveSession {
  * it instead of racing the flush. A session that cannot write closes at once,
  * and the next one, or regained write access, resumes the unsaved draft.
  */
-export function createFileSaveSessions(deps: FileSaveSessionDeps) {
+function createFileSaveSessions(deps: FileSaveSessionDeps) {
   const sessions = new Map<string, FileSaveSession>();
 
   const recover = (target: FileSaveTarget, coordinator: FileSaveCoordinator) => {

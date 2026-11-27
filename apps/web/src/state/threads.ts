@@ -80,7 +80,7 @@ function isDetailDone<E>(result: AsyncResult.AsyncResult<EnvironmentThreadState,
 }
 
 /** Keeps stopped threads mounted until their independent detail stream is live and also reports stopped. */
-export function createRunningThreadKeepAliveAtom<E>(input: {
+function createRunningThreadKeepAliveAtom<E>(input: {
   readonly environmentIdsAtom: Atom.Atom<ReadonlyArray<EnvironmentId>>;
   readonly threadsAtom: (
     environmentId: EnvironmentId,

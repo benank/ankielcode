@@ -24,7 +24,6 @@ export {
   type TerminalOutputState,
   type TerminalOutputUpdate,
 } from "./terminalOutput.ts";
-export { DEFAULT_MAX_TERMINAL_BUFFER_BYTES } from "@ankielcode/contracts";
 
 /** The PTY grid every renderer of a shared terminal draws. */
 export interface TerminalGrid {

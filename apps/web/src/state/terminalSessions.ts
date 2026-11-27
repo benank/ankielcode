@@ -94,7 +94,7 @@ function terminalMetadataIndex(metadata: ReadonlyArray<TerminalSummary>): Termin
   return index;
 }
 
-export function selectKnownTerminalSessions(
+function selectKnownTerminalSessions(
   metadata: ReadonlyArray<TerminalSummary> | null,
   environmentId: EnvironmentId | null,
   threadId: ThreadId | null,
@@ -220,7 +220,7 @@ const knownTerminalSessionsFamily = Atom.family((key: string) => {
   }).pipe(Atom.withLabel(`web-known-terminal-sessions:${key}`));
 });
 
-export function knownTerminalSessionsAtom(
+function knownTerminalSessionsAtom(
   environmentId: EnvironmentId,
   threadId: ThreadId | null,
 ): Atom.Atom<ReadonlyArray<KnownTerminalSession> | null> {

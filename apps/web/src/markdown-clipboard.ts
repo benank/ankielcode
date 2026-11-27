@@ -417,7 +417,7 @@ function tidyMarkdown(markdown: string): string {
     .join("");
 }
 
-export function serializeRenderedMarkdownFragment(container: Node): string {
+function serializeRenderedMarkdownFragment(container: Node): string {
   const codeBlock = soleCodeBlock(container);
   if (codeBlock) return (codeBlock.textContent ?? "").replace(/\n$/, "");
   return tidyMarkdown(serializeChildren(container));

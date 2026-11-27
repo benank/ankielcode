@@ -132,7 +132,7 @@ export interface ServerProfileData {
   readonly clear: (environmentId: EnvironmentId, profileId: string) => Promise<void>;
 }
 
-export async function clearBrowserProfileData(
+async function clearBrowserProfileData(
   bridge: BrowserProfileDataBridge | null,
   environmentIds: ReadonlyArray<EnvironmentId>,
   profileId: string,
@@ -186,7 +186,7 @@ class ProfileLimitReachedError extends Schema.TaggedError<ProfileLimitReachedErr
 
 const isProfileLimitReachedError = Schema.is(ProfileLimitReachedError);
 
-export const importFailureReason = (cause: unknown): BrowserImportFailureReason => {
+const importFailureReason = (cause: unknown): BrowserImportFailureReason => {
   const message = String((cause as { message?: unknown } | undefined)?.message ?? "");
   return (
     BrowserImportFailureReason.literals.find((reason) => message.includes(`failed: ${reason}.`)) ??

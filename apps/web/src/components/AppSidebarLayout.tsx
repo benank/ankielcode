@@ -149,7 +149,7 @@ function readRoutePanelsOpen(router: AnyRouter) {
   };
 }
 
-export function registerNavigationHistoryCommands(router: AnyRouter): () => void {
+function registerNavigationHistoryCommands(router: AnyRouter): () => void {
   return registerCommands(
     {
       "navigation.back": (event) => {

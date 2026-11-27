@@ -18,7 +18,7 @@ const TITLE_MAX_LENGTH = 200;
  * Recent by the palette's rule: last written in or opened. Untitled threads have nothing to
  * show, and subagent threads and side chats open from their parent.
  */
-export function selectRecentThreads(
+function selectRecentThreads(
   shells: ReadonlyArray<EnvironmentThreadShell>,
   limit = DESKTOP_RECENT_THREADS_LIMIT,
 ): DesktopRecentThread[] {
@@ -47,7 +47,7 @@ const listKey = (threads: ReadonlyArray<DesktopRecentThread>) =>
  * differs from the last one sent. A streaming thread changes shells constantly, so the timer
  * is not restarted by later changes: it would never fire.
  */
-export function createRecentThreadsPublisher(input: {
+function createRecentThreadsPublisher(input: {
   readonly read: () => ReadonlyArray<DesktopRecentThread>;
   readonly send: (threads: ReadonlyArray<DesktopRecentThread>) => Promise<void>;
   readonly delayMs?: number;

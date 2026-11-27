@@ -5,7 +5,7 @@ import { isLoopbackHostname } from "../environments/primary/target";
 import { environmentPresentations } from "./presentation";
 import { hostEnvironmentIdAtom } from "./primaryEnvironment";
 
-export function isClientHostEnvironment(
+function isClientHostEnvironment(
   environmentId: EnvironmentId,
   hostEnvironmentId: string | null,
   target: ConnectionTarget | null,

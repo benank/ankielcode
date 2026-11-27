@@ -206,7 +206,7 @@ const toEventLogEntry = (raw: unknown): DeviceEventLogEntry | null => {
   };
 };
 
-export const DEVICE_EVENT_LOG_LIMIT = 100;
+const DEVICE_EVENT_LOG_LIMIT = 100;
 
 /** A reset batch replaces the log; the log keeps the newest entries up to the limit. */
 export function appendDeviceEventLog(

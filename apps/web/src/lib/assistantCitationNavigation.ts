@@ -90,7 +90,7 @@ export function assistantCitationNavigation(
  * Reveals the location's side chat quote in its tab on `parentThreadId`, moving off the side
  * chat's own route. Links, reloads and late-loading shells all land here, not only clicks.
  */
-export function revealSideChatCitation(
+function revealSideChatCitation(
   router: Pick<AnyRouter, "navigate" | "state">,
   routeThreadRef: ScopedThreadRef,
   sideChatThreadId: ThreadId,

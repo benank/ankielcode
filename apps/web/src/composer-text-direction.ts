@@ -44,7 +44,7 @@ function blockDirection(block: ProseMirrorNode): TextDirection | null {
  * letters yet continues the one above, so a new line after Arabic starts on
  * the right. Code blocks stay left to right.
  */
-export function composerTextDirections(doc: ProseMirrorNode): ComposerTextDirections {
+function composerTextDirections(doc: ProseMirrorNode): ComposerTextDirections {
   const cached = docDirections.get(doc);
   if (cached) return cached;
   const blocks: Array<TextDirection | null> = [];

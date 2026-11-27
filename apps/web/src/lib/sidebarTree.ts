@@ -2,7 +2,7 @@ const ROW = "[data-sidebar-row]";
 const CONTROL = "button, a[href], [tabindex]";
 const TEXT_ENTRY = 'input, textarea, select, [contenteditable="true"]';
 // Long enough to type a word at a relaxed pace, as in Finder.
-export const SIDEBAR_TYPEAHEAD_RESET_MS = 1000;
+const SIDEBAR_TYPEAHEAD_RESET_MS = 1000;
 
 /** Ref callback for a sidebar list; installs its keyboard navigation and returns its cleanup. */
 export function attachSidebarTree(element: HTMLElement | null) {
@@ -15,7 +15,7 @@ export function attachSidebarTree(element: HTMLElement | null) {
  * (or the open one), and Tab goes on to that row's own buttons. Rows keep the button role, not
  * treeitem, so screen readers stay in browse mode.
  */
-export function installSidebarTree(root: HTMLElement) {
+function installSidebarTree(root: HTMLElement) {
   let focusedId: string | undefined;
   let focusedParent: string | undefined;
   let focusedIndex = -1;

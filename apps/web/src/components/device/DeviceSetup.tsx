@@ -91,7 +91,7 @@ function DeviceHostDiagnostics(props: {
 }
 
 /** Components pass `useMessages()` so the message follows a language switch. */
-export function platformSetupStatus(
+function platformSetupStatus(
   state: DeviceServiceState,
   platform: DevicePlatform,
   resolve: MessageResolver = m,

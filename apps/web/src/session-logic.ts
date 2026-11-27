@@ -58,10 +58,7 @@ import * as DateTime from "effect/DateTime";
 import * as Equal from "effect/Equal";
 import { shallow } from "zustand/vanilla/shallow";
 
-export {
-  workEntryDisplayIndicatesToolFailure,
-  workEntryIndicatesToolFailure,
-} from "@ankielcode/client-runtime/work-log/presentation";
+export { workEntryDisplayIndicatesToolFailure } from "@ankielcode/client-runtime/work-log/presentation";
 
 export type WorkLogToolLifecycleStatus =
   | "idle"

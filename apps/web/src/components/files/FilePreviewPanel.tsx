@@ -270,7 +270,7 @@ const htmlPreviewFrame = (
   ),
 });
 
-export function WorkspaceBrowserPreview(props: {
+function WorkspaceBrowserPreview(props: {
   readonly environmentId: EnvironmentId;
   readonly threadRef: ScopedThreadRef;
   readonly draft: boolean;
@@ -2009,7 +2009,7 @@ function LargeFileActions(props: {
   );
 }
 
-export function WorkspaceLargeTextPreview(props: {
+function WorkspaceLargeTextPreview(props: {
   environmentId: EnvironmentId;
   threadRef: ScopedThreadRef;
   absolutePath: string;

@@ -77,7 +77,7 @@ export function HighlightedTokens({
 }
 
 /** Restore CRLF from source; Shiki strips both line-ending forms. */
-export function keyedLines<Token extends SyntaxToken>(
+function keyedLines<Token extends SyntaxToken>(
   code: string,
   lines: ReadonlyArray<ReadonlyArray<Token>>,
 ) {
@@ -97,7 +97,7 @@ interface Word {
   readonly pieces: Array<{ key: string; text: string; token: SyntaxToken }>;
 }
 
-export function wordsOf(tokens: ReadonlyArray<SyntaxToken>): Array<string | Word> {
+function wordsOf(tokens: ReadonlyArray<SyntaxToken>): Array<string | Word> {
   const parts: Array<string | Word> = [];
   let word: Word | null = null;
   for (const token of tokens) {

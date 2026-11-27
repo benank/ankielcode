@@ -9,7 +9,7 @@ import { msg } from "gt-react";
 
 import { m } from "../i18n/messages";
 
-export const PROJECT_SCRIPT_KEYBINDING_INVALID_MESSAGE = msg("Invalid keybinding.");
+const PROJECT_SCRIPT_KEYBINDING_INVALID_MESSAGE = msg("Invalid keybinding.");
 
 const decodeKeybindingRule = Schema.decodeUnknownOption(KeybindingRuleSchema);
 

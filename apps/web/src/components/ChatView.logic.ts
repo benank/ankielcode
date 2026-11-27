@@ -394,11 +394,6 @@ export function peekRememberedThreadTimeline<T extends readonly unknown[]>(
   return (rememberedThreadTimelines.get(threadKey)?.entries as T | undefined) ?? null;
 }
 
-export function resetHeldThreadTimeline(): void {
-  rememberedThreadTimelines = new Map();
-  rememberedThreadTimelineOrder = [];
-}
-
 export function resolveThreadSwitchTimeline<T extends readonly unknown[]>(input: {
   loading: boolean;
   activeThreadKey: string | null;

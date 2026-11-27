@@ -119,7 +119,7 @@ function formatValue(
 }
 
 /** Matches resolveProjectSettings order. */
-export function settingInheritanceLayers(
+function settingInheritanceLayers(
   target: ScopedSettingsTarget,
   environmentSettings: ServerSettings,
   key: keyof ServerSettings,

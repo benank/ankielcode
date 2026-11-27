@@ -166,7 +166,7 @@ export function composerCodeBlockHighlight(options: {
 
 type Highlighter = Awaited<ReturnType<typeof getSyntaxHighlighterPromise>>;
 
-export function tokenizeBlock(
+function tokenizeBlock(
   highlighter: Highlighter,
   code: string,
   language: string,

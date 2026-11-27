@@ -60,7 +60,7 @@ const REVEAL_CONTEXT_LINES = 10;
  * positioned once it does. A reveal belongs to the diff it was asked of, so a viewer remounted for
  * another diff scope, which no longer holds the file, drops it.
  */
-export function createCodeViewFileReveal() {
+function createCodeViewFileReveal() {
   let viewer: FileRevealHandle | null = null;
   let detachedInstance: object | undefined;
   let pending: {

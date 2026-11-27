@@ -74,7 +74,7 @@ export function providerTextColor(driverKind: ProviderDriverKind): {
   return className ? { className } : {};
 }
 
-export function resolveProviderInstanceAcpRegistryIconUrl(input: {
+function resolveProviderInstanceAcpRegistryIconUrl(input: {
   readonly driverKind: ProviderDriverKind;
   readonly agentId?: string | undefined;
   readonly iconUrl?: string | undefined;

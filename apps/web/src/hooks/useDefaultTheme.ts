@@ -8,11 +8,11 @@ const APPLIED_DEFAULT_THEME_STORAGE_PREFIX = "ankielcode:default-theme-applied:v
 const APPLIED_DEFAULT_APPEARANCE_STORAGE_PREFIX = "ankielcode:default-appearance-applied:v1:";
 
 /** Include set time so reasserting the same theme still applies. */
-export function defaultThemeGeneration(theme: string, setAt: string): string {
+function defaultThemeGeneration(theme: string, setAt: string): string {
   return setAt.length > 0 ? `${theme}@${setAt}` : theme;
 }
 
-export function defaultThemeToApply(input: {
+function defaultThemeToApply(input: {
   readonly environmentId: string | null;
   readonly defaultTheme: string;
   readonly defaultThemeSetAt: string;
@@ -32,7 +32,7 @@ export function defaultThemeToApply(input: {
 }
 
 /** A single-appearance theme sets its own mode unless a mode was set with it or after it. */
-export function themeSetsOwnMode(input: {
+function themeSetsOwnMode(input: {
   readonly defaultThemeSetAt: string;
   readonly defaultAppearance: string;
   readonly defaultAppearanceSetAt: string;

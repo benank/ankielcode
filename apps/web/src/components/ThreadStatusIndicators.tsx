@@ -673,7 +673,7 @@ export function resolveDisplayedThreadPr(input: {
   return null;
 }
 
-export function resolveDisplayedThreadPrProvider(input: {
+function resolveDisplayedThreadPrProvider(input: {
   threadBranch: string | null;
   gitStatus: VcsStatusResult | null;
   linkedPullRequest?: ThreadLinkedPullRequest | null | undefined;

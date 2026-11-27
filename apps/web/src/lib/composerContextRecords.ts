@@ -370,19 +370,6 @@ export function environmentContextReference(
   return { kind: "environment", contextId: record.contextId, label: record.label };
 }
 
-export function environmentContextRecord(
-  environmentId: EnvironmentId,
-  label: string,
-): EnvironmentContextRecord {
-  return {
-    version: 1,
-    kind: "environment",
-    contextId: toKindScopedComposerContextId("environment", environmentId),
-    label: sanitizeComposerContextLabel(label, "environment"),
-    environmentId,
-  };
-}
-
 export function terminalContextRecord(context: TerminalContextDraft): TerminalContextRecord {
   return {
     version: 1,

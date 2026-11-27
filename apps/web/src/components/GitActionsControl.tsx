@@ -466,7 +466,7 @@ interface PublishRepositoryDialogProps {
   readonly offeredProviders: OfferedSourceControlProviders | undefined;
 }
 
-export function PublishRepositoryDialog(props: PublishRepositoryDialogProps) {
+function PublishRepositoryDialog(props: PublishRepositoryDialogProps) {
   const gt = useGT();
   const messages = useMessages();
   const openLink = useOpenLink(props.threadRef);

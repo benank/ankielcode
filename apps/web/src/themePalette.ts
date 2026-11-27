@@ -50,7 +50,7 @@ export const CUSTOM_THEMES_STORAGE_KEY = "ankielcode:themes:v1";
 export const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "ankielcode:theme-follow-system";
 export const THEME_APPEARANCE_MODE_STORAGE_KEY = "ankielcode:theme-appearance-mode";
 export const THEME_HALVES_STORAGE_KEY = "ankielcode:theme-halves:v1";
-export const ENVIRONMENT_THEMES_STORAGE_KEY = "ankielcode:environment-themes:v1";
+const ENVIRONMENT_THEMES_STORAGE_KEY = "ankielcode:environment-themes:v1";
 
 const LEGACY_ORCHID_DARK_THEME_ID = "orchid-dark";
 
@@ -309,7 +309,7 @@ function environmentThemeDefinition(theme: EnvironmentTheme): ThemeDefinition {
  * card while "Use" resolved the built-in, and a published `dark.json` would
  * capture everyone whose stored preference is the stock `"dark"`.
  */
-export function publishedThemeDefinitions(
+function publishedThemeDefinitions(
   themes: ReadonlyArray<EnvironmentTheme>,
 ): ReadonlyArray<ThemeDefinition> {
   return themes
@@ -492,7 +492,7 @@ function formatOklchThemeColor(color: ThemeOklch, alpha = 1): string {
   return alpha < 1 ? `oklch(${body} / ${formatThemeColorNumber(alpha, 4)})` : `oklch(${body})`;
 }
 
-export function toCanonicalThemeColor(value: unknown): string | null {
+function toCanonicalThemeColor(value: unknown): string | null {
   const parsed = parseThemeColor(value);
   return parsed ? formatOklchThemeColor(parsed.color, parsed.alpha) : null;
 }
@@ -720,7 +720,7 @@ const CONTEXT_CHIP_CONTRAST = 5;
 const CONTEXT_CHIP_MESSAGE_VARIABLE = "--context-chip-message";
 const CONTEXT_CHIP_INVALID_VARIABLE = "--context-chip-invalid";
 
-export function contextChipVariables(colors: ThemeColors): Readonly<Record<string, string>> {
+function contextChipVariables(colors: ThemeColors): Readonly<Record<string, string>> {
   // CSS paints surfaces from their unrounded OKLCH, so measure them unrounded.
   const parsedCanvas = parseThemeColor(colors.canvas);
   const canvas = parsedCanvas ? themeOklchToRgb(parsedCanvas.color, false) : THEME_WHITE_FOREGROUND;
@@ -1011,7 +1011,7 @@ function standardMutedThemeText(
   return readableThemeText(background, foreground, 1, target);
 }
 
-export function getDefaultThemeColors(appearance: ThemeAppearance): ThemeColors {
+function getDefaultThemeColors(appearance: ThemeAppearance): ThemeColors {
   return appearance === "dark" ? ORCHID_THEME.variants!.dark! : ORCHID_THEME.colors;
 }
 
