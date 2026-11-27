@@ -37,9 +37,15 @@ struct TerminalScreen: View {
           select: { chosen = $0 }, leave: { dismiss() }
         )
         .id(terminalId)
+      } else if !presenter.isConnected {
+        TerminalNotice(title: "Not connected", detail: "The terminal opens when this computer reconnects.")
       } else {
         TerminalNotice(title: "Loading terminals", detail: "Reading existing terminal sessions.", loading: true)
       }
+    }
+    // The first terminal chosen stays: a list that changes must not swap the shell on screen.
+    .onChange(of: terminalId, initial: true) { _, id in
+      if chosen == nil, let id { chosen = id }
     }
     .navigationTitle(Text("Terminal", comment: "screen title"))
     .navigationBarTitleDisplayMode(.inline)
@@ -141,7 +147,7 @@ private struct TerminalSessionView: View {
     .onAppear {
       session.onExit = { exited() }
       session.start()
-      TerminalDebug.applyToSession(session, focus: { focused = true }, select: { selection = SelectedText(text: surface.viewportText ?? "") })
+      TerminalDebug.applyToSession(session, focus: { focused = true }, paste: { surface.paste($0) }, select: { selection = SelectedText(text: surface.viewportText ?? "") })
     }
     .onDisappear { session.stop() }
   }
@@ -200,26 +206,18 @@ private struct TerminalSessionView: View {
             Button {
               select(entry.terminalId)
             } label: {
-              Label {
-                Text(TerminalCopy.name(entry.name))
-                Text(TerminalCopy.subtitle(entry))
-              } icon: {
-                Image(systemName: entry.terminalId == terminalId ? "checkmark" : "apple.terminal")
-              }
+              Label(TerminalCopy.name(entry.name), systemImage: entry.terminalId == terminalId ? "checkmark" : "apple.terminal")
+              Text(TerminalCopy.subtitle(entry))
             }
           }
           Button {
             select(presenter.newTerminalId(active: terminalId))
           } label: {
-            Label {
-              Text("Open new terminal")
-              if let folder = TerminalMenu.basename(presenter.workspace?.root) {
-                Text("Start another shell in \(folder)")
-              } else {
-                Text("Start another shell in this workspace")
-              }
-            } icon: {
-              Image(systemName: "plus")
+            Label("Open new terminal", systemImage: "plus")
+            if let folder = TerminalMenu.basename(presenter.workspace?.root) {
+              Text("Start another shell in \(folder)")
+            } else {
+              Text("Start another shell in this workspace")
             }
           }
           .accessibilityIdentifier("terminal.new")

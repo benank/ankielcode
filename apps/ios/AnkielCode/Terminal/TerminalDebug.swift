@@ -5,8 +5,10 @@ import Foundation
 /// `ANKIEL_OPEN_URL` thread link), once per launch: `ANKIEL_DEBUG_TERMINAL` opens the terminal
 /// (`open`, `open:<terminalId>`, `new`); `ANKIEL_DEBUG_TERMINAL_SEND` types its text once the
 /// shell is live (`\r` is Enter); `ANKIEL_DEBUG_TERMINAL_KEYBOARD=1` shows the keyboard and its
-/// accessory bar; `ANKIEL_DEBUG_TERMINAL_SELECT=1` opens "Select text" a moment after the send.
-/// `ANKIEL_DEBUG_TERMINAL_HISTORY=<folder>` points a new shell's history files there. The shell is
+/// accessory bar; `ANKIEL_DEBUG_TERMINAL_PASTE` pastes its text (`\n` is a newline) through the
+/// surface's paste path; `ANKIEL_DEBUG_TERMINAL_SELECT=1` opens "Select text" a moment after the send.
+/// `ANKIEL_DEBUG_TERMINAL_HISTORY=<folder>` starts new shells with `ZDOTDIR`, `HISTFILE` and
+/// `LESSHISTFILE` there, so the user's rc files and history are left alone. The shell is
 /// real: send only harmless commands.
 @MainActor
 enum TerminalDebug {
@@ -19,10 +21,16 @@ enum TerminalDebug {
   /// Extra environment for shells a debug launch starts.
   static var env: [String: String]? {
     #if DEBUG
-      environment["ANKIEL_DEBUG_TERMINAL_HISTORY"].map { ["HISTFILE": "\($0)/.history", "LESSHISTFILE": "-"] }
+      environment["ANKIEL_DEBUG_TERMINAL_HISTORY"].map(TerminalDebug.isolated)
     #else
       nil
     #endif
+  }
+
+  /// zsh reads `ZDOTDIR` instead of the home folder, so the user's rc files (which may point
+  /// `HISTFILE` home) are skipped and history lands in `folder`.
+  nonisolated static func isolated(_ folder: String) -> [String: String] {
+    ["ZDOTDIR": folder, "HISTFILE": "\(folder)/.history", "LESSHISTFILE": "-"]
   }
 
   static func apply(to presenter: TerminalPresenter) {
@@ -45,13 +53,17 @@ enum TerminalDebug {
     #endif
   }
 
-  static func applyToSession(_ session: TerminalSessionModel, focus: @escaping () -> Void, select: @escaping () -> Void) {
+  static func applyToSession(
+    _ session: TerminalSessionModel, focus: @escaping () -> Void, paste: @escaping (String) -> Void,
+    select: @escaping () -> Void
+  ) {
     #if DEBUG
       guard !sent else { return }
       let text = environment["ANKIEL_DEBUG_TERMINAL_SEND"]?.replacingOccurrences(of: "\\r", with: "\r")
       let keyboard = environment["ANKIEL_DEBUG_TERMINAL_KEYBOARD"] == "1"
       let selecting = environment["ANKIEL_DEBUG_TERMINAL_SELECT"] == "1"
-      guard text != nil || keyboard || selecting else { return }
+      let pasted = environment["ANKIEL_DEBUG_TERMINAL_PASTE"]?.replacingOccurrences(of: "\\n", with: "\n")
+      guard text != nil || keyboard || selecting || pasted != nil else { return }
       sent = true
       Task {
         for _ in 0..<150 where !session.isLive { try? await Task.sleep(for: .milliseconds(100)) }
@@ -59,6 +71,10 @@ enum TerminalDebug {
         if keyboard { focus() }
         try? await Task.sleep(for: .milliseconds(600))
         if let text { session.write(text) }
+        if let pasted {
+          try? await Task.sleep(for: .seconds(1))
+          paste(pasted)
+        }
         if selecting {
           try? await Task.sleep(for: .seconds(2))
           select()

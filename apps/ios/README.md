@@ -362,7 +362,8 @@ not built.
 `swift run ankiel-probe --state <file> --terminal <cwd>` runs a real shell through the same model
 (echo, a 300 KB flood past the ack window, a resize read back with `stty size`, reattach with
 scrollback, close). `--terminal-list <threadId> [--close term-2,term-3]` lists a thread's shells and
-closes the named ones with their history. Use a throwaway folder under `/tmp`.
+closes the named ones with their history. Use a throwaway folder under `/tmp`: the probe's shell
+gets `ZDOTDIR` and its history there.
 
 | Variable | Values | Shows |
 | --- | --- | --- |
@@ -370,11 +371,13 @@ closes the named ones with their history. Use a throwaway folder under `/tmp`.
 | `ANKIEL_DEBUG_TERMINAL_SEND` | text (`\r` is Enter) | Typed once the shell is live. The shell is real: harmless commands only. |
 | `ANKIEL_DEBUG_TERMINAL_KEYBOARD` | `1` | Focuses the terminal (keyboard and accessory bar). |
 | `ANKIEL_DEBUG_TERMINAL_SELECT` | `1` | Opens "Select text" a moment after the send. |
-| `ANKIEL_DEBUG_TERMINAL_HISTORY` | a folder | A new shell's `HISTFILE` goes there and `LESSHISTFILE` is off. |
+| `ANKIEL_DEBUG_TERMINAL_PASTE` | text (`\n` is a newline) | Pasted through the surface (Ghostty's bracketed paste) once the shell is live. |
+| `ANKIEL_DEBUG_TERMINAL_HISTORY` | a folder | New shells start with `ZDOTDIR`, `HISTFILE` there and `LESSHISTFILE` off, so zsh skips the user's rc files and history (an rc file can reset `HISTFILE`). |
 | `ANKIEL_DEBUG_TERMINAL_INPUT` | `1` | Puts the hidden input field in the accessibility tree so UI tests can type. |
 
 `TerminalUITests` (live; skips when the dev server is down) opens a new terminal from the thread
-menu in the `ankiel-probe live` project, types `echo`, rotates and closes it.
+menu in the `ankiel-probe live` project, types `echo`, rotates and closes it; a second test scrolls
+back through 200 lines and leaves on `exit`.
 
 ## Pull requests
 

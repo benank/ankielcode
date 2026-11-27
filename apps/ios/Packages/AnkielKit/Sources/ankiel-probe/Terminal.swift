@@ -4,7 +4,7 @@ import Foundation
 /// `--terminal <cwd> [--thread <id>]`: a real shell through the app's `TerminalSessionModel`.
 /// Opens a terminal, runs `echo`, floods past the stream's ack window, resizes and reads the size
 /// back, detaches and reattaches to check the scrollback, then closes it with its history. Run it
-/// only in a throwaway folder: the shell is real. History files point into that folder.
+/// only in a throwaway folder: the shell is real. `ZDOTDIR` and history files point into it.
 @MainActor
 func probeTerminal(_ session: EnvironmentSession, cwd: String) async throws {
   try FileManager.default.createDirectory(atPath: cwd, withIntermediateDirectories: true)
@@ -12,7 +12,8 @@ func probeTerminal(_ session: EnvironmentSession, cwd: String) async throws {
   let terminalId = TerminalMenu.nextId([], uniqueSuffix: UUID().uuidString.lowercased())
   let target = TerminalTarget(environmentId: session.environmentId, threadId: threadId, terminalId: terminalId)
   let location = TerminalLocation(
-    cwd: cwd, worktreePath: nil, env: ["HISTFILE": "\(cwd)/.probe_history", "LESSHISTFILE": "-"])
+    // zsh then skips the user's rc files, which may point HISTFILE at their home.
+    cwd: cwd, worktreePath: nil, env: ["ZDOTDIR": cwd, "HISTFILE": "\(cwd)/.probe_history", "LESSHISTFILE": "-"])
   let host = FixedTerminalHost(channel: session.rpc)
   print("terminal:          \(threadId) / \(terminalId) in \(cwd)")
 

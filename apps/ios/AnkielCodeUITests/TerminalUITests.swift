@@ -83,4 +83,29 @@ final class TerminalUITests: HomeUITestCase {
     XCTAssertFalse(app.alerts["Couldn't close terminal"].waitForExistence(timeout: 3), "the server closed it")
     shot("terminal-after-close")
   }
+
+  /// Scrolls back through `cat` output, then `exit` leaves the screen (no other shell is live).
+  func testScrollbackAndExit() {
+    launch([
+      "ANKIEL_OPEN_URL": Self.threadLink,
+      "ANKIEL_DEBUG_TERMINAL": "new",
+      "ANKIEL_DEBUG_TERMINAL_HISTORY": "/tmp/ankiel-term-agent/hist",
+      "ANKIEL_DEBUG_TERMINAL_INPUT": "1",
+      "ANKIEL_DEBUG_TERMINAL_SEND": " for i in $(seq 1 200); do echo row-$i; done\\r",
+    ])
+    let surface = app.descendants(matching: .any)["terminal.surface"]
+    XCTAssertTrue(surface.waitForExistence(timeout: 30))
+    expectation(for: NSPredicate(format: "value CONTAINS 'row-200'"), evaluatedWith: surface)
+    waitForExpectations(timeout: 20)
+    XCTAssertNil((surface.value as? String ?? "").firstMatch(of: /row-100\D/), "the start is above the screen")
+
+    for _ in 0..<6 { surface.swipeDown(velocity: .fast) }
+    expectation(for: NSPredicate(format: "NOT (value CONTAINS 'row-200')"), evaluatedWith: surface)
+    waitForExpectations(timeout: 10)
+    shot("terminal-scrolled-back")
+
+    surface.tap()
+    app.textFields["terminal.input"].typeText(" exit\n")
+    XCTAssertTrue(app.buttons["thread.menu"].waitForExistence(timeout: 15), "an exited shell leaves for the thread")
+  }
 }

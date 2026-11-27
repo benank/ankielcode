@@ -135,23 +135,16 @@ struct TerminalMenuSection: View {
               Button {
                 presenter.open(entry.terminalId)
               } label: {
-                Label {
-                  Text(TerminalCopy.name(entry.name))
-                  Text(TerminalCopy.subtitle(entry))
-                } icon: {
-                  Image(systemName: "apple.terminal")
-                }
+                // A sibling Text is the menu row's subtitle; inside the Label it is dropped.
+                Label(TerminalCopy.name(entry.name), systemImage: "apple.terminal")
+                Text(TerminalCopy.subtitle(entry))
               }
             }
             Button {
               presenter.openNew()
             } label: {
-              Label {
-                Text("Open new terminal")
-                Text("Start another shell for this thread")
-              } icon: {
-                Image(systemName: "plus")
-              }
+              Label("Open new terminal", systemImage: "plus")
+              Text("Start another shell for this thread")
             }
             .accessibilityIdentifier("thread.terminal.new")
           } label: {
