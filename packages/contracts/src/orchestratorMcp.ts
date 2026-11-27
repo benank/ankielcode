@@ -107,7 +107,7 @@ export const OrchestratorMcpTarget = Schema.Struct({
   options: Schema.optional(
     OrchestratorMcpTargetOptions.annotate({
       description:
-        "Ids vary by provider; see `orchestrator_capabilities`. Given values override inherited. [] or {} clears.",
+        "Per-provider ids from `orchestrator_capabilities`. Overrides inherited; [] or {} clears.",
     }),
   ),
 });
@@ -164,7 +164,7 @@ export const OrchestratorMcpDelegateTaskInput = Schema.Struct({
   isolation: Schema.optional(
     Schema.Literals(["shared", "worktree"]).annotate({
       description:
-        "'shared' (default): parent checkout. 'worktree': new prepared checkout from the parent commit, for a separate checkout or PR per child. Uncommitted edits stay out.",
+        "'shared' (default): parent checkout. 'worktree': new prepared checkout from the parent commit. Uncommitted edits stay out.",
     }),
   ),
   mode: Schema.optional(
@@ -516,14 +516,13 @@ export const OrchestratorMcpThreadSendInput = Schema.Struct({
   mode: Schema.optional(Schema.Literals(["auto", "queue", "steer", "restart"])),
   freshContext: Schema.optional(
     Schema.Boolean.annotate({
-      description:
-        "Start a new provider session without the thread's earlier context, like /clear. Never steers.",
+      description: "New provider session without earlier context, like /clear. Never steers.",
     }),
   ),
   outputSchema: Schema.optional(
     Schema.Record(Schema.String, Schema.Json).annotate({
       description:
-        "JSON Schema for a result the turn must return as data, read back as `output` from `ankiel_thread_wait`. Never steers.",
+        "JSON Schema the turn's result must match, read back as `output` from `ankiel_thread_wait`. Never steers.",
     }),
   ),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),

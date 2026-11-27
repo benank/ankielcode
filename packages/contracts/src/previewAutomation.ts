@@ -15,7 +15,7 @@ import { BrowserProfileId } from "./browserProfile.ts";
 const BoundedUrl = Schema.String.check(Schema.isTrimmed())
   .check(Schema.isNonEmpty())
   .check(Schema.isMaxLength(2048));
-const URL_GUIDANCE = "Absolute http(s) URL, or a bare host (https; http for loopback).";
+const URL_GUIDANCE = "Absolute http(s) URL or bare host (https; http for loopback).";
 const PROFILE_GUIDANCE =
   "Profile id or name from preview_status, for a new tab. Default: the user's. A tab keeps its profile.";
 const OptionalTimeoutMs = Schema.optional(
@@ -151,11 +151,11 @@ export type PreviewAutomationDialogInput = typeof PreviewAutomationDialogInput.T
 export const PreviewAutomationOpenInput = Schema.Struct({
   ...PreviewAutomationTabTargetFields,
   url: Schema.optional(BoundedUrl).annotate({
-    description: `First page URL. ${URL_GUIDANCE} Omit to open a blank tab.`,
+    description: `${URL_GUIDANCE} Omit for a blank tab.`,
   }),
   open: Schema.optional(
     Schema.Boolean.annotate({
-      description: "Show the preview to the user. Default true. False for background only.",
+      description: "Show it to the user. Default true; false keeps it in the background.",
     }),
   ),
   show: Schema.optional(
@@ -184,7 +184,7 @@ export const BrowserNavigationTarget = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("url"),
     url: BoundedUrl.annotate({
-      description: `Website URL. ${URL_GUIDANCE}`,
+      description: URL_GUIDANCE,
     }),
   }),
   Schema.Struct({
@@ -199,7 +199,7 @@ export const BrowserNavigationTarget = Schema.Union([
     ),
     path: Schema.optional(
       Schema.String.annotate({
-        description: "Path, query, and fragment, such as /settings?tab=account.",
+        description: "Path, query, and fragment, e.g. /settings?tab=account.",
       }),
     ),
   }),
@@ -209,7 +209,7 @@ export type BrowserNavigationTarget = typeof BrowserNavigationTarget.Type;
 export const PreviewAutomationNavigateInput = Schema.Struct({
   ...PreviewAutomationTabTargetFields,
   url: Schema.optional(BoundedUrl).annotate({
-    description: `Website URL. ${URL_GUIDANCE} For public pages.`,
+    description: URL_GUIDANCE,
   }),
   target: Schema.optional(BrowserNavigationTarget),
   readiness: Schema.optional(Schema.Literals(["load", "domContentLoaded", "none"])).annotate({
