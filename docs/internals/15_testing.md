@@ -38,12 +38,3 @@ it("saves on Enter", async () => {
   expect(onSave).toHaveBeenCalledWith("Title");
 });
 ```
-
-## Scenarios
-
-Scenarios are [e2e](https://e2e.com/docs) tests in [`scripts/scenarios`](../../scripts/scenarios) (`*.e2e.ts`) that drive the real app (server, HTTP/WS, web browser or a Simlock iOS simulator) with the free `Replay (dev)` agent. Run them with `vp run scenarios`, one run at a time per checkout.
-
-- One test per file (`WEB` from `./ankiel.ts` or `IOS` from `./ankiel-mobile.ts`). Seed projects and threads with `ankiel.project` / `ankiel.thread` before `ankiel.open(...)` so the app skips first-run setup.
-- Never call `agent.act` or `agent.assert`; no model is configured.
-- The app starts with only `PATH`, `HOME` and a temp dir; pass more with `ANKIEL_SCENARIO_INHERIT_ENV='VAR,PREFIX_*'`. iOS scenarios need `SIMLOCK_AGENT_DEVICE_URL` and `AGENT_DEVICE_DAEMON_AUTH_TOKEN`.
-- Scenarios cannot cover the desktop shell, Android, provider-specific protocols, or timing.

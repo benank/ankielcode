@@ -2,15 +2,10 @@
 
 ## Wire and payload budgets
 
-```bash
-vp run test:perf:v2-wire
-```
-
-Exercises real V2 projections and client reducers. Payload budgets are enforced in
-[`transferBudgetV2.integration.test.ts`](../../apps/server/integration/transferBudgetV2.integration.test.ts)
-(whose opt-in objects are typed `Required` against contracts so new client opt-ins must be tested)
-and reported in CI via `TransferBudgetReport.integration.ts`. Run this whenever changing projection
-schemas, history paging, shell synchronization, or thread state.
+Payload budgets are enforced in
+[`transferBudgetV2.integration.test.ts`](../../apps/server/integration/transferBudgetV2.integration.test.ts),
+whose opt-in objects are typed `Required` against contracts so new client opt-ins must be tested.
+Run it whenever changing projection schemas, history paging, shell synchronization, or thread state.
 
 Core wire invariants:
 
@@ -27,26 +22,6 @@ Core wire invariants:
 - **Incremental shell sync.** Initial shells send active navigation rows only (omitting archived
   rows, idle subagents, and older settled threads), and resumes send deltas rather than full
   snapshots.
-
-## Server process metrics
-
-[`scripts/server-metrics.ts`](../../scripts/server-metrics.ts) benchmarks server CPU, wakeups, RSS,
-heap, and first-request latency against a fake Anthropic API and the real `claude` CLI:
-
-- Always compare refs with `ab <checkoutA> <checkoutB>` on the same machine rather than comparing
-  isolated runs.
-- Use `scaling` to separate per-thread cost from fixed server overhead, and `--soak <minutes>` to
-  spot rising heap slopes (leaks). A leak only shows in code the soak drives, so give a new
-  subsystem with long-lived state a part in its workload.
-- Steer server work by `working`: many worktree threads editing files at once with one client
-  subscribed to all of them. Turns per minute that stay flat as threads are added mean the
-  server, not the agents, is the bottleneck.
-- Upper bounds no user hits daily, such as 20 clients reconnecting at once, run only with
-  `--stress`; the default reconnect is a user's 3 devices holding 10 threads each.
-- `--quick` shortens every window for a per-PR or nightly check; `compare` refuses to mix quick
-  and full runs. `server-metrics --help` says which scenario to trust for what.
-- Test macOS, Windows, and Linux with `--no-agent-scope`: Linux systemd agent scopes mask
-  per-process polling paths that other platforms run.
 
 ## Persistence and background work invariants
 

@@ -1,6 +1,5 @@
-// Must stay first: the render counter and behavior probe wrap the DevTools hook before any React commit.
+// Must stay first: the render counter wraps the DevTools hook before any React commit.
 import "./src/features/development/render-counter-entry";
-import "./src/features/development/behavior-probe-entry";
 import "./src/i18n/intl-polyfills";
 import { registerRootComponent } from "expo";
 import "react-native-gesture-handler";

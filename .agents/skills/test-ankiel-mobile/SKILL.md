@@ -36,9 +36,8 @@ vp run mobile:install <ios|android> <device-id>
 
 This installs the dev client for the checkout's native fingerprint: from the
 device, the local cache, or the shared cache in seconds, building once only
-when no machine has that fingerprint yet: in the `Mobile Dev Client` workflow
-in CI when HEAD is pushed and `gh` may dispatch it (the command waits),
-otherwise here (5-15 minutes, logged to the file it names). The device id may be omitted when exactly one device is booted. It
+when no machine has that fingerprint yet (5-15 minutes, logged to the file it
+names). The device id may be omitted when exactly one device is booted. It
 prints one JSON line; on failure it names the next command. Mobile verification
 includes that step unless the user prohibits it.
 
@@ -85,27 +84,3 @@ iterate on anything that feels off until you are satisfied before handing back.
 Retain the app and environment while iterating. At teardown, remove
 the disposable connection, close the AgentDevice session, call `device_close`,
 and stop only your backend and Metro processes.
-
-## Accessibility audit
-
-For mobile UI changes, run the local `mobile:audit` CLI on the touched screens
-with the session's AgentDevice launcher:
-
-```bash
-vp run mobile:audit capture --platform <ios|android> --screen <name> \
-  --out /tmp/mobile-audit/after --agent-device "$agent_device_command" \
-  -- "${agent_device_target_args[@]}"
-
-# Compare against a base capture (exits non-zero on regressions):
-vp run mobile:audit compare --before /tmp/mobile-audit/before \
-  --after /tmp/mobile-audit/after --out /tmp/mobile-audit/diff \
-  --fail-on-regression
-
-# Or annotate a single capture when there is no baseline:
-vp run mobile:audit report --dir /tmp/mobile-audit/after \
-  --out /tmp/mobile-audit/report
-```
-
-Attach the generated `report.md` summary and annotated PNG(s) to your response
-to the user (embedded by absolute file path) and to the PR description (uploaded
-via `ghdrop` or forge assets; never commit generated audit artifacts).
