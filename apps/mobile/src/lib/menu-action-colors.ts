@@ -1,6 +1,6 @@
 import type { MenuAction } from "@react-native-menu/menu";
 
-// MenuView's iOS bridge treats an omitted imageColor as transparent.
+// Without an imageColor, MenuView's iOS icons keep UIKit's default menu color, not the theme's icon colors.
 export function withMenuActionIconColors(
   actions: readonly MenuAction[],
   colors: {
