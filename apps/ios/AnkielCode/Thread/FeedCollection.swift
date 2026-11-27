@@ -79,7 +79,7 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
   private var insetsAnimating = false
   /// Set by a row toggle: the next update animates the resize it causes.
   private var animatesNextUpdate = false
-  /// Rows that join the feed in view and fade in: a reader's new message, rows a fold opens.
+  /// A reader's new message, which fades in as it first shows.
   private var arriving: Set<String> = []
   #if DEBUG
     private var debugTop = ProcessInfo.processInfo.environment["ANKIEL_DEBUG_THREAD_SCROLL"] == "top"
@@ -176,11 +176,11 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
     let animates = animatesNextUpdate
     animatesNextUpdate = false
     let known = Set(order)
+    // Rows a toggle inserts fade with the animated apply; a sent message fades in on its own.
     arriving = Set(
       next.lazy.filter { item in
-        guard !known.contains(item.id), !known.isEmpty else { return false }
-        if case .pending = item { return true }
-        return animates
+        guard !known.contains(item.id), !known.isEmpty, case .pending = item else { return false }
+        return true
       }.map(\.id))
     var changed: [String] = []
     var nextItems: [String: FeedItem] = [:]
@@ -197,11 +197,13 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
       snapshot.appendSections([0])
       snapshot.appendItems(nextOrder)
       snapshot.reconfigureItems(changed)
-      dataSource.apply(snapshot, animatingDifferences: false)
+      if animates { animateResize() }
+      dataSource.apply(snapshot, animatingDifferences: animates)
     } else if !changed.isEmpty {
       var snapshot = dataSource.snapshot()
       snapshot.reconfigureItems(changed)
-      dataSource.apply(snapshot, animatingDifferences: false)
+      if animates { animateResize() }
+      dataSource.apply(snapshot, animatingDifferences: animates)
     }
 
     #if DEBUG
@@ -216,24 +218,18 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
     if pending > previousPending {
       // The reader's own new message always comes into view.
       scrollToEnd(animated: true)
-    } else if animates {
-      animateResize()
     } else {
       collection.setNeedsLayout()
     }
     publish()
   }
 
-  /// A toggled row resizes inside one short animation. The anchor is re-applied inside it too
-  /// (as for an inset change), so the toggled row stays put while the rows after it move.
+  /// A toggle's snapshot applies animated; a hosted row can re-size a layout pass or two later,
+  /// so layout passes animate for a moment too, with the anchor re-applied inside each (as for an
+  /// inset change), so the toggled row stays put while the rows after it move.
   private func animateResize() {
-    insetsAnimating = true
-    collection.animatesLayout = true
-    UIView.animate(withDuration: 0.25, delay: 0, options: [.curveEaseInOut, .beginFromCurrentState, .allowUserInteraction]) {
-      self.collection.layoutIfNeeded()
-    }
-    insetsAnimating = false
-    collection.animatesLayout = false
+    collection.animatesLayoutUntil = CACurrentMediaTime() + 0.3
+    collection.setNeedsLayout()
   }
 
   /// Back to the end (the scroll-to-latest button, or a send).
@@ -294,7 +290,7 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
     // A correction rides an inset change's animation (the keyboard, the composer), so the rows
     // move with it. Any other animation in flight (a push, a row opening) would otherwise animate
     // the correction too, and the feed visibly slid into place while the offset was already right.
-    if insetsAnimating {
+    if insetsAnimating || collection.layingOutAnimated {
       applyAnchor()
     } else {
       UIView.performWithoutAnimation(applyAnchor)
@@ -372,16 +368,28 @@ final class FeedCollectionView: UICollectionView {
 
   /// Set while an inset change (keyboard, composer) lays the feed out inside its animation.
   var animatesLayout = false
+  /// Until then (a row just opened or closed), layout passes animate.
+  var animatesLayoutUntil: CFTimeInterval = 0
+  /// Whether the pass in progress animates (its anchor correction must animate with it).
+  private(set) var layingOutAnimated = false
 
   override func layoutSubviews() {
     // Rows resizing inside some other animation in flight (a push, SwiftUI's transaction for a
     // row toggle) would otherwise slide into place from where they were estimated.
     if animatesLayout {
       super.layoutSubviews()
+      onLayout()
+    } else if !readerMoving, CACurrentMediaTime() < animatesLayoutUntil {
+      layingOutAnimated = true
+      UIView.animate(withDuration: 0.25, delay: 0, options: [.curveEaseInOut, .beginFromCurrentState, .allowUserInteraction]) {
+        super.layoutSubviews()
+        self.onLayout()
+      }
+      layingOutAnimated = false
     } else {
       UIView.performWithoutAnimation { super.layoutSubviews() }
+      onLayout()
     }
-    onLayout()
   }
 
   /// Moves the feed and lays out the rows that come on screen (they size themselves).
