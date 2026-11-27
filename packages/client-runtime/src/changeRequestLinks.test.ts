@@ -11,7 +11,6 @@ import {
   findProjectOnChangeRequestHost,
   projectChangeRequestUrl,
   resolveChangeRequestLinkTarget,
-  resolvePullRequestPreviewTarget,
 } from "./changeRequestLinks.ts";
 
 describe("findProjectForChangeRequest", () => {
@@ -158,35 +157,6 @@ describe("resolveChangeRequestLinkTarget", () => {
         lendHostProject: false,
       }),
     ).toBeNull();
-  });
-});
-
-describe("resolvePullRequestPreviewTarget", () => {
-  const environmentId = EnvironmentId.make("env-1");
-  const project = {
-    id: ProjectId.make("project-1"),
-    environmentId,
-    repositoryIdentity: {
-      canonicalKey: "github.com/acme/web",
-      provider: SourceControlProviderKind.make("github"),
-      displayName: "acme/web",
-      locator: { source: "git-remote", remoteName: "origin", remoteUrl: "git@github.com:acme/web" },
-    } satisfies RepositoryIdentity,
-  };
-
-  it("previews a pull request only under the project that holds its repository", () => {
-    const target = (url: string) =>
-      resolvePullRequestPreviewTarget({
-        environmentId,
-        projects: [project],
-        pullRequestsEnabled: true,
-        url,
-      });
-    expect(target("https://github.com/acme/web/pull/7")).toEqual({
-      environmentId,
-      input: { projectId: project.id, host: "github.com", repository: "acme/web", number: 7 },
-    });
-    expect(target("https://github.com/acme/other/pull/7")).toBeNull();
   });
 });
 

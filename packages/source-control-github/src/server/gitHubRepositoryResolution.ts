@@ -10,7 +10,7 @@ export interface GitHubRepositoryLocator {
   readonly name: string;
 }
 
-export function parseFetchRemotes(
+function parseFetchRemotes(
   remotes: string,
 ): ReadonlyArray<{ readonly name: string; readonly url: string }> {
   // Partial clones append the promisor filter, e.g. `(fetch) [blob:none]`.
@@ -127,31 +127,6 @@ export function parseGitHubRepositorySelector(
   if (parts.length === 3 && host !== undefined && isGitHubHost(host))
     return { host, owner: parts[1]!, name: parts[2]! };
   return null;
-}
-
-export function parsePullRequestReference(
-  reference: string,
-):
-  | { readonly kind: "number"; readonly number: number }
-  | { readonly kind: "url"; readonly locator: GitHubRepositoryLocator; readonly number: number }
-  | { readonly kind: "branch"; readonly headSelector: string } {
-  const trimmed = reference.trim();
-  const numbered = /^#?([1-9]\d*)$/.exec(trimmed);
-  if (numbered) return { kind: "number", number: Number(numbered[1]) };
-  if (/^https?:\/\//i.test(trimmed)) {
-    try {
-      const url = new URL(trimmed);
-      const match = /^\/([^/]+)\/([^/]+)\/pull\/([1-9]\d*)(?:\/.*)?$/.exec(url.pathname);
-      if (match) {
-        return {
-          kind: "url",
-          locator: { host: url.host.toLowerCase(), owner: match[1]!, name: match[2]! },
-          number: Number(match[3]),
-        };
-      }
-    } catch {}
-  }
-  return { kind: "branch", headSelector: trimmed };
 }
 
 // An additional dot is a real DNS host, never a github.com SSH alias.

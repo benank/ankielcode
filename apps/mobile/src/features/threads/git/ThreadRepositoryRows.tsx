@@ -84,9 +84,6 @@ const RepositoryRow = memo(function RepositoryRow(props: {
       icon="folder"
       label={props.section.name}
       description={repositoryRowDescription(summary, status.error, resolve)}
-      detail={
-        summary?.isRepository && summary.pullRequest ? `#${summary.pullRequest.number}` : undefined
-      }
       onPress={() => props.onOpen(props.section)}
     />
   );

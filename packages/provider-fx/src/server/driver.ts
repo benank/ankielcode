@@ -55,10 +55,8 @@ const unsupportedTextGeneration: ProviderTextGeneration = (() => {
     );
   return {
     generateCommitMessage: () => unsupported("generateCommitMessage"),
-    generatePrContent: () => unsupported("generatePrContent"),
     generateBranchName: () => unsupported("generateBranchName"),
     generateThreadTitle: () => unsupported("generateThreadTitle"),
-    generateReviewGuide: () => unsupported("generateReviewGuide"),
     generateTranscriptionPostProcessing: () => unsupported("generateTranscriptionPostProcessing"),
   };
 })();

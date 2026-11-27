@@ -5,7 +5,7 @@ import * as Schema from "effect/Schema";
 
 import { parseTimeOfDay } from "../scheduledTasks/Schedule.ts";
 import { checkOptions, durationOf } from "./options.ts";
-import type { Issue, PullRequest } from "./WorkflowForge.ts";
+import type { Issue } from "./WorkflowForge.ts";
 
 /** The time a scheduled run was due, which is not the time it started. */
 export const Tick = Schema.Struct({ scheduledAt: Schema.String });
@@ -37,9 +37,9 @@ export interface WebhookTrigger {
   readonly name: string;
   readonly key: ((request: WebhookRequest) => string | undefined) | undefined;
 }
-/** New issues or pull requests of a project, which the engine looks for by itself. */
+/** New issues of a project, which the engine looks for by itself. */
 export interface OpenedTrigger {
-  readonly kind: "issues" | "pullRequests";
+  readonly kind: "issues";
   /** Stable across restarts: where this trigger keeps how far it has looked. */
   readonly id: string;
   readonly project: string;
@@ -141,16 +141,4 @@ export const issuesOpened = (options: {
 }): Trigger<Issue> => {
   checkOptions("issues.opened", options, ["project", "labels", "query"]);
   return { kind: "issues", id: openedId("issues", options), ...options };
-};
-
-/**
- * A run for each pull request opened against the project's repository from now on, with the pull
- * request as its payload (`PullRequest`). `query` is free text for the host.
- */
-export const pullRequestsOpened = (options: {
-  readonly project: string;
-  readonly query?: string;
-}): Trigger<PullRequest> => {
-  checkOptions("pullRequests.opened", options, ["project", "query"]);
-  return { kind: "pullRequests", id: openedId("pullRequests", options), ...options };
 };

@@ -10,13 +10,13 @@ import type {
   IssueState,
   IssueTemplate,
   IssueViewerPermissions,
-  PullRequestState,
+  IssueLinkedPullRequestState,
 } from "@ankielcode/contracts";
 import { decodeJsonResult } from "@ankielcode/shared/schemaJson";
 import type { TrackerIssueSummary } from "@ankielcode/source-control-core/server/IssueTracker";
 
 import type * as Issues from "./issues.graphql.ts";
-import { toReactions } from "./gitHubPullRequestJson.ts";
+import { toReactions } from "./gitHubReactions.ts";
 
 type DetailIssue = NonNullable<NonNullable<Issues.IssueDetail.Result["repository"]>["issue"]>;
 type Actor = {
@@ -140,7 +140,9 @@ function toSummary(
   };
 }
 
-function toPullRequestState(value: string | null | undefined): PullRequestState {
+function toIssueLinkedPullRequestState(
+  value: string | null | undefined,
+): IssueLinkedPullRequestState {
   switch (value?.trim().toUpperCase()) {
     case "MERGED":
       return "merged";
@@ -163,7 +165,7 @@ function toLinkedPullRequest(
     number,
     title,
     url,
-    state: toPullRequestState(raw.state),
+    state: toIssueLinkedPullRequestState(raw.state),
     isDraft: raw.isDraft ?? false,
     closesIssue,
   };

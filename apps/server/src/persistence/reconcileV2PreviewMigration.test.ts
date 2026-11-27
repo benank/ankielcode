@@ -93,6 +93,7 @@ describe("V2 preview upgrade", () => {
         [111, "SupersededRunAttemptIndex"],
         [112, "DropIssueTrackerTables"],
         [113, "PushRegistrations"],
+        [114, "RemovePullRequests"],
       ]);
       assert.deepStrictEqual(yield* runMigrations(), []);
       assert.deepStrictEqual(yield* sql`SELECT * FROM orchestration_v2_legacy_imports`, imports);
@@ -107,12 +108,10 @@ describe("V2 preview upgrade", () => {
         yield* sql`SELECT created_at FROM effect_sql_migrations WHERE migration_id = 55`,
         [{ created_at: "2026-09-15 00:00:00" }],
       );
-      yield* sql`
-        INSERT INTO pull_request_files_viewed
-          (provider, host, repository, number, viewer, path, revision, viewed_at)
-        VALUES ('github', 'github.com', 'owner/repo', 1, 'viewer', 'file.ts', 'revision', '2026-09-17')
-      `;
-      assert.strictEqual((yield* sql`SELECT * FROM pull_request_files_viewed`).length, 1);
+      assert.deepStrictEqual(
+        yield* sql`SELECT name FROM sqlite_master WHERE name = 'pull_request_files_viewed'`,
+        [],
+      );
     }).pipe(Effect.provide(NodeSqliteClient.layer({ filename: ":memory:" }))),
   );
 
@@ -229,6 +228,7 @@ describe("V2 preview upgrade", () => {
         [111, "SupersededRunAttemptIndex"],
         [112, "DropIssueTrackerTables"],
         [113, "PushRegistrations"],
+        [114, "RemovePullRequests"],
       ]);
     }).pipe(Effect.provide(NodeSqliteClient.layer({ filename: ":memory:" }))),
   );

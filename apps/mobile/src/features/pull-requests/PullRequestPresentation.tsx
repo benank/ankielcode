@@ -1,11 +1,11 @@
-import type { PullRequestActor } from "@ankielcode/contracts";
+import type { IssueActor } from "@ankielcode/contracts";
 import { Image } from "expo-image";
 import { View } from "react-native";
 
 import { AppText as Text } from "../../components/ui/AppText";
 
 export function PullRequestAvatar(props: {
-  readonly actor: PullRequestActor | null;
+  readonly actor: IssueActor | null;
   readonly size?: number;
 }) {
   const size = props.size ?? 24;

@@ -38,7 +38,6 @@ export interface GitActionResultNotification {
   readonly type: "success" | "error";
   readonly title: string;
   readonly description?: string;
-  readonly prUrl?: string;
 }
 
 const RESULT_DISMISS_MS = 5_000;
@@ -96,7 +95,6 @@ export interface GitActionProgress {
   readonly phase: GitActionProgressPhase;
   readonly label: string | null;
   readonly description: string | null;
-  readonly prUrl?: string;
 }
 
 const subscribeNever = () => () => {};
@@ -169,7 +167,6 @@ export function useGitActionProgress(
       phase: result.type,
       label: result.title,
       description: result.description ?? null,
-      prUrl: result.prUrl,
     };
   }
 

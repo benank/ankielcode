@@ -1,5 +1,3 @@
-import * as Dialog from "../../../components/ui/Dialog";
-import { useOpenIssueLink } from "../../../native/useOpenIssueLink";
 import {
   type GitActionRequestInput,
   buildMenuItems,
@@ -8,8 +6,6 @@ import {
 } from "@ankielcode/client-runtime/state/vcs";
 import type { ThreadRepositorySection } from "@ankielcode/client-runtime/state/thread-repositories";
 import { EnvironmentId, ThreadId } from "@ankielcode/contracts";
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
-import { changeRequestTermKind } from "../../../lib/changeRequestTerm";
 import {
   CommonActions,
   StackActions,
@@ -83,10 +79,6 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
   const environmentId = EnvironmentId.make(props.route.params.environmentId);
   const threadId = ThreadId.make(props.route.params.threadId);
   const { selectedThread, selectedThreadProject } = useThreadSelection();
-  const openPullRequest = useOpenIssueLink({
-    replace: presentation === "sheet",
-    context: selectedThread ?? undefined,
-  });
   // A tracked repository instead of the thread's own folder: thread-only rows stay off for it.
   const repository = gitRepositoryTargetFromRoute(props.route.params);
   const repositoryParams = gitRepositoryRouteParams(repository);
@@ -164,69 +156,29 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
   const sheetMenuItems = menuItems.map((item) => ({
     item: {
       ...item,
-      disabled: item.disabled || (!canWriteSourceControl && item.kind !== "open_pr"),
+      disabled: item.disabled || !canWriteSourceControl,
     },
-    disabledReason:
-      !canWriteSourceControl && item.kind !== "open_pr"
-        ? gt("This connection cannot change source control.")
-        : getGitActionDisabledReason(
-            {
-              item,
-              gitStatus: gitStatus.data,
-              isBusy: busy,
-              hasOriginRemote: hasPrimaryRemote,
-            },
-            m,
-          ),
+    disabledReason: !canWriteSourceControl
+      ? gt("This connection cannot change source control.")
+      : getGitActionDisabledReason(
+          {
+            item,
+            gitStatus: gitStatus.data,
+            isBusy: busy,
+            hasOriginRemote: hasPrimaryRemote,
+          },
+          m,
+        ),
   }));
-
-  const term = changeRequestTermKind(
-    sourceControlClients.get(gitStatus.data?.sourceControlProvider?.kind).changeRequest,
-  );
-
-  const openExistingPr = async () => {
-    const prUrl = gitStatus.data?.pr?.state === "open" ? gitStatus.data.pr.url : null;
-    if (!prUrl) {
-      Dialog.alert(
-        gt("{term, select, mr {No open MR} cr {No open change request} other {No open PR}}", {
-          term,
-        }),
-        gt(
-          "{term, select, mr {This branch does not have an open merge request.} cr {This branch does not have an open change request.} other {This branch does not have an open pull request.}}",
-          { term },
-        ),
-      );
-      return;
-    }
-    if (!(await openPullRequest(prUrl))) {
-      Dialog.alert(
-        gt(
-          "{term, select, mr {Unable to open MR} cr {Unable to open change request} other {Unable to open PR}}",
-          { term },
-        ),
-        gt(
-          "{term, select, mr {The merge request could not be opened.} cr {The change request could not be opened.} other {The pull request could not be opened.}}",
-          { term },
-        ),
-      );
-    }
-  };
 
   const runActionWithPrompt = async (input: GitActionRequestInput) => {
     if (!canWriteSourceControl) return;
-    const confirmableAction =
-      input.action === "push" ||
-      input.action === "create_pr" ||
-      input.action === "commit_push" ||
-      input.action === "commit_push_pr"
-        ? input.action
-        : null;
+    const confirmableAction = input.action;
     const branchName = gitStatus.data?.refName;
     if (
       branchName &&
-      confirmableAction &&
       !input.featureBranch &&
-      requiresDefaultBranchConfirmation(input.action, isDefaultRef)
+      requiresDefaultBranchConfirmation(confirmableAction, isDefaultRef)
     ) {
       presentRoute(() =>
         navigation.navigate("GitConfirm", {
@@ -247,10 +199,6 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
 
   const onPressMenuItem = async (item: (typeof menuItems)[number]) => {
     if (item.disabled) return;
-    if (item.kind === "open_pr") {
-      await openExistingPr();
-      return;
-    }
     if (!canWriteSourceControl) return;
     if (item.dialogAction === "commit") {
       presentRoute(() =>
@@ -264,10 +212,6 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
     }
     if (item.dialogAction === "push") {
       await runActionWithPrompt({ action: "push" });
-      return;
-    }
-    if (item.dialogAction === "create_pr") {
-      await runActionWithPrompt({ action: "create_pr" });
     }
   };
 
@@ -287,16 +231,6 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
       return gt("{count, plural, one {{count} commit ahead} other {{count} commits ahead}}", {
         count: ahead,
       });
-    }
-    if (item.kind === "open_pr" && status.pr?.number != null) {
-      return gt(
-        "{term, select, mr {MR #{number} {state, select, open {open} closed {closed} merged {merged} other {{state}}}} cr {change request #{number} {state, select, open {open} closed {closed} merged {merged} other {{state}}}} other {PR #{number} {state, select, open {open} closed {closed} merged {merged} other {{state}}}}}",
-        {
-          term,
-          number: status.pr.number,
-          state: status.pr.state ?? "open",
-        },
-      );
     }
     return undefined;
   };

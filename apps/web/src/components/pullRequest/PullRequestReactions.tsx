@@ -1,4 +1,4 @@
-import type { PullRequestReaction, PullRequestReactionContent } from "@ankielcode/contracts";
+import type { IssueReaction, IssueReactionContent } from "@ankielcode/contracts";
 import { msg, useGT, useLocale, useMessages } from "gt-react";
 import { SmilePlusIcon } from "lucide-react";
 import { useState } from "react";
@@ -22,8 +22,7 @@ import {
 const PILL_CLASS =
   "inline-flex h-6 shrink-0 items-center gap-1 rounded-full border px-2 text-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring";
 
-const EMPTY_PENDING: ReadonlyMap<PullRequestReactionContent, PendingPullRequestReaction> =
-  new Map();
+const EMPTY_PENDING: ReadonlyMap<IssueReactionContent, PendingPullRequestReaction> = new Map();
 
 /** Reaction pills with a picker. `onReact` resolves to whether the host saved the change. */
 export function ReactionBar({
@@ -32,9 +31,9 @@ export function ReactionBar({
   onReact,
   className,
 }: {
-  readonly reactions: ReadonlyArray<PullRequestReaction>;
+  readonly reactions: ReadonlyArray<IssueReaction>;
   readonly canReact: boolean;
-  readonly onReact: (content: PullRequestReactionContent, reacted: boolean) => Promise<boolean>;
+  readonly onReact: (content: IssueReactionContent, reacted: boolean) => Promise<boolean>;
   readonly className?: string | undefined;
 }) {
   const gt = useGT();
@@ -43,14 +42,14 @@ export function ReactionBar({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pending, setPending] = useState<{
     readonly signature: string;
-    readonly values: ReadonlyMap<PullRequestReactionContent, PendingPullRequestReaction>;
+    readonly values: ReadonlyMap<IssueReactionContent, PendingPullRequestReaction>;
   }>({ signature: "", values: EMPTY_PENDING });
 
   const signature = pullRequestReactionsSignature(reactions);
   const values = pending.signature === signature ? pending.values : EMPTY_PENDING;
   const shown = applyPendingPullRequestReactions(reactions, values);
 
-  const toggle = async (content: PullRequestReactionContent, reacted: boolean) => {
+  const toggle = async (content: IssueReactionContent, reacted: boolean) => {
     const entry: PendingPullRequestReaction = { reacted };
     setPending({ signature, values: new Map([...values, [content, entry]]) });
     if (await onReact(content, reacted)) return;

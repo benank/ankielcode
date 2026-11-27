@@ -1,7 +1,6 @@
 import { msg, useGT, useMessages } from "gt-react-native";
 
 import * as Dialog from "../../components/ui/Dialog";
-import { useOpenIssueLink } from "../../native/useOpenIssueLink";
 import type { AppBarMenu } from "../../components/ui/AppBar.types";
 import {
   AuthSourceControlWriteScope,
@@ -17,8 +16,6 @@ import {
   resolveQuickAction,
 } from "@ankielcode/client-runtime/state/vcs";
 import { useNavigation } from "@react-navigation/native";
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
-import { changeRequestTermKind } from "../../lib/changeRequestTerm";
 
 import { m, type MessageResolver } from "../../i18n/messages";
 import { useEnvironmentScope } from "../../state/session";
@@ -70,12 +67,6 @@ function compactMenuStatus(gitStatus: VcsStatusResult | null, resolve: MessageRe
       ),
     );
   }
-  if (gitStatus.pr?.state === "open") {
-    const { shortLabel } = sourceControlClients.get(
-      gitStatus.sourceControlProvider?.kind,
-    ).changeRequest;
-    parts.push(`${shortLabel} #${gitStatus.pr.number}`);
-  }
 
   return parts.join(" · ");
 }
@@ -117,7 +108,6 @@ function useThreadGitControlModel(props: ThreadGitMenuProps) {
   const navigation = useNavigation();
   const gt = useGT();
   const messages = useMessages();
-  const openPullRequest = useOpenIssueLink();
   const environmentId = props.environmentId;
   const canWriteSourceControl = useEnvironmentScope(
     environmentId ? EnvironmentId.make(String(environmentId)) : null,
@@ -141,7 +131,7 @@ function useThreadGitControlModel(props: ThreadGitMenuProps) {
         hint: gt("This workspace is not a git repository."),
       };
     }
-    const action = resolveQuickAction(gitStatus, busy, isDefaultRef, hasPrimaryRemote, messages);
+    const action = resolveQuickAction(gitStatus, busy, hasPrimaryRemote, messages);
     return !canWriteSourceControl && (action.kind === "run_pull" || action.kind === "run_action")
       ? {
           ...action,
@@ -157,7 +147,6 @@ function useThreadGitControlModel(props: ThreadGitMenuProps) {
 
   const quickActionIcon: QuickActionIcon = (() => {
     if (quickAction.kind === "run_pull") return "arrow.down.circle";
-    if (quickAction.kind === "open_pr") return "arrow.up.right.circle";
     if (quickAction.kind === "run_action") {
       if (quickAction.action === "commit") return "checkmark.circle";
       if (quickAction.action === "push" || quickAction.action === "commit_push")
@@ -166,52 +155,14 @@ function useThreadGitControlModel(props: ThreadGitMenuProps) {
     return "arrow.up.right.circle";
   })();
 
-  const openExistingPr = async () => {
-    const term = changeRequestTermKind(
-      sourceControlClients.get(gitStatus?.sourceControlProvider?.kind).changeRequest,
-    );
-    const prUrl = gitStatus?.pr?.state === "open" ? gitStatus.pr.url : null;
-    if (!prUrl) {
-      Dialog.alert(
-        gt("{term, select, mr {No open MR} cr {No open change request} other {No open PR}}", {
-          term,
-        }),
-        gt(
-          "{term, select, mr {This branch does not have an open merge request.} cr {This branch does not have an open change request.} other {This branch does not have an open pull request.}}",
-          { term },
-        ),
-      );
-      return;
-    }
-    if (!(await openPullRequest(prUrl))) {
-      Dialog.alert(
-        gt(
-          "{term, select, mr {Unable to open MR} cr {Unable to open change request} other {Unable to open PR}}",
-          { term },
-        ),
-        gt(
-          "{term, select, mr {The merge request could not be opened.} cr {The change request could not be opened.} other {The pull request could not be opened.}}",
-          { term },
-        ),
-      );
-    }
-  };
-
   const runActionWithPrompt = async (input: GitActionRequestInput) => {
     if (!canWriteSourceControl) return;
-    const confirmableAction =
-      input.action === "push" ||
-      input.action === "create_pr" ||
-      input.action === "commit_push" ||
-      input.action === "commit_push_pr"
-        ? input.action
-        : null;
+    const confirmableAction = input.action;
     const branchName = gitStatus?.refName;
     if (
       branchName &&
-      confirmableAction &&
       !input.featureBranch &&
-      requiresDefaultBranchConfirmation(input.action, isDefaultRef)
+      requiresDefaultBranchConfirmation(confirmableAction, isDefaultRef)
     ) {
       if (props.hasThread === false) {
         Dialog.alert(
@@ -233,10 +184,6 @@ function useThreadGitControlModel(props: ThreadGitMenuProps) {
 
   const runQuickAction = async () => {
     if (quickAction.disabled) return;
-    if (quickAction.kind === "open_pr") {
-      await openExistingPr();
-      return;
-    }
     if (quickAction.kind === "run_pull") {
       await onPull();
       return;

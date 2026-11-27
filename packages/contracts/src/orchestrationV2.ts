@@ -57,16 +57,6 @@ import {
 import { ModelSelection } from "./modelSelection.ts";
 import { ThreadIssueKey, ThreadIssueLink, ThreadIssueLinkSource } from "./issue.ts";
 import {
-  ThreadLinkedPullRequest,
-  ThreadPullRequestLink,
-  ThreadPullRequestKey,
-  ThreadPullRequestLinkSource,
-  ThreadPullRequestSnapshot,
-  ThreadPullRequestStack,
-  ThreadPullRequestWatch,
-  PullRequestWatchUntil,
-} from "./threadPullRequest.ts";
-import {
   ProviderApprovalDecision,
   ProviderApprovalFullAccessOverride,
   ProviderApprovalOption,
@@ -456,9 +446,6 @@ export const OrchestrationV2AppThread = Schema.Struct({
   interactionMode: ProviderInteractionMode,
   branch: Schema.NullOr(GitRefName),
   worktreePath: Schema.NullOr(TrimmedNonEmptyString),
-  linkedPullRequest: Schema.optional(Schema.NullOr(ThreadLinkedPullRequest)),
-  pullRequests: Schema.optional(Schema.Array(ThreadPullRequestLink)),
-  branchPullRequest: Schema.optional(Schema.NullOr(ThreadLinkedPullRequest)),
   /** Issues linked to this thread; optional so pre-linking servers still decode. */
   issues: Schema.optional(Schema.Array(ThreadIssueLink)),
   activeProviderThreadId: Schema.NullOr(ProviderThreadId),
@@ -1361,22 +1348,6 @@ const OrchestrationV2NotificationOutcome = Schema.Literals([
   "updated",
   "unknown",
 ]);
-/** One pull request's part of a wake, which stands alone once the others are outdated. */
-const PullRequestWakeSection = Schema.Struct({
-  text: Schema.String,
-  outcome: OrchestrationV2NotificationOutcome,
-  summary: TrimmedNonEmptyString,
-});
-const MonitorPullRequestStamp = Schema.Struct({
-  ...ThreadPullRequestKey.fields,
-  watchStartedAt: IsoDateTime,
-  /** Null when the wake is not about one head, so a newer push does not outdate it. */
-  headSha: Schema.NullOr(TrimmedNonEmptyString),
-  watchEnded: Schema.optional(Schema.Boolean),
-  /** Set on a wake covering several pull requests. */
-  section: Schema.optional(PullRequestWakeSection),
-});
-
 /** Encode legacy background_command/background_task shapes first so older clients accept command/subagent sources. */
 export const OrchestrationV2NotificationSource = kindUnionWithFallback(
   [
@@ -1408,9 +1379,8 @@ export const OrchestrationV2NotificationSource = kindUnionWithFallback(
     CommandNotificationSource,
     Schema.Struct({
       kind: Schema.Literal("monitor"),
-      pullRequest: Schema.optional(MonitorPullRequestStamp),
-      /** The other pull requests one wake covers; outdated ones leave it before it starts. */
-      otherPullRequests: Schema.optional(Schema.Array(MonitorPullRequestStamp)),
+      /** Set on a retired pull request watch wake, which the server drops instead of starting. */
+      pullRequest: Schema.optional(Schema.Unknown),
     }),
     Schema.Struct({ kind: Schema.Literal("background_task") }),
     Schema.Struct({ kind: Schema.Literal("system") }),
@@ -2092,7 +2062,6 @@ export const OrchestrationV2DomainEvent = Schema.Union([
       "thread.visited",
       "thread.marked-unread",
       "thread.metadata-updated",
-      "thread.pull-request-synced",
       "thread.issue-synced",
       "thread.runtime-mode-updated",
       "thread.interaction-mode-updated",
@@ -2100,11 +2069,6 @@ export const OrchestrationV2DomainEvent = Schema.Union([
       "thread.provider-switched",
     ]),
     payload: OrchestrationV2AppThread,
-  }),
-  Schema.Struct({
-    ...OrchestrationV2EventBase.fields,
-    type: Schema.Literal("thread.pull-request-link-updated"),
-    payload: ThreadPullRequestLink,
   }),
   Schema.Struct({
     ...OrchestrationV2EventBase.fields,
@@ -2298,9 +2262,6 @@ export const OrchestrationV2ThreadShell = Schema.Struct({
   interactionMode: ProviderInteractionMode,
   branch: Schema.NullOr(GitRefName),
   worktreePath: Schema.NullOr(TrimmedNonEmptyString),
-  linkedPullRequest: Schema.optional(Schema.NullOr(ThreadLinkedPullRequest)),
-  pullRequests: Schema.optional(Schema.Array(ThreadPullRequestLink)),
-  branchPullRequest: Schema.optional(Schema.NullOr(ThreadLinkedPullRequest)),
   /** Issues linked to this thread; optional so pre-linking servers still decode. */
   issues: Schema.optional(Schema.Array(ThreadIssueLink)),
   lineage: OrchestrationV2AppThreadLineage,
@@ -3047,7 +3008,6 @@ export const OrchestrationV2DomainEventJson = Schema.Union([
       "thread.tags-updated",
       "thread.visited",
       "thread.marked-unread",
-      "thread.pull-request-synced",
       "thread.issue-synced",
       "thread.metadata-updated",
       "thread.runtime-mode-updated",
@@ -3056,11 +3016,6 @@ export const OrchestrationV2DomainEventJson = Schema.Union([
       "thread.provider-switched",
     ]),
     payload: OrchestrationV2AppThreadJson,
-  }),
-  Schema.Struct({
-    ...OrchestrationV2JsonEventBaseFields,
-    type: Schema.Literal("thread.pull-request-link-updated"),
-    payload: ThreadPullRequestLink,
   }),
   Schema.Struct({
     ...OrchestrationV2JsonEventBaseFields,
@@ -3353,31 +3308,6 @@ export const OrchestrationV2Command = Schema.Union([
     /** Reject unless no message or run has landed on this thread. */
     expectedEmpty: Schema.optional(Schema.Boolean),
     limitRecovery: Schema.optional(Schema.NullOr(OrchestrationV2LimitRecoveryUpdate)),
-    /** Link (object) or unlink (null) a pull request; absent leaves it unchanged. */
-    linkedPullRequest: Schema.optional(Schema.NullOr(ThreadLinkedPullRequest)),
-  }),
-  Schema.Struct({
-    type: Schema.Literal("thread.pull-request.link"),
-    commandId: CommandId,
-    threadId: ThreadId,
-    ...ThreadPullRequestKey.fields,
-    url: TrimmedNonEmptyString,
-    source: ThreadPullRequestLinkSource,
-    repositoryWebUrl: Schema.optional(TrimmedNonEmptyString),
-  }),
-  Schema.Struct({
-    type: Schema.Literal("thread.pull-request.unlink"),
-    commandId: CommandId,
-    threadId: ThreadId,
-    ...ThreadPullRequestKey.fields,
-  }),
-  Schema.Struct({
-    type: Schema.Literal("thread.pull-request-link.sync"),
-    commandId: CommandId,
-    threadId: ThreadId,
-    ...ThreadPullRequestKey.fields,
-    snapshot: ThreadPullRequestSnapshot,
-    stack: Schema.NullOr(ThreadPullRequestStack),
   }),
   Schema.Struct({
     type: Schema.Literal("thread.issue.link"),
@@ -3395,40 +3325,6 @@ export const OrchestrationV2Command = Schema.Union([
     commandId: CommandId,
     threadId: ThreadId,
     ...ThreadIssueKey.fields,
-  }),
-  Schema.Struct({
-    type: Schema.Literal("thread.pull-request.watch"),
-    commandId: CommandId,
-    threadId: ThreadId,
-    ...ThreadPullRequestKey.fields,
-    watching: Schema.Boolean,
-    /** With `watching`, sets how long the watch holds its thread; absent keeps the current one. */
-    until: Schema.optional(PullRequestWatchUntil),
-    /** Whether CI was pending with no failure yet when the watch started, so any failure is news. */
-    checksPending: Schema.optional(Schema.Boolean),
-    link: Schema.optional(
-      Schema.Struct({
-        url: TrimmedNonEmptyString,
-        source: ThreadPullRequestLinkSource,
-        repositoryWebUrl: Schema.optional(TrimmedNonEmptyString),
-      }),
-    ),
-  }),
-  Schema.Struct({
-    type: Schema.Literal("thread.pull-request.sync"),
-    commandId: CommandId,
-    threadId: ThreadId,
-    projectId: ProjectId,
-    snapshotSequence: NonNegativeInt,
-    expected: Schema.Struct({
-      workspaceRoot: TrimmedNonEmptyString,
-      branch: Schema.NullOr(GitRefName),
-      worktreePath: Schema.NullOr(TrimmedNonEmptyString),
-      linkedPullRequest: Schema.NullOr(ThreadLinkedPullRequest),
-      branchPullRequest: Schema.NullOr(ThreadLinkedPullRequest),
-    }),
-    branchPullRequest: Schema.NullOr(ThreadLinkedPullRequest),
-    linkedPullRequest: Schema.optional(ThreadLinkedPullRequest),
   }),
   Schema.Struct({
     type: Schema.Literal("thread.title.regeneration.complete"),
@@ -3727,54 +3623,6 @@ const OrchestrationV2InternalCommand = Schema.Union([
     commandId: CommandId,
     threadId: ThreadId,
     projectId: ProjectId,
-  }),
-  /**
-   * After a push, the thread's watches forget whether their checks were running, since the push
-   * can start new ones. Applied to the watches as they are then, so no earlier read overwrites them.
-   */
-  Schema.Struct({
-    type: Schema.Literal("thread.pull-request-watch.checks-reopen"),
-    commandId: CommandId,
-    threadId: ThreadId,
-  }),
-  Schema.Struct({
-    type: Schema.Literal("thread.pull-request-watch.sync"),
-    commandId: CommandId,
-    threadId: ThreadId,
-    ...ThreadPullRequestKey.fields,
-    startedAt: IsoDateTime,
-    watch: Schema.NullOr(ThreadPullRequestWatch),
-    /**
-     * The watch's `checksPending` when this read started. A push that clears it during the read
-     * makes the read's answer describe the old head, so the cleared answer stays.
-     */
-    checksPendingBefore: Schema.optional(Schema.Boolean),
-    /** With `watch: null`, the state the ended watch keeps instead of its last saved one. */
-    endedWatch: Schema.optional(ThreadPullRequestWatch),
-    /** More watches of this thread recorded together, which `wake` also reports on. */
-    others: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          ...ThreadPullRequestKey.fields,
-          startedAt: IsoDateTime,
-          watch: Schema.NullOr(ThreadPullRequestWatch),
-          checksPendingBefore: Schema.optional(Schema.Boolean),
-          endedWatch: Schema.optional(ThreadPullRequestWatch),
-          includesRemarks: Schema.optional(Schema.Boolean),
-        }),
-      ),
-    ),
-    wake: Schema.optional(
-      Schema.Struct({
-        messageId: MessageId,
-        text: Schema.String,
-        notification: OrchestrationV2Notification,
-        /** Comments stay worth reading after a push, so the wake outlives a newer head. */
-        includesRemarks: Schema.optional(Schema.Boolean),
-        /** With `others`, each pull request's own part, in the same order. */
-        sections: Schema.optional(Schema.Array(PullRequestWakeSection)),
-      }),
-    ),
   }),
   Schema.Struct({
     type: Schema.Literal("checkpoint.rollback.fail"),

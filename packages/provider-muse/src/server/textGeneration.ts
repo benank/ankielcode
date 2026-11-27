@@ -25,18 +25,15 @@ import { isMuseUsageLimitFailure } from "./usageLimits.ts";
 import type { ProviderTextGeneration } from "@ankielcode/provider-core/server/textGeneration";
 import {
   generatedThreadTitle,
-  investigationUnsupported,
   TranscriptionPostProcessingOutput,
 } from "@ankielcode/provider-core/server/textGenerationOperations";
 import {
   buildBranchNamePrompt,
   buildCommitMessagePrompt,
-  buildPrContentPrompt,
   buildThreadTitlePrompt,
 } from "@ankielcode/provider-core/server/textGenerationPrompts";
 import {
   sanitizeCommitSubject,
-  sanitizePrTitle,
   toJsonSchemaObject,
 } from "@ankielcode/provider-core/server/textGenerationUtils";
 
@@ -353,16 +350,6 @@ export const makeMuseTextGeneration = Effect.fn("makeMuseTextGeneration")(functi
         : {}),
     };
   });
-  const generatePrContent: ProviderTextGeneration["generatePrContent"] = Effect.fn(
-    "MuseTextGeneration.generatePrContent",
-  )(function* (input) {
-    const generated = yield* runMuseJson({
-      operation: "generatePrContent",
-      ...buildPrContentPrompt(input),
-      modelSelection: input.modelSelection,
-    });
-    return { title: sanitizePrTitle(generated.title), body: generated.body.trim() };
-  });
   const generateBranchName: ProviderTextGeneration["generateBranchName"] = Effect.fn(
     "MuseTextGeneration.generateBranchName",
   )(function* (input) {
@@ -392,14 +379,10 @@ export const makeMuseTextGeneration = Effect.fn("makeMuseTextGeneration")(functi
         modelSelection: input.modelSelection,
       });
     });
-  const generateReviewGuide: ProviderTextGeneration["generateReviewGuide"] = () =>
-    Effect.fail(investigationUnsupported("generateReviewGuide", "Muse Code"));
   return {
     generateCommitMessage,
-    generatePrContent,
     generateBranchName,
     generateThreadTitle,
-    generateReviewGuide,
     generateTranscriptionPostProcessing,
   } satisfies ProviderTextGeneration;
 });

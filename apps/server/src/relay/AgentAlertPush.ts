@@ -113,8 +113,6 @@ function alertTrigger(event: OrchestrationV2DomainEvent): "raise" | "release" | 
       return backgroundWorkHoldsCompletion(event.payload.pendingBackgroundTasks ?? [])
         ? null
         : "release";
-    case "thread.pull-request-synced":
-      return "release";
     default:
       return null;
   }

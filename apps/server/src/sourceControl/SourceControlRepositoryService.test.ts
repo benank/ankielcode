@@ -36,21 +36,11 @@ const CLONE_URLS = {
 function makeProvider(
   overrides: Partial<SourceControlProvider.SourceControlProvider["Service"]> = {},
 ): SourceControlProvider.SourceControlProvider["Service"] {
-  const unsupported = (operation: string) =>
-    Effect.die(`unexpected provider operation ${operation}`) as Effect.Effect<
-      never,
-      SourceControlProviderError
-    >;
-
   return {
     kind: SourceControlProviderKind.make("github"),
-    listChangeRequests: () => unsupported("listChangeRequests"),
-    getChangeRequest: () => unsupported("getChangeRequest"),
-    createChangeRequest: () => unsupported("createChangeRequest"),
     getRepositoryCloneUrls: () => Effect.succeed(CLONE_URLS),
     createRepository: () => Effect.succeed(CLONE_URLS),
     getDefaultBranch: () => Effect.succeed(null),
-    checkoutChangeRequest: () => unsupported("checkoutChangeRequest"),
     ...overrides,
   };
 }

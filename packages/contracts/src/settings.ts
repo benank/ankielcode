@@ -51,7 +51,6 @@ import {
   ProviderInstanceId,
   ProviderDriverKind,
 } from "./providerInstance.ts";
-import { PullRequestMergeMethod } from "./pullRequest.ts";
 import {
   CloudSpeechModelId,
   SpeechAcceleration,
@@ -523,14 +522,6 @@ export const ClientSettingsSchema = Schema.Struct({
   providerModelPreferences: ProviderModelPreferences.pipe(
     Schema.withDecodingDefault(Effect.succeed({})),
   ),
-  pullRequestMergeMethodOverrides: Schema.Record(
-    TrimmedNonEmptyString,
-    PullRequestMergeMethod,
-  ).pipe(Schema.withDecodingDefault(Effect.succeed({}))),
-
-  pullRequestLinksOpenInApp: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
-  pullRequestTabEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
-
   composerRichTextEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
   sendShortcut: Schema.Literals(["enter", "mod-enter-multiline", "mod-enter"]).pipe(
     Schema.withDecodingDefault(Effect.succeed("enter")),
@@ -1031,9 +1022,6 @@ export const SourceControlWritingStyleSettings = Schema.Struct({
     Schema.withDecodingDefault(Effect.succeed("repo_conventions" as const)),
   ),
   customInstructions: TrimmedString.pipe(Schema.withDecodingDefault(Effect.succeed(""))),
-  followChangeRequestTemplates: Schema.Boolean.pipe(
-    Schema.withDecodingDefault(Effect.succeed(true)),
-  ),
 });
 export type SourceControlWritingStyleSettings = typeof SourceControlWritingStyleSettings.Type;
 
@@ -1044,7 +1032,6 @@ const LegacySourceControlWritingStyle = TrimmedString.pipe(
       decode: (value): SourceControlWritingStyleSettings => ({
         mode: value.length > 0 ? "custom" : "repo_conventions",
         customInstructions: value,
-        followChangeRequestTemplates: true,
       }),
       encode: (value) => value.customInstructions,
     }),
@@ -1160,17 +1147,11 @@ export const PROJECT_SCOPED_SERVER_SETTING_KEYS = [
   "textGenerationModelSelection",
   "threadTitleInstructions",
   "sourceControlWriterModelSelection",
-  "reviewGuideModelSelection",
-  "reviewGuideInstructions",
   "sourceControlWritingStyle",
-  "removeAgentCreditsOnMerge",
   "branchNamingMode",
   "branchNamePrefix",
   "branchNameInstructions",
-  "pullRequestMergeMethod",
-  "sidebarAutoSettleOnMerge",
   "sidebarAutoSettleAfterDays",
-  "sidebarAutoSettleKeepPullRequests",
   "continueThreadsAfterServerUpdate",
   "responseStreamingMode",
   "speechProjectCustomWords",
@@ -1199,17 +1180,11 @@ export const ProjectSettingsOverrides = Schema.Struct({
   textGenerationModelSelection: Schema.optionalKey(ModelSelection),
   threadTitleInstructions: Schema.optionalKey(TrimmedString),
   sourceControlWriterModelSelection: Schema.optionalKey(Schema.NullOr(ModelSelection)),
-  reviewGuideModelSelection: Schema.optionalKey(Schema.NullOr(ModelSelection)),
-  reviewGuideInstructions: Schema.optionalKey(TrimmedString),
   sourceControlWritingStyle: Schema.optionalKey(SourceControlWritingStyleSetting),
-  removeAgentCreditsOnMerge: Schema.optionalKey(Schema.Boolean),
   branchNamingMode: Schema.optionalKey(BranchNamingMode),
   branchNamePrefix: Schema.optionalKey(TrimmedString),
   branchNameInstructions: Schema.optionalKey(TrimmedString),
-  pullRequestMergeMethod: Schema.optionalKey(Schema.NullOr(PullRequestMergeMethod)),
-  sidebarAutoSettleOnMerge: Schema.optionalKey(Schema.Boolean),
   sidebarAutoSettleAfterDays: Schema.optionalKey(Schema.NullOr(SidebarAutoSettleAfterDays)),
-  sidebarAutoSettleKeepPullRequests: Schema.optionalKey(Schema.Boolean),
   continueThreadsAfterServerUpdate: Schema.optionalKey(Schema.Boolean),
   responseStreamingMode: Schema.optionalKey(ResponseStreamingMode),
   speechProjectCustomWords: Schema.optionalKey(SpeechCustomWords),
@@ -1240,13 +1215,7 @@ const NULLABLE_PROJECT_SETTINGS_OVERRIDES: ReadonlySet<ProjectScopedServerSettin
   {
     [K in ProjectScopedServerSettingKey]: null extends ProjectSettingsOverrides[K] ? K : never;
   }[ProjectScopedServerSettingKey]
->([
-  "defaultModelSelection",
-  "sourceControlWriterModelSelection",
-  "reviewGuideModelSelection",
-  "pullRequestMergeMethod",
-  "sidebarAutoSettleAfterDays",
-]);
+>(["defaultModelSelection", "sourceControlWriterModelSelection", "sidebarAutoSettleAfterDays"]);
 
 /** Reclaimable bytes from which the offline `ankiel doctor` repair is worth suggesting. */
 export const DATABASE_COMPACTION_RECOMMENDED_BYTES = 1024 ** 3;
@@ -1457,10 +1426,6 @@ export const ServerSettings = Schema.Struct({
   workflowsEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
   /** Beta: Claude and Codex predict the next prompt after completed turns. Codex follows a change at once; open Claude threads after they restart. */
   promptSuggestionsEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
-  sidebarAutoSettleKeepPullRequests: Schema.Boolean.pipe(
-    Schema.withDecodingDefault(Effect.succeed(false)),
-  ),
-  sidebarAutoSettleOnMerge: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
   backgroundActivity: BackgroundActivitySettings,
 
   automaticGitFetchInterval: Schema.DurationFromMillis.pipe(
@@ -1522,20 +1487,10 @@ export const ServerSettings = Schema.Struct({
   ),
   branchNamePrefix: TrimmedString.pipe(Schema.withDecodingDefault(Effect.succeed("ankiel"))),
   branchNameInstructions: TrimmedString.pipe(Schema.withDecodingDefault(Effect.succeed(""))),
-  removeAgentCreditsOnMerge: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
   sourceControlWritingStyle: SourceControlWritingStyleSetting.pipe(
     Schema.withDecodingDefault(Effect.succeed({})),
   ),
   sourceControlWriterModelSelection: Schema.NullOr(ModelSelection).pipe(
-    Schema.withDecodingDefault(Effect.succeed(null)),
-  ),
-  reviewGuidesEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
-  reviewGuideModelSelection: Schema.NullOr(ModelSelection).pipe(
-    Schema.withDecodingDefault(Effect.succeed(null)),
-  ),
-  reviewGuideInstructions: TrimmedString.pipe(Schema.withDecodingDefault(Effect.succeed(""))),
-
-  pullRequestMergeMethod: Schema.NullOr(PullRequestMergeMethod).pipe(
     Schema.withDecodingDefault(Effect.succeed(null)),
   ),
 
@@ -1852,8 +1807,6 @@ export const ServerSettingsPatch = Schema.Struct({
   sidebarAutoSettleAfterDays: Schema.optionalKey(Schema.NullOr(SidebarAutoSettleAfterDays)),
   compactIdleThreads: Schema.optionalKey(LegacyCompactIdleThreads),
   idleCompaction: Schema.optionalKey(IdleCompactionMode),
-  sidebarAutoSettleKeepPullRequests: Schema.optionalKey(Schema.Boolean),
-  sidebarAutoSettleOnMerge: Schema.optionalKey(Schema.Boolean),
   autoResumeLimitedThreads: Schema.optionalKey(Schema.Boolean),
   snoozeLimitedThreads: Schema.optionalKey(Schema.Boolean),
   snoozePresets: Schema.optionalKey(SnoozePresetSettings),
@@ -1888,19 +1841,13 @@ export const ServerSettingsPatch = Schema.Struct({
   branchNamingMode: Schema.optionalKey(BranchNamingMode),
   branchNamePrefix: Schema.optionalKey(TrimmedString),
   branchNameInstructions: Schema.optionalKey(TrimmedString),
-  removeAgentCreditsOnMerge: Schema.optionalKey(Schema.Boolean),
   sourceControlWritingStyle: Schema.optionalKey(
     Schema.Struct({
       mode: Schema.optionalKey(SourceControlWritingStyleMode),
       customInstructions: Schema.optionalKey(TrimmedString),
-      followChangeRequestTemplates: Schema.optionalKey(Schema.Boolean),
     }),
   ),
   sourceControlWriterModelSelection: Schema.optionalKey(Schema.NullOr(ModelSelection)),
-  reviewGuidesEnabled: Schema.optionalKey(Schema.Boolean),
-  reviewGuideModelSelection: Schema.optionalKey(Schema.NullOr(ModelSelection)),
-  reviewGuideInstructions: Schema.optionalKey(TrimmedString),
-  pullRequestMergeMethod: Schema.optionalKey(Schema.NullOr(PullRequestMergeMethod)),
   /** Merges per host, replacing patched fields whole; redaction markers retain secrets, empty secrets remove them. A non-empty token map keeps the saved tokens of hosts it omits; an empty map clears them all. */
   sourceControlHosts: Schema.optionalKey(Schema.Record(Schema.String, SourceControlHostSettings)),
   offeredSourceControlProviders: Schema.optionalKey(Schema.Record(Schema.String, Schema.Boolean)),
@@ -2027,11 +1974,6 @@ export const ClientSettingsPatch = Schema.Struct({
   persistComposerContextStrip: Schema.optionalKey(Schema.Boolean),
   favorites: Schema.optionalKey(ModelFavorites),
   providerModelPreferences: Schema.optionalKey(ProviderModelPreferences),
-  pullRequestMergeMethodOverrides: Schema.optionalKey(
-    Schema.Record(TrimmedNonEmptyString, PullRequestMergeMethod),
-  ),
-  pullRequestLinksOpenInApp: Schema.optionalKey(Schema.Boolean),
-  pullRequestTabEnabled: Schema.optionalKey(Schema.Boolean),
   composerRichTextEnabled: Schema.optionalKey(Schema.Boolean),
   sendShortcut: Schema.optionalKey(Schema.Literals(["enter", "mod-enter-multiline", "mod-enter"])),
   followUpBehavior: Schema.optionalKey(Schema.Literals(["queue", "steer"])),

@@ -550,14 +550,6 @@ it.effect(
       const rejected = yield* Effect.flip(lookup);
       assert.include(rejected.detail, "Enable GitHub integration");
       assert.isFalse(yield* discoverGitHub);
-      const disabledPrProvider = yield* registry.resolve({ cwd: "/repo" });
-      assert.isEmpty(
-        yield* disabledPrProvider.listChangeRequests({
-          cwd: "/repo",
-          headSelector: "feature",
-          state: "all",
-        }),
-      );
 
       yield* Ref.set(enabled, true);
       assert.isTrue(yield* discoverGitHub);

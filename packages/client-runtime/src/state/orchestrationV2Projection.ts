@@ -293,9 +293,6 @@ export function applyOrchestrationV2ProjectionEvent(
   const latestLocalTurnOrdinal = options?.latestLocalTurnOrdinal;
   const base = { ...projection, updatedAt: event.occurredAt };
   switch (event.type) {
-    // Clients no longer show pull request links.
-    case "thread.pull-request-link-updated":
-      return projection;
     case "thread.created":
     case "thread.archived":
     case "thread.unarchived":
@@ -310,7 +307,6 @@ export function applyOrchestrationV2ProjectionEvent(
     case "thread.pin-reordered":
     case "thread.active-reordered":
     case "thread.metadata-updated":
-    case "thread.pull-request-synced":
     case "thread.issue-synced":
     case "thread.runtime-mode-updated":
     case "thread.interaction-mode-updated":

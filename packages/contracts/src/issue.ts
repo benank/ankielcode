@@ -10,13 +10,6 @@ import {
   ThreadId,
   TrimmedNonEmptyString,
 } from "./baseSchemas.ts";
-import {
-  PullRequestActor,
-  PullRequestLabel,
-  PullRequestReaction,
-  PullRequestReactionContent,
-  PullRequestState,
-} from "./pullRequest.ts";
 
 /**
  * Which tracker an issue lives in. Git hosts reuse their `SourceControlProviderKind` spelling
@@ -30,10 +23,19 @@ export const IssueTrackerKind = TrimmedNonEmptyString.check(
 ).pipe(Schema.brand("IssueTrackerKind"));
 export type IssueTrackerKind = typeof IssueTrackerKind.Type;
 
-export const IssueActor = PullRequestActor;
+export const IssueActor = Schema.Struct({
+  isBot: Schema.optional(Schema.Boolean),
+  login: TrimmedNonEmptyString,
+  name: Schema.NullOr(Schema.String),
+  avatarUrl: Schema.NullOr(Schema.String),
+});
 export type IssueActor = typeof IssueActor.Type;
 
-export const IssueLabel = PullRequestLabel;
+export const IssueLabel = Schema.Struct({
+  name: TrimmedNonEmptyString,
+  color: Schema.NullOr(Schema.String),
+  description: Schema.optional(Schema.NullOr(Schema.String)),
+});
 export type IssueLabel = typeof IssueLabel.Type;
 
 /**
@@ -64,10 +66,25 @@ export type IssueInvolvement = typeof IssueInvolvement.Type;
 export const IssueListSort = Schema.Literals(["updated", "created"]);
 export type IssueListSort = typeof IssueListSort.Type;
 
-export const IssueReactionContent = PullRequestReactionContent;
+export const IssueReactionContent = Schema.Literals([
+  "thumbs-up",
+  "thumbs-down",
+  "laugh",
+  "hooray",
+  "confused",
+  "heart",
+  "rocket",
+  "eyes",
+]);
 export type IssueReactionContent = typeof IssueReactionContent.Type;
 
-export const IssueReaction = PullRequestReaction;
+export const IssueReaction = Schema.Struct({
+  content: IssueReactionContent,
+  count: PositiveInt,
+  /** Excludes the viewer's login when viewerHasReacted; count still includes them. */
+  actors: Schema.Array(TrimmedNonEmptyString),
+  viewerHasReacted: Schema.Boolean,
+});
 export type IssueReaction = typeof IssueReaction.Type;
 
 /**
@@ -170,13 +187,16 @@ export const IssueEvent = Schema.Struct({
 });
 export type IssueEvent = typeof IssueEvent.Type;
 
+export const IssueLinkedPullRequestState = Schema.Literals(["open", "closed", "merged"]);
+export type IssueLinkedPullRequestState = typeof IssueLinkedPullRequestState.Type;
+
 /** A change request the tracker says closes or mentions this issue. */
 export const IssueLinkedPullRequest = Schema.Struct({
   repository: TrimmedNonEmptyString,
   number: PositiveInt,
   title: TrimmedNonEmptyString,
   url: TrimmedNonEmptyString,
-  state: PullRequestState,
+  state: IssueLinkedPullRequestState,
   isDraft: Schema.Boolean,
   /** Merging it closes this issue, rather than only citing it. */
   closesIssue: Schema.Boolean,

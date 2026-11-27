@@ -172,7 +172,6 @@ function threadCreatedEvent(
       interactionMode: "default",
       branch: null,
       worktreePath: null,
-      branchPullRequest: null,
       activeOrderKey: null,
       activeProviderThreadId: providerThreadId,
       lineage: {

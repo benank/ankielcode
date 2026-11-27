@@ -390,7 +390,7 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
                       icon={PullRequestGlyph.pullRequest}
                       label={gt("GitHub integration")}
                       subtitle={gt(
-                        "Allow Ankiel Code to read and manage GitHub issues and pull requests on this environment.",
+                        "Allow Ankiel Code to read and manage GitHub issues on this environment.",
                       )}
                       value={uniform("githubIntegrationEnabled")}
                       disabled={disabledFor("githubIntegrationEnabled")}

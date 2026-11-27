@@ -507,7 +507,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       : []),
     ...(settings.diffLayout !== DEFAULT_UNIFIED_SETTINGS.diffLayout ? [gt("Diff layout")] : []),
     ...(settings.proactivePanelsEnabled !== DEFAULT_UNIFIED_SETTINGS.proactivePanelsEnabled
-      ? [gt("Open pull requests and changes panels proactively")]
+      ? [gt("Open the changes panel proactively")]
       : []),
     ...(settings.showSkillsInSlashMenu !== DEFAULT_UNIFIED_SETTINGS.showSkillsInSlashMenu
       ? [gt("Show skills in slash menu")]
@@ -1665,9 +1665,7 @@ export function DiffsSettingsPanel() {
         />
         <SettingsRow
           {...setting("default-diff-file-state")}
-          description={gt(
-            "Start with files expanded or collapsed when opening diffs or a pull request's Code tab.",
-          )}
+          description={gt("Start with files expanded or collapsed when opening diffs.")}
           resetAction={
             settings.diffFilesCollapsed !== DEFAULT_UNIFIED_SETTINGS.diffFilesCollapsed ? (
               <SettingResetButton

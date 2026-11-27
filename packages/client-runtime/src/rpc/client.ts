@@ -79,7 +79,7 @@ export type EnvironmentSubscriptionRpcTag =
   | typeof WS_METHODS.subscribeDiscoveredLocalServers
   | typeof WS_METHODS.subscribeDeviceState
   | typeof WS_METHODS.subscribeResourceTelemetry
-  | typeof WS_METHODS.pullRequestsSubscribeLinkedThreadRefreshes
+  | typeof WS_METHODS.linkedThreadsSubscribeRefreshes
   | typeof WS_METHODS.subscribeVcsStatus
   | typeof WS_METHODS.subscribeVcsBranch
   | typeof WS_METHODS.subscribeWorktreeSetup
@@ -196,25 +196,21 @@ export class RpcPermissionGuard extends Context.Reference<{
   readonly authorize: (
     environmentId: EnvironmentId,
     method: string,
-    input: unknown,
   ) => Effect.Effect<void, EnvironmentAuthorizationError>;
 }>("@ankielcode/client-runtime/rpc/RpcPermissionGuard", {
   defaultValue: () => ({
-    authorize: (_environmentId, method, input) => {
-      const scope = clientRpcRequiredScopes(method, input)[0];
+    authorize: (_environmentId, method) => {
+      const scope = clientRpcRequiredScopes(method)[0];
       return scope === undefined ? Effect.void : Effect.fail(scopeRequiredError(scope));
     },
   }),
 }) {}
 
-const authorizeRequest = Effect.fn("EnvironmentRpc.authorize")(function* (
-  method: string,
-  input: unknown,
-) {
-  if (clientRpcRequiredScopes(method, input).length === 0) return;
+const authorizeRequest = Effect.fn("EnvironmentRpc.authorize")(function* (method: string) {
+  if (clientRpcRequiredScopes(method).length === 0) return;
   const supervisor = yield* EnvironmentSupervisor.EnvironmentSupervisor;
   const guard = yield* RpcPermissionGuard;
-  yield* guard.authorize(supervisor.target.environmentId, method, input);
+  yield* guard.authorize(supervisor.target.environmentId, method);
 });
 
 export const requestInSession = Effect.fn("EnvironmentRpc.request")(function* <
@@ -225,7 +221,7 @@ export const requestInSession = Effect.fn("EnvironmentRpc.request")(function* <
     "environment.id": supervisor.target.environmentId,
     "rpc.method": tag,
   });
-  yield* authorizeRequest(tag, input);
+  yield* authorizeRequest(tag);
   const observer = yield* EnvironmentRpcRequestObserver;
   const method = session.client[tag] as (
     input: EnvironmentRpcInput<TTag>,
@@ -273,7 +269,7 @@ export function runStreamInSession<TTag extends EnvironmentStreamCommandRpcTag>(
   const method = session.client[tag] as (
     input: EnvironmentRpcInput<TTag>,
   ) => Stream.Stream<EnvironmentRpcStreamValue<TTag>, EnvironmentRpcStreamFailure<TTag>>;
-  return Stream.unwrap(authorizeRequest(tag, input).pipe(Effect.map(() => method(input)))).pipe(
+  return Stream.unwrap(authorizeRequest(tag).pipe(Effect.map(() => method(input)))).pipe(
     Stream.withSpan("EnvironmentRpc.runStream", {
       attributes: { "rpc.method": tag },
     }),

@@ -140,7 +140,7 @@ const SETTINGS_SEARCH_TERMS = {
   SettingsEnvironmentSourceControl: [
     msg("GitHub integration"),
     "git",
-    msg("pull requests", { $context: "settings search keyword" }),
+    msg("issues", { $context: "settings search keyword" }),
     msg("co-authors", { $context: "settings search keyword" }),
     msg("agent credits", { $context: "settings search keyword" }),
     msg("default branch", { $context: "settings search keyword" }),

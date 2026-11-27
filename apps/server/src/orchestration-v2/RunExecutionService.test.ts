@@ -1095,29 +1095,7 @@ it.effect("records a finished run as failed when its ownership check cannot be r
   }),
 );
 
-it.effect("does not refresh pull requests for auxiliary or stale provider terminals", () =>
-  Effect.gen(function* () {
-    const { observed } = yield* captureRootRunTermination({
-      key: "pull-request-refresh:auxiliary",
-      shouldFinalizeRun: () => Effect.succeed(true),
-      events: (ids) =>
-        Stream.fromIterable([
-          rootTerminalEvent(
-            { ...ids, rootProviderTurnId: ProviderTurnId.make("turn:child") },
-            "completed",
-          ),
-          rootTerminalEvent(
-            { ...ids, rootProviderTurnId: ProviderTurnId.make("turn:previous") },
-            "interrupted",
-          ),
-          rootTerminalEvent(ids, "cancelled"),
-        ]),
-    });
-    assert.deepEqual(observed, ["run:cancelled", "pull-requests-refreshed"]);
-  }),
-);
-
-it.effect("refreshes pull requests after a provider stream exits with an error", () =>
+it.effect("fails the run when its provider stream exits with an error", () =>
   Effect.gen(function* () {
     const { written, observed } = yield* captureRootRunTermination({
       key: "pull-request-refresh:stream-error",
@@ -1131,7 +1109,7 @@ it.effect("refreshes pull requests after a provider stream exits with an error",
           }),
         ),
     });
-    assert.deepEqual(observed, ["run:failed", "pull-requests-refreshed"]);
+    assert.deepEqual(observed, ["run:failed"]);
     assert.deepEqual(
       written.map((item) => item.type),
       ["error"],
@@ -1159,7 +1137,7 @@ it.effect("does not interrupt an ended provider when its terminal write fails", 
         }),
     });
     assert.equal(yield* Ref.get(interrupts), 0);
-    assert.deepEqual(observed, ["run:failed", "pull-requests-refreshed"]);
+    assert.deepEqual(observed, ["run:failed"]);
   }),
 );
 
@@ -1213,7 +1191,7 @@ it.effect("fails the run when its event stream ends without a root terminal", ()
       shouldFinalizeRun: () => Effect.succeed(true),
       events: () => Stream.empty,
     });
-    assert.deepEqual(observed, ["run:failed", "pull-requests-refreshed"]);
+    assert.deepEqual(observed, ["run:failed"]);
     assert.equal(
       finalEvents.find((event) => event.type === "provider-thread.updated")?.payload.status,
       "idle",
@@ -1248,25 +1226,13 @@ it.effect("does not start a turn whose run settled during the app context read",
         Effect.andThen(Deferred.await(runFailed)),
         Effect.as([]),
       ),
-      refreshAfterTurn: Ref.set(current, false).pipe(
+      onRunUpdated: Ref.set(current, false).pipe(
         Effect.andThen(Deferred.succeed(runFailed, undefined)),
       ),
       startTurn: () => Ref.update(providerCalls, (count) => count + 1),
     });
-    assert.deepEqual(observed, ["run:failed", "pull-requests-refreshed"]);
+    assert.deepEqual(observed, ["run:failed"]);
     assert.equal(yield* Ref.get(providerCalls), 0);
-  }),
-);
-
-it.effect("keeps completed runs completed when pull request refresh fails", () =>
-  Effect.gen(function* () {
-    const { observed } = yield* captureRootRunTermination({
-      key: "pull-request-refresh:refresh-failure",
-      shouldFinalizeRun: () => Effect.succeed(true),
-      events: (ids) => Stream.make(rootTerminalEvent(ids, "completed")),
-      refreshAfterTurn: Effect.die("refresh failed"),
-    });
-    assert.deepEqual(observed, ["run:completed", "pull-requests-refreshed"]);
   }),
 );
 
@@ -1293,11 +1259,11 @@ function captureRootRunTermination(input: {
   readonly onStartFailure?: (
     error: RunExecutionService.RunExecutionServiceV2Error,
   ) => Effect.Effect<void>;
-  readonly refreshAfterTurn?: Effect.Effect<void>;
   readonly onSubscriptionClose?: Effect.Effect<void>;
   readonly shouldStartProviderTurn?: RunExecutionService.RunExecutionServiceV2StartRootRunInput["shouldStartProviderTurn"];
   readonly appContext?: ReturnType<McpAppModelContext.McpAppModelContext["Service"]["forThread"]>;
   readonly ingestNormalized?: ProviderEventIngestor.ProviderEventIngestorV2["Service"]["ingestNormalized"];
+  readonly onRunUpdated?: Effect.Effect<void>;
   readonly beforeTerminalWrite?: (
     request: Parameters<EventSink.EventSinkV2["Service"]["writeIfRunCurrent"]>[0],
   ) => Effect.Effect<boolean, EventSink.EventSinkV2Error>;
@@ -1359,6 +1325,7 @@ function captureRootRunTermination(input: {
           }
           if (event.type === "run.updated") {
             yield* Ref.update(observed, (current) => [...current, `run:${event.payload.status}`]);
+            yield* input.onRunUpdated ?? Effect.void;
           }
         }
       });
@@ -1428,10 +1395,6 @@ function captureRootRunTermination(input: {
           Layer.succeed(RunFinalizationService.RunFinalizationObserver, {
             refresh: () => Effect.void,
             refreshRepositories: () => Effect.void,
-            refreshAfterTurn: () =>
-              Ref.update(observed, (current) => [...current, "pull-requests-refreshed"]).pipe(
-                Effect.andThen(input.refreshAfterTurn ?? Effect.void),
-              ),
           }),
         ),
       ),

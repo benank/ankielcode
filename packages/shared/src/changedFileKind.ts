@@ -1,10 +1,13 @@
-import type { PullRequestChangeBreakdown } from "@ankielcode/contracts";
+export type ChangedFileKind = "code" | "tests" | "mocks" | "generated" | "docs";
 
-export type ChangedFileKind = keyof NonNullable<PullRequestChangeBreakdown>;
+export type ChangeBreakdown = Record<
+  ChangedFileKind,
+  { readonly additions: number; readonly deletions: number }
+>;
 
 export function summarizeChangedFiles(
   files: ReadonlyArray<{ path: string; additions: number; deletions: number }>,
-): NonNullable<PullRequestChangeBreakdown> {
+): ChangeBreakdown {
   const empty = () => ({ additions: 0, deletions: 0 });
   const breakdown = {
     code: empty(),

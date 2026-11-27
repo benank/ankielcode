@@ -386,7 +386,7 @@ describe("ServerSettings.sourceControlWritingStyle", () => {
       customInstructions: "Prefer concise wording.\nKeep issue references.",
     },
   ])("normalizes legacy writing style $legacy in snapshots only", ({ legacy, ...expected }) => {
-    const style = { ...expected, followChangeRequestTemplates: true };
+    const style = expected;
     for (const [input, normalized] of [
       [{ sourceControlWritingStyle: legacy }, { sourceControlWritingStyle: style }],
       [
@@ -399,6 +399,30 @@ describe("ServerSettings.sourceControlWritingStyle", () => {
       expect(encodeServerSettings(settings)).toMatchObject(normalized);
       expect(() => decodeServerSettingsPatch(input)).toThrow();
     }
+  });
+});
+
+describe("ServerSettings retired pull request keys", () => {
+  it("loads settings saved with them and drops them", () => {
+    const retired = {
+      pullRequestMergeMethod: "squash",
+      sidebarAutoSettleOnMerge: false,
+      sidebarAutoSettleKeepPullRequests: true,
+      removeAgentCreditsOnMerge: true,
+      reviewGuidesEnabled: true,
+      reviewGuideModelSelection: null,
+      reviewGuideInstructions: "Focus on tests.",
+    };
+    const settings = decodeServerSettings({
+      ...retired,
+      threadTitleInstructions: "Short titles.",
+      sourceControlWritingStyle: { mode: "custom", followChangeRequestTemplates: false },
+      projectSettingsOverrides: { project: { pullRequestMergeMethod: "rebase" } },
+    });
+    expect(settings.threadTitleInstructions).toBe("Short titles.");
+    expect(settings.sourceControlWritingStyle).toEqual({ mode: "custom", customInstructions: "" });
+    const encoded = encodeServerSettings(settings);
+    for (const key of Object.keys(retired)) expect(key in encoded).toBe(false);
   });
 });
 

@@ -1,18 +1,14 @@
 import type {
   GitRunStackedActionResult,
   GitStackedAction,
-  PullRequestChangeBreakdown,
   ReviewDiffPreviewSource,
   VcsStatusResult,
 } from "@ankielcode/contracts";
-import { summarizeChangedFiles } from "@ankielcode/shared/changedFileKind";
+import { type ChangeBreakdown, summarizeChangedFiles } from "@ankielcode/shared/changedFileKind";
 import { isTemporaryWorktreeBranch } from "@ankielcode/shared/git";
 import { msg } from "gt-react";
 import { m, type MessageResolver } from "../i18n/messages";
-import { changeRequestTermKind } from "./pullRequest/changeRequestTerm";
-import type { ChangeRequestTerminology } from "@ankielcode/client-runtime/source-control-clients";
 import {
-  changeRequestTerminologyFor,
   type DefaultBranchActionDialogCopy,
   type DefaultBranchConfirmableAction,
   type GitActionIconName,
@@ -27,12 +23,12 @@ export {
 } from "@ankielcode/client-runtime/state/vcs";
 
 export interface GitActionMenuItem {
-  id: "commit" | "push" | "pr";
+  id: "commit" | "push";
   label: string;
   disabled: boolean;
   icon: GitActionIconName;
   kind: "open_dialog";
-  dialogAction?: GitDialogAction;
+  dialogAction: GitDialogAction;
 }
 
 export interface GitQuickAction {
@@ -128,13 +124,10 @@ export function buildMenuItems(
   resolve: MessageResolver = m,
 ): GitActionMenuItem[] {
   if (!gitStatus) return [];
-  const terminology = changeRequestTerminologyFor(gitStatus);
 
   const hasBranch = gitStatus.refName !== null;
   const hasChanges = gitStatus.hasWorkingTreeChanges;
-  const hasOpenPr = gitStatus.pr?.state === "open";
   const isBehind = gitStatus.behindCount > 0;
-  const hasDefaultBranchDelta = (gitStatus.aheadOfDefaultCount ?? gitStatus.aheadCount) > 0;
   const canPushWithoutUpstream = hasPrimaryRemote && !gitStatus.hasUpstream;
   const canCommit = !isBusy && hasChanges;
   const canPush =
@@ -143,14 +136,6 @@ export function buildMenuItems(
     !isBehind &&
     gitStatus.aheadCount > 0 &&
     (gitStatus.hasUpstream || canPushWithoutUpstream);
-  const canCreatePr =
-    !isBusy &&
-    hasBranch &&
-    !hasOpenPr &&
-    hasDefaultBranchDelta &&
-    !isBehind &&
-    (gitStatus.hasUpstream || canPushWithoutUpstream);
-
   const commitItem: GitActionMenuItem = {
     id: "commit",
     label: resolve(msg("Commit", { $context: "verb, git action" })),
@@ -173,26 +158,7 @@ export function buildMenuItems(
     dialogAction: "push",
   };
 
-  if (hasOpenPr) {
-    return [commitItem, pushItem];
-  }
-
-  return [
-    commitItem,
-    pushItem,
-    {
-      id: "pr",
-      label: resolve(
-        msg("Create {term, select, mr {MR} cr {change request} other {PR}}", {
-          term: changeRequestTermKind(terminology),
-        }),
-      ),
-      disabled: !canCreatePr,
-      icon: "pr",
-      kind: "open_dialog",
-      dialogAction: "create_pr",
-    },
-  ];
+  return [commitItem, pushItem];
 }
 
 export function getMenuActionDisabledReason(
@@ -217,7 +183,6 @@ export function getMenuActionDisabledReason(
   const hasChanges = gitStatus.hasWorkingTreeChanges;
   const isAhead = gitStatus.aheadCount > 0;
   const isBehind = gitStatus.behindCount > 0;
-  const terminology = changeRequestTerminologyFor(gitStatus);
 
   if (item.id === "commit") {
     if (!hasChanges) {
@@ -226,60 +191,19 @@ export function getMenuActionDisabledReason(
     return resolve(msg("Commit is currently unavailable."));
   }
 
-  if (item.id === "push") {
-    if (!hasBranch) {
-      return resolve(msg("Detached HEAD: check out a branch before pushing."));
-    }
-    if (isBehind) {
-      return resolve(msg("Branch is behind upstream. Pull/rebase before pushing."));
-    }
-    if (!gitStatus.hasUpstream && !hasPrimaryRemote) {
-      return resolve(msg('Add an "origin" remote before pushing.'));
-    }
-    if (!isAhead) {
-      return resolve(msg("No local commits to push."));
-    }
-    return resolve(msg("Push is currently unavailable."));
-  }
-
   if (!hasBranch) {
-    return resolve(
-      msg(
-        "Detached HEAD: check out a branch before creating a {term, select, mr {merge request} cr {change request} other {pull request}}.",
-        { term: changeRequestTermKind(terminology) },
-      ),
-    );
-  }
-  if (!gitStatus.hasUpstream && !hasPrimaryRemote) {
-    return resolve(
-      msg(
-        'Add an "origin" remote before creating a {term, select, mr {merge request} cr {change request} other {pull request}}.',
-        { term: changeRequestTermKind(terminology) },
-      ),
-    );
-  }
-  if ((gitStatus.aheadOfDefaultCount ?? gitStatus.aheadCount) <= 0) {
-    return resolve(
-      msg(
-        "No local commits to include in a {term, select, mr {merge request} cr {change request} other {pull request}}.",
-        { term: changeRequestTermKind(terminology) },
-      ),
-    );
+    return resolve(msg("Detached HEAD: check out a branch before pushing."));
   }
   if (isBehind) {
-    return resolve(
-      msg(
-        "Branch is behind upstream. Pull/rebase before creating a {term, select, mr {merge request} cr {change request} other {pull request}}.",
-        { term: changeRequestTermKind(terminology) },
-      ),
-    );
+    return resolve(msg("Branch is behind upstream. Pull/rebase before pushing."));
   }
-  return resolve(
-    msg(
-      "Create {term, select, mr {merge request} cr {change request} other {pull request}} is currently unavailable.",
-      { term: changeRequestTermKind(terminology) },
-    ),
-  );
+  if (!gitStatus.hasUpstream && !hasPrimaryRemote) {
+    return resolve(msg('Add an "origin" remote before pushing.'));
+  }
+  if (!isAhead) {
+    return resolve(msg("No local commits to push."));
+  }
+  return resolve(msg("Push is currently unavailable."));
 }
 
 export function hasUsableGitMenuContent(input: {
@@ -298,7 +222,6 @@ export function hasUsableGitMenuContent(input: {
 export function resolveQuickAction(
   gitStatus: VcsStatusResult | null,
   isBusy: boolean,
-  isDefaultRef = false,
   hasPrimaryRemote = true,
   resolve: MessageResolver = m,
 ): GitQuickAction {
@@ -322,24 +245,16 @@ export function resolveQuickAction(
 
   const hasBranch = gitStatus.refName !== null;
   const hasChanges = gitStatus.hasWorkingTreeChanges;
-  const hasOpenPr = gitStatus.pr?.state === "open";
   const isAhead = gitStatus.aheadCount > 0;
-  const hasDefaultBranchDelta = (gitStatus.aheadOfDefaultCount ?? gitStatus.aheadCount) > 0;
   const isBehind = gitStatus.behindCount > 0;
   const isDiverged = isAhead && isBehind;
-  const terminology = changeRequestTerminologyFor(gitStatus);
 
   if (!hasBranch) {
     return {
       label: resolve(msg("Commit", { $context: "verb, git action" })),
       disabled: true,
       kind: "show_hint",
-      hint: resolve(
-        msg(
-          "Create and checkout a ref before pushing or opening a {term, select, mr {merge request} cr {change request} other {pull request}}.",
-          { term: changeRequestTermKind(terminology) },
-        ),
-      ),
+      hint: resolve(msg("Create and checkout a ref before pushing.")),
     };
   }
 
@@ -352,23 +267,11 @@ export function resolveQuickAction(
         action: "commit",
       };
     }
-    if (hasOpenPr || isDefaultRef) {
-      return {
-        label: resolve(msg("Commit & push")),
-        disabled: false,
-        kind: "run_action",
-        action: "commit_push",
-      };
-    }
     return {
-      label: resolve(
-        msg("Commit, push & {term, select, mr {MR} cr {change request} other {PR}}", {
-          term: changeRequestTermKind(terminology),
-        }),
-      ),
+      label: resolve(msg("Commit & push")),
       disabled: false,
       kind: "run_action",
-      action: "commit_push_pr",
+      action: "commit_push",
     };
   }
 
@@ -381,14 +284,6 @@ export function resolveQuickAction(
       };
     }
     if (!isAhead) {
-      if (hasOpenPr) {
-        return {
-          label: resolve(msg("Commit", { $context: "verb, git action" })),
-          disabled: true,
-          kind: "show_hint",
-          hint: resolve(msg("Branch is up to date. No action needed.")),
-        };
-      }
       return {
         label: resolve(msg("Push", { $context: "verb, git action" })),
         disabled: true,
@@ -396,23 +291,11 @@ export function resolveQuickAction(
         hint: resolve(msg("No local commits to push.")),
       };
     }
-    if (hasOpenPr || isDefaultRef) {
-      return {
-        label: resolve(msg("Push", { $context: "verb, git action" })),
-        disabled: false,
-        kind: "run_action",
-        action: "push",
-      };
-    }
     return {
-      label: resolve(
-        msg("Push & create {term, select, mr {MR} cr {change request} other {PR}}", {
-          term: changeRequestTermKind(terminology),
-        }),
-      ),
+      label: resolve(msg("Push", { $context: "verb, git action" })),
       disabled: false,
       kind: "run_action",
-      action: "create_pr",
+      action: "push",
     };
   }
 
@@ -434,45 +317,11 @@ export function resolveQuickAction(
   }
 
   if (isAhead) {
-    if (hasOpenPr || isDefaultRef) {
-      return {
-        label: resolve(msg("Push", { $context: "verb, git action" })),
-        disabled: false,
-        kind: "run_action",
-        action: "push",
-      };
-    }
     return {
-      label: resolve(
-        msg("Push & create {term, select, mr {MR} cr {change request} other {PR}}", {
-          term: changeRequestTermKind(terminology),
-        }),
-      ),
+      label: resolve(msg("Push", { $context: "verb, git action" })),
       disabled: false,
       kind: "run_action",
-      action: "create_pr",
-    };
-  }
-
-  if (hasOpenPr && gitStatus.hasUpstream) {
-    return {
-      label: resolve(msg("Commit", { $context: "verb, git action" })),
-      disabled: true,
-      kind: "show_hint",
-      hint: resolve(msg("Branch is up to date. No action needed.")),
-    };
-  }
-
-  if (hasDefaultBranchDelta && !isDefaultRef) {
-    return {
-      label: resolve(
-        msg("Create {term, select, mr {MR} cr {change request} other {PR}}", {
-          term: changeRequestTermKind(terminology),
-        }),
-      ),
-      disabled: false,
-      kind: "run_action",
-      action: "create_pr",
+      action: "push",
     };
   }
 
@@ -489,75 +338,31 @@ export function resolveDefaultBranchActionDialogCopy(
     action: DefaultBranchConfirmableAction;
     branchName: string;
     includesCommit: boolean;
-    terminology: ChangeRequestTerminology;
   },
   resolve: MessageResolver = m,
 ): DefaultBranchActionDialogCopy {
   const branch = input.branchName;
-  const term = changeRequestTermKind(input.terminology);
-
-  if (input.action === "push" || input.action === "commit_push") {
-    if (input.includesCommit) {
-      return {
-        title: resolve(msg("Commit & push to default ref?")),
-        description: resolve(
-          msg(
-            'This action will commit and push changes on "{branch}". You can continue on this ref or create a feature ref and run the same action there.',
-            { branch },
-          ),
-        ),
-        continueLabel: resolve(msg("Commit & push to {branch}", { branch })),
-      };
-    }
+  if (input.includesCommit) {
     return {
-      title: resolve(msg("Push to default ref?")),
+      title: resolve(msg("Commit & push to default ref?")),
       description: resolve(
         msg(
-          'This action will push local commits on "{branch}". You can continue on this ref or create a feature ref and run the same action there.',
+          'This action will commit and push changes on "{branch}". You can continue on this ref or create a feature ref and run the same action there.',
           { branch },
         ),
       ),
-      continueLabel: resolve(msg("Push to {branch}", { branch })),
-    };
-  }
-
-  if (input.includesCommit) {
-    return {
-      title: resolve(
-        msg(
-          "Commit, push & create {term, select, mr {MR} cr {change request} other {PR}} from default ref?",
-          { term },
-        ),
-      ),
-      description: resolve(
-        msg(
-          'This action will commit, push, and create a {term, select, mr {merge request} cr {change request} other {pull request}} on "{branch}". You can continue on this ref or create a feature ref and run the same action there.',
-          { term, branch },
-        ),
-      ),
-      continueLabel: resolve(
-        msg("Commit, push & create {term, select, mr {MR} cr {change request} other {PR}}", {
-          term,
-        }),
-      ),
+      continueLabel: resolve(msg("Commit & push to {branch}", { branch })),
     };
   }
   return {
-    title: resolve(
-      msg(
-        "Push & create {term, select, mr {MR} cr {change request} other {PR}} from default ref?",
-        { term },
-      ),
-    ),
+    title: resolve(msg("Push to default ref?")),
     description: resolve(
       msg(
-        'This action will push local commits and create a {term, select, mr {merge request} cr {change request} other {pull request}} on "{branch}". You can continue on this ref or create a feature ref and run the same action there.',
-        { term, branch },
+        'This action will push local commits on "{branch}". You can continue on this ref or create a feature ref and run the same action there.',
+        { branch },
       ),
     ),
-    continueLabel: resolve(
-      msg("Push & create {term, select, mr {MR} cr {change request} other {PR}}", { term }),
-    ),
+    continueLabel: resolve(msg("Push to {branch}", { branch })),
   };
 }
 
@@ -578,7 +383,7 @@ export function resolveFeatureBranchUnavailableReason(
       ),
     );
   }
-  if (input.action === "push" || input.action === "create_pr") {
+  if (input.action === "push") {
     return resolve(
       msg(
         "This action doesn't commit your changes, so a feature branch can't be named. Create a branch yourself or continue on {branch}.",
@@ -647,7 +452,7 @@ export type ChangesLineTotals = {
   /** Ref the counts compare against; `null` means they are uncommitted changes against HEAD. */
   readonly baseRef: string | null;
   /** `null` when the selected totals carry no per-file stats. */
-  readonly breakdown: PullRequestChangeBreakdown;
+  readonly breakdown: ChangeBreakdown | null;
 };
 
 // `branchChanges ?? workingTree` treats `{0,0}` as present, so a zero branch total hid a dirty

@@ -5,7 +5,6 @@ import type {
   OrchestrationV2ThreadShell,
   OrchestrationV2TurnItem,
   ThreadId,
-  ThreadPullRequestLink,
 } from "@ankielcode/contracts";
 import { isOrchestrationV2WorkActive } from "@ankielcode/contracts";
 import * as Predicate from "effect/Predicate";
@@ -120,34 +119,20 @@ function backgroundWorkKindHoldsCompletion(kind: PendingBackgroundWorkTask["kind
   }
 }
 
-const PULL_REQUEST_WATCH_TASK_ID = "pull-request-watch:";
-
-export const isPullRequestWatchTask = (task: Pick<PendingBackgroundWorkTask, "taskId">) =>
-  task.taskId.startsWith(PULL_REQUEST_WATCH_TASK_ID);
-
 /**
  * A monitor wakes the agent once per line, so a progress wake run's completion waits for the
- * monitor to end. A pull request watch wakes only on news and holds while its checks run.
+ * monitor to end.
  */
 export function monitorHoldsWakeCompletion(
   thread: Pick<OrchestrationV2ThreadShell, "latestRunBackgroundWake" | "pendingBackgroundTasks">,
 ): boolean {
   return (
     thread.latestRunBackgroundWake === true &&
-    (thread.pendingBackgroundTasks ?? []).some(
-      (task) => task.kind === "monitor" && !isPullRequestWatchTask(task),
-    )
+    (thread.pendingBackgroundTasks ?? []).some((task) => task.kind === "monitor")
   );
 }
 
 type PendingBackgroundWorkRun = Pick<OrchestrationV2Run, "id" | "ordinal" | "status">;
-
-type PendingBackgroundWorkPullRequest = Pick<
-  ThreadPullRequestLink,
-  "host" | "repository" | "number" | "url" | "source" | "watch"
-> & {
-  readonly snapshot: Pick<NonNullable<ThreadPullRequestLink["snapshot"]>, "state"> | null;
-};
 
 type PendingBackgroundWorkProviderThread = Pick<
   OrchestrationV2ProviderThread,
@@ -266,7 +251,6 @@ export function derivePendingBackgroundWork(input: {
   readonly hasActiveRun?: boolean;
   /** Excludes rolled-back runs; optional only when the caller already filtered them, as SQL shell reads do. */
   readonly runs?: ReadonlyArray<PendingBackgroundWorkRun>;
-  readonly pullRequests?: ReadonlyArray<PendingBackgroundWorkPullRequest> | undefined;
 }): ReadonlyArray<PendingBackgroundWorkTask> {
   const hasActiveRun =
     input.hasActiveRun ??
@@ -276,9 +260,6 @@ export function derivePendingBackgroundWork(input: {
     false;
   if (hasActiveRun) {
     return [];
-  }
-  if (input.latestRun == null) {
-    return pullRequestWatchTasks(input.pullRequests);
   }
   if (!isLatestRunSettledForBackgroundWait(input.latestRun)) {
     return [];
@@ -317,8 +298,6 @@ export function derivePendingBackgroundWork(input: {
     byTaskId.set(taskId, pendingTaskFromTurnItem(taskId, item));
   }
 
-  for (const task of pullRequestWatchTasks(input.pullRequests)) byTaskId.set(task.taskId, task);
-
   // Follow-up tasks can share a child thread; the pending list counts agents, not messages.
   const childThreadIds = new Set<ThreadId>();
   return Array.from(byTaskId.values()).filter((task) => {
@@ -327,30 +306,4 @@ export function derivePendingBackgroundWork(input: {
     childThreadIds.add(task.childThreadId);
     return true;
   });
-}
-
-function pullRequestWatchTasks(
-  pullRequests: ReadonlyArray<PendingBackgroundWorkPullRequest> | undefined,
-): Array<PendingBackgroundWorkTask> {
-  return (pullRequests ?? []).flatMap((link) =>
-    link.watch === undefined || link.source === "stack-dismissed"
-      ? []
-      : [
-          {
-            // Links store their normalized identity, and this id only has to be unique within the
-            // thread, so it reads those fields instead of parsing the URL.
-            taskId: `${PULL_REQUEST_WATCH_TASK_ID}${link.host.toLowerCase()}/${link.repository.toLowerCase()}#${link.number}`,
-            description: `Watching pull request #${link.number}`,
-            kind: "monitor" as const,
-            // Once every check finished, a person moves the PR next: the watch stays on but holds
-            // nothing, unless the agent said it acts on the PR itself. A merged PR's watch holds
-            // until its read wakes the agent, so settling on merge waits.
-            ...(link.watch.checksPending === false &&
-            link.watch.until !== "merged" &&
-            link.snapshot?.state !== "merged"
-              ? {}
-              : { awaited: true as const }),
-          },
-        ],
-  );
 }

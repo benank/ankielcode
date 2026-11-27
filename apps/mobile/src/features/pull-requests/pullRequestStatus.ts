@@ -1,4 +1,4 @@
-import type { PullRequestListEntry } from "@ankielcode/contracts";
+import type { IssueLinkedPullRequest } from "@ankielcode/contracts";
 import { msg } from "gt-react-native";
 
 import type { AppSymbolName } from "../../components/ui/AppSymbol";
@@ -30,7 +30,7 @@ const STATES = {
 } satisfies Record<string, { label: string; icon: AppSymbolName; tint: string }>;
 
 export function pullRequestStatus(
-  pr: Pick<PullRequestListEntry, "state" | "isDraft">,
+  pr: Pick<IssueLinkedPullRequest, "state" | "isDraft">,
   resolve: MessageResolver = m,
 ) {
   const status = STATES[pr.isDraft && pr.state === "open" ? "draft" : pr.state];

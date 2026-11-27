@@ -617,6 +617,116 @@ it.effect("replay always skips events of removed guest share and agent feedback 
   }).pipe(Effect.provide(Layer.fresh(layerTest))),
 );
 
+it.effect("replays a thread written while pull requests were a feature", () =>
+  Effect.gen(function* () {
+    const store = yield* OrchestrationEventStore.OrchestrationEventStore;
+    const sql = yield* SqlClient.SqlClient;
+    const threadId = ThreadId.make("removed-pull-requests:thread");
+    const providerInstanceId = ProviderInstanceId.make("codex");
+    const occurredAt = DateTime.makeUnsafe("2026-01-07T00:00:00.000Z");
+    const baseline = yield* store.latestApplicationSequence;
+    const [created] = yield* store.appendAgentEvents({
+      commandId: CommandId.make("command:removed-pull-requests"),
+      events: [
+        {
+          id: EventId.make("event:removed-pull-requests:created"),
+          type: "thread.created",
+          threadId,
+          providerInstanceId,
+          occurredAt,
+          payload: {
+            id: threadId,
+            projectId: ProjectId.make("project:removed-pull-requests"),
+            title: "Thread",
+            providerInstanceId,
+            modelSelection: { instanceId: providerInstanceId, model: "gpt-5.4" },
+            runtimeMode: "full-access",
+            interactionMode: "default",
+            branch: "feature",
+            worktreePath: null,
+            activeProviderThreadId: null,
+            lineage: { rootThreadId: threadId, parentThreadId: null, relationshipToParent: null },
+            forkedFrom: null,
+            createdBy: "user",
+            creationSource: "web",
+            createdAt: occurredAt,
+            updatedAt: occurredAt,
+            archivedAt: null,
+            settledOverride: null,
+            settledAt: null,
+            lastVisitedAt: null,
+            deletedAt: null,
+          },
+        },
+      ],
+    });
+    const [stored] = yield* sql<{ readonly payload_json: string }>`
+      SELECT payload_json FROM orchestration_events WHERE sequence = ${created!.sequence}
+    `;
+    const link = {
+      host: "github.com",
+      repository: "owner/repo",
+      number: 7,
+      url: "https://github.com/owner/repo/pull/7",
+      source: "agent",
+      linkedAt: "2026-01-07T00:00:00.000Z",
+      snapshot: null,
+      stack: null,
+      watch: { startedAt: "2026-01-07T00:00:00.000Z", until: "checks" },
+    };
+    const linked = {
+      projectId: "project:removed-pull-requests",
+      repository: "owner/repo",
+      number: 7,
+      title: "Fix",
+      url: link.url,
+    };
+    const withPullRequests = JSON.stringify({
+      ...JSON.parse(stored!.payload_json),
+      pullRequests: [link],
+      linkedPullRequest: linked,
+      branchPullRequest: linked,
+    });
+    let version = 1;
+    const insertRow = Effect.fnUntraced(function* (eventType: string, payload: string) {
+      const [row] = yield* sql<{ sequence: number }>`
+        INSERT INTO orchestration_events (
+          event_id, aggregate_kind, stream_id, stream_version, event_type,
+          occurred_at, actor_kind, payload_json, metadata_json, application_event_version
+        ) VALUES (
+          ${`${threadId}:${version}`}, 'thread', ${threadId}, ${version++}, ${eventType},
+          '2026-01-07T00:00:01.000Z', 'server', ${payload}, '{}', 2
+        ) RETURNING sequence
+      `;
+      return row!.sequence;
+    });
+    yield* insertRow("thread.pull-request-synced", withPullRequests);
+    yield* insertRow("thread.pull-request-link-updated", JSON.stringify(link));
+    const kept = yield* insertRow("thread.metadata-updated", withPullRequests);
+
+    const replayed = yield* store
+      .readAgentEvents({ threadId, afterSequence: baseline })
+      .pipe(Stream.runCollect);
+    assert.deepEqual(
+      replayed.map((event) => event.event.type),
+      ["thread.created", "thread.metadata-updated"],
+    );
+    const payload = replayed.at(-1)!.event.payload;
+    assert.equal(replayed.at(-1)!.sequence, kept);
+    assert.isTrue("branch" in payload && payload.branch === "feature");
+    for (const key of ["pullRequests", "linkedPullRequest", "branchPullRequest"]) {
+      assert.isFalse(key in payload);
+    }
+    const application = yield* store
+      .readApplicationEvents({ afterSequence: baseline, throughSequence: kept })
+      .pipe(
+        Stream.map((event) => event.sequence),
+        Stream.runCollect,
+      );
+    assert.deepEqual(application, [created!.sequence, kept]);
+  }).pipe(Effect.provide(Layer.fresh(layerTest))),
+);
+
 it.effect.each(["high-water", "replay"] as const)(
   "bounds application live events while the %s query is blocked",
   (phase) =>

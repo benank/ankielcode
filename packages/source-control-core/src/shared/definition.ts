@@ -1,6 +1,4 @@
 import {
-  type PullRequestAction,
-  type PullRequestReviewVerdict,
   type RepositoryIdentity,
   secretSetting,
   SettingsSecretValue,
@@ -114,13 +112,6 @@ export interface GitRemoteHost {
   readonly host: string;
   /** `host` without its port. */
   readonly hostname: string;
-}
-
-export interface ChangeRequestCheckoutInput {
-  readonly number: number;
-  readonly headBranch: string;
-  readonly headRepositoryNameWithOwner?: string | null | undefined;
-  readonly repositoryUrl?: string | null | undefined;
 }
 
 /** Media a host serves only to a request carrying a credential, as `mediaUrl` reads it. */
@@ -303,22 +294,6 @@ export interface SourceControlDefinition {
    * before treating it as one.
    */
   readonly changeRequestUrlFromReferenceAutolink: (url: URL) => string | null;
-  /**
-   * The actions this host can take on a change request, the same list its server provider
-   * declares in `capabilities.actions`.
-   */
-  readonly changeRequestActions: ReadonlySet<PullRequestAction>;
-  readonly checkoutCommand: (changeRequest: ChangeRequestCheckoutInput) => string | null;
-  /**
-   * Matches a shell command that merges or closes a change request with this host's CLI, which
-   * sends Ankiel no notification of its own. Absent for a host with no such CLI.
-   */
-  readonly changeRequestCloseCommand?: RegExp;
-  /**
-   * Matches a shell command that opens a change request with this host's CLI and prints its URL
-   * on a line of its own. Absent for a host with no such CLI.
-   */
-  readonly changeRequestCreateCommand?: RegExp;
   readonly authorProfileUrl: (login: string, repositoryUrl: string) => string | null;
   /**
    * The references this host's own renderer links in plain text, such as `#12` or a commit SHA,
@@ -331,21 +306,6 @@ export interface SourceControlDefinition {
   ) => ReadonlyArray<ReferenceAutolink>;
   /** True when the host renders a single newline in change request text as a line break. */
   readonly hardLineBreaks?: boolean;
-  /** Where the host lists a change request's checks. Absent means the change request's own page. */
-  readonly changeRequestChecksUrl?: (changeRequestUrl: string) => string;
-  /**
-   * The actions a server too old to report `capabilities.actions` could still take on this host's
-   * change requests. Absent means none.
-   */
-  readonly changeRequestActionsWhenUnreported?: ReadonlySet<PullRequestAction>;
-  /**
-   * `host` when the server lists change requests in many repositories on this host with one read,
-   * so a page's size bounds the rows of every repository together. Absent means one read per
-   * repository.
-   */
-  readonly changeRequestListScope?: "host" | "repository";
-  readonly reviewSummaryRequired: (verdict: PullRequestReviewVerdict) => boolean;
-  readonly checkoutCommandArgument: (input: string) => string | null;
   readonly isChangeRequestReference: (url: string) => boolean;
   readonly isChangeRequestInRepository: (
     identity: ChangeRequestProjectIdentity,
@@ -355,12 +315,6 @@ export interface SourceControlDefinition {
     identity: ChangeRequestProjectIdentity,
     link: ChangeRequestLink,
   ) => boolean;
-  readonly checkoutChangeRequestHost: (identity: ChangeRequestProjectIdentity) => string | null;
-  /**
-   * The ref the target repository publishes change request `number`'s head under, which names the
-   * head even when it lives in a fork. Absent for a host that publishes none.
-   */
-  readonly changeRequestHeadRef?: (number: number) => string;
   /** Null when this host does not claim the remote. Asked in the registry's recognition order. */
   readonly recognizeRemote: (remote: GitRemoteHost) => SourceControlProviderInfo | null;
   /** The host change requests in the project are listed and keyed under. */
@@ -612,7 +566,7 @@ function defaultRepositorySelector(
   return identity.owner && identity.name ? `${identity.owner}/${identity.name}` : null;
 }
 
-export const UNKNOWN_SOURCE_CONTROL_CLIENT: SourceControlDefinition = {
+const UNKNOWN_SOURCE_CONTROL_CLIENT: SourceControlDefinition = {
   kind: SourceControlProviderKind.make("unknown"),
   label: "source control",
   pickerLabel: "source control",
@@ -632,13 +586,8 @@ export const UNKNOWN_SOURCE_CONTROL_CLIENT: SourceControlDefinition = {
   changeRequestUrl: () => null,
   parseChangeRequestUrl: () => null,
   changeRequestUrlFromReferenceAutolink: () => null,
-  changeRequestActions: new Set(),
-  checkoutCommand: () => null,
   authorProfileUrl: () => null,
-  reviewSummaryRequired: () => false,
-  checkoutCommandArgument: () => null,
   isChangeRequestReference: () => false,
-  checkoutChangeRequestHost: () => null,
   recognizeRemote: () => null,
   isChangeRequestInRepository: (identity, link) =>
     isChangeRequestInProjectRepository(

@@ -566,8 +566,8 @@ export function createVcsActionManager<R, E>(
           },
         ).pipe(
           Effect.provideService(RpcPermissionGuard, {
-            authorize: (id, method, payload) =>
-              createCommandPermissions(runtime, method).authorize(registry, id, payload),
+            authorize: (id, method) =>
+              createCommandPermissions(runtime, method).authorize(registry, id),
           }),
           Effect.ensuring(invalidateCachedVcsRefs(registry, target)),
           Effect.tap(() => clearOwnedState),

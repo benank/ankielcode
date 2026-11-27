@@ -1,4 +1,4 @@
-import type { PullRequestActor, PullRequestLabel, PullRequestState } from "@ankielcode/contracts";
+import type { IssueActor, IssueLabel, IssueLinkedPullRequestState } from "@ankielcode/contracts";
 import { useGT, useMessages } from "gt-react";
 import { Children, type CSSProperties, isValidElement, type ReactNode, useState } from "react";
 
@@ -21,7 +21,7 @@ export function PullRequestLabelChip({
   focusable = false,
   children,
 }: {
-  label: Pick<PullRequestLabel, "name" | "color" | "description">;
+  label: Pick<IssueLabel, "name" | "color" | "description">;
   size?: "sm" | "default";
   className?: string;
   focusable?: boolean;
@@ -52,7 +52,7 @@ export function PullRequestLabelChip({
 
 function resolvePullRequestState(
   input: {
-    readonly state: PullRequestState;
+    readonly state: IssueLinkedPullRequestState;
     readonly isDraft: boolean;
   },
   resolve: MessageResolver = m,
@@ -67,7 +67,7 @@ export function PullRequestStateGlyph({
   isDraft,
   className,
 }: {
-  state: PullRequestState;
+  state: IssueLinkedPullRequestState;
   isDraft: boolean;
   className?: string;
 }) {
@@ -91,7 +91,7 @@ export function PullRequestActorAvatar({
   actor,
   className,
 }: {
-  actor: PullRequestActor | null;
+  actor: IssueActor | null;
   className?: string;
 }) {
   const login = actor?.login ?? "ghost";
@@ -126,7 +126,7 @@ export function PullRequestActorLabel({
   tooltip = true,
   profileUrl,
 }: {
-  actor: PullRequestActor | null;
+  actor: IssueActor | null;
   className?: string;
   variant?: "label" | "avatar";
   tooltip?: boolean;

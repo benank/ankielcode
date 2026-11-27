@@ -3,13 +3,12 @@ import type {
   ChatAttachment,
   ModelSelection,
   ProjectId,
-  PullRequestReviewGuide,
   TextGenerationError,
 } from "@ankielcode/contracts";
 import type * as Effect from "effect/Effect";
 
 import type { TextGenerationPolicy } from "./textGenerationPolicy.ts";
-import type { ChangeProducer, ThreadTitleForkSource } from "./textGenerationPrompts.ts";
+import type { ThreadTitleForkSource } from "./textGenerationPrompts.ts";
 
 export interface CommitMessageGenerationInput {
   cwd: string;
@@ -26,26 +25,6 @@ export interface CommitMessageGenerationResult {
   subject: string;
   body: string;
   branch?: string | undefined;
-}
-
-export interface PrContentGenerationInput {
-  cwd: string;
-  baseBranch: string;
-  headBranch: string;
-  commitSummary: string;
-  diffSummary: string;
-  diffPatch: string;
-  changeRequestTemplate?: string | undefined;
-  threadContext?: string | undefined;
-  producedBy?: ReadonlyArray<ChangeProducer> | undefined;
-  policy?: TextGenerationPolicy | undefined;
-  modelSelection: ModelSelection;
-  projectId?: ProjectId | null | undefined;
-}
-
-export interface PrContentGenerationResult {
-  title: string;
-  body: string;
 }
 
 export interface BranchNameGenerationInput {
@@ -79,35 +58,6 @@ export interface ThreadTitleGenerationResult {
   needsRefinement?: boolean | undefined;
 }
 
-export interface ReviewGuideStackLayer {
-  readonly number: number;
-  readonly title: string | null;
-  readonly headSha: string | null;
-  readonly state: "open" | "closed" | "merged";
-}
-
-export interface ReviewGuideGenerationInput {
-  /** A scratch checkout of the pull request's head. */
-  cwd: string;
-  /** The project folder the checkout was made from; the user's own relative paths resolve here. */
-  projectCwd: string;
-  number: number;
-  title: string;
-  description: string;
-  baseBranch: string;
-  baseCommit: string;
-  settledReview: string;
-  instructions?: string | undefined;
-  stack?: ReadonlyArray<ReviewGuideStackLayer> | undefined;
-  modelSelection: ModelSelection;
-  projectId?: ProjectId | null | undefined;
-}
-
-export type ReviewGuideGenerationResult = Omit<
-  PullRequestReviewGuide,
-  "headSha" | "generatedAt" | "modelSelection"
->;
-
 export interface TranscriptionPostProcessingInput {
   cwd: string;
   prompt: string;
@@ -127,10 +77,6 @@ export interface ProviderTextGeneration {
     input: CommitMessageGenerationInput,
   ) => Effect.Effect<CommitMessageGenerationResult, TextGenerationError>;
 
-  readonly generatePrContent: (
-    input: PrContentGenerationInput,
-  ) => Effect.Effect<PrContentGenerationResult, TextGenerationError>;
-
   readonly generateBranchName: (
     input: BranchNameGenerationInput,
   ) => Effect.Effect<BranchNameGenerationResult, TextGenerationError>;
@@ -138,8 +84,4 @@ export interface ProviderTextGeneration {
   readonly generateThreadTitle: (
     input: ThreadTitleGenerationInput,
   ) => Effect.Effect<ThreadTitleGenerationResult, TextGenerationError>;
-
-  readonly generateReviewGuide: (
-    input: ReviewGuideGenerationInput,
-  ) => Effect.Effect<ReviewGuideGenerationResult, TextGenerationError>;
 }

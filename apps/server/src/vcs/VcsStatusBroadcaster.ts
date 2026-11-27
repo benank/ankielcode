@@ -237,7 +237,8 @@ export class VcsStatusBroadcaster extends Context.Service<
       cwd: string,
       options?: { readonly localOnly?: boolean },
     ) => Effect.Effect<VcsRefreshStatusResult, GitManagerServiceError>;
-    readonly refreshPullRequestStatus: (
+    /** Divergence after a turn, read even while background polling is paused. */
+    readonly refreshRemoteStatusAfterTurn: (
       cwd: string,
     ) => Effect.Effect<VcsStatusRemoteResult | null, GitManagerServiceError>;
     readonly streamStatus: (
@@ -818,20 +819,18 @@ export const make = Effect.gen(function* () {
     yield* Deferred.await(localDone);
   });
 
-  const refreshPullRequestStatus: VcsStatusBroadcaster["Service"]["refreshPullRequestStatus"] =
-    Effect.fn("VcsStatusBroadcaster.refreshPullRequestStatus")(function* (rawCwd) {
+  const refreshRemoteStatusAfterTurn: VcsStatusBroadcaster["Service"]["refreshRemoteStatusAfterTurn"] =
+    Effect.fn("VcsStatusBroadcaster.refreshRemoteStatusAfterTurn")(function* (rawCwd) {
       const cwd = yield* withFileSystem(normalizeCwd(rawCwd));
       return yield* withRemoteWriteLock(
         cwd,
         Effect.gen(function* () {
           const cached = yield* getCachedStatus(cwd);
           if (!cached || cached.remote?.value === null) return null;
-          // Turn completion must update divergence even when background polling is paused.
           const statusDetails = upstreamReads.get(cwd);
           upstreamReads.delete(cwd);
           const remoteRead = yield* readRemoteStatus(cwd, {
             refreshUpstream: false,
-            refreshMissingPullRequest: true,
             ...(statusDetails ? { statusDetails } : {}),
           });
           return yield* updateCachedRemoteStatus(cwd, remoteRead, { publish: true });
@@ -1326,7 +1325,7 @@ export const make = Effect.gen(function* () {
     refreshLocalStatus,
     refreshAfterCheckout,
     refreshStatus: shareQueuedRefreshStatus,
-    refreshPullRequestStatus,
+    refreshRemoteStatusAfterTurn,
     streamStatus,
   });
 });

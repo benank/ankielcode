@@ -1,5 +1,5 @@
 import { formatDiffCount } from "@ankielcode/client-runtime/diff-count";
-import type { PullRequestChangeBreakdown } from "@ankielcode/contracts";
+import type { ChangeBreakdown, ChangedFileKind } from "@ankielcode/shared/changedFileKind";
 import { msg, useGT, useMessages } from "gt-react";
 
 const KIND_LABELS = {
@@ -8,7 +8,7 @@ const KIND_LABELS = {
   mocks: msg("Mocks", { $context: "kind of changed file" }),
   generated: msg("Generated", { $context: "kind of changed file" }),
   docs: msg("Docs", { $context: "kind of changed file" }),
-} satisfies Record<keyof NonNullable<PullRequestChangeBreakdown>, string>;
+} satisfies Record<ChangedFileKind, string>;
 
 type DiffTotals = { additions: number; deletions: number };
 
@@ -16,7 +16,7 @@ export function ChangeBreakdownGrid({
   breakdown,
   total,
 }: {
-  breakdown: NonNullable<PullRequestChangeBreakdown>;
+  breakdown: ChangeBreakdown;
   total?: DiffTotals;
 }) {
   const gt = useGT();

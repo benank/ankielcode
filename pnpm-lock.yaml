@@ -1910,9 +1910,6 @@ importers:
       '@ankielcode/source-control-core':
         specifier: workspace:*
         version: link:../source-control-core
-      '@effect/platform-node':
-        specifier: 4.1.5
-        version: 4.1.5(bufferutil@4.1.0)(effect@4.1.5(patch_hash=14a7acd734809d8dddbf2c19c4ec01fdd2ffae60a612de42b5ed29860216052a))(redis@6.2.1)(utf-8-validate@6.0.6)
       effect:
         specifier: 4.1.5
         version: 4.1.5(patch_hash=14a7acd734809d8dddbf2c19c4ec01fdd2ffae60a612de42b5ed29860216052a)

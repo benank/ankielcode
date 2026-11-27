@@ -438,7 +438,6 @@ export function useSelectedThreadGitActions(repository?: GitRepositoryTarget) {
           type: "success",
           title: result.value.toast.title,
           description: result.value.toast.description,
-          prUrl: result.value.toast.cta.kind === "open_pr" ? result.value.toast.cta.url : undefined,
         });
         return result;
       },

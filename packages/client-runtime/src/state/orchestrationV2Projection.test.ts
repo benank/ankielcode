@@ -106,26 +106,6 @@ const emptyProjection = {
 } as OrchestrationV2ThreadProjection;
 
 describe("applyOrchestrationV2ProjectionEvent", () => {
-  it("ignores pull request link updates from older servers", () => {
-    const next = applyOrchestrationV2ProjectionEvent(emptyProjection, {
-      id: "compact-sync" as OrchestrationV2DomainEvent["id"],
-      type: "thread.pull-request-link-updated",
-      threadId,
-      occurredAt: now,
-      payload: {
-        host: "github.com",
-        repository: "benank/ankielcode",
-        number: 1,
-        url: "https://github.com/benank/ankielcode/pull/1",
-        source: "agent",
-        linkedAt: DateTime.formatIso(now),
-        snapshot: null,
-        stack: null,
-      },
-    });
-    expect(next).toBe(emptyProjection);
-  });
-
   it("keeps live token usage when the terminal provider turn omits it", () => {
     const providerTurnId = ProviderTurnId.make("provider-turn-reducer");
     const running = {

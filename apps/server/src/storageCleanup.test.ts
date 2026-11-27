@@ -55,7 +55,7 @@ import {
   type OrchestrationV2ThreadShell,
 } from "@ankielcode/contracts";
 import * as DateTime from "effect/DateTime";
-import { storageCleanupPullRequestMerged, storageCleanupThreadIdle } from "./storageCleanup.ts";
+import { storageCleanupThreadIdle } from "./storageCleanup.ts";
 
 const NOW_MS = Date.parse("2026-06-10T12:00:00.000Z");
 const DAY_MS = 24 * 60 * 60 * 1_000;
@@ -91,7 +91,6 @@ function shell(overrides: Partial<OrchestrationV2ThreadShell> = {}): Orchestrati
     lastVisitedAt: null,
     deletedAt: null,
     branch: null,
-    linkedPullRequest: null,
     status: "idle",
     activityRunStatus: null,
     pendingRuntimeRequest: null,
@@ -191,52 +190,6 @@ describe("V2 storage cleanup eligibility", () => {
   }
 });
 
-describe("merged pull request cleanup", () => {
-  const HEAD_SHA = "a".repeat(40);
-  const integrated = {
-    branch: "feature",
-    defaultBranch: "main",
-    headSha: HEAD_SHA,
-    integrated: true,
-  };
-  const squashed = { ...integrated, integrated: false };
-  const pullRequest = (
-    overrides: Partial<NonNullable<Parameters<typeof storageCleanupPullRequestMerged>[0]>> = {},
-  ) => ({
-    state: "merged" as const,
-    headRef: "feature",
-    baseRef: "main",
-    headSha: HEAD_SHA,
-    ...overrides,
-  });
-
-  it("removes a worktree whose head reached the default branch through a merged pull request", () => {
-    expect(storageCleanupPullRequestMerged(pullRequest({ headSha: null }), integrated)).toBe(true);
-  });
-
-  it("removes a squash-merged worktree when the pull request names its exact head", () => {
-    expect(storageCleanupPullRequestMerged(pullRequest(), squashed)).toBe(true);
-  });
-
-  it.each([
-    ["has a later commit than the merged head", { headSha: "c".repeat(40) }],
-    ["was merged into a release branch", { baseRef: "release" }],
-    ["was merged into its stack parent", { baseRef: "stack-parent" }],
-    ["was merged without a reported head commit", { headSha: null }],
-    ["belongs to a different branch", { headRef: "other" }],
-    ["is still open", { state: "open" }],
-    ["was closed without merging", { state: "closed" }],
-  ] as const)("keeps a squash worktree whose pull request %s", (_name, overrides) => {
-    expect(storageCleanupPullRequestMerged(pullRequest(overrides), squashed)).toBe(false);
-  });
-
-  it("keeps a worktree with no pull request, or one that is not merged", () => {
-    expect(storageCleanupPullRequestMerged(null, squashed)).toBe(false);
-    expect(storageCleanupPullRequestMerged(null, integrated)).toBe(false);
-    expect(storageCleanupPullRequestMerged(pullRequest({ state: "open" }), integrated)).toBe(false);
-  });
-});
-
 const allocatedBytes = (fs: FileSystem.FileSystem, file: string) =>
   fs.stat(file).pipe(
     Effect.map((stat) =>
@@ -287,7 +240,6 @@ const cleanupFixture = (
     let onLiveCheck: Effect.Effect<void> = Effect.void;
     let outboxStatus: string | null = null;
     let scheduledThreadIds: string[] = [];
-    let branchPullRequests: Record<string, GitManager.GitBranchPullRequest> = {};
     let fullStatusCalls = 0;
     let statusCommands = 0;
     let gitInspections = 0;
@@ -443,8 +395,6 @@ const cleanupFixture = (
       ),
       Effect.provideService(GitManager.GitManager, {
         invalidateStatus: () => Effect.void,
-        branchPullRequest: (input: { branch: string }) =>
-          Effect.sync(() => branchPullRequests[input.branch] ?? null),
       } as unknown as GitManager.GitManager["Service"]),
       Effect.provideService(TerminalManager.TerminalManager, {
         subscribeMetadata: (
@@ -508,9 +458,6 @@ const cleanupFixture = (
       },
       setThreads: (next: typeof threads) => {
         threads = next;
-      },
-      setBranchPullRequests: (next: typeof branchPullRequests) => {
-        branchPullRequests = next;
       },
       threadBranches: () => threads.map((thread) => thread.branch),
       setOnLiveCheck: (hook: Effect.Effect<void>) => {

@@ -595,7 +595,7 @@ describe("mobile SQLite environment cache store", () => {
 
       const shell = Option.getOrThrow(yield* store.loadShell(ENVIRONMENT_ID));
       expect(shell.threads.map((thread) => thread.id)).toEqual([THREAD_ID, second.id]);
-      expect(shell.threads.map((thread) => thread.pullRequests)).toEqual([undefined, undefined]);
+      expect(shell.threads.map((thread) => "pullRequests" in thread)).toEqual([false, false]);
       expect(memory.removed).toEqual([]);
     }),
   );

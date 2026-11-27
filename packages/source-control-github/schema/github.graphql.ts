@@ -11,81 +11,6 @@ export const DateTime = Schema.String
 /** An RFC 3986, RFC 3987, and RFC 6570 (level 4) compliant URI string. */
 export const URI = Schema.String
 
-/** A Git object ID. */
-export const GitObjectID = Schema.String
-
-/** A fully qualified reference name (e.g. `refs/heads/master`). */
-export const GitRefname = Schema.String
-
-/**
- * The possible states for a check suite or run conclusion.
- *
- * - `ACTION_REQUIRED`: The check suite or run requires action.
- * - `CANCELLED`: The check suite or run has been cancelled.
- * - `FAILURE`: The check suite or run has failed.
- * - `NEUTRAL`: The check suite or run was neutral.
- * - `SKIPPED`: The check suite or run was skipped.
- * - `STALE`: The check suite or run was marked stale by GitHub. Only GitHub can use this conclusion.
- * - `STARTUP_FAILURE`: The check suite or run has failed at startup.
- * - `SUCCESS`: The check suite or run has succeeded.
- * - `TIMED_OUT`: The check suite or run has timed out.
- */
-export const CheckConclusionState = Schema.Literals(["ACTION_REQUIRED", "CANCELLED", "FAILURE", "NEUTRAL", "SKIPPED", "STALE", "STARTUP_FAILURE", "SUCCESS", "TIMED_OUT"])
-export type CheckConclusionState = typeof CheckConclusionState.Type
-
-/**
- * The possible states of a check run in a status rollup.
- *
- * - `ACTION_REQUIRED`: The check run requires action.
- * - `CANCELLED`: The check run has been cancelled.
- * - `COMPLETED`: The check run has been completed.
- * - `FAILURE`: The check run has failed.
- * - `IN_PROGRESS`: The check run is in progress.
- * - `NEUTRAL`: The check run was neutral.
- * - `PENDING`: The check run is in pending state.
- * - `QUEUED`: The check run has been queued.
- * - `SKIPPED`: The check run was skipped.
- * - `STALE`: The check run was marked stale by GitHub. Only GitHub can use this conclusion.
- * - `STARTUP_FAILURE`: The check run has failed at startup.
- * - `SUCCESS`: The check run has succeeded.
- * - `TIMED_OUT`: The check run has timed out.
- * - `WAITING`: The check run is in waiting state.
- */
-export const CheckRunState = Schema.Literals(["ACTION_REQUIRED", "CANCELLED", "COMPLETED", "FAILURE", "IN_PROGRESS", "NEUTRAL", "PENDING", "QUEUED", "SKIPPED", "STALE", "STARTUP_FAILURE", "SUCCESS", "TIMED_OUT", "WAITING"])
-export type CheckRunState = typeof CheckRunState.Type
-
-/**
- * The possible states for a check suite or run status.
- *
- * - `COMPLETED`: The check suite or run has been completed.
- * - `IN_PROGRESS`: The check suite or run is in progress.
- * - `PENDING`: The check suite or run is in pending state.
- * - `QUEUED`: The check suite or run has been queued.
- * - `REQUESTED`: The check suite or run has been requested.
- * - `WAITING`: The check suite or run is in waiting state.
- */
-export const CheckStatusState = Schema.Literals(["COMPLETED", "IN_PROGRESS", "PENDING", "QUEUED", "REQUESTED", "WAITING"])
-export type CheckStatusState = typeof CheckStatusState.Type
-
-/**
- * The possible sides of a diff.
- *
- * - `LEFT`: The left side of the diff.
- * - `RIGHT`: The right side of the diff.
- */
-export const DiffSide = Schema.Literals(["LEFT", "RIGHT"])
-export type DiffSide = typeof DiffSide.Type
-
-/**
- * The possible viewed states of a file .
- *
- * - `DISMISSED`: The file has new changes since last viewed.
- * - `UNVIEWED`: The file has not been marked as viewed.
- * - `VIEWED`: The file has been marked as viewed.
- */
-export const FileViewedState = Schema.Literals(["DISMISSED", "UNVIEWED", "VIEWED"])
-export type FileViewedState = typeof FileViewedState.Type
-
 /**
  * The possible states of an issue.
  *
@@ -105,72 +30,6 @@ export type IssueState = typeof IssueState.Type
  */
 export const IssueStateReason = Schema.Literals(["COMPLETED", "DUPLICATE", "NOT_PLANNED", "REOPENED"])
 export type IssueStateReason = typeof IssueStateReason.Type
-
-/**
- * Detailed status information about a pull request merge.
- *
- * - `BEHIND`: The head ref is out of date.
- * - `BLOCKED`: The merge is blocked.
- * - `CLEAN`: Mergeable and passing commit status.
- * - `DIRTY`: The merge commit cannot be cleanly created.
- * - `DRAFT`: The merge is blocked due to the pull request being a draft. Deprecated: DRAFT state will be removed from this enum and `isDraft` should be used instead Use PullRequest.isDraft instead. Removal on 2021-01-01 UTC.
- * - `HAS_HOOKS`: Mergeable with passing commit status and pre-receive hooks.
- * - `UNKNOWN`: The state cannot currently be determined.
- * - `UNSTABLE`: Mergeable with non-passing commit status.
- */
-export const MergeStateStatus = Schema.Literals(["BEHIND", "BLOCKED", "CLEAN", "DIRTY", "DRAFT", "HAS_HOOKS", "UNKNOWN", "UNSTABLE"])
-export type MergeStateStatus = typeof MergeStateStatus.Type
-
-/**
- * Whether or not a PullRequest can be merged.
- *
- * - `CONFLICTING`: The pull request cannot be merged due to merge conflicts.
- * - `MERGEABLE`: The pull request can be merged.
- * - `UNKNOWN`: The mergeability of the pull request is still being calculated.
- */
-export const MergeableState = Schema.Literals(["CONFLICTING", "MERGEABLE", "UNKNOWN"])
-export type MergeableState = typeof MergeableState.Type
-
-/**
- * The possible methods for updating a pull request's head branch with the base branch.
- *
- * - `MERGE`: Update branch via merge
- * - `REBASE`: Update branch via rebase
- */
-export const PullRequestBranchUpdateMethod = Schema.Literals(["MERGE", "REBASE"])
-export type PullRequestBranchUpdateMethod = typeof PullRequestBranchUpdateMethod.Type
-
-/**
- * Represents available types of methods to use when merging a pull request.
- *
- * - `MERGE`: Add all commits from the head branch to the base branch with a merge commit.
- * - `REBASE`: Add all commits from the head branch onto the base branch individually.
- * - `SQUASH`: Combine all commits from the head branch into a single commit in the base branch.
- */
-export const PullRequestMergeMethod = Schema.Literals(["MERGE", "REBASE", "SQUASH"])
-export type PullRequestMergeMethod = typeof PullRequestMergeMethod.Type
-
-/**
- * The review status of a pull request.
- *
- * - `APPROVED`: The pull request has received an approving review.
- * - `CHANGES_REQUESTED`: Changes have been requested on the pull request.
- * - `REVIEW_REQUIRED`: A review is required before the pull request can be merged.
- */
-export const PullRequestReviewDecision = Schema.Literals(["APPROVED", "CHANGES_REQUESTED", "REVIEW_REQUIRED"])
-export type PullRequestReviewDecision = typeof PullRequestReviewDecision.Type
-
-/**
- * The possible states of a pull request review.
- *
- * - `APPROVED`: A review allowing the pull request to merge.
- * - `CHANGES_REQUESTED`: A review blocking the pull request from merging.
- * - `COMMENTED`: An informational review.
- * - `DISMISSED`: A review that has been dismissed.
- * - `PENDING`: A review that has not yet been submitted.
- */
-export const PullRequestReviewState = Schema.Literals(["APPROVED", "CHANGES_REQUESTED", "COMMENTED", "DISMISSED", "PENDING"])
-export type PullRequestReviewState = typeof PullRequestReviewState.Type
 
 /**
  * The possible states of a pull request.
@@ -211,107 +70,6 @@ export type ReactionContent = typeof ReactionContent.Type
 export const RepositoryPermission = Schema.Literals(["ADMIN", "MAINTAIN", "MODERATE", "READ", "TRIAGE", "TRIAGE_PLUS", "WRITE"])
 export type RepositoryPermission = typeof RepositoryPermission.Type
 
-/**
- * The possible commit status states.
- *
- * - `ERROR`: Status is errored.
- * - `EXPECTED`: Status is expected.
- * - `FAILURE`: Status is failing.
- * - `PENDING`: Status is pending.
- * - `SUCCESS`: Status is successful.
- */
-export const StatusState = Schema.Literals(["ERROR", "EXPECTED", "FAILURE", "PENDING", "SUCCESS"])
-export type StatusState = typeof StatusState.Type
-
-/** Autogenerated input type of EnablePullRequestAutoMerge */
-export const EnablePullRequestAutoMergeInput = Schema.Struct({
-  /** The email address to associate with this merge. */
-  authorEmail: Schema.optional(Schema.NullOr(Schema.String)),
-  /** A unique identifier for the client performing the mutation. */
-  clientMutationId: Schema.optional(Schema.NullOr(Schema.String)),
-  /**
-   * Commit body to use for the commit when the PR is mergable; if omitted, a
-   * default message will be used. NOTE: when merging with a merge queue any input
-   * value for commit message is ignored.
-   */
-  commitBody: Schema.optional(Schema.NullOr(Schema.String)),
-  /**
-   * Commit headline to use for the commit when the PR is mergable; if omitted, a
-   * default message will be used. NOTE: when merging with a merge queue any input
-   * value for commit headline is ignored.
-   */
-  commitHeadline: Schema.optional(Schema.NullOr(Schema.String)),
-  /** The expected head OID of the pull request. */
-  expectedHeadOid: Schema.optional(Schema.NullOr(GitObjectID)),
-  /**
-   * Enable auto-merge for this pull request and any eligible pull requests below it in the stack.
-   *
-   * @default false
-   */
-  includeStack: Schema.optional(Schema.NullOr(Schema.Boolean)),
-  /**
-   * The merge method to use. If omitted, defaults to `MERGE`. NOTE: when merging
-   * with a merge queue any input value for merge method is ignored.
-   *
-   * @default MERGE
-   */
-  mergeMethod: Schema.optional(Schema.NullOr(PullRequestMergeMethod)),
-  /** ID of the pull request to enable auto-merge on. */
-  pullRequestId: ID
-})
-export interface EnablePullRequestAutoMergeInput extends Schema.Struct.Type<typeof EnablePullRequestAutoMergeInput.fields> {}
-
-/** Autogenerated input type of MergePullRequest */
-export const MergePullRequestInput = Schema.Struct({
-  /** The email address to associate with this merge. */
-  authorEmail: Schema.optional(Schema.NullOr(Schema.String)),
-  /** A unique identifier for the client performing the mutation. */
-  clientMutationId: Schema.optional(Schema.NullOr(Schema.String)),
-  /** Commit body to use for the merge commit; if omitted, a default message will be used */
-  commitBody: Schema.optional(Schema.NullOr(Schema.String)),
-  /** Commit headline to use for the merge commit; if omitted, a default message will be used. */
-  commitHeadline: Schema.optional(Schema.NullOr(Schema.String)),
-  /** OID that the pull request head ref must match to allow merge; if omitted, no check is performed. */
-  expectedHeadOid: Schema.optional(Schema.NullOr(GitObjectID)),
-  /**
-   * The merge method to use. If omitted, defaults to 'MERGE'
-   *
-   * @default MERGE
-   */
-  mergeMethod: Schema.optional(Schema.NullOr(PullRequestMergeMethod)),
-  /** ID of the pull request to be merged. */
-  pullRequestId: ID
-})
-export interface MergePullRequestInput extends Schema.Struct.Type<typeof MergePullRequestInput.fields> {}
-
-/** A ref update */
-export const RefUpdate = Schema.Struct({
-  /** The value this ref should be updated to. */
-  afterOid: GitObjectID,
-  /** The value this ref needs to point to before the update. */
-  beforeOid: Schema.optional(Schema.NullOr(GitObjectID)),
-  /**
-   * Force a non fast-forward update.
-   *
-   * @default false
-   */
-  force: Schema.optional(Schema.NullOr(Schema.Boolean)),
-  /** The fully qualified name of the ref to be update. For example `refs/heads/branch-name` */
-  name: GitRefname
-})
-export interface RefUpdate extends Schema.Struct.Type<typeof RefUpdate.fields> {}
-
-/** Autogenerated input type of UpdateRefs */
-export const UpdateRefsInput = Schema.Struct({
-  /** A unique identifier for the client performing the mutation. */
-  clientMutationId: Schema.optional(Schema.NullOr(Schema.String)),
-  /** A list of ref updates. */
-  refUpdates: Schema.Array(RefUpdate),
-  /** The Node ID of the repository. */
-  repositoryId: ID
-})
-export interface UpdateRefsInput extends Schema.Struct.Type<typeof UpdateRefsInput.fields> {}
-
 /** The possible `__typename` values of each interface and union the operations select from. */
 export declare namespace Typename {
   /** Every possible `__typename` of interface `Actor`. */
@@ -320,8 +78,6 @@ export declare namespace Typename {
   export type Assignee = "Bot" | "Mannequin" | "Organization" | "User"
   /** Every possible `__typename` of interface `GitObject`. */
   export type GitObject = "Blob" | "Commit" | "Tag" | "Tree"
-  /** Every possible `__typename` of union `IssueOrPullRequest`. */
-  export type IssueOrPullRequest = "Issue" | "PullRequest"
   /** Every possible `__typename` of union `IssueTimelineItems`. */
   export type IssueTimelineItems =
     | "AddedToProjectEvent" | "AddedToProjectV2Event" | "AssignedEvent" | "BlockedByAddedEvent"
@@ -410,27 +166,6 @@ export declare namespace Typename {
     | "TransferredEvent" | "Tree" | "UnassignedEvent" | "UnlabeledEvent" | "UnlockedEvent" | "UnmarkedAsDuplicateEvent"
     | "UnpinnedEvent" | "UnsubscribedEvent" | "User" | "UserBlockedEvent" | "UserContentEdit" | "UserList"
     | "UserNamespaceRepository" | "UserStatus" | "VerifiableDomain" | "Workflow" | "WorkflowRun" | "WorkflowRunFile"
-  /** Every possible `__typename` of union `PullRequestTimelineItems`. */
-  export type PullRequestTimelineItems =
-    | "AddedToMergeQueueEvent" | "AddedToProjectEvent" | "AddedToProjectV2Event" | "AddedToStackEvent" | "AssignedEvent"
-    | "AutoMergeDisabledEvent" | "AutoMergeEnabledEvent" | "AutoRebaseEnabledEvent" | "AutoSquashEnabledEvent"
-    | "AutomaticBaseChangeFailedEvent" | "AutomaticBaseChangeSucceededEvent" | "BaseRefChangedEvent"
-    | "BaseRefDeletedEvent" | "BaseRefForcePushedEvent" | "BlockedByAddedEvent" | "BlockedByRemovedEvent"
-    | "BlockingAddedEvent" | "BlockingRemovedEvent" | "ClosedEvent" | "CommentDeletedEvent" | "ConnectedEvent"
-    | "ConvertToDraftEvent" | "ConvertedFromDraftEvent" | "ConvertedNoteToIssueEvent" | "ConvertedToDiscussionEvent"
-    | "CrossReferencedEvent" | "DemilestonedEvent" | "DeployedEvent" | "DeploymentEnvironmentChangedEvent"
-    | "DisconnectedEvent" | "HeadRefDeletedEvent" | "HeadRefForcePushedEvent" | "HeadRefRestoredEvent" | "IssueComment"
-    | "IssueCommentPinnedEvent" | "IssueCommentUnpinnedEvent" | "IssueFieldAddedEvent" | "IssueFieldChangedEvent"
-    | "IssueFieldRemovedEvent" | "IssueTypeAddedEvent" | "IssueTypeChangedEvent" | "IssueTypeRemovedEvent"
-    | "LabeledEvent" | "LockedEvent" | "MarkedAsDuplicateEvent" | "MentionedEvent" | "MergedEvent" | "MilestonedEvent"
-    | "MovedColumnsInProjectEvent" | "ParentIssueAddedEvent" | "ParentIssueRemovedEvent" | "PinnedEvent"
-    | "ProjectV2ItemStatusChangedEvent" | "PullRequestCommit" | "PullRequestCommitCommentThread" | "PullRequestReview"
-    | "PullRequestReviewThread" | "PullRequestRevisionMarker" | "ReadyForReviewEvent" | "ReferencedEvent"
-    | "RemovedFromMergeQueueEvent" | "RemovedFromProjectEvent" | "RemovedFromProjectV2Event" | "RemovedFromStackEvent"
-    | "RenamedTitleEvent" | "ReopenedEvent" | "ReviewDismissedEvent" | "ReviewRequestRemovedEvent"
-    | "ReviewRequestedEvent" | "SubIssueAddedEvent" | "SubIssueRemovedEvent" | "SubscribedEvent" | "TransferredEvent"
-    | "UnassignedEvent" | "UnlabeledEvent" | "UnlockedEvent" | "UnmarkedAsDuplicateEvent" | "UnpinnedEvent"
-    | "UnsubscribedEvent" | "UserBlockedEvent"
   /** Every possible `__typename` of interface `Reactable`. */
   export type Reactable =
     | "CommitComment" | "Discussion" | "DiscussionComment" | "Issue" | "IssueComment" | "PullRequest"
@@ -439,13 +174,7 @@ export declare namespace Typename {
   export type Reactor = "Bot" | "Mannequin" | "Organization" | "User"
   /** Every possible `__typename` of union `ReferencedSubject`. */
   export type ReferencedSubject = "Issue" | "PullRequest"
-  /** Every possible `__typename` of interface `RepositoryOwner`. */
-  export type RepositoryOwner = "Organization" | "User"
-  /** Every possible `__typename` of union `RequestedReviewer`. */
-  export type RequestedReviewer = "Bot" | "EnterpriseTeam" | "Mannequin" | "Team" | "User"
   /** Every possible `__typename` of union `SearchResultItem`. */
   export type SearchResultItem =
     | "App" | "Discussion" | "Issue" | "MarketplaceListing" | "Organization" | "PullRequest" | "Repository" | "User"
-  /** Every possible `__typename` of union `StatusCheckRollupContext`. */
-  export type StatusCheckRollupContext = "CheckRun" | "StatusContext"
 }

@@ -1,12 +1,7 @@
-// What a run touched, for a person reading the run: the issue that started it, the pull request a
-// step merged. Anything that touches something calls `noteReference`; a new kind of thing is a
+// What a run touched, for a person reading the run: the issue that started it, the one a step
+// commented on. Anything that touches something calls `noteReference`; a new kind of thing is a
 // new caller, and nothing else changes.
-import {
-  type IssueRef,
-  type IssueState,
-  type PullRequestRef,
-  WorkflowReferenceKind,
-} from "@ankielcode/contracts";
+import { type IssueRef, type IssueState, WorkflowReferenceKind } from "@ankielcode/contracts";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -69,22 +64,4 @@ export const issueReference = (
   title: seen?.title ?? "",
   url: seen?.url,
   state: seen?.state.category,
-});
-
-/** A pull request by its normalized host and repository, so every way of naming it is one. */
-export const pullRequestReference = (
-  ref: Pick<PullRequestRef, "projectId" | "repository" | "number"> & { readonly host: string },
-  seen?: { readonly title?: string; readonly url?: string; readonly state?: string },
-): ReferenceInput => ({
-  kind: WorkflowReferenceKind.pullRequest,
-  key: JSON.stringify([ref.host, ref.repository, ref.number]),
-  address: {
-    projectId: ref.projectId,
-    host: ref.host,
-    repository: ref.repository,
-    number: ref.number,
-  },
-  title: seen?.title ?? "",
-  url: seen?.url,
-  state: seen?.state,
 });

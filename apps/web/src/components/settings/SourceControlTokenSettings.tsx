@@ -38,7 +38,7 @@ export function SourceControlTokenSettings({
   // Translates the GitHub definition's English `tokenAccess`.
   const tokenAccess =
     definition.kind === "github"
-      ? gt("read and write access to pull requests and contents")
+      ? gt("read and write access to issues and contents")
       : credentials.tokenAccess;
   const { tokens } = useEnvironmentSettings(environmentId, (settings) =>
     readHostCredentialSettings(settings, definition.kind),

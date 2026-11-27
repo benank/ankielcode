@@ -1,10 +1,10 @@
-import type { EnvironmentId, PullRequestLinkedThreadsResult } from "@ankielcode/contracts";
+import type { EnvironmentId, IssueLinkedThreadsResult } from "@ankielcode/contracts";
 
 import { dispatchCommandPalette, isCommandPaletteMounted } from "./commandPaletteStore";
 
 export interface CommandPaletteLinkedThreads {
   readonly environmentId: EnvironmentId;
-  readonly threads: PullRequestLinkedThreadsResult["threads"];
+  readonly threads: IssueLinkedThreadsResult["threads"];
 }
 
 export interface CommandPaletteOpenDetail {

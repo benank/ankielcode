@@ -45,17 +45,7 @@ import { issueReference, noteFor, stepReferences } from "./runReferences.ts";
 import { forStep, KeyValues, layerKeyValues, EngineLink, layerEngineLink } from "./stepServices.ts";
 import { WorkflowAgents } from "./WorkflowAgents.ts";
 import { settleTurn, TurnEnd, TurnWatch } from "./workflowAgent.ts";
-import {
-  type Issue,
-  isSettled,
-  type PullRequest,
-  type PullRequestAddress,
-  type PullRequestWatch,
-  pullRequestReferenceOf,
-  standingOf,
-  unavailable,
-  WorkflowForge,
-} from "./WorkflowForge.ts";
+import { type Issue, unavailable, WorkflowForge } from "./WorkflowForge.ts";
 import {
   hookId as hookIdOf,
   WorkflowHookBusyError,
@@ -117,12 +107,6 @@ const make = Effect.fn("WorkflowEngine.make")(function* (
       comment: plain(trackers.issues.comment),
       setState: plain(trackers.issues.setState),
       create: plain(trackers.issues.create),
-    },
-    pullRequests: {
-      list: plain(trackers.pullRequests.list),
-      read: plain(trackers.pullRequests.read),
-      comment: plain(trackers.pullRequests.comment),
-      act: plain(trackers.pullRequests.act),
     },
   });
   const scope = yield* Scope.Scope;
@@ -396,14 +380,14 @@ const make = Effect.fn("WorkflowEngine.make")(function* (
   const millisOf = (at: string) =>
     Option.match(DateTime.make(at), { onNone: () => undefined, onSome: DateTime.toEpochMillis });
   /**
-   * Start a run for each issue or pull request opened since the trigger last looked. The first
+   * Start a run for each issue opened since the trigger last looked. The first
    * look only notes the time, so a workflow never starts on everything that was already there.
    */
   const fireOpened = Effect.gen(function* () {
     const now = yield* DateTime.now;
     for (const definition of latestDefinitions) {
       for (const trigger of definition.triggers) {
-        if (trigger.kind !== "issues" && trigger.kind !== "pullRequests") continue;
+        if (trigger.kind !== "issues") continue;
         const id = `${definition.name}/${trigger.id}`;
         const since = yield* store.triggerNext(id);
         if (since === undefined) {
@@ -414,27 +398,19 @@ const make = Effect.fn("WorkflowEngine.make")(function* (
         const at = DateTime.toEpochMillis(now);
         if (last !== undefined && at - last < Duration.toMillis(LOOK_EVERY)) continue;
         lookedAt.set(id, at);
-        const found =
-          trigger.kind === "issues"
-            ? forge.issues.list({
-                project: trigger.project,
-                // Closed ones too: an item can open and close between two looks.
-                state: "all",
-                sort: "created",
-                limit: LOOK_AT_MOST,
-                labels: trigger.labels,
-                query: trigger.query,
-              })
-            : forge.pullRequests.list({
-                project: trigger.project,
-                state: "all",
-                limit: LOOK_AT_MOST,
-                query: trigger.query,
-              });
+        const found = forge.issues.list({
+          project: trigger.project,
+          // Closed ones too: an item can open and close between two looks.
+          state: "all",
+          sort: "created",
+          limit: LOOK_AT_MOST,
+          labels: trigger.labels,
+          query: trigger.query,
+        });
         const sinceMillis = millisOf(since) ?? at;
         yield* found.pipe(
           Effect.flatMap(
-            Effect.fnUntraced(function* (entries: ReadonlyArray<Issue | PullRequest>) {
+            Effect.fnUntraced(function* (entries: ReadonlyArray<Issue>) {
               // From the mark on, not after it: two items can share a moment. As times, since a
               // host writes them in its own format and the mark is ours.
               const fresh = entries
@@ -460,14 +436,7 @@ const make = Effect.fn("WorkflowEngine.make")(function* (
                   yield* start(definition.name, entry, { idempotencyKey: key }).pipe(
                     // What started the run is the first thing it touched.
                     Effect.flatMap(({ runId }) =>
-                      noteFor(
-                        store,
-                        runId,
-                        null,
-                        "tracker" in entry
-                          ? issueReference(entry, entry)
-                          : pullRequestReferenceOf(entry, entry),
-                      ),
+                      noteFor(store, runId, null, issueReference(entry, entry)),
                     ),
                     Effect.catchTags({
                       WorkflowInputError: (error) =>
@@ -494,10 +463,7 @@ const make = Effect.fn("WorkflowEngine.make")(function* (
     }
   }).pipe(Effect.withSpan("Workflows.fireOpened"));
 
-  const noChecksSince = new Map<string, number>();
-  /** End each wait on a pull request that has got where the wait wanted it. */
   const fireWatches = Effect.gen(function* () {
-    const now = DateTime.toEpochMillis(yield* DateTime.now);
     for (const wait of yield* store.watches) {
       const watched = WorkflowStore.jsonValue(wait.watch_json ?? "null");
       // An agent's turn is watched by a fiber of its own, started again here after a reload.
@@ -505,35 +471,9 @@ const make = Effect.fn("WorkflowEngine.make")(function* (
         yield* seeTurn(wait);
         continue;
       }
-      const id = `watch:${wait.run_id}/${wait.name}`;
-      const last = lookedAt.get(id);
-      if (last !== undefined && now - last < Duration.toMillis(LOOK_EVERY)) continue;
-      lookedAt.set(id, now);
-      const watch = watched as unknown as PullRequestWatch;
-      yield* forge.pullRequests.read(watch.pullRequest as PullRequestAddress).pipe(
-        // Each look keeps where the pull request stands on the wait's own step.
-        Effect.provideContext(stepReferences(store, wait.run_id, wait.name)),
-        Effect.flatMap(
-          Effect.fnUntraced(function* (detail) {
-            const standing = standingOf(detail);
-            // How long the host has listed no checks, not how long the wait is open: a push can
-            // clear the list for a moment in the middle of a long wait.
-            if (standing.checks !== "none") noChecksSince.delete(id);
-            else if (!noChecksSince.has(id)) noChecksSince.set(id, now);
-            const without = now - (noChecksSince.get(id) ?? now);
-            if (!isSettled(watch.until, standing, without)) return;
-            const woke = { expired: false, value: standing };
-            if (!(yield* store.waitSignalled(wait.run_id, wait.name, woke))) return;
-            lookedAt.delete(id);
-            noChecksSince.delete(id);
-            yield* wake(wait, woke);
-          }),
-        ),
-        // The wait's own timeout is what ends a wait on something that cannot be read.
-        Effect.catch((error) =>
-          Effect.logWarning("A workflow could not look at a pull request", { wait: id, error }),
-        ),
-      );
+      // Waits on pull requests were removed; one an older build left ends as if it timed out.
+      const woke = { expired: true, value: null };
+      if (yield* store.waitSignalled(wait.run_id, wait.name, woke)) yield* wake(wait, woke);
     }
   }).pipe(Effect.withSpan("Workflows.fireWatches"));
 

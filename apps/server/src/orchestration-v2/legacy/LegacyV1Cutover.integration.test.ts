@@ -854,11 +854,7 @@ describe("orchestration v2 legacy v1 cutover", () => {
                 },
               ],
             );
-            assert.equal(active.thread.linkedPullRequest?.number, 9100);
-            assert.deepStrictEqual(
-              active.thread.pullRequests?.map((pullRequest) => pullRequest.number),
-              [9100],
-            );
+            assert.isFalse("pullRequests" in active.thread);
 
             const archived = yield* projections.getThreadProjection(ThreadId.make(ARCHIVED_THREAD));
             assert.isNotNull(archived.thread.archivedAt);

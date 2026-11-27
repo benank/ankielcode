@@ -1,4 +1,4 @@
-import type { PullRequestActor } from "@ankielcode/contracts";
+import type { IssueActor } from "@ankielcode/contracts";
 import type { ReactNode } from "react";
 
 import { cn } from "~/lib/utils";
@@ -64,7 +64,7 @@ export function PullRequestRowAuthor({
   className,
   labelClassName,
 }: {
-  actor: PullRequestActor | null;
+  actor: IssueActor | null;
   className?: string;
   labelClassName?: string;
 }) {

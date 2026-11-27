@@ -188,7 +188,7 @@ export function createIssueEnvironmentAtoms<R, E>(
   ) => Effect.sync(() => registry.refresh(detail({ environmentId, input: detailRef(input) })));
   const linkedThreadSignals = createEnvironmentRpcSubscriptionAtomFamily(runtime, {
     label: "environment-data:issues:linked-thread-refreshes",
-    tag: WS_METHODS.pullRequestsSubscribeLinkedThreadRefreshes,
+    tag: WS_METHODS.linkedThreadsSubscribeRefreshes,
   });
   const pendingListRefreshes = new WeakMap<
     AtomRegistry.AtomRegistry,

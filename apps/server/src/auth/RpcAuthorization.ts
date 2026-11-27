@@ -130,35 +130,13 @@ export const RPC_REQUIRED_SCOPES = {
   // Delivery logs hold request bodies, so they need the same scope as the URL.
   [WS_METHODS.scheduledTasksListWebhookDeliveries]: AuthOrchestrationOperateScope,
   [WS_METHODS.scheduledTasksGetWebhookDelivery]: AuthOrchestrationOperateScope,
-  [WS_METHODS.pullRequestsList]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsListStats]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsFilterOptions]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsSummary]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsRouting]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsRoutingIdentity]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsStack]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsLinkedThreads]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsDetail]: AuthOrchestrationReadScope,
   [WS_METHODS.issuesList]: AuthOrchestrationReadScope,
   [WS_METHODS.issuesDetail]: AuthOrchestrationReadScope,
   [WS_METHODS.issuesComments]: AuthOrchestrationReadScope,
   [WS_METHODS.issuesTemplates]: AuthOrchestrationReadScope,
   [WS_METHODS.issuesCandidates]: AuthOrchestrationReadScope,
   [WS_METHODS.issuesLinkedThreads]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsPreview]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsChecks]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsActivity]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsReviewGuide]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsThreadComments]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsDiffFileContents]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsFilesViewed]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsChangeBreakdown]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsInvalidate]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsReportState]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsSubscribeRefreshes]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsSubscribeLinkedThreadRefreshes]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsReviewerCandidates]: AuthOrchestrationReadScope,
-  [WS_METHODS.pullRequestsLabelCandidates]: AuthOrchestrationReadScope,
+  [WS_METHODS.linkedThreadsSubscribeRefreshes]: AuthOrchestrationReadScope,
   [WS_METHODS.sourceControlLookupRepository]: AuthOrchestrationReadScope,
   [WS_METHODS.sourceControlAppAccess]: AuthOrchestrationReadScope,
   [WS_METHODS.sourceControlStarred]: AuthOrchestrationReadScope,
@@ -195,7 +173,6 @@ export const RPC_REQUIRED_SCOPES = {
   [WS_METHODS.worktreeSetupCancel]: AuthOrchestrationOperateScope,
   [WS_METHODS.subscribeResourceTelemetry]: AuthDiagnosticsReadScope,
   [WS_METHODS.vcsRefreshStatus]: AuthOrchestrationReadScope,
-  [WS_METHODS.gitResolvePullRequest]: AuthOrchestrationReadScope,
   [WS_METHODS.vcsListRefs]: AuthOrchestrationReadScope,
   [WS_METHODS.reviewGetBranchCommits]: AuthFilesystemReadScope,
   [WS_METHODS.reviewGetDiffPreview]: AuthFilesystemReadScope,
@@ -328,7 +305,7 @@ const requiredScopesForRpcCall = (
   if (method === WS_METHODS.projectsMutate) {
     return requiredScopesForProjectMutation(decodeProjectMutation(payload));
   }
-  const guarded = clientRpcRequiredScopes(method, payload);
+  const guarded = clientRpcRequiredScopes(method);
   const scopes = guarded.length > 0 ? guarded : [requiredScopeForRpcMethod(method)];
   return sendsProviderSignOutPrompt(method, payload)
     ? [...scopes, AuthProvidersManageScope]

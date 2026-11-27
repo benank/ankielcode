@@ -262,7 +262,11 @@ function rowToApplicationStoredEvent(
 const isKnownProjectEventType = Schema.is(ProjectEventType);
 
 // Event types of removed features stay in existing databases; every reader drops them.
-const REMOVED_V2_EVENT_TYPES: ReadonlySet<string> = new Set(["thread.guest-share-updated"]);
+const REMOVED_V2_EVENT_TYPES: ReadonlySet<string> = new Set([
+  "thread.guest-share-updated",
+  "thread.pull-request-synced",
+  "thread.pull-request-link-updated",
+]);
 
 const keepNonRemovedEventTypeRow = (row: ApplicationEventRow) =>
   row.aggregate_kind === "project" ||

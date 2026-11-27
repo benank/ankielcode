@@ -1,5 +1,4 @@
 import { useGT } from "gt-react-native";
-import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
 import Animated, { FadeIn, FadeOut, ReduceMotion } from "react-native-reanimated";
 import { Toast } from "../../components/ui/Toast";
 import { useBarInset } from "../../components/ui/useBarInset";
@@ -13,9 +12,6 @@ export function GitActionProgressOverlay(props: {
   const gt = useGT();
   const { progress, onDismiss } = props;
   const top = useBarInset() + 8;
-  const handlePress = () => {
-    if (progress.prUrl) void tryOpenExternalUrl(progress.prUrl, "pull-request");
-  };
 
   if (progress.phase === "idle") {
     return null;
@@ -42,14 +38,6 @@ export function GitActionProgressOverlay(props: {
               : "default"
         }
         busy={progress.phase === "running"}
-        action={
-          progress.prUrl
-            ? {
-                label: gt("View", { $context: "verb, opens the pull request" }),
-                onPress: handlePress,
-              }
-            : undefined
-        }
       />
     </Animated.View>
   );

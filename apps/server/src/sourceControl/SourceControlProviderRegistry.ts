@@ -77,27 +77,6 @@ function unsupportedProvider(
   // Binding context does not create a second provider-operation span.
   return SourceControlProvider.SourceControlProvider.of({
     kind,
-    // Unknown hosts, and hosts whose forge a feature flag leaves out, have no readable change
-    // requests; return none to avoid poll warnings on every refresh.
-    listChangeRequests: Effect.fn("SourceControlProviderRegistry.unsupported.listChangeRequests")(
-      () => Effect.succeed([]),
-    ),
-    getChangeRequest: (input) =>
-      new SourceControlProviderError({
-        provider: kind,
-        operation: "getChangeRequest",
-        cwd: input.cwd,
-        reference: SourceControlProvider.transportSafeSourceControlErrorValue(input.reference),
-        detail,
-      }),
-    createChangeRequest: (input) =>
-      new SourceControlProviderError({
-        provider: kind,
-        operation: "createChangeRequest",
-        cwd: input.cwd,
-        reference: SourceControlProvider.transportSafeSourceControlErrorValue(input.headSelector),
-        detail,
-      }),
     getRepositoryCloneUrls: (input) =>
       new SourceControlProviderError({
         provider: kind,
@@ -119,14 +98,6 @@ function unsupportedProvider(
         provider: kind,
         operation: "getDefaultBranch",
         cwd: input.cwd,
-        detail,
-      }),
-    checkoutChangeRequest: (input) =>
-      new SourceControlProviderError({
-        provider: kind,
-        operation: "checkoutChangeRequest",
-        cwd: input.cwd,
-        reference: SourceControlProvider.transportSafeSourceControlErrorValue(input.reference),
         detail,
       }),
   });
@@ -206,33 +177,6 @@ function bindProviderContext(
 
   return SourceControlProvider.SourceControlProvider.of({
     ...provider,
-    listChangeRequests: Effect.fnUntraced(function* (input) {
-      return yield* provider.listChangeRequests({
-        ...input,
-        context: input.context ?? context,
-      });
-    }),
-    getChangeRequest: Effect.fnUntraced(function* (input) {
-      return yield* provider.getChangeRequest({
-        ...input,
-        context: input.context ?? context,
-      });
-    }),
-    createChangeRequest: Effect.fnUntraced(function* (input) {
-      return yield* provider.createChangeRequest({
-        ...input,
-        context: input.context ?? context,
-      });
-    }),
-    ...(provider.privateChangeRequestRemote === undefined
-      ? {}
-      : {
-          privateChangeRequestRemote: (input) =>
-            provider.privateChangeRequestRemote!({
-              ...input,
-              context: input.context ?? context,
-            }),
-        }),
     getRepositoryCloneUrls: Effect.fnUntraced(function* (input) {
       return yield* provider.getRepositoryCloneUrls({
         ...input,
@@ -244,12 +188,6 @@ function bindProviderContext(
     }),
     getDefaultBranch: Effect.fnUntraced(function* (input) {
       return yield* provider.getDefaultBranch({
-        ...input,
-        context: input.context ?? context,
-      });
-    }),
-    checkoutChangeRequest: Effect.fnUntraced(function* (input) {
-      return yield* provider.checkoutChangeRequest({
         ...input,
         context: input.context ?? context,
       });

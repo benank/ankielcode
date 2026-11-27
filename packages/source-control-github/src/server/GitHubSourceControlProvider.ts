@@ -1,49 +1,28 @@
 import { requireSettingsSecretLiteral, SourceControlProviderKind } from "@ankielcode/contracts";
-import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import {
-  GraphQL,
-  GraphQLClient,
-  GraphQLClientError,
-  GraphQLGroup,
-  GraphQLResolver,
-} from "effect/graphql";
 import * as Option from "effect/Option";
-import * as RequestResolver from "effect/RequestResolver";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import {
   SourceControlProviderError,
   TrimmedNonEmptyString,
-  type ChangeRequest,
   type SourceControlProviderDiscoveryItem,
   type SourceControlRepositoryCloneUrls,
 } from "@ankielcode/contracts";
 import { normalizeGitRemoteUrl } from "@ankielcode/shared/git";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { decodeJsonResult } from "@ankielcode/shared/schemaJson";
-import { isSshRemoteUrl } from "@ankielcode/shared/sourceControl";
 
 import { GH_PROCESS_CONCURRENCY } from "./GitHubCredentials.ts";
 import * as GitHubAppSignIn from "./GitHubAppSignIn.ts";
 import * as GitHubRest from "./GitHubRest.ts";
 import * as GitHubRequestPolicy from "./GitHubRequestPolicy.ts";
-import * as GitHubChangeRequestTemplate from "./gitHubChangeRequestTemplate.ts";
-import * as GitHubGraphQlClient from "./gitHubGraphQlClient.ts";
-import {
-  normalizeGitHubPullRequestRecord,
-  type NormalizedGitHubPullRequestRecord,
-} from "./gitHubPullRequests.ts";
 import {
   gitHubApiHostForRemote,
-  parseFetchRemotes,
   parseGitHubRepositorySelector,
-  parsePullRequestReference,
   resolveGitHubRepository,
   type GitHubRepositoryLocator,
 } from "./gitHubRepositoryResolution.ts";
-import * as SourceControlRateLimit from "@ankielcode/source-control-core/server/SourceControlRateLimit";
 import {
   effectiveGitHubAccount,
   findAuthenticatedGitHubAccount,
@@ -69,36 +48,12 @@ import {
 
 import * as GitHubClient from "../shared/definition.ts";
 import { makeGhProcess } from "./gitHubCliProcess.ts";
-import {
-  PullRequestByNumber,
-  PullRequestNode,
-  PullRequestsByHead,
-} from "./sourceControlProvider.graphql.ts";
-
-// Decode rows separately to isolate malformed PRs within shared documents.
-const LenientPullRequestsByHead = GraphQL.query(PullRequestsByHead.name, {
-  // `GraphQLResolver.aliased` needs a template per lookup.
-  document: PullRequestsByHead.template!,
-  variables: PullRequestsByHead.variables,
-  result: Schema.Struct({
-    repository: Schema.NullOr(
-      Schema.Struct({
-        pullRequests: Schema.Struct({ nodes: Schema.NullOr(Schema.Array(Schema.Unknown)) }),
-      }),
-    ),
-  }),
-});
-const decodePullRequestNode = Schema.decodeUnknownOption(PullRequestNode);
 
 const decodeLinkSubject = Schema.decodeUnknownEffect(
   Schema.fromJsonString(
     Schema.Struct({ title: Schema.String, body: Schema.optional(Schema.NullOr(Schema.String)) }),
   ),
 );
-
-function toChangeRequest(record: NormalizedGitHubPullRequestRecord): ChangeRequest {
-  return { provider: SourceControlProviderKind.make("github"), ...record };
-}
 
 function authAccounts(accounts: ReadonlyArray<GitHubAuthStatusAccount>) {
   return accounts.map((entry) => ({
@@ -376,13 +331,13 @@ const refineRepositoryIdentity: NonNullable<
     : identity;
 });
 
-const PULL_REQUEST_NOT_FOUND = "Pull request not found. Check the PR number or URL and try again.";
+const NOT_FOUND = "GitHub could not find it. Check the URL and try again.";
 const REPOSITORY_NOT_FOUND = "Repository not found. Check the owner and name and try again.";
 const isGitHubApiNotFoundError = Schema.is(GitHubRequestPolicy.GitHubApiNotFoundError);
 
 function fromGitHubApiError(
   error: GitHubRequestPolicy.GitHubApiError,
-  notFound = PULL_REQUEST_NOT_FOUND,
+  notFound = NOT_FOUND,
 ): GitHubFailure {
   switch (error._tag) {
     case "GitHubCliMissingError":
@@ -416,8 +371,6 @@ function fromGitHubApiError(
   }
 }
 
-const notFound = (cause: string) => failure(PULL_REQUEST_NOT_FOUND, new Error(cause));
-
 const RawRepositorySchema = Schema.Struct({
   full_name: TrimmedNonEmptyString,
   html_url: TrimmedNonEmptyString,
@@ -434,119 +387,6 @@ function repositoryCloneUrls(
 
 const decodeViewerLogin = decodeJsonResult(Schema.Struct({ login: TrimmedNonEmptyString }));
 
-const decodeRestPullRequests = decodeJsonResult(Schema.Array(Schema.Unknown));
-const decodeRestPullRequest = Schema.decodeUnknownOption(
-  Schema.Struct({
-    number: Schema.Number,
-    title: Schema.String,
-    html_url: Schema.String,
-    state: Schema.String,
-    draft: Schema.optional(Schema.Boolean),
-    merged_at: Schema.NullOr(Schema.String),
-    closed_at: Schema.NullOr(Schema.String),
-    updated_at: Schema.String,
-    base: Schema.Struct({ ref: Schema.String, repo: Schema.Struct({ full_name: Schema.String }) }),
-    head: Schema.Struct({
-      ref: Schema.String,
-      sha: Schema.String,
-      repo: Schema.NullOr(
-        Schema.Struct({
-          name: Schema.String,
-          full_name: Schema.String,
-          owner: Schema.Struct({ login: Schema.String, type: Schema.String }),
-        }),
-      ),
-    }),
-  }),
-);
-
-/** Reshapes a REST pull request into the GraphQL node so both decode the same way. */
-function restPullRequestNode(entry: unknown) {
-  const pr = Option.getOrNull(decodeRestPullRequest(entry));
-  if (pr === null) return null;
-  return {
-    number: pr.number,
-    title: pr.title,
-    url: pr.html_url,
-    baseRefName: pr.base.ref,
-    headRefName: pr.head.ref,
-    headRefOid: pr.head.sha,
-    state: pr.merged_at === null ? pr.state.toUpperCase() : "MERGED",
-    isDraft: pr.draft === true,
-    mergedAt: pr.merged_at,
-    closedAt: pr.closed_at,
-    updatedAt: pr.updated_at,
-    isCrossRepository: pr.head.repo?.full_name !== pr.base.repo.full_name,
-    headRepository: pr.head.repo && {
-      name: pr.head.repo.name,
-      nameWithOwner: pr.head.repo.full_name,
-    },
-    headRepositoryOwner: pr.head.repo && {
-      __typename: pr.head.repo.owner.type,
-      login: pr.head.repo.owner.login,
-    },
-  };
-}
-
-type PullRequestListState = "open" | "closed" | "merged" | "all";
-
-const GRAPHQL_STATES: Record<
-  PullRequestListState,
-  NonNullable<PullRequestsByHead.Variables["states"]>
-> = {
-  open: ["OPEN"],
-  closed: ["CLOSED"],
-  merged: ["MERGED"],
-  all: ["OPEN", "CLOSED", "MERGED"],
-};
-/** 50 lookups keeps responses near 0.5s at the same one-point cost as 100. */
-const HEAD_LOOKUPS_PER_DOCUMENT = 50;
-/** Git reads stagger background lookups by ~300ms; gather batches before spending quota. */
-const HEAD_LOOKUP_BATCH_WINDOW = "50 millis";
-const BACKGROUND_HEAD_LOOKUP_BATCH_WINDOW = "500 millis";
-/** For heads matching 100 PRs each, 50 lookups approached GitHub's ~10s limit; 25 took ~7s. */
-const BACKGROUND_HEAD_LOOKUPS_PER_DOCUMENT = 25;
-const HEAD_LOOKUP_MAX_RESPONSE_BYTES = 16_000_000;
-const OWNER_HEAD_SCAN_LIMIT = 100;
-
-function trimmed(value: string): string | null {
-  const text = value.trim();
-  return text.length > 0 ? text : null;
-}
-
-/** Null isolates unusable PRs from the rest of a listing. */
-function toPullRequestRecord(node: PullRequestNode): NormalizedGitHubPullRequestRecord | null {
-  const title = trimmed(node.title);
-  const url = trimmed(node.url);
-  const baseRefName = trimmed(node.baseRefName);
-  const headRefName = trimmed(node.headRefName);
-  const updatedAt = DateTime.make(node.updatedAt);
-  if (node.number < 1 || !title || !url || !baseRefName || !headRefName) return null;
-  if (Option.isNone(updatedAt)) return null;
-  return normalizeGitHubPullRequestRecord({
-    ...node,
-    title,
-    url,
-    baseRefName,
-    headRefName,
-    updatedAt: Option.some(DateTime.toUtc(updatedAt.value)),
-  });
-}
-
-function pullRequestCheckoutBranchName(input: {
-  readonly headRefName: string;
-  readonly headOwner: string | null;
-  readonly isCrossRepository: boolean;
-  readonly defaultBranch: string | null;
-}): string {
-  return input.isCrossRepository &&
-    input.headOwner !== null &&
-    input.defaultBranch !== null &&
-    input.headRefName === input.defaultBranch
-    ? `${input.headOwner}/${input.headRefName}`
-    : input.headRefName;
-}
-
 const contextHost = (context: SourceControlProvider.SourceControlProviderContext | undefined) =>
   context === undefined ? undefined : new URL(context.provider.baseUrl).host;
 
@@ -556,7 +396,6 @@ export const make = Effect.gen(function* () {
   const process = sourceControlHost.process;
   const environment = yield* HostProcess.Environment;
   const git = sourceControlHost.git;
-  const fileSystem = yield* FileSystem.FileSystem;
 
   const gitRead = (cwd: string, args: ReadonlyArray<string>) =>
     process.run({
@@ -613,160 +452,8 @@ export const make = Effect.gen(function* () {
     },
   );
 
-  const client = yield* GraphQLClient.make(
-    GraphQLGroup.make(LenientPullRequestsByHead, PullRequestByNumber).middleware(
-      GitHubGraphQlClient.GitHubGraphQlAuth,
-    ),
-  ).pipe(Effect.provide(GitHubGraphQlClient.layer));
-
-  const graphqlRead = <A, E, R>(
-    target: GitHubGraphQlClient.GitHubGraphQlTarget["Service"],
-    decodeDetail: string,
-    effect: Effect.Effect<A, E, R>,
-  ) =>
-    effect.pipe(
-      GitHubGraphQlClient.call(target),
-      Effect.mapError((error) =>
-        GraphQLClientError.isGraphQLClientError(error)
-          ? failure(decodeDetail, error)
-          : fromGitHubApiError(error as GitHubRequestPolicy.GitHubApiError),
-      ),
-    );
-
   const rest = (input: GitHubRest.GitHubRestInput, notFoundDetail?: string) =>
     api.rest(input).pipe(Effect.mapError((error) => fromGitHubApiError(error, notFoundDetail)));
-
-  // Batch by host/credential; isolate missing repositories and interactive/background reserves.
-  const headResolver = GraphQLResolver.aliased(client.PullRequestsByHead, {
-    batchKey: GitHubGraphQlClient.batchKey,
-  }).pipe(RequestResolver.batchN(HEAD_LOOKUPS_PER_DOCUMENT));
-  const interactiveHeadResolver = headResolver.pipe(
-    RequestResolver.setDelay(HEAD_LOOKUP_BATCH_WINDOW),
-  );
-  const backgroundHeadResolver = headResolver.pipe(
-    RequestResolver.batchN(BACKGROUND_HEAD_LOOKUPS_PER_DOCUMENT),
-    RequestResolver.setDelay(BACKGROUND_HEAD_LOOKUP_BATCH_WINDOW),
-  );
-
-  const listByHead = Effect.fn("GitHubSourceControlProvider.listByHead")(function* (input: {
-    readonly cwd: string;
-    readonly headSelector: string;
-    readonly state: PullRequestListState;
-    readonly limit: number;
-    readonly context?: SourceControlProvider.SourceControlProviderContext | undefined;
-    readonly host?: string | undefined;
-    readonly repository?: string | undefined;
-    readonly allowReserve: boolean;
-  }) {
-    const base = yield* resolveRepository(input);
-    const locator =
-      input.repository === undefined
-        ? base
-        : parseGitHubRepositorySelector(input.repository, base.host);
-    if (locator === null) return yield* failure(`${input.repository} is not a GitHub repository.`);
-    const limit = Math.min(Math.max(Math.trunc(input.limit), 1), 100);
-    const ownerMatch = /^([^:/\s]+):(.+)$/u.exec(input.headSelector.trim());
-    const headRefName = ownerMatch?.[2] ?? input.headSelector.trim();
-    if (ownerMatch) {
-      // GraphQL cannot filter heads by owner, and names like a fork's `main` match thousands.
-      const query = new URLSearchParams({
-        head: `${ownerMatch[1]}:${headRefName}`,
-        state: input.state === "all" || input.state === "open" ? input.state : "closed",
-        sort: "created",
-        direction: "desc",
-        per_page: String(OWNER_HEAD_SCAN_LIMIT),
-      });
-      const response = yield* rest({
-        host: locator.host,
-        operation: "listPullRequestsByHead",
-        allowReserve: input.allowReserve,
-        path: `repos/${encodeURIComponent(locator.owner)}/${encodeURIComponent(locator.name)}/pulls?${query}`,
-      });
-      const decoded = decodeRestPullRequests(response.body);
-      if (Result.isFailure(decoded)) {
-        return yield* failure("GitHub returned an invalid change request list.", decoded.failure);
-      }
-      return decoded.success
-        .flatMap((entry) => {
-          const node = Option.getOrNull(decodePullRequestNode(restPullRequestNode(entry)));
-          const record = node === null ? null : toPullRequestRecord(node);
-          return record === null ? [] : [record];
-        })
-        .filter((row) => input.state === "all" || row.state === input.state)
-        .slice(0, limit);
-    }
-    const result = yield* graphqlRead(
-      {
-        host: locator.host,
-        operation: "listPullRequestsByHead",
-        allowReserve: input.allowReserve,
-        // 50 default-branch lookups can each match 100 fork PRs and exceed the usual cap.
-        maxResponseBytes: HEAD_LOOKUP_MAX_RESPONSE_BYTES,
-      },
-      "GitHub returned an invalid change request list.",
-      GraphQLResolver.request(
-        {
-          owner: locator.owner,
-          name: locator.name,
-          head: headRefName,
-          states: GRAPHQL_STATES[input.state],
-          first: limit,
-        },
-        input.allowReserve ? interactiveHeadResolver : backgroundHeadResolver,
-      ),
-    );
-    if (result.repository === null) return yield* notFound("The repository could not be read.");
-    return (result.repository.pullRequests.nodes ?? []).flatMap((entry) => {
-      const node = Option.getOrNull(decodePullRequestNode(entry));
-      const record = node === null ? null : toPullRequestRecord(node);
-      return record === null ? [] : [record];
-    });
-  });
-
-  const readPullRequest = Effect.fn("GitHubSourceControlProvider.readPullRequest")(
-    function* (input: {
-      readonly cwd: string;
-      readonly reference: string;
-      readonly context?: SourceControlProvider.SourceControlProviderContext | undefined;
-      readonly host?: string | undefined;
-    }) {
-      const parsed = parsePullRequestReference(input.reference);
-      if (parsed.kind === "branch") {
-        // `gh pr view <branch>` prefers an open pull request, then the newest of any state.
-        const lookup = (state: PullRequestListState) =>
-          listByHead({
-            cwd: input.cwd,
-            headSelector: parsed.headSelector,
-            state,
-            limit: 1,
-            host: input.host,
-            context: input.context,
-            allowReserve: true,
-          });
-        const [open] = yield* lookup("open");
-        const found = open ?? (yield* lookup("all"))[0];
-        if (found === undefined) return yield* notFound("No pull request has this head branch.");
-        return found;
-      }
-      const locator = parsed.kind === "url" ? parsed.locator : yield* resolveRepository(input);
-      const decodeDetail = "GitHub returned an invalid pull request.";
-      const result = yield* graphqlRead(
-        { host: locator.host, operation: "getPullRequest", allowReserve: true },
-        decodeDetail,
-        client.PullRequestByNumber({
-          owner: locator.owner,
-          name: locator.name,
-          number: parsed.number,
-        }),
-      );
-      const node = result.repository?.pullRequest;
-      if (node == null) return yield* notFound("The pull request does not exist.");
-      const record = toPullRequestRecord(node);
-      if (record === null)
-        return yield* failure(decodeDetail, new Error("Malformed pull request."));
-      return record;
-    },
-  );
 
   const readRepository = Effect.fn("GitHubSourceControlProvider.readRepository")(function* (
     locator: GitHubRepositoryLocator,
@@ -802,146 +489,6 @@ export const make = Effect.gen(function* () {
     }
     return decoded.success.login;
   });
-
-  // Keep paths, argv and stderr in cause; expose only a fixed checkout error to clients.
-  const gitFailure = (cause: unknown) =>
-    failure("The pull request could not be checked out with git.", cause);
-
-  const runGit = (cwd: string, operation: string, args: ReadonlyArray<string>) =>
-    git.execute({
-      operation: `GitHubSourceControlProvider.checkoutPullRequest.${operation}`,
-      cwd,
-      args,
-    });
-
-  const checkoutPullRequest = Effect.fn("GitHubSourceControlProvider.checkoutPullRequest")(
-    function* (input: {
-      readonly cwd: string;
-      readonly reference: string;
-      readonly force?: boolean;
-      readonly context?: SourceControlProvider.SourceControlProviderContext;
-    }) {
-      const reference = parsePullRequestReference(input.reference);
-      const pullRequest = yield* readPullRequest(input);
-      const base = reference.kind === "url" ? reference.locator : yield* resolveRepository(input);
-      const baseNameWithOwner = `${base.owner}/${base.name}`.toLowerCase();
-      const headNameWithOwner = pullRequest.headRepositoryNameWithOwner ?? null;
-      const isCrossRepository =
-        pullRequest.isCrossRepository ??
-        (headNameWithOwner !== null && headNameWithOwner.toLowerCase() !== baseNameWithOwner);
-      const headOwner =
-        pullRequest.headRepositoryOwnerLogin ?? headNameWithOwner?.split("/")[0] ?? null;
-
-      const remotes = yield* gitRead(input.cwd, ["remote", "-v"]).pipe(
-        Effect.map((result) => (result.exitCode === 0 ? result.stdout : "")),
-        Effect.mapError(gitFailure),
-      );
-      const remoteFor = (nameWithOwner: string) =>
-        parseFetchRemotes(remotes).find(
-          (remote) =>
-            (gitHubApiHostForRemote(remote.url) ??
-              normalizeGitRemoteUrl(remote.url).split("/")[0]) === base.host &&
-            normalizeGitRemoteUrl(remote.url).split("/").slice(1).join("/") ===
-              nameWithOwner.toLowerCase(),
-        )?.name ?? null;
-      const baseRemote = Effect.suspend(() => {
-        const known = remoteFor(baseNameWithOwner);
-        return known === null ? git.resolvePrimaryRemoteName(input.cwd) : Effect.succeed(known);
-      });
-      // Avoid resetting the default branch; prefix colliding forks and fail if it is unknown.
-      const defaultBranch = isCrossRepository
-        ? yield* readRepository(base).pipe(
-            Effect.map((repository) => repository.default_branch ?? null),
-          )
-        : null;
-      const localBranch = pullRequestCheckoutBranchName({
-        headRefName: pullRequest.headRefName,
-        headOwner,
-        isCrossRepository,
-        defaultBranch,
-      });
-
-      const headRemote = Effect.gen(function* () {
-        if (!isCrossRepository) return yield* baseRemote;
-        if (headNameWithOwner === null) return yield* failure("The fork is gone.");
-        const known = remoteFor(headNameWithOwner);
-        if (known !== null) return known;
-        const [owner, name] = headNameWithOwner.split("/");
-        const fork = yield* readRepository({ host: base.host, owner: owner!, name: name! });
-        // Git fetches from a remote's first URL; `config --get` returns the last of several, and
-        // `git remote -v` applies `insteadOf` rewrites.
-        const originUrl = yield* runGit(input.cwd, "readOriginUrl", [
-          "config",
-          "--get-all",
-          "remote.origin.url",
-        ]).pipe(
-          Effect.map((result) => result.stdout.split("\n", 1)[0]?.trim() || null),
-          Effect.orElseSucceed(() => null),
-        );
-        return yield* git.ensureRemote({
-          cwd: input.cwd,
-          preferredName: headOwner ?? "fork",
-          url: originUrl !== null && isSshRemoteUrl(originUrl) ? fork.ssh_url : fork.html_url,
-        });
-      });
-
-      const exists = (yield* git
-        .listLocalBranchNames(input.cwd)
-        .pipe(Effect.mapError(gitFailure))).includes(localBranch);
-
-      const target = yield* Effect.gen(function* () {
-        const remoteName = yield* headRemote;
-        yield* git.fetchRemoteTrackingBranch({
-          cwd: input.cwd,
-          remoteName,
-          remoteBranch: pullRequest.headRefName,
-        });
-        return {
-          ref: `refs/remotes/${remoteName}/${pullRequest.headRefName}`,
-          upstream: { remoteName, remoteBranch: pullRequest.headRefName },
-        };
-      }).pipe(
-        Effect.catch(() =>
-          Effect.gen(function* () {
-            yield* runGit(input.cwd, "fetchPullRef", [
-              "fetch",
-              "--quiet",
-              "--no-tags",
-              "--",
-              yield* baseRemote,
-              `refs/pull/${pullRequest.number}/head`,
-            ]);
-            const { commitSha } = yield* git.resolveCommit({
-              cwd: input.cwd,
-              revision: "FETCH_HEAD",
-            });
-            return { ref: commitSha, upstream: null };
-          }),
-        ),
-        Effect.mapError(gitFailure),
-      );
-
-      yield* Effect.gen(function* () {
-        if (!exists) {
-          yield* git.createBranch({ cwd: input.cwd, branch: localBranch, startPoint: target.ref });
-        }
-        yield* Effect.scoped(git.switchRef({ cwd: input.cwd, refName: localBranch }));
-        if (exists) {
-          yield* runGit(
-            input.cwd,
-            "sync",
-            input.force === true
-              ? ["reset", "--hard", "--quiet", target.ref]
-              : ["merge", "--ff-only", "--quiet", target.ref],
-          );
-        }
-        // Set tracking after sync succeeds so a failed checkout preserves the existing upstream.
-        if (target.upstream !== null) {
-          yield* git.setBranchUpstream({ cwd: input.cwd, branch: localBranch, ...target.upstream });
-        }
-      }).pipe(Effect.mapError(gitFailure));
-    },
-  );
 
   const providerError =
     (
@@ -1017,50 +564,6 @@ export const make = Effect.gen(function* () {
     resolveRemoteWebHost: Effect.fn("GitHubSourceControlProvider.resolveRemoteWebHost")(
       ({ context }) => Effect.succeed(gitHubApiHostForRemote(context.remoteUrl)),
     ),
-    // GitHub matches bare heads; read a full page to disambiguate forks by owner. A default branch
-    // collides with most forks, so its owner-qualified lookup has GitHub filter by owner instead.
-    headBranchProbe: ({ headSelectors, ownerHeadSelector }) => ({
-      headSelectors: ownerHeadSelector
-        ? [ownerHeadSelector]
-        : headSelectors.filter((selector) => !selector.includes(":")),
-      limit: 100,
-    }),
-    readChangeRequestTemplate: Effect.fn("GitHubSourceControlProvider.readChangeRequestTemplate")(
-      function ({ cwd, treeish }) {
-        return GitHubChangeRequestTemplate.detect(cwd, treeish, git.execute);
-      },
-    ),
-    // `createChangeRequest` targets what `resolveRepository` picks: GH_REPO when it parses, else
-    // gh's pick among the checkout's remotes, led by the one `gh repo set-default` marked
-    // (`gh-resolved`). An HTTPS remote keeps a non-default port in the context's host, and the
-    // mark is then ignored.
-    createsChangeRequestsIn: Effect.fn("GitHubSourceControlProvider.createsChangeRequestsIn")(
-      function* ({ cwd, context, repository }) {
-        const host = URL.canParse(context.provider.baseUrl)
-          ? new URL(context.provider.baseUrl).host
-          : null;
-        const target = repository?.toLowerCase();
-        const fromEnvironment = parseGitHubRepositorySelector(
-          environment.GH_REPO ?? "",
-          host ?? "",
-        );
-        if (fromEnvironment !== null) {
-          const { host: targetHost, owner, name } = fromEnvironment;
-          return (
-            host !== null &&
-            URL.canParse(`https://${targetHost}`) &&
-            new URL(`https://${targetHost}`).host === host &&
-            `${owner}/${name}`.toLowerCase() === target
-          );
-        }
-        const { locator } = resolveGitHubRepository({
-          ...(yield* readRemotes(cwd)),
-          hostHint: host ?? undefined,
-          defaultHost: host ?? "github.com",
-        });
-        return locator === null || `${locator.owner}/${locator.name}`.toLowerCase() === target;
-      },
-    ),
     // `gh pr create` run in the checkout, as an agent in an Ankiel worktree often does, takes its base
     // from this key.
     recordBranchBase: Effect.fn("GitHubSourceControlProvider.recordBranchBase")(function ({
@@ -1085,73 +588,6 @@ export const make = Effect.gen(function* () {
       if (!match) return undefined;
       return readLinkSubject(input, `repos/${match[1]}/${match[2]}/issues/${match[3]}`);
     },
-    listChangeRequests: Effect.fn("GitHubSourceControlProvider.listChangeRequests")(
-      function (input) {
-        return (
-          input.state === "open" ? Effect.succeed(true) : SourceControlRateLimit.Interactive
-        ).pipe(
-          Effect.flatMap((allowReserve) =>
-            listByHead({
-              cwd: input.cwd,
-              headSelector: input.headSelector,
-              state: input.state,
-              limit: input.limit ?? (input.state === "open" ? 1 : 20),
-              host: contextHost(input.context),
-              context: input.context,
-              repository: input.repository,
-              allowReserve,
-            }),
-          ),
-          Effect.map((records) => records.map(toChangeRequest)),
-          Effect.mapError(
-            providerError("listChangeRequests", input.cwd, { reference: input.headSelector }),
-          ),
-        );
-      },
-    ),
-    getChangeRequest: Effect.fn("GitHubSourceControlProvider.getChangeRequest")(function (input) {
-      return readPullRequest({ ...input, host: contextHost(input.context) }).pipe(
-        Effect.map(toChangeRequest),
-        Effect.mapError(
-          providerError("getChangeRequest", input.cwd, { reference: input.reference }),
-        ),
-      );
-    }),
-    createsDraftChangeRequests: true,
-    createChangeRequest: Effect.fn("GitHubSourceControlProvider.createChangeRequest")(
-      function* (input) {
-        const locator = yield* resolveRepository(input);
-        const body = yield* fileSystem
-          .readFileString(input.bodyFile)
-          .pipe(
-            Effect.mapError((cause) =>
-              failure("The pull request description could not be read.", cause),
-            ),
-          );
-        yield* rest({
-          host: locator.host,
-          operation: "createPullRequest",
-          method: "POST",
-          allowReserve: true,
-          path: `repos/${encodeURIComponent(locator.owner)}/${encodeURIComponent(locator.name)}/pulls`,
-          // Explicitly allow maintainer edits to match gh; the API default is undocumented.
-          body: {
-            base: input.baseRefName,
-            head: input.headSelector,
-            title: input.title,
-            body,
-            maintainer_can_modify: true,
-            ...(input.draft === true ? { draft: true } : {}),
-          },
-        });
-      },
-      (effect, input) =>
-        effect.pipe(
-          Effect.mapError(
-            providerError("createChangeRequest", input.cwd, { reference: input.headSelector }),
-          ),
-        ),
-    ),
     getRepositoryCloneUrls: Effect.fn("GitHubSourceControlProvider.getRepositoryCloneUrls")(
       function* (input) {
         const fallbackHost = (
@@ -1250,15 +686,6 @@ export const make = Effect.gen(function* () {
         return branch.length > 0 ? branch : null;
       },
       (effect, input) => effect.pipe(Effect.mapError(providerError("getDefaultBranch", input.cwd))),
-    ),
-    checkoutChangeRequest: Effect.fn("GitHubSourceControlProvider.checkoutChangeRequest")(
-      function (input) {
-        return checkoutPullRequest(input).pipe(
-          Effect.mapError(
-            providerError("checkoutChangeRequest", input.cwd, { reference: input.reference }),
-          ),
-        );
-      },
     ),
   });
 });

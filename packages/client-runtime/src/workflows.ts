@@ -2,9 +2,7 @@ import { mFallback, msg } from "gt-i18n";
 import type { MFunctionType } from "gt-i18n/types";
 import {
   type IssueRef,
-  type PullRequestRef,
   WorkflowIssueAddress,
-  WorkflowPullRequestAddress,
   WorkflowReferenceKind,
   type WorkflowQuestion,
   type WorkflowRun,
@@ -709,7 +707,6 @@ export function workflowSaidStart(said: string, limit: number): string | null {
 }
 
 const decodeIssueAddress = Schema.decodeUnknownOption(WorkflowIssueAddress);
-const decodePullRequestAddress = Schema.decodeUnknownOption(WorkflowPullRequestAddress);
 
 /** A reference's issue, when it is one and its address reads as one. */
 export function workflowReferenceIssue(reference: WorkflowRunReference): IssueRef | null {
@@ -718,22 +715,12 @@ export function workflowReferenceIssue(reference: WorkflowRunReference): IssueRe
     : null;
 }
 
-/** A reference's pull request, when it is one and its address reads as one. */
-function workflowReferencePullRequest(
-  reference: WorkflowRunReference,
-): PullRequestRef | null {
-  return reference.kind === WorkflowReferenceKind.pullRequest
-    ? Option.getOrNull(decodePullRequestAddress(reference.address))
-    : null;
-}
-
 /**
- * What a reference is called in a chip: `#412` for an issue or pull request on a git host, a
- * tracker's own key such as `ENG-12`, and the title for a kind this client does not know.
+ * What a reference is called in a chip: `#412` for an issue on a git host, a tracker's own key
+ * such as `ENG-12`, and the title for a kind this client does not know, such as the pull requests
+ * older runs recorded.
  */
 export function workflowReferenceLabel(reference: WorkflowRunReference): string {
-  const pullRequest = workflowReferencePullRequest(reference);
-  if (pullRequest !== null) return `#${pullRequest.number}`;
   const issue = workflowReferenceIssue(reference);
   if (issue !== null) return /^\d+$/.test(issue.key) ? `#${issue.key}` : issue.key;
   return reference.title === "" ? reference.kind : reference.title;

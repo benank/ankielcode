@@ -17,6 +17,7 @@ import {
   OrchestrationV2ProviderCapabilities,
   OrchestrationV2ProviderThread,
   OrchestrationV2ProviderThreadJson,
+  OrchestrationV2Notification,
   OrchestrationV2RpcSchemas,
   OrchestrationV2Subagent,
   OrchestrationV2ThreadShellJson,
@@ -32,6 +33,7 @@ const now = DateTime.makeUnsafe("2026-04-20T00:00:00.000Z");
 const decodeOrchestrationV2TurnItemJson = Schema.decodeUnknownSync(OrchestrationV2TurnItemJson);
 const encodeOrchestrationV2TurnItemJson = Schema.encodeSync(OrchestrationV2TurnItemJson);
 const decodeOrchestrationV2Subagent = Schema.decodeUnknownSync(OrchestrationV2Subagent);
+const decodeOrchestrationV2Notification = Schema.decodeUnknownSync(OrchestrationV2Notification);
 const decodeCheckpointFileSummary = Schema.decodeSync(OrchestrationV2CheckpointFileSummary);
 const encodeOrchestrationV2SubagentJson = Schema.encodeSync(OrchestrationV2SubagentJson);
 const decodeOrchestrationV2ProviderThreadJson = Schema.decodeUnknownSync(
@@ -89,6 +91,49 @@ describe("orchestration V2 contracts", () => {
         { ...detached("event-4", 4), event: { ...detached("event-4", 4).event, payload: {} } },
       ]),
     ).toThrow();
+  });
+
+  it("skips the pull request events an older server still sends", () => {
+    const decodeWireItems = Schema.decodeUnknownSync(
+      Schema.toCodecJson(Schema.Array(OrchestrationV2RpcSchemas.subscribeThread.output)),
+    );
+    const event = (sequence: number, type: string, payload: unknown) => ({
+      kind: "event",
+      sequence,
+      event: {
+        id: `event-${sequence}`,
+        type,
+        threadId: "thread-1",
+        occurredAt: DateTime.formatIso(now),
+        payload,
+      },
+    });
+    expect(
+      decodeWireItems([
+        event(1, "thread.pull-request-link-updated", { host: "github.com", number: 1 }),
+        event(2, "thread.pull-request-synced", { id: "thread-1" }),
+      ]),
+    ).toEqual([
+      { kind: "unknown-event", sequence: 1, eventType: "thread.pull-request-link-updated" },
+      { kind: "unknown-event", sequence: 2, eventType: "thread.pull-request-synced" },
+    ]);
+  });
+
+  it("keeps a stored pull request watch wake recognizable so the server can drop it", () => {
+    const stamp = {
+      host: "github.com",
+      repository: "owner/repo",
+      number: 7,
+      watchStartedAt: DateTime.formatIso(now),
+      headSha: null,
+    };
+    const decoded = decodeOrchestrationV2Notification({
+      source: { kind: "monitor", pullRequest: stamp, otherPullRequests: [stamp] },
+      outcome: "updated",
+      summary: "Checks passed",
+    });
+    expect(decoded.source.kind).toBe("monitor");
+    expect(decoded.source.kind === "monitor" && decoded.source.pullRequest).toEqual(stamp);
   });
 
   it("skips turn item types from a newer server in snapshots and turn-item events", () => {

@@ -21,8 +21,8 @@ import { readIssueTemplates } from "./gitHubIssueTemplates.ts";
 import * as GitHubRequestPolicy from "./GitHubRequestPolicy.ts";
 import * as GitHubGraphQlClient from "./gitHubGraphQlClient.ts";
 import { IssuesGraphQLGroup } from "./issues.graphql.ts";
-import { AddReaction, RemoveReaction } from "./pullRequestMutations.graphql.ts";
-import { gitHubReactionContent } from "./gitHubPullRequestJson.ts";
+import { gitHubReactionContent } from "./gitHubReactions.ts";
+import { AddReaction, RemoveReaction } from "./reactions.graphql.ts";
 import {
   ISSUE_STATES,
   planningStatusesOf,

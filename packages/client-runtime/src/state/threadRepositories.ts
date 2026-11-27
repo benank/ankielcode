@@ -715,8 +715,6 @@ export interface RepositorySectionSummary {
   readonly changedFiles: number;
   readonly insertions: number;
   readonly deletions: number;
-  /** The branch's pull request, from the last remote read anyone made of this folder. */
-  readonly pullRequest: NonNullable<VcsStatusResult["pr"]> | null;
 }
 
 export function repositorySectionSummary(
@@ -729,6 +727,5 @@ export function repositorySectionSummary(
     changedFiles: status.workingTree.files.length,
     insertions: status.workingTree.insertions,
     deletions: status.workingTree.deletions,
-    pullRequest: status.pr,
   };
 }

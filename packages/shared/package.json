@@ -7,10 +7,6 @@
       "types": "./src/png.ts",
       "import": "./src/png.ts"
     },
-    "./pullRequestAnchor": {
-      "types": "./src/pullRequestAnchor.ts",
-      "import": "./src/pullRequestAnchor.ts"
-    },
     "./changedFileKind": {
       "types": "./src/changedFileKind.ts",
       "import": "./src/changedFileKind.ts"
@@ -266,10 +262,6 @@
     "./paletteSearch": {
       "types": "./src/paletteSearch.ts",
       "import": "./src/paletteSearch.ts"
-    },
-    "./threadPullRequests": {
-      "types": "./src/threadPullRequests.ts",
-      "import": "./src/threadPullRequests.ts"
     },
     "./composerTrigger": {
       "types": "./src/composerTrigger.ts",

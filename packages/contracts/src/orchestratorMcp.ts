@@ -24,12 +24,6 @@ import {
   ScheduledTaskUpsertSchedule,
 } from "./scheduledTask.ts";
 import { ProviderInteractionMode, ProviderRequestKind, RuntimeMode } from "./providerPolicy.ts";
-import { PullRequestState } from "./pullRequest.ts";
-import {
-  ThreadLinkedPullRequest,
-  ThreadPullRequestKey,
-  ThreadPullRequestLinkSource,
-} from "./threadPullRequest.ts";
 import { secretRequestPageUrl } from "./secretRequest.ts";
 import { hasOnlyPairedSurrogates } from "./threadMetadataMcp.ts";
 import { LastThreadTitleRegeneration, ThreadTitleRegeneration } from "./threadTitle.ts";
@@ -338,17 +332,6 @@ export const OrchestratorMcpThreadListInput = Schema.Struct({
 });
 export type OrchestratorMcpThreadListInput = typeof OrchestratorMcpThreadListInput.Type;
 
-/** state is null until the host is read. */
-export const OrchestratorMcpThreadPullRequest = Schema.Struct({
-  ...ThreadPullRequestKey.fields,
-  url: TrimmedNonEmptyString,
-  source: ThreadPullRequestLinkSource,
-  state: Schema.NullOr(PullRequestState),
-  watching: Schema.Boolean,
-  watchStartedAt: Schema.NullOr(IsoDateTime),
-});
-export type OrchestratorMcpThreadPullRequest = typeof OrchestratorMcpThreadPullRequest.Type;
-
 /** Background work still open on the thread, as its provider reported it. */
 export const OrchestratorMcpThreadBackgroundTask = Schema.Struct({
   taskId: TrimmedNonEmptyString,
@@ -373,11 +356,6 @@ export const OrchestratorMcpThreadListItem = Schema.Struct({
   model: Schema.String,
   runtimeMode: RuntimeMode,
   interactionMode: ProviderInteractionMode,
-  linkedPullRequest: Schema.NullOr(ThreadLinkedPullRequest),
-  /** Up to 5 open linked pull requests, watched first. */
-  pullRequests: Schema.optional(Schema.Array(OrchestratorMcpThreadPullRequest)),
-  pullRequestCount: Schema.optional(NonNegativeInt),
-  openPullRequestCount: Schema.optional(NonNegativeInt),
   settled: Schema.Boolean,
   settledAt: Schema.NullOr(IsoDateTime),
   snoozed: Schema.Boolean,
@@ -435,11 +413,6 @@ export const OrchestratorMcpThreadDetail = Schema.Struct({
   model: Schema.String,
   runtimeMode: RuntimeMode,
   interactionMode: ProviderInteractionMode,
-  linkedPullRequest: Schema.NullOr(ThreadLinkedPullRequest),
-  /** Up to 5 open linked pull requests, watched first, on the first page only. */
-  pullRequests: Schema.optional(Schema.Array(OrchestratorMcpThreadPullRequest)),
-  pullRequestCount: Schema.optional(NonNegativeInt),
-  openPullRequestCount: Schema.optional(NonNegativeInt),
   titleRegeneration: Schema.NullOr(ThreadTitleRegeneration),
   lastTitleRegeneration: Schema.optional(Schema.NullOr(LastThreadTitleRegeneration)),
   branch: Schema.NullOr(Schema.String),
@@ -578,8 +551,8 @@ export const OrchestratorMcpThreadInterruptInput = Schema.Struct({
   reason: Schema.optional(Schema.String.check(Schema.isMaxLength(2_000))),
   /**
    * Stop the thread as its Stop button does instead: interrupt its running
-   * turn whichever run that is, hold its queued messages, end its pull request
-   * watches and stop every task it delegated. `runId` is then not used.
+   * turn whichever run that is, hold its queued messages and stop every task it
+   * delegated. `runId` is then not used.
    */
   stop: Schema.optional(Schema.Boolean),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),

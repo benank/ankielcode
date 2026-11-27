@@ -726,7 +726,7 @@ export function WorktreeCleanupSection() {
               title={gt("Delete merged worktrees")}
               status={ruleStatus("worktreeOnMerge")}
               description={gt(
-                "Remove worktrees whose pull request is merged and whose commits are included in the default branch.",
+                "Remove a finished subagent's worktree once its work is on the default branch.",
               )}
               serverScoped={!isProjectScope}
               control={
