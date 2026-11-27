@@ -257,12 +257,6 @@ export class PullRequestService extends Context.Service<
     ) => Effect.Effect<PullRequestActivity, PullRequestError>;
     /** Emits when the host reports a change; empty where the host has no event feed. */
     readonly changes: (input: PullRequestRef) => Stream.Stream<void>;
-    /** Whether the project's checkout is on a forge Ankiel reads change requests from. */
-    readonly servesProject: (projectId: ProjectId) => Effect.Effect<boolean>;
-    /** The project as `servesProject` sees it: identity resolved, its forge refined. */
-    readonly addressedProject: (
-      projectId: ProjectId,
-    ) => Effect.Effect<OrchestrationProjectShell | undefined, PullRequestError>;
     readonly threadComments: (
       input: PullRequestThreadCommentsInput,
     ) => Effect.Effect<PullRequestThreadCommentsResult, PullRequestError>;
@@ -762,7 +756,7 @@ function httpRemoteHost(remoteUrl: string): string | null {
 }
 
 /** Whether `expected` names `head`: the full SHA, or a hex prefix of at least 7 characters. */
-export const isHeadSha = (head: string, expected: string) => {
+const isHeadSha = (head: string, expected: string) => {
   const wanted = expected.toLowerCase();
   return /^[0-9a-f]{7,}$/.test(wanted) ? head.toLowerCase().startsWith(wanted) : head === expected;
 };
@@ -1175,25 +1169,6 @@ export const make = Effect.gen(function* () {
       repository: project.repository,
     };
   });
-
-  // A failed read keeps the tools: their calls report the failure.
-  const servesProject: PullRequestService["Service"]["servesProject"] = (projectId) =>
-    listWorkspaceProjects({ projectId }).pipe(
-      Effect.map(({ supported }) => supported.length > 0),
-      Effect.orElseSucceed(() => true),
-    );
-
-  const addressedProject: PullRequestService["Service"]["addressedProject"] = (projectId) =>
-    listWorkspaceProjects({ projectId }).pipe(
-      Effect.map(({ projects, supported }) => {
-        const own = supported[0];
-        if (own === undefined) return projects.find((project) => project.id === projectId);
-        const identity = own.project.repositoryIdentity;
-        return identity == null || identity.provider === own.kind
-          ? own.project
-          : { ...own.project, repositoryIdentity: { ...identity, provider: own.kind } };
-      }),
-    );
 
   const changes: PullRequestService["Service"]["changes"] = (input) =>
     Stream.unwrap(
@@ -4263,8 +4238,6 @@ export const make = Effect.gen(function* () {
     ),
     activity: credentialCached(activity),
     changes,
-    servesProject,
-    addressedProject,
     preview: credentialCached(preview),
     threadComments,
     diff: credentialCached(diff),

@@ -18,7 +18,6 @@ import {
 } from "@ankielcode/shared/ankielMcpToolPresentation";
 import { classifyMarkdownImageSource } from "@ankielcode/client-runtime/markdown-images";
 import { resolveMediaSource } from "@ankielcode/client-runtime/media-source";
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
 import { isWorkspaceImagePreviewPath } from "@ankielcode/shared/mediaPreview";
 import { formatTokens } from "@ankielcode/shared/usageFormat";
 import { classifyToolActivity } from "@ankielcode/shared/toolActivity";
@@ -109,11 +108,6 @@ export interface WorkLogPresentationEntry {
 }
 
 export type ToolGroupAction =
-  | "link-pr"
-  | "unlink-pr"
-  | "list-prs"
-  | "watch-pr"
-  | "unwatch-pr"
   | "read"
   | "edit"
   | "command"
@@ -126,7 +120,6 @@ export type ToolGroupAction =
   | "update";
 
 export type ToolGroupSummaryKind =
-  | "pull-request"
   | ToolGroupAction
   | "dynamic-tool"
   | "reasoning"
@@ -190,30 +183,6 @@ function resolveAnkielMcpToolPresentation(
   if (!definition) return null;
   const detail = definition.labels[3];
 
-  const actionKind =
-    definition.summaryAction === "link-pr" ||
-    definition.summaryAction === "unlink-pr" ||
-    definition.summaryAction === "list-prs" ||
-    definition.summaryAction === "watch-pr" ||
-    definition.summaryAction === "unwatch-pr"
-      ? definition.summaryAction
-      : undefined;
-  const payload = asRecord(data);
-  const input =
-    asRecord(payload?.arguments) ?? asRecord(payload?.input) ?? asRecord(payload?.rawInput);
-  const urlTarget =
-    typeof input?.url === "string" ? sourceControlClients.parseChangeRequestUrl(input.url) : null;
-  const number = urlTarget?.link.number ?? input?.number;
-  const { shortLabel } = (urlTarget?.definition ?? sourceControlClients.get(undefined))
-    .changeRequest;
-  const pullRequestNumber =
-    actionKind !== undefined &&
-    actionKind !== "list-prs" &&
-    typeof number === "number" &&
-    Number.isSafeInteger(number) &&
-    number > 0
-      ? number
-      : null;
   const sentence = ankielToolSentence(definition.labels);
   const statusKey = ankielToolStatusKey(status);
   // A tool added to the shared table after `ankielToolSentences.ts` was generated.
@@ -232,19 +201,9 @@ function resolveAnkielMcpToolPresentation(
               : running;
   const displayName =
     sentence === undefined
-      ? `${fallbackVerb} ${pullRequestNumber === null ? detail : `${shortLabel} #${pullRequestNumber}`}`
-      : pullRequestNumber !== null && sentence.changeRequest !== undefined
-        ? resolve(sentence.changeRequest, {
-            status: statusKey,
-            changeRequest: shortLabel,
-            number: String(pullRequestNumber),
-          })
-        : resolve(sentence.detail, { status: statusKey });
-  return {
-    displayName,
-    icon: definition.icon,
-    ...(actionKind === undefined ? {} : { action: actionKind }),
-  };
+      ? `${fallbackVerb} ${detail}`
+      : resolve(sentence.detail, { status: statusKey });
+  return { displayName, icon: definition.icon };
 }
 
 export function liveActivityToolStatus(status: string | undefined, presentTense: boolean) {
@@ -415,7 +374,6 @@ export function toolGroupAction(entry: WorkLogPresentationEntry): ToolGroupActio
 function computeToolGroupAction(entry: WorkLogPresentationEntry): ToolGroupAction {
   if (entry.itemType === "thread_created") return "thread-create";
   const presentation = resolveWorkEntryToolPresentation(entry);
-  if (presentation?.action !== undefined) return presentation.action;
   if (presentation?.icon === "browser") return "browser";
   if (presentation?.icon === "device") return "device";
   if (entry.requestKind === "file-read" || entry.viewedImagePath !== undefined) return "read";
@@ -537,43 +495,6 @@ function toolGroupActionLabel(
   resolve: MFunctionType,
 ): string {
   switch (action) {
-    case "link-pr":
-      return resolve(
-        msg(
-          "{count, plural, one {Linked {count} pull request} other {Linked {count} pull requests}}",
-          {
-            count,
-          },
-        ),
-      );
-    case "unlink-pr":
-      return resolve(
-        msg(
-          "{count, plural, one {Unlinked {count} pull request} other {Unlinked {count} pull requests}}",
-          { count },
-        ),
-      );
-    case "watch-pr":
-      return resolve(
-        msg(
-          "{count, plural, one {Watching {count} pull request} other {Watching {count} pull requests}}",
-          { count },
-        ),
-      );
-    case "unwatch-pr":
-      return resolve(
-        msg(
-          "{count, plural, one {Stopped watching {count} pull request} other {Stopped watching {count} pull requests}}",
-          { count },
-        ),
-      );
-    case "list-prs":
-      return resolve(
-        msg(
-          "{count, plural, =1 {Checked linked pull requests} other {Checked linked pull requests {count} times}}",
-          { count },
-        ),
-      );
     case "read":
       return resolve(
         msg("{count, plural, one {Read {count} file} other {Read {count} files}}", { count }),
@@ -811,11 +732,6 @@ export function toolGroupSummaryKind(
   const toolEntries = entries.filter((entry) => entry.itemType !== "reasoning");
   if (entries.length > 0 && toolEntries.length === 0) return "reasoning";
   entries = toolEntries;
-  if (
-    entries.length > 0 &&
-    entries.every((entry) => resolveWorkEntryToolPresentation(entry)?.icon === "pull-request")
-  )
-    return "pull-request";
   const actions = new Set(entries.map(toolGroupAction));
   if (actions.size !== 1) return "mixed";
   const action = actions.values().next().value!;

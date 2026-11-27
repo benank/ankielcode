@@ -187,16 +187,6 @@ describe("resolveWorkEntryToolPresentation", () => {
     ).toBe("Failed to click in the preview browser");
   });
 
-  it("names a linked pull request with its number", () => {
-    expect(
-      resolveWorkEntryToolPresentation({
-        label: "Ankiel-code.link_pull_request",
-        toolLifecycleStatus: "completed",
-        toolData: { arguments: { url: "https://github.com/acme/web/pull/7" } },
-      })?.displayName,
-    ).toMatch(/ PR #7$/);
-  });
-
   it("does not brand unknown tools or another server's matching tool name", () => {
     for (const label of [
       "mcp__github__preview_click",

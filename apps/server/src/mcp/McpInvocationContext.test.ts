@@ -25,18 +25,18 @@ it.effect("reports other missing capabilities with the neutral error", () => {
   };
 
   return Effect.gen(function* () {
-    const error = yield* McpInvocationContext.requireMcpCapability("pull-requests").pipe(
+    const error = yield* McpInvocationContext.requireThreadMcpCapability("device").pipe(
       Effect.provideService(McpInvocationContext.McpInvocationContext, invocation),
       Effect.flip,
     );
 
     expect(error).toBeInstanceOf(McpCapabilityUnavailableError);
     expect(error).toMatchObject({
-      capability: "pull-requests",
+      capability: "device",
       threadId: invocation.thread?.threadId,
     });
 
-    const scope = yield* McpInvocationContext.requireMcpCapability("preview").pipe(
+    const scope = yield* McpInvocationContext.requireThreadMcpCapability("preview").pipe(
       Effect.provideService(McpInvocationContext.McpInvocationContext, invocation),
     );
     expect(scope).toBe(invocation);

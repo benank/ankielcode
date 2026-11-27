@@ -2,12 +2,10 @@ import { msg } from "gt-i18n";
 
 /**
  * Whole sentences for each Ankiel MCP tool row, keyed by the tool's labels from
- * `@ankielcode/shared/ankielMcpToolPresentation`. Resolve with `{ status }`, and for
- * `changeRequest` also `{ changeRequest, number }`.
+ * `@ankielcode/shared/ankielMcpToolPresentation`. Resolve with `{ status }`.
  */
 export interface AnkielToolSentence {
   readonly detail: string;
-  readonly changeRequest?: string;
 }
 
 export function ankielToolSentence(labels: ReadonlyArray<string>): AnkielToolSentence | undefined {
@@ -18,160 +16,6 @@ const ANKIEL_TOOL_SENTENCES: ReadonlyMap<string, AnkielToolSentence> = new Map<
   string,
   AnkielToolSentence
 >([
-  [
-    "Link\nLinking\nLinked\na pull request",
-    {
-      detail: msg(
-        "{status, select, inProgress {Linking a pull request} completed {Linked a pull request} failed {Failed to link a pull request} declined {Declined to link a pull request} stopped {Stopped linking a pull request} other {Linking a pull request}}",
-      ),
-      changeRequest: msg(
-        "{status, select, inProgress {Linking {changeRequest} #{number}} completed {Linked {changeRequest} #{number}} failed {Failed to link {changeRequest} #{number}} declined {Declined to link {changeRequest} #{number}} stopped {Stopped linking {changeRequest} #{number}} other {Linking {changeRequest} #{number}}}",
-      ),
-    },
-  ],
-  [
-    "Link\nLinking\nLinked\npull requests",
-    {
-      detail: msg(
-        "{status, select, inProgress {Linking pull requests} completed {Linked pull requests} failed {Failed to link pull requests} declined {Declined to link pull requests} stopped {Stopped linking pull requests} other {Linking pull requests}}",
-      ),
-      changeRequest: msg(
-        "{status, select, inProgress {Linking {changeRequest} #{number}} completed {Linked {changeRequest} #{number}} failed {Failed to link {changeRequest} #{number}} declined {Declined to link {changeRequest} #{number}} stopped {Stopped linking {changeRequest} #{number}} other {Linking {changeRequest} #{number}}}",
-      ),
-    },
-  ],
-  [
-    "Unlink\nUnlinking\nUnlinked\na pull request",
-    {
-      detail: msg(
-        "{status, select, inProgress {Unlinking a pull request} completed {Unlinked a pull request} failed {Failed to unlink a pull request} declined {Declined to unlink a pull request} stopped {Stopped unlinking a pull request} other {Unlinking a pull request}}",
-      ),
-      changeRequest: msg(
-        "{status, select, inProgress {Unlinking {changeRequest} #{number}} completed {Unlinked {changeRequest} #{number}} failed {Failed to unlink {changeRequest} #{number}} declined {Declined to unlink {changeRequest} #{number}} stopped {Stopped unlinking {changeRequest} #{number}} other {Unlinking {changeRequest} #{number}}}",
-      ),
-    },
-  ],
-  [
-    "Unlink\nUnlinking\nUnlinked\npull requests by state",
-    {
-      detail: msg(
-        "{status, select, inProgress {Unlinking pull requests by state} completed {Unlinked pull requests by state} failed {Failed to unlink pull requests by state} declined {Declined to unlink pull requests by state} stopped {Stopped unlinking pull requests by state} other {Unlinking pull requests by state}}",
-      ),
-      changeRequest: msg(
-        "{status, select, inProgress {Unlinking {changeRequest} #{number}} completed {Unlinked {changeRequest} #{number}} failed {Failed to unlink {changeRequest} #{number}} declined {Declined to unlink {changeRequest} #{number}} stopped {Stopped unlinking {changeRequest} #{number}} other {Unlinking {changeRequest} #{number}}}",
-      ),
-    },
-  ],
-  [
-    "Check\nChecking\nChecked\nlinked pull requests",
-    {
-      detail: msg(
-        "{status, select, inProgress {Checking linked pull requests} completed {Checked linked pull requests} failed {Failed to check linked pull requests} declined {Declined to check linked pull requests} stopped {Stopped checking linked pull requests} other {Checking linked pull requests}}",
-      ),
-    },
-  ],
-  [
-    "Watch\nWatching\nWatching\na pull request",
-    {
-      detail: msg(
-        "{status, select, inProgress {Watching a pull request} completed {Watching a pull request} failed {Failed to watch a pull request} declined {Declined to watch a pull request} stopped {Stopped watching a pull request} other {Watching a pull request}}",
-      ),
-      changeRequest: msg(
-        "{status, select, inProgress {Watching {changeRequest} #{number}} completed {Watching {changeRequest} #{number}} failed {Failed to watch {changeRequest} #{number}} declined {Declined to watch {changeRequest} #{number}} stopped {Stopped watching {changeRequest} #{number}} other {Watching {changeRequest} #{number}}}",
-      ),
-    },
-  ],
-  [
-    "Stop watching\nUnwatching\nStopped watching\na pull request",
-    {
-      detail: msg(
-        "{status, select, inProgress {Unwatching a pull request} completed {Stopped watching a pull request} failed {Failed to stop watching a pull request} declined {Declined to stop watching a pull request} stopped {Stopped unwatching a pull request} other {Unwatching a pull request}}",
-      ),
-      changeRequest: msg(
-        "{status, select, inProgress {Unwatching {changeRequest} #{number}} completed {Stopped watching {changeRequest} #{number}} failed {Failed to stop watching {changeRequest} #{number}} declined {Declined to stop watching {changeRequest} #{number}} stopped {Stopped unwatching {changeRequest} #{number}} other {Unwatching {changeRequest} #{number}}}",
-      ),
-    },
-  ],
-  [
-    "Write\nWriting\nStarted writing\nreview guides",
-    {
-      detail: msg(
-        "{status, select, inProgress {Writing review guides} completed {Started writing review guides} failed {Failed to write review guides} declined {Declined to write review guides} stopped {Stopped writing review guides} other {Writing review guides}}",
-      ),
-    },
-  ],
-  [
-    "Read\nReading\nRead\na review guide",
-    {
-      detail: msg(
-        "{status, select, inProgress {Reading a review guide} completed {Read a review guide} failed {Failed to read a review guide} declined {Declined to read a review guide} stopped {Stopped reading a review guide} other {Reading a review guide}}",
-      ),
-    },
-  ],
-  [
-    "List\nListing\nListed\nissues",
-    {
-      detail: msg(
-        "{status, select, inProgress {Listing issues} completed {Listed issues} failed {Failed to list issues} declined {Declined to list issues} stopped {Stopped listing issues} other {Listing issues}}",
-      ),
-    },
-  ],
-  [
-    "Read\nReading\nRead\nan issue",
-    {
-      detail: msg(
-        "{status, select, inProgress {Reading an issue} completed {Read an issue} failed {Failed to read an issue} declined {Declined to read an issue} stopped {Stopped reading an issue} other {Reading an issue}}",
-      ),
-    },
-  ],
-  [
-    "File\nFiling\nFiled\nan issue",
-    {
-      detail: msg(
-        "{status, select, inProgress {Filing an issue} completed {Filed an issue} failed {Failed to file an issue} declined {Declined to file an issue} stopped {Stopped filing an issue} other {Filing an issue}}",
-      ),
-    },
-  ],
-  [
-    "Comment on\nCommenting on\nCommented on\nan issue",
-    {
-      detail: msg(
-        "{status, select, inProgress {Commenting on an issue} completed {Commented on an issue} failed {Failed to comment on an issue} declined {Declined to comment on an issue} stopped {Stopped commenting on an issue} other {Commenting on an issue}}",
-      ),
-    },
-  ],
-  [
-    "Change\nChanging\nChanged\nan issue's state",
-    {
-      detail: msg(
-        "{status, select, inProgress {Changing an issue's state} completed {Changed an issue's state} failed {Failed to change an issue's state} declined {Declined to change an issue's state} stopped {Stopped changing an issue's state} other {Changing an issue's state}}",
-      ),
-    },
-  ],
-  [
-    "Link\nLinking\nLinked\nan issue",
-    {
-      detail: msg(
-        "{status, select, inProgress {Linking an issue} completed {Linked an issue} failed {Failed to link an issue} declined {Declined to link an issue} stopped {Stopped linking an issue} other {Linking an issue}}",
-      ),
-    },
-  ],
-  [
-    "Unlink\nUnlinking\nUnlinked\nan issue",
-    {
-      detail: msg(
-        "{status, select, inProgress {Unlinking an issue} completed {Unlinked an issue} failed {Failed to unlink an issue} declined {Declined to unlink an issue} stopped {Stopped unlinking an issue} other {Unlinking an issue}}",
-      ),
-    },
-  ],
-  [
-    "Check\nChecking\nChecked\nlinked issues",
-    {
-      detail: msg(
-        "{status, select, inProgress {Checking linked issues} completed {Checked linked issues} failed {Failed to check linked issues} declined {Declined to check linked issues} stopped {Stopped checking linked issues} other {Checking linked issues}}",
-      ),
-    },
-  ],
   [
     "Get\nGetting\nGot\norchestration capabilities",
     {

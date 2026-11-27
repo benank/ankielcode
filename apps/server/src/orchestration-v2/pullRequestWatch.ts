@@ -456,9 +456,9 @@ const SUMMARY: Record<PullRequestWatchChange["kind"], string> = {
 };
 
 const WATCHING_CLOSING =
-  "Look into each item and act on it as your task requires. This PR stays linked and watched, so do not link, watch, or list it again. End your turn when you are done, and Ankiel Code wakes you on the next change. When you hand the work back to the user, call unwatch_pull_request first so the thread returns to their inbox.";
+  "Look into each item and act on it as your task requires. This PR stays linked and watched. End your turn when you are done, and Ankiel Code wakes you on the next change.";
 const WATCHING_CLOSING_PLURAL =
-  "Look into each item and act on it as your task requires. Each PR Ankiel Code still watches stays linked and watched, so do not link, watch, or list them again. End your turn when you are done, and Ankiel Code wakes you on the next change. When you hand the work back to the user, call unwatch_pull_request for each first so the thread returns to their inbox.";
+  "Look into each item and act on it as your task requires. Each PR Ankiel Code still watches stays linked and watched. End your turn when you are done, and Ankiel Code wakes you on the next change.";
 
 export interface PullRequestWatchWake {
   readonly text: string;
@@ -509,7 +509,7 @@ export function pullRequestWatchEndMessage(input: {
   return {
     text: [
       `Pull request #${input.number} (${input.url}) ${how}, so Ankiel Code stopped watching it.`,
-      ...(merged ? [] : ["If it is reopened, call watch_pull_request to watch it again."]),
+      ...(merged ? [] : ["If it is reopened, the user can watch it again from the thread."]),
     ].join(" "),
     notification: {
       source: { kind: "monitor" },
@@ -536,7 +536,7 @@ export function pullRequestWatchMessage(input: {
     ...changes.flatMap((change) => changeLines(change, context)),
     "",
     exhausted
-      ? `Ankiel Code stopped watching after ${PULL_REQUEST_WATCH_WAKE_LIMIT} comment-only updates in a row. Call watch_pull_request to watch it again.`
+      ? `Ankiel Code stopped watching after ${PULL_REQUEST_WATCH_WAKE_LIMIT} comment-only updates in a row. The user can watch it again from the thread.`
       : WATCHING_CLOSING,
   ].join("\n");
   const failed = changes.some(

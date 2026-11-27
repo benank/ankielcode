@@ -55,7 +55,6 @@
   "src/mcp/toolkits/preview/tools.test.ts": 3.6,
   "src/mcp/toolkits/previewControls/handlers.test.ts": 1.6,
   "src/mcp/toolkits/project/handlers.test.ts": 1.3,
-  "src/mcp/toolkits/pullRequests/handlers.test.ts": 1.3,
   "src/mcpApps/McpAppModelContext.test.ts": 1,
   "src/mcpApps/McpAppRequests.test.ts": 1.3,
   "src/observability/DefectReporter.test.ts": 1.2,

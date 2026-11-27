@@ -3,15 +3,13 @@ import { assert, describe, it } from "@effect/vitest";
 import { buildRuntimeInstructions } from "./runtimeInstructions.ts";
 
 describe("buildRuntimeInstructions", () => {
-  it("names the harness and model and carries no PR linking guidance", () => {
+  it("names the harness and model", () => {
     const instructions = buildRuntimeInstructions({
       harness: "Antigravity",
       model: "gemini-3.8-flash",
     });
 
     assert.include(instructions, "through the Antigravity harness, as gemini-3.8-flash.");
-    assert.notInclude(instructions, "pull_request");
-    assert.notInclude(instructions, "link_issue");
   });
 
   it("lists a multi-folder thread's folders and leaves single-folder text unchanged", () => {

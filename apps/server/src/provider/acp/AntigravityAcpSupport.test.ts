@@ -154,9 +154,9 @@ describe("Antigravity Auto", () => {
           ServerName: "ankiel-code",
           ToolName: "delegate_task",
         }),
-        request("Running create_issue", { ServerName: "ankiel-code", ToolName: "delegate_task" }),
+        request("Running html_render", { ServerName: "ankiel-code", ToolName: "delegate_task" }),
         // call_mcp_tool is titled for the tool it calls.
-        request("MCP Tool create_issue", { ServerName: "ankiel-code", ToolName: "delegate_task" }),
+        request("MCP Tool html_render", { ServerName: "ankiel-code", ToolName: "delegate_task" }),
       ]) {
         expect(antigravityPermissionDisposition(policy, otherCall)).toBe("ask");
       }

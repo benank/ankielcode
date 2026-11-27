@@ -1,5 +1,3 @@
-import * as Orchestrator from "../orchestration-v2/Orchestrator.ts";
-import * as ProjectionStore from "../orchestration-v2/ProjectionStore.ts";
 import { expect, it } from "@effect/vitest";
 import { NodeHttpServer } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -10,7 +8,6 @@ import {
   EnvironmentId,
   OrchestratorMcpFailure,
   PreviewTabId,
-  ProjectId,
   ProviderInstanceId,
   ThreadId,
 } from "@ankielcode/contracts";
@@ -40,9 +37,6 @@ import * as Sqlite from "../persistence/Sqlite.ts";
 import * as PreviewManager from "../preview/Manager.ts";
 
 import * as DeviceService from "../device/DeviceService.ts";
-import * as GitManager from "../git/GitManager.ts";
-import * as PullRequestReviewGuideService from "../pullRequest/PullRequestReviewGuideService.ts";
-import * as PullRequestService from "../pullRequest/PullRequestService.ts";
 import * as ServerConfig from "../config.ts";
 import * as ServerHttp from "../http.ts";
 import * as ServerSettings from "../serverSettings.ts";
@@ -96,22 +90,6 @@ const layerTest = McpHttpServer.layerPreviewToolkit.pipe(
     ServerConfig.layerTest(process.cwd(), { prefix: "ankiel-mcp-http-server-test-" }),
   ),
   Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)),
-);
-const layerPullRequestsTest = McpHttpServer.layerPullRequestsToolkit.pipe(
-  Layer.provideMerge(McpHttpServer.layerInProcessMcpServer),
-  Layer.provideMerge(McpToolAccessTestkit.liveThreadsLayer),
-  Layer.provide(
-    Layer.mergeAll(
-      Layer.mock(ProjectService.ProjectService)({}),
-      Layer.mock(PullRequestReviewGuideService.PullRequestReviewGuideService)({}),
-      Layer.mock(PullRequestService.PullRequestService)({}),
-      Layer.mock(GitManager.GitManager)({}),
-      Layer.mock(Orchestrator.OrchestratorV2)({}),
-      Layer.mock(ProjectionStore.ProjectionStoreV2)({}),
-      NodeServices.layer,
-      NodeCrypto.layer,
-    ),
-  ),
 );
 
 const snapshotResult = {
@@ -810,38 +788,6 @@ it("keeps cross-tool routing out of the delegate_task description", () => {
   expect(description).not.toContain("Do not poll");
   expect(description).not.toContain("Prefer native");
 });
-
-it.effect(
-  "registers the pull request toolkit and surfaces a missing capability as a tool error",
-  () =>
-    Effect.gen(function* () {
-      const server = yield* McpServer.McpServer;
-      const names = server.tools.map(({ tool }) => tool.name);
-      expect(names).toEqual(
-        expect.arrayContaining([
-          "link_pull_request",
-          "unlink_pull_request",
-          "list_thread_pull_requests",
-        ]),
-      );
-      const linkTool = server.tools.find(({ tool }) => tool.name === "link_pull_request");
-      expect(linkTool?.tool.annotations?.idempotentHint).toBe(true);
-      expect(linkTool?.tool.annotations?.openWorldHint).toBe(false);
-      expect(linkTool?.tool.description).toContain("Link a PR to this thread");
-      expect(linkTool?.tool.description).toContain("settles the thread on merge");
-
-      const denied = yield* server
-        .callTool({ name: "list_thread_pull_requests", arguments: {} })
-        .pipe(
-          Effect.provideService(McpInvocationContext.McpInvocationContext, invocation),
-          Effect.provideService(McpSchema.McpServerClient, client),
-        );
-      expect(denied.isError).toBe(true);
-      expect(denied.content).toEqual([
-        { type: "text", text: "MCP credential does not grant the pull-requests capability." },
-      ]);
-    }).pipe(Effect.provide(layerPullRequestsTest)),
-);
 
 it.effect("bounds large ARIA trees without dropping every server locator", () =>
   Effect.scoped(
@@ -1592,128 +1538,6 @@ it.effect("gives outside clients an upload URL on the origin their request reach
       expect(new URL(proxied.uploadUrl).protocol).toBe("https:");
     }),
   ).pipe(Effect.provide(NodeHttpServer.layerTest)),
-);
-
-it.effect(
-  "lists watch tools only to threads that are not delegated children, and forge tools only where the project has a forge",
-  () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const scopeFor = (
-          token: string,
-          subagent: boolean,
-        ): McpInvocationContext.McpThreadInvocationScope => ({
-          environmentId,
-          requestNamespace: token,
-          thread: {
-            threadId: ThreadId.make(`thread-${token}`),
-            providerSessionId: token,
-            providerInstanceId: ProviderInstanceId.make("codex"),
-            subagent,
-          },
-          client: undefined,
-          capabilities: new Set(["pull-requests"]),
-          issuedAt: 1,
-        });
-        const scopes = new Map([
-          ["parentToken", scopeFor("parentToken", false)],
-          ["childToken", scopeFor("childToken", true)],
-          ["noForgeToken", scopeFor("noForgeToken", false)],
-        ]);
-        const serverLayer = McpHttpServer.layerMcpTransport(
-          McpHttpServer.layerPullRequestsToolkit,
-        ).pipe(
-          Layer.provide(ServerSettings.layerTest()),
-          Layer.provide(
-            Layer.mock(McpSessionRegistry.McpSessionRegistry)({
-              resolve: (token) => Effect.succeed(scopes.get(token)),
-            }),
-          ),
-          Layer.provide(
-            Layer.mergeAll(
-              McpToolAccessTestkit.liveThreadsLayer,
-              Layer.mock(ProjectService.ProjectService)({}),
-              Layer.mock(PullRequestReviewGuideService.PullRequestReviewGuideService)({}),
-              Layer.mock(PullRequestService.PullRequestService)({
-                servesProject: (projectId) => Effect.succeed(projectId !== "project-noForgeToken"),
-              }),
-              Layer.mock(GitManager.GitManager)({}),
-              Layer.mock(Orchestrator.OrchestratorV2)({}),
-              Layer.mock(ProjectionStore.ProjectionStoreV2)({
-                getThreadShell: (threadId) =>
-                  Effect.succeed({
-                    projectId: ProjectId.make(threadId.replace("thread-", "project-")),
-                  } as never),
-              }),
-              NodeServices.layer,
-              NodeCrypto.layer,
-            ),
-          ),
-        );
-        yield* HttpRouter.serve(serverLayer, { disableListenLog: true, disableLogger: true }).pipe(
-          Layer.build,
-        );
-        const httpClient = yield* HttpClient.HttpClient;
-        const listedTools = (token: string) =>
-          Effect.gen(function* () {
-            const headers = {
-              accept: "application/json, text/event-stream",
-              authorization: `Bearer ${token}`,
-            };
-            const initialize = yield* httpClient.post("/mcp", {
-              headers,
-              body: HttpBody.text(
-                `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"probe","version":"1.0.0"}}}`,
-                "application/json",
-              ),
-            });
-            const listed = yield* httpClient.post("/mcp", {
-              headers: {
-                ...headers,
-                "mcp-session-id": initialize.headers["mcp-session-id"]!,
-                "mcp-protocol-version": "2025-06-18",
-              },
-              body: HttpBody.text(
-                `{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}`,
-                "application/json",
-              ),
-            });
-            const body = (yield* listed.json) as {
-              readonly result: { readonly tools: ReadonlyArray<{ readonly name: string }> };
-            };
-            return body.result.tools.map((tool) => tool.name);
-          });
-
-        const parentTools = yield* listedTools("parentToken");
-        const childTools = yield* listedTools("childToken");
-        expect(parentTools).toEqual(
-          expect.arrayContaining([
-            "link_pull_request",
-            "watch_pull_request",
-            "unwatch_pull_request",
-          ]),
-        );
-        expect(childTools).toContain("link_pull_request");
-        expect(childTools).not.toContain("watch_pull_request");
-        expect(childTools).not.toContain("unwatch_pull_request");
-        expect(parentTools).toEqual(
-          expect.arrayContaining([
-            "pull_request_read",
-            "pull_request_review",
-            "pull_request_merge",
-            "ci_logs",
-            "ci_rerun",
-          ]),
-        );
-        const noForgeTools = yield* listedTools("noForgeToken");
-        expect(noForgeTools).toEqual(
-          expect.arrayContaining(["link_pull_request", "watch_pull_request"]),
-        );
-        expect(
-          noForgeTools.filter((name) => name.startsWith("pull_request_") || name.startsWith("ci_")),
-        ).toEqual([]);
-      }),
-    ).pipe(Effect.provide(NodeHttpServer.layerTest)),
 );
 
 it.effect("lists optional tools to a deferring client only after tool_search loads them", () =>

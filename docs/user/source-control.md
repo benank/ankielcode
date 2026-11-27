@@ -163,9 +163,7 @@ Alternatively, open **Settings → Source control & issues**, expand **TanStack 
 from `https://source.tanstack.com/settings/tokens`. A saved token is used before `SRC_TOKEN`, which is
 used before the `src` login. With several `src` logins, pick the account there too.
 
-Pull requests show the runs of TanStack Source CI with their logs, and update live while open. An
-agent can open a private pull request on a public repository when you ask for one: its branch goes
-to the repository's private companion and never to the repository itself. Issues
+Pull requests show the runs of TanStack Source CI with their logs, and update live while open. Issues
 can be listed, filed, edited, commented on and closed. Reactions and picking reviewers or assignees
 from a list are not available yet.
 
@@ -364,13 +362,7 @@ and their marks follow the same rules as on desktop.
 A thread can hold several pull requests, including reviews from another repository on the same host.
 Use **Link pull request** in the command palette or **Linked items** panel, or right-click a
 pull request link in the conversation. Creating a pull request from Git actions links it automatically,
-and so does an agent creating one with `gh pr create` or `glab mr create`. Agents can link other
-pull requests with the `link_pull_request` tool.
-
-Agents can also read, open, update, reply on, and merge pull requests in the thread's repository
-through Ankiel Code's own tools, which use the same sign-in as the Pull requests page. An agent merges
-only the commit it last read: if someone pushed since, the merge is refused. On github.com an
-agent can also land a GitHub stack in one merge, like **Merge stack** below.
+and so does an agent creating one with `gh pr create` or `glab mr create`.
 
 Use **Link pull request to thread** in the command palette to keep a pull request with the thread. From a review
 on the Pull requests page, **Link to thread** lets you search for an active thread. The review header
@@ -386,7 +378,7 @@ closed reviews refresh periodically so reopening one on the host is detected. Me
 when requested. Settling a thread refreshes its open and closed reviews once; after that they stop refreshing until you unsettle it. With **Auto-settle merged threads** enabled, a thread can settle after every linked
 review is terminal. An open or unsynced link keeps it active.
 
-Ask the agent to watch, monitor, or babysit a pull request and it calls `watch_pull_request`. While
+To watch a pull request, use its row menu in the **Linked items** panel. While
 the thread is active, the server checks the pull request every two minutes and wakes the agent when a
 check fails or waits for a maintainer's approval, the required checks pass, the other checks finish after a failure, someone else comments or reviews, or the branch starts to
 conflict. On github.com it also wakes the agent, with GitHub's reason, when the merge queue drops
@@ -398,18 +390,15 @@ pull request itself with the host's CLI. A reopened pull request needs a new wat
 failed reads in a row, or when you press Stop on the thread. A rate limit only pauses watching.
 Settling or archiving a thread also ends all its watches. Unsettle the thread before starting a new
 watch. Watching a pull request again does not repeat check or conflict news its last
-watch already reported; unlinking the pull request clears that. Subagents cannot watch pull requests; the thread that delegated to them does. To start or stop
-it yourself, use the row menu in the **Linked items** panel. In the thread details card, a
-watched pull request shows an eye; click it to stop watching.
+watch already reported; unlinking the pull request clears that. To stop watching, use the same row menu. In the thread
+details card, a watched pull request shows an eye; click it to stop watching.
 
 A watched thread counts as working while the pull request still has checks running, so it stays in
 the **Working** section, including after the agent pushes a fix. Once every check has finished,
 including review bots that report as checks, the thread returns to your inbox: what happens next is
 up to a person. That includes a workflow waiting for a maintainer to approve it, which runs only
-once someone does. If you ask the agent to act on the pull request itself, such as merging it once
-a teammate approves, the thread stays in **Working** until the pull request merges or closes. The
-watch stays on and still wakes the agent on new comments, failed checks or conflicts, and a watched
-thread never auto-settles.
+once someone does. The watch stays on and still wakes the agent on new comments, failed checks or
+conflicts, and a watched thread never auto-settles.
 
 Cross-repository links use a project on the same host. Azure DevOps reviews require a project checked
 out from the matching organization and repository.

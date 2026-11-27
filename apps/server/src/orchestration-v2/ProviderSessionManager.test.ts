@@ -2731,10 +2731,7 @@ it.effect(
         assert.isDefined(token);
         const resolved = yield* registry.resolve(token!);
         assert.equal(resolved?.thread.threadId, threadId);
-        assert.deepEqual(
-          resolved?.capabilities,
-          new Set(["preview", "orchestration", "worktree", "pull-requests"]),
-        );
+        assert.deepEqual(resolved?.capabilities, new Set(["preview", "orchestration", "worktree"]));
 
         assert.isFalse(yield* captured!.hasPendingWake!);
 
@@ -2843,10 +2840,7 @@ it.effect(
         assert.equal(captured?.browserToolsAvailable, false);
         const token = captured?.authorizationHeader.replace(/^Bearer\s+/, "");
         const resolved = yield* registry.resolve(token!);
-        assert.deepEqual(
-          resolved?.capabilities,
-          new Set(["orchestration", "worktree", "pull-requests"]),
-        );
+        assert.deepEqual(resolved?.capabilities, new Set(["orchestration", "worktree"]));
 
         yield* manager.close(providerSessionId);
       });

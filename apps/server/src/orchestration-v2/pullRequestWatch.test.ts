@@ -1361,7 +1361,7 @@ describe("pullRequestWatchEndMessage", () => {
     const closed = end({ state: "closed" });
     assert.equal(
       closed.text,
-      `Pull request #7 (${url}) was closed without merging, so Ankiel Code stopped watching it. If it is reopened, call watch_pull_request to watch it again.`,
+      `Pull request #7 (${url}) was closed without merging, so Ankiel Code stopped watching it. If it is reopened, the user can watch it again from the thread.`,
     );
     assert.equal(closed.notification.summary, "#7: closed, stopped watching");
   });

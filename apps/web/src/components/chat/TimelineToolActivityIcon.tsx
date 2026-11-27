@@ -1,4 +1,3 @@
-import { PullRequestGlyph } from "../pullRequest/pullRequestIcons";
 import { type ToolActivityIcon } from "@ankielcode/contracts";
 import { toolActivityFaviconUrl } from "@ankielcode/shared/favicon";
 import { getProjectFaviconCacheKey } from "@ankielcode/shared/projectFavicon";
@@ -50,7 +49,6 @@ export type WorkEntryIconName =
   | "search"
   | "square-pen"
   | "terminal"
-  | "pull-request"
   | "ankiel-code"
   | "wrench"
   | "x"
@@ -231,8 +229,6 @@ function ToolActivityImageIcon(props: {
 
 function WorkEntryIcon({ name, className }: { name: WorkEntryIconName; className: string }) {
   switch (name) {
-    case "pull-request":
-      return <PullRequestGlyph.pullRequest className={className} aria-hidden />;
     case "bot":
       return <BotIcon className={className} aria-hidden />;
     case "brain":

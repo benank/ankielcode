@@ -82,7 +82,6 @@ describe("Pi orchestration prompt section", () => {
       assert.isDefined(result);
       assert.isTrue(result!.systemPrompt.startsWith(`${event.systemPrompt}\n\n`));
       assert.include(result!.systemPrompt, "orchestrator_capabilities");
-      assert.notInclude(result!.systemPrompt, "pull_request_linking");
     }
   });
 
@@ -95,7 +94,6 @@ describe("Pi orchestration prompt section", () => {
     );
     assert.isUndefined(result);
     assert.include(sections.ankiel_code_orchestration, "orchestrator_capabilities");
-    assert.notInclude(sections.ankiel_code_orchestration, "pull_request_linking");
   });
 });
 
