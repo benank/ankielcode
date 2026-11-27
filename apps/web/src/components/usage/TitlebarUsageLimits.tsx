@@ -1,6 +1,8 @@
 import type { ContextWindowSnapshot } from "@ankielcode/client-runtime/state/context-window";
 import { refreshUsageLimits } from "@ankielcode/client-runtime/state/usage";
 import {
+  CLAUDE_USAGE_LINK,
+  CODEX_USAGE_LINK,
   collectExternalUsageLinks,
   collectLimitAccounts,
   type LimitPresentations,
@@ -127,6 +129,14 @@ function UsageLimitsBreakdown({
   const [now] = useState(() => Date.now());
   const notices = collectLimitNotices(presentations, m, false);
   const externalLinks = collectExternalUsageLinks(presentations, (provider) => provider);
+  const resetLinks = externalLinks.filter(
+    ({ url }) => url === CODEX_USAGE_LINK.url || url === CLAUDE_USAGE_LINK.url,
+  );
+  const footerLinks = externalLinks.filter(
+    (link) =>
+      !resetLinks.includes(link) ||
+      !accounts.some(({ limits }) => limits.externalUsage?.url === link.url),
+  );
   return (
     <div className="flex flex-col gap-3 py-1">
       <PopoverTitle>{gt("Provider usage limits")}</PopoverTitle>
@@ -135,6 +145,8 @@ function UsageLimitsBreakdown({
         {accounts.map((account) => {
           const name =
             account.displayName ?? providerClients.get(account.driver)?.label ?? account.driver;
+          const plan = account.plan ? shortPlanLabel(account.plan) : null;
+          const resetLink = resetLinks.find(({ url }) => url === account.limits.externalUsage?.url);
           return (
             <section
               key={account.key}
@@ -148,12 +160,17 @@ function UsageLimitsBreakdown({
                   className="size-4 shrink-0"
                   iconClassName="size-3.5"
                 />
-                <span className="truncate">{name}</span>
-                {account.plan ? (
-                  <span className="shrink-0 font-normal text-muted-foreground">
-                    {shortPlanLabel(account.plan)}
-                  </span>
-                ) : null}
+                {resetLink && !plan ? (
+                  <ResetUsageButton url={resetLink.url} provider={name} />
+                ) : (
+                  <span className="truncate">{name}</span>
+                )}
+                {plan &&
+                  (resetLink ? (
+                    <ResetUsageButton url={resetLink.url} provider={name} plan={plan} />
+                  ) : (
+                    <span className="shrink-0 font-normal text-muted-foreground">{plan}</span>
+                  ))}
                 {account.displayName === null && account.email ? (
                   <RedactedSensitiveText
                     value={account.email}
@@ -176,23 +193,32 @@ function UsageLimitsBreakdown({
           );
         })}
       </div>
-      {externalLinks.map((link) => (
-        <div
-          key={link.url}
-          className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-2"
-        >
-          <span className="min-w-0 text-xs break-words text-muted-foreground">
-            {link.accounts.join(", ")}
-          </span>
-          <Button
-            size="xs"
-            variant="outline"
-            onClick={() => void ensureLocalApi().shell.openExternal(link.url)}
+      {footerLinks.map((link) => {
+        const provider = link.accounts.join(", ");
+        return (
+          <div
+            key={link.url}
+            className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-2"
           >
-            {link.label}
-          </Button>
-        </div>
-      ))}
+            {resetLinks.includes(link) ? (
+              <ResetUsageButton url={link.url} provider={provider} />
+            ) : (
+              <>
+                <span className="min-w-0 text-xs break-words text-muted-foreground">
+                  {provider}
+                </span>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() => void ensureLocalApi().shell.openExternal(link.url)}
+                >
+                  {link.label}
+                </Button>
+              </>
+            )}
+          </div>
+        );
+      })}
       {notices.map((notice) => (
         <p key={notice} className="text-xs break-words text-muted-foreground">
           {notice}
@@ -204,6 +230,29 @@ function UsageLimitsBreakdown({
         </p>
       ) : null}
     </div>
+  );
+}
+
+function ResetUsageButton({
+  url,
+  provider,
+  plan,
+}: {
+  readonly url: string;
+  readonly provider: string;
+  readonly plan?: string;
+}) {
+  const gt = useGT();
+  return (
+    <Button
+      size="xs"
+      variant="ghost-muted"
+      className="min-w-0 max-w-full shrink"
+      title={gt("Usage & Resets for {provider}", { provider })}
+      onClick={() => void ensureLocalApi().shell.openExternal(url)}
+    >
+      <span className="truncate font-normal">{plan ?? provider}</span>
+    </Button>
   );
 }
 

@@ -10678,6 +10678,7 @@
   "6389dee75a7cb536": "{step}, étape {number}",
   "e0558a82e8059d27": "Limites d’utilisation des fournisseurs",
   "4acffc5cda91aea2": "Limites d’utilisation des fournisseurs · utilisation maximale de {percent} %",
+  "933c06f9b3de3fd1": "Utilisation et réinitialisations pour {provider}",
   "9a8d5ee34a1ba4bf": "{tokens} tokens restants",
   "a436751fedd547ef": "Aucune limite signalée par les fournisseurs.",
   "5434b97f68b55d8f": "En avance : consommation plus rapide que l’écoulement de la fenêtre",
