@@ -1188,7 +1188,7 @@ export function buildRemoteNodeEnvScript(input?: RemoteAnkielRunnerOptions): str
   );
 }
 
-export function buildRemoteLaunchScript(input?: RemoteAnkielRunnerOptions): string {
+function buildRemoteLaunchScript(input?: RemoteAnkielRunnerOptions): string {
   return applyScriptPlaceholders(REMOTE_LAUNCH_SCRIPT, {
     ANKIEL_UPDATE_MARKER_FILE: DESKTOP_UPDATE_IN_PROGRESS_MARKER_FILE,
     ANKIEL_UPDATE_TTL_MS: String(DESKTOP_UPDATE_IN_PROGRESS_TTL_MS),
