@@ -4,6 +4,7 @@ import * as Schema from "effect/Schema";
 import {
   GitCommandError,
   GitRunStackedActionInput,
+  GitRunStackedActionResult,
   VcsCreateWorktreeInput,
   VcsRef,
   VcsStatusRemoteResult,
@@ -20,6 +21,7 @@ const decodeGitCommandError = Schema.decodeUnknownSync(Schema.toCodecJson(GitCom
 const decodeRemoteStatus = Schema.decodeUnknownSync(VcsStatusRemoteResult);
 const encodeRemoteStatus = Schema.encodeUnknownSync(VcsStatusRemoteResult);
 const decodeRunStackedActionInput = Schema.decodeUnknownSync(GitRunStackedActionInput);
+const decodeRunStackedActionResult = Schema.decodeUnknownSync(GitRunStackedActionResult);
 const encodeRunStackedActionInput = Schema.encodeUnknownSync(GitRunStackedActionInput);
 const decodeReviewDiffFileContentsInput = Schema.decodeUnknownSync(ReviewDiffFileContentsInput);
 const encodeReviewDiffFileContentsInput = Schema.encodeUnknownSync(ReviewDiffFileContentsInput);
@@ -59,6 +61,31 @@ describe("retired pull request fields", () => {
     });
     expect(parsed.pr).toBeNull();
     expect(encodeRemoteStatus(parsed)).toEqual({ ...remote, pr: null });
+  });
+
+  it("reads an older server's pull request push result without its pull request parts", () => {
+    const result = decodeRunStackedActionResult({
+      action: "push",
+      branch: { status: "skipped_not_requested" },
+      commit: { status: "skipped_not_requested" },
+      push: { status: "pushed", branch: "fix" },
+      pr: { status: "opened_existing", url: "https://github.com/owner/repo/pull/1", number: 1 },
+      toast: {
+        title: "Pushed fix",
+        cta: { kind: "open_pr", label: "View PR", url: "https://github.com/owner/repo/pull/1" },
+      },
+    });
+    expect(result.pr).toEqual({ status: "skipped_not_requested" });
+    expect(result.toast.cta).toEqual({ kind: "none" });
+    expect(
+      decodeRunStackedActionResult({
+        ...result,
+        toast: {
+          title: "Pushed",
+          cta: { kind: "run_action", label: "Create PR", action: { kind: "create_pr" } },
+        },
+      }).toast.cta,
+    ).toEqual({ kind: "none" });
   });
 
   it("still decodes the pull request actions older clients send", () => {

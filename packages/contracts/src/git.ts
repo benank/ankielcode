@@ -56,15 +56,21 @@ export const GitRunStackedActionToastRunAction = Schema.Struct({
   kind: GitStackedAction,
 });
 export type GitRunStackedActionToastRunAction = typeof GitRunStackedActionToastRunAction.Type;
+const GitRunStackedActionToastNoCta = Schema.Struct({ kind: Schema.Literal("none") });
 const GitRunStackedActionToastCta = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("none"),
-  }),
+  GitRunStackedActionToastNoCta,
   Schema.Struct({
     kind: Schema.Literal("run_action"),
     label: TrimmedNonEmptyStringSchema,
     action: GitRunStackedActionToastRunAction,
   }),
+  // An older server offers to open or create a pull request after a push.
+  Schema.Unknown.pipe(
+    Schema.decodeTo(GitRunStackedActionToastNoCta, {
+      decode: SchemaGetter.succeed({ kind: "none" as const }),
+      encode: SchemaGetter.passthrough(),
+    }),
+  ),
 ]);
 export type GitRunStackedActionToastCta = typeof GitRunStackedActionToastCta.Type;
 const GitRunStackedActionToast = Schema.Struct({
@@ -270,6 +276,7 @@ export const VcsSwitchRefResult = Schema.Struct({
 });
 export type VcsSwitchRefResult = typeof VcsSwitchRefResult.Type;
 
+const GitRetiredPrStep = Schema.Struct({ status: Schema.Literal("skipped_not_requested") });
 export const GitRunStackedActionResult = Schema.Struct({
   action: GitStackedAction,
   branch: Schema.Struct({
@@ -287,8 +294,16 @@ export const GitRunStackedActionResult = Schema.Struct({
     upstreamBranch: Schema.optional(GitRefName),
     setUpstream: Schema.optional(Schema.Boolean),
   }),
-  /** Retired pull request step that older clients still require. */
-  pr: Schema.Struct({ status: Schema.Literal("skipped_not_requested") }),
+  /** Retired pull request step that older clients still require; an older server may report one. */
+  pr: Schema.Union([
+    GitRetiredPrStep,
+    Schema.Unknown.pipe(
+      Schema.decodeTo(GitRetiredPrStep, {
+        decode: SchemaGetter.succeed({ status: "skipped_not_requested" as const }),
+        encode: SchemaGetter.passthrough(),
+      }),
+    ),
+  ]),
   toast: GitRunStackedActionToast,
 });
 export type GitRunStackedActionResult = typeof GitRunStackedActionResult.Type;
