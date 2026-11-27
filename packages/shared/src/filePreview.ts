@@ -6,7 +6,6 @@ import {
 export {
   isWorkspaceAudioPreviewPath,
   isWorkspaceImagePreviewPath,
-  mediaKindFromPath,
   mediaMimeTypeFromExtension,
 } from "./mediaPreview.ts";
 import { GENERIC_MIME_TYPES } from "./image.ts";

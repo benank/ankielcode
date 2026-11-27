@@ -752,7 +752,7 @@ export function splitSearchText(
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Both activity recency and open counts halve every two weeks. */
-export const SEARCH_RECENCY_HALF_LIFE_MS = 14 * DAY_MS;
+const SEARCH_RECENCY_HALF_LIFE_MS = 14 * DAY_MS;
 /**
  * Opens closer together than this count once, so flipping between threads is
  * not frequency. Clients skip sending them.

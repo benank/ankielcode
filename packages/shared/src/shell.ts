@@ -443,7 +443,7 @@ const execWindowsEnvironmentProbe = (
     });
   });
 
-export const readEnvironmentFromWindowsShell = Effect.fn("shell.readEnvironmentFromWindowsShell")(
+const readEnvironmentFromWindowsShell = Effect.fn("shell.readEnvironmentFromWindowsShell")(
   function* (
     names: ReadonlyArray<string>,
     options: WindowsEnvironmentProbeOptions = {},
@@ -665,7 +665,7 @@ const listPathDirectory = Effect.fnUntraced(function* (
   };
 });
 
-export const makePathDirectoryListings = Cache.makeWith(listPathDirectory, {
+const makePathDirectoryListings = Cache.makeWith(listPathDirectory, {
   capacity: PATH_DIRECTORY_LISTINGS_MAX_ENTRIES,
   timeToLive: (exit) =>
     Exit.isSuccess(exit) && exit.value.reusable ? Duration.infinity : Duration.zero,
@@ -673,10 +673,9 @@ export const makePathDirectoryListings = Cache.makeWith(listPathDirectory, {
 });
 
 /** Windows PATH directory listings for the process; each use rechecks the directory's mtime. */
-export const PathDirectoryListings = Context.Reference(
-  "@ankielcode/shared/shell/PathDirectoryListings",
-  { defaultValue: () => Effect.runSync(makePathDirectoryListings) },
-);
+const PathDirectoryListings = Context.Reference("@ankielcode/shared/shell/PathDirectoryListings", {
+  defaultValue: () => Effect.runSync(makePathDirectoryListings),
+});
 
 const resolverPathDirectoryListings = new Map<
   string,
@@ -948,7 +947,7 @@ function isFileSync(filePath: string): boolean {
 }
 
 /** Bypass the launcher's extra process and kernel-token leak. Retain it when MSYSTEM is set, or git.exe omits hook/helper PATH entries. */
-export function preferGitForWindowsBinary(
+function preferGitForWindowsBinary(
   executable: string,
   env: NodeJS.ProcessEnv,
   isFile: (filePath: string) => boolean = isFileSync,
@@ -1003,7 +1002,7 @@ function readFileSyncOrUndefined(filePath: string): string | undefined {
 }
 
 /** Resolve shims that only launch native executables so direct spawning keeps them in libuv's kill-on-close job. */
-export function npmShimExecutable(
+function npmShimExecutable(
   shimPath: string,
   readFile: (filePath: string) => string | undefined = readFileSyncOrUndefined,
   isFile: (filePath: string) => boolean = isFileSync,
@@ -1041,7 +1040,7 @@ function locateXcodeGitWithXcrun(env: NodeJS.ProcessEnv): string | undefined {
   }
 }
 
-export const XcodeGitLocation = Context.Reference<XcodeGitLocator>(
+const XcodeGitLocation = Context.Reference<XcodeGitLocator>(
   "@ankielcode/shared/shell/XcodeGitLocation",
   { defaultValue: () => locateXcodeGitWithXcrun },
 );
@@ -1325,7 +1324,7 @@ interface PathSetupInput {
  * PATH for new zsh, bash, or fish terminals, so it never shadows another `ankiel`. Undefined on Windows (writing PATH there would flatten the registry's
  * `%VAR%` entries), for other shells, macOS bash, or unsafe paths.
  */
-export function pathSetup(
+function pathSetup(
   input: PathSetupInput,
 ): { readonly file: string; readonly line: string } | undefined {
   // A relative folder on PATH would follow the working directory into any checkout.

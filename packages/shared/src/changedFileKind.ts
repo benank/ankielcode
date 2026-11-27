@@ -93,7 +93,7 @@ export function isTestChangedFile(path: string): boolean {
   return kind === "tests" || kind === "mocks";
 }
 
-export function classifyChangedFile(path: string): ChangedFileKind {
+function classifyChangedFile(path: string): ChangedFileKind {
   const segments = path.replaceAll("\\", "/").split("/");
   const name = segments.pop() ?? "";
   const dirs = segments.map((segment) => segment.toLowerCase());

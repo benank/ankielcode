@@ -553,14 +553,6 @@ export function extractMarkdownLinkHrefs(markdown: string): string[] {
   return hrefs;
 }
 
-export function resolveMarkdownFileLinkTarget(
-  href: string | undefined,
-  cwd?: string,
-  baseDir: string | undefined = cwd,
-): string | null {
-  return resolveMarkdownFileLink(href, cwd, baseDir)?.targetPath ?? null;
-}
-
 /** Resolves the displayed position and the editor target, which opens at the start line. */
 export function resolveMarkdownFileLink(
   href: string | undefined,

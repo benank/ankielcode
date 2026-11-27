@@ -165,7 +165,7 @@ export function mcpAppToolCallableByApp(meta: unknown): boolean {
 }
 
 /** Block undeclared origins, including self, which would expose Ankiel's API. */
-export function mcpAppContentSecurityPolicy(csp: McpAppCsp | undefined): string {
+function mcpAppContentSecurityPolicy(csp: McpAppCsp | undefined): string {
   const resources = csp?.resourceDomains?.join(" ") ?? "";
   const list = (domains: ReadonlyArray<string> | undefined, fallback: string) =>
     domains === undefined || domains.length === 0 ? fallback : domains.join(" ");

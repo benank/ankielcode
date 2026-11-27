@@ -10,7 +10,6 @@ import remarkParse from "remark-parse";
 import { unified, type Processor } from "unified";
 
 import {
-  codexArtifactTemplatePresentationLabel,
   resolveCodexArtifactTemplate,
   type CodexArtifactTemplate,
 } from "./codexArtifactTemplates.ts";
@@ -336,22 +335,6 @@ export function renderCodexInlineDirectivesAsMarkdown(markdown: string): string 
   }
 
   return renderDirectiveMatches(markdown, (match) => match.markdown);
-}
-
-export function renderCodexDirectivesForCopy(markdown: string): string {
-  if (
-    !markdown.includes(`:${CODEX_FILE_CITATION_NAME}`) &&
-    !markdown.includes(`:${CODEX_FOLLOW_UP_NAME}`) &&
-    !markdown.includes(`::${CODEX_ARTIFACT_TEMPLATE_NAME}`)
-  ) {
-    return markdown;
-  }
-
-  return renderDirectiveMatches(markdown, (match) => {
-    if (match.markdown !== undefined) return match.markdown;
-    if (match.template === undefined) return undefined;
-    return `${match.template.displayName} (${codexArtifactTemplatePresentationLabel(match.template.artifactKind)})`;
-  });
 }
 
 export function splitCodexArtifactTemplateMarkdown(

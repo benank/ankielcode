@@ -463,11 +463,3 @@ export function resolveAnkielMcpSummaryAction(
   const fields = asSummaryInput(input);
   return (fields && summarize?.(fields)) ?? definition.summaryAction;
 }
-
-export function resolveAnkielMcpToolPresentation(
-  toolName: string | null | undefined,
-  input?: unknown,
-): AnkielMcpToolPresentation | null {
-  const definition = resolveAnkielMcpToolDefinition(toolName, input);
-  return definition === null ? null : { displayName: definition.displayName, logo: "ankiel-code" };
-}
