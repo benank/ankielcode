@@ -277,7 +277,7 @@ enum SettingsSearch {
   /// The settings each page holds, as the user reads them.
   static func entries() -> [(SettingsRoute, [String])] {
     [
-      (.general, [String(localized: "Project grouping"), String(localized: "Group by repository")]),
+      (.general, [String(localized: "Language"), String(localized: "Project grouping"), String(localized: "Group by repository")]),
       (.appearance, [String(localized: "Theme"), String(localized: "Dark"), String(localized: "Light"), String(localized: "Code and diffs"), String(localized: "Font size"), String(localized: "Word break"), String(localized: "Text size")]),
       (.chat, [String(localized: "While the agent is running"), String(localized: "Steer", comment: "verb, follow-up behavior"), String(localized: "Queue", comment: "verb, follow-up behavior")]),
       (.notifications, [String(localized: "Push notifications")]),

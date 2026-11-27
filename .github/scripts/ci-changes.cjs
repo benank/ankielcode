@@ -10,6 +10,8 @@ const INERT = [
   /^\.(agents|cursor|vscode|devcontainer|macroscope|repos)\//,
   /^[^/]+\.md$/,
   /^LICENSE$/,
+  // The native iOS app has no JS package; scripts/check-changed.ts runs its Swift tests locally.
+  /^apps\/ios\//,
 ];
 
 // Shared test setup and vendored mobile dependencies affect every package.

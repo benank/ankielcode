@@ -235,6 +235,18 @@ export const splitTests = (tests: Iterable<string>) => {
     nodeTests: all.filter((file) => NODE_TEST.test(file)),
   };
 };
+// apps/ios has no CI job (it needs macOS), so its checks run only here: the AnkielKit Swift tests,
+// the hand-written wire types' fixtures decoded by the contracts' Effect schemas, and the catalog.
+const ANKIEL_KIT = "apps/ios/Packages/AnkielKit";
+const COMMAND_FIXTURES = `${ANKIEL_KIT}/Tests/AnkielKitTests/Fixtures/commands/`;
+export type SwiftToolchain = "available" | "not-macos" | "missing";
+export const iosChecks = (files: ReadonlyArray<string>) => ({
+  swiftTest: files.some((file) => file.startsWith(`${ANKIEL_KIT}/`)),
+  schemas: files.some(
+    (file) => file.startsWith(COMMAND_FIXTURES) || file.startsWith("packages/contracts/"),
+  ),
+  translations: files.some((file) => /^apps\/ios\/(AnkielCode|scripts)\//.test(file)),
+});
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // A flag wins over its environment variable; either must be a positive integer.
@@ -436,10 +448,9 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
 
   // Output is piped, so keep the colors a terminal would get.
   const env = process.stdout.isTTY ? { FORCE_COLOR: "1" } : {};
-  const vp = (args: ReadonlyArray<string>, cwd = root) =>
+  const exec = (command: string, commandArgs: ReadonlyArray<string>, cwd = root) =>
     Effect.scoped(
       Effect.gen(function* () {
-        const [command, commandArgs] = vitePlusCommand(args, platform);
         const handle = yield* spawner.spawn(
           ChildProcess.make(command, commandArgs, {
             cwd,
@@ -455,6 +466,8 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
         return { ok: exitCode === 0, output };
       }),
     ).pipe(Effect.catch((error) => Effect.succeed({ ok: false, output: error.message })));
+  const vp = (args: ReadonlyArray<string>, cwd = root) =>
+    exec(...vitePlusCommand(args, platform), cwd);
 
   // Resolve without the lockfile in a temp copy to preserve the working tree and lockfile.
   // Copy mobile modules too: they are file: dependencies, not workspace packages.
@@ -501,6 +514,47 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
   const typecheckWorkers = Math.min(concurrency, affected.length);
   const command = (name: string, args: ReadonlyArray<string>) => ({ name, run: vp(args) });
   const compilerFiles = compilerApps.reduce((count, app) => count + app.names.length, 0);
+
+  const ios = iosChecks(files);
+  const swift: SwiftToolchain = !ios.swiftTest
+    ? "available"
+    : platform !== "darwin"
+      ? "not-macos"
+      : (yield* exec("swift", ["--version"])).ok
+        ? "available"
+        : "missing";
+  const runSwiftTest = ios.swiftTest && swift === "available";
+  const iosSteps: Array<Step<never>> = [
+    ...(runSwiftTest
+      ? [
+          {
+            name: "swift test (AnkielKit)",
+            run: exec("swift", ["test", "--package-path", ANKIEL_KIT]),
+            weight: 2,
+          },
+        ]
+      : []),
+    ...(ios.schemas
+      ? [
+          {
+            name: "ios wire schemas",
+            run: exec(
+              process.execPath,
+              [`../../${COMMAND_FIXTURES}check-schemas.mjs`, "--check"],
+              inRoot("packages/contracts"),
+            ),
+          },
+        ]
+      : []),
+    ...(ios.translations
+      ? [
+          {
+            name: "ios translations",
+            run: exec(process.execPath, ["apps/ios/scripts/check-translations.mjs"]),
+          },
+        ]
+      : []),
+  ];
 
   const steps: Array<Step<never>> = [
     ...(runPatchCheck ? [{ name: "unused patches", run: checkPatches }] : []),
@@ -572,6 +626,7 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
           },
         ]
       : []),
+    ...iosSteps,
   ];
 
   const results = yield* runSteps(steps, { concurrency, timeoutSeconds });
@@ -594,6 +649,13 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
   if (ciOnly.length > 0) summary.push(`  CI also runs: ${ciOnly.join(", ")}`);
   if (!runPatchCheck) summary.push("  unused patch check skipped: no dependency files changed");
   if (!runKnip) summary.push("  knip skipped: no code or manifest changed");
+  if (ios.swiftTest && !runSwiftTest) {
+    summary.push(
+      swift === "not-macos"
+        ? "  swift test skipped: AnkielKit changed, but its tests need macOS"
+        : "  swift test skipped: AnkielKit changed, but `swift` is not installed",
+    );
+  }
   yield* Console.log(`\n${summary.join("\n")}`);
 
   if (results.some((result) => result.outcome !== "pass")) return false;

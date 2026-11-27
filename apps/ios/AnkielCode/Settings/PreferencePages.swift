@@ -5,6 +5,7 @@ import UIKit
 /// Project grouping and language (RN `SettingsProjectGroupingRouteScreen`, the General page).
 struct GeneralSettingsPage: View {
   @Environment(AppModel.self) private var model
+  @Environment(\.openURL) private var openURL
 
   private static let options: [(ProjectGroupingMode, LocalizedStringResource, LocalizedStringResource)] = [
     (.repository, "Group by repository", "Matching repositories appear as one project."),
@@ -16,6 +17,30 @@ struct GeneralSettingsPage: View {
     @Bindable var preferences = model.preferences
     List {
       Section {
+        // iOS keeps the per-app language in the app's page in Settings; it relaunches the app.
+        Button {
+          if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+        } label: {
+          LabeledContent {
+            HStack(spacing: Spacing.xs) {
+              Text(Self.currentLanguage)
+              Image(systemName: "arrow.up.forward")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
+            }
+          } label: {
+            Text("Language")
+          }
+        }
+        .tint(.primary)
+        .accessibilityHint(Text("Opens Ankiel Code in the Settings app"))
+        .accessibilityIdentifier("general.language")
+      } footer: {
+        Text("Choose the app's language in its page in the Settings app.")
+      }
+
+      Section {
         ChoiceRows(selection: $preferences.values.projectGroupingMode, options: Self.options)
       } header: {
         Text("Project grouping")
@@ -26,6 +51,12 @@ struct GeneralSettingsPage: View {
     .navigationTitle("General")
     .navigationBarTitleDisplayMode(.inline)
     .onChange(of: model.preferences.values.projectGroupingMode) { _, _ in model.home.groupingChanged() }
+  }
+
+  /// The language the app is showing, in that language ("Deutsch", "日本語").
+  private static var currentLanguage: String {
+    let code = Bundle.main.preferredLocalizations.first ?? "en"
+    return Locale(identifier: code).localizedString(forIdentifier: code)?.localizedCapitalized ?? code
   }
 }
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Ankiel iOS"
+  short_description: "Build and test the native SwiftUI app on a simulator"
+  default_prompt: "Use $test-ankiel-ios to build the native iOS app, run its tests and check the affected screens on one simulator."

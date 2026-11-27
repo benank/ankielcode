@@ -1,0 +1,3084 @@
+{
+  "%@ came back still on %@. Try again, or update it on that machine.": {
+    "de": "%1$@ ist zurück, aber noch auf %2$@. Versuch es erneut oder aktualisiere es auf diesem Computer.",
+    "es": "%1$@ volvió, pero sigue en %2$@. Inténtalo de nuevo o actualízalo en ese equipo.",
+    "fr": "%1$@ est revenu, mais toujours en %2$@. Réessayez ou mettez-le à jour sur cette machine.",
+    "ja": "%1$@ は再起動しましたが、まだ %2$@ のままです。もう一度試すか、そのマシンで更新してください。",
+    "ko": "%1$@이(가) 다시 연결되었지만 아직 %2$@입니다. 다시 시도하거나 해당 컴퓨터에서 업데이트하세요.",
+    "pt-BR": "%1$@ voltou, mas ainda está na %2$@. Tente novamente ou atualize nessa máquina.",
+    "ru": "%1$@ снова на связи, но всё ещё на версии %2$@. Повторите попытку или обновите его на этом компьютере.",
+    "sv": "%1$@ är tillbaka men fortfarande på %2$@. Försök igen eller uppdatera på den datorn.",
+    "zh-Hans": "%1$@ 已恢复，但仍是 %2$@。请重试，或在那台电脑上更新。"
+  },
+  "%@ closed the connection while pairing. Try again in a moment.": {
+    "de": "%@ hat die Verbindung während der Kopplung getrennt. Versuch es gleich noch einmal.",
+    "es": "%@ cerró la conexión durante el emparejamiento. Inténtalo de nuevo en un momento.",
+    "fr": "%@ a fermé la connexion pendant l’appairage. Réessayez dans un instant.",
+    "ja": "ペアリング中に %@ が接続を閉じました。少し待ってからもう一度お試しください。",
+    "ko": "페어링 중에 %@이(가) 연결을 닫았습니다. 잠시 후 다시 시도하세요.",
+    "pt-BR": "%@ fechou a conexão durante o pareamento. Tente novamente em instantes.",
+    "ru": "%@ закрыл соединение во время сопряжения. Повторите попытку чуть позже.",
+    "sv": "%@ stängde anslutningen under parkopplingen. Försök igen om en stund.",
+    "zh-Hans": "%@ 在配对过程中关闭了连接。请稍后重试。"
+  },
+  "%@ did not answer.": {
+    "de": "%@ hat nicht geantwortet.",
+    "es": "%@ no respondió.",
+    "fr": "%@ n’a pas répondu.",
+    "ja": "%@ から応答がありませんでした。",
+    "ko": "%@이(가) 응답하지 않았습니다.",
+    "pt-BR": "%@ não respondeu.",
+    "ru": "%@ не ответил.",
+    "sv": "%@ svarade inte.",
+    "zh-Hans": "%@ 没有响应。"
+  },
+  "%@ did not respond in time.": {
+    "de": "%@ hat nicht rechtzeitig geantwortet.",
+    "es": "%@ no respondió a tiempo.",
+    "fr": "%@ n’a pas répondu à temps.",
+    "ja": "%@ から時間内に応答がありませんでした。",
+    "ko": "%@이(가) 제시간에 응답하지 않았습니다.",
+    "pt-BR": "%@ não respondeu a tempo.",
+    "ru": "%@ не ответил вовремя.",
+    "sv": "%@ svarade inte i tid.",
+    "zh-Hans": "%@ 未及时响应。"
+  },
+  "%@ is saved with a different address. If it moved, update it to use this one: its sign-in is replaced and the old addresses stay as fallbacks.": {
+    "de": "%@ ist mit einer anderen Adresse gespeichert. Wenn er umgezogen ist, aktualisiere ihn auf diese Adresse: Die Anmeldung wird ersetzt, und die alten Adressen bleiben als Ausweichadressen erhalten.",
+    "es": "%@ está guardado con otra dirección. Si se ha movido, actualízalo para usar esta: se reemplaza su inicio de sesión y las direcciones anteriores quedan como alternativas.",
+    "fr": "%@ est enregistré avec une autre adresse. S’il a changé d’adresse, mettez-le à jour pour utiliser celle-ci : sa connexion est remplacée et les anciennes adresses restent en secours.",
+    "ja": "%@ は別のアドレスで保存されています。移動した場合は、このアドレスを使うように更新してください。サインインは置き換えられ、古いアドレスは予備として残ります。",
+    "ko": "%@은(는) 다른 주소로 저장되어 있습니다. 주소가 바뀌었다면 이 주소를 사용하도록 업데이트하세요. 로그인은 교체되고 이전 주소는 대체 주소로 남습니다.",
+    "pt-BR": "%@ está salvo com outro endereço. Se ele mudou, atualize para usar este: o login é substituído e os endereços antigos ficam como alternativas.",
+    "ru": "%@ сохранён с другим адресом. Если он переехал, обновите его на этот адрес: вход будет заменён, а старые адреса останутся запасными.",
+    "sv": "%@ är sparad med en annan adress. Om den har flyttat kan du uppdatera den till den här: inloggningen ersätts och de gamla adresserna finns kvar som reserv.",
+    "zh-Hans": "%@ 以另一个地址保存。如果它已迁移，请更新为使用此地址：其登录信息会被替换，旧地址保留为备用。"
+  },
+  "%@ is turned off": {
+    "de": "%@ ist ausgeschaltet",
+    "es": "%@ está desactivado",
+    "fr": "%@ est désactivé",
+    "ja": "%@ はオフになっています",
+    "ko": "%@이(가) 꺼져 있습니다",
+    "pt-BR": "%@ está desativado",
+    "ru": "%@ выключен",
+    "sv": "%@ är avstängd",
+    "zh-Hans": "%@ 已关闭"
+  },
+  "%@ needs pairing": {
+    "de": "%@ muss gekoppelt werden",
+    "es": "%@ necesita emparejarse",
+    "fr": "%@ doit être appairé",
+    "ja": "%@ はペアリングが必要です",
+    "ko": "%@을(를) 페어링해야 합니다",
+    "pt-BR": "%@ precisa ser pareado",
+    "ru": "Для %@ нужно сопряжение",
+    "sv": "%@ behöver parkopplas",
+    "zh-Hans": "%@ 需要配对"
+  },
+  "%@ refused the connection": {
+    "de": "%@ hat die Verbindung abgelehnt",
+    "es": "%@ rechazó la conexión",
+    "fr": "%@ a refusé la connexion",
+    "ja": "%@ が接続を拒否しました",
+    "ko": "%@이(가) 연결을 거부했습니다",
+    "pt-BR": "%@ recusou a conexão",
+    "ru": "%@ отклонил соединение",
+    "sv": "%@ nekade anslutningen",
+    "zh-Hans": "%@ 拒绝了连接"
+  },
+  "%@ use different values. These rows show %@.": {
+    "de": "%1$@ verwenden unterschiedliche Werte. Diese Zeilen zeigen %2$@.",
+    "es": "%1$@ usan valores distintos. Estas filas muestran %2$@.",
+    "fr": "%1$@ utilisent des valeurs différentes. Ces lignes affichent %2$@.",
+    "ja": "%1$@ は異なる値を使っています。この行には %2$@ の値が表示されています。",
+    "ko": "%1$@의 값이 서로 다릅니다. 이 행에는 %2$@의 값이 표시됩니다.",
+    "pt-BR": "%1$@ usam valores diferentes. Estas linhas mostram %2$@.",
+    "ru": "%1$@ используют разные значения. В этих строках показан %2$@.",
+    "sv": "%1$@ använder olika värden. Raderna visar %2$@.",
+    "zh-Hans": "%1$@ 使用不同的值。这些行显示的是 %2$@ 的值。"
+  },
+  "%@ · Failed": {
+    "de": "%@ · Fehlgeschlagen",
+    "es": "%@ · Error",
+    "fr": "%@ · Échec",
+    "ja": "%@ · 失敗",
+    "ko": "%@ · 실패",
+    "pt-BR": "%@ · Falhou",
+    "ru": "%@ · Ошибка",
+    "sv": "%@ · Misslyckades",
+    "zh-Hans": "%@ · 失败"
+  },
+  "%@ · Not checked": {
+    "de": "%@ · Nicht geprüft",
+    "es": "%@ · Sin comprobar",
+    "fr": "%@ · Non vérifié",
+    "ja": "%@ · 未確認",
+    "ko": "%@ · 확인 안 됨",
+    "pt-BR": "%@ · Não verificado",
+    "ru": "%@ · Не проверено",
+    "sv": "%@ · Inte kontrollerad",
+    "zh-Hans": "%@ · 未检查"
+  },
+  "%@, done": {
+    "de": "%@, fertig",
+    "es": "%@, listo",
+    "fr": "%@, terminé",
+    "ja": "%@、完了",
+    "ko": "%@, 완료",
+    "pt-BR": "%@, concluída",
+    "ru": "%@, готово",
+    "sv": "%@, klar",
+    "zh-Hans": "%@，已完成"
+  },
+  "%@, failed": {
+    "de": "%@, fehlgeschlagen",
+    "es": "%@, con error",
+    "fr": "%@, échec",
+    "ja": "%@、失敗",
+    "ko": "%@, 실패",
+    "pt-BR": "%@, falhou",
+    "ru": "%@, ошибка",
+    "sv": "%@, misslyckades",
+    "zh-Hans": "%@，失败"
+  },
+  "%@, needs you": {
+    "de": "%@, braucht dich",
+    "es": "%@, te necesita",
+    "fr": "%@, attend votre action",
+    "ja": "%@、対応が必要",
+    "ko": "%@, 확인 필요",
+    "pt-BR": "%@, precisa de você",
+    "ru": "%@, нужно ваше участие",
+    "sv": "%@, behöver dig",
+    "zh-Hans": "%@，需要你处理"
+  },
+  "%@, working": {
+    "de": "%@, arbeitet",
+    "es": "%@, en curso",
+    "fr": "%@, en cours",
+    "ja": "%@、作業中",
+    "ko": "%@, 작업 중",
+    "pt-BR": "%@, trabalhando",
+    "ru": "%@, в работе",
+    "sv": "%@, arbetar",
+    "zh-Hans": "%@，进行中"
+  },
+  "%lld models": {
+    "de": {
+      "one": "%lld Modell",
+      "other": "%lld Modelle"
+    },
+    "es": {
+      "one": "%lld modelo",
+      "other": "%lld modelos"
+    },
+    "fr": {
+      "one": "%lld modèle",
+      "other": "%lld modèles"
+    },
+    "ja": {
+      "other": "%lld 個のモデル"
+    },
+    "ko": {
+      "other": "모델 %lld개"
+    },
+    "pt-BR": {
+      "one": "%lld modelo",
+      "other": "%lld modelos"
+    },
+    "ru": {
+      "one": "%lld модель",
+      "few": "%lld модели",
+      "many": "%lld моделей",
+      "other": "%lld модели"
+    },
+    "sv": {
+      "one": "%lld modell",
+      "other": "%lld modeller"
+    },
+    "zh-Hans": {
+      "other": "%lld 个模型"
+    }
+  },
+  "%lld queued · held": {
+    "de": "%lld eingereiht · angehalten",
+    "es": "%lld en cola · en espera",
+    "fr": "%lld en file d’attente · en pause",
+    "ja": "%lld 件キュー内 · 保留中",
+    "ko": "%lld개 대기 중 · 보류됨",
+    "pt-BR": "%lld na fila · retidas",
+    "ru": "В очереди: %lld · приостановлено",
+    "sv": "%lld köade · pausade",
+    "zh-Hans": "%lld 条排队中 · 已暂停"
+  },
+  "1 model": {
+    "de": "1 Modell",
+    "es": "1 modelo",
+    "fr": "1 modèle",
+    "ja": "1 個のモデル",
+    "ko": "모델 1개",
+    "pt-BR": "1 modelo",
+    "ru": "1 модель",
+    "sv": "1 modell",
+    "zh-Hans": "1 个模型"
+  },
+  "A different computer answered": {
+    "de": "Ein anderer Computer hat geantwortet",
+    "es": "Respondió otro equipo",
+    "fr": "Un autre ordinateur a répondu",
+    "ja": "別のコンピュータが応答しました",
+    "ko": "다른 컴퓨터가 응답했습니다",
+    "pt-BR": "Outro computador respondeu",
+    "ru": "Ответил другой компьютер",
+    "sv": "En annan dator svarade",
+    "zh-Hans": "另一台电脑做出了响应"
+  },
+  "A different machine answered at this address.": {
+    "de": "Unter dieser Adresse hat ein anderer Computer geantwortet.",
+    "es": "En esta dirección respondió otra máquina.",
+    "fr": "Une autre machine a répondu à cette adresse.",
+    "ja": "このアドレスでは別のマシンが応答しました。",
+    "ko": "이 주소에서 다른 컴퓨터가 응답했습니다.",
+    "pt-BR": "Outra máquina respondeu neste endereço.",
+    "ru": "По этому адресу ответил другой компьютер.",
+    "sv": "En annan dator svarade på den här adressen.",
+    "zh-Hans": "此地址上响应的是另一台机器。"
+  },
+  "A different machine answered for %@": {
+    "de": "Für %@ hat ein anderer Computer geantwortet",
+    "es": "Otra máquina respondió por %@",
+    "fr": "Une autre machine a répondu pour %@",
+    "ja": "%@ の代わりに別のマシンが応答しました",
+    "ko": "%@ 대신 다른 컴퓨터가 응답했습니다",
+    "pt-BR": "Outra máquina respondeu por %@",
+    "ru": "Вместо %@ ответил другой компьютер",
+    "sv": "En annan dator svarade för %@",
+    "zh-Hans": "响应 %@ 的是另一台机器"
+  },
+  "A pairing link works once and expires after a few minutes. Make a new one if it stops working.": {
+    "de": "Ein Kopplungslink funktioniert nur einmal und läuft nach wenigen Minuten ab. Erstelle einen neuen, wenn er nicht mehr funktioniert.",
+    "es": "Un enlace de emparejamiento funciona una sola vez y caduca a los pocos minutos. Crea uno nuevo si deja de funcionar.",
+    "fr": "Un lien d’appairage ne fonctionne qu’une fois et expire après quelques minutes. Créez-en un nouveau s’il ne fonctionne plus.",
+    "ja": "ペアリングリンクは 1 回だけ使え、数分で期限切れになります。使えなくなったら新しいリンクを作成してください。",
+    "ko": "페어링 링크는 한 번만 사용할 수 있으며 몇 분 후 만료됩니다. 작동하지 않으면 새 링크를 만드세요.",
+    "pt-BR": "Um link de pareamento funciona uma vez e expira após alguns minutos. Crie um novo se ele parar de funcionar.",
+    "ru": "Ссылка сопряжения работает один раз и истекает через несколько минут. Если она перестала работать, создайте новую.",
+    "sv": "En parkopplingslänk fungerar en gång och går ut efter några minuter. Skapa en ny om den slutar fungera.",
+    "zh-Hans": "配对链接只能使用一次，并会在几分钟后过期。如果失效，请重新创建一个。"
+  },
+  "Across computers": {
+    "de": "Computerübergreifend",
+    "es": "En todos los equipos",
+    "fr": "Sur tous les ordinateurs",
+    "ja": "すべてのコンピュータ",
+    "ko": "모든 컴퓨터",
+    "pt-BR": "Em todos os computadores",
+    "ru": "На всех компьютерах",
+    "sv": "Över alla datorer",
+    "zh-Hans": "跨电脑"
+  },
+  "Add a computer": {
+    "de": "Computer hinzufügen",
+    "es": "Añadir un equipo",
+    "fr": "Ajouter un ordinateur",
+    "ja": "コンピュータを追加",
+    "ko": "컴퓨터 추가",
+    "pt-BR": "Adicionar um computador",
+    "ru": "Добавить компьютер",
+    "sv": "Lägg till en dator",
+    "zh-Hans": "添加电脑"
+  },
+  "Add a computer to change its defaults.": {
+    "de": "Füge einen Computer hinzu, um seine Standardwerte zu ändern.",
+    "es": "Añade un equipo para cambiar sus valores predeterminados.",
+    "fr": "Ajoutez un ordinateur pour modifier ses valeurs par défaut.",
+    "ja": "既定値を変更するには、コンピュータを追加してください。",
+    "ko": "기본값을 변경하려면 컴퓨터를 추가하세요.",
+    "pt-BR": "Adicione um computador para alterar os padrões dele.",
+    "ru": "Добавьте компьютер, чтобы изменить его значения по умолчанию.",
+    "sv": "Lägg till en dator för att ändra dess standardvärden.",
+    "zh-Hans": "添加一台电脑以更改其默认设置。"
+  },
+  "Addresses": {
+    "de": "Adressen",
+    "es": "Direcciones",
+    "fr": "Adresses",
+    "ja": "アドレス",
+    "ko": "주소",
+    "pt-BR": "Endereços",
+    "ru": "Адреса",
+    "sv": "Adresser",
+    "zh-Hans": "地址"
+  },
+  "Addresses the computer reports, such as its local network address, are tried first and checked before any credential is sent.": {
+    "de": "Adressen, die der Computer meldet, etwa seine Adresse im lokalen Netzwerk, werden zuerst versucht und geprüft, bevor Zugangsdaten gesendet werden.",
+    "es": "Las direcciones que informa el equipo, como su dirección de red local, se prueban primero y se verifican antes de enviar cualquier credencial.",
+    "fr": "Les adresses signalées par l’ordinateur, comme son adresse sur le réseau local, sont essayées en premier et vérifiées avant l’envoi de tout identifiant.",
+    "ja": "コンピュータが報告するアドレス（ローカルネットワークのアドレスなど）が最初に試され、資格情報を送信する前に確認されます。",
+    "ko": "컴퓨터가 알려 주는 주소(예: 로컬 네트워크 주소)를 먼저 시도하며, 자격 증명을 보내기 전에 확인합니다.",
+    "pt-BR": "Os endereços que o computador informa, como o endereço na rede local, são tentados primeiro e verificados antes de qualquer credencial ser enviada.",
+    "ru": "Адреса, которые сообщает компьютер, например адрес в локальной сети, пробуются первыми и проверяются до отправки учётных данных.",
+    "sv": "Adresser som datorn rapporterar, till exempel dess adress i det lokala nätverket, provas först och kontrolleras innan några inloggningsuppgifter skickas.",
+    "zh-Hans": "电脑报告的地址（例如其局域网地址）会优先尝试，并在发送任何凭据之前进行验证。"
+  },
+  "All computers": {
+    "de": "Alle Computer",
+    "es": "Todos los equipos",
+    "fr": "Tous les ordinateurs",
+    "ja": "すべてのコンピュータ",
+    "ko": "모든 컴퓨터",
+    "pt-BR": "Todos os computadores",
+    "ru": "Все компьютеры",
+    "sv": "Alla datorer",
+    "zh-Hans": "所有电脑"
+  },
+  "All connected computers": {
+    "de": "Alle verbundenen Computer",
+    "es": "Todos los equipos conectados",
+    "fr": "Tous les ordinateurs connectés",
+    "ja": "接続中のすべてのコンピュータ",
+    "ko": "연결된 모든 컴퓨터",
+    "pt-BR": "Todos os computadores conectados",
+    "ru": "Все подключённые компьютеры",
+    "sv": "Alla anslutna datorer",
+    "zh-Hans": "所有已连接的电脑"
+  },
+  "All threads": {
+    "de": "Alle Threads",
+    "es": "Todos los hilos",
+    "fr": "Toutes les conversations",
+    "ja": "すべてのスレッド",
+    "ko": "모든 스레드",
+    "pt-BR": "Todas as threads",
+    "ru": "Все треды",
+    "sv": "Alla trådar",
+    "zh-Hans": "所有会话"
+  },
+  "Allow Ankiel Code to add photos in Settings.": {
+    "de": "Erlaube Ankiel Code in den Einstellungen, Fotos hinzuzufügen.",
+    "es": "Permite que Ankiel Code añada fotos en Ajustes.",
+    "fr": "Autorisez Ankiel Code à ajouter des photos dans Réglages.",
+    "ja": "「設定」で Ankiel Code に写真の追加を許可してください。",
+    "ko": "설정에서 Ankiel Code의 사진 추가를 허용하세요.",
+    "pt-BR": "Permita que o Ankiel Code adicione fotos nos Ajustes.",
+    "ru": "Разрешите Ankiel Code добавлять фото в Настройках.",
+    "sv": "Tillåt Ankiel Code att lägga till bilder i Inställningar.",
+    "zh-Hans": "请在“设置”中允许 Ankiel Code 添加照片。"
+  },
+  "Allowed": {
+    "de": "Erlaubt",
+    "es": "Permitido",
+    "fr": "Autorisé",
+    "ja": "許可",
+    "ko": "허용됨",
+    "pt-BR": "Permitido",
+    "ru": "Разрешено",
+    "sv": "Tillåtet",
+    "zh-Hans": "已允许"
+  },
+  "An image exceeds the 10 MB attachment limit.": {
+    "de": "Ein Bild überschreitet die Grenze von 10 MB für Anhänge.",
+    "es": "Una imagen supera el límite de 10 MB para adjuntos.",
+    "fr": "Une image dépasse la limite de 10 Mo pour les pièces jointes.",
+    "ja": "画像が添付ファイルの上限（10 MB）を超えています。",
+    "ko": "이미지가 첨부 파일 한도인 10MB를 초과합니다.",
+    "pt-BR": "Uma imagem excede o limite de 10 MB para anexos.",
+    "ru": "Изображение превышает ограничение для вложений в 10 МБ.",
+    "sv": "En bild överskrider gränsen på 10 MB för bilagor.",
+    "zh-Hans": "有图片超过了 10 MB 的附件大小限制。"
+  },
+  "Ankiel Code connection to %@: %@": {
+    "de": "Ankiel-Code-Verbindung zu %1$@: %2$@",
+    "es": "Conexión de Ankiel Code con %1$@: %2$@",
+    "fr": "Connexion Ankiel Code à %1$@ : %2$@",
+    "ja": "%1$@ への Ankiel Code 接続: %2$@",
+    "ko": "%1$@에 대한 Ankiel Code 연결: %2$@",
+    "pt-BR": "Conexão do Ankiel Code com %1$@: %2$@",
+    "ru": "Подключение Ankiel Code к %1$@: %2$@",
+    "sv": "Ankiel Code-anslutning till %1$@: %2$@",
+    "zh-Hans": "Ankiel Code 与 %1$@ 的连接：%2$@"
+  },
+  "Ankiel Code follows the text size you choose for your device in Display & Brightness, including the larger accessibility sizes.": {
+    "de": "Ankiel Code übernimmt die Textgröße, die du unter „Anzeige & Helligkeit“ für dein Gerät festlegst, einschließlich der größeren Bedienungshilfen-Größen.",
+    "es": "Ankiel Code usa el tamaño de texto que elijas para el dispositivo en Pantalla y brillo, incluidos los tamaños de accesibilidad más grandes.",
+    "fr": "Ankiel Code suit la taille du texte choisie pour votre appareil dans Luminosité et affichage, y compris les grandes tailles d’accessibilité.",
+    "ja": "Ankiel Code は、「画面表示と明るさ」でデバイスに設定した文字サイズ（アクセシビリティの大きいサイズを含む）に従います。",
+    "ko": "Ankiel Code는 디스플레이 및 밝기에서 기기에 설정한 텍스트 크기를 따르며, 손쉬운 사용의 더 큰 크기도 지원합니다.",
+    "pt-BR": "O Ankiel Code segue o tamanho de texto que você escolhe para o dispositivo em Tela e Brilho, incluindo os tamanhos maiores de acessibilidade.",
+    "ru": "Ankiel Code использует размер текста, выбранный для устройства в разделе «Экран и яркость», включая увеличенные размеры для универсального доступа.",
+    "sv": "Ankiel Code följer textstorleken du väljer för enheten under Skärm och ljusstyrka, inklusive de större hjälpmedelsstorlekarna.",
+    "zh-Hans": "Ankiel Code 会遵循你在“显示与亮度”中为设备选择的文字大小，包括更大的辅助功能字号。"
+  },
+  "Ankiel Code is open source under the MIT license. This app includes no third-party code.": {
+    "de": "Ankiel Code ist Open Source unter der MIT-Lizenz. Diese App enthält keinen Code von Drittanbietern.",
+    "es": "Ankiel Code es de código abierto con licencia MIT. Esta app no incluye código de terceros.",
+    "fr": "Ankiel Code est open source sous licence MIT. Cette app n’inclut aucun code tiers.",
+    "ja": "Ankiel Code は MIT ライセンスのオープンソースです。このアプリにはサードパーティのコードは含まれていません。",
+    "ko": "Ankiel Code는 MIT 라이선스의 오픈 소스입니다. 이 앱에는 서드파티 코드가 포함되어 있지 않습니다.",
+    "pt-BR": "O Ankiel Code é de código aberto sob a licença MIT. Este app não inclui código de terceiros.",
+    "ru": "Ankiel Code — проект с открытым исходным кодом под лицензией MIT. Приложение не содержит стороннего кода.",
+    "sv": "Ankiel Code är öppen källkod under MIT-licensen. Appen innehåller ingen kod från tredje part.",
+    "zh-Hans": "Ankiel Code 是基于 MIT 许可证的开源软件。本应用不包含任何第三方代码。"
+  },
+  "Ankiel Code keeps every saved computer connected and reconnects on its own.": {
+    "de": "Ankiel Code hält jeden gespeicherten Computer verbunden und verbindet sich selbstständig neu.",
+    "es": "Ankiel Code mantiene conectados todos los equipos guardados y se reconecta por sí solo.",
+    "fr": "Ankiel Code garde chaque ordinateur enregistré connecté et se reconnecte tout seul.",
+    "ja": "Ankiel Code は保存したすべてのコンピュータとの接続を維持し、自動で再接続します。",
+    "ko": "Ankiel Code는 저장된 모든 컴퓨터와 연결을 유지하며 자동으로 다시 연결합니다.",
+    "pt-BR": "O Ankiel Code mantém todos os computadores salvos conectados e se reconecta sozinho.",
+    "ru": "Ankiel Code поддерживает подключение ко всем сохранённым компьютерам и переподключается сам.",
+    "sv": "Ankiel Code håller alla sparade datorer anslutna och återansluter av sig själv.",
+    "zh-Hans": "Ankiel Code 会保持与每台已保存电脑的连接，并自动重新连接。"
+  },
+  "Answer sent": {
+    "de": "Antwort gesendet",
+    "es": "Respuesta enviada",
+    "fr": "Réponse envoyée",
+    "ja": "回答を送信しました",
+    "ko": "답변을 보냄",
+    "pt-BR": "Resposta enviada",
+    "ru": "Ответ отправлен",
+    "sv": "Svar skickat",
+    "zh-Hans": "已发送回答"
+  },
+  "Answered": {
+    "de": "Beantwortet",
+    "es": "Respondida",
+    "fr": "Répondu",
+    "ja": "回答済み",
+    "ko": "답변함",
+    "pt-BR": "Respondida",
+    "ru": "Отвечено",
+    "sv": "Besvarad",
+    "zh-Hans": "已回答"
+  },
+  "Answered on another device": {
+    "de": "Auf einem anderen Gerät beantwortet",
+    "es": "Respondida en otro dispositivo",
+    "fr": "Répondu sur un autre appareil",
+    "ja": "別のデバイスで回答済み",
+    "ko": "다른 기기에서 답변함",
+    "pt-BR": "Respondida em outro dispositivo",
+    "ru": "Отвечено на другом устройстве",
+    "sv": "Besvarad på en annan enhet",
+    "zh-Hans": "已在其他设备上回答"
+  },
+  "As %@ reported them when it was last connected.": {
+    "de": "So, wie %@ sie bei der letzten Verbindung gemeldet hat.",
+    "es": "Tal como los informó %@ la última vez que estuvo conectado.",
+    "fr": "Tels que %@ les a signalés lors de sa dernière connexion.",
+    "ja": "%@ が最後に接続していたときに報告した内容です。",
+    "ko": "%@이(가) 마지막으로 연결되었을 때 보고한 내용입니다.",
+    "pt-BR": "Como %@ informou na última vez em que esteve conectado.",
+    "ru": "Как сообщил %@ при последнем подключении.",
+    "sv": "Som %@ rapporterade dem när den senast var ansluten.",
+    "zh-Hans": "这是 %@ 上次连接时报告的内容。"
+  },
+  "Attachment copies": {
+    "de": "Kopien von Anhängen",
+    "es": "Copias de adjuntos",
+    "fr": "Copies des pièces jointes",
+    "ja": "添付ファイルのコピー",
+    "ko": "첨부 파일 사본",
+    "pt-BR": "Cópias de anexos",
+    "ru": "Копии вложений",
+    "sv": "Kopior av bilagor",
+    "zh-Hans": "附件副本"
+  },
+  "Cached thread lists show threads before a computer connects. They download again on the next connection.": {
+    "de": "Zwischengespeicherte Thread-Listen zeigen Threads, bevor ein Computer verbunden ist. Sie werden bei der nächsten Verbindung neu geladen.",
+    "es": "Las listas de hilos en caché muestran los hilos antes de que un equipo se conecte. Se vuelven a descargar en la siguiente conexión.",
+    "fr": "Les listes de conversations en cache affichent les conversations avant la connexion d’un ordinateur. Elles sont retéléchargées à la connexion suivante.",
+    "ja": "キャッシュされたスレッド一覧により、コンピュータの接続前にスレッドを表示できます。次回の接続時に再ダウンロードされます。",
+    "ko": "캐시된 스레드 목록은 컴퓨터가 연결되기 전에 스레드를 보여 줍니다. 다음 연결 때 다시 다운로드됩니다.",
+    "pt-BR": "As listas de threads em cache mostram as threads antes de um computador se conectar. Elas são baixadas de novo na próxima conexão.",
+    "ru": "Кешированные списки тредов показывают треды до подключения компьютера. При следующем подключении они загружаются заново.",
+    "sv": "Cachade trådlistor visar trådar innan en dator ansluter. De laddas ner igen vid nästa anslutning.",
+    "zh-Hans": "缓存的会话列表可以在电脑连接前显示会话。下次连接时会重新下载。"
+  },
+  "Camera": {
+    "de": "Kamera",
+    "es": "Cámara",
+    "fr": "Appareil photo",
+    "ja": "カメラ",
+    "ko": "카메라",
+    "pt-BR": "Câmera",
+    "ru": "Камера",
+    "sv": "Kamera",
+    "zh-Hans": "相机"
+  },
+  "Camera access was denied for this app. Open Settings to enable it, or paste the link instead.": {
+    "de": "Der Kamerazugriff wurde für diese App verweigert. Aktiviere ihn in den Einstellungen oder füge stattdessen den Link ein.",
+    "es": "Se denegó el acceso a la cámara para esta app. Abre Ajustes para activarlo o pega el enlace en su lugar.",
+    "fr": "L’accès à l’appareil photo a été refusé pour cette app. Ouvrez Réglages pour l’autoriser, ou collez plutôt le lien.",
+    "ja": "このアプリのカメラへのアクセスが拒否されています。「設定」で許可するか、代わりにリンクを貼り付けてください。",
+    "ko": "이 앱의 카메라 접근이 거부되었습니다. 설정에서 허용하거나 대신 링크를 붙여넣으세요.",
+    "pt-BR": "O acesso à câmera foi negado para este app. Abra os Ajustes para permitir ou cole o link.",
+    "ru": "Доступ к камере для этого приложения запрещён. Разрешите его в Настройках или вставьте ссылку.",
+    "sv": "Kameraåtkomst nekades för appen. Öppna Inställningar för att tillåta den, eller klistra in länken i stället.",
+    "zh-Hans": "此应用的相机访问权限已被拒绝。请打开“设置”启用，或改为粘贴链接。"
+  },
+  "Changes here are written to every connected computer now. Computers that are offline keep their own values.": {
+    "de": "Änderungen hier werden sofort auf alle verbundenen Computer geschrieben. Offline-Computer behalten ihre eigenen Werte.",
+    "es": "Los cambios que hagas aquí se aplican ahora en todos los equipos conectados. Los equipos sin conexión conservan sus propios valores.",
+    "fr": "Les modifications faites ici sont écrites dès maintenant sur chaque ordinateur connecté. Les ordinateurs hors ligne conservent leurs propres valeurs.",
+    "ja": "ここでの変更は、接続中のすべてのコンピュータにすぐ書き込まれます。オフラインのコンピュータは独自の値を保持します。",
+    "ko": "여기에서 변경한 내용은 연결된 모든 컴퓨터에 바로 적용됩니다. 오프라인 컴퓨터는 자체 값을 유지합니다.",
+    "pt-BR": "As alterações feitas aqui são gravadas agora em todos os computadores conectados. Computadores offline mantêm os próprios valores.",
+    "ru": "Изменения здесь сразу записываются на все подключённые компьютеры. Компьютеры не в сети сохраняют свои значения.",
+    "sv": "Ändringar här skrivs direkt till alla anslutna datorer. Datorer som är offline behåller sina egna värden.",
+    "zh-Hans": "此处的更改会立即写入所有已连接的电脑。离线的电脑保留各自的值。"
+  },
+  "Checkbox": {
+    "de": "Kontrollkästchen",
+    "es": "Casilla",
+    "fr": "Case à cocher",
+    "ja": "チェックボックス",
+    "ko": "체크박스",
+    "pt-BR": "Caixa de seleção",
+    "ru": "Флажок",
+    "sv": "Kryssruta",
+    "zh-Hans": "复选框"
+  },
+  "Checking the computer": {
+    "de": "Computer wird geprüft",
+    "es": "Comprobando el equipo",
+    "fr": "Vérification de l’ordinateur",
+    "ja": "コンピュータを確認しています",
+    "ko": "컴퓨터 확인 중",
+    "pt-BR": "Verificando o computador",
+    "ru": "Проверка компьютера",
+    "sv": "Kontrollerar datorn",
+    "zh-Hans": "正在检查电脑"
+  },
+  "Choose a model first.": {
+    "de": "Wähle zuerst ein Modell.",
+    "es": "Elige primero un modelo.",
+    "fr": "Choisissez d’abord un modèle.",
+    "ja": "先にモデルを選択してください。",
+    "ko": "먼저 모델을 선택하세요.",
+    "pt-BR": "Escolha um modelo primeiro.",
+    "ru": "Сначала выберите модель.",
+    "sv": "Välj en modell först.",
+    "zh-Hans": "请先选择一个模型。"
+  },
+  "Choose a thread from the list, or start a new one.": {
+    "de": "Wähle einen Thread aus der Liste oder starte einen neuen.",
+    "es": "Elige un hilo de la lista o empieza uno nuevo.",
+    "fr": "Choisissez une conversation dans la liste ou démarrez-en une nouvelle.",
+    "ja": "一覧からスレッドを選ぶか、新しいスレッドを開始してください。",
+    "ko": "목록에서 스레드를 선택하거나 새 스레드를 시작하세요.",
+    "pt-BR": "Escolha uma thread na lista ou inicie uma nova.",
+    "ru": "Выберите тред из списка или начните новый.",
+    "sv": "Välj en tråd i listan eller starta en ny.",
+    "zh-Hans": "从列表中选择一个会话，或新建一个。"
+  },
+  "Choose another computer or create a new task.": {
+    "de": "Wähle einen anderen Computer oder erstelle eine neue Aufgabe.",
+    "es": "Elige otro equipo o crea una tarea nueva.",
+    "fr": "Choisissez un autre ordinateur ou créez une nouvelle tâche.",
+    "ja": "別のコンピュータを選ぶか、新しいタスクを作成してください。",
+    "ko": "다른 컴퓨터를 선택하거나 새 작업을 만드세요.",
+    "pt-BR": "Escolha outro computador ou crie uma nova tarefa.",
+    "ru": "Выберите другой компьютер или создайте новую задачу.",
+    "sv": "Välj en annan dator eller skapa en ny uppgift.",
+    "zh-Hans": "选择另一台电脑，或新建任务。"
+  },
+  "Choose the app's language in its page in the Settings app.": {
+    "de": "Die Sprache der App wählst du auf ihrer Seite in der App „Einstellungen“.",
+    "es": "Elige el idioma de la app en su página de la app Ajustes.",
+    "fr": "Choisissez la langue de l’app dans sa page de l’app Réglages.",
+    "ja": "アプリの言語は「設定」アプリのこのアプリのページで選択します。",
+    "ko": "앱 언어는 설정 앱의 이 앱 페이지에서 선택하세요.",
+    "pt-BR": "Escolha o idioma do app na página dele no app Ajustes.",
+    "ru": "Язык приложения выбирается на его странице в приложении «Настройки».",
+    "sv": "Välj appens språk på dess sida i appen Inställningar.",
+    "zh-Hans": "在“设置”应用中本应用的页面里选择应用语言。"
+  },
+  "Clear all caches": {
+    "de": "Alle Caches leeren",
+    "es": "Borrar todas las cachés",
+    "fr": "Vider tous les caches",
+    "ja": "すべてのキャッシュを消去",
+    "ko": "모든 캐시 지우기",
+    "pt-BR": "Limpar todos os caches",
+    "ru": "Очистить все кеши",
+    "sv": "Rensa alla cacher",
+    "zh-Hans": "清除所有缓存"
+  },
+  "Clear all drafts?": {
+    "de": "Alle Entwürfe löschen?",
+    "es": "¿Borrar todos los borradores?",
+    "fr": "Effacer tous les brouillons ?",
+    "ja": "すべての下書きを消去しますか？",
+    "ko": "모든 초안을 지울까요?",
+    "pt-BR": "Limpar todos os rascunhos?",
+    "ru": "Удалить все черновики?",
+    "sv": "Rensa alla utkast?",
+    "zh-Hans": "清除所有草稿？"
+  },
+  "Clear drafts": {
+    "de": "Entwürfe löschen",
+    "es": "Borrar borradores",
+    "fr": "Effacer les brouillons",
+    "ja": "下書きを消去",
+    "ko": "초안 지우기",
+    "pt-BR": "Limpar rascunhos",
+    "ru": "Удалить черновики",
+    "sv": "Rensa utkast",
+    "zh-Hans": "清除草稿"
+  },
+  "Client storage": {
+    "de": "Speicher auf diesem Gerät",
+    "es": "Almacenamiento del cliente",
+    "fr": "Stockage du client",
+    "ja": "クライアントのストレージ",
+    "ko": "클라이언트 저장 공간",
+    "pt-BR": "Armazenamento do cliente",
+    "ru": "Хранилище клиента",
+    "sv": "Klientlagring",
+    "zh-Hans": "客户端存储"
+  },
+  "Code and diffs": {
+    "de": "Code und Diffs",
+    "es": "Código y diffs",
+    "fr": "Code et diffs",
+    "ja": "コードと差分",
+    "ko": "코드 및 diff",
+    "pt-BR": "Código e diffs",
+    "ru": "Код и диффы",
+    "sv": "Kod och diffar",
+    "zh-Hans": "代码和差异"
+  },
+  "Collapsed": {
+    "de": "Eingeklappt",
+    "es": "Contraído",
+    "fr": "Réduit",
+    "ja": "折りたたみ",
+    "ko": "접힘",
+    "pt-BR": "Recolhido",
+    "ru": "Свёрнуто",
+    "sv": "Hopfälld",
+    "zh-Hans": "已折叠"
+  },
+  "Composer": {
+    "de": "Eingabefeld",
+    "es": "Cuadro de mensaje",
+    "fr": "Zone de saisie",
+    "ja": "入力欄",
+    "ko": "입력창",
+    "pt-BR": "Editor de mensagens",
+    "ru": "Поле ввода",
+    "sv": "Inmatningsfält",
+    "zh-Hans": "输入框"
+  },
+  "Computer": {
+    "de": "Computer",
+    "es": "Equipo",
+    "fr": "Ordinateur",
+    "ja": "コンピュータ",
+    "ko": "컴퓨터",
+    "pt-BR": "Computador",
+    "ru": "Компьютер",
+    "sv": "Dator",
+    "zh-Hans": "电脑"
+  },
+  "Computer not saved": {
+    "de": "Computer nicht gespeichert",
+    "es": "Equipo no guardado",
+    "fr": "Ordinateur non enregistré",
+    "ja": "コンピュータが保存されていません",
+    "ko": "컴퓨터가 저장되지 않음",
+    "pt-BR": "Computador não salvo",
+    "ru": "Компьютер не сохранён",
+    "sv": "Datorn är inte sparad",
+    "zh-Hans": "电脑未保存"
+  },
+  "Connect %@ to manage it. These are the values it reported when it was last connected.": {
+    "de": "Verbinde %@, um ihn zu verwalten. Das sind die Werte, die er bei der letzten Verbindung gemeldet hat.",
+    "es": "Conecta %@ para administrarlo. Estos son los valores que informó la última vez que estuvo conectado.",
+    "fr": "Connectez %@ pour le gérer. Voici les valeurs qu’il a signalées lors de sa dernière connexion.",
+    "ja": "管理するには %@ を接続してください。これは最後に接続していたときに報告された値です。",
+    "ko": "관리하려면 %@을(를) 연결하세요. 마지막으로 연결되었을 때 보고된 값입니다.",
+    "pt-BR": "Conecte %@ para gerenciá-lo. Estes são os valores que ele informou na última vez em que esteve conectado.",
+    "ru": "Подключите %@, чтобы управлять им. Это значения, которые он сообщил при последнем подключении.",
+    "sv": "Anslut %@ för att hantera den. Det här är värdena den rapporterade när den senast var ansluten.",
+    "zh-Hans": "连接 %@ 后即可管理。这些是它上次连接时报告的值。"
+  },
+  "Connect %@ to see and change its defaults.": {
+    "de": "Verbinde %@, um seine Standardwerte zu sehen und zu ändern.",
+    "es": "Conecta %@ para ver y cambiar sus valores predeterminados.",
+    "fr": "Connectez %@ pour voir et modifier ses valeurs par défaut.",
+    "ja": "既定値を確認・変更するには %@ を接続してください。",
+    "ko": "기본값을 보고 변경하려면 %@을(를) 연결하세요.",
+    "pt-BR": "Conecte %@ para ver e alterar os padrões dele.",
+    "ru": "Подключите %@, чтобы увидеть и изменить его значения по умолчанию.",
+    "sv": "Anslut %@ för att se och ändra dess standardvärden.",
+    "zh-Hans": "连接 %@ 以查看和更改其默认设置。"
+  },
+  "Connect a computer to change its defaults.": {
+    "de": "Verbinde einen Computer, um seine Standardwerte zu ändern.",
+    "es": "Conecta un equipo para cambiar sus valores predeterminados.",
+    "fr": "Connectez un ordinateur pour modifier ses valeurs par défaut.",
+    "ja": "既定値を変更するには、コンピュータを接続してください。",
+    "ko": "기본값을 변경하려면 컴퓨터를 연결하세요.",
+    "pt-BR": "Conecte um computador para alterar os padrões dele.",
+    "ru": "Подключите компьютер, чтобы изменить его значения по умолчанию.",
+    "sv": "Anslut en dator för att ändra dess standardvärden.",
+    "zh-Hans": "连接一台电脑以更改其默认设置。"
+  },
+  "Connect on this device": {
+    "de": "Auf diesem Gerät verbinden",
+    "es": "Conectar en este dispositivo",
+    "fr": "Se connecter sur cet appareil",
+    "ja": "このデバイスで接続",
+    "ko": "이 기기에서 연결",
+    "pt-BR": "Conectar neste dispositivo",
+    "ru": "Подключаться на этом устройстве",
+    "sv": "Anslut på den här enheten",
+    "zh-Hans": "在此设备上连接"
+  },
+  "Connect to the computer to see the output.": {
+    "de": "Verbinde dich mit dem Computer, um die Ausgabe zu sehen.",
+    "es": "Conéctate al equipo para ver la salida.",
+    "fr": "Connectez-vous à l’ordinateur pour voir la sortie.",
+    "ja": "出力を表示するには、コンピュータに接続してください。",
+    "ko": "출력을 보려면 컴퓨터에 연결하세요.",
+    "pt-BR": "Conecte-se ao computador para ver a saída.",
+    "ru": "Подключитесь к компьютеру, чтобы увидеть вывод.",
+    "sv": "Anslut till datorn för att se utdata.",
+    "zh-Hans": "连接到电脑以查看输出。"
+  },
+  "Connect to this computer to change the model.": {
+    "de": "Verbinde dich mit diesem Computer, um das Modell zu ändern.",
+    "es": "Conéctate a este equipo para cambiar el modelo.",
+    "fr": "Connectez-vous à cet ordinateur pour changer de modèle.",
+    "ja": "モデルを変更するには、このコンピュータに接続してください。",
+    "ko": "모델을 변경하려면 이 컴퓨터에 연결하세요.",
+    "pt-BR": "Conecte-se a este computador para trocar o modelo.",
+    "ru": "Подключитесь к этому компьютеру, чтобы сменить модель.",
+    "sv": "Anslut till den här datorn för att byta modell.",
+    "zh-Hans": "连接到这台电脑以更改模型。"
+  },
+  "Context compacted · %@ → %@ tokens": {
+    "de": "Kontext komprimiert · %1$@ → %2$@ Tokens",
+    "es": "Contexto compactado · %1$@ → %2$@ tokens",
+    "fr": "Contexte compacté · %1$@ → %2$@ jetons",
+    "ja": "コンテキストを圧縮 · %1$@ → %2$@ トークン",
+    "ko": "컨텍스트 압축됨 · %1$@ → %2$@ 토큰",
+    "pt-BR": "Contexto compactado · %1$@ → %2$@ tokens",
+    "ru": "Контекст сжат · %1$@ → %2$@ токенов",
+    "sv": "Kontext komprimerad · %1$@ → %2$@ token",
+    "zh-Hans": "上下文已压缩 · %1$@ → %2$@ 个 token"
+  },
+  "Context handed off to %@": {
+    "de": "Kontext an %@ übergeben",
+    "es": "Contexto transferido a %@",
+    "fr": "Contexte transmis à %@",
+    "ja": "コンテキストを %@ に引き継ぎました",
+    "ko": "컨텍스트를 %@(으)로 넘김",
+    "pt-BR": "Contexto passado para %@",
+    "ru": "Контекст передан в %@",
+    "sv": "Kontext överlämnad till %@",
+    "zh-Hans": "上下文已交接给 %@"
+  },
+  "Copy the pairing link on your computer, then paste it here.": {
+    "de": "Kopiere den Kopplungslink auf deinem Computer und füge ihn dann hier ein.",
+    "es": "Copia el enlace de emparejamiento en tu equipo y pégalo aquí.",
+    "fr": "Copiez le lien d’appairage sur votre ordinateur, puis collez-le ici.",
+    "ja": "コンピュータでペアリングリンクをコピーして、ここに貼り付けてください。",
+    "ko": "컴퓨터에서 페어링 링크를 복사한 다음 여기에 붙여넣으세요.",
+    "pt-BR": "Copie o link de pareamento no seu computador e cole aqui.",
+    "ru": "Скопируйте ссылку сопряжения на компьютере и вставьте её сюда.",
+    "sv": "Kopiera parkopplingslänken på datorn och klistra sedan in den här.",
+    "zh-Hans": "在电脑上复制配对链接，然后粘贴到这里。"
+  },
+  "Copy the whole link, including the part after #token=, or enter the code.": {
+    "de": "Kopiere den ganzen Link einschließlich des Teils nach #token= oder gib den Code ein.",
+    "es": "Copia el enlace completo, incluida la parte después de #token=, o introduce el código.",
+    "fr": "Copiez le lien entier, y compris la partie après #token=, ou saisissez le code.",
+    "ja": "#token= 以降も含めてリンク全体をコピーするか、コードを入力してください。",
+    "ko": "#token= 뒤 부분을 포함해 링크 전체를 복사하거나 코드를 입력하세요.",
+    "pt-BR": "Copie o link inteiro, incluindo a parte depois de #token=, ou digite o código.",
+    "ru": "Скопируйте ссылку целиком, включая часть после #token=, или введите код.",
+    "sv": "Kopiera hela länken, inklusive delen efter #token=, eller ange koden.",
+    "zh-Hans": "复制完整链接（包括 #token= 之后的部分），或输入代码。"
+  },
+  "Copy thread link": {
+    "de": "Thread-Link kopieren",
+    "es": "Copiar enlace del hilo",
+    "fr": "Copier le lien de la conversation",
+    "ja": "スレッドのリンクをコピー",
+    "ko": "스레드 링크 복사",
+    "pt-BR": "Copiar link da thread",
+    "ru": "Скопировать ссылку на тред",
+    "sv": "Kopiera trådlänk",
+    "zh-Hans": "复制会话链接"
+  },
+  "Could not connect: %@ Reconnecting…": {
+    "de": "Verbindung fehlgeschlagen: %@ Verbinde neu…",
+    "es": "No se pudo conectar: %@ Reconectando…",
+    "fr": "Connexion impossible : %@ Reconnexion…",
+    "ja": "接続できませんでした: %@ 再接続しています…",
+    "ko": "연결할 수 없습니다: %@ 다시 연결하는 중…",
+    "pt-BR": "Não foi possível conectar: %@ Reconectando…",
+    "ru": "Не удалось подключиться: %@ Переподключение…",
+    "sv": "Kunde inte ansluta: %@ Återansluter…",
+    "zh-Hans": "无法连接：%@ 正在重新连接…"
+  },
+  "Could not load older threads. Tap to retry.": {
+    "de": "Ältere Threads konnten nicht geladen werden. Tippe, um es erneut zu versuchen.",
+    "es": "No se pudieron cargar los hilos anteriores. Toca para reintentar.",
+    "fr": "Impossible de charger les conversations plus anciennes. Touchez pour réessayer.",
+    "ja": "以前のスレッドを読み込めませんでした。タップして再試行してください。",
+    "ko": "이전 스레드를 불러올 수 없습니다. 탭하여 다시 시도하세요.",
+    "pt-BR": "Não foi possível carregar threads mais antigas. Toque para tentar novamente.",
+    "ru": "Не удалось загрузить более старые треды. Нажмите, чтобы повторить.",
+    "sv": "Kunde inte läsa in äldre trådar. Tryck för att försöka igen.",
+    "zh-Hans": "无法加载更早的会话。轻点重试。"
+  },
+  "Could not open this thread": {
+    "de": "Dieser Thread konnte nicht geöffnet werden",
+    "es": "No se pudo abrir este hilo",
+    "fr": "Impossible d’ouvrir cette conversation",
+    "ja": "このスレッドを開けませんでした",
+    "ko": "이 스레드를 열 수 없습니다",
+    "pt-BR": "Não foi possível abrir esta thread",
+    "ru": "Не удалось открыть этот тред",
+    "sv": "Kunde inte öppna tråden",
+    "zh-Hans": "无法打开此会话"
+  },
+  "Could not read a photo.": {
+    "de": "Ein Foto konnte nicht gelesen werden.",
+    "es": "No se pudo leer una foto.",
+    "fr": "Impossible de lire une photo.",
+    "ja": "写真を読み込めませんでした。",
+    "ko": "사진을 읽을 수 없습니다.",
+    "pt-BR": "Não foi possível ler uma foto.",
+    "ru": "Не удалось прочитать фото.",
+    "sv": "Kunde inte läsa ett foto.",
+    "zh-Hans": "无法读取照片。"
+  },
+  "Could not read that file.": {
+    "de": "Diese Datei konnte nicht gelesen werden.",
+    "es": "No se pudo leer ese archivo.",
+    "fr": "Impossible de lire ce fichier.",
+    "ja": "そのファイルを読み込めませんでした。",
+    "ko": "해당 파일을 읽을 수 없습니다.",
+    "pt-BR": "Não foi possível ler esse arquivo.",
+    "ru": "Не удалось прочитать этот файл.",
+    "sv": "Kunde inte läsa filen.",
+    "zh-Hans": "无法读取该文件。"
+  },
+  "Could not read this thread": {
+    "de": "Dieser Thread konnte nicht gelesen werden",
+    "es": "No se pudo leer este hilo",
+    "fr": "Impossible de lire cette conversation",
+    "ja": "このスレッドを読み込めませんでした",
+    "ko": "이 스레드를 읽을 수 없습니다",
+    "pt-BR": "Não foi possível ler esta thread",
+    "ru": "Не удалось прочитать этот тред",
+    "sv": "Kunde inte läsa tråden",
+    "zh-Hans": "无法读取此会话"
+  },
+  "Could not search messages for “%@”. Change the search to try again.": {
+    "de": "Nachrichten konnten nicht nach „%@“ durchsucht werden. Ändere die Suche, um es erneut zu versuchen.",
+    "es": "No se pudieron buscar mensajes con «%@». Cambia la búsqueda para volver a intentarlo.",
+    "fr": "Impossible de rechercher « %@ » dans les messages. Modifiez la recherche pour réessayer.",
+    "ja": "メッセージで「%@」を検索できませんでした。検索語を変えて再度お試しください。",
+    "ko": "메시지에서 “%@”을(를) 검색할 수 없습니다. 검색어를 바꿔 다시 시도하세요.",
+    "pt-BR": "Não foi possível pesquisar “%@” nas mensagens. Altere a pesquisa para tentar novamente.",
+    "ru": "Не удалось найти «%@» в сообщениях. Измените запрос, чтобы попробовать снова.",
+    "sv": "Kunde inte söka efter ”%@” i meddelanden. Ändra sökningen för att försöka igen.",
+    "zh-Hans": "无法在消息中搜索“%@”。请修改搜索内容后重试。"
+  },
+  "Could not send your answers. Try again.": {
+    "de": "Deine Antworten konnten nicht gesendet werden. Versuch es erneut.",
+    "es": "No se pudieron enviar tus respuestas. Inténtalo de nuevo.",
+    "fr": "Impossible d’envoyer vos réponses. Réessayez.",
+    "ja": "回答を送信できませんでした。もう一度お試しください。",
+    "ko": "답변을 보낼 수 없습니다. 다시 시도하세요.",
+    "pt-BR": "Não foi possível enviar suas respostas. Tente novamente.",
+    "ru": "Не удалось отправить ответы. Повторите попытку.",
+    "sv": "Kunde inte skicka dina svar. Försök igen.",
+    "zh-Hans": "无法发送你的回答。请重试。"
+  },
+  "Couldn't reach %@": {
+    "de": "%@ nicht erreichbar",
+    "es": "No se pudo contactar con %@",
+    "fr": "Impossible de joindre %@",
+    "ja": "%@ に接続できませんでした",
+    "ko": "%@에 연결할 수 없습니다",
+    "pt-BR": "Não foi possível acessar %@",
+    "ru": "Не удалось связаться с %@",
+    "sv": "Kunde inte nå %@",
+    "zh-Hans": "无法连接到 %@"
+  },
+  "Describe a task": {
+    "de": "Beschreibe eine Aufgabe",
+    "es": "Describe una tarea",
+    "fr": "Décrivez une tâche",
+    "ja": "タスクを説明してください",
+    "ko": "작업을 설명하세요",
+    "pt-BR": "Descreva uma tarefa",
+    "ru": "Опишите задачу",
+    "sv": "Beskriv en uppgift",
+    "zh-Hans": "描述一个任务"
+  },
+  "Development": {
+    "de": "Entwicklung",
+    "es": "Desarrollo",
+    "fr": "Développement",
+    "ja": "開発版",
+    "ko": "개발",
+    "pt-BR": "Desenvolvimento",
+    "ru": "Разработка",
+    "sv": "Utveckling",
+    "zh-Hans": "开发版"
+  },
+  "Direct": {
+    "de": "Direkt",
+    "es": "Directa",
+    "fr": "Directe",
+    "ja": "直接",
+    "ko": "직접",
+    "pt-BR": "Direta",
+    "ru": "Напрямую",
+    "sv": "Direkt",
+    "zh-Hans": "直连"
+  },
+  "Dismissed": {
+    "de": "Verworfen",
+    "es": "Descartada",
+    "fr": "Ignorée",
+    "ja": "閉じました",
+    "ko": "닫음",
+    "pt-BR": "Dispensada",
+    "ru": "Отклонено",
+    "sv": "Avvisad",
+    "zh-Hans": "已忽略"
+  },
+  "Edit queued message": {
+    "de": "Eingereihte Nachricht bearbeiten",
+    "es": "Editar mensaje en cola",
+    "fr": "Modifier le message en file d’attente",
+    "ja": "キュー内のメッセージを編集",
+    "ko": "대기 중인 메시지 편집",
+    "pt-BR": "Editar mensagem na fila",
+    "ru": "Изменить сообщение в очереди",
+    "sv": "Redigera köat meddelande",
+    "zh-Hans": "编辑排队中的消息"
+  },
+  "Exchanging the pairing code": {
+    "de": "Kopplungscode wird ausgetauscht",
+    "es": "Intercambiando el código de emparejamiento",
+    "fr": "Échange du code d’appairage",
+    "ja": "ペアリングコードを交換しています",
+    "ko": "페어링 코드 교환 중",
+    "pt-BR": "Trocando o código de pareamento",
+    "ru": "Обмен кодом сопряжения",
+    "sv": "Utbyter parkopplingskoden",
+    "zh-Hans": "正在交换配对代码"
+  },
+  "Expand user input, ^[%lld question](inflect: true)": {
+    "de": {
+      "one": "Benutzereingabe aufklappen, %lld Frage",
+      "other": "Benutzereingabe aufklappen, %lld Fragen"
+    },
+    "es": {
+      "one": "Expandir la entrada del usuario, %lld pregunta",
+      "other": "Expandir la entrada del usuario, %lld preguntas"
+    },
+    "fr": {
+      "one": "Développer la saisie, %lld question",
+      "other": "Développer la saisie, %lld questions"
+    },
+    "ja": {
+      "other": "ユーザー入力を展開、%lld 件の質問"
+    },
+    "ko": {
+      "other": "사용자 입력 펼치기, 질문 %lld개"
+    },
+    "pt-BR": {
+      "one": "Expandir entrada do usuário, %lld pergunta",
+      "other": "Expandir entrada do usuário, %lld perguntas"
+    },
+    "ru": {
+      "one": "Развернуть ввод пользователя, %lld вопрос",
+      "few": "Развернуть ввод пользователя, %lld вопроса",
+      "many": "Развернуть ввод пользователя, %lld вопросов",
+      "other": "Развернуть ввод пользователя, %lld вопроса"
+    },
+    "sv": {
+      "one": "Visa användarinmatning, %lld fråga",
+      "other": "Visa användarinmatning, %lld frågor"
+    },
+    "zh-Hans": {
+      "other": "展开用户输入，%lld 个问题"
+    }
+  },
+  "Expanded": {
+    "de": "Aufgeklappt",
+    "es": "Expandido",
+    "fr": "Développé",
+    "ja": "展開",
+    "ko": "펼쳐짐",
+    "pt-BR": "Expandido",
+    "ru": "Развёрнуто",
+    "sv": "Expanderad",
+    "zh-Hans": "已展开"
+  },
+  "Files can be up to 50 MB.": {
+    "de": "Dateien dürfen bis zu 50 MB groß sein.",
+    "es": "Los archivos pueden ocupar hasta 50 MB.",
+    "fr": "Les fichiers peuvent faire jusqu’à 50 Mo.",
+    "ja": "ファイルは 50 MB まで添付できます。",
+    "ko": "파일은 최대 50MB까지 가능합니다.",
+    "pt-BR": "Os arquivos podem ter até 50 MB.",
+    "ru": "Размер файла — до 50 МБ.",
+    "sv": "Filer kan vara upp till 50 MB.",
+    "zh-Hans": "文件最大 50 MB。"
+  },
+  "Filter": {
+    "de": "Filtern",
+    "es": "Filtrar",
+    "fr": "Filtrer",
+    "ja": "フィルタ",
+    "ko": "필터",
+    "pt-BR": "Filtrar",
+    "ru": "Фильтр",
+    "sv": "Filtrera",
+    "zh-Hans": "筛选"
+  },
+  "Filtered": {
+    "de": "Gefiltert",
+    "es": "Filtrado",
+    "fr": "Filtré",
+    "ja": "フィルタ適用中",
+    "ko": "필터 적용됨",
+    "pt-BR": "Filtrado",
+    "ru": "С фильтром",
+    "sv": "Filtrerad",
+    "zh-Hans": "已筛选"
+  },
+  "Find in file": {
+    "de": "In Datei suchen",
+    "es": "Buscar en el archivo",
+    "fr": "Rechercher dans le fichier",
+    "ja": "ファイル内を検索",
+    "ko": "파일에서 찾기",
+    "pt-BR": "Buscar no arquivo",
+    "ru": "Найти в файле",
+    "sv": "Sök i filen",
+    "zh-Hans": "在文件中查找"
+  },
+  "Follow and steer the coding agents on your own computers, from anywhere.": {
+    "de": "Verfolge und lenke die Coding-Agenten auf deinen eigenen Computern – von überall.",
+    "es": "Sigue y dirige los agentes de programación de tus propios equipos, desde cualquier lugar.",
+    "fr": "Suivez et pilotez les agents de code de vos propres ordinateurs, où que vous soyez.",
+    "ja": "自分のコンピュータで動くコーディングエージェントを、どこからでも確認して指示できます。",
+    "ko": "내 컴퓨터의 코딩 에이전트를 어디서나 확인하고 조정하세요.",
+    "pt-BR": "Acompanhe e direcione os agentes de programação dos seus próprios computadores, de qualquer lugar.",
+    "ru": "Следите за агентами программирования на своих компьютерах и управляйте ими откуда угодно.",
+    "sv": "Följ och styr kodagenterna på dina egna datorer, var du än är.",
+    "zh-Hans": "随时随地查看并引导你自己电脑上的编程智能体。"
+  },
+  "For machines on your local network or tailnet, or anywhere through your own relay. The machine keeps its own provider credentials.": {
+    "de": "Für Computer in deinem lokalen Netzwerk oder Tailnet oder überall über dein eigenes Relay. Der Computer behält seine eigenen Anbieter-Zugangsdaten.",
+    "es": "Para máquinas de tu red local o tailnet, o desde cualquier lugar a través de tu propio relay. La máquina conserva sus propias credenciales de proveedor.",
+    "fr": "Pour les machines de votre réseau local ou tailnet, ou de n’importe où via votre propre relais. La machine conserve ses propres identifiants de fournisseur.",
+    "ja": "ローカルネットワークや tailnet 上のマシン、または自分のリレー経由でどこからでも利用できます。プロバイダーの資格情報はマシン側に保持されます。",
+    "ko": "로컬 네트워크나 tailnet의 컴퓨터, 또는 직접 운영하는 릴레이를 통해 어디서나 사용할 수 있습니다. 제공자 자격 증명은 해당 컴퓨터에 남아 있습니다.",
+    "pt-BR": "Para máquinas na sua rede local ou tailnet, ou em qualquer lugar pelo seu próprio relay. A máquina mantém as próprias credenciais de provedor.",
+    "ru": "Для компьютеров в локальной сети или tailnet, а также откуда угодно через ваш собственный relay. Учётные данные провайдеров остаются на компьютере.",
+    "sv": "För datorer i ditt lokala nätverk eller tailnet, eller var som helst via ditt eget relä. Datorn behåller sina egna inloggningsuppgifter för leverantörer.",
+    "zh-Hans": "适用于局域网或 tailnet 中的机器，也可通过你自己的中继随时随地连接。提供方凭据保留在该机器上。"
+  },
+  "Forgets every computer's sign-in and cached threads on this device. Your preferences stay. The computers keep listing this device until you revoke it there.": {
+    "de": "Entfernt auf diesem Gerät die Anmeldungen und zwischengespeicherten Threads aller Computer. Deine Einstellungen bleiben erhalten. Die Computer führen dieses Gerät weiter, bis du es dort widerrufst.",
+    "es": "Olvida en este dispositivo el inicio de sesión y los hilos en caché de todos los equipos. Tus preferencias se mantienen. Los equipos seguirán mostrando este dispositivo hasta que lo revoques en ellos.",
+    "fr": "Oublie sur cet appareil la connexion et les conversations en cache de chaque ordinateur. Vos préférences sont conservées. Les ordinateurs continuent d’afficher cet appareil jusqu’à ce que vous le révoquiez sur ceux-ci.",
+    "ja": "このデバイス上のすべてのコンピュータのサインイン情報とキャッシュされたスレッドを削除します。設定はそのまま残ります。各コンピュータでは、そこで取り消すまでこのデバイスが一覧に表示され続けます。",
+    "ko": "이 기기에서 모든 컴퓨터의 로그인과 캐시된 스레드를 삭제합니다. 환경설정은 유지됩니다. 각 컴퓨터에서 취소하기 전까지는 그 컴퓨터 목록에 이 기기가 계속 표시됩니다.",
+    "pt-BR": "Esquece neste dispositivo o login e as threads em cache de todos os computadores. Suas preferências são mantidas. Os computadores continuam listando este dispositivo até você revogá-lo neles.",
+    "ru": "Удаляет с этого устройства вход и кешированные треды всех компьютеров. Ваши настройки сохраняются. Компьютеры будут показывать это устройство, пока вы не отзовёте его на них.",
+    "sv": "Glömmer alla datorers inloggning och cachade trådar på den här enheten. Dina inställningar finns kvar. Datorerna fortsätter att visa enheten tills du återkallar den där.",
+    "zh-Hans": "在此设备上清除所有电脑的登录信息和缓存的会话。你的偏好设置会保留。在你于各电脑上撤销之前，它们仍会列出此设备。"
+  },
+  "Hide": {
+    "de": "Ausblenden",
+    "es": "Ocultar",
+    "fr": "Masquer",
+    "ja": "隠す",
+    "ko": "숨기기",
+    "pt-BR": "Ocultar",
+    "ru": "Скрыть",
+    "sv": "Dölj",
+    "zh-Hans": "隐藏"
+  },
+  "How do I get a pairing link?": {
+    "de": "Wie bekomme ich einen Kopplungslink?",
+    "es": "¿Cómo consigo un enlace de emparejamiento?",
+    "fr": "Comment obtenir un lien d’appairage ?",
+    "ja": "ペアリングリンクの入手方法",
+    "ko": "페어링 링크는 어떻게 받나요?",
+    "pt-BR": "Como consigo um link de pareamento?",
+    "ru": "Как получить ссылку сопряжения?",
+    "sv": "Hur får jag en parkopplingslänk?",
+    "zh-Hans": "如何获取配对链接？"
+  },
+  "How the project filter on the thread list combines the same project across computers.": {
+    "de": "Wie der Projektfilter der Thread-Liste dasselbe Projekt auf mehreren Computern zusammenfasst.",
+    "es": "Cómo combina el filtro de proyectos de la lista de hilos un mismo proyecto en distintos equipos.",
+    "fr": "Comment le filtre de projet de la liste des conversations regroupe un même projet sur plusieurs ordinateurs.",
+    "ja": "スレッド一覧のプロジェクトフィルタで、複数のコンピュータにある同じプロジェクトをどうまとめるかを設定します。",
+    "ko": "스레드 목록의 프로젝트 필터가 여러 컴퓨터에 있는 같은 프로젝트를 어떻게 묶을지 정합니다.",
+    "pt-BR": "Como o filtro de projetos da lista de threads combina o mesmo projeto em vários computadores.",
+    "ru": "Как фильтр проектов в списке тредов объединяет один и тот же проект на разных компьютерах.",
+    "sv": "Hur projektfiltret i trådlistan slår ihop samma projekt på olika datorer.",
+    "zh-Hans": "会话列表的项目筛选如何合并不同电脑上的同一项目。"
+  },
+  "In progress": {
+    "de": "In Arbeit",
+    "es": "En curso",
+    "fr": "En cours",
+    "ja": "進行中",
+    "ko": "진행 중",
+    "pt-BR": "Em andamento",
+    "ru": "Выполняется",
+    "sv": "Pågår",
+    "zh-Hans": "进行中"
+  },
+  "In the desktop app, open Settings, then Connections. Or run `ankiel pair` in a terminal.": {
+    "de": "Öffne in der Desktop-App die Einstellungen und dann „Verbindungen“. Oder führe `ankiel pair` in einem Terminal aus.",
+    "es": "En la app de escritorio, abre Ajustes y luego Conexiones. O ejecuta `ankiel pair` en una terminal.",
+    "fr": "Dans l’app de bureau, ouvrez Réglages, puis Connexions. Ou exécutez `ankiel pair` dans un terminal.",
+    "ja": "デスクトップアプリで「設定」→「接続」を開きます。またはターミナルで `ankiel pair` を実行します。",
+    "ko": "데스크톱 앱에서 설정을 연 다음 연결로 이동하세요. 또는 터미널에서 `ankiel pair`를 실행하세요.",
+    "pt-BR": "No app de desktop, abra Ajustes e depois Conexões. Ou execute `ankiel pair` em um terminal.",
+    "ru": "В настольном приложении откройте «Настройки», затем «Подключения». Или выполните `ankiel pair` в терминале.",
+    "sv": "Öppna Inställningar och sedan Anslutningar i skrivbordsappen. Eller kör `ankiel pair` i en terminal.",
+    "zh-Hans": "在桌面应用中打开“设置”，然后进入“连接”。或在终端中运行 `ankiel pair`。"
+  },
+  "Install Ankiel Code %@. The server will restart and reconnect. Running threads may be interrupted.": {
+    "de": "Ankiel Code %@ installieren. Der Server startet neu und verbindet sich wieder. Laufende Threads können unterbrochen werden.",
+    "es": "Instalar Ankiel Code %@. El servidor se reiniciará y volverá a conectarse. Los hilos en ejecución podrían interrumpirse.",
+    "fr": "Installer Ankiel Code %@. Le serveur va redémarrer et se reconnecter. Les conversations en cours peuvent être interrompues.",
+    "ja": "Ankiel Code %@ をインストールします。サーバーが再起動して再接続します。実行中のスレッドは中断される場合があります。",
+    "ko": "Ankiel Code %@을(를) 설치합니다. 서버가 다시 시작된 후 다시 연결됩니다. 실행 중인 스레드가 중단될 수 있습니다.",
+    "pt-BR": "Instalar o Ankiel Code %@. O servidor vai reiniciar e se reconectar. Threads em execução podem ser interrompidas.",
+    "ru": "Установить Ankiel Code %@. Сервер перезапустится и переподключится. Выполняющиеся треды могут прерваться.",
+    "sv": "Installera Ankiel Code %@. Servern startar om och återansluter. Pågående trådar kan avbrytas.",
+    "zh-Hans": "安装 Ankiel Code %@。服务器将重启并重新连接，正在运行的会话可能会被中断。"
+  },
+  "Installed": {
+    "de": "Installiert",
+    "es": "Instalado",
+    "fr": "Installé",
+    "ja": "インストール済み",
+    "ko": "설치됨",
+    "pt-BR": "Instalado",
+    "ru": "Установлено",
+    "sv": "Installerad",
+    "zh-Hans": "已安装"
+  },
+  "Keep the app open for a moment.": {
+    "de": "Lass die App kurz geöffnet.",
+    "es": "Mantén la app abierta un momento.",
+    "fr": "Gardez l’app ouverte quelques instants.",
+    "ja": "しばらくアプリを開いたままにしてください。",
+    "ko": "잠시 앱을 열어 두세요.",
+    "pt-BR": "Mantenha o app aberto por um instante.",
+    "ru": "Не закрывайте приложение несколько секунд.",
+    "sv": "Låt appen vara öppen en stund.",
+    "zh-Hans": "请让应用保持打开片刻。"
+  },
+  "Language": {
+    "de": "Sprache",
+    "es": "Idioma",
+    "fr": "Langue",
+    "ja": "言語",
+    "ko": "언어",
+    "pt-BR": "Idioma",
+    "ru": "Язык",
+    "sv": "Språk",
+    "zh-Hans": "语言"
+  },
+  "Last connected": {
+    "de": "Zuletzt verbunden",
+    "es": "Última conexión",
+    "fr": "Dernière connexion",
+    "ja": "最終接続",
+    "ko": "마지막 연결",
+    "pt-BR": "Última conexão",
+    "ru": "Последнее подключение",
+    "sv": "Senast ansluten",
+    "zh-Hans": "上次连接"
+  },
+  "License (MIT)": {
+    "de": "Lizenz (MIT)",
+    "es": "Licencia (MIT)",
+    "fr": "Licence (MIT)",
+    "ja": "ライセンス（MIT）",
+    "ko": "라이선스(MIT)",
+    "pt-BR": "Licença (MIT)",
+    "ru": "Лицензия (MIT)",
+    "sv": "Licens (MIT)",
+    "zh-Hans": "许可证（MIT）"
+  },
+  "Loading files": {
+    "de": "Dateien werden geladen",
+    "es": "Cargando archivos",
+    "fr": "Chargement des fichiers",
+    "ja": "ファイルを読み込んでいます",
+    "ko": "파일 불러오는 중",
+    "pt-BR": "Carregando arquivos",
+    "ru": "Загрузка файлов",
+    "sv": "Läser in filer",
+    "zh-Hans": "正在加载文件"
+  },
+  "Loading thread": {
+    "de": "Thread wird geladen",
+    "es": "Cargando hilo",
+    "fr": "Chargement de la conversation",
+    "ja": "スレッドを読み込んでいます",
+    "ko": "스레드 불러오는 중",
+    "pt-BR": "Carregando thread",
+    "ru": "Загрузка треда",
+    "sv": "Läser in tråd",
+    "zh-Hans": "正在加载会话"
+  },
+  "Local network": {
+    "de": "Lokales Netzwerk",
+    "es": "Red local",
+    "fr": "Réseau local",
+    "ja": "ローカルネットワーク",
+    "ko": "로컬 네트워크",
+    "pt-BR": "Rede local",
+    "ru": "Локальная сеть",
+    "sv": "Lokalt nätverk",
+    "zh-Hans": "局域网"
+  },
+  "Looking for “%@” in messages.": {
+    "de": "Suche nach „%@“ in Nachrichten.",
+    "es": "Buscando «%@» en los mensajes.",
+    "fr": "Recherche de « %@ » dans les messages.",
+    "ja": "メッセージから「%@」を検索しています。",
+    "ko": "메시지에서 “%@”을(를) 찾는 중입니다.",
+    "pt-BR": "Procurando “%@” nas mensagens.",
+    "ru": "Поиск «%@» в сообщениях.",
+    "sv": "Söker efter ”%@” i meddelanden.",
+    "zh-Hans": "正在消息中查找“%@”。"
+  },
+  "Make sure Ankiel Code is running on that computer and this device can reach it: the same Wi-Fi, your tailnet, or the relay.": {
+    "de": "Stelle sicher, dass Ankiel Code auf diesem Computer läuft und dieses Gerät ihn erreichen kann: im selben WLAN, über dein Tailnet oder das Relay.",
+    "es": "Asegúrate de que Ankiel Code se esté ejecutando en ese equipo y de que este dispositivo pueda llegar a él: la misma red Wi-Fi, tu tailnet o el relay.",
+    "fr": "Vérifiez qu’Ankiel Code tourne sur cet ordinateur et que cet appareil peut le joindre : même Wi-Fi, votre tailnet ou le relais.",
+    "ja": "そのコンピュータで Ankiel Code が動作していて、このデバイスから到達できること（同じ Wi-Fi、tailnet、またはリレー）を確認してください。",
+    "ko": "해당 컴퓨터에서 Ankiel Code가 실행 중이고 이 기기에서 연결할 수 있는지 확인하세요. 같은 Wi-Fi, tailnet 또는 릴레이를 사용해야 합니다.",
+    "pt-BR": "Verifique se o Ankiel Code está em execução nesse computador e se este dispositivo consegue alcançá-lo: mesma rede Wi-Fi, sua tailnet ou o relay.",
+    "ru": "Убедитесь, что на том компьютере запущен Ankiel Code и это устройство может до него достучаться: та же сеть Wi-Fi, ваш tailnet или relay.",
+    "sv": "Kontrollera att Ankiel Code körs på den datorn och att enheten kan nå den: samma Wi-Fi, ditt tailnet eller reläet.",
+    "zh-Hans": "请确认那台电脑上正在运行 Ankiel Code，并且此设备可以访问它：同一 Wi-Fi、你的 tailnet 或中继。"
+  },
+  "Message": {
+    "de": "Nachricht",
+    "es": "Mensaje",
+    "fr": "Message",
+    "ja": "メッセージ",
+    "ko": "메시지",
+    "pt-BR": "Mensagem",
+    "ru": "Сообщение",
+    "sv": "Meddelande",
+    "zh-Hans": "消息"
+  },
+  "Models": {
+    "de": "Modelle",
+    "es": "Modelos",
+    "fr": "Modèles",
+    "ja": "モデル",
+    "ko": "모델",
+    "pt-BR": "Modelos",
+    "ru": "Модели",
+    "sv": "Modeller",
+    "zh-Hans": "模型"
+  },
+  "Needs pairing again": {
+    "de": "Muss erneut gekoppelt werden",
+    "es": "Hay que volver a emparejarlo",
+    "fr": "Doit être appairé à nouveau",
+    "ja": "再ペアリングが必要",
+    "ko": "다시 페어링 필요",
+    "pt-BR": "Precisa parear de novo",
+    "ru": "Нужно повторное сопряжение",
+    "sv": "Behöver parkopplas igen",
+    "zh-Hans": "需要重新配对"
+  },
+  "New messages": {
+    "de": "Neue Nachrichten",
+    "es": "Mensajes nuevos",
+    "fr": "Nouveaux messages",
+    "ja": "新しいメッセージ",
+    "ko": "새 메시지",
+    "pt-BR": "Novas mensagens",
+    "ru": "Новые сообщения",
+    "sv": "Nya meddelanden",
+    "zh-Hans": "新消息"
+  },
+  "New threads start with these permissions. You can change them for one thread from its composer.": {
+    "de": "Neue Threads starten mit diesen Berechtigungen. Für einen einzelnen Thread kannst du sie in dessen Eingabefeld ändern.",
+    "es": "Los hilos nuevos empiezan con estos permisos. Puedes cambiarlos para un hilo desde su cuadro de mensaje.",
+    "fr": "Les nouvelles conversations démarrent avec ces autorisations. Vous pouvez les modifier pour une conversation depuis sa zone de saisie.",
+    "ja": "新しいスレッドはこの権限で開始します。スレッドごとに入力欄から変更できます。",
+    "ko": "새 스레드는 이 권한으로 시작합니다. 스레드별로 입력창에서 변경할 수 있습니다.",
+    "pt-BR": "Novas threads começam com estas permissões. Você pode alterá-las para uma thread no editor de mensagens dela.",
+    "ru": "Новые треды начинаются с этими разрешениями. Для отдельного треда их можно изменить в его поле ввода.",
+    "sv": "Nya trådar startar med de här behörigheterna. Du kan ändra dem för en tråd i dess inmatningsfält.",
+    "zh-Hans": "新会话以这些权限开始。你可以在单个会话的输入框中更改它们。"
+  },
+  "Next %@": {
+    "de": "Nächster %@",
+    "es": "El próximo %@",
+    "fr": "%@ prochain",
+    "ja": "次の%@",
+    "ko": "다음 %@",
+    "pt-BR": "Próxima %@",
+    "ru": "Следующий %@",
+    "sv": "Nästa %@",
+    "zh-Hans": "下%@"
+  },
+  "Next match": {
+    "de": "Nächster Treffer",
+    "es": "Siguiente coincidencia",
+    "fr": "Résultat suivant",
+    "ja": "次の一致",
+    "ko": "다음 일치 항목",
+    "pt-BR": "Próxima ocorrência",
+    "ru": "Следующее совпадение",
+    "sv": "Nästa träff",
+    "zh-Hans": "下一个匹配项"
+  },
+  "No camera here": {
+    "de": "Keine Kamera verfügbar",
+    "es": "No hay cámara",
+    "fr": "Aucun appareil photo",
+    "ja": "カメラがありません",
+    "ko": "카메라 없음",
+    "pt-BR": "Sem câmera",
+    "ru": "Камера недоступна",
+    "sv": "Ingen kamera här",
+    "zh-Hans": "此处没有相机"
+  },
+  "No computers": {
+    "de": "Keine Computer",
+    "es": "No hay equipos",
+    "fr": "Aucun ordinateur",
+    "ja": "コンピュータがありません",
+    "ko": "컴퓨터 없음",
+    "pt-BR": "Nenhum computador",
+    "ru": "Нет компьютеров",
+    "sv": "Inga datorer",
+    "zh-Hans": "没有电脑"
+  },
+  "No matches": {
+    "de": "Keine Treffer",
+    "es": "Sin coincidencias",
+    "fr": "Aucun résultat",
+    "ja": "一致なし",
+    "ko": "일치 항목 없음",
+    "pt-BR": "Nenhuma ocorrência",
+    "ru": "Нет совпадений",
+    "sv": "Inga träffar",
+    "zh-Hans": "无匹配项"
+  },
+  "No models are set up on this computer.": {
+    "de": "Auf diesem Computer sind keine Modelle eingerichtet.",
+    "es": "No hay modelos configurados en este equipo.",
+    "fr": "Aucun modèle n’est configuré sur cet ordinateur.",
+    "ja": "このコンピュータにはモデルが設定されていません。",
+    "ko": "이 컴퓨터에 설정된 모델이 없습니다.",
+    "pt-BR": "Nenhum modelo está configurado neste computador.",
+    "ru": "На этом компьютере не настроено ни одной модели.",
+    "sv": "Inga modeller är konfigurerade på den här datorn.",
+    "zh-Hans": "这台电脑上没有设置任何模型。"
+  },
+  "No providers reported.": {
+    "de": "Keine Anbieter gemeldet.",
+    "es": "No se informó ningún proveedor.",
+    "fr": "Aucun fournisseur signalé.",
+    "ja": "プロバイダーが報告されていません。",
+    "ko": "보고된 제공자가 없습니다.",
+    "pt-BR": "Nenhum provedor informado.",
+    "ru": "Провайдеры не найдены.",
+    "sv": "Inga leverantörer rapporterade.",
+    "zh-Hans": "未报告任何提供方。"
+  },
+  "No sign-in details or thread content are included.": {
+    "de": "Anmeldedaten und Thread-Inhalte sind nicht enthalten.",
+    "es": "No se incluyen datos de inicio de sesión ni contenido de los hilos.",
+    "fr": "Aucune information de connexion ni aucun contenu de conversation n’est inclus.",
+    "ja": "サインイン情報やスレッドの内容は含まれません。",
+    "ko": "로그인 정보나 스레드 내용은 포함되지 않습니다.",
+    "pt-BR": "Nenhum dado de login ou conteúdo de thread é incluído.",
+    "ru": "Данные для входа и содержимое тредов не включаются.",
+    "sv": "Inga inloggningsuppgifter eller trådinnehåll ingår.",
+    "zh-Hans": "不包含任何登录信息或会话内容。"
+  },
+  "No thread selected": {
+    "de": "Kein Thread ausgewählt",
+    "es": "Ningún hilo seleccionado",
+    "fr": "Aucune conversation sélectionnée",
+    "ja": "スレッドが選択されていません",
+    "ko": "선택한 스레드 없음",
+    "pt-BR": "Nenhuma thread selecionada",
+    "ru": "Тред не выбран",
+    "sv": "Ingen tråd vald",
+    "zh-Hans": "未选择会话"
+  },
+  "Not connected to the computer. Try again when it is back.": {
+    "de": "Nicht mit dem Computer verbunden. Versuch es erneut, wenn er wieder da ist.",
+    "es": "No hay conexión con el equipo. Inténtalo de nuevo cuando vuelva.",
+    "fr": "Non connecté à l’ordinateur. Réessayez lorsqu’il sera de retour.",
+    "ja": "コンピュータに接続されていません。復帰したらもう一度お試しください。",
+    "ko": "컴퓨터에 연결되어 있지 않습니다. 다시 연결되면 시도하세요.",
+    "pt-BR": "Sem conexão com o computador. Tente novamente quando ele voltar.",
+    "ru": "Нет подключения к компьютеру. Повторите попытку, когда он снова будет на связи.",
+    "sv": "Inte ansluten till datorn. Försök igen när den är tillbaka.",
+    "zh-Hans": "未连接到电脑。请在它恢复后重试。"
+  },
+  "Not connected · showing saved messages": {
+    "de": "Nicht verbunden · gespeicherte Nachrichten",
+    "es": "Sin conexión · mostrando mensajes guardados",
+    "fr": "Non connecté · messages enregistrés affichés",
+    "ja": "未接続 · 保存済みのメッセージを表示中",
+    "ko": "연결되지 않음 · 저장된 메시지 표시 중",
+    "pt-BR": "Não conectado · mostrando mensagens salvas",
+    "ru": "Нет подключения · показаны сохранённые сообщения",
+    "sv": "Inte ansluten · visar sparade meddelanden",
+    "zh-Hans": "未连接 · 正在显示已保存的消息"
+  },
+  "Not done": {
+    "de": "Nicht erledigt",
+    "es": "Sin hacer",
+    "fr": "Non terminé",
+    "ja": "未完了",
+    "ko": "미완료",
+    "pt-BR": "Não concluído",
+    "ru": "Не выполнено",
+    "sv": "Inte klar",
+    "zh-Hans": "未完成"
+  },
+  "Not granted": {
+    "de": "Nicht gewährt",
+    "es": "No concedido",
+    "fr": "Non accordé",
+    "ja": "未許可",
+    "ko": "허용되지 않음",
+    "pt-BR": "Não concedida",
+    "ru": "Не предоставлено",
+    "sv": "Inte beviljad",
+    "zh-Hans": "未授予"
+  },
+  "Not sent": {
+    "de": "Nicht gesendet",
+    "es": "Sin enviar",
+    "fr": "Non envoyé",
+    "ja": "未送信",
+    "ko": "보내지 않음",
+    "pt-BR": "Não enviada",
+    "ru": "Не отправлено",
+    "sv": "Inte skickat",
+    "zh-Hans": "未发送"
+  },
+  "Not sent · %@": {
+    "de": "Nicht gesendet · %@",
+    "es": "Sin enviar · %@",
+    "fr": "Non envoyé · %@",
+    "ja": "未送信 · %@",
+    "ko": "보내지 않음 · %@",
+    "pt-BR": "Não enviada · %@",
+    "ru": "Не отправлено · %@",
+    "sv": "Inte skickat · %@",
+    "zh-Hans": "未发送 · %@"
+  },
+  "Nothing here yet": {
+    "de": "Hier ist noch nichts",
+    "es": "Aún no hay nada aquí",
+    "fr": "Rien pour l’instant",
+    "ja": "まだ何もありません",
+    "ko": "아직 아무것도 없습니다",
+    "pt-BR": "Nada aqui ainda",
+    "ru": "Здесь пока пусто",
+    "sv": "Inget här än",
+    "zh-Hans": "这里还没有内容"
+  },
+  "Only pair with computers you own. It will be able to show this device its threads.": {
+    "de": "Kopple nur mit Computern, die dir gehören. Der Computer kann diesem Gerät dann seine Threads zeigen.",
+    "es": "Empareja solo con equipos que sean tuyos. Podrá mostrar sus hilos en este dispositivo.",
+    "fr": "N’appairez que des ordinateurs qui vous appartiennent. Il pourra afficher ses conversations sur cet appareil.",
+    "ja": "ペアリングは自分のコンピュータとだけ行ってください。そのコンピュータのスレッドがこのデバイスに表示されるようになります。",
+    "ko": "내가 소유한 컴퓨터와만 페어링하세요. 해당 컴퓨터의 스레드가 이 기기에 표시될 수 있습니다.",
+    "pt-BR": "Pareie apenas com computadores que são seus. Ele poderá mostrar as threads dele neste dispositivo.",
+    "ru": "Выполняйте сопряжение только со своими компьютерами. Компьютер сможет показывать этому устройству свои треды.",
+    "sv": "Parkoppla bara med datorer du äger. Den kommer att kunna visa sina trådar på den här enheten.",
+    "zh-Hans": "只与你自己的电脑配对。配对后，它可以在此设备上显示其会话。"
+  },
+  "Open Ankiel Code on your computer": {
+    "de": "Öffne Ankiel Code auf deinem Computer",
+    "es": "Abre Ankiel Code en tu equipo",
+    "fr": "Ouvrez Ankiel Code sur votre ordinateur",
+    "ja": "コンピュータで Ankiel Code を開きます",
+    "ko": "컴퓨터에서 Ankiel Code를 여세요",
+    "pt-BR": "Abra o Ankiel Code no seu computador",
+    "ru": "Откройте Ankiel Code на компьютере",
+    "sv": "Öppna Ankiel Code på din dator",
+    "zh-Hans": "在电脑上打开 Ankiel Code"
+  },
+  "Open in Quick Look": {
+    "de": "In Übersicht öffnen",
+    "es": "Abrir en Vista rápida",
+    "fr": "Ouvrir dans Coup d’œil",
+    "ja": "クイックルックで開く",
+    "ko": "훑어보기로 열기",
+    "pt-BR": "Abrir na Visualização Rápida",
+    "ru": "Открыть в Быстром просмотре",
+    "sv": "Öppna i Snabbtitt",
+    "zh-Hans": "用快速查看打开"
+  },
+  "Open it from Files to see what is inside.": {
+    "de": "Öffne ihn über „Dateien“, um den Inhalt zu sehen.",
+    "es": "Ábrela desde Archivos para ver su contenido.",
+    "fr": "Ouvrez-le depuis Fichiers pour voir son contenu.",
+    "ja": "中身を見るには「ファイル」から開いてください。",
+    "ko": "내용을 보려면 파일에서 여세요.",
+    "pt-BR": "Abra pelo Arquivos para ver o que há dentro.",
+    "ru": "Откройте её в «Файлах», чтобы увидеть содержимое.",
+    "sv": "Öppna den från Filer för att se innehållet.",
+    "zh-Hans": "请从“文件”中打开以查看其内容。"
+  },
+  "Opens Ankiel Code in the Settings app": {
+    "de": "Öffnet Ankiel Code in der App „Einstellungen“",
+    "es": "Abre Ankiel Code en la app Ajustes",
+    "fr": "Ouvre Ankiel Code dans l’app Réglages",
+    "ja": "「設定」アプリで Ankiel Code を開きます",
+    "ko": "설정 앱에서 Ankiel Code를 엽니다",
+    "pt-BR": "Abre o Ankiel Code no app Ajustes",
+    "ru": "Открывает Ankiel Code в приложении «Настройки»",
+    "sv": "Öppnar Ankiel Code i appen Inställningar",
+    "zh-Hans": "在“设置”应用中打开 Ankiel Code"
+  },
+  "Opens the file": {
+    "de": "Öffnet die Datei",
+    "es": "Abre el archivo",
+    "fr": "Ouvre le fichier",
+    "ja": "ファイルを開きます",
+    "ko": "파일을 엽니다",
+    "pt-BR": "Abre o arquivo",
+    "ru": "Открывает файл",
+    "sv": "Öppnar filen",
+    "zh-Hans": "打开文件"
+  },
+  "Opens the image": {
+    "de": "Öffnet das Bild",
+    "es": "Abre la imagen",
+    "fr": "Ouvre l’image",
+    "ja": "画像を開きます",
+    "ko": "이미지를 엽니다",
+    "pt-BR": "Abre a imagem",
+    "ru": "Открывает изображение",
+    "sv": "Öppnar bilden",
+    "zh-Hans": "打开图片"
+  },
+  "Opens the subagent's thread": {
+    "de": "Öffnet den Thread des Subagenten",
+    "es": "Abre el hilo del subagente",
+    "fr": "Ouvre la conversation du sous-agent",
+    "ja": "サブエージェントのスレッドを開きます",
+    "ko": "서브에이전트의 스레드를 엽니다",
+    "pt-BR": "Abre a thread do subagente",
+    "ru": "Открывает тред субагента",
+    "sv": "Öppnar subagentens tråd",
+    "zh-Hans": "打开子智能体的会话"
+  },
+  "Or copy the pairing link and paste it here.": {
+    "de": "Oder kopiere den Kopplungslink und füge ihn hier ein.",
+    "es": "O copia el enlace de emparejamiento y pégalo aquí.",
+    "fr": "Ou copiez le lien d’appairage et collez-le ici.",
+    "ja": "または、ペアリングリンクをコピーしてここに貼り付けます。",
+    "ko": "또는 페어링 링크를 복사해 여기에 붙여넣으세요.",
+    "pt-BR": "Ou copie o link de pareamento e cole aqui.",
+    "ru": "Или скопируйте ссылку сопряжения и вставьте её сюда.",
+    "sv": "Eller kopiera parkopplingslänken och klistra in den här.",
+    "zh-Hans": "或者复制配对链接并粘贴到这里。"
+  },
+  "Pair": {
+    "de": "Koppeln",
+    "es": "Emparejar",
+    "fr": "Appairer",
+    "ja": "ペアリング",
+    "ko": "페어링",
+    "pt-BR": "Parear",
+    "ru": "Выполнить сопряжение",
+    "sv": "Parkoppla",
+    "zh-Hans": "配对"
+  },
+  "Pair a computer to start a thread.": {
+    "de": "Kopple einen Computer, um einen Thread zu starten.",
+    "es": "Empareja un equipo para empezar un hilo.",
+    "fr": "Appairez un ordinateur pour démarrer une conversation.",
+    "ja": "スレッドを開始するには、コンピュータをペアリングしてください。",
+    "ko": "스레드를 시작하려면 컴퓨터를 페어링하세요.",
+    "pt-BR": "Pareie um computador para iniciar uma thread.",
+    "ru": "Выполните сопряжение с компьютером, чтобы начать тред.",
+    "sv": "Parkoppla en dator för att starta en tråd.",
+    "zh-Hans": "配对一台电脑以开始会话。"
+  },
+  "Pair again": {
+    "de": "Erneut koppeln",
+    "es": "Volver a emparejar",
+    "fr": "Appairer à nouveau",
+    "ja": "再ペアリング",
+    "ko": "다시 페어링",
+    "pt-BR": "Parear novamente",
+    "ru": "Повторить сопряжение",
+    "sv": "Parkoppla igen",
+    "zh-Hans": "重新配对"
+  },
+  "Pair with this computer?": {
+    "de": "Mit diesem Computer koppeln?",
+    "es": "¿Emparejar con este equipo?",
+    "fr": "Appairer cet ordinateur ?",
+    "ja": "このコンピュータとペアリングしますか？",
+    "ko": "이 컴퓨터와 페어링할까요?",
+    "pt-BR": "Parear com este computador?",
+    "ru": "Выполнить сопряжение с этим компьютером?",
+    "sv": "Parkoppla med den här datorn?",
+    "zh-Hans": "要与这台电脑配对吗？"
+  },
+  "Paired": {
+    "de": "Gekoppelt",
+    "es": "Emparejado",
+    "fr": "Appairé",
+    "ja": "ペアリング済み",
+    "ko": "페어링됨",
+    "pt-BR": "Pareado",
+    "ru": "Сопряжено",
+    "sv": "Parkopplad",
+    "zh-Hans": "已配对"
+  },
+  "Paired with %@": {
+    "de": "Mit %@ gekoppelt",
+    "es": "Emparejado con %@",
+    "fr": "Appairé avec %@",
+    "ja": "%@ とペアリングしました",
+    "ko": "%@와(과) 페어링됨",
+    "pt-BR": "Pareado com %@",
+    "ru": "Сопряжено с %@",
+    "sv": "Parkopplad med %@",
+    "zh-Hans": "已与 %@ 配对"
+  },
+  "Pairing a computer": {
+    "de": "Computer koppeln",
+    "es": "Emparejar un equipo",
+    "fr": "Appairer un ordinateur",
+    "ja": "コンピュータのペアリング",
+    "ko": "컴퓨터 페어링",
+    "pt-BR": "Parear um computador",
+    "ru": "Сопряжение с компьютером",
+    "sv": "Parkoppla en dator",
+    "zh-Hans": "配对电脑"
+  },
+  "Pairing links look like https://your-computer/pair#token=…": {
+    "de": "Kopplungslinks sehen so aus: https://your-computer/pair#token=…",
+    "es": "Los enlaces de emparejamiento tienen este aspecto: https://your-computer/pair#token=…",
+    "fr": "Les liens d’appairage ressemblent à https://your-computer/pair#token=…",
+    "ja": "ペアリングリンクは https://your-computer/pair#token=… のような形式です",
+    "ko": "페어링 링크는 https://your-computer/pair#token=… 형식입니다",
+    "pt-BR": "Links de pareamento têm este formato: https://your-computer/pair#token=…",
+    "ru": "Ссылки сопряжения выглядят так: https://your-computer/pair#token=…",
+    "sv": "Parkopplingslänkar ser ut så här: https://your-computer/pair#token=…",
+    "zh-Hans": "配对链接的格式类似 https://your-computer/pair#token=…"
+  },
+  "Pairing links work once and expire after a few minutes. Create a new one on your computer and scan it again.": {
+    "de": "Kopplungslinks funktionieren nur einmal und laufen nach wenigen Minuten ab. Erstelle auf deinem Computer einen neuen und scanne ihn erneut.",
+    "es": "Los enlaces de emparejamiento funcionan una vez y caducan a los pocos minutos. Crea uno nuevo en tu equipo y vuelve a escanearlo.",
+    "fr": "Les liens d’appairage ne fonctionnent qu’une fois et expirent après quelques minutes. Créez-en un nouveau sur votre ordinateur et scannez-le à nouveau.",
+    "ja": "ペアリングリンクは 1 回だけ使え、数分で期限切れになります。コンピュータで新しいリンクを作成して、もう一度スキャンしてください。",
+    "ko": "페어링 링크는 한 번만 사용할 수 있고 몇 분 후 만료됩니다. 컴퓨터에서 새 링크를 만들어 다시 스캔하세요.",
+    "pt-BR": "Links de pareamento funcionam uma vez e expiram após alguns minutos. Crie um novo no seu computador e escaneie de novo.",
+    "ru": "Ссылки сопряжения работают один раз и истекают через несколько минут. Создайте новую на компьютере и отсканируйте её снова.",
+    "sv": "Parkopplingslänkar fungerar en gång och går ut efter några minuter. Skapa en ny på datorn och skanna den igen.",
+    "zh-Hans": "配对链接只能使用一次，并会在几分钟后过期。请在电脑上新建一个链接后再次扫描。"
+  },
+  "Pairing with %@": {
+    "de": "Kopplung mit %@",
+    "es": "Emparejando con %@",
+    "fr": "Appairage avec %@",
+    "ja": "%@ とペアリングしています",
+    "ko": "%@와(과) 페어링 중",
+    "pt-BR": "Pareando com %@",
+    "ru": "Сопряжение с %@",
+    "sv": "Parkopplar med %@",
+    "zh-Hans": "正在与 %@ 配对"
+  },
+  "Paste a pairing link": {
+    "de": "Kopplungslink einfügen",
+    "es": "Pega un enlace de emparejamiento",
+    "fr": "Collez un lien d’appairage",
+    "ja": "ペアリングリンクを貼り付けてください",
+    "ko": "페어링 링크를 붙여넣으세요",
+    "pt-BR": "Cole um link de pareamento",
+    "ru": "Вставьте ссылку сопряжения",
+    "sv": "Klistra in en parkopplingslänk",
+    "zh-Hans": "粘贴配对链接"
+  },
+  "Paste image": {
+    "de": "Bild einfügen",
+    "es": "Pegar imagen",
+    "fr": "Coller l’image",
+    "ja": "画像を貼り付け",
+    "ko": "이미지 붙여넣기",
+    "pt-BR": "Colar imagem",
+    "ru": "Вставить изображение",
+    "sv": "Klistra in bild",
+    "zh-Hans": "粘贴图片"
+  },
+  "Paste link": {
+    "de": "Link einfügen",
+    "es": "Pegar enlace",
+    "fr": "Coller le lien",
+    "ja": "リンクを貼り付け",
+    "ko": "링크 붙여넣기",
+    "pt-BR": "Colar link",
+    "ru": "Вставить ссылку",
+    "sv": "Klistra in länk",
+    "zh-Hans": "粘贴链接"
+  },
+  "Permissions": {
+    "de": "Berechtigungen",
+    "es": "Permisos",
+    "fr": "Autorisations",
+    "ja": "権限",
+    "ko": "권한",
+    "pt-BR": "Permissões",
+    "ru": "Разрешения",
+    "sv": "Behörigheter",
+    "zh-Hans": "权限"
+  },
+  "Photo library": {
+    "de": "Fotomediathek",
+    "es": "Fototeca",
+    "fr": "Photothèque",
+    "ja": "写真ライブラリ",
+    "ko": "사진 보관함",
+    "pt-BR": "Fototeca",
+    "ru": "Медиатека",
+    "sv": "Bildbibliotek",
+    "zh-Hans": "照片图库"
+  },
+  "Previous match": {
+    "de": "Vorheriger Treffer",
+    "es": "Coincidencia anterior",
+    "fr": "Résultat précédent",
+    "ja": "前の一致",
+    "ko": "이전 일치 항목",
+    "pt-BR": "Ocorrência anterior",
+    "ru": "Предыдущее совпадение",
+    "sv": "Föregående träff",
+    "zh-Hans": "上一个匹配项"
+  },
+  "Question %lld of %lld": {
+    "de": "Frage %1$lld von %2$lld",
+    "es": "Pregunta %1$lld de %2$lld",
+    "fr": "Question %1$lld sur %2$lld",
+    "ja": "質問 %1$lld/%2$lld",
+    "ko": "질문 %1$lld/%2$lld",
+    "pt-BR": "Pergunta %1$lld de %2$lld",
+    "ru": "Вопрос %1$lld из %2$lld",
+    "sv": "Fråga %1$lld av %2$lld",
+    "zh-Hans": "第 %1$lld 个问题，共 %2$lld 个"
+  },
+  "Queueing…": {
+    "de": "Wird eingereiht…",
+    "es": "Poniendo en cola…",
+    "fr": "Mise en file d’attente…",
+    "ja": "キューに追加しています…",
+    "ko": "대기열에 추가하는 중…",
+    "pt-BR": "Enfileirando…",
+    "ru": "Добавление в очередь…",
+    "sv": "Köar…",
+    "zh-Hans": "正在加入队列…"
+  },
+  "Read a file": {
+    "de": "Eine Datei gelesen",
+    "es": "Leyó un archivo",
+    "fr": "A lu un fichier",
+    "ja": "ファイルを読み取りました",
+    "ko": "파일을 읽음",
+    "pt-BR": "Leu um arquivo",
+    "ru": "Прочитан файл",
+    "sv": "Läste en fil",
+    "zh-Hans": "读取了一个文件"
+  },
+  "Recent projects": {
+    "de": "Letzte Projekte",
+    "es": "Proyectos recientes",
+    "fr": "Projets récents",
+    "ja": "最近のプロジェクト",
+    "ko": "최근 프로젝트",
+    "pt-BR": "Projetos recentes",
+    "ru": "Недавние проекты",
+    "sv": "Senaste projekt",
+    "zh-Hans": "最近的项目"
+  },
+  "Reconnecting %lld computers": {
+    "de": {
+      "one": "%lld Computer wird neu verbunden",
+      "other": "%lld Computer werden neu verbunden"
+    },
+    "es": {
+      "one": "Reconectando %lld equipo",
+      "other": "Reconectando %lld equipos"
+    },
+    "fr": {
+      "one": "Reconnexion de %lld ordinateur",
+      "other": "Reconnexion de %lld ordinateurs"
+    },
+    "ja": {
+      "other": "%lld 台のコンピュータに再接続しています"
+    },
+    "ko": {
+      "other": "컴퓨터 %lld대 다시 연결 중"
+    },
+    "pt-BR": {
+      "one": "Reconectando %lld computador",
+      "other": "Reconectando %lld computadores"
+    },
+    "ru": {
+      "one": "Переподключение %lld компьютера",
+      "few": "Переподключение %lld компьютеров",
+      "many": "Переподключение %lld компьютеров",
+      "other": "Переподключение %lld компьютера"
+    },
+    "sv": {
+      "one": "Återansluter %lld dator",
+      "other": "Återansluter %lld datorer"
+    },
+    "zh-Hans": {
+      "other": "正在重新连接 %lld 台电脑"
+    }
+  },
+  "Relay": {
+    "de": "Relay",
+    "es": "Relay",
+    "fr": "Relais",
+    "ja": "リレー",
+    "ko": "릴레이",
+    "pt-BR": "Relay",
+    "ru": "Relay",
+    "sv": "Relä",
+    "zh-Hans": "中继"
+  },
+  "Remove all": {
+    "de": "Alle entfernen",
+    "es": "Quitar todo",
+    "fr": "Tout supprimer",
+    "ja": "すべて削除",
+    "ko": "모두 제거",
+    "pt-BR": "Remover tudo",
+    "ru": "Удалить все",
+    "sv": "Ta bort alla",
+    "zh-Hans": "全部移除"
+  },
+  "Remove all computers": {
+    "de": "Alle Computer entfernen",
+    "es": "Quitar todos los equipos",
+    "fr": "Supprimer tous les ordinateurs",
+    "ja": "すべてのコンピュータを削除",
+    "ko": "모든 컴퓨터 제거",
+    "pt-BR": "Remover todos os computadores",
+    "ru": "Удалить все компьютеры",
+    "sv": "Ta bort alla datorer",
+    "zh-Hans": "移除所有电脑"
+  },
+  "Remove all computers?": {
+    "de": "Alle Computer entfernen?",
+    "es": "¿Quitar todos los equipos?",
+    "fr": "Supprimer tous les ordinateurs ?",
+    "ja": "すべてのコンピュータを削除しますか？",
+    "ko": "모든 컴퓨터를 제거할까요?",
+    "pt-BR": "Remover todos os computadores?",
+    "ru": "Удалить все компьютеры?",
+    "sv": "Ta bort alla datorer?",
+    "zh-Hans": "要移除所有电脑吗？"
+  },
+  "Removing forgets this computer's sign-in and cached threads on this device. %@ keeps listing this device until you revoke it there.": {
+    "de": "Beim Entfernen werden die Anmeldung und die zwischengespeicherten Threads dieses Computers auf diesem Gerät gelöscht. %@ führt dieses Gerät weiter, bis du es dort widerrufst.",
+    "es": "Al quitarlo se olvidan en este dispositivo el inicio de sesión y los hilos en caché de este equipo. %@ seguirá mostrando este dispositivo hasta que lo revoques allí.",
+    "fr": "La suppression oublie sur cet appareil la connexion et les conversations en cache de cet ordinateur. %@ continue d’afficher cet appareil jusqu’à ce que vous le révoquiez là-bas.",
+    "ja": "削除すると、このデバイス上にあるこのコンピュータのサインイン情報とキャッシュされたスレッドが消去されます。%@ 側で取り消すまで、このデバイスはそこに表示され続けます。",
+    "ko": "제거하면 이 기기에 있는 이 컴퓨터의 로그인과 캐시된 스레드가 삭제됩니다. %@에서 취소하기 전까지는 그곳에 이 기기가 계속 표시됩니다.",
+    "pt-BR": "Remover esquece neste dispositivo o login e as threads em cache deste computador. %@ continua listando este dispositivo até você revogá-lo lá.",
+    "ru": "При удалении с этого устройства стираются вход и кешированные треды этого компьютера. %@ будет показывать это устройство, пока вы не отзовёте его там.",
+    "sv": "Om du tar bort datorn glöms dess inloggning och cachade trådar på den här enheten. %@ fortsätter att visa enheten tills du återkallar den där.",
+    "zh-Hans": "移除后，此设备上会清除这台电脑的登录信息和缓存的会话。在你于 %@ 上撤销之前，它仍会列出此设备。"
+  },
+  "Request %lld of %lld": {
+    "de": "Anfrage %1$lld von %2$lld",
+    "es": "Solicitud %1$lld de %2$lld",
+    "fr": "Demande %1$lld sur %2$lld",
+    "ja": "リクエスト %1$lld/%2$lld",
+    "ko": "요청 %1$lld/%2$lld",
+    "pt-BR": "Solicitação %1$lld de %2$lld",
+    "ru": "Запрос %1$lld из %2$lld",
+    "sv": "Begäran %1$lld av %2$lld",
+    "zh-Hans": "第 %1$lld 个请求，共 %2$lld 个"
+  },
+  "Retry upload": {
+    "de": "Upload wiederholen",
+    "es": "Reintentar la subida",
+    "fr": "Réessayer l’envoi",
+    "ja": "アップロードを再試行",
+    "ko": "업로드 다시 시도",
+    "pt-BR": "Tentar enviar de novo",
+    "ru": "Повторить загрузку",
+    "sv": "Försök ladda upp igen",
+    "zh-Hans": "重新上传"
+  },
+  "Save to Photos": {
+    "de": "In „Fotos“ sichern",
+    "es": "Guardar en Fotos",
+    "fr": "Enregistrer dans Photos",
+    "ja": "“写真”に保存",
+    "ko": "사진에 저장",
+    "pt-BR": "Salvar no Fotos",
+    "ru": "Сохранить в Фото",
+    "sv": "Spara i Bilder",
+    "zh-Hans": "存储到“照片”"
+  },
+  "Saved to Photos": {
+    "de": "In „Fotos“ gesichert",
+    "es": "Guardada en Fotos",
+    "fr": "Enregistrée dans Photos",
+    "ja": "“写真”に保存しました",
+    "ko": "사진에 저장됨",
+    "pt-BR": "Salva no Fotos",
+    "ru": "Сохранено в Фото",
+    "sv": "Sparad i Bilder",
+    "zh-Hans": "已存储到“照片”"
+  },
+  "Scan a new code": {
+    "de": "Neuen Code scannen",
+    "es": "Escanear un código nuevo",
+    "fr": "Scanner un nouveau code",
+    "ja": "新しいコードをスキャン",
+    "ko": "새 코드 스캔",
+    "pt-BR": "Escanear um novo código",
+    "ru": "Отсканировать новый код",
+    "sv": "Skanna en ny kod",
+    "zh-Hans": "扫描新代码"
+  },
+  "Scan the code from `ankiel pair` or desktop Connections settings": {
+    "de": "Scanne den Code aus `ankiel pair` oder den Verbindungseinstellungen der Desktop-App",
+    "es": "Escanea el código de `ankiel pair` o de los ajustes de Conexiones de la app de escritorio",
+    "fr": "Scannez le code de `ankiel pair` ou des réglages Connexions de l’app de bureau",
+    "ja": "`ankiel pair` またはデスクトップアプリの接続設定に表示されるコードをスキャンします",
+    "ko": "`ankiel pair` 또는 데스크톱 앱의 연결 설정에 표시된 코드를 스캔하세요",
+    "pt-BR": "Escaneie o código de `ankiel pair` ou dos ajustes de Conexões do app de desktop",
+    "ru": "Отсканируйте код из `ankiel pair` или из настроек «Подключения» в настольном приложении",
+    "sv": "Skanna koden från `ankiel pair` eller anslutningsinställningarna i skrivbordsappen",
+    "zh-Hans": "扫描 `ankiel pair` 或桌面应用“连接”设置中的代码"
+  },
+  "Scan the code it shows": {
+    "de": "Scanne den angezeigten Code",
+    "es": "Escanea el código que muestra",
+    "fr": "Scannez le code affiché",
+    "ja": "表示されたコードをスキャンします",
+    "ko": "표시된 코드를 스캔하세요",
+    "pt-BR": "Escaneie o código exibido",
+    "ru": "Отсканируйте показанный код",
+    "sv": "Skanna koden som visas",
+    "zh-Hans": "扫描它显示的代码"
+  },
+  "Scroll to latest": {
+    "de": "Zum Neuesten scrollen",
+    "es": "Desplazarse a lo más reciente",
+    "fr": "Faire défiler jusqu’au plus récent",
+    "ja": "最新までスクロール",
+    "ko": "최신으로 스크롤",
+    "pt-BR": "Rolar até o mais recente",
+    "ru": "Прокрутить к последнему",
+    "sv": "Rulla till senaste",
+    "zh-Hans": "滚动到最新"
+  },
+  "Searched for %@": {
+    "de": "Nach %@ gesucht",
+    "es": "Buscó %@",
+    "fr": "A recherché %@",
+    "ja": "%@ を検索しました",
+    "ko": "%@ 검색함",
+    "pt-BR": "Pesquisou %@",
+    "ru": "Выполнен поиск: %@",
+    "sv": "Sökte efter %@",
+    "zh-Hans": "搜索了 %@"
+  },
+  "Searched the web for %@": {
+    "de": "Im Web nach %@ gesucht",
+    "es": "Buscó %@ en la web",
+    "fr": "A recherché %@ sur le web",
+    "ja": "Web で %@ を検索しました",
+    "ko": "웹에서 %@ 검색함",
+    "pt-BR": "Pesquisou %@ na web",
+    "ru": "Поиск в интернете: %@",
+    "sv": "Sökte på webben efter %@",
+    "zh-Hans": "在网络上搜索了 %@"
+  },
+  "Secret requested: %@": {
+    "de": "Geheimnis angefordert: %@",
+    "es": "Secreto solicitado: %@",
+    "fr": "Secret demandé : %@",
+    "ja": "シークレットのリクエスト: %@",
+    "ko": "시크릿 요청됨: %@",
+    "pt-BR": "Segredo solicitado: %@",
+    "ru": "Запрошен секрет: %@",
+    "sv": "Hemlighet begärd: %@",
+    "zh-Hans": "请求的密钥：%@"
+  },
+  "Send a message to get the agent started.": {
+    "de": "Sende eine Nachricht, um den Agenten zu starten.",
+    "es": "Envía un mensaje para que el agente empiece.",
+    "fr": "Envoyez un message pour lancer l’agent.",
+    "ja": "メッセージを送信してエージェントを開始します。",
+    "ko": "메시지를 보내 에이전트를 시작하세요.",
+    "pt-BR": "Envie uma mensagem para o agente começar.",
+    "ru": "Отправьте сообщение, чтобы агент начал работу.",
+    "sv": "Skicka ett meddelande för att sätta igång agenten.",
+    "zh-Hans": "发送一条消息让智能体开始工作。"
+  },
+  "Sends after the current turn": {
+    "de": "Wird nach der aktuellen Runde gesendet",
+    "es": "Se envía después del turno actual",
+    "fr": "Envoyé après le tour en cours",
+    "ja": "現在のターンの後に送信します",
+    "ko": "현재 턴이 끝난 뒤 보냅니다",
+    "pt-BR": "Envia depois do turno atual",
+    "ru": "Отправится после текущего хода",
+    "sv": "Skickas efter den aktuella omgången",
+    "zh-Hans": "在当前轮次结束后发送"
+  },
+  "Sends into the current turn": {
+    "de": "Wird in die aktuelle Runde gesendet",
+    "es": "Se envía en el turno actual",
+    "fr": "Envoyé dans le tour en cours",
+    "ja": "現在のターンに送信します",
+    "ko": "현재 턴에 바로 보냅니다",
+    "pt-BR": "Envia no turno atual",
+    "ru": "Отправится в текущий ход",
+    "sv": "Skickas in i den aktuella omgången",
+    "zh-Hans": "发送到当前轮次中"
+  },
+  "Sent by an agent": {
+    "de": "Von einem Agenten gesendet",
+    "es": "Enviado por un agente",
+    "fr": "Envoyé par un agent",
+    "ja": "エージェントが送信",
+    "ko": "에이전트가 보냄",
+    "pt-BR": "Enviada por um agente",
+    "ru": "Отправлено агентом",
+    "sv": "Skickat av en agent",
+    "zh-Hans": "由智能体发送"
+  },
+  "Sent while working": {
+    "de": "Während der Arbeit gesendet",
+    "es": "Enviado durante el trabajo",
+    "fr": "Envoyé pendant le travail",
+    "ja": "作業中に送信",
+    "ko": "작업 중에 보냄",
+    "pt-BR": "Enviada durante o trabalho",
+    "ru": "Отправлено во время работы",
+    "sv": "Skickat under arbetet",
+    "zh-Hans": "在工作中发送"
+  },
+  "Set when the pairing link was made. To change them, pair again with a link that grants more.": {
+    "de": "Festgelegt beim Erstellen des Kopplungslinks. Um sie zu ändern, kopple erneut mit einem Link, der mehr erlaubt.",
+    "es": "Se definieron al crear el enlace de emparejamiento. Para cambiarlos, vuelve a emparejar con un enlace que conceda más.",
+    "fr": "Définies à la création du lien d’appairage. Pour les modifier, appairez à nouveau avec un lien qui en accorde davantage.",
+    "ja": "ペアリングリンクの作成時に設定されています。変更するには、より多くを許可するリンクでもう一度ペアリングしてください。",
+    "ko": "페어링 링크를 만들 때 설정되었습니다. 변경하려면 더 많은 권한을 주는 링크로 다시 페어링하세요.",
+    "pt-BR": "Definidas quando o link de pareamento foi criado. Para alterá-las, pareie de novo com um link que conceda mais.",
+    "ru": "Заданы при создании ссылки сопряжения. Чтобы изменить их, выполните сопряжение заново по ссылке с большими правами.",
+    "sv": "Angavs när parkopplingslänken skapades. Parkoppla igen med en länk som ger mer för att ändra dem.",
+    "zh-Hans": "在创建配对链接时设定。如需更改，请使用授予更多权限的链接重新配对。"
+  },
+  "Settled threads move to the Settled shelf. Nothing is deleted.": {
+    "de": "Erledigte Threads wandern in den Bereich „Erledigt“. Nichts wird gelöscht.",
+    "es": "Los hilos resueltos pasan a la sección Resueltos. No se elimina nada.",
+    "fr": "Les conversations closes passent dans la section Clos. Rien n’est supprimé.",
+    "ja": "対応済みのスレッドは「対応済み」の棚に移動します。何も削除されません。",
+    "ko": "정리된 스레드는 정리됨 목록으로 이동합니다. 삭제되는 것은 없습니다.",
+    "pt-BR": "Threads concluídas vão para a seção Concluídas. Nada é excluído.",
+    "ru": "Разобранные треды перемещаются в раздел «Разобранные». Ничего не удаляется.",
+    "sv": "Klara trådar flyttas till hyllan Klara. Inget tas bort.",
+    "zh-Hans": "已收尾的会话会移到“已收尾”栏，不会删除任何内容。"
+  },
+  "Show": {
+    "de": "Einblenden",
+    "es": "Mostrar",
+    "fr": "Afficher",
+    "ja": "表示",
+    "ko": "표시",
+    "pt-BR": "Mostrar",
+    "ru": "Показать",
+    "sv": "Visa",
+    "zh-Hans": "显示"
+  },
+  "Show all threads": {
+    "de": "Alle Threads anzeigen",
+    "es": "Mostrar todos los hilos",
+    "fr": "Afficher toutes les conversations",
+    "ja": "すべてのスレッドを表示",
+    "ko": "모든 스레드 표시",
+    "pt-BR": "Mostrar todas as threads",
+    "ru": "Показать все треды",
+    "sv": "Visa alla trådar",
+    "zh-Hans": "显示所有会话"
+  },
+  "Showing the first %lld matches.": {
+    "de": {
+      "one": "Der erste %lld Treffer wird angezeigt.",
+      "other": "Die ersten %lld Treffer werden angezeigt."
+    },
+    "es": {
+      "one": "Se muestra la primera %lld coincidencia.",
+      "other": "Se muestran las primeras %lld coincidencias."
+    },
+    "fr": {
+      "one": "Affichage du premier %lld résultat.",
+      "other": "Affichage des %lld premiers résultats."
+    },
+    "ja": {
+      "other": "最初の %lld 件の一致を表示しています。"
+    },
+    "ko": {
+      "other": "처음 %lld개의 일치 항목을 표시합니다."
+    },
+    "pt-BR": {
+      "one": "Mostrando a primeira %lld ocorrência.",
+      "other": "Mostrando as primeiras %lld ocorrências."
+    },
+    "ru": {
+      "one": "Показано первое %lld совпадение.",
+      "few": "Показаны первые %lld совпадения.",
+      "many": "Показаны первые %lld совпадений.",
+      "other": "Показаны первые %lld совпадения."
+    },
+    "sv": {
+      "one": "Visar den första %lld träffen.",
+      "other": "Visar de första %lld träffarna."
+    },
+    "zh-Hans": {
+      "other": "显示前 %lld 个匹配项。"
+    }
+  },
+  "Showing the first 1 MB of %@.": {
+    "de": "Die ersten 1 MB von %@ werden angezeigt.",
+    "es": "Se muestra el primer MB de %@.",
+    "fr": "Affichage du premier Mo sur %@.",
+    "ja": "%@ のうち最初の 1 MB を表示しています。",
+    "ko": "%@ 중 처음 1MB를 표시합니다.",
+    "pt-BR": "Mostrando o primeiro 1 MB de %@.",
+    "ru": "Показан первый 1 МБ из %@.",
+    "sv": "Visar den första 1 MB av %@.",
+    "zh-Hans": "显示 %@ 中的前 1 MB。"
+  },
+  "Shows the work behind this reply": {
+    "de": "Zeigt die Arbeit hinter dieser Antwort",
+    "es": "Muestra el trabajo detrás de esta respuesta",
+    "fr": "Affiche le travail derrière cette réponse",
+    "ja": "この返信までの作業を表示します",
+    "ko": "이 답변 뒤의 작업을 보여 줍니다",
+    "pt-BR": "Mostra o trabalho por trás desta resposta",
+    "ru": "Показывает работу, стоящую за этим ответом",
+    "sv": "Visar arbetet bakom svaret",
+    "zh-Hans": "显示此回复背后的工作"
+  },
+  "Some files are not listed.": {
+    "de": "Einige Dateien werden nicht aufgeführt.",
+    "es": "Algunos archivos no aparecen en la lista.",
+    "fr": "Certains fichiers ne sont pas listés.",
+    "ja": "一部のファイルは一覧に表示されていません。",
+    "ko": "일부 파일은 목록에 표시되지 않습니다.",
+    "pt-BR": "Alguns arquivos não estão listados.",
+    "ru": "Некоторые файлы не показаны.",
+    "sv": "Vissa filer visas inte.",
+    "zh-Hans": "部分文件未列出。"
+  },
+  "Source code": {
+    "de": "Quellcode",
+    "es": "Código fuente",
+    "fr": "Code source",
+    "ja": "ソースコード",
+    "ko": "소스 코드",
+    "pt-BR": "Código-fonte",
+    "ru": "Исходный код",
+    "sv": "Källkod",
+    "zh-Hans": "源代码"
+  },
+  "Tailnet": {
+    "de": "Tailnet",
+    "es": "Tailnet",
+    "fr": "Tailnet",
+    "ja": "Tailnet",
+    "ko": "Tailnet",
+    "pt-BR": "Tailnet",
+    "ru": "Tailnet",
+    "sv": "Tailnet",
+    "zh-Hans": "Tailnet"
+  },
+  "That address claims to be %@": {
+    "de": "Diese Adresse gibt sich als %@ aus",
+    "es": "Esa dirección dice ser %@",
+    "fr": "Cette adresse prétend être %@",
+    "ja": "このアドレスは %@ だと名乗っています",
+    "ko": "이 주소는 %@(이)라고 주장합니다",
+    "pt-BR": "Esse endereço diz ser %@",
+    "ru": "Этот адрес выдаёт себя за %@",
+    "sv": "Adressen påstår sig vara %@",
+    "zh-Hans": "该地址声称是 %@"
+  },
+  "That code isn't a pairing link.": {
+    "de": "Dieser Code ist kein Kopplungslink.",
+    "es": "Ese código no es un enlace de emparejamiento.",
+    "fr": "Ce code n’est pas un lien d’appairage.",
+    "ja": "このコードはペアリングリンクではありません。",
+    "ko": "이 코드는 페어링 링크가 아닙니다.",
+    "pt-BR": "Esse código não é um link de pareamento.",
+    "ru": "Этот код не является ссылкой сопряжения.",
+    "sv": "Koden är inte en parkopplingslänk.",
+    "zh-Hans": "该代码不是配对链接。"
+  },
+  "That isn't a pairing link": {
+    "de": "Das ist kein Kopplungslink",
+    "es": "Eso no es un enlace de emparejamiento",
+    "fr": "Ce n’est pas un lien d’appairage",
+    "ja": "ペアリングリンクではありません",
+    "ko": "페어링 링크가 아닙니다",
+    "pt-BR": "Isso não é um link de pareamento",
+    "ru": "Это не ссылка сопряжения",
+    "sv": "Det är inte en parkopplingslänk",
+    "zh-Hans": "这不是配对链接"
+  },
+  "The address reached another Ankiel Code computer than the link was made for.": {
+    "de": "Die Adresse führte zu einem anderen Ankiel-Code-Computer als dem, für den der Link erstellt wurde.",
+    "es": "La dirección llegó a un equipo de Ankiel Code distinto del que se creó el enlace.",
+    "fr": "L’adresse a atteint un autre ordinateur Ankiel Code que celui pour lequel le lien a été créé.",
+    "ja": "このアドレスは、リンクの作成元とは別の Ankiel Code コンピュータにつながりました。",
+    "ko": "이 주소는 링크를 만든 컴퓨터가 아닌 다른 Ankiel Code 컴퓨터에 연결되었습니다.",
+    "pt-BR": "O endereço chegou a um computador Ankiel Code diferente daquele para o qual o link foi criado.",
+    "ru": "Адрес привёл к другому компьютеру с Ankiel Code, а не к тому, для которого создана ссылка.",
+    "sv": "Adressen nådde en annan Ankiel Code-dator än den länken skapades för.",
+    "zh-Hans": "该地址连接到的 Ankiel Code 电脑不是创建链接的那台。"
+  },
+  "The computer could not list these files.": {
+    "de": "Der Computer konnte diese Dateien nicht auflisten.",
+    "es": "El equipo no pudo listar estos archivos.",
+    "fr": "L’ordinateur n’a pas pu lister ces fichiers.",
+    "ja": "コンピュータがこれらのファイルを一覧表示できませんでした。",
+    "ko": "컴퓨터가 이 파일 목록을 가져올 수 없습니다.",
+    "pt-BR": "O computador não conseguiu listar esses arquivos.",
+    "ru": "Компьютеру не удалось получить список этих файлов.",
+    "sv": "Datorn kunde inte lista filerna.",
+    "zh-Hans": "电脑无法列出这些文件。"
+  },
+  "The computer could not read this file.": {
+    "de": "Der Computer konnte diese Datei nicht lesen.",
+    "es": "El equipo no pudo leer este archivo.",
+    "fr": "L’ordinateur n’a pas pu lire ce fichier.",
+    "ja": "コンピュータがこのファイルを読み取れませんでした。",
+    "ko": "컴퓨터가 이 파일을 읽을 수 없습니다.",
+    "pt-BR": "O computador não conseguiu ler este arquivo.",
+    "ru": "Компьютеру не удалось прочитать этот файл.",
+    "sv": "Datorn kunde inte läsa filen.",
+    "zh-Hans": "电脑无法读取此文件。"
+  },
+  "The computer did not confirm the message within 60 seconds.": {
+    "de": "Der Computer hat die Nachricht nicht innerhalb von 60 Sekunden bestätigt.",
+    "es": "El equipo no confirmó el mensaje en 60 segundos.",
+    "fr": "L’ordinateur n’a pas confirmé le message dans les 60 secondes.",
+    "ja": "コンピュータが 60 秒以内にメッセージを確認しませんでした。",
+    "ko": "컴퓨터가 60초 안에 메시지를 확인하지 않았습니다.",
+    "pt-BR": "O computador não confirmou a mensagem em 60 segundos.",
+    "ru": "Компьютер не подтвердил сообщение в течение 60 секунд.",
+    "sv": "Datorn bekräftade inte meddelandet inom 60 sekunder.",
+    "zh-Hans": "电脑未在 60 秒内确认该消息。"
+  },
+  "The computer did not send this thread.": {
+    "de": "Der Computer hat diesen Thread nicht gesendet.",
+    "es": "El equipo no envió este hilo.",
+    "fr": "L’ordinateur n’a pas envoyé cette conversation.",
+    "ja": "コンピュータからこのスレッドが送信されませんでした。",
+    "ko": "컴퓨터가 이 스레드를 보내지 않았습니다.",
+    "pt-BR": "O computador não enviou esta thread.",
+    "ru": "Компьютер не прислал этот тред.",
+    "sv": "Datorn skickade inte tråden.",
+    "zh-Hans": "电脑没有发送此会话。"
+  },
+  "The computer refused the change.": {
+    "de": "Der Computer hat die Änderung abgelehnt.",
+    "es": "El equipo rechazó el cambio.",
+    "fr": "L’ordinateur a refusé la modification.",
+    "ja": "コンピュータが変更を拒否しました。",
+    "ko": "컴퓨터가 변경을 거부했습니다.",
+    "pt-BR": "O computador recusou a alteração.",
+    "ru": "Компьютер отклонил изменение.",
+    "sv": "Datorn nekade ändringen.",
+    "zh-Hans": "电脑拒绝了此更改。"
+  },
+  "The connection dropped": {
+    "de": "Die Verbindung wurde unterbrochen",
+    "es": "Se perdió la conexión",
+    "fr": "La connexion a été interrompue",
+    "ja": "接続が切断されました",
+    "ko": "연결이 끊어졌습니다",
+    "pt-BR": "A conexão caiu",
+    "ru": "Соединение прервалось",
+    "sv": "Anslutningen bröts",
+    "zh-Hans": "连接已断开"
+  },
+  "The connection dropped.": {
+    "de": "Die Verbindung wurde unterbrochen.",
+    "es": "Se perdió la conexión.",
+    "fr": "La connexion a été interrompue.",
+    "ja": "接続が切断されました。",
+    "ko": "연결이 끊어졌습니다.",
+    "pt-BR": "A conexão caiu.",
+    "ru": "Соединение прервалось.",
+    "sv": "Anslutningen bröts.",
+    "zh-Hans": "连接已断开。"
+  },
+  "The other choice stays one tap away, in the small button beside Send.": {
+    "de": "Die andere Option bleibt einen Tipp entfernt, über die kleine Taste neben „Senden“.",
+    "es": "La otra opción queda a un toque, en el botón pequeño junto a Enviar.",
+    "fr": "L’autre choix reste à portée d’un toucher, dans le petit bouton à côté d’Envoyer.",
+    "ja": "もう一方の選択肢は、「送信」の横の小さなボタンからワンタップで使えます。",
+    "ko": "다른 옵션은 보내기 옆의 작은 버튼을 한 번 탭해 사용할 수 있습니다.",
+    "pt-BR": "A outra opção fica a um toque, no botão pequeno ao lado de Enviar.",
+    "ru": "Другой вариант доступен одним касанием — маленькой кнопкой рядом с «Отправить».",
+    "sv": "Det andra valet finns ett tryck bort, i den lilla knappen bredvid Skicka.",
+    "zh-Hans": "另一个选项只需轻点一下，就在“发送”旁边的小按钮里。"
+  },
+  "The pairing code is missing": {
+    "de": "Der Kopplungscode fehlt",
+    "es": "Falta el código de emparejamiento",
+    "fr": "Le code d’appairage est manquant",
+    "ja": "ペアリングコードがありません",
+    "ko": "페어링 코드가 없습니다",
+    "pt-BR": "O código de pareamento está faltando",
+    "ru": "Отсутствует код сопряжения",
+    "sv": "Parkopplingskoden saknas",
+    "zh-Hans": "缺少配对代码"
+  },
+  "The saved address now reaches another computer. Remove %@ and pair it again.": {
+    "de": "Die gespeicherte Adresse führt jetzt zu einem anderen Computer. Entferne %@ und kopple ihn erneut.",
+    "es": "La dirección guardada ahora llega a otro equipo. Quita %@ y vuelve a emparejarlo.",
+    "fr": "L’adresse enregistrée mène désormais à un autre ordinateur. Supprimez %@ et appairez-le à nouveau.",
+    "ja": "保存されたアドレスは現在、別のコンピュータにつながります。%@ を削除して、もう一度ペアリングしてください。",
+    "ko": "저장된 주소가 이제 다른 컴퓨터에 연결됩니다. %@을(를) 제거하고 다시 페어링하세요.",
+    "pt-BR": "O endereço salvo agora leva a outro computador. Remova %@ e pareie de novo.",
+    "ru": "Сохранённый адрес теперь ведёт к другому компьютеру. Удалите %@ и выполните сопряжение заново.",
+    "sv": "Den sparade adressen leder nu till en annan dator. Ta bort %@ och parkoppla den igen.",
+    "zh-Hans": "保存的地址现在指向另一台电脑。请移除 %@ 并重新配对。"
+  },
+  "The server answered with HTTP %lld. Try again in a moment.": {
+    "de": "Der Server hat mit HTTP %lld geantwortet. Versuch es gleich noch einmal.",
+    "es": "El servidor respondió con HTTP %lld. Inténtalo de nuevo en un momento.",
+    "fr": "Le serveur a répondu avec HTTP %lld. Réessayez dans un instant.",
+    "ja": "サーバーが HTTP %lld で応答しました。少し待ってからもう一度お試しください。",
+    "ko": "서버가 HTTP %lld(으)로 응답했습니다. 잠시 후 다시 시도하세요.",
+    "pt-BR": "O servidor respondeu com HTTP %lld. Tente novamente em instantes.",
+    "ru": "Сервер ответил HTTP %lld. Повторите попытку чуть позже.",
+    "sv": "Servern svarade med HTTP %lld. Försök igen om en stund.",
+    "zh-Hans": "服务器返回了 HTTP %lld。请稍后重试。"
+  },
+  "The server refused the connection (HTTP %lld).": {
+    "de": "Der Server hat die Verbindung abgelehnt (HTTP %lld).",
+    "es": "El servidor rechazó la conexión (HTTP %lld).",
+    "fr": "Le serveur a refusé la connexion (HTTP %lld).",
+    "ja": "サーバーが接続を拒否しました（HTTP %lld）。",
+    "ko": "서버가 연결을 거부했습니다(HTTP %lld).",
+    "pt-BR": "O servidor recusou a conexão (HTTP %lld).",
+    "ru": "Сервер отклонил соединение (HTTP %lld).",
+    "sv": "Servern nekade anslutningen (HTTP %lld).",
+    "zh-Hans": "服务器拒绝了连接（HTTP %lld）。"
+  },
+  "The server sent something this app couldn't read.": {
+    "de": "Der Server hat etwas gesendet, das diese App nicht lesen konnte.",
+    "es": "El servidor envió algo que esta app no pudo leer.",
+    "fr": "Le serveur a envoyé quelque chose que cette app n’a pas pu lire.",
+    "ja": "サーバーから、このアプリで読み取れないデータが送られてきました。",
+    "ko": "서버가 이 앱에서 읽을 수 없는 데이터를 보냈습니다.",
+    "pt-BR": "O servidor enviou algo que este app não conseguiu ler.",
+    "ru": "Сервер прислал данные, которые это приложение не смогло прочитать.",
+    "sv": "Servern skickade något som appen inte kunde läsa.",
+    "zh-Hans": "服务器发送了本应用无法读取的内容。"
+  },
+  "Theme": {
+    "de": "Design",
+    "es": "Tema",
+    "fr": "Thème",
+    "ja": "テーマ",
+    "ko": "테마",
+    "pt-BR": "Tema",
+    "ru": "Тема",
+    "sv": "Tema",
+    "zh-Hans": "主题"
+  },
+  "This app is too old for %@": {
+    "de": "Diese App ist zu alt für %@",
+    "es": "Esta app es demasiado antigua para %@",
+    "fr": "Cette app est trop ancienne pour %@",
+    "ja": "このアプリは %@ に対して古すぎます",
+    "ko": "이 앱은 %@에 비해 너무 오래되었습니다",
+    "pt-BR": "Este app é antigo demais para %@",
+    "ru": "Это приложение слишком старое для %@",
+    "sv": "Appen är för gammal för %@",
+    "zh-Hans": "此应用版本过旧，无法用于 %@"
+  },
+  "This app is too old for %@.": {
+    "de": "Diese App ist zu alt für %@.",
+    "es": "Esta app es demasiado antigua para %@.",
+    "fr": "Cette app est trop ancienne pour %@.",
+    "ja": "このアプリは %@ に対して古すぎます。",
+    "ko": "이 앱은 %@에 비해 너무 오래되었습니다.",
+    "pt-BR": "Este app é antigo demais para %@.",
+    "ru": "Это приложение слишком старое для %@.",
+    "sv": "Appen är för gammal för %@.",
+    "zh-Hans": "此应用版本过旧，无法用于 %@。"
+  },
+  "This app needs a newer version of Ankiel Code on this machine.": {
+    "de": "Diese App braucht eine neuere Version von Ankiel Code auf diesem Computer.",
+    "es": "Esta app necesita una versión más reciente de Ankiel Code en esta máquina.",
+    "fr": "Cette app nécessite une version plus récente d’Ankiel Code sur cette machine.",
+    "ja": "このアプリには、このマシン上の新しいバージョンの Ankiel Code が必要です。",
+    "ko": "이 앱을 사용하려면 이 컴퓨터에 최신 버전의 Ankiel Code가 필요합니다.",
+    "pt-BR": "Este app precisa de uma versão mais nova do Ankiel Code nesta máquina.",
+    "ru": "Этому приложению нужна более новая версия Ankiel Code на этом компьютере.",
+    "sv": "Appen behöver en nyare version av Ankiel Code på den här datorn.",
+    "zh-Hans": "此应用需要这台机器上安装更新版本的 Ankiel Code。"
+  },
+  "This computer is no longer saved on this device.": {
+    "de": "Dieser Computer ist auf diesem Gerät nicht mehr gespeichert.",
+    "es": "Este equipo ya no está guardado en este dispositivo.",
+    "fr": "Cet ordinateur n’est plus enregistré sur cet appareil.",
+    "ja": "このコンピュータはこのデバイスに保存されていません。",
+    "ko": "이 컴퓨터는 더 이상 이 기기에 저장되어 있지 않습니다.",
+    "pt-BR": "Este computador não está mais salvo neste dispositivo.",
+    "ru": "Этот компьютер больше не сохранён на этом устройстве.",
+    "sv": "Datorn är inte längre sparad på den här enheten.",
+    "zh-Hans": "此设备上已不再保存这台电脑。"
+  },
+  "This computer is not connected. Try again when it reconnects.": {
+    "de": "Dieser Computer ist nicht verbunden. Versuch es erneut, wenn er wieder verbunden ist.",
+    "es": "Este equipo no está conectado. Inténtalo de nuevo cuando se vuelva a conectar.",
+    "fr": "Cet ordinateur n’est pas connecté. Réessayez lorsqu’il se reconnectera.",
+    "ja": "このコンピュータは接続されていません。再接続したらもう一度お試しください。",
+    "ko": "이 컴퓨터는 연결되어 있지 않습니다. 다시 연결되면 시도하세요.",
+    "pt-BR": "Este computador não está conectado. Tente novamente quando ele se reconectar.",
+    "ru": "Этот компьютер не подключён. Повторите попытку, когда он переподключится.",
+    "sv": "Datorn är inte ansluten. Försök igen när den återansluter.",
+    "zh-Hans": "这台电脑未连接。请在它重新连接后重试。"
+  },
+  "This computer is offline. Check its address or start it, then try again.": {
+    "de": "Dieser Computer ist offline. Prüfe seine Adresse oder starte ihn und versuch es dann erneut.",
+    "es": "Este equipo no tiene conexión. Comprueba su dirección o enciéndelo y vuelve a intentarlo.",
+    "fr": "Cet ordinateur est hors ligne. Vérifiez son adresse ou démarrez-le, puis réessayez.",
+    "ja": "このコンピュータはオフラインです。アドレスを確認するか起動してから、もう一度お試しください。",
+    "ko": "이 컴퓨터는 오프라인입니다. 주소를 확인하거나 컴퓨터를 켠 다음 다시 시도하세요.",
+    "pt-BR": "Este computador está offline. Verifique o endereço ou ligue-o e tente novamente.",
+    "ru": "Этот компьютер не в сети. Проверьте его адрес или запустите его, затем повторите попытку.",
+    "sv": "Datorn är offline. Kontrollera adressen eller starta den och försök sedan igen.",
+    "zh-Hans": "这台电脑处于离线状态。请检查其地址或启动它，然后重试。"
+  },
+  "This connection cannot answer secret requests.": {
+    "de": "Diese Verbindung kann keine Geheimnis-Anfragen beantworten.",
+    "es": "Esta conexión no puede responder solicitudes de secretos.",
+    "fr": "Cette connexion ne peut pas répondre aux demandes de secret.",
+    "ja": "この接続ではシークレットのリクエストに回答できません。",
+    "ko": "이 연결로는 시크릿 요청에 답할 수 없습니다.",
+    "pt-BR": "Esta conexão não pode responder a solicitações de segredos.",
+    "ru": "Это подключение не может отвечать на запросы секретов.",
+    "sv": "Den här anslutningen kan inte svara på förfrågningar om hemligheter.",
+    "zh-Hans": "此连接无法响应密钥请求。"
+  },
+  "This connection does not have permission to change settings on %@.": {
+    "de": "Diese Verbindung darf die Einstellungen auf %@ nicht ändern.",
+    "es": "Esta conexión no tiene permiso para cambiar los ajustes de %@.",
+    "fr": "Cette connexion n’a pas l’autorisation de modifier les réglages de %@.",
+    "ja": "この接続には %@ の設定を変更する権限がありません。",
+    "ko": "이 연결에는 %@의 설정을 변경할 권한이 없습니다.",
+    "pt-BR": "Esta conexão não tem permissão para alterar os ajustes de %@.",
+    "ru": "У этого подключения нет прав на изменение настроек %@.",
+    "sv": "Den här anslutningen har inte behörighet att ändra inställningar på %@.",
+    "zh-Hans": "此连接没有权限更改 %@ 上的设置。"
+  },
+  "This device can read this computer's threads but not send to them.": {
+    "de": "Dieses Gerät kann die Threads dieses Computers lesen, aber nichts an sie senden.",
+    "es": "Este dispositivo puede leer los hilos de este equipo, pero no enviarles mensajes.",
+    "fr": "Cet appareil peut lire les conversations de cet ordinateur, mais pas y envoyer de messages.",
+    "ja": "このデバイスはこのコンピュータのスレッドを閲覧できますが、送信はできません。",
+    "ko": "이 기기는 이 컴퓨터의 스레드를 읽을 수 있지만 메시지를 보낼 수는 없습니다.",
+    "pt-BR": "Este dispositivo pode ler as threads deste computador, mas não enviar mensagens a elas.",
+    "ru": "Это устройство может читать треды этого компьютера, но не может отправлять в них сообщения.",
+    "sv": "Enheten kan läsa datorns trådar men inte skicka till dem.",
+    "zh-Hans": "此设备可以读取这台电脑的会话，但无法向其发送消息。"
+  },
+  "This device can't scan codes. Paste the pairing link instead.": {
+    "de": "Dieses Gerät kann keine Codes scannen. Füge stattdessen den Kopplungslink ein.",
+    "es": "Este dispositivo no puede escanear códigos. Pega el enlace de emparejamiento en su lugar.",
+    "fr": "Cet appareil ne peut pas scanner de codes. Collez plutôt le lien d’appairage.",
+    "ja": "このデバイスではコードをスキャンできません。代わりにペアリングリンクを貼り付けてください。",
+    "ko": "이 기기는 코드를 스캔할 수 없습니다. 대신 페어링 링크를 붙여넣으세요.",
+    "pt-BR": "Este dispositivo não consegue escanear códigos. Cole o link de pareamento.",
+    "ru": "Это устройство не может сканировать коды. Вставьте ссылку сопряжения.",
+    "sv": "Enheten kan inte skanna koder. Klistra in parkopplingslänken i stället.",
+    "zh-Hans": "此设备无法扫描代码。请改为粘贴配对链接。"
+  },
+  "This device doesn't connect to %@ or show its threads. Its sign-in stays saved.": {
+    "de": "Dieses Gerät verbindet sich nicht mit %@ und zeigt dessen Threads nicht an. Die Anmeldung bleibt gespeichert.",
+    "es": "Este dispositivo no se conecta a %@ ni muestra sus hilos. Su inicio de sesión sigue guardado.",
+    "fr": "Cet appareil ne se connecte pas à %@ et n’affiche pas ses conversations. Sa connexion reste enregistrée.",
+    "ja": "このデバイスは %@ に接続せず、そのスレッドも表示しません。サインイン情報は保存されたままです。",
+    "ko": "이 기기는 %@에 연결하지 않으며 해당 스레드도 표시하지 않습니다. 로그인 정보는 저장된 채로 유지됩니다.",
+    "pt-BR": "Este dispositivo não se conecta a %@ nem mostra as threads dele. O login continua salvo.",
+    "ru": "Это устройство не подключается к %@ и не показывает его треды. Вход остаётся сохранённым.",
+    "sv": "Enheten ansluter inte till %@ och visar inte dess trådar. Inloggningen finns kvar.",
+    "zh-Hans": "此设备不会连接到 %@，也不会显示其会话。登录信息仍会保存。"
+  },
+  "This device is not allowed to read files on this computer.": {
+    "de": "Dieses Gerät darf keine Dateien auf diesem Computer lesen.",
+    "es": "Este dispositivo no tiene permiso para leer archivos de este equipo.",
+    "fr": "Cet appareil n’est pas autorisé à lire les fichiers de cet ordinateur.",
+    "ja": "このデバイスには、このコンピュータのファイルを読み取る権限がありません。",
+    "ko": "이 기기는 이 컴퓨터의 파일을 읽을 수 없습니다.",
+    "pt-BR": "Este dispositivo não tem permissão para ler arquivos deste computador.",
+    "ru": "Этому устройству не разрешено читать файлы на этом компьютере.",
+    "sv": "Enheten får inte läsa filer på den här datorn.",
+    "zh-Hans": "此设备无权读取这台电脑上的文件。"
+  },
+  "This device's sign-in to %@ expired or was revoked.": {
+    "de": "Die Anmeldung dieses Geräts bei %@ ist abgelaufen oder wurde widerrufen.",
+    "es": "El inicio de sesión de este dispositivo en %@ caducó o se revocó.",
+    "fr": "La connexion de cet appareil à %@ a expiré ou a été révoquée.",
+    "ja": "このデバイスの %@ へのサインインは期限切れになったか、取り消されました。",
+    "ko": "이 기기의 %@ 로그인이 만료되었거나 취소되었습니다.",
+    "pt-BR": "O login deste dispositivo em %@ expirou ou foi revogado.",
+    "ru": "Вход этого устройства на %@ истёк или был отозван.",
+    "sv": "Enhetens inloggning till %@ har gått ut eller återkallats.",
+    "zh-Hans": "此设备在 %@ 上的登录已过期或被撤销。"
+  },
+  "This empties every composer and removes its attachments. Unsent messages stay.": {
+    "de": "Damit werden alle Eingabefelder geleert und ihre Anhänge entfernt. Nicht gesendete Nachrichten bleiben erhalten.",
+    "es": "Esto vacía todos los cuadros de mensaje y quita sus adjuntos. Los mensajes sin enviar se mantienen.",
+    "fr": "Cela vide chaque zone de saisie et retire ses pièces jointes. Les messages non envoyés sont conservés.",
+    "ja": "すべての入力欄を空にし、添付ファイルを削除します。未送信のメッセージは残ります。",
+    "ko": "모든 입력창을 비우고 첨부 파일을 제거합니다. 보내지 않은 메시지는 유지됩니다.",
+    "pt-BR": "Isso esvazia todos os editores de mensagens e remove os anexos. Mensagens não enviadas são mantidas.",
+    "ru": "Все поля ввода будут очищены, а вложения удалены. Неотправленные сообщения сохранятся.",
+    "sv": "Det här tömmer alla inmatningsfält och tar bort deras bilagor. Oskickade meddelanden finns kvar.",
+    "zh-Hans": "这会清空所有输入框并移除其中的附件。未发送的消息会保留。"
+  },
+  "This file can't be shown as text.": {
+    "de": "Diese Datei kann nicht als Text angezeigt werden.",
+    "es": "Este archivo no se puede mostrar como texto.",
+    "fr": "Ce fichier ne peut pas être affiché sous forme de texte.",
+    "ja": "このファイルはテキストとして表示できません。",
+    "ko": "이 파일은 텍스트로 표시할 수 없습니다.",
+    "pt-BR": "Este arquivo não pode ser exibido como texto.",
+    "ru": "Этот файл нельзя показать как текст.",
+    "sv": "Filen kan inte visas som text.",
+    "zh-Hans": "此文件无法以文本形式显示。"
+  },
+  "This image could not be loaded.": {
+    "de": "Dieses Bild konnte nicht geladen werden.",
+    "es": "No se pudo cargar esta imagen.",
+    "fr": "Impossible de charger cette image.",
+    "ja": "この画像を読み込めませんでした。",
+    "ko": "이 이미지를 불러올 수 없습니다.",
+    "pt-BR": "Não foi possível carregar esta imagem.",
+    "ru": "Не удалось загрузить это изображение.",
+    "sv": "Bilden kunde inte läsas in.",
+    "zh-Hans": "无法加载此图片。"
+  },
+  "This image is not loaded yet.": {
+    "de": "Dieses Bild ist noch nicht geladen.",
+    "es": "Esta imagen aún no se ha cargado.",
+    "fr": "Cette image n’est pas encore chargée.",
+    "ja": "この画像はまだ読み込まれていません。",
+    "ko": "이 이미지는 아직 불러오지 않았습니다.",
+    "pt-BR": "Esta imagem ainda não foi carregada.",
+    "ru": "Это изображение ещё не загружено.",
+    "sv": "Bilden har inte lästs in än.",
+    "zh-Hans": "此图片尚未加载。"
+  },
+  "This is a folder": {
+    "de": "Das ist ein Ordner",
+    "es": "Es una carpeta",
+    "fr": "C’est un dossier",
+    "ja": "これはフォルダです",
+    "ko": "폴더입니다",
+    "pt-BR": "Isto é uma pasta",
+    "ru": "Это папка",
+    "sv": "Det här är en mapp",
+    "zh-Hans": "这是一个文件夹"
+  },
+  "This pairing link has expired or was already used": {
+    "de": "Dieser Kopplungslink ist abgelaufen oder wurde bereits verwendet",
+    "es": "Este enlace de emparejamiento caducó o ya se usó",
+    "fr": "Ce lien d’appairage a expiré ou a déjà été utilisé",
+    "ja": "このペアリングリンクは期限切れか、すでに使用されています",
+    "ko": "이 페어링 링크는 만료되었거나 이미 사용되었습니다",
+    "pt-BR": "Este link de pareamento expirou ou já foi usado",
+    "ru": "Срок действия этой ссылки сопряжения истёк, или она уже использована",
+    "sv": "Parkopplingslänken har gått ut eller har redan använts",
+    "zh-Hans": "此配对链接已过期或已被使用"
+  },
+  "This removes offline data for every environment. Connections, credentials and app preferences stay intact.": {
+    "de": "Damit werden die Offline-Daten aller Umgebungen entfernt. Verbindungen, Zugangsdaten und App-Einstellungen bleiben erhalten.",
+    "es": "Esto elimina los datos sin conexión de todos los entornos. Las conexiones, credenciales y preferencias de la app se mantienen.",
+    "fr": "Cela supprime les données hors ligne de chaque environnement. Les connexions, identifiants et préférences de l’app sont conservés.",
+    "ja": "すべての環境のオフラインデータを削除します。接続、資格情報、アプリの設定はそのまま残ります。",
+    "ko": "모든 환경의 오프라인 데이터를 삭제합니다. 연결, 자격 증명, 앱 환경설정은 그대로 유지됩니다.",
+    "pt-BR": "Isso remove os dados offline de todos os ambientes. Conexões, credenciais e preferências do app continuam intactas.",
+    "ru": "Будут удалены офлайн-данные всех окружений. Подключения, учётные данные и настройки приложения сохранятся.",
+    "sv": "Det här tar bort offlinedata för alla miljöer. Anslutningar, inloggningsuppgifter och appinställningar finns kvar.",
+    "zh-Hans": "这会删除所有环境的离线数据。连接、凭据和应用偏好设置保持不变。"
+  },
+  "This removes the saved thread list for this computer. Its connection and sign-in stay.": {
+    "de": "Damit wird die gespeicherte Thread-Liste dieses Computers entfernt. Verbindung und Anmeldung bleiben erhalten.",
+    "es": "Esto elimina la lista de hilos guardada de este equipo. Su conexión y su inicio de sesión se mantienen.",
+    "fr": "Cela supprime la liste de conversations enregistrée pour cet ordinateur. Sa connexion et son identification sont conservées.",
+    "ja": "このコンピュータの保存済みスレッド一覧を削除します。接続とサインインはそのまま残ります。",
+    "ko": "이 컴퓨터의 저장된 스레드 목록을 삭제합니다. 연결과 로그인은 유지됩니다.",
+    "pt-BR": "Isso remove a lista de threads salva deste computador. A conexão e o login continuam.",
+    "ru": "Будет удалён сохранённый список тредов этого компьютера. Подключение и вход сохранятся.",
+    "sv": "Det här tar bort den sparade trådlistan för datorn. Anslutningen och inloggningen finns kvar.",
+    "zh-Hans": "这会删除这台电脑已保存的会话列表。其连接和登录信息保留。"
+  },
+  "This request expired": {
+    "de": "Diese Anfrage ist abgelaufen",
+    "es": "Esta solicitud caducó",
+    "fr": "Cette demande a expiré",
+    "ja": "このリクエストは期限切れです",
+    "ko": "이 요청은 만료되었습니다",
+    "pt-BR": "Esta solicitação expirou",
+    "ru": "Срок действия запроса истёк",
+    "sv": "Begäran har gått ut",
+    "zh-Hans": "此请求已过期"
+  },
+  "This request was cancelled": {
+    "de": "Diese Anfrage wurde abgebrochen",
+    "es": "Esta solicitud se canceló",
+    "fr": "Cette demande a été annulée",
+    "ja": "このリクエストはキャンセルされました",
+    "ko": "이 요청은 취소되었습니다",
+    "pt-BR": "Esta solicitação foi cancelada",
+    "ru": "Запрос отменён",
+    "sv": "Begäran avbröts",
+    "zh-Hans": "此请求已取消"
+  },
+  "This thread uses something this version of the app cannot read yet. Update the app.": {
+    "de": "Dieser Thread verwendet etwas, das diese App-Version noch nicht lesen kann. Aktualisiere die App.",
+    "es": "Este hilo usa algo que esta versión de la app todavía no puede leer. Actualiza la app.",
+    "fr": "Cette conversation utilise un élément que cette version de l’app ne sait pas encore lire. Mettez l’app à jour.",
+    "ja": "このスレッドには、このバージョンのアプリではまだ読み取れない内容が含まれています。アプリを更新してください。",
+    "ko": "이 스레드에는 이 버전의 앱에서 아직 읽을 수 없는 내용이 있습니다. 앱을 업데이트하세요.",
+    "pt-BR": "Esta thread usa algo que esta versão do app ainda não consegue ler. Atualize o app.",
+    "ru": "В этом треде есть то, что эта версия приложения пока не умеет читать. Обновите приложение.",
+    "sv": "Tråden använder något som den här versionen av appen inte kan läsa än. Uppdatera appen.",
+    "zh-Hans": "此会话使用了当前版本应用尚无法读取的内容。请更新应用。"
+  },
+  "This thread was deleted on its computer.": {
+    "de": "Dieser Thread wurde auf seinem Computer gelöscht.",
+    "es": "Este hilo se eliminó en su equipo.",
+    "fr": "Cette conversation a été supprimée sur son ordinateur.",
+    "ja": "このスレッドはそのコンピュータ上で削除されました。",
+    "ko": "이 스레드는 해당 컴퓨터에서 삭제되었습니다.",
+    "pt-BR": "Esta thread foi excluída no computador dela.",
+    "ru": "Этот тред удалён на своём компьютере.",
+    "sv": "Tråden har tagits bort på sin dator.",
+    "zh-Hans": "此会话已在其所在的电脑上删除。"
+  },
+  "This thread's computer is not saved on this device.": {
+    "de": "Der Computer dieses Threads ist auf diesem Gerät nicht gespeichert.",
+    "es": "El equipo de este hilo no está guardado en este dispositivo.",
+    "fr": "L’ordinateur de cette conversation n’est pas enregistré sur cet appareil.",
+    "ja": "このスレッドのコンピュータはこのデバイスに保存されていません。",
+    "ko": "이 스레드의 컴퓨터가 이 기기에 저장되어 있지 않습니다.",
+    "pt-BR": "O computador desta thread não está salvo neste dispositivo.",
+    "ru": "Компьютер этого треда не сохранён на этом устройстве.",
+    "sv": "Trådens dator är inte sparad på den här enheten.",
+    "zh-Hans": "此设备上未保存该会话所在的电脑。"
+  },
+  "Thread actions": {
+    "de": "Thread-Aktionen",
+    "es": "Acciones del hilo",
+    "fr": "Actions de la conversation",
+    "ja": "スレッドの操作",
+    "ko": "스레드 작업",
+    "pt-BR": "Ações da thread",
+    "ru": "Действия с тредом",
+    "sv": "Trådåtgärder",
+    "zh-Hans": "会话操作"
+  },
+  "Thread deleted": {
+    "de": "Thread gelöscht",
+    "es": "Hilo eliminado",
+    "fr": "Conversation supprimée",
+    "ja": "スレッドを削除しました",
+    "ko": "스레드 삭제됨",
+    "pt-BR": "Thread excluída",
+    "ru": "Тред удалён",
+    "sv": "Tråden har tagits bort",
+    "zh-Hans": "会话已删除"
+  },
+  "Tool image %lld": {
+    "de": "Werkzeugbild %lld",
+    "es": "Imagen de herramienta %lld",
+    "fr": "Image d’outil %lld",
+    "ja": "ツールの画像 %lld",
+    "ko": "도구 이미지 %lld",
+    "pt-BR": "Imagem da ferramenta %lld",
+    "ru": "Изображение инструмента %lld",
+    "sv": "Verktygsbild %lld",
+    "zh-Hans": "工具图片 %lld"
+  },
+  "Turn on automatic date and time in Settings, then try again.": {
+    "de": "Aktiviere in den Einstellungen „Automatisch einstellen“ für Datum & Uhrzeit und versuch es dann erneut.",
+    "es": "Activa la fecha y hora automáticas en Ajustes y vuelve a intentarlo.",
+    "fr": "Activez la date et l’heure automatiques dans Réglages, puis réessayez.",
+    "ja": "「設定」で日付と時刻の自動設定をオンにしてから、もう一度お試しください。",
+    "ko": "설정에서 날짜 및 시간 자동 설정을 켠 다음 다시 시도하세요.",
+    "pt-BR": "Ative data e hora automáticas nos Ajustes e tente novamente.",
+    "ru": "Включите автоматическую настройку даты и времени в Настройках и повторите попытку.",
+    "sv": "Slå på automatiskt datum och tid i Inställningar och försök sedan igen.",
+    "zh-Hans": "请在“设置”中打开自动设置日期与时间，然后重试。"
+  },
+  "Turned off on this device": {
+    "de": "Auf diesem Gerät ausgeschaltet",
+    "es": "Desactivado en este dispositivo",
+    "fr": "Désactivé sur cet appareil",
+    "ja": "このデバイスではオフ",
+    "ko": "이 기기에서 꺼짐",
+    "pt-BR": "Desativado neste dispositivo",
+    "ru": "Выключено на этом устройстве",
+    "sv": "Avstängd på den här enheten",
+    "zh-Hans": "已在此设备上关闭"
+  },
+  "Unsent messages": {
+    "de": "Nicht gesendete Nachrichten",
+    "es": "Mensajes sin enviar",
+    "fr": "Messages non envoyés",
+    "ja": "未送信のメッセージ",
+    "ko": "보내지 않은 메시지",
+    "pt-BR": "Mensagens não enviadas",
+    "ru": "Неотправленные сообщения",
+    "sv": "Oskickade meddelanden",
+    "zh-Hans": "未发送的消息"
+  },
+  "Unsent messages are delivered when their computer connects; delete one from its thread. Clearing drafts keeps them.": {
+    "de": "Nicht gesendete Nachrichten werden zugestellt, sobald ihr Computer verbunden ist; lösche eine im zugehörigen Thread. Beim Löschen der Entwürfe bleiben sie erhalten.",
+    "es": "Los mensajes sin enviar se entregan cuando su equipo se conecta; elimina uno desde su hilo. Al borrar los borradores se mantienen.",
+    "fr": "Les messages non envoyés sont remis quand leur ordinateur se connecte ; supprimez-en un depuis sa conversation. Effacer les brouillons les conserve.",
+    "ja": "未送信のメッセージは、送信先のコンピュータが接続したときに配信されます。削除はスレッドから行ってください。下書きを消去しても未送信のメッセージは残ります。",
+    "ko": "보내지 않은 메시지는 해당 컴퓨터가 연결되면 전달됩니다. 삭제하려면 해당 스레드에서 지우세요. 초안을 지워도 유지됩니다.",
+    "pt-BR": "Mensagens não enviadas são entregues quando o computador delas se conecta; exclua uma pela thread. Limpar rascunhos as mantém.",
+    "ru": "Неотправленные сообщения доставляются, когда подключается их компьютер; удалить сообщение можно в его треде. При удалении черновиков они сохраняются.",
+    "sv": "Oskickade meddelanden levereras när deras dator ansluter; ta bort ett från dess tråd. De finns kvar när du rensar utkast.",
+    "zh-Hans": "未发送的消息会在其电脑连接时送达；可在所属会话中删除。清除草稿不会删除它们。"
+  },
+  "Unsupported item (%@)": {
+    "de": "Nicht unterstütztes Element (%@)",
+    "es": "Elemento no compatible (%@)",
+    "fr": "Élément non pris en charge (%@)",
+    "ja": "サポートされていない項目（%@）",
+    "ko": "지원되지 않는 항목(%@)",
+    "pt-BR": "Item não compatível (%@)",
+    "ru": "Неподдерживаемый элемент (%@)",
+    "sv": "Objekt som inte stöds (%@)",
+    "zh-Hans": "不支持的项目（%@）"
+  },
+  "Update Ankiel Code on that computer, then pair again.": {
+    "de": "Aktualisiere Ankiel Code auf diesem Computer und kopple dann erneut.",
+    "es": "Actualiza Ankiel Code en ese equipo y vuelve a emparejar.",
+    "fr": "Mettez à jour Ankiel Code sur cet ordinateur, puis appairez à nouveau.",
+    "ja": "そのコンピュータの Ankiel Code を更新してから、もう一度ペアリングしてください。",
+    "ko": "해당 컴퓨터의 Ankiel Code를 업데이트한 다음 다시 페어링하세요.",
+    "pt-BR": "Atualize o Ankiel Code nesse computador e pareie novamente.",
+    "ru": "Обновите Ankiel Code на том компьютере и выполните сопряжение заново.",
+    "sv": "Uppdatera Ankiel Code på den datorn och parkoppla sedan igen.",
+    "zh-Hans": "请在那台电脑上更新 Ankiel Code，然后重新配对。"
+  },
+  "Update Ankiel Code on this device, then pair again.": {
+    "de": "Aktualisiere Ankiel Code auf diesem Gerät und kopple dann erneut.",
+    "es": "Actualiza Ankiel Code en este dispositivo y vuelve a emparejar.",
+    "fr": "Mettez à jour Ankiel Code sur cet appareil, puis appairez à nouveau.",
+    "ja": "このデバイスの Ankiel Code を更新してから、もう一度ペアリングしてください。",
+    "ko": "이 기기의 Ankiel Code를 업데이트한 다음 다시 페어링하세요.",
+    "pt-BR": "Atualize o Ankiel Code neste dispositivo e pareie novamente.",
+    "ru": "Обновите Ankiel Code на этом устройстве и выполните сопряжение заново.",
+    "sv": "Uppdatera Ankiel Code på den här enheten och parkoppla sedan igen.",
+    "zh-Hans": "请在此设备上更新 Ankiel Code，然后重新配对。"
+  },
+  "Update Ankiel Code on this device.": {
+    "de": "Aktualisiere Ankiel Code auf diesem Gerät.",
+    "es": "Actualiza Ankiel Code en este dispositivo.",
+    "fr": "Mettez à jour Ankiel Code sur cet appareil.",
+    "ja": "このデバイスの Ankiel Code を更新してください。",
+    "ko": "이 기기의 Ankiel Code를 업데이트하세요.",
+    "pt-BR": "Atualize o Ankiel Code neste dispositivo.",
+    "ru": "Обновите Ankiel Code на этом устройстве.",
+    "sv": "Uppdatera Ankiel Code på den här enheten.",
+    "zh-Hans": "请在此设备上更新 Ankiel Code。"
+  },
+  "Update and restart Ankiel Code on this machine.": {
+    "de": "Aktualisiere Ankiel Code auf diesem Computer und starte es neu.",
+    "es": "Actualiza y reinicia Ankiel Code en esta máquina.",
+    "fr": "Mettez à jour et redémarrez Ankiel Code sur cette machine.",
+    "ja": "このマシンで Ankiel Code を更新して再起動してください。",
+    "ko": "이 컴퓨터에서 Ankiel Code를 업데이트하고 다시 시작하세요.",
+    "pt-BR": "Atualize e reinicie o Ankiel Code nesta máquina.",
+    "ru": "Обновите и перезапустите Ankiel Code на этом компьютере.",
+    "sv": "Uppdatera och starta om Ankiel Code på den här datorn.",
+    "zh-Hans": "请在这台机器上更新并重启 Ankiel Code。"
+  },
+  "Update the provider to use this model": {
+    "de": "Aktualisiere den Anbieter, um dieses Modell zu verwenden",
+    "es": "Actualiza el proveedor para usar este modelo",
+    "fr": "Mettez à jour le fournisseur pour utiliser ce modèle",
+    "ja": "このモデルを使うにはプロバイダーを更新してください",
+    "ko": "이 모델을 사용하려면 제공자를 업데이트하세요",
+    "pt-BR": "Atualize o provedor para usar este modelo",
+    "ru": "Обновите провайдера, чтобы использовать эту модель",
+    "sv": "Uppdatera leverantören för att använda modellen",
+    "zh-Hans": "更新提供方以使用此模型"
+  },
+  "Upload failed": {
+    "de": "Upload fehlgeschlagen",
+    "es": "Error al subir",
+    "fr": "Échec de l’envoi",
+    "ja": "アップロードに失敗しました",
+    "ko": "업로드 실패",
+    "pt-BR": "Falha no envio",
+    "ru": "Не удалось загрузить",
+    "sv": "Uppladdningen misslyckades",
+    "zh-Hans": "上传失败"
+  },
+  "Uploading, %@": {
+    "de": "Wird hochgeladen, %@",
+    "es": "Subiendo, %@",
+    "fr": "Envoi en cours, %@",
+    "ja": "アップロード中、%@",
+    "ko": "업로드 중, %@",
+    "pt-BR": "Enviando, %@",
+    "ru": "Загрузка, %@",
+    "sv": "Laddar upp, %@",
+    "zh-Hans": "正在上传，%@"
+  },
+  "Uploads when sent": {
+    "de": "Wird beim Senden hochgeladen",
+    "es": "Se sube al enviar",
+    "fr": "Envoyé avec le message",
+    "ja": "送信時にアップロード",
+    "ko": "보낼 때 업로드",
+    "pt-BR": "Enviado junto com a mensagem",
+    "ru": "Загрузится при отправке",
+    "sv": "Laddas upp när det skickas",
+    "zh-Hans": "发送时上传"
+  },
+  "Use it right away": {
+    "de": "Sofort verwenden",
+    "es": "Úsalo ya",
+    "fr": "L’utiliser tout de suite",
+    "ja": "すぐに使う",
+    "ko": "바로 사용",
+    "pt-BR": "Usar agora mesmo",
+    "ru": "Использовать сразу",
+    "sv": "Använd direkt",
+    "zh-Hans": "立即使用"
+  },
+  "Waiting for the computer": {
+    "de": "Warte auf den Computer",
+    "es": "Esperando al equipo",
+    "fr": "En attente de l’ordinateur",
+    "ja": "コンピュータを待っています",
+    "ko": "컴퓨터를 기다리는 중",
+    "pt-BR": "Aguardando o computador",
+    "ru": "Ожидание компьютера",
+    "sv": "Väntar på datorn",
+    "zh-Hans": "正在等待电脑"
+  },
+  "Waiting on %lld agents": {
+    "de": {
+      "one": "Warte auf %lld Agenten",
+      "other": "Warte auf %lld Agenten"
+    },
+    "es": {
+      "one": "Esperando a %lld agente",
+      "other": "Esperando a %lld agentes"
+    },
+    "fr": {
+      "one": "En attente de %lld agent",
+      "other": "En attente de %lld agents"
+    },
+    "ja": {
+      "other": "%lld 個のエージェントを待っています"
+    },
+    "ko": {
+      "other": "에이전트 %lld개 대기 중"
+    },
+    "pt-BR": {
+      "one": "Aguardando %lld agente",
+      "other": "Aguardando %lld agentes"
+    },
+    "ru": {
+      "one": "Ожидание %lld агента",
+      "few": "Ожидание %lld агентов",
+      "many": "Ожидание %lld агентов",
+      "other": "Ожидание %lld агента"
+    },
+    "sv": {
+      "one": "Väntar på %lld agent",
+      "other": "Väntar på %lld agenter"
+    },
+    "zh-Hans": {
+      "other": "正在等待 %lld 个智能体"
+    }
+  },
+  "Waiting on 1 agent": {
+    "de": "Warte auf 1 Agenten",
+    "es": "Esperando a 1 agente",
+    "fr": "En attente de 1 agent",
+    "ja": "1 個のエージェントを待っています",
+    "ko": "에이전트 1개 대기 중",
+    "pt-BR": "Aguardando 1 agente",
+    "ru": "Ожидание 1 агента",
+    "sv": "Väntar på 1 agent",
+    "zh-Hans": "正在等待 1 个智能体"
+  },
+  "Wakes %@": {
+    "de": "Kommt zurück %@",
+    "es": "Vuelve %@",
+    "fr": "Revient %@",
+    "ja": "再表示 %@",
+    "ko": "%@에 다시 알림",
+    "pt-BR": "Volta %@",
+    "ru": "Вернётся %@",
+    "sv": "Väcks %@",
+    "zh-Hans": "%@ 恢复"
+  },
+  "Website": {
+    "de": "Website",
+    "es": "Sitio web",
+    "fr": "Site web",
+    "ja": "Web サイト",
+    "ko": "웹사이트",
+    "pt-BR": "Site",
+    "ru": "Сайт",
+    "sv": "Webbplats",
+    "zh-Hans": "网站"
+  },
+  "Word break wraps long lines instead of scrolling them sideways.": {
+    "de": "Mit Zeilenumbruch werden lange Zeilen umbrochen, statt seitlich zu scrollen.",
+    "es": "El ajuste de línea divide las líneas largas en lugar de desplazarlas horizontalmente.",
+    "fr": "Le retour à la ligne coupe les longues lignes au lieu de les faire défiler horizontalement.",
+    "ja": "折り返しをオンにすると、長い行を横スクロールせずに折り返します。",
+    "ko": "줄 바꿈을 사용하면 긴 줄을 옆으로 스크롤하지 않고 줄 바꿈합니다.",
+    "pt-BR": "A quebra de linha divide as linhas longas em vez de rolá-las para o lado.",
+    "ru": "Перенос строк переносит длинные строки вместо горизонтальной прокрутки.",
+    "sv": "Radbrytning bryter långa rader i stället för att rulla dem i sidled.",
+    "zh-Hans": "自动换行会将长行换行显示，而不是横向滚动。"
+  },
+  "You'll need a new pairing link to add each one again.": {
+    "de": "Um sie wieder hinzuzufügen, brauchst du für jeden einen neuen Kopplungslink.",
+    "es": "Necesitarás un enlace de emparejamiento nuevo para volver a añadir cada uno.",
+    "fr": "Il vous faudra un nouveau lien d’appairage pour rajouter chacun d’eux.",
+    "ja": "もう一度追加するには、それぞれ新しいペアリングリンクが必要です。",
+    "ko": "다시 추가하려면 각각 새 페어링 링크가 필요합니다.",
+    "pt-BR": "Você vai precisar de um novo link de pareamento para adicionar cada um de novo.",
+    "ru": "Чтобы снова добавить каждый из них, понадобится новая ссылка сопряжения.",
+    "sv": "Du behöver en ny parkopplingslänk för att lägga till var och en igen.",
+    "zh-Hans": "重新添加每台电脑都需要新的配对链接。"
+  },
+  "You'll need a new pairing link to add it again.": {
+    "de": "Um ihn wieder hinzuzufügen, brauchst du einen neuen Kopplungslink.",
+    "es": "Necesitarás un enlace de emparejamiento nuevo para volver a añadirlo.",
+    "fr": "Il vous faudra un nouveau lien d’appairage pour le rajouter.",
+    "ja": "もう一度追加するには、新しいペアリングリンクが必要です。",
+    "ko": "다시 추가하려면 새 페어링 링크가 필요합니다.",
+    "pt-BR": "Você vai precisar de um novo link de pareamento para adicioná-lo de novo.",
+    "ru": "Чтобы снова добавить его, понадобится новая ссылка сопряжения.",
+    "sv": "Du behöver en ny parkopplingslänk för att lägga till den igen.",
+    "zh-Hans": "重新添加它需要新的配对链接。"
+  },
+  "^[%lld question](inflect: true)": {
+    "de": {
+      "one": "%lld Frage",
+      "other": "%lld Fragen"
+    },
+    "es": {
+      "one": "%lld pregunta",
+      "other": "%lld preguntas"
+    },
+    "fr": {
+      "one": "%lld question",
+      "other": "%lld questions"
+    },
+    "ja": {
+      "other": "%lld 件の質問"
+    },
+    "ko": {
+      "other": "질문 %lld개"
+    },
+    "pt-BR": {
+      "one": "%lld pergunta",
+      "other": "%lld perguntas"
+    },
+    "ru": {
+      "one": "%lld вопрос",
+      "few": "%lld вопроса",
+      "many": "%lld вопросов",
+      "other": "%lld вопроса"
+    },
+    "sv": {
+      "one": "%lld fråga",
+      "other": "%lld frågor"
+    },
+    "zh-Hans": {
+      "other": "%lld 个问题"
+    }
+  },
+  "exit %lld": {
+    "de": "Exit-Code %lld",
+    "es": "código de salida %lld",
+    "fr": "code de sortie %lld",
+    "ja": "終了コード %lld",
+    "ko": "종료 코드 %lld",
+    "pt-BR": "código de saída %lld",
+    "ru": "код выхода %lld",
+    "sv": "slutkod %lld",
+    "zh-Hans": "退出码 %lld"
+  },
+  "the computer": {
+    "de": "der Computer",
+    "es": "el equipo",
+    "fr": "l’ordinateur",
+    "ja": "コンピュータ",
+    "ko": "컴퓨터",
+    "pt-BR": "o computador",
+    "ru": "компьютер",
+    "sv": "datorn",
+    "zh-Hans": "电脑"
+  }
+}

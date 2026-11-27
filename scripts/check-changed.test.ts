@@ -20,6 +20,7 @@ import {
   defaultConcurrency,
   gitLines,
   ignoredCheckInputs,
+  iosChecks,
   runSteps,
   splitTests,
   type Step,
@@ -220,6 +221,35 @@ describe("check:changed", () => {
     "packages/shared/src/testing/gitRepositoryEnv.ts",
   ])("tests every package when the shared test setup file %s changes", (file) => {
     assert.strictEqual(decide([file], readWorkspace(), false).outputs.test_packages, "");
+  });
+
+  it("runs the iOS checks for their own paths and leaves CI's jobs alone", () => {
+    const kit = "apps/ios/Packages/AnkielKit/Sources/AnkielKit/Shell/ThreadShell.swift";
+    const fixture = "apps/ios/Packages/AnkielKit/Tests/AnkielKitTests/Fixtures/commands/x.json";
+    const view = "apps/ios/AnkielCode/Home/ThreadCopy.swift";
+    assert.deepStrictEqual(iosChecks([kit]), {
+      swiftTest: true,
+      schemas: false,
+      translations: false,
+    });
+    assert.deepStrictEqual(iosChecks([fixture]), {
+      swiftTest: true,
+      schemas: true,
+      translations: false,
+    });
+    assert.deepStrictEqual(iosChecks(["packages/contracts/src/orchestration.ts"]), {
+      swiftTest: false,
+      schemas: true,
+      translations: false,
+    });
+    assert.deepStrictEqual(iosChecks([view, "apps/web/src/main.tsx"]), {
+      swiftTest: false,
+      schemas: false,
+      translations: true,
+    });
+    const { affected, outputs } = decide([kit, view], readWorkspace(), false);
+    assert.deepStrictEqual(affected, []);
+    assert.isFalse(outputs.build || outputs.test || outputs.mobile_native);
   });
 });
 

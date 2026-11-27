@@ -1,7 +1,7 @@
 // Decodes every command fixture with the server's own Effect schemas, and writes the provider
 // catalog fixture by encoding a sample through the real `ServerProvider` / `ServerSettings`
 // schemas. Run from the repo's `packages/contracts`:
-//   node ../../apps/ios/Packages/AnkielKit/Tests/AnkielKitTests/Fixtures/commands/check-schemas.mjs
+//   node ../../apps/ios/Packages/AnkielKit/Tests/AnkielKitTests/Fixtures/commands/check-schemas.mjs [--check]
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -21,6 +21,10 @@ const schemas = {
   secretAnswer: m.SecretRequestAnswerInput,
   updateSettings: S.Struct({ patch: m.ClientServerSettingsPatch }),
   serverUpdate: m.ServerSelfUpdateInput,
+  listEntries: m.ProjectListEntriesInput,
+  searchEntries: m.ProjectSearchEntriesInput,
+  readFile: m.ProjectReadFileInput,
+  assetUrl: m.AssetCreateUrlInput,
 };
 
 let failures = 0;
@@ -115,9 +119,19 @@ const encodedProviders = sample.providers.map((value) =>
   S.encodeSync(m.ServerProvider)(S.decodeUnknownSync(m.ServerProvider)(value)),
 );
 const encodedSettings = S.encodeSync(m.ServerSettings)(S.decodeUnknownSync(m.ServerSettings)(sample.settings));
-writeFileSync(
-  join(here, "..", "provider-catalog.json"),
-  JSON.stringify({ providers: encodedProviders, settings: encodedSettings }, null, 2) + "\n",
-);
-console.log("wrote provider-catalog.json");
+const catalogPath = join(here, "..", "provider-catalog.json");
+const catalog = JSON.stringify({ providers: encodedProviders, settings: encodedSettings }, null, 2) + "\n";
+// --check (check:changed) compares instead of writing: a contracts change that alters the encoding
+// fails here until the fixture is rewritten and the Swift tests pass against it.
+if (process.argv.includes("--check")) {
+  if (readFileSync(catalogPath, "utf8") === catalog) {
+    console.log("ok   provider-catalog.json matches the schemas");
+  } else {
+    failures += 1;
+    console.log("FAIL provider-catalog.json is stale: run this script without --check, then swift test");
+  }
+} else {
+  writeFileSync(catalogPath, catalog);
+  console.log("wrote provider-catalog.json");
+}
 process.exit(failures === 0 ? 0 : 1);

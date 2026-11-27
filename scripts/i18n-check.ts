@@ -74,6 +74,18 @@ for (const [app, [command, ...args]] of Object.entries(GENERATE)) {
   }
 }
 
+// The native iOS app's String Catalog has its own check, in plain Node so it runs off macOS too.
+const ios = NodeChildProcess.spawnSync(
+  process.execPath,
+  [NodePath.join(root, "apps/ios/scripts/check-translations.mjs")],
+  { encoding: "utf8" },
+);
+if (ios.status !== 0) {
+  problems.push(
+    `apps/ios:\n${ios.stdout}${ios.stderr}\nSee "Translations" in apps/ios/README.md to fix these.`,
+  );
+}
+
 if (problems.length > 0) {
   console.error(problems.join("\n"));
   console.error(
@@ -81,5 +93,5 @@ if (problems.length > 0) {
   );
   process.exitCode = 1;
 } else {
-  console.log(`i18n catalogs match the source in ${APPS.join(", ")}.`);
+  console.log(`i18n catalogs match the source in ${APPS.join(", ")} and apps/ios.`);
 }

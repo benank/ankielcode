@@ -82,7 +82,7 @@ See [00_development.md](docs/operations/00_development.md) for setup, ports, see
 - Before you push, run `vp run check:changed`. **Do not run repo-wide checks** (`vp check`, `vp run -r test`, `vp run -r typecheck`) unless asked. CI runs lint, build and typecheck but no tests, so `check:changed` is the only test run a change gets.
 - Iterate with `vp test run <files>` (add `-t "<name>"` for large files) and `vp run typecheck` (`effect-tsgo tsrs --noEmit`). Run `node -e` snippets from the owning package (`effect` does not resolve from repo root).
 - Follow [15_testing.md](docs/internals/15_testing.md) for what to test, bug-fix proof, draining async work (no sleeps/polling), web browser tests (`await using screen = await render(...)`), and real-app [Scenarios](docs/internals/15_testing.md#scenarios) (`vp run scenarios:prove`).
-- Give user-visible frontend changes one integrated pass in a real client: `test-ankiel-app` for web, `test-ankiel-mobile` for mobile (primary agent only; subagents do not launch dev servers). Inspect the rendered result and walk the flow as a user using the feature—checking layout, visual hierarchy, and ergonomics—and fix anything rough until you are satisfied before handing back. Use the free `Replay (dev)` provider unless the change depends on a real provider (then pick its cheapest model, e.g. Haiku or Luna). On mobile, run `vp run mobile:install <ios|android> [device-id]` before Metro rather than rebuilding from scratch.
+- Give user-visible frontend changes one integrated pass in a real client: `test-ankiel-app` for web, `test-ankiel-mobile` for mobile, `test-ankiel-ios` for the native iOS app (primary agent only; subagents do not launch dev servers). Inspect the rendered result and walk the flow as a user using the feature—checking layout, visual hierarchy, and ergonomics—and fix anything rough until you are satisfied before handing back. Use the free `Replay (dev)` provider unless the change depends on a real provider (then pick its cheapest model, e.g. Haiku or Luna). On mobile, run `vp run mobile:install <ios|android> [device-id]` before Metro rather than rebuilding from scratch.
 
 ## Commits and pull requests
 
@@ -118,6 +118,7 @@ Most code changes do not need an internal documentation change. Agents can read 
 
 - `apps/server` - WebSocket, event-sourced orchestration (`Orchestrator` → `EventSink` → `EffectWorker`), providers, checkpointing. Read [02_effect-services.md](docs/internals/02_effect-services.md) and `.repos/effect/LLMS.md`.
 - `apps/web` - React/Vite renderer for `apps/desktop`; `apps/mobile` is React Native; `apps/marketing` is the site.
+- `apps/ios` - native SwiftUI iOS client; its logic lives in the `AnkielKit` Swift package. See [18_ios-native.md](docs/internals/18_ios-native.md).
 - `packages/contracts` - Effect/Schema wire contracts plus small derived helpers. No heavy runtime logic.
 - `packages/shared` - shared runtime utils, subpath exports, no barrel.
 - `packages/client-runtime` - client connection and domain state shared by web and mobile.
@@ -142,6 +143,7 @@ Read the matching doc before changing code in that area; code review enforces th
 | Writing & reviewing tests                  | [15_testing.md](docs/internals/15_testing.md)                                                                                                                                                     |
 | Wire budgets, server metrics & perf        | [16_performance-regressions.md](docs/internals/16_performance-regressions.md)                                                                                                                     |
 | Repo & package scripts                     | [17_scripts.md](docs/internals/17_scripts.md)                                                                                                                                                     |
+| Native iOS app                             | [18_ios-native.md](docs/internals/18_ios-native.md)                                                                                                                                               |
 
 ## Taste
 

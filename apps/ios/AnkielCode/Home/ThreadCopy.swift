@@ -19,26 +19,30 @@ enum ThreadCopy {
     }
   }
 
-  /// `relativeTime`: "<1m", "5m", "3h", "2d".
+  /// `relativeTime`: "<1m", "5m", "3h", "2d" (in the user's language).
   static func elapsed(since date: Date, now: Date) -> String {
     let seconds = max(0, Int(now.timeIntervalSince(date)))
     if seconds < 60 { return String(localized: "<1m", comment: "compact elapsed time, under one minute") }
     let minutes = seconds / 60
-    if minutes < 60 { return String(localized: "\(minutes)m", comment: "compact elapsed minutes") }
+    if minutes < 60 { return compact(minutes: minutes) }
     let hours = minutes / 60
-    if hours < 24 { return String(localized: "\(hours)h", comment: "compact elapsed hours") }
-    return String(localized: "\(hours / 24)d", comment: "compact elapsed days")
+    if hours < 24 { return compact(minutes: hours * 60) }
+    return compact(minutes: hours / 24 * 1440)
   }
 
-  /// `snoozeWakeLabel`: "now", "45m", "3h", "2d".
+  /// `snoozeWakeLabel`: "now", "45m", "3h", "2d", rounded up.
   static func wakesIn(_ wake: Date, now: Date) -> String {
     guard wake > now else { return String(localized: "now", comment: "a snoozed thread wakes now") }
     let minutes = max(1, Int(wake.timeIntervalSince1970 / 60) - Int(now.timeIntervalSince1970 / 60))
-    if minutes < 60 { return String(localized: "\(minutes)m", comment: "compact elapsed minutes") }
-    if minutes < 24 * 60 {
-      return String(localized: "\(Int((Double(minutes) / 60).rounded(.up)))h", comment: "compact elapsed hours")
-    }
-    return String(localized: "\(Int((Double(minutes) / 1440).rounded(.up)))d", comment: "compact elapsed days")
+    if minutes < 60 { return compact(minutes: minutes) }
+    if minutes < 24 * 60 { return compact(minutes: Int((Double(minutes) / 60).rounded(.up)) * 60) }
+    return compact(minutes: Int((Double(minutes) / 1440).rounded(.up)) * 1440)
+  }
+
+  /// A whole number of minutes, hours or days in its largest unit, in the narrow style.
+  private static func compact(minutes: Int) -> String {
+    Duration.seconds(minutes * 60).formatted(
+      .units(allowed: [.days, .hours, .minutes], width: .narrow, maximumUnitCount: 1))
   }
 
   static func wakes(at wake: Date) -> String {
@@ -66,7 +70,7 @@ enum ThreadCopy {
   static func snoozeWhen(_ preset: SnoozePreset, now: Date) -> String {
     let time = preset.wake.formatted(date: .omitted, time: .shortened)
     if preset.labelNamesDay || Calendar.current.isDate(preset.wake, inSameDayAs: now) { return time }
-    return "\(preset.wake.formatted(.dateTime.weekday(.abbreviated))) \(time)"
+    return preset.wake.formatted(.dateTime.weekday(.abbreviated).hour().minute())
   }
 }
 

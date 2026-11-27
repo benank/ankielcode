@@ -189,6 +189,8 @@ export default defineConfig({
       "*.icon/**",
       // Xcode rewrites asset catalogs in its own JSON style.
       "apps/ios/**/*.xcassets/**",
+      // Test fixtures and the plain-node scripts that write them from the contracts.
+      "apps/ios/**/Fixtures/**",
     ],
     sortPackageJson: {},
     overrides: [
@@ -214,6 +216,7 @@ export default defineConfig({
       "apps/mobile/android/**",
       "apps/mobile/ios/**",
       "apps/mobile/uniwind-types.d.ts",
+      "apps/ios/**/Fixtures/**",
     ],
     plugins: ["eslint", "oxc", "react", "unicorn", "typescript"],
     jsPlugins: ["./oxlint-plugin-ankielcode/index.ts", "@shadcn/lint"],

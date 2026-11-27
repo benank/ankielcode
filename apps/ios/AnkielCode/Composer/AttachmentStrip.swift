@@ -151,7 +151,7 @@ private struct AttachmentChip: View {
 
   private var stateDescription: String {
     switch state {
-    case .uploading(let progress)?: String(localized: "Uploading, \(Int(progress * 100)) percent")
+    case .uploading(let progress)?: String(localized: "Uploading, \(progress.formatted(.percent.precision(.fractionLength(0))))")
     case .failed?: String(localized: "Upload failed")
     case .ready?: String(localized: "Ready")
     case nil: String(localized: "Uploads when sent")
