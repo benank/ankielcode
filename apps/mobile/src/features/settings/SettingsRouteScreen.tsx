@@ -223,6 +223,7 @@ function useSettingsIndexSections(): SettingsListSection[] {
         page("SettingsOrganization", "gearshape", gt("General")),
         page("SettingsAppearance", "paintbrush", gt("Appearance")),
         page("SettingsFollowUp", "bubble.left.and.bubble.right", gt("Chat")),
+        page("SettingsNotifications", "bell.badge", gt("Notifications")),
         ...(navigationCustomizationAvailable()
           ? [page("SettingsNavigation", "line.3.horizontal", gt("Navigation tabs"))]
           : []),

@@ -62,6 +62,8 @@ Scan the QR code on your phone or paste the pairing URL into **Add environment**
 
 Pairing authorizes that device for future connections. Use a fresh one-time link for each new device; you do not need the original token to reconnect. A device stays signed in while you keep using it, until you revoke it in **Settings → Sharing & access** on the host. One unused for 30 days, or paired with a host older than this release, has to pair again. Links created in Settings can only be copied from the client that created them while its Sharing & access page stays open. If you leave or reload that page, create another link to share.
 
+A phone paired with a computer that uses a relay can also get [alerts when an agent finishes or needs you](./mobile-notifications.md).
+
 ## Same-network (LAN) access
 
 When your phone or another computer is on the same Wi-Fi or local network as the host, Ankiel Code can connect directly over your LAN for lower latency without sending traffic through Cloudflare.

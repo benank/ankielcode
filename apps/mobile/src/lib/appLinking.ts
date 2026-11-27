@@ -18,12 +18,12 @@ export function shouldHandleAppLink(url: string): boolean {
 }
 
 /**
- * Paths of screens this app no longer has (hosted sign-in, onboarding, push notification settings).
+ * Paths of screens this app no longer has (hosted sign-in and onboarding).
  * Anchored to the app-relative path (after `exp://host/--/` in Expo Go) so a file route whose
  * path merely ends in one of these names still opens.
  */
 const REMOVED_LINK_PATH =
-  /^[a-z][\w+.-]*:\/*(?:[^/]*\/--\/)?(?:connect-onboarding|settings\/(?:auth|waitlist|notifications))\/*$/i;
+  /^[a-z][\w+.-]*:\/*(?:[^/]*\/--\/)?(?:connect-onboarding|settings\/(?:auth|waitlist))\/*$/i;
 
 /** Keep the published draft URLs while using the root thread screen. */
 export function restoreDraftLinkState(

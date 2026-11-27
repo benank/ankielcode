@@ -3,10 +3,15 @@ import * as NodeFS from "node:fs";
 import * as NodeModule from "node:module";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
+import { PushAlertKind } from "@ankielcode/contracts";
 import { compileModsAsync, IOSConfig } from "expo/config-plugins";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 
+import gtConfig from "../gt.config.json";
 import withIosAppShortcuts from "./withIosAppShortcuts.cjs";
+
+/** The app's locales as Xcode names them. */
+const IOS_REGIONS = gtConfig.locales.map((locale) => (locale === "zh" ? "zh-Hans" : locale));
 
 const require = NodeModule.createRequire(import.meta.url);
 const projectRoots: string[] = [];
@@ -91,13 +96,36 @@ describe("withIosAppShortcuts", () => {
         : [],
     );
     expect(catalogTypes).toEqual(["text.json.xcstrings", "text.json.xcstrings"]);
-    expect(project.hasKnownRegion('"zh-Hans"')).toBe(true);
+    for (const region of IOS_REGIONS) {
+      expect(project.hasKnownRegion(region.includes("-") ? `"${region}"` : region)).toBe(true);
+    }
     for (const file of [
       "AnkielAppShortcuts.swift",
       "AppShortcuts.xcstrings",
       "Localizable.xcstrings",
     ]) {
       expect(NodeFS.existsSync(NodePath.join(projectRoot, "ios/HelloWorld", file))).toBe(true);
+    }
+  });
+
+  // iOS shows a missing APNs `loc-key` as the raw key, so the server's keys need every language.
+  it("defines every push alert loc-key in every app language", () => {
+    const catalog = JSON.parse(
+      NodeFS.readFileSync(
+        NodePath.join(__dirname, "../modules/ankiel-app-intents/app-target/Localizable.xcstrings"),
+        "utf8",
+      ),
+    ) as {
+      strings: Record<
+        string,
+        { localizations?: Record<string, { stringUnit?: { value?: string } }> }
+      >;
+    };
+    for (const kind of PushAlertKind.literals) {
+      const localizations = catalog.strings[`ANKIEL_PUSH_${kind.toUpperCase()}`]?.localizations;
+      for (const region of ["en", ...IOS_REGIONS]) {
+        expect(localizations?.[region]?.stringUnit?.value, `${kind} in ${region}`).toBeTruthy();
+      }
     }
   });
 

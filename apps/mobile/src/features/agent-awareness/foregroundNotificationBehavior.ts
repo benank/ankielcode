@@ -16,13 +16,7 @@ const SUPPRESS: NotificationBehavior = {
   shouldSetBadge: false,
 };
 
-export function foregroundNotificationBehavior(
-  notification: Notification,
-  deepLinkOnScreen: string | null,
-): NotificationBehavior {
-  const target = extractAgentNotificationDeepLink({ notification });
-  if (target !== null && target === deepLinkOnScreen) {
-    return SUPPRESS;
-  }
-  return SHOW;
+/** The open app already shows what an agent alert says, so agent alerts stay quiet in it. */
+export function foregroundNotificationBehavior(notification: Notification): NotificationBehavior {
+  return extractAgentNotificationDeepLink({ notification }) === null ? SHOW : SUPPRESS;
 }

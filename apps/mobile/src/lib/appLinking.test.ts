@@ -39,7 +39,6 @@ describe("removed deep links", () => {
     "ankielcode-dev://connect-onboarding/?source=x",
     "ankielcode://settings/waitlist",
     "ankielcode://settings/auth",
-    "ankielcode://settings/notifications",
     "exp://192.168.1.2:8081/--/settings/auth",
   ])("ignores %s", (url) => {
     expect(shouldHandleAppLink(url)).toBe(false);
@@ -47,6 +46,7 @@ describe("removed deep links", () => {
 
   it.each([
     "ankielcode://settings",
+    "ankielcode://settings/notifications",
     "ankielcode://settings/authors",
     "ankielcode://pair?next=settings/auth",
     "ankielcode://threads/env/thread/files/scripts/connect-onboarding",

@@ -16,6 +16,7 @@ import {
   PullRequestListState,
   type ProviderInstanceId,
   PullRequestMergeMethod,
+  PushAlertKind,
   type SidebarProjectGroupingMode,
 } from "@ankielcode/contracts";
 import { ToolCallVisibility } from "@ankielcode/contracts/settings";
@@ -156,6 +157,10 @@ export interface Preferences {
   readonly mathRenderingEnabled?: boolean;
   /** Haptic ticks while a reply streams. Unset means on. */
   readonly streamHapticsEnabled?: boolean;
+  /** Relay push alerts. Unset means never turned on, so nothing is unregistered. */
+  readonly pushNotificationsEnabled?: boolean;
+  /** Alert kinds to push. Unset means all of them. */
+  readonly pushNotificationKinds?: readonly PushAlertKind[];
   readonly collapsedProjectGroups?: readonly string[];
   readonly dismissedDatabaseStorageNotices?: readonly string[];
   /** Hardware-keyboard Return behavior in the composer. */
@@ -224,6 +229,7 @@ export class MobilePreferencesStore extends Context.Service<
 >()("@ankielcode/mobile/persistence/mobile-preferences/MobilePreferencesStore") {}
 
 const isToolCallVisibility = Schema.is(ToolCallVisibility);
+const isPushAlertKind = Schema.is(PushAlertKind);
 const isPullRequestMergeMethod = Schema.is(PullRequestMergeMethod);
 
 function sanitizePreferences(parsed: Preferences): Preferences {
@@ -247,6 +253,8 @@ function sanitizePreferences(parsed: Preferences): Preferences {
     codeWordBreak?: boolean;
     mathRenderingEnabled?: boolean;
     streamHapticsEnabled?: boolean;
+    pushNotificationsEnabled?: boolean;
+    pushNotificationKinds?: readonly PushAlertKind[];
     collapsedProjectGroups?: readonly string[];
     dismissedDatabaseStorageNotices?: readonly string[];
     composerEnterBehavior?: ComposerEnterBehavior;
@@ -345,6 +353,12 @@ function sanitizePreferences(parsed: Preferences): Preferences {
     preferences.mathRenderingEnabled = parsed.mathRenderingEnabled;
   if (typeof parsed.streamHapticsEnabled === "boolean") {
     preferences.streamHapticsEnabled = parsed.streamHapticsEnabled;
+  }
+  if (typeof parsed.pushNotificationsEnabled === "boolean") {
+    preferences.pushNotificationsEnabled = parsed.pushNotificationsEnabled;
+  }
+  if (Array.isArray(parsed.pushNotificationKinds)) {
+    preferences.pushNotificationKinds = parsed.pushNotificationKinds.filter(isPushAlertKind);
   }
   if (Array.isArray(parsed.collapsedProjectGroups)) {
     preferences.collapsedProjectGroups = parsed.collapsedProjectGroups.filter(

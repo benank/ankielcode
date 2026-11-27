@@ -5,10 +5,24 @@ import { DEFAULT_LOCALE } from "./locales";
 export type MessageResolver = ReturnType<typeof useMessages>;
 
 let activeLocale = DEFAULT_LOCALE;
+const localeListeners = new Set<() => void>();
 
 /** I18nProvider calls this once the locale's catalog is in GT's cache. */
 export function setActiveLocale(locale: string): void {
+  if (locale === activeLocale) return;
   activeLocale = locale;
+  for (const listener of localeListeners) listener();
+}
+
+export function getActiveLocale(): string {
+  return activeLocale;
+}
+
+export function subscribeActiveLocale(listener: () => void): () => void {
+  localeListeners.add(listener);
+  return () => {
+    localeListeners.delete(listener);
+  };
 }
 
 function resolve(message: string, variables: Parameters<MessageResolver>[1] = {}): string {

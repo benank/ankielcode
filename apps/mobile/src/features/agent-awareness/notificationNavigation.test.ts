@@ -1,6 +1,7 @@
 import type { NotificationResponse } from "expo-notifications";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
+import { foregroundNotificationBehavior } from "./foregroundNotificationBehavior";
 import { consumeLastAgentNotificationResponse } from "./notificationResponseConsumer";
 
 import {
@@ -73,6 +74,12 @@ describe("extractAgentNotificationDeepLink", () => {
         }),
       ),
     ).toBe("/threads/env%201/thread%2F2");
+    // A relay push's APNs `body`, which expo-notifications exposes as `content.data`.
+    expect(
+      extractAgentNotificationDeepLink(
+        responseWithData({ environmentId: "env", threadId: "thread", kind: "approval" }),
+      ),
+    ).toBe("/threads/env/thread");
   });
 
   it("falls back to ids when explicit deep link is not an agent thread route", () => {
@@ -101,6 +108,21 @@ describe("extractAgentNotificationDeepLink", () => {
       extractAgentNotificationDeepLink(responseWithData({ deepLink: "/threads/env/thread?x=1" })),
     ).toBeNull();
     expect(extractAgentNotificationDeepLink({})).toBeNull();
+  });
+});
+
+describe("foregroundNotificationBehavior", () => {
+  it("keeps agent alerts quiet while the app is open and shows other notifications", () => {
+    const notification = (data: Record<string, unknown>) =>
+      responseWithData(data).notification as unknown as Parameters<
+        typeof foregroundNotificationBehavior
+      >[0];
+    expect(
+      foregroundNotificationBehavior(
+        notification({ environmentId: "env", threadId: "thread", kind: "completed" }),
+      ).shouldShowBanner,
+    ).toBe(false);
+    expect(foregroundNotificationBehavior(notification({})).shouldShowBanner).toBe(true);
   });
 });
 

@@ -1,6 +1,7 @@
 import type { EnvironmentId } from "@ankielcode/contracts";
 
 import { environmentCatalog } from "../../connection/catalog";
+import { unregisterPushBeforeRemoval } from "../agent-awareness/pushRemoval";
 import {
   connectPairingUrl as connectPairingUrlAtom,
   updateBearerConnection,
@@ -25,8 +26,10 @@ export function useConnectionController() {
       pairingUrl,
       ...(expectedEnvironmentId === undefined ? {} : { expectedEnvironmentId }),
     });
-  const removeEnvironment = (environmentId: EnvironmentId) =>
-    removeEnvironmentMutation(environmentId);
+  const removeEnvironment = async (environmentId: EnvironmentId) => {
+    await unregisterPushBeforeRemoval(environmentId);
+    return removeEnvironmentMutation(environmentId);
+  };
   const setEnvironmentEnabled = (environmentId: EnvironmentId, enabled: boolean) =>
     setEnvironmentEnabledMutation({ environmentId, enabled });
   const updateEnvironment = (

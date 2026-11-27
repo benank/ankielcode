@@ -53,6 +53,12 @@ const SETTINGS_SEARCH_TERMS = {
     msg("new line", { $context: "settings search keyword" }),
     msg("hardware keyboard", { $context: "settings search keyword" }),
   ],
+  SettingsNotifications: [
+    msg("push notifications", { $context: "settings search keyword" }),
+    msg("alerts", { $context: "settings search keyword" }),
+    msg("approval", { $context: "settings search keyword" }),
+    msg("relay", { $context: "settings search keyword" }),
+  ],
   SettingsVoice: [
     msg("microphone", { $context: "settings search keyword" }),
     msg("dictation", { $context: "settings search keyword" }),

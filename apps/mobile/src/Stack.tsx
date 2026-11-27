@@ -122,6 +122,7 @@ import {
   ScheduledTaskThreadPickerRouteScreen,
 } from "./features/settings/ScheduledTaskPickerScreens";
 import { SettingsKeyboardRouteScreen } from "./features/settings/SettingsKeyboardRouteScreen";
+import { SettingsNotificationsRouteScreen } from "./features/settings/SettingsNotificationsRouteScreen";
 import { SettingsLegalRouteScreen } from "./features/settings/SettingsLegalRouteScreen";
 import { SettingsVoiceRouteScreen } from "./features/settings/SettingsVoiceRouteScreen";
 import { SettingsVoiceModelsRouteScreen } from "./features/settings/SettingsVoiceModelsRouteScreen";
@@ -183,6 +184,7 @@ const ROUTE_TITLES: Readonly<Record<string, string>> = {
   SettingsLanguage: msg("Language"),
   SettingsProjectOverview: msg("Projects"),
   SettingsKeyboard: msg("Keyboard"),
+  SettingsNotifications: msg("Notifications"),
   SettingsVoice: msg("Voice"),
   SettingsFollowUp: msg("Chat", { $context: "noun, settings page title" }),
   SettingsScheduledTasks: msg("Scheduled tasks"),
@@ -334,6 +336,11 @@ const SETTINGS_SCREENS = {
   SettingsKeyboard: createNativeStackScreen({
     screen: SettingsKeyboardRouteScreen,
     linking: "settings/keyboard",
+    options: settingsPage(),
+  }),
+  SettingsNotifications: createNativeStackScreen({
+    screen: SettingsNotificationsRouteScreen,
+    linking: "settings/notifications",
     options: settingsPage(),
   }),
   SettingsVoice: createNativeStackScreen({
