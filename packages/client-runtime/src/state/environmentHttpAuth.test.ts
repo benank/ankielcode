@@ -3,7 +3,6 @@ import {
   EnvironmentId,
   ORCHESTRATION_PROTOCOL_HEADER,
   ORCHESTRATION_PROTOCOL_VERSION_TEXT,
-  ProjectId,
   ThreadId,
   type AuthSessionState,
   type OrchestrationV2ShellSnapshot,
@@ -34,7 +33,6 @@ import {
 import * as Dpop from "../dpop.ts";
 import { type RemoteEnvironmentRequestError } from "../rpc/http.ts";
 import * as RpcHttp from "../rpc/http.ts";
-import * as PullRequestDiffLoader from "./pullRequestDiffHttp.ts";
 import { fetchEnvironmentSessionState, sessionDeniesScope } from "./session.ts";
 import { fetchEnvironmentShellSnapshot } from "./shellSnapshotHttp.ts";
 import * as ThreadSnapshotLoader from "./threadSnapshotHttp.ts";
@@ -67,12 +65,6 @@ const PREPARED: PreparedConnection = {
   },
   target: TARGET,
 };
-const DIFF = {
-  projectId: ProjectId.make("project-1"),
-  repository: "owner/repository",
-  number: 42,
-};
-const DIFF_RESULT = { patch: "diff --git a/file.ts b/file.ts", truncated: false, nextCursor: null };
 const AUTH = {
   policy: "remote-reachable",
   bootstrapMethods: ["one-time-token"],
@@ -198,21 +190,8 @@ const LOADERS: ReadonlyArray<{
   readonly expected: unknown;
   readonly load: (
     input: HttpInput,
-  ) => Effect.Effect<
-    unknown,
-    RemoteEnvironmentRequestError | PullRequestDiffLoader.PullRequestDiffCredentialRejectedError,
-    HttpClient.HttpClient
-  >;
+  ) => Effect.Effect<unknown, RemoteEnvironmentRequestError, HttpClient.HttpClient>;
 }> = [
-  {
-    name: "PR diff",
-    method: "POST",
-    path: "/api/pull-requests/diff",
-    response: DIFF_RESULT,
-    expected: DIFF_RESULT,
-    load: (input: HttpInput) =>
-      PullRequestDiffLoader.fetchEnvironmentPullRequestDiff({ ...input, diff: DIFF }),
-  },
   {
     name: "session permissions",
     method: "GET",
@@ -227,14 +206,7 @@ const LOADERS: ReadonlyArray<{
     path: "/api/orchestration/shell",
     response: SHELL,
     expected: SHELL,
-    load: (input: HttpInput) =>
-      fetchEnvironmentShellSnapshot(input).pipe(
-        Effect.map((answer) => {
-          if ("resumable" in answer) return answer;
-          const { loadPullRequests: _links, ...snapshot } = answer;
-          return snapshot;
-        }),
-      ),
+    load: fetchEnvironmentShellSnapshot,
   },
   {
     name: "thread transcript",
@@ -370,24 +342,26 @@ describe("authenticated environment HTTP requests", () => {
       }),
   );
 
-  it.effect("retries a rejected diff once with a new token and proof", () =>
+  it.effect("retries a rejected request once with a new token and proof", () =>
     Effect.gen(function* () {
       const harness = makeHarness((requestNumber) =>
-        requestNumber === 1 ? credentialRejectedResponse() : Response.json(DIFF_RESULT),
+        requestNumber === 1
+          ? credentialRejectedResponse()
+          : Response.json(encodeThreadTranscript(TRANSCRIPT)),
       );
-      const result = yield* PullRequestDiffLoader.fetchEnvironmentPullRequestDiff({
+      const result = yield* fetchEnvironmentThreadTranscript({
         ...harness.input,
-        diff: DIFF,
+        threadId: TRANSCRIPT.threadId,
       }).pipe(Effect.provide(harness.httpLayer));
 
-      expect(result).toEqual(DIFF_RESULT);
+      expect(result).toEqual(TRANSCRIPT);
       expect(harness.authorizations).toEqual([
         { connection: DIRECT },
         { connection: DIRECT, rejectedAccessToken: "current-token" },
       ]);
       expect(harness.calls.map((call) => call.url)).toEqual([
-        `${ORIGIN}/api/pull-requests/diff`,
-        `${ORIGIN}/api/pull-requests/diff`,
+        `${ORIGIN}/api/orchestration/threads/${TRANSCRIPT.threadId}/transcript`,
+        `${ORIGIN}/api/orchestration/threads/${TRANSCRIPT.threadId}/transcript`,
       ]);
       expect(
         harness.calls.map((call) => new Headers(call.init.headers).get("authorization")),
@@ -397,11 +371,10 @@ describe("authenticated environment HTTP requests", () => {
         "proof-2",
       ]);
       expect(harness.proofs[1]).toEqual({
-        method: "POST",
-        url: `${ORIGIN}/api/pull-requests/diff`,
+        method: "GET",
+        url: `${ORIGIN}/api/orchestration/threads/${TRANSCRIPT.threadId}/transcript`,
         accessToken: "renewed-token",
       });
-      expect(harness.calls[1]!.init.body).toEqual(harness.calls[0]!.init.body);
     }),
   );
 
@@ -447,13 +420,14 @@ describe("authenticated environment HTTP requests", () => {
   it.effect("preserves the credential rejection after the one recovery attempt fails", () =>
     Effect.gen(function* () {
       const harness = makeHarness(() => credentialRejectedResponse());
-      const error = yield* PullRequestDiffLoader.fetchEnvironmentPullRequestDiff({
+      const error = yield* fetchEnvironmentThreadTranscript({
         ...harness.input,
-        diff: DIFF,
+        threadId: TRANSCRIPT.threadId,
       }).pipe(Effect.provide(harness.httpLayer), Effect.flip);
 
       expect(error).toMatchObject({
-        _tag: "PullRequestDiffCredentialRejectedError",
+        _tag: "EnvironmentAuthInvalidError",
+        reason: "invalid_credential",
         traceId: "trace-rejected",
       });
       expect(harness.calls).toHaveLength(2);
@@ -494,9 +468,9 @@ describe("authenticated environment HTTP requests", () => {
   ])("does not renew or retry on $name", ({ reply, errorTag }) =>
     Effect.gen(function* () {
       const harness = makeHarness(reply);
-      const error = yield* PullRequestDiffLoader.fetchEnvironmentPullRequestDiff({
+      const error = yield* fetchEnvironmentThreadTranscript({
         ...harness.input,
-        diff: DIFF,
+        threadId: TRANSCRIPT.threadId,
       }).pipe(Effect.provide(harness.httpLayer), Effect.flip);
 
       expect(error._tag).toBe(errorTag);

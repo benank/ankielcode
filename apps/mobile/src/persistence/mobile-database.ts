@@ -5,10 +5,9 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import type { SQLiteDatabase } from "expo-sqlite";
 
 const DATABASE_NAME = "ankielcode-client.db";
-const DATABASE_SCHEMA_VERSION = 1;
+const DATABASE_SCHEMA_VERSION = 2;
 
 export const ClientCacheKind = Schema.Literals([
   "shell",
@@ -16,7 +15,6 @@ export const ClientCacheKind = Schema.Literals([
   "server-config",
   "vcs-refs",
   "project-favicon",
-  "pull-request",
 ]);
 export type ClientCacheKind = typeof ClientCacheKind.Type;
 
@@ -164,7 +162,10 @@ const makeAvailable = Effect.gen(function* () {
             `);
       });
       if ((schema?.user_version ?? 0) < DATABASE_SCHEMA_VERSION) {
-        await database.execAsync(`PRAGMA user_version = ${DATABASE_SCHEMA_VERSION};`);
+        // Version 2 dropped the pull request cache; its rows no longer decode as a cache kind.
+        await database.execAsync(
+          `DELETE FROM client_cache WHERE kind = 'pull-request'; PRAGMA user_version = ${DATABASE_SCHEMA_VERSION};`,
+        );
       }
     },
     catch: databaseError("migrate"),
@@ -200,54 +201,28 @@ const makeAvailable = Effect.gen(function* () {
       }).pipe(Effect.map((rows) => rows.map((row) => row.payload))),
     ),
     saveCache: Effect.fn("MobileDatabase.saveCache")(
-      (environmentId, kind, cacheKey, schemaVersion, payload) =>
-        Effect.tryPromise({
-          try: async () => {
-            // Bound offline PR caches to 32 MiB and 256 responses per environment; reject huge diffs that would evict everything.
-            if (
-              kind === "pull-request" &&
-              new TextEncoder().encode(payload).length > 4 * 1024 * 1024
-            )
-              return;
-            const save = async (transaction: SQLiteDatabase) => {
-              await transaction.runAsync(
-                `INSERT INTO client_cache
-                  (environment_id, kind, cache_key, schema_version, payload, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?)
-                 ON CONFLICT (environment_id, kind, cache_key) DO UPDATE SET
-                   schema_version = excluded.schema_version,
-                   payload = excluded.payload,
-                   updated_at = excluded.updated_at`,
-                environmentId,
-                kind,
-                cacheKey,
-                schemaVersion,
-                payload,
-                Date.now(),
-              );
-              if (kind === "pull-request") {
-                await transaction.runAsync(
-                  `DELETE FROM client_cache WHERE environment_id = ? AND kind = 'pull-request'
-                   AND cache_key IN (
-                     SELECT cache_key FROM (
-                       SELECT cache_key, updated_at,
-                         ROW_NUMBER() OVER (ORDER BY updated_at DESC, cache_key) AS position,
-                         SUM(LENGTH(CAST(payload AS BLOB))) OVER (
-                           ORDER BY updated_at DESC, cache_key
-                         ) AS total_bytes
-                       FROM client_cache WHERE environment_id = ? AND kind = 'pull-request'
-                     ) WHERE position > 256 OR total_bytes > 33554432 OR updated_at < ?
-                   )`,
-                  environmentId,
-                  environmentId,
-                  Date.now() - 30 * 24 * 60 * 60_000,
-                );
-              }
-            };
-            await save(database);
-          },
+      function* (environmentId, kind, cacheKey, schemaVersion, payload) {
+        const now = yield* Clock.currentTimeMillis;
+        yield* Effect.tryPromise({
+          try: () =>
+            database.runAsync(
+              `INSERT INTO client_cache
+                (environment_id, kind, cache_key, schema_version, payload, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?)
+               ON CONFLICT (environment_id, kind, cache_key) DO UPDATE SET
+                 schema_version = excluded.schema_version,
+                 payload = excluded.payload,
+                 updated_at = excluded.updated_at`,
+              environmentId,
+              kind,
+              cacheKey,
+              schemaVersion,
+              payload,
+              now,
+            ),
           catch: databaseError("save-cache"),
-        }).pipe(Effect.asVoid),
+        });
+      },
     ),
     removeCache: Effect.fn("MobileDatabase.removeCache")((environmentId, kind, cacheKey) =>
       Effect.tryPromise({

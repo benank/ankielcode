@@ -3,7 +3,6 @@ import {
   type ProviderSkillSourceKind,
 } from "@ankielcode/client-runtime/providerSkills";
 import type {
-  PullRequestContextMetadata,
   ScopedThreadRef,
   ServerProviderSkill,
   ServerProviderSlashCommand,
@@ -22,15 +21,7 @@ import { ProviderIcon } from "../../components/ProviderIcon";
 import type { MessageResolver } from "../../i18n/messages";
 import { cn } from "../../lib/cn";
 import type { ModelOption } from "../../lib/modelOptions";
-import { pullRequestStatus } from "../pull-requests/pullRequestStatus";
 export type ComposerCommandItem =
-  | {
-      readonly id: string;
-      readonly type: "pull-request";
-      readonly pullRequest: PullRequestContextMetadata;
-      readonly label: string;
-      readonly description: string;
-    }
   | {
       readonly id: string;
       readonly type: "path";
@@ -79,7 +70,6 @@ interface ComposerCommandPopoverProps {
   readonly items: ReadonlyArray<ComposerCommandItem>;
   readonly triggerKind: ComposerTriggerKind | null;
   readonly isLoading: boolean;
-  readonly error?: string | null;
   readonly onSelect: (item: ComposerCommandItem) => void;
 }
 
@@ -112,8 +102,6 @@ const SKILL_SOURCE_SYMBOL_BY_KIND: Record<ProviderSkillSourceKind, AppSymbolName
 
 function itemIcon(item: ComposerCommandItem): AppSymbolName | null {
   switch (item.type) {
-    case "pull-request":
-      return pullRequestStatus(item.pullRequest).icon;
     case "slash-command":
     case "provider-slash-command":
       return "terminal";
@@ -133,8 +121,6 @@ function groupLabel(
   resolve: MessageResolver,
 ): string | null {
   switch (triggerKind) {
-    case "pull-request":
-      return resolve(msg("Pull requests"));
     case "slash-command":
       return resolve(msg("Commands"));
     case "skill":
@@ -157,8 +143,6 @@ function emptyText(
     return triggerKind === "path" ? resolve(msg("Searching files…")) : resolve(msg("Loading…"));
   }
   switch (triggerKind) {
-    case "pull-request":
-      return resolve(msg("No matching pull requests."));
     case "path":
       return resolve(msg("No matching mentions."));
     case "skill":
@@ -197,11 +181,7 @@ const CommandRow = memo(function CommandRow(props: {
         <SymbolView
           name={iconName}
           size={14}
-          tintColorClassName={
-            props.item.type === "pull-request"
-              ? pullRequestStatus(props.item.pullRequest).tint
-              : "accent-icon-subtle"
-          }
+          tintColorClassName="accent-icon-subtle"
           type="monochrome"
         />
       ) : null}
@@ -262,7 +242,7 @@ export const ComposerCommandPopover = memo(function ComposerCommandPopover(
       ) : (
         <View className="px-3.5 py-2.5">
           <Text className="text-xs text-foreground-tertiary">
-            {props.error ?? emptyText(props.triggerKind, props.isLoading, m)}
+            {emptyText(props.triggerKind, props.isLoading, m)}
           </Text>
         </View>
       )}

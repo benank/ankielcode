@@ -72,9 +72,6 @@ class AnkielWorkspaceNavigationModule : Module() {
       Prop("tabTitles") { view: AnkielWorkspaceNavigationView, value: Map<String, String> ->
         view.tabTitles = value
       }
-      Prop("expandedTabTitles") { view: AnkielWorkspaceNavigationView, value: Map<String, String> ->
-        view.expandedTabTitles = value
-      }
       Prop("newThreadTitle") { view: AnkielWorkspaceNavigationView, value: String ->
         view.newThreadTitle = value
       }
@@ -135,9 +132,8 @@ class AnkielWorkspaceNavigationView(
   private val onTabSelected by EventDispatcher()
   private val onNewThread by EventDispatcher()
   private val onOverlayChange by EventDispatcher()
-  var tabs by mutableStateOf(listOf("threads", "pullRequests", "issues", "usage", "settings"))
+  var tabs by mutableStateOf(listOf("threads", "issues", "usage", "settings"))
   var tabTitles by mutableStateOf(emptyMap<String, String>())
-  var expandedTabTitles by mutableStateOf(emptyMap<String, String>())
   var newThreadTitle by mutableStateOf("New thread")
   var selectedTab by mutableStateOf("threads")
   var rail by mutableStateOf(false)
@@ -246,7 +242,7 @@ class AnkielWorkspaceNavigationView(
                 role = Role.Tab,
                 onClick = { onTabSelected(mapOf("tab" to tab)) },
               )
-              .semantics { contentDescription = expandedTabTitle(tab) }
+              .semantics { contentDescription = tabTitle(tab) }
               .padding(4.dp)
               .background(if (selected) Color(indicatorColor) else Color.Transparent, CircleShape),
             contentAlignment = Alignment.Center,
@@ -394,7 +390,7 @@ class AnkielWorkspaceNavigationView(
   @Composable
   private fun railItem(tab: String, fraction: Float, onClick: () -> Unit) {
     val selected = selectedTab == tab
-    val title = expandedTabTitle(tab)
+    val title = tabTitle(tab)
     val tint = Color(if (selected) selectedColor else unselectedColor)
     Box(
       Modifier
@@ -426,21 +422,16 @@ class AnkielWorkspaceNavigationView(
 
   private fun tabTitle(tab: String) = tabTitles[tab] ?: when (tab) {
     "threads" -> "Chats"
-    "pullRequests" -> "Pulls"
     "issues" -> "Issues"
     "workflows" -> "Workflows"
     "usage" -> "Usage"
     else -> "Settings"
   }
 
-  private fun expandedTabTitle(tab: String) =
-    expandedTabTitles[tab] ?: if (tab == "pullRequests") "Pull requests" else tabTitle(tab)
-
   @Composable
   private fun tabIconPainter(tab: String) = painterResource(
     when (tab) {
       "threads" -> R.drawable.ankiel_chats
-      "pullRequests" -> R.drawable.ankiel_pull_requests
       "issues" -> R.drawable.ankiel_issues
       "workflows" -> R.drawable.ankiel_workflows
       "usage" -> R.drawable.ankiel_usage

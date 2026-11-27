@@ -15,7 +15,6 @@ export function WorkspaceEmptyDetail(props: {
   readonly onAddConnection?: () => void;
 }) {
   const gt = useGT();
-  const pullRequests = props.tab === "pullRequests";
   const issues = props.tab === "issues";
   const settings = props.tab === "settings";
   if (props.tab !== undefined && props.tab !== "settings" && !workspaceUsesColumns(props.tab))
@@ -57,24 +56,20 @@ export function WorkspaceEmptyDetail(props: {
             <Text className="text-center text-xl font-ankiel-bold">
               {settings
                 ? gt("Select a setting")
-                : pullRequests
-                  ? gt("Select a pull request")
-                  : issues
-                    ? gt("Select an issue")
-                    : gt("Select a thread")}
+                : issues
+                  ? gt("Select an issue")
+                  : gt("Select a thread")}
             </Text>
             <Text className="text-center text-base text-foreground-muted">
               {settings
                 ? gt("Choose a page from the sidebar.")
-                : pullRequests
-                  ? gt("Choose a pull request from the sidebar to review it.")
-                  : issues
-                    ? gt("Choose an issue from the sidebar to read it.")
-                    : Platform.OS === "android"
-                      ? gt("Choose a thread from the sidebar or start a new thread.")
-                      : gt("Choose a thread from the sidebar or start a new task.")}
+                : issues
+                  ? gt("Choose an issue from the sidebar to read it.")
+                  : Platform.OS === "android"
+                    ? gt("Choose a thread from the sidebar or start a new thread.")
+                    : gt("Choose a thread from the sidebar or start a new task.")}
             </Text>
-            {props.onStartNewTask && !pullRequests && !issues && !settings ? (
+            {props.onStartNewTask && !issues && !settings ? (
               Platform.OS === "android" ? (
                 <NewThreadButton extended className="mt-2" onPress={props.onStartNewTask} />
               ) : (

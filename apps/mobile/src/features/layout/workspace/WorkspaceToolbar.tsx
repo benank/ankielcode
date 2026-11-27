@@ -25,7 +25,6 @@ import { useWorkspaceCompose } from "./useWorkspaceCompose";
 
 const SEARCH_LABELS = {
   threads: msg("Search threads"),
-  pullRequests: msg("Search pull requests"),
   issues: msg("Search issues"),
   settings: msg("Search settings"),
 } as const;

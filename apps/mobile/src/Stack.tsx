@@ -1,8 +1,5 @@
 import { isDraftThreadRoute } from "./features/threads/thread-route-state";
 import { ComponentCatalogScreen } from "./features/development/ComponentCatalogScreen";
-import { PullRequestGuideStopScreen } from "./features/pull-requests/guide/PullRequestGuideScreen";
-import { PullRequestInlineCommentScreen } from "./features/pull-requests/PullRequestInlineCommentScreen";
-import { PullRequestDiscussionScreen } from "./features/pull-requests/PullRequestDiscussionScreen";
 import { createWorkspaceStackNavigator } from "./features/layout/createWorkspaceStackNavigator";
 import {
   createPathConfigForStaticNavigation,
@@ -28,16 +25,6 @@ import {
   recordHomeTransitionStart,
 } from "./features/home/home-route-visibility";
 import { AndroidWorkspaceTabsProvider } from "./features/layout/workspace/AndroidWorkspaceTabsProvider";
-import {
-  PullRequestRouteScreen,
-  PullRequestFileRouteScreen,
-} from "./features/pull-requests/PullRequestRouteScreen";
-import { PullRequestFilesSheet } from "./features/pull-requests/PullRequestFiles";
-import { PullRequestReviewSheet } from "./features/pull-requests/PullRequestReviewSheet";
-import { PullRequestReviewersScreen } from "./features/pull-requests/PullRequestReviewersScreen";
-import { PullRequestLabelsScreen } from "./features/pull-requests/PullRequestLabelsScreen";
-import { PullRequestEditScreen } from "./features/pull-requests/PullRequestEditScreen";
-import { PullRequestFilterSearchScreen } from "./features/pull-requests/PullRequestFilterSearchScreen";
 import { IssueAssigneesScreen } from "./features/issues/IssueAssigneesScreen";
 import { IssueEditScreen } from "./features/issues/IssueEditScreen";
 import { IssueLabelsScreen } from "./features/issues/IssueLabelsScreen";
@@ -66,7 +53,6 @@ import { GitBranchesSheet } from "./features/threads/git/GitBranchesSheet";
 import { GitCommitSheet } from "./features/threads/git/GitCommitSheet";
 import { GitConfirmSheet } from "./features/threads/git/GitConfirmSheet";
 import { GitOverviewSheet } from "./features/threads/git/GitOverviewSheet";
-import { ThreadPullRequestsSheet } from "./features/threads/ThreadPullRequestsSheet";
 import { ThreadAgentsSheet } from "./features/threads/ThreadAgentsSheet";
 import { UsageLimitsSheet } from "./features/usage/HeaderUsageLimits";
 import { ThreadBackgroundWorkSheet } from "./features/threads/ThreadBackgroundWorkSheet";
@@ -563,54 +549,6 @@ const RootStackConfig = createWorkspaceStackNavigator({
         ...compactBrandHeaderOptions,
       },
     }),
-    PullRequest: createNativeStackScreen({
-      screen: PullRequestRouteScreen,
-      linking: {
-        path: "pull-requests/:environmentId/:projectId/:repository/:number",
-        parse: { number: Number },
-      },
-      options: pageRoute({ duoMinimize: "never" }),
-    }),
-    PullRequestGuideStop: createNativeStackScreen({
-      screen: PullRequestGuideStopScreen,
-      options: pageRoute(),
-    }),
-    PullRequestFile: createNativeStackScreen({
-      screen: PullRequestFileRouteScreen,
-      options: pageRoute(),
-    }),
-    PullRequestFiles: createNativeStackScreen({
-      screen: PullRequestFilesSheet,
-      options: sheetRoute({ detent: 0.6 }),
-    }),
-    PullRequestReviewers: createNativeStackScreen({
-      screen: PullRequestReviewersScreen,
-      options: sheetRoute({ detent: 0.75, itemStyle: "editor", duoMinimize: "never" }),
-    }),
-    PullRequestLabels: createNativeStackScreen({
-      screen: PullRequestLabelsScreen,
-      options: SEARCH_SHEET_ROUTE,
-    }),
-    PullRequestFilterSearch: createNativeStackScreen({
-      screen: PullRequestFilterSearchScreen,
-      options: SEARCH_SHEET_ROUTE,
-    }),
-    PullRequestDiscussion: createNativeStackScreen({
-      screen: PullRequestDiscussionScreen,
-      options: pageRoute(),
-    }),
-    PullRequestInlineComment: createNativeStackScreen({
-      screen: PullRequestInlineCommentScreen,
-      options: sheetRoute({ detent: 0.75, android: "fullScreen" }),
-    }),
-    PullRequestReview: createNativeStackScreen({
-      screen: PullRequestReviewSheet,
-      options: sheetRoute({ detent: 0.75, androidFit: true }),
-    }),
-    PullRequestEdit: createNativeStackScreen({
-      screen: PullRequestEditScreen,
-      options: sheetRoute({ detent: 0.75, androidFit: true }),
-    }),
     Issue: createNativeStackScreen({
       screen: IssueRouteScreen,
       linking: "issues/:environmentId/:projectId/:tracker/:scope/:issueKey",
@@ -789,11 +727,6 @@ const RootStackConfig = createWorkspaceStackNavigator({
     GitOverview: createNativeStackScreen({
       screen: GitOverviewSheet,
       linking: `${THREAD_LINKING_PREFIX}/git`,
-      options: sheetRoute({ detent: 0.55 }),
-    }),
-    ThreadPullRequests: createNativeStackScreen({
-      screen: ThreadPullRequestsSheet,
-      linking: `${THREAD_LINKING_PREFIX}/pull-requests`,
       options: sheetRoute({ detent: 0.55 }),
     }),
     GitCommit: createNativeStackScreen({

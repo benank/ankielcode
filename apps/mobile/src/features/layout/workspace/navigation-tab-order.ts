@@ -1,52 +1,31 @@
 import { msg } from "gt-react-native";
 import type { Preferences } from "../../../persistence/mobile-preferences";
 
-export const NAVIGATION_TAB_ORDER = ["threads", "pullRequests", "issues", "usage"] as const;
+export const NAVIGATION_TAB_ORDER = ["threads", "issues", "usage"] as const;
 /** Built, but left out of the tab bar while workflows are a soft launch on web. */
 type UnlistedTab = "workflows";
 export type NavigationTab = (typeof NAVIGATION_TAB_ORDER)[number] | UnlistedTab;
 
-const SHARED_SLOT_TABS = ["pullRequests", "issues"] as const;
-export type SharedSlotTab = (typeof SHARED_SLOT_TABS)[number];
-
-export function isSharedSlotTab(value: unknown): value is SharedSlotTab {
-  return SHARED_SLOT_TABS.some((tab) => tab === value);
-}
-
-/**
- * Pull requests and issues share one slot in the tab bar. The open one holds it, or else the one
- * opened last; this returns the other, which the bar leaves out.
- */
-function sharedSlotAbsentee(selected: NavigationTab, last: unknown): SharedSlotTab {
-  const holder = isSharedSlotTab(selected) ? selected : last === "issues" ? last : "pullRequests";
-  return holder === "issues" ? "pullRequests" : "issues";
-}
-
 export function workspaceHiddenNavigationTabs(
-  selected: NavigationTab,
   preferences?: Preferences,
-  githubEnabled = true,
+  issuesEnabled = true,
 ): readonly NavigationTab[] {
-  if (!githubEnabled) return SHARED_SLOT_TABS;
   return [
     ...(navigationCustomizationAvailable()
       ? resolveHiddenNavigationTabs(preferences?.hiddenNavigationTabs)
       : []),
-    preferences?.pullRequestTabEnabled === true
-      ? sharedSlotAbsentee(selected, preferences.sharedSlotTab)
-      : "pullRequests",
+    ...(issuesEnabled ? [] : ["issues" as const]),
   ];
 }
 
 export function navigationCustomizationAvailable(
-  registeredSections: number = NAVIGATION_TAB_ORDER.length - 1,
+  registeredSections: number = NAVIGATION_TAB_ORDER.length,
 ) {
   return registeredSections > 4;
 }
 
 export const NAVIGATION_TAB_LABELS: Readonly<Record<NavigationTab, string>> = {
   threads: msg("Threads", { $context: "navigation tab, list of chat threads" }),
-  pullRequests: msg("Pulls", { $context: "navigation tab, pull requests" }),
   issues: msg("Issues", { $context: "navigation tab, issues from an issue tracker" }),
   workflows: msg("Workflows", { $context: "navigation tab, durable workflow runs" }),
   usage: msg("Usage", { $context: "navigation tab, provider usage limits" }),

@@ -62,18 +62,14 @@ on macOS and Ctrl on Windows and Linux, including GNOME, KDE Plasma, Niri, and
 Hyprland. If a custom desktop shortcut takes the same keys, choose another binding
 in Settings.
 
-## Copy pull request references
+## Copy a thread reference
 
-With a PR open in the right panel or on the Pull requests page, use `mod+shift+c`
-to copy its URL and `mod+shift+k` to copy its number with a `#` prefix.
-Both shortcuts can be changed in Settings. Search for “Copy Link or Thread”
-or “Copy Number”. They copy the selected PR and leave terminal input alone.
-Without a PR, `mod+shift+c` copies the thread itself, which pastes into a
-composer as a thread chip.
+`mod+shift+c` copies the current thread, which pastes into a composer as a thread chip. It can be
+changed in Settings and leaves terminal input alone.
 
 ## Find in a diff
 
-Click into a diff in the Diff panel or a pull request's Code tab, then press
+Click into a diff in the Diff panel, then press
 `mod+f` to search every file in it, including folded files and unchanged lines
 hidden between changes. Enter and `Shift+Enter` move between matches, and a
 match in a folded file opens it. Escape closes the search. This shortcut is not

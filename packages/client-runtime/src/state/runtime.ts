@@ -520,7 +520,7 @@ export async function settlePromise<A>(
 }
 
 /** Where a query's answer is persisted, so an action's reply can be saved where a read would be. */
-export const queryPersistenceKey = (label: string, input: unknown): string =>
+const queryPersistenceKey = (label: string, input: unknown): string =>
   JSON.stringify([label, input]);
 
 function environmentRpcKey<Input>(target: {

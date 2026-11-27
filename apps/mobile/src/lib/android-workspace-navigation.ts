@@ -67,7 +67,7 @@ export function returnToAndroidWorkspaceList(
   resetRootStack(navigation, () => ({ ...state, index, routes: state.routes.slice(0, index + 1) }));
 }
 
-// Split view: Thread, PullRequest, and a Settings page picked from the list swap the detail pane
+// Split view: Thread, Issue, and a Settings page picked from the list swap the detail pane
 // rather than stack, so they don't animate. Pages opened from a Settings page crossfade inside the
 // pane's card; the default push edge-extends the incoming page, bleeding a stripe beside the list.
 export function androidWorkspaceDestinationAnimation(
@@ -76,8 +76,7 @@ export function androidWorkspaceDestinationAnimation(
   usesSplitView: boolean,
 ) {
   if (!usesSplitView) return undefined;
-  if (route.name === "Thread" || route.name === "PullRequest" || route.name === "Issue")
-    return "none" as const;
+  if (route.name === "Thread" || route.name === "Issue") return "none" as const;
   if (route.name === "Settings" || !isSettingsRoute(route.name)) return undefined;
   const below = routes[routes.findIndex((candidate) => candidate.key === route.key) - 1];
   return below?.name === "Settings" ? ("none" as const) : ("fade" as const);

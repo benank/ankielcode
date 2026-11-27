@@ -218,21 +218,10 @@ A scheduled task that posts into one thread keeps running after you archive that
 each run fails. Settle the thread instead, or move or pause the task in **Settings → Scheduled
 tasks**.
 
-## Link a pull request
-
-The server finds the PR for each unsettled thread's saved branch, even when your
-apps are closed. Settled threads keep their saved links. Update the server if
-automatic branch links do not appear.
-
-On desktop, right-click a pull request link in a thread and choose
-**Link to thread** to select a different PR. Use **Unlink from thread** on the
-same link to return to the branch PR, if one exists.
-The linked pull request participates in automatic settlement.
-
 ## Find and reference work
 
 On desktop, open the command palette with `Cmd/Ctrl+K` to search threads
-across connected environments by title, branch, pull request, or project.
+across connected environments by title, branch, or project.
 Threads you open often or recently rank higher, and for three weeks the thread
 you last picked for a query ranks higher when you type that query again.
 Threads whose messages contain all your words appear below, under **In
@@ -243,11 +232,9 @@ the matching message; on an iPad with a keyboard, `Cmd+K` opens the same
 palette.
 
 Use **Settings → Keybindings** to find or customize shortcuts for searching files
-and copying a thread reference. A copied reference uses the thread's pull request
-link when available. Otherwise it copies a thread reference you can paste into an
-Ankiel Code composer as a thread chip. To copy the thread even
-when it has a PR, choose **Copy → Thread** from its context menu, or **Copy
-thread** from its long-press menu on mobile.
+and copying a thread reference. A copied reference pastes into an Ankiel Code
+composer as a thread chip. You can also choose **Copy → Thread** from a thread's
+context menu, or **Copy thread** from its long-press menu on mobile.
 **Thread ID** copies the bare ID for scripts and the `ankiel` CLI. See
 [keybindings](./keybindings.md) for custom configuration.
 

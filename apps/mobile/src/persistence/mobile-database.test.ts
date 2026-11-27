@@ -9,7 +9,7 @@ vi.mock("expo-sqlite", () => ({ openDatabaseAsync }));
 
 import * as MobileDatabase from "./mobile-database";
 
-describe("offline pull request cache", () => {
+describe("offline client cache", () => {
   const environmentId = "cached-environment" as import("@ankielcode/contracts").EnvironmentId;
   const otherEnvironment = "other-environment" as import("@ankielcode/contracts").EnvironmentId;
 
@@ -42,18 +42,36 @@ describe("offline pull request cache", () => {
     Effect.gen(function* () {
       yield* Effect.promise(sqliteDatabase);
       const database = yield* MobileDatabase.make;
-      yield* database.saveCache(environmentId, "pull-request", "v1:list", 1, '{"entries":[]}');
-      yield* database.saveCache(otherEnvironment, "pull-request", "v1:list", 1, "other");
-      expect(yield* database.loadCache(environmentId, "pull-request", "v1:list")).toEqual(
+      yield* database.saveCache(environmentId, "thread", "v1:list", 1, '{"entries":[]}');
+      yield* database.saveCache(otherEnvironment, "thread", "v1:list", 1, "other");
+      expect(yield* database.loadCache(environmentId, "thread", "v1:list")).toEqual(
         Option.some('{"entries":[]}'),
       );
       yield* database.clearEnvironmentCache(environmentId);
-      expect((yield* database.loadCache(environmentId, "pull-request", "v1:list"))._tag).toBe(
-        "None",
-      );
-      expect((yield* database.loadCache(otherEnvironment, "pull-request", "v1:list"))._tag).toBe(
-        "Some",
-      );
+      expect((yield* database.loadCache(environmentId, "thread", "v1:list"))._tag).toBe("None");
+      expect((yield* database.loadCache(otherEnvironment, "thread", "v1:list"))._tag).toBe("Some");
+    }),
+  );
+
+  it.effect("drops pull request rows an older build cached", () =>
+    Effect.gen(function* () {
+      const sqlite = yield* Effect.promise(sqliteDatabase);
+      sqlite.exec(`
+        CREATE TABLE client_cache (
+          environment_id TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          cache_key TEXT NOT NULL,
+          schema_version INTEGER NOT NULL,
+          payload TEXT NOT NULL,
+          updated_at INTEGER NOT NULL,
+          PRIMARY KEY (environment_id, kind, cache_key)
+        ) WITHOUT ROWID;
+        INSERT INTO client_cache VALUES ('${environmentId}', 'pull-request', 'v1:list', 1, '{}', 1);
+        INSERT INTO client_cache VALUES ('${environmentId}', 'thread', 'v1:list', 1, '{}', 1);
+      `);
+      const database = yield* MobileDatabase.make;
+      const summary = yield* database.inspectCaches;
+      expect(summary.map((row) => row.kind)).toEqual(["thread"]);
     }),
   );
 });

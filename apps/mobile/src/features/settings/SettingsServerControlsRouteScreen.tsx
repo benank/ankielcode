@@ -55,10 +55,9 @@ const PAGE_PROJECT_KEYS: Record<SettingsPage, readonly ProjectScopedServerSettin
     "defaultThreadEnvMode",
     "responseStreamingMode",
     "enableAgentBrowserAccess",
-    "sidebarAutoSettleOnMerge",
     "sidebarAutoSettleAfterDays",
   ],
-  "source-control": ["defaultAutoPull", "removeAgentCreditsOnMerge"],
+  "source-control": ["defaultAutoPull"],
   worktrees: [
     "newWorktreesStartFromOrigin",
     "worktreeSubmodules",
@@ -137,7 +136,6 @@ const STREAMING_CHOICES: ReadonlyArray<{
 
 // Only servers with thread auto-settlement store these, so other targets get the rest of a patch.
 const AUTO_SETTLE_SETTING_KEYS: ReadonlySet<string> = new Set([
-  "sidebarAutoSettleOnMerge",
   "sidebarAutoSettleAfterDays",
   "autoResumeLimitedThreads",
   "snoozeLimitedThreads",
@@ -406,18 +404,6 @@ function ServerSettingsDetail(props: { readonly page: SettingsPage }) {
                     canWrite={(environmentId) => writableEnvironments.has(environmentId)}
                   />
                 )}
-                <SettingsSection title={gt("Pull requests")}>
-                  <SettingsSwitchRow
-                    icon={PullRequestGlyph.merged}
-                    label={gt("Remove agent credits when merging")}
-                    subtitle={gt(
-                      "Remove recognized agent credits from merge and squash messages on hosts that support it, keeping human co-authors. Includes auto-merge. Excludes merge queues, stack merges, and existing commits.",
-                    )}
-                    value={uniform("removeAgentCreditsOnMerge")}
-                    disabled={disabledFor("removeAgentCreditsOnMerge")}
-                    onValueChange={(value) => write({ removeAgentCreditsOnMerge: value })}
-                  />
-                </SettingsSection>
                 <SettingsSection title={gt("Default branch")}>
                   <SettingsSwitchRow
                     icon="arrow.down.circle"

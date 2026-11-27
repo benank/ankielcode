@@ -1,8 +1,6 @@
 import { T, useGT, Var } from "gt-react-native";
 
 import { Button } from "./ui/Button";
-import * as Dialog from "./ui/Dialog";
-import { useOpenPullRequest } from "../native/useOpenPullRequest";
 import { SourceFileSurface } from "../features/files/SourceFileSurface";
 import { filePreviewKind } from "@ankielcode/shared/filePreview";
 import type {
@@ -13,10 +11,8 @@ import type {
   ScopedThreadRef,
 } from "@ankielcode/contracts";
 import { formatAttachmentSize } from "@ankielcode/client-runtime/state/attachments";
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
-import { changeRequestTermKind } from "../lib/changeRequestTerm";
 import { videoMimeType } from "@ankielcode/shared/video";
-import { Pressable, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { REVIEW_MONO_FONT_FAMILY } from "../features/review/reviewDiffRendering";
 import { ReviewCommentCard, useReviewCommentColors } from "../features/review/ReviewCommentCard";
@@ -90,7 +86,6 @@ export function ComposerContextSheet(props: {
   readonly onClose: () => void;
   readonly onRemove?: () => void;
   readonly onOpenAttachment?: () => void;
-  readonly onOpenPullRequest?: () => void;
   readonly skillDescription?: string;
   readonly onOpenSkill?: () => void;
   readonly onOpenThread?: (thread: ScopedThreadRef) => void;
@@ -99,12 +94,6 @@ export function ComposerContextSheet(props: {
   readonly records?: ReadonlyArray<ComposerContextRecord>;
   readonly attachments?: ReadonlyArray<DraftComposerAttachment>;
 }) {
-  const openPullRequest = useOpenPullRequest({
-    context:
-      props.environmentId && props.projectId
-        ? { environmentId: props.environmentId, projectId: props.projectId }
-        : undefined,
-  });
   const gt = useGT();
   const reviewColors = useReviewCommentColors();
   const insets = useSafeAreaInsets();
@@ -189,16 +178,6 @@ export function ComposerContextSheet(props: {
             (entry) => entry.contextId === record.screenshotContextId && "attachmentId" in entry,
           )
         : undefined;
-  const pullRequestUrl =
-    record?.kind === "review-comment" && "pullRequest" in record
-      ? record.pullRequest?.url
-      : undefined;
-  const term = changeRequestTermKind(
-    (
-      (pullRequestUrl ? sourceControlClients.findByChangeRequestUrl(pullRequestUrl) : undefined) ??
-      sourceControlClients.get(undefined)
-    ).changeRequest,
-  );
   const terminal = record?.kind === "terminal" && !("payload" in record) ? record : null;
   return (
     <Sheet title={terminal?.terminalLabel ?? props.label} onClose={props.onClose}>
@@ -263,20 +242,6 @@ export function ComposerContextSheet(props: {
             ) : null}
             {record.kind === "review-comment" ? (
               <>
-                {record.pullRequest ? (
-                  <ContextField
-                    label={`#${record.pullRequest.number} · ${
-                      record.pullRequest.isDraft
-                        ? gt("draft", { $context: "pull request state" })
-                        : record.pullRequest.state === "open"
-                          ? gt("open", { $context: "pull request state" })
-                          : record.pullRequest.state === "closed"
-                            ? gt("closed", { $context: "pull request state" })
-                            : gt("merged", { $context: "pull request state" })
-                    }`}
-                    value={`${record.pullRequest.title}\n${record.pullRequest.headBranch} → ${record.pullRequest.baseBranch}`}
-                  />
-                ) : null}
                 {!record.sectionId.startsWith("pull-request:") ? (
                   <>
                     <ReviewCommentCard
@@ -431,47 +396,11 @@ export function ComposerContextSheet(props: {
             )}
           />
         ) : null}
-        {pullRequestUrl && /^https?:\/\//i.test(pullRequestUrl) ? (
-          <Pressable
-            accessibilityRole="link"
-            onPress={() => {
-              props.onClose();
-              void openPullRequest(pullRequestUrl).catch(() =>
-                Dialog.alert(
-                  gt(
-                    "Could not open {term, select, mr {merge request} cr {change request} other {pull request}}",
-                    { term },
-                  ),
-                  gt("Try again when connected."),
-                ),
-              );
-            }}
-            className="rounded-xl bg-subtle p-4"
-          >
-            <Text className="text-foreground">
-              {gt(
-                "Open {term, select, mr {merge request} cr {change request} other {pull request}}",
-                { term },
-              )}
-            </Text>
-          </Pressable>
-        ) : null}
         {props.onOpenAttachment ? (
           <Button
             label={gt("Open attachment")}
             tone="secondary"
             onPress={props.onOpenAttachment}
-            fullWidth
-          />
-        ) : null}
-        {props.onOpenPullRequest && !pullRequestUrl ? (
-          <Button
-            label={gt(
-              "Open {term, select, mr {merge request} cr {change request} other {pull request}}",
-              { term },
-            )}
-            tone="secondary"
-            onPress={props.onOpenPullRequest}
             fullWidth
           />
         ) : null}

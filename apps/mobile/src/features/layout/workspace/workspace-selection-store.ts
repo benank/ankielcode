@@ -55,18 +55,10 @@ function save() {
 function withoutRouteKeys(saved: WorkspaceSelections | undefined): WorkspaceSelections {
   const omitKey = <Selection extends { readonly key?: string }>({ key: _, ...rest }: Selection) =>
     rest;
-  const {
-    threads,
-    pullRequests,
-    issues,
-    settingsKey: _,
-    threadsDraft: _draft,
-    ...rest
-  } = saved ?? {};
+  const { threads, issues, settingsKey: _, threadsDraft: _draft, ...rest } = saved ?? {};
   return {
     ...rest,
     ...(threads ? { threads: omitKey(threads) } : {}),
-    ...(pullRequests ? { pullRequests: omitKey(pullRequests) } : {}),
     ...(issues ? { issues: omitKey(issues) } : {}),
   };
 }
@@ -122,7 +114,6 @@ export const workspaceSelectionCheck: WorkspaceSelectionCheck = {
       .get(environmentThreadShells.environmentThreadIndexAtom(environmentId))
       .has(selection.threadId as ThreadId);
   },
-  pullRequest: (selection) => !environmentRemoved(selection.environmentId),
   issue: (selection) => !environmentRemoved(selection.environmentId),
 };
 

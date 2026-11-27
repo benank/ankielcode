@@ -1,4 +1,8 @@
-import { EnvironmentHttpCommonError, OrchestrationV2ShellResumable } from "@ankielcode/contracts";
+import {
+  EnvironmentHttpCommonError,
+  OrchestrationV2ShellResumable,
+  type OrchestrationV2ShellSnapshot,
+} from "@ankielcode/contracts";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -15,10 +19,7 @@ import {
   executeAuthenticatedEnvironmentHttpRequest,
   withOrchestrationProtocolHeader,
 } from "./environmentHttpAuth.ts";
-import {
-  decodeShellSnapshotDeferringPullRequests,
-  type DeferredShellSnapshot,
-} from "./shellPullRequests.ts";
+import { decodeShellSnapshotWithoutPullRequests } from "./shellPullRequests.ts";
 
 export interface ShellSnapshotOptions {
   readonly omitIdleSubagents?: boolean;
@@ -28,7 +29,7 @@ export interface ShellSnapshotOptions {
 }
 
 /** `projectIdentities` names the repository identities the snapshot carried. */
-export interface ShellHttpSnapshot extends DeferredShellSnapshot {
+export interface ShellHttpSnapshot extends OrchestrationV2ShellSnapshot {
   readonly projectIdentities?: string;
 }
 
@@ -95,7 +96,7 @@ const decodeShellSnapshotResponse = (
           Predicate.isObject(json) && typeof json.projectIdentities === "string"
             ? json.projectIdentities
             : undefined;
-        return decodeShellSnapshotDeferringPullRequests(json).pipe(
+        return decodeShellSnapshotWithoutPullRequests(json).pipe(
           Effect.map((snapshot) =>
             projectIdentities === undefined ? snapshot : { ...snapshot, projectIdentities },
           ),

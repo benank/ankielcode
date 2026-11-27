@@ -1,5 +1,5 @@
 import * as Dialog from "../../../components/ui/Dialog";
-import { useOpenPullRequest } from "../../../native/useOpenPullRequest";
+import { useOpenIssueLink } from "../../../native/useOpenIssueLink";
 import {
   type GitActionRequestInput,
   buildMenuItems,
@@ -48,12 +48,6 @@ import { useSelectedThreadWorktree } from "../../../state/use-selected-thread-wo
 import { vcsEnvironment } from "../../../state/vcs";
 import { menuItemIconName, statusSummary } from "./gitSheetComponents";
 import { ThreadRepositoryRows } from "./ThreadRepositoryRows";
-import {
-  LinkedPullRequestRow,
-  linkedPullRequestKey,
-  useLinkedPullRequestLines,
-} from "../LinkedPullRequestList";
-import { useLinkedPullRequestActions } from "../useLinkedPullRequestActions";
 
 type GitOverviewSheetProps = StaticScreenProps<
   {
@@ -88,9 +82,8 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
     closeInspectorSheet ? closeInspectorSheet(present) : present();
   const environmentId = EnvironmentId.make(props.route.params.environmentId);
   const threadId = ThreadId.make(props.route.params.threadId);
-  const { selectedThread, selectedThreadProject, selectedEnvironmentRuntime } =
-    useThreadSelection();
-  const openPullRequest = useOpenPullRequest({
+  const { selectedThread, selectedThreadProject } = useThreadSelection();
+  const openPullRequest = useOpenIssueLink({
     replace: presentation === "sheet",
     context: selectedThread ?? undefined,
   });
@@ -105,12 +98,6 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
   const isPinnedRepository =
     repository !== undefined &&
     pinnedRepositories.some((pin) => pin.repositoryPath === repository.key);
-  const linkedPrLines = useLinkedPullRequestLines(selectedThread, selectedEnvironmentRuntime);
-  const linkedPrActions = useLinkedPullRequestActions({
-    thread: selectedThread,
-    project: selectedThreadProject,
-    runtime: selectedEnvironmentRuntime,
-  });
   const gitState = useSelectedThreadGitState(repository);
   const gitActions = useSelectedThreadGitActions(repository);
   const { canWriteSourceControl, canChangeThreadBranch } = gitActions;
@@ -441,20 +428,6 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
                   )
                 }
               />
-              {linkedPrActions.canLink ? (
-                <ListRow
-                  icon="link"
-                  label={gt(
-                    "{term, select, mr {Link merge request} cr {Link change request} other {Link pull request}}",
-                    { term: changeRequestTermKind(linkedPrActions.terminology) },
-                  )}
-                  description={gt(
-                    "{term, select, mr {Attach a merge request by URL or number} cr {Attach a change request by URL or number} other {Attach a pull request by URL or number}}",
-                    { term: changeRequestTermKind(linkedPrActions.terminology) },
-                  )}
-                  onPress={linkedPrActions.promptLink}
-                />
-              ) : null}
             </>
           ) : isPinnedRepository ? (
             <ListRow
@@ -468,21 +441,6 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
               }}
             />
           ) : null}
-        </ListSection>
-      ) : null}
-
-      {repository === undefined && linkedPrLines.length > 0 ? (
-        <ListSection title={gt("Linked {terms}", { terms: linkedPrActions.terminology.plural })}>
-          {linkedPrLines.map((line, index) => (
-            <LinkedPullRequestRow
-              key={linkedPullRequestKey(line)}
-              line={line}
-              separator={index < linkedPrLines.length - 1}
-              surfaceClassName="text-grouped-card"
-              openPullRequest={openPullRequest}
-              actions={linkedPrActions}
-            />
-          ))}
         </ListSection>
       ) : null}
 

@@ -1,5 +1,3 @@
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
-import { changeRequestTermKind } from "../lib/changeRequestTerm";
 import { errorDisplayMessage } from "@ankielcode/client-runtime/errors";
 import * as Dialog from "../components/ui/Dialog";
 import {
@@ -58,7 +56,6 @@ import {
 import { environmentProjects } from "./projects";
 import { environmentServerConfigsAtom, serverEnvironment } from "./server";
 import { uploadComposerAttachmentShared } from "./composer-attachment-uploads";
-import { gitEnvironment } from "./git";
 import { environmentSession, readEnvironmentScope, sessionHasScope } from "./session";
 import {
   confirmThreadOutboxMessageQueued,
@@ -544,7 +541,6 @@ export const restoreRejectedQueuedMessage = Effect.fn("ThreadOutbox.restoreRejec
                 mode: queuedMessage.creation.workspaceMode,
                 branch: queuedMessage.creation.branch,
                 worktreePath: queuedMessage.creation.worktreePath,
-                pullRequestReference: queuedMessage.creation.pullRequestReference,
                 ...(queuedMessage.creation.startFromOrigin !== undefined
                   ? { startFromOrigin: queuedMessage.creation.startFromOrigin }
                   : {}),
@@ -1124,42 +1120,6 @@ function createThreadOutboxDelivery(): {
     const launched = launchedCreations.get(persistedMessage.messageId);
     if (launched?.revision === deliveryRevision) {
       workspace = launched.workspace;
-    } else if (creation.pullRequestReference) {
-      const checkout = yield* deliveryCommand(gitEnvironment.preparePullRequestThread, {
-        environmentId: queuedMessage.environmentId,
-        input: { cwd: projectCwd, reference: creation.pullRequestReference, mode: "worktree" },
-      });
-      if (!isQueuedMessagePayloadCurrent(persistedMessage, deliveryRevision) || !hasAccess())
-        return;
-      const failure = reportCommandFailure(queuedMessage, checkout, "start-turn");
-      if (failure?.action === "retry") return yield* retryDelivery;
-      if (failure?.action === "restore")
-        return yield* restoreQueuedMessage(persistedMessage, failure.message);
-      if (!AsyncResult.isSuccess(checkout)) return yield* retryDelivery;
-      if (!checkout.value.worktreePath || !checkout.value.isOnPullRequestHead) {
-        const term = changeRequestTermKind(
-          (
-            sourceControlClients.findByChangeRequestUrl(creation.pullRequestReference) ??
-            sourceControlClients.get(undefined)
-          ).changeRequest,
-        );
-        return yield* restoreQueuedMessage(
-          persistedMessage,
-          m(
-            msg(
-              "{term, select, mr {The MR worktree has local changes and could not update to the MR head. Resolve them before trying again.} cr {The change request worktree has local changes and could not update to the change request head. Resolve them before trying again.} other {The PR worktree has local changes and could not update to the PR head. Resolve them before trying again.}}",
-              { term },
-            ),
-          ),
-        );
-      }
-      workspace = {
-        ...creation,
-        workspaceMode: "local",
-        branch: checkout.value.branch,
-        worktreePath: checkout.value.worktreePath,
-        startFromOrigin: false,
-      };
     }
     launchedCreations.set(persistedMessage.messageId, { revision: deliveryRevision, workspace });
     const deliveryResult = yield* deliveryCommand(threadEnvironment.startTurn, {

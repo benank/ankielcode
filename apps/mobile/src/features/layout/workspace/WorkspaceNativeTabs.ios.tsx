@@ -36,7 +36,6 @@ import { WorkspaceTabDock } from "./WorkspaceTabDock";
 import { useAdaptiveWorkspaceLayout, useWorkspacePaneState } from "../AdaptiveWorkspaceLayout";
 import { useSelectWorkspaceTab } from "./useSelectWorkspaceTab";
 
-const PULL_REQUEST_ICON = require("../../../../assets/icons/pull-request.png");
 const ISSUE_ICON = require("../../../../assets/icons/issue.png");
 
 /** Retain each native controller tree; removing its root can leave RNS's stack empty. */
@@ -237,11 +236,9 @@ export function WorkspaceNativeTabs(props: {
                   contentReady: mountedSlots.has(slot),
                   icon: settings
                     ? { type: "sfSymbol", name: "gearshape" }
-                    : tab === "pullRequests"
-                      ? { type: "templateSource", templateSource: PULL_REQUEST_ICON }
-                      : tab === "issues"
-                        ? { type: "templateSource", templateSource: ISSUE_ICON }
-                        : { type: "sfSymbol", name: NAVIGATION_TAB_ICONS[tab] },
+                    : tab === "issues"
+                      ? { type: "templateSource", templateSource: ISSUE_ICON }
+                      : { type: "sfSymbol", name: NAVIGATION_TAB_ICONS[tab] },
                   selectedIcon:
                     !settings && tab === "threads"
                       ? { type: "sfSymbol", name: "text.bubble.fill" }

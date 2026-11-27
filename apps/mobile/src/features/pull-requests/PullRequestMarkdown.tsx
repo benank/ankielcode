@@ -1,3 +1,4 @@
+import { EnvironmentId, ProjectId } from "@ankielcode/contracts";
 import {
   splitPullRequestBody,
   type PullRequestBodySegment,
@@ -6,7 +7,6 @@ import { markdownTaskMarkerOffset } from "@ankielcode/shared/markdownTaskList";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import { useProject } from "../../state/entities";
-import { pullRequestTarget, type PullRequestParams } from "./usePullRequestDiff";
 import {
   PullRequestMedia,
   PullRequestMediaContext,
@@ -24,7 +24,7 @@ import {
 } from "@ankielcode/client-runtime/source-control-clients";
 import { nativePullRequestMarkdown } from "./pullRequestAutolinks";
 
-import { useOpenPullRequest } from "../../native/useOpenPullRequest";
+import { useOpenIssueLink } from "../../native/useOpenIssueLink";
 import { SelectableMarkdownText } from "../../native/SelectableMarkdownText";
 import { useMarkdownPreviewStyles } from "../files/FileMarkdownPreview";
 import { markdownImageSources } from "../../lib/markdownImageSources";
@@ -50,7 +50,12 @@ const ChangeRequestUrlContext = createContext<string | null>(null);
 export function PullRequestMarkdownRepository(props: {
   /** The change request the markdown belongs to, whose host decides what its text links. */
   readonly changeRequest: { readonly provider: string; readonly url: string } | null | undefined;
-  readonly params: PullRequestParams;
+  /** Where the markdown's media resolves: the environment, project and repository it lives in. */
+  readonly params: {
+    readonly environmentId: string;
+    readonly projectId: string;
+    readonly repository: string;
+  };
   readonly children: ReactNode;
 }) {
   const provider = props.changeRequest?.provider;
@@ -60,15 +65,13 @@ export function PullRequestMarkdownRepository(props: {
       ? null
       : changeRequestReferenceAutolinker({ provider, url });
   const lineBreaks = sourceControlClients.find(provider ?? "")?.hardLineBreaks ?? false;
-  const target = pullRequestTarget(props.params);
+  const environmentId = EnvironmentId.make(props.params.environmentId);
   const project = useProject({
-    environmentId: target.environmentId,
-    projectId: target.input.projectId,
+    environmentId,
+    projectId: ProjectId.make(props.params.projectId),
   });
   const cwd = project?.workspaceRoot;
-  const media = cwd
-    ? { environmentId: target.environmentId, cwd, repository: target.input.repository }
-    : null;
+  const media = cwd ? { environmentId, cwd, repository: props.params.repository } : null;
   return (
     <AutolinksContext value={autolinks}>
       <GithubEmojiContext value={provider === "github"}>
@@ -232,7 +235,7 @@ function PullRequestMarkdownContent(props: {
   const changeRequestUrl = useContext(ChangeRequestUrlContext);
   const resolveMediaUrl = (href: string) =>
     changeRequestUrl ? resolveChangeRequestMediaUrl(href, changeRequestUrl) : href;
-  const openPullRequest = useOpenPullRequest();
+  const openPullRequest = useOpenIssueLink();
   const openLink = (href: string) => {
     void openPullRequest(href);
   };

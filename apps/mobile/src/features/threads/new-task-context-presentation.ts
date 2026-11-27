@@ -1,6 +1,4 @@
 import { sanitizeNewRefName } from "@ankielcode/shared/git";
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
-import { changeRequestTermKind } from "../../lib/changeRequestTerm";
 import { resolveSendEnvMode } from "@ankielcode/shared/projectSettings";
 import { msg } from "gt-react-native";
 
@@ -96,23 +94,9 @@ export function resolveNewTaskBranchLabel(
     readonly branchName: string | null;
     readonly startFromOrigin: boolean;
     readonly workspaceMode: WorkspaceMode;
-    readonly pullRequestReference?: string;
   },
   resolve: MessageResolver = m,
 ): string {
-  if (input.workspaceMode === "worktree" && input.pullRequestReference) {
-    const parsed = sourceControlClients.parseChangeRequestUrl(input.pullRequestReference);
-    if (parsed)
-      return resolve(
-        msg(
-          "{term, select, mr {From MR #{number}} cr {From change request #{number}} other {From PR #{number}}}",
-          {
-            term: changeRequestTermKind(parsed.definition.changeRequest),
-            number: parsed.link.number,
-          },
-        ),
-      );
-  }
   if (!input.branchName) {
     return resolve(msg("Choose branch"));
   }

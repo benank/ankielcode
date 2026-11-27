@@ -17,11 +17,10 @@ export const environmentPresentations = createEnvironmentPresentationAtoms({
   serverConfigValueAtom: serverEnvironment.configValueAtom,
 });
 
-export const { connectedEnvironmentIdsAtom, pullRequestsSupportedAtom } =
-  createEnvironmentSummaryAtoms({
-    catalogValueAtom: environmentCatalog.catalogValueAtom,
-    presentationAtom: environmentPresentations.presentationAtom,
-  });
+export const { connectedEnvironmentIdsAtom, issuesSupportedAtom } = createEnvironmentSummaryAtoms({
+  catalogValueAtom: environmentCatalog.catalogValueAtom,
+  presentationAtom: environmentPresentations.presentationAtom,
+});
 
 export const threadListEnvironmentsAtom = createThreadListEnvironmentsAtom(
   environmentServerConfigsAtom,

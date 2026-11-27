@@ -12,7 +12,6 @@ type RouteLike = {
   readonly params?: object | undefined;
 };
 type ThreadSelection = NonNullable<WorkspaceSelections["threads"]>;
-type PullRequestSelection = NonNullable<WorkspaceSelections["pullRequests"]>;
 type IssueSelection = NonNullable<WorkspaceSelections["issues"]>;
 
 /** Opened when Settings has columns and none of its pages has been opened yet. */
@@ -39,50 +38,15 @@ export function rememberedSettingsPage(selections: WorkspaceSelections): Setting
     : DEFAULT_SETTINGS_PAGE;
 }
 
-/** Whether a remembered chat, pull request or issue can still be opened. */
+/** Whether a remembered chat or issue can still be opened. */
 export interface WorkspaceSelectionCheck {
   readonly thread: (selection: ThreadSelection) => boolean;
-  readonly pullRequest: (selection: PullRequestSelection) => boolean;
   readonly issue: (selection: IssueSelection) => boolean;
 }
 
 function stringParam(params: object | undefined, key: string) {
   const value = (params as Record<string, unknown> | undefined)?.[key];
   return typeof value === "string" ? value : undefined;
-}
-
-function pullRequestSelection(
-  params: object | undefined,
-): Omit<PullRequestSelection, "key"> | undefined {
-  const value = params as Record<string, unknown> | undefined;
-  if (
-    typeof value?.environmentId !== "string" ||
-    typeof value.projectId !== "string" ||
-    typeof value.repository !== "string" ||
-    typeof value.number !== "number"
-  ) {
-    return undefined;
-  }
-  return {
-    environmentId: value.environmentId,
-    projectId: value.projectId,
-    repository: value.repository,
-    number: value.number,
-    ...(typeof value.host === "string" ? { host: value.host } : {}),
-  };
-}
-
-function samePullRequest(
-  left: PullRequestSelection | undefined,
-  right: Omit<PullRequestSelection, "key">,
-) {
-  return (
-    left?.environmentId === right.environmentId &&
-    left.projectId === right.projectId &&
-    left.repository === right.repository &&
-    left.number === right.number &&
-    left.host === right.host
-  );
 }
 
 const ISSUE_IDENTITY = ["environmentId", "projectId", "tracker", "scope", "issueKey"] as const;
@@ -110,7 +74,7 @@ function sameIssue(left: IssueSelection | undefined, right: Omit<IssueSelection,
 }
 
 /**
- * The page each tab shows in a root route chain: the newest chat, pull request and issue, and
+ * The page each tab shows in a root route chain: the newest chat and issue, and
  * the Settings page directly above the Settings route. Returns `previous` when nothing changed.
  */
 export function workspaceSelectionsIn(
@@ -137,15 +101,6 @@ export function workspaceSelectionsIn(
     (next.threadsDraft?.key !== thread.key || next.threadsDraft.params !== thread.params)
   ) {
     next = { ...next, threadsDraft: { key: thread.key, params: thread.params } };
-  }
-  const pullRequestRoute = routes.findLast((route) => route.name === "PullRequest");
-  const pullRequest = pullRequestSelection(pullRequestRoute?.params);
-  if (
-    pullRequest &&
-    (!samePullRequest(next.pullRequests, pullRequest) ||
-      next.pullRequests?.key !== pullRequestRoute?.key)
-  ) {
-    next = { ...next, pullRequests: { ...pullRequest, key: pullRequestRoute?.key } };
   }
   const issueRoute = routes.findLast((route) => route.name === "Issue");
   const issue = issueSelection(issueRoute?.params);
@@ -189,10 +144,9 @@ function keyedPage<Route extends RouteLike>(route: Route): Route & { readonly ke
 
 function detailRoute(
   state: { readonly routes: readonly RouteLike[] },
-  tab: "threads" | "pullRequests" | "issues",
+  tab: "threads" | "issues",
   selections: WorkspaceSelections,
   check: WorkspaceSelectionCheck,
-  seedPullRequest?: (identity: Omit<PullRequestSelection, "key">) => object,
 ): RouteLike | undefined {
   if (tab === "threads") {
     const draft = selections.threadsDraft;
@@ -220,28 +174,13 @@ function detailRoute(
       }
     );
   }
-  if (tab === "issues") {
-    const issue = selections.issues;
-    if (!issue || !check.issue(issue)) return undefined;
-    return (
-      state.routes.find((route) => {
-        const shown = route.name === "Issue" ? issueSelection(route.params) : undefined;
-        return shown !== undefined && sameIssue(issue, shown);
-      }) ?? { key: issue.key, name: "Issue", params: identityOf(issue) }
-    );
-  }
-  const pullRequest = selections.pullRequests;
-  if (!pullRequest || !check.pullRequest(pullRequest)) return undefined;
+  const issue = selections.issues;
+  if (!issue || !check.issue(issue)) return undefined;
   return (
-    state.routes.find(
-      (route) =>
-        route.name === "PullRequest" &&
-        samePullRequest(pullRequestSelection(route.params), pullRequest),
-    ) ?? {
-      key: pullRequest.key,
-      name: "PullRequest",
-      params: seedPullRequest?.(identityOf(pullRequest)) ?? identityOf(pullRequest),
-    }
+    state.routes.find((route) => {
+      const shown = route.name === "Issue" ? issueSelection(route.params) : undefined;
+      return shown !== undefined && sameIssue(issue, shown);
+    }) ?? { key: issue.key, name: "Issue", params: identityOf(issue) }
   );
 }
 
@@ -261,7 +200,6 @@ export function workspaceTabNavigationState<
     readonly columns: boolean;
     readonly check: WorkspaceSelectionCheck;
     readonly overlays?: readonly RouteLike[];
-    readonly seedPullRequest?: (identity: Omit<PullRequestSelection, "key">) => object;
   },
 ) {
   const overlays = options.overlays ?? [];
@@ -283,8 +221,8 @@ export function workspaceTabNavigationState<
   }
   const home = state.routes.find((route) => route.name === "Home") ?? { name: "Home" };
   const detail =
-    options.columns && (tab === "threads" || tab === "pullRequests")
-      ? detailRoute(state, tab, selections, options.check, options.seedPullRequest)
+    options.columns && tab === "threads"
+      ? detailRoute(state, tab, selections, options.check)
       : undefined;
   const routes = [keyed(home), ...(detail ? [keyedPage(detail)] : []), ...overlays];
   return { ...state, index: routes.length - 1, routes };
@@ -298,7 +236,6 @@ export function workspaceTabPage(
   options: {
     readonly columns: boolean;
     readonly check: WorkspaceSelectionCheck;
-    readonly seedPullRequest?: (identity: Omit<PullRequestSelection, "key">) => object;
   },
 ) {
   const page = workspaceTabNavigationState(state, tab, selections, options).routes.find(

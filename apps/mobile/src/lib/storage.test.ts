@@ -107,8 +107,8 @@ describe("mobile connection storage", () => {
   });
 
   it("persists tab order locally and retains it when another preference changes", async () => {
-    const navigationTabOrder = ["usage", "threads", "pullRequests"];
-    const hiddenNavigationTabs = ["issues", "home"];
+    const navigationTabOrder = ["usage", "threads", "issues"];
+    const hiddenNavigationTabs = ["usage", "home"];
     await savePreferencesPatch({ navigationTabOrder, hiddenNavigationTabs });
     await savePreferencesPatch({ baseFontSize: 19 });
     await expect(loadPreferences()).resolves.toEqual({
@@ -134,6 +134,39 @@ describe("mobile connection storage", () => {
     });
   });
 
+  it("drops the retired pull requests tab and its preferences from older builds", async () => {
+    mocks.setPreferencesJson(
+      JSON.stringify({
+        navigationTabOrder: ["pullRequests", "threads", "issues"],
+        hiddenNavigationTabs: ["pullRequests", "usage"],
+        sharedSlotTab: "pullRequests",
+        pullRequestTabEnabled: true,
+        pullRequestMergeMethod: "squash",
+        pullRequestActivityVisibility: { bots: true, resolved: false },
+        pullRequestListFilters: { environmentId: null, controls: {} },
+        pullRequestSavedViews: [],
+        pullRequestHideTestFiles: true,
+        workspaceSelections: {
+          threads: { environmentId: "env", threadId: "thread" },
+          pullRequests: { environmentId: "env", projectId: "p", repository: "a/b", number: 1 },
+          settings: "SettingsAppearance",
+        },
+        baseFontSize: 18,
+      }),
+      1,
+    );
+    await expect(loadPreferences()).resolves.toEqual({
+      navigationTabOrder: ["threads", "issues"],
+      hiddenNavigationTabs: ["usage"],
+      pullRequestHideTestFiles: true,
+      workspaceSelections: {
+        threads: { environmentId: "env", threadId: "thread" },
+        settings: "SettingsAppearance",
+      },
+      baseFontSize: 18,
+    });
+  });
+
   it("loads legacy preferences when SQLite is unavailable", async () => {
     mocks.setDatabaseFailures(true, true);
     await mocks.setItemAsync("ankielcode.preferences", JSON.stringify({ baseFontSize: 17 }));
@@ -152,14 +185,7 @@ describe("mobile connection storage", () => {
     expect(fallback.updatedAt).toEqual(expect.any(Number));
   });
 
-  it("discards malformed saved PR and issue views without discarding other preferences", async () => {
-    const validView = {
-      id: "reviewing",
-      name: "Review queue",
-      environmentId: null,
-      query: "bug",
-      controls: { state: "open", involvement: "reviewing", filters: {}, sort: "updated" },
-    } as const;
+  it("discards malformed saved issue views without discarding other preferences", async () => {
     const validIssueView = {
       id: "assigned",
       name: "Assigned",
@@ -173,22 +199,12 @@ describe("mobile connection storage", () => {
     mocks.setPreferencesJson(
       JSON.stringify({
         baseFontSize: 17,
-        pullRequestSavedViews: [
-          validView,
-          {
-            ...validView,
-            id: "invalid",
-            name: "Broken",
-            controls: { ...validView.controls, sort: "unknown" },
-          },
-        ],
         issueSavedViews: [validIssueView, { ...validIssueView, id: "invalid", involvement: "x" }],
       }),
       10,
     );
     expect(await loadPreferences()).toEqual({
       baseFontSize: 17,
-      pullRequestSavedViews: [validView],
       issueSavedViews: [validIssueView],
     });
   });

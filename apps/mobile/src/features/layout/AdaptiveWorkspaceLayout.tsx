@@ -58,7 +58,6 @@ import type { ThreadListFilters } from "../../persistence/mobile-preferences";
 import { appAtomRegistry } from "../../state/atom-registry";
 import { useProjects } from "../../state/entities";
 import { environmentThreadShells } from "../../state/threads";
-import { withKnownPullRequestSummary } from "../../state/use-thread-pr";
 import { mobilePreferencesAtom } from "../../state/preferences";
 import { savedConnectionsByIdAtom } from "../../state/use-remote-environment-registry";
 import { workspaceConnections } from "../../state/workspace";
@@ -81,7 +80,6 @@ import {
 import {
   selectWorkspaceDetail,
   type WorkspaceDetail,
-  type WorkspaceDetailSheet,
 } from "./workspace/workspace-detail-selection";
 import { startOpeningDetail } from "./workspace/useSelectWorkspaceDetail";
 import { useWorkspaceTabs } from "./workspace/WorkspaceTabsContext";
@@ -210,7 +208,7 @@ function useStableActions(actions: Required<AdaptiveWorkspaceActions>): Adaptive
   });
   const [stable] = useState((): AdaptiveWorkspaceActions => ({
     startNewTask: () => latest.current.startNewTask(),
-    selectDetail: (detail, sheet) => latest.current.selectDetail(detail, sheet),
+    selectDetail: (detail) => latest.current.selectDetail(detail),
     registerWorkspaceInspector: (content, routeKey, revealKey) =>
       latest.current.registerWorkspaceInspector(content, routeKey, revealKey),
     setPrimarySidebarSearchQuery: (query) => latest.current.setPrimarySidebarSearchQuery(query),
@@ -565,7 +563,6 @@ function AdaptiveWorkspaceLayoutContent(
         columns: workspaceTabColumns(Platform.OS, tab, options?.columns ?? layout.usesSplitView),
         check: workspaceSelectionCheck,
         overlays,
-        seedPullRequest: withKnownPullRequestSummary,
       },
     );
     if (layout.variant === "medium") {
@@ -577,7 +574,7 @@ function AdaptiveWorkspaceLayoutContent(
   const handleOpenSettings = () => openWorkspaceTab("settings");
 
   /** The one way to show a page in the detail column; see `selectWorkspaceDetail`. */
-  function handleSelectDetail(detail: WorkspaceDetail, sheet?: WorkspaceDetailSheet) {
+  function handleSelectDetail(detail: WorkspaceDetail) {
     threadSelectionDeferral.run(() => {
       if (Platform.OS === "android") Keyboard.dismiss();
       setFileInspectorPreferredVisible(false);
@@ -585,7 +582,7 @@ function AdaptiveWorkspaceLayoutContent(
       if (layout.variant === "medium") setPrimarySidebarVisible(false);
       workspace?.dispatch({ type: "select", tab: workspaceTabOf(detail.name) });
       startOpeningDetail(detail);
-      navigation.dispatch(selectWorkspaceDetail(detail, sheet));
+      navigation.dispatch(selectWorkspaceDetail(detail));
     });
   }
   const handleSelectThreadRoute = (params: ReactNavigation.RootParamList["Thread"]) =>

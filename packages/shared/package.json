@@ -31,10 +31,6 @@
       "types": "./src/socketFrameParts.ts",
       "import": "./src/socketFrameParts.ts"
     },
-    "./composerPullRequestMatches": {
-      "types": "./src/composerPullRequestMatches.ts",
-      "import": "./src/composerPullRequestMatches.ts"
-    },
     "./themePalettes": {
       "types": "./src/themePalettes.ts",
       "import": "./src/themePalettes.ts"
@@ -282,10 +278,6 @@
     "./triagePrompt": {
       "types": "./src/triagePrompt.ts",
       "import": "./src/triagePrompt.ts"
-    },
-    "./pullRequestComposerTrigger": {
-      "types": "./src/pullRequestComposerTrigger.ts",
-      "import": "./src/pullRequestComposerTrigger.ts"
     },
     "./composerInlineTokens": {
       "types": "./src/composerInlineTokens.ts",

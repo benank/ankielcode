@@ -1,6 +1,5 @@
 import { Connection } from "@ankielcode/client-runtime/connection";
 import { ShellSnapshotLoader } from "@ankielcode/client-runtime/state/shell";
-import { PullRequestDiffLoader } from "@ankielcode/client-runtime/state/pull-requests";
 import {
   BoundedThreadSnapshotLoader,
   ThreadHistoryController,
@@ -20,7 +19,6 @@ declare const module: { readonly hot?: FoundationHotModule } | undefined;
 const layerProvidedConnectionPlatform = ConnectionPlatform.layer.pipe(Layer.provide(Runtime.layer));
 
 const layerSnapshotLoader = Layer.mergeAll(
-  PullRequestDiffLoader.layer,
   BoundedThreadSnapshotLoader.layer,
   ShellSnapshotLoader.layer,
   ThreadHistoryController.layer,

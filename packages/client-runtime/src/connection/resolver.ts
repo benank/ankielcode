@@ -27,10 +27,6 @@ import {
   mapRemoteEnvironmentError,
   profileMissingError,
 } from "./errors.ts";
-import {
-  PullRequestRoutingPermissions,
-  pullRequestRoutingConnectionKey,
-} from "./pullRequestRoutingPermissions.ts";
 import type {
   BearerConnectionTarget,
   ConnectionTarget,
@@ -224,13 +220,6 @@ const makeSshBroker = Effect.fn("clientRuntime.connection.broker.makeSsh")(funct
       label: profile.label,
       target: prepared.bootstrap.target,
     });
-    if (
-      pullRequestRoutingConnectionKey(entry) !==
-      pullRequestRoutingConnectionKey({ ...entry, profile: Option.some(preparedProfile) })
-    ) {
-      const permissions = yield* PullRequestRoutingPermissions;
-      yield* permissions.forget(target.environmentId);
-    }
     yield* profiles.put(preparedProfile);
     const authorized = yield* remote.authorizeBearer({
       expectedEnvironmentId: target.environmentId,

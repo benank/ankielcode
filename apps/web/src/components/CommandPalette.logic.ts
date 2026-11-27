@@ -426,12 +426,7 @@ export type BuildThreadActionItemsThread = Pick<
   | "title"
   | "worktreePath"
 > &
-  Partial<
-    Pick<
-      SidebarThreadSummary,
-      "pullRequests" | "linkedPullRequest" | "branchPullRequest" | "opens" | "latestUserMessageAt"
-    >
-  > & {
+  Partial<Pick<SidebarThreadSummary, "opens" | "latestUserMessageAt">> & {
     updatedAt: string;
   };
 

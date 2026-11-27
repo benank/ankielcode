@@ -29,7 +29,6 @@ import {
   type ComponentProps,
   type ReactNode,
 } from "react";
-import { withKnownPullRequestSummary } from "../../state/use-thread-pr";
 import {
   currentWorkspaceSelections,
   workspaceSelectionCheck,
@@ -94,11 +93,6 @@ type ViewProps = ComponentProps<typeof NativeStackView>;
 type Descriptor = ViewProps["descriptors"][string];
 type Route = ViewProps["state"]["routes"][number];
 
-const isPullRequestRoute = (route: Route) =>
-  route.name === "PullRequest" ||
-  route.name === "PullRequestFile" ||
-  route.name === "PullRequestFiles";
-
 const isIssueRoute = (route: Route) => route.name.startsWith("Issue");
 
 // Every step of starting a task, from the project picker to the draft thread itself.
@@ -117,7 +111,6 @@ function ColumnScreen(props: {
   readonly attached?: boolean;
   readonly animatesPush?: boolean;
   readonly selectedThreadKey?: string | null;
-  readonly selectedPullRequestKey?: string | null;
   readonly selectedIssueKey?: string | null;
   readonly onDismiss: (routeKey: string, native: boolean) => void;
   readonly onAppearance: (
@@ -143,7 +136,6 @@ function ColumnScreen(props: {
     ? {
         presented,
         selectedThreadKey: props.selectedThreadKey ?? null,
-        selectedPullRequestKey: props.selectedPullRequestKey ?? null,
         selectedIssueKey: props.selectedIssueKey ?? null,
       }
     : null;
@@ -297,19 +289,6 @@ function WorkspaceColumns(
   const collapsed = useRef(!layout.usesSplitView);
   const collapsedColumn = useRef<CollapsedSplitColumn>({ visible: compactColumn, leaving: null });
   const threadParams = props.detail.findLast((route) => route.name === "Thread")?.params;
-  const pullRequestParams = props.detail.findLast(isPullRequestRoute)?.params;
-  const selectedPullRequestKey =
-    pullRequestParams &&
-    "environmentId" in pullRequestParams &&
-    "host" in pullRequestParams &&
-    "repository" in pullRequestParams &&
-    "number" in pullRequestParams &&
-    typeof pullRequestParams.environmentId === "string" &&
-    typeof pullRequestParams.host === "string" &&
-    typeof pullRequestParams.repository === "string" &&
-    typeof pullRequestParams.number === "number"
-      ? `${pullRequestParams.environmentId}:${pullRequestParams.host}:${pullRequestParams.repository}:${pullRequestParams.number}`
-      : null;
   const selectedIssueKey = selectedIssueKeyOf(props.detail.findLast(isIssueRoute)?.params);
   const selectedThreadKey =
     threadParams &&
@@ -432,7 +411,6 @@ function WorkspaceColumns(
             primary
             footer={deviceType === "pad" ? <WorkspaceTabDock placement="column" /> : undefined}
             selectedThreadKey={selectedThreadKey}
-            selectedPullRequestKey={selectedPullRequestKey}
             selectedIssueKey={selectedIssueKey}
             onDismiss={handleNativeDismiss}
             onAppearance={followCollapsedSplit}
@@ -472,7 +450,7 @@ function WorkspaceColumns(
                 animatesPush={!shownPages.keys.has(route.key)}
                 onDismiss={handleNativeDismiss}
                 onAppearance={followCollapsedSplit}
-                onCompose={isPullRequestRoute(route) ? undefined : detailCompose}
+                onCompose={detailCompose}
                 navigation={props.navigation}
               />
             ) : null;
@@ -568,7 +546,6 @@ function WorkspaceStackView(props: ViewProps & { readonly nativeColumns: boolean
             ? (workspaceTabPage(props.state, tab, currentWorkspaceSelections(), {
                 columns: workspaceTabColumns(Platform.OS, tab, layout.usesSplitView),
                 check: workspaceSelectionCheck,
-                seedPullRequest: withKnownPullRequestSummary,
               }) as Route | undefined)
             : undefined;
           const detail = headerOnly ? (page ? [page] : []) : projection.detail;

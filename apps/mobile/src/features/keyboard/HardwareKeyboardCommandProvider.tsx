@@ -1,7 +1,7 @@
 import { StackActions, useNavigation } from "@react-navigation/native";
 import { msg, useGT, useMessages } from "gt-react-native";
 import { Platform } from "react-native";
-import { resolveThreadReferenceCopyTarget } from "@ankielcode/client-runtime/thread-reference";
+import { threadChipCopyTarget } from "@ankielcode/client-runtime/thread-reference";
 import {
   THREAD_JUMP_KEYBINDING_COMMANDS,
   type ThreadJumpKeybindingCommand,
@@ -103,16 +103,7 @@ export function HardwareKeyboardCommandProvider({
     () =>
       activeThreadRef === null
         ? null
-        : resolveThreadReferenceCopyTarget(
-            {
-              threadRef: activeThreadRef,
-              title: activeThread?.title ?? "",
-              pullRequests: activeThread?.pullRequests,
-              linkedPullRequestUrl:
-                (activeThread?.linkedPullRequest ?? activeThread?.branchPullRequest)?.url ?? null,
-            },
-            messages,
-          ),
+        : threadChipCopyTarget(activeThreadRef, activeThread?.title ?? "", messages),
     [activeThread, activeThreadRef, messages],
   );
   const [copyFeedback, setCopyFeedback] = useState<GitActionProgress>(EMPTY_COPY_FEEDBACK);

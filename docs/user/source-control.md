@@ -163,8 +163,7 @@ Alternatively, open **Settings → Source control & issues**, expand **TanStack 
 from `https://source.tanstack.com/settings/tokens`. A saved token is used before `SRC_TOKEN`, which is
 used before the `src` login. With several `src` logins, pick the account there too.
 
-Pull requests show the runs of TanStack Source CI with their logs, and update live while open. Issues
-can be listed, filed, edited, commented on and closed. Reactions and picking reviewers or assignees
+Issues can be listed, filed, edited, commented on and closed. Reactions and picking reviewers or assignees
 from a list are not available yet.
 
 ### Cursor Origin
@@ -228,124 +227,6 @@ Choose how commit messages and pull request titles and descriptions are written 
 project's instructions and recent commit subjects. **Custom instructions** applies your own
 instructions to commits and pull requests.
 
-## Review and merge
-
-Turn on **Show pull requests tab** in **Settings → Appearance** to add the list to workspace
-navigation on this device. On mobile, use the list title to switch between **Issues** and
-**Pull requests**. Open **Pull requests** to review changes and comments, request reviewers,
-check out a branch, or merge. You can edit review titles and descriptions and your own comments
-where the host allows it.
-Where you can edit a description, you can also tick its checkboxes from the Summary tab
-(the Overview tab on mobile).
-GitLab calls these merge requests.
-
-A merge or review applies to the commits you opened the pull request on. When someone pushes
-meanwhile, the desktop app offer **Load new commits**; until you do, a merge or review is refused and your
-review draft is kept. Merging from a thread's pull request row, or from the list, lands the head that
-row had when you confirmed.
-
-Save a filter setup with **Views → Save current view** on the Pull Requests page. For example, choose
-**Reviewing** (**Your review** on mobile) and save it as "PRs Requesting My Review". Choose a saved view to restore its search,
-filters, sort order, and server/project scope. After changing filters, use **Update saved view** to
-keep the changes, or save another view. You can also rename or delete views from the same menu.
-Saved views stay in the browser or app where you created them and do not sync across devices.
-
-A link to part of a pull request opens that part: a comment or review is marked in the activity, a
-changed-line link opens the file at those lines, a checks link opens the checks, and a commit link
-opens that commit's changes. On desktop, hovering a comment or commit link previews it.
-
-On mobile, **Pull requests** lists reviews across your connected environments. Open a review
-to read its description, activity, commits, and changed files. Line comments stay as drafts
-until you submit the review. **Work on PR** opens a chat with the review attached; sending
-the first message prepares a worktree from the review's branch.
-
-Previously loaded lists, review details, guides, and diff pages remain readable on mobile
-without a connection, including after restarting the app. Saved content refreshes when the
-environment reconnects; submitting changes requires a connection.
-
-Enable **Remove agent credits when merging** in Settings → Source control & issues to remove recognized
-agent co-author and generated-by lines from GitHub merge and squash commit messages. Human
-co-authors stay credited. The setting is off by default and projects can override it. It also
-applies to auto-merge, but not merge queues or native stack merges. Original commits keep their
-messages, so merge and rebase can still retain agent credits in those commits.
-
-On desktop, hold **Shift** in the GitHub pull request list for quick actions.
-To close several, press **Close**, drag across the rows in the same group, and release.
-Press **Escape** before releasing to cancel. Failed closes stay in the list so you can retry them.
-
-GitHub, GitLab, and Azure DevOps support auto-merge while checks are outstanding. GitHub also
-supports approving waiting fork workflows and opening a revert pull request for a merged change.
-
-Pull request sharing is off by default. In Settings → Environments → Pull request sharing (Pull
-request routing under Environments on mobile), choose **Read PRs** or **Read and act** for each
-environment you trust to share its source control access.
-Enable both the original environment and the environment answering its requests on this client.
-**Read and act** can use broader permissions than the original environment's credential;
-only enable it for environments you control and trust. Changing a saved endpoint or removing an
-environment clears its permission.
-
-Review details, linked PR status, and permitted review actions can then use another connected
-environment signed in to the same account on the same host. Each needs a project on that host.
-A connected local environment is preferred for actions and can answer slow or failed reads.
-Browsers and mobile clients need a paired environment to use its GitHub credentials.
-Credentials stay on their machines. Previously verified credentials remain usable for routing
-for ten minutes during a GitHub outage; new credentials must be verified first. An action with
-an uncertain result is never automatically retried elsewhere. Listings, diffs, and checkout or
-PR creation from Git actions continue to use the project's environment.
-
-For Azure DevOps, use the host website to change comments. Bitbucket does not support reopening a
-declined pull request.
-
-### Review guides
-
-Review guides are in beta. Turn on **Review guides** in Settings → Source control & issues to add the
-**Guide** tab to pull requests on that server. On mobile, move between stops with **Next**
-and the back button; a stale guide offers a rewrite and hides excerpts that no longer match
-the current change.
-
-The **Guide** tab gives you a tour of a pull request without reading it line by line: stops
-through the change in reading order. Each stop points at the lines worth reading, and a stop marked
-**Look closely** has a call only a maintainer can make. Mechanical changes such as renames and
-snapshots are grouped at the end, and every changed file appears somewhere on the tour.
-Conversations already resolved in review are left out. For a pull request in a stack, the guide
-covers that layer only, and may point out what a lower layer introduced or what a higher one uses.
-
-Choose **Write guide** to have the review guide model from Settings → Source control & issues read the
-change in a temporary checkout; without one set, the source control writer model is used. Nothing
-in the checkout is changed, and a large pull request takes a few minutes; you can go elsewhere in
-the app. On web, you are told when the guide is ready; on mobile, return to the guide to check
-its progress. Claude and Codex can write guides. Claude writes them with your user settings, but
-tool approvals in those settings do not apply: it reads files and runs `git diff`, `git log` and
-`git show`, nothing else. The guide is
-kept for everyone using this server. To write it again, for example after a push or after changing
-the model or instructions, choose **Rewrite guide** from the pull request's **⋯** menu.
-
-On web, while reading a stop, select lines in an excerpt to add a comment to your review or ask an agent
-about them; comments wait with the ones from the **Code** tab until you send the review. Choose a
-suggested question, or **Ask about this stop**, to open a thread that already knows which stop you
-are on. **Finish review** on the last stop opens the review with everything you collected.
-
-Agents can write guides too: ask one to prepare guides for a set of pull requests, and it starts
-them for you. Each is read through the project whose checkout has that repository.
-
-To shape guides to your taste, write **Review guide instructions** in Settings → Source control & issues,
-such as what to show first or what to skip; projects can override them. They change emphasis and
-ordering, not the guide's layout or which files it covers.
-
-### Mark files as viewed
-
-Tick a file off in the **Code** tab once you have read it and it collapses; the toolbar keeps a
-running count. A tick belongs to the pull request rather than to a commit, so scoping the tab to a
-single commit keeps them. A file pushed to after you cleared it comes back marked **Changed**.
-
-On GitHub these are GitHub's own viewed marks, so a review carries between Ankiel Code and github.com
-in either direction. Forgejo, GitLab, Bitbucket, Azure DevOps, and Cursor Origin expose no record
-Ankiel Code can read, so the server you are connected to keeps them instead: they follow you across the
-apps connected to that server, but the host's own site will not show them, and the count reads **viewed in Ankiel Code**.
-
-On mobile, open a changed file and mark it viewed from its header. Viewed files collapse,
-and their marks follow the same rules as on desktop.
-
 ## Troubleshooting
 
 - **Not authenticated:** run the provider's login command on the server, then rescan. For Bitbucket,
@@ -354,54 +235,6 @@ and their marks follow the same rules as on desktop.
 - **GitHub sign-in cannot be verified:** update GitHub CLI to at least 2.81.0, or save a token in Settings → Source control & issues.
 - **Push fails despite a connected account:** check the Git remote's credentials. SSH and HTTPS
   remotes can require separate setup from the hosting provider's API access.
-- **A review cannot load:** open it on the host website while resolving connectivity, permissions,
-  or rate limits.
-
-## Linked pull requests
-
-A thread can hold several pull requests, including reviews from another repository on the same host.
-Use **Link pull request** in the command palette or **Linked items** panel, or right-click a
-pull request link in the conversation. Creating a pull request from Git actions links it automatically,
-and so does an agent creating one with `gh pr create` or `glab mr create`.
-
-Use **Link pull request to thread** in the command palette to keep a pull request with the thread. From a review
-on the Pull requests page, **Link to thread** lets you search for an active thread. The review header
-also lists the threads that link to it, including archived threads, so you can return to their context.
-
-Thread badges show a stack's layer count or the current review number with a count of additional
-links. Clicking a badge with more than one review opens the **Linked items** panel. On mobile, the Git overview lists linked reviews and their stacks; tap a review to open it.
-Linking and unlinking are available in the desktop client.
-
-The **Linked items** panel lists every review and groups stacks. Unlink a review from its
-row menu. An unlinked stack layer stays out of later syncs. Open linked reviews refresh on the server;
-closed reviews refresh periodically so reopening one on the host is detected. Merged reviews refresh
-when requested. Settling a thread refreshes its open and closed reviews once; after that they stop refreshing until you unsettle it. With **Auto-settle merged threads** enabled, a thread can settle after every linked
-review is terminal. An open or unsynced link keeps it active.
-
-To watch a pull request, use its row menu in the **Linked items** panel. While
-the thread is active, the server checks the pull request every two minutes and wakes the agent when a
-check fails or waits for a maintainer's approval, the required checks pass, the other checks finish after a failure, someone else comments or reviews, or the branch starts to
-conflict. On github.com it also wakes the agent, with GitHub's reason, when the merge queue drops
-the pull request without merging it. Threads in a project that watch the same pull request share one check. On GitHub, a check
-first asks whether anything changed and reads the pull request only when it did, which keeps
-watching inside GitHub's rate limit. Comments from your own account do not wake it. When the pull
-request merges or closes, watching ends, and the agent is woken once unless it merged or closed the
-pull request itself with the host's CLI. A reopened pull request needs a new watch. Watching also ends after 10 wakes in a row that bring only comments, after 8
-failed reads in a row, or when you press Stop on the thread. A rate limit only pauses watching.
-Settling or archiving a thread also ends all its watches. Unsettle the thread before starting a new
-watch. Watching a pull request again does not repeat check or conflict news its last
-watch already reported; unlinking the pull request clears that. To stop watching, use the same row menu. In the thread
-details card, a watched pull request shows an eye; click it to stop watching.
-
-A watched thread counts as working while the pull request still has checks running, so it stays in
-the **Working** section, including after the agent pushes a fix. Once every check has finished,
-including review bots that report as checks, the thread returns to your inbox: what happens next is
-up to a person. That includes a workflow waiting for a maintainer to approve it, which runs only
-once someone does. The watch stays on and still wakes the agent on new comments, failed checks or
-conflicts, and a watched thread never auto-settles.
-
-Cross-repository links use a project on the same host. Azure DevOps reviews require a project checked
-out from the matching organization and repository.
 
 ## Issues
 
@@ -411,32 +244,18 @@ DevOps or Forgejo, grouped per tracker account. Open it from the sidebar's utili
 (assigned, opened by you, mentioning you), and by tracker. Under **Projects**, uncheck the
 projects you do not want to see; the list remembers them, and a project you add later shows.
 The search box asks the tracker itself where it can search. Press **Load more** at the end of a group to read further back.
-The **Views** menu saves and restores a search, filter, and sort setup, as it does for pull
-requests.
+The **Views** menu saves and restores a search, filter, and sort setup.
 
 Select an issue to open it beside the list: description, comments, state changes, linked pull
-requests, labels, assignees, and reactions. Linked pull requests open in the same panel. You can
+requests, labels, assignees, and reactions. Linked pull requests open on the host. You can
 comment, edit the title and description, change labels and assignees, react, and move it to
 another state when the tracker and your account allow it. Where a GitHub repository has issue
 statuses (Backlog, Todo, In progress, and so on), those are the states you move between;
 elsewhere you close or reopen, with a close reason where the
 tracker records one. An issue read through a project that does not own its repository is shown read-only.
 
-An issue can be kept with a thread the way a pull request can: open it beside the thread (issue
-links in the conversation open there) and use **Link to this thread** in its header; **Unlink**
-undoes it. Click the issue badge in the thread sidebar to see its issues and pull requests in
-**Linked items**. Select an issue there to open it beside the thread.
+An issue can be kept with a thread: open it beside the thread (issue links in the conversation
+open there) and use **Link to this thread** in its header; **Unlink** undoes it. Click the issue
+badge in the thread sidebar to see its issues in **Linked items**. Select an issue there to open it beside the thread.
 
 Writing to a tracker over a remote connection requires the `source-control:write` scope.
-
-## GitHub stacks
-
-The Pull requests page shows each PR's position in its GitHub stack. Open the stack badge in a
-review to navigate its layers. **Merge stack** submits the selected pull request and every unmerged
-layer below it to GitHub together, respecting branch rules and merge queues. The confirmation shows
-the scope and merge strategy. GitHub rebases the remaining stack after merging.
-
-**Rebase stack** updates remote branches from bottom to top without changing your local checkout.
-It can rewrite history and restart checks. If a layer fails, earlier updates remain; resolve that
-layer before retrying. GitHub may require manual conflict resolution after a lower layer is amended,
-even when its changes look independent. Stack actions require an environment that supports them.

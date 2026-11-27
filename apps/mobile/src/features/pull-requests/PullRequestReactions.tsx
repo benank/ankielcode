@@ -1,4 +1,3 @@
-import { useNavigation } from "@react-navigation/native";
 import {
   applyPendingPullRequestReactions,
   type PendingPullRequestReaction,
@@ -8,13 +7,8 @@ import {
   pullRequestReactionTooltip,
   pullRequestReactionsSignature,
 } from "@ankielcode/client-runtime/pull-request-reactions";
-import type {
-  PullRequestComment,
-  PullRequestReaction,
-  PullRequestReactionContent,
-} from "@ankielcode/contracts";
-import { AsyncResult } from "effect/reactivity";
-import { T, useGT, useLocale, useMessages } from "gt-react-native";
+import type { PullRequestReaction, PullRequestReactionContent } from "@ankielcode/contracts";
+import { useGT, useLocale, useMessages } from "gt-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { SymbolView } from "../../components/ui/AppSymbol";
@@ -22,11 +16,6 @@ import { AppText as Text } from "../../components/ui/AppText";
 import * as Dialog from "../../components/ui/Dialog";
 import { Menu } from "../../components/ui/Menu";
 import { cn } from "../../lib/cn";
-import { composerPullRequests } from "../../state/pull-requests";
-import { useEnvironmentQuery } from "../../state/query";
-import { useAtomCommand } from "../../state/use-atom-command";
-import { pullRequestTarget, type PullRequestParams } from "./usePullRequestDiff";
-import { usePullRequestPermissions } from "./usePullRequestPermissions";
 
 const EMPTY_PENDING: ReadonlyMap<PullRequestReactionContent, PendingPullRequestReaction> =
   new Map();
@@ -110,103 +99,5 @@ export function ReactionPills(props: {
         </Menu>
       ) : null}
     </>
-  );
-}
-
-function usePullRequestReact(params: PullRequestParams, subjectId?: string) {
-  const target = pullRequestTarget(params);
-  const setReaction = useAtomCommand(composerPullRequests.setReaction, { reportFailure: false });
-  return async (content: PullRequestReactionContent, reacted: boolean) =>
-    !AsyncResult.isFailure(
-      await setReaction({
-        ...target,
-        input: {
-          ...target.input,
-          ...(subjectId === undefined ? {} : { subjectId }),
-          content,
-          reacted,
-        },
-      }),
-    );
-}
-
-/** Reactions on the change request itself, which is where its description's reactions live. */
-export function PullRequestReactions(props: { readonly params: PullRequestParams }) {
-  const target = pullRequestTarget(props.params);
-  const detail = useEnvironmentQuery(composerPullRequests.detail(target));
-  const activity = useEnvironmentQuery(composerPullRequests.activity(target));
-  const { canReact } = usePullRequestPermissions(props.params, detail.data);
-  const reactions = activity.data?.reactions ?? [];
-  const onReact = usePullRequestReact(props.params);
-  if (!activity.data || (reactions.length === 0 && !canReact)) return null;
-  return (
-    <View className="flex-row flex-wrap items-center gap-1.5">
-      <ReactionPills
-        reactions={reactions}
-        canReact={canReact}
-        onReact={onReact}
-        onChanged={activity.refresh}
-      />
-    </View>
-  );
-}
-
-export function PullRequestCommentFooter(props: {
-  readonly params: PullRequestParams;
-  readonly comment: Pick<
-    PullRequestComment,
-    "id" | "kind" | "body" | "author" | "canEdit" | "reactions"
-  >;
-  readonly permissions: Pick<
-    ReturnType<typeof usePullRequestPermissions>,
-    "canEditComment" | "canReactComment"
-  >;
-  readonly onChanged: () => void;
-  readonly onEdit?: () => void;
-}) {
-  const navigation = useNavigation();
-  const gt = useGT();
-  const { comment } = props;
-  const reactions = comment.reactions ?? [];
-  const editableKind = comment.kind === "review" ? null : comment.kind;
-  const canEdit = editableKind !== null && props.permissions.canEditComment(comment);
-  const canReact = props.permissions.canReactComment(comment);
-  const onReact = usePullRequestReact(props.params, comment.id);
-  if (reactions.length === 0 && !canReact && !canEdit) return null;
-  return (
-    <View className="flex-row flex-wrap items-center gap-1.5">
-      <ReactionPills
-        reactions={reactions}
-        canReact={canReact}
-        onReact={onReact}
-        onChanged={props.onChanged}
-      />
-      {canEdit && editableKind !== null ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={gt("Edit comment")}
-          onPress={() => {
-            props.onEdit?.();
-            navigation.navigate("PullRequestEdit", {
-              ...props.params,
-              field: "comment",
-              comment: {
-                id: comment.id,
-                kind: editableKind,
-                body: comment.body,
-                author: comment.author,
-                ...(comment.canEdit === undefined ? {} : { canEdit: comment.canEdit }),
-              },
-            });
-          }}
-          className={cn(PILL, "ml-auto border-transparent")}
-        >
-          <SymbolView name="pencil" size={13} tintColorClassName="accent-icon-muted" />
-          <Text className="text-xs font-ankiel-medium text-foreground-muted">
-            <T context="verb, edit a comment">Edit</T>
-          </Text>
-        </Pressable>
-      ) : null}
-    </View>
   );
 }

@@ -9,10 +9,8 @@ import {
   type NavigationTab,
 } from "./navigation-tab-order";
 import type { AppSymbolName } from "../../../components/ui/AppSymbol";
-import { pullRequestsSupportedAtom } from "../../../state/presentation";
+import { issuesSupportedAtom } from "../../../state/presentation";
 import { mobilePreferencesAtom } from "../../../state/preferences";
-import { PullRequestGlyph } from "../../pull-requests/pullRequestGlyphs";
-import { useWorkspaceTabs } from "./WorkspaceTabsContext";
 import { resolveWorkspaceTabOrder } from "./workspace-tabs-state";
 
 export const WORKSPACE_TAB_LABELS = {
@@ -20,14 +18,12 @@ export const WORKSPACE_TAB_LABELS = {
   ...(Platform.OS === "ios"
     ? {
         threads: msg("Chats", { $context: "navigation tab, list of chat threads" }),
-        pullRequests: msg("PRs", { $context: "navigation tab, pull requests" }),
       }
     : {}),
 };
 
 export const NAVIGATION_TAB_ICONS = {
   threads: "text.bubble",
-  pullRequests: PullRequestGlyph.pullRequest,
   issues: "git.issue",
   workflows: "point.3.connected.trianglepath.dotted",
   usage: "chart.bar.xaxis",
@@ -43,20 +39,9 @@ export function useNavigationTabOrder() {
 
 export function useHiddenNavigationTabs() {
   const preferences = useAtomValue(mobilePreferencesAtom);
-  const selected = useWorkspaceTabs()?.state.selectedTab ?? "threads";
   const saved = AsyncResult.isSuccess(preferences) ? preferences.value : undefined;
-  const githubEnabled = useAtomValue(pullRequestsSupportedAtom);
-  return workspaceHiddenNavigationTabs(selected, saved, githubEnabled);
-}
-
-export function usePullRequestTabEnabled() {
-  const preferences = useAtomValue(mobilePreferencesAtom);
-  const githubEnabled = useAtomValue(pullRequestsSupportedAtom);
-  return (
-    githubEnabled &&
-    AsyncResult.isSuccess(preferences) &&
-    preferences.value.pullRequestTabEnabled === true
-  );
+  const issuesEnabled = useAtomValue(issuesSupportedAtom);
+  return workspaceHiddenNavigationTabs(saved, issuesEnabled);
 }
 
 export function useEnabledNavigationTabs() {

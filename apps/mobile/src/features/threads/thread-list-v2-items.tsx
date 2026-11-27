@@ -51,11 +51,6 @@ import { copyThreadReference } from "../../lib/copyThreadReference";
 import { useUniwindTheme } from "../../lib/useUniwindTheme";
 import { useEnvironmentScope } from "../../state/session";
 import type { PendingNewTask } from "../../state/use-pending-new-tasks";
-import {
-  resolveThreadPrBadgeAction,
-  type ThreadPrPresentation,
-} from "../../state/thread-pr-presentation";
-import { useThreadPr } from "../../state/use-thread-pr";
 import { useSwipeRowDormant } from "../home/swipe-row-activation";
 import { ThreadSwipeable } from "../home/thread-swipe-actions";
 import { buildThreadTitleRegenerationMenuItems } from "./thread-title-regeneration-menu";
@@ -652,10 +647,6 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   readonly selected?: boolean;
   readonly fullSwipeWidth?: number;
   readonly onSelectThread: (thread: EnvironmentThreadShell) => void;
-  readonly onOpenThreadPullRequests: (
-    thread: EnvironmentThreadShell,
-    pr: ThreadPrPresentation,
-  ) => void;
   readonly onDeleteThread: (thread: EnvironmentThreadShell) => void;
   readonly onNewThreadOnBranch: (thread: EnvironmentThreadShell) => void;
   readonly onRenameThread: (thread: EnvironmentThreadShell) => void;
@@ -697,7 +688,6 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
     variant,
     branch,
     onSelectThread,
-    onOpenThreadPullRequests,
     onDeleteThread,
     onRenameThread,
     onRegenerateThreadTitle,
@@ -740,11 +730,6 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         showBadge: providerInstance.showBadge,
       })
     : null;
-  const pr = useThreadPr(thread);
-  const prBadgeLabel = pr ? resolveThreadPrBadgeAction(pr, m).accessibilityLabel : null;
-  const handleOpenPullRequests = useCallback(() => {
-    if (pr) onOpenThreadPullRequests(thread, pr);
-  }, [onOpenThreadPullRequests, pr, thread]);
 
   const theme = useUniwindTheme();
   const sidebarPane = props.pane === "sidebar";
@@ -831,14 +816,13 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   // VoiceOver cannot focus buttons inside the accessible row.
   const rowAccessibilityActions = useMemo(
     () => [
-      ...(prBadgeLabel ? [{ name: "openPullRequests", label: prBadgeLabel }] : []),
       ...(showsWoke ? [{ name: "dismissWoke", label: gt("Dismiss Woke notification") }] : []),
       // Dismissing Woke already marks the thread read.
       ...(readToggleLabel !== null && !(showsWoke && readToggleKind === "mark-read")
         ? [{ name: "toggleRead", label: readToggleLabel }]
         : []),
     ],
-    [gt, prBadgeLabel, readToggleKind, readToggleLabel, showsWoke],
+    [gt, readToggleKind, readToggleLabel, showsWoke],
   );
 
   const handleDelete = useCallback(() => onDeleteThread(thread), [onDeleteThread, thread]);
@@ -1314,7 +1298,6 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
       accessibilityState={{ selected }}
       accessibilityActions={rowAccessibilityActions}
       onAccessibilityAction={(event) => {
-        if (event.nativeEvent.actionName === "openPullRequests") handleOpenPullRequests();
         if (event.nativeEvent.actionName === "dismissWoke") handleAcknowledgeWoke();
         if (event.nativeEvent.actionName === "toggleRead") handleToggleRead();
       }}

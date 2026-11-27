@@ -16,7 +16,6 @@ import {
   THREAD_OPEN_DEDUPE_MS,
   type ThreadSearchSubject,
 } from "@ankielcode/shared/paletteSearch";
-import { threadSearchPullRequests } from "@ankielcode/shared/threadPullRequests";
 
 import type { EnvironmentThreadShell } from "./models.ts";
 import { getThreadSortTimestamp } from "./threadSort.ts";
@@ -213,8 +212,7 @@ export type ThreadSearchShell = Pick<
   | "latestUserMessageAt"
   | "latestUserAuthoredMessageAt"
   | "opens"
-> &
-  Partial<Pick<EnvironmentThreadShell, "pullRequests" | "linkedPullRequest" | "branchPullRequest">>;
+>;
 
 /**
  * What the web and mobile palettes rank a thread shell by. Pass the
@@ -268,7 +266,6 @@ function buildThreadSearchSubject(
     branch: thread.branch,
     projectTitle: projectTitle ?? null,
     environmentLabel: environmentLabel ?? null,
-    pullRequests: threadSearchPullRequests(thread),
     activityAt: Number.isFinite(activityAt) ? activityAt : null,
     // This client's own latest open counts too: the server merged it, or has
     // no record yet (an older server ignores opens).

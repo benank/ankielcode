@@ -1,7 +1,5 @@
 import { backgroundWorkHoldsCompletion } from "@ankielcode/shared/orchestrationV2PendingBackgroundWork";
-import { threadPullRequestsOf } from "../threadPullRequests.ts";
 import type {
-  ThreadLinkedPullRequest,
   EnvironmentId,
   MessageId,
   OrchestrationProjectShell,
@@ -197,9 +195,6 @@ export interface EnvironmentThreadShell {
   readonly autoSettleDisabledAt?: string | null;
   readonly pinOrderKey: string | null;
   readonly activeOrderKey: string | null;
-  readonly pullRequests: ReadonlyArray<import("@ankielcode/contracts").ThreadPullRequestLink>;
-  readonly linkedPullRequest?: ThreadLinkedPullRequest | null;
-  readonly branchPullRequest?: ThreadLinkedPullRequest | null;
   /** Absent from rows built before issue linking; the server sends an empty list. */
   readonly issues?: ReadonlyArray<import("@ankielcode/contracts").ThreadIssueLink>;
   /**
@@ -308,9 +303,6 @@ export function presentThreadShell(
     interactionMode: thread.interactionMode,
     branch: thread.branch,
     worktreePath: thread.worktreePath,
-    pullRequests: threadPullRequestsOf(thread),
-    linkedPullRequest: thread.linkedPullRequest ?? null,
-    branchPullRequest: thread.branchPullRequest ?? null,
     issues: thread.issues ?? [],
     lineage: thread.lineage,
     forkedFrom: thread.forkedFrom,

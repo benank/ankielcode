@@ -22,7 +22,6 @@ const SETTINGS_SEARCH_TERMS = {
     "tailscale",
   ],
   SettingsAppearance: [
-    msg("Show pull requests tab"),
     msg("theme", { $context: "settings search keyword" }),
     msg("dark mode", { $context: "settings search keyword" }),
     msg("light mode", { $context: "settings search keyword" }),

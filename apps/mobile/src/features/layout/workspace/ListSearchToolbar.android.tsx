@@ -6,21 +6,20 @@ import { AppBar } from "../../../components/ui/AppBar";
 import { appBarMenuItemsFromActions } from "../../../components/ui/menuActionItems";
 import { useHardwareKeyboardCommand } from "../../keyboard/hardwareKeyboardCommands";
 import { WorkspaceConnectionTitle } from "../../home/WorkspaceConnectionTitle";
-import type { SharedSlotTab } from "./navigation-tab-order";
-import { SharedSlotTitle } from "./SharedSlotTitle";
+import { IssuesListTitle } from "./IssuesListTitle";
 import { useWorkspaceTabs } from "./WorkspaceTabsContext";
 import type { PullRequestFilterMenu } from "../../pull-requests/PullRequestListFilters";
 import { openSettings } from "../../settings/settings-navigation";
 
-/** Pull request and issue search share the thread list's Android header. */
+/** Issue search shares the thread list's Android header. */
 export function ListSearchToolbar(props: {
-  readonly tab: SharedSlotTab;
   readonly filters?: PullRequestFilterMenu | null;
   readonly onRequestVisibility?: () => void;
 }) {
   const gt = useGT();
   const navigation = useNavigation();
-  const { filters, tab: section } = props;
+  const { filters } = props;
+  const section = "issues";
   const workspace = useWorkspaceTabs()!;
   const { dispatch, getScrollOffset, recordScrollOffset, isTabActive } = workspace;
   const { onRequestVisibility } = props;
@@ -64,13 +63,13 @@ export function ListSearchToolbar(props: {
         <WorkspaceConnectionTitle
           grow
           onPress={() => openSettings(navigation, "SettingsEnvironments")}
-          brand={<SharedSlotTitle tab={section} />}
+          brand={<IssuesListTitle />}
         />
       }
       search={{
         value: tab.query,
         onChangeText: (query) => dispatch({ type: "query", tab: section, query }),
-        placeholder: section === "issues" ? gt("Search issues") : gt("Search pull requests"),
+        placeholder: gt("Search issues"),
         active: searching,
         onOpen: openSearch,
         onClose: closeSearch,
@@ -79,7 +78,7 @@ export function ListSearchToolbar(props: {
         filters
           ? [
               {
-                title: section === "issues" ? gt("Filter issues") : gt("Filter pull requests"),
+                title: gt("Filter issues"),
                 icon: filters.customized
                   ? "line.3.horizontal.decrease.circle.fill"
                   : "line.3.horizontal.decrease.circle",

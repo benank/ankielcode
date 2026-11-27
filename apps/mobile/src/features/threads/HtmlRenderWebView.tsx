@@ -17,7 +17,7 @@ import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
 import { mobileHtmlRenderTheme } from "../../lib/htmlRenderTheme";
-import { useOpenPullRequest } from "../../native/useOpenPullRequest";
+import { useOpenIssueLink } from "../../native/useOpenIssueLink";
 import { useAssetUrlState, useRefreshAssetUrl } from "../../state/assets";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 import { webViewDecelerationRate } from "../../lib/webViewDecelerationRate";
@@ -83,7 +83,7 @@ export function HtmlRenderWebView(props: {
   readonly onLoadError?: () => void;
 }) {
   const theme = useHtmlRenderTheme();
-  const openLink = useOpenPullRequest();
+  const openLink = useOpenIssueLink();
   const [initialTheme] = useState(theme);
   const [generation, setGeneration] = useState(0);
   const [loaded, setLoaded] = useState(false);

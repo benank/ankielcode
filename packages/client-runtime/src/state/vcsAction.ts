@@ -42,7 +42,6 @@ export const VcsActionOperation = Schema.Literals([
   "create_worktree",
   "init",
   "publish_repository",
-  "prepare_pull_request_thread",
 ]);
 export type VcsActionOperation = typeof VcsActionOperation.Type;
 

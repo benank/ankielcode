@@ -91,7 +91,7 @@ import {
   resolveNewTaskBranchWorktreePath,
   resolveNewTaskLocalWorkspaceSelection,
 } from "./new-task-context-presentation";
-import { isSameRepository, resolveEnvironmentProjectMatch } from "./new-task-project-selection";
+import { resolveEnvironmentProjectMatch } from "./new-task-project-selection";
 import { useNewTaskProjectDefaults } from "./use-new-task-project-defaults";
 import { resolveProjectThreadCreationBranch } from "./projectThreadCreationValidation";
 import {
@@ -162,7 +162,6 @@ type NewTaskFlowContextValue = {
     selection: ComposerDraftWorkspaceSelection | undefined,
   ) => ComposerDraftWorkspaceSelection;
   readonly startFromOrigin: boolean;
-  readonly pullRequestReference: string | undefined;
   readonly draftKey: string | null;
   readonly prompt: string;
   readonly attachments: ReadonlyArray<DraftComposerAttachment>;
@@ -574,14 +573,11 @@ export function NewTaskFlowProvider(
     replaceComposerDraftAttachments(selectedProjectDraftKey, []);
   };
 
-  const carryDraftContentTo = (
-    project: EnvironmentProject,
-    options?: Parameters<typeof retargetNewTaskDraft>[2],
-  ): string => {
+  const carryDraftContentTo = (project: EnvironmentProject): string => {
     const target = { environmentId: project.environmentId, projectId: project.id };
     const current = readFlow().draftKey;
     if (current !== null && isNewTaskDraftKey(current)) {
-      retargetNewTaskDraft(current, target, options);
+      retargetNewTaskDraft(current, target);
       return current;
     }
     return createNewTaskDraft(target);
@@ -601,12 +597,7 @@ export function NewTaskFlowProvider(
       selectedProject,
     );
     updateFlow({
-      // A name or title match may be another repository, which must not receive the PR checkout.
-      draftKey: match
-        ? carryDraftContentTo(match, {
-            keepPullRequestWorkspace: isSameRepository(match, selectedProject),
-          })
-        : readFlow().draftKey,
+      draftKey: match ? carryDraftContentTo(match) : readFlow().draftKey,
       environmentId,
       projectKey: match ? scopedProjectKey(match.environmentId, match.id) : null,
     });
@@ -818,9 +809,6 @@ export function NewTaskFlowProvider(
         projectTitle: selectedProject.title,
         projectCwd: selectedProject.workspaceRoot,
         workspaceMode: mode,
-        ...(mode === "worktree" && workspaceSelection?.pullRequestReference
-          ? { pullRequestReference: workspaceSelection.pullRequestReference }
-          : {}),
         // Queued local tasks use drain-time checkout; snapshot branches only for immediate sends or explicit choices.
         branch: resolveProjectThreadCreationBranch({
           workspaceMode: mode,
@@ -918,7 +906,6 @@ export function NewTaskFlowProvider(
     resolveWorkspaceSelection,
     startFromOrigin,
     draftKey: selectedProjectDraftKey,
-    pullRequestReference: selectedProjectDraft.workspaceSelection?.pullRequestReference,
     prompt,
     attachments,
     submitting,

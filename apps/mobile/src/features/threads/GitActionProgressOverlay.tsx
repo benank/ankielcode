@@ -9,19 +9,12 @@ import type { GitActionProgress } from "../../state/use-vcs-action-state";
 export function GitActionProgressOverlay(props: {
   readonly progress: GitActionProgress;
   readonly onDismiss: () => void;
-  readonly onOpenPullRequest?: (url: string) => Promise<boolean>;
 }) {
   const gt = useGT();
   const { progress, onDismiss } = props;
-  const openPullRequest = props.onOpenPullRequest;
   const top = useBarInset() + 8;
   const handlePress = () => {
-    if (progress.prUrl) {
-      void (openPullRequest
-        ? openPullRequest(progress.prUrl)
-        : tryOpenExternalUrl(progress.prUrl, "pull-request"));
-      return;
-    }
+    if (progress.prUrl) void tryOpenExternalUrl(progress.prUrl, "pull-request");
   };
 
   if (progress.phase === "idle") {

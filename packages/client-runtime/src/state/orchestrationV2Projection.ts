@@ -1,4 +1,3 @@
-import { applyThreadPullRequestLinkUpdate } from "../threadPullRequests.ts";
 import {
   applyOrchestrationV2ThreadVisit,
   isQueuedProviderThreadPlaceholder,
@@ -294,11 +293,9 @@ export function applyOrchestrationV2ProjectionEvent(
   const latestLocalTurnOrdinal = options?.latestLocalTurnOrdinal;
   const base = { ...projection, updatedAt: event.occurredAt };
   switch (event.type) {
+    // Clients no longer show pull request links.
     case "thread.pull-request-link-updated":
-      return {
-        ...base,
-        thread: applyThreadPullRequestLinkUpdate(projection.thread, event.payload),
-      };
+      return projection;
     case "thread.created":
     case "thread.archived":
     case "thread.unarchived":

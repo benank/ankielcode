@@ -17,7 +17,7 @@ introduce a different execution model.
   Verify a direct or learned route answers as the expected environment before sending credentials.
   A saved environment can hold both a Cloudflare Relay HTTPS route and a learned same-network LAN
   route, switching between them transparently as the client moves on and off the host's network.
-- Pull request routing trust covers the saved route set: adding or changing a route revokes trust;
+- An unsupported verdict covers the saved route set: adding or changing a route drops it;
   reordering does not.
 
 ## Desktop previews tunnel loopback
