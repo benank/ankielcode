@@ -16,6 +16,8 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
   public var autoResumeLimitedThreads = false
   public var snoozeLimitedThreads = false
   public var snoozePresets: [SnoozePresetSetting] = SnoozePresetSetting.defaults
+  /// `enablePreviewTunnel` (default on): whether device previews may reach the computer's localhost.
+  public var enablePreviewTunnel = true
 
   public static let defaultAutoSettleDays = 7
   /// `MIN_`/`MAX_SIDEBAR_AUTO_SETTLE_AFTER_DAYS`; the server refuses a patch outside them.
@@ -29,6 +31,7 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
   enum CodingKeys: String, CodingKey {
     case defaultModelSelection, fallbackModelSelection, defaultRuntimeMode, providerModelPreferences
     case sidebarAutoSettleOnMerge, sidebarAutoSettleAfterDays, autoResumeLimitedThreads, snoozeLimitedThreads, snoozePresets
+    case enablePreviewTunnel
   }
 
   struct Preferences: Decodable {
@@ -53,6 +56,7 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
     }
     autoResumeLimitedThreads = c.loose(Bool.self, .autoResumeLimitedThreads) ?? false
     snoozeLimitedThreads = c.loose(Bool.self, .snoozeLimitedThreads) ?? false
+    enablePreviewTunnel = c.loose(Bool.self, .enablePreviewTunnel) ?? true
     let presets = c.loose(LossyArray<WirePreset>.self, .snoozePresets)?.elements.compactMap(\.setting)
     snoozePresets = presets.map { $0.isEmpty ? SnoozePresetSetting.defaults : $0 } ?? SnoozePresetSetting.defaults
   }

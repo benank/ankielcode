@@ -98,6 +98,21 @@ func run() async throws {
     await session.close()
     return
   }
+  if let url = argument("--preview-seed") {
+    try await probePreviewSeed(session, url: url)
+    await session.close()
+    return
+  }
+  if let threadId = argument("--preview-delete") {
+    await deleteThread(session, threadId)
+    await session.close()
+    return
+  }
+  if let port = argument("--preview-tunnel").flatMap(UInt16.init) {
+    try await probePreviewTunnel(session, environment: environment, connector: connector, port: port)
+    await session.close()
+    return
+  }
   if let threadId = argument("--terminal-list") {
     try await probeTerminalList(session, threadId: threadId)
     await session.close()

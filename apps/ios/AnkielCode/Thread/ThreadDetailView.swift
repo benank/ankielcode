@@ -86,6 +86,7 @@ private struct ThreadScreen: View {
       .navigationSubtitle(subtitle)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar { toolbar }
+      .threadPreview(threadRef)
       .threadReview(threadRef, detail: detail)
       .threadFiles(threadRef, detail: detail)
       .task(id: shell?.branchPullRequest?.number) { model.pullRequests.loadSummary(for: shell, environmentId: threadRef.environmentId) }
@@ -309,6 +310,7 @@ private struct ThreadScreen: View {
         FilesMenuButton()
         ReviewMenuSection()
         TerminalMenuSection()
+        PreviewMenuSection()
         if let row {
           ThreadActionsMenu(
             row: row, operable: model.home.canOperate(threadRef), rename: { renaming = row.title },

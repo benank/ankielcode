@@ -456,3 +456,33 @@ its own `--state` file for that (sessions sharing a DPoP key are revoked togethe
 
 `SharingAccessUITests` (fixtures) revoke a device, create, share and revoke a link, and check the
 denied state.
+
+## Previews
+
+A thread's menu has **Browser**, and a `localhost` (or `127.0.0.1`, `[::1]`, `0.0.0.0`) link in a
+message opens there instead of Safari, which would load the phone's own localhost (RN
+`LocalPreviewScreen`). The page is the computer's: a `WKWebView` whose website data store (one
+in-memory store per computer) sends a stand-in host, `ankl.test`, to a SOCKS5 listener in the app;
+each connection gets a ticketed `/api/preview/tunnel?wsTicket=…&port=…` WebSocket on the computer's
+own route (LAN or relay alike), and the listener swaps `ankl.test` and `localhost` in plain HTTP.
+There is no fallback to the device's loopback: a refused tunnel shows why (nothing on the port, not
+connected, tunnel turned off, an outdated server, no `terminal:operate`). The menu also lists the
+thread's server browser tabs (`preview.list` plus `subscribePreviewEvents`) to open on this device.
+The streamed server browser (RN `PreviewStreamWebView`) and device streams are not built. Logic is
+in `AnkielKit/Preview`, views in `AnkielCode/Preview`.
+
+`swift run ankiel-probe --state <file> --preview-tunnel <port> [--closed-port <port>]
+[--preview-thread <id>]` loads `http://localhost:<port>/` through the same listener and tunnel
+(the stand-in host resolves nowhere, so a load proves the tunnel carried it), then checks a closed
+port and a bogus ticket. `--preview-seed <url>` makes a Replay thread whose message links `url`;
+`--preview-delete <id>` removes it.
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_PREVIEW` | `start`, `open:<url>` | Opens the browser (empty, or at that address) in the thread a launch shows. |
+| `ANKIEL_DEBUG_PREVIEW_STATE` | `port`, `environment`, `outdated`, `disabled`, `permission`, `setup`, `page`, `tunnel-off` | That state, with no server. |
+| `ANKIEL_DEBUG_PREVIEW_TABS` | `fixture` | Two synthetic browser tabs in the menu and start page. |
+
+`PreviewUITests` (live; skips without `ANKIEL_TEST_PREVIEW_THREAD_LINK` and
+`ANKIEL_TEST_PREVIEW_PORT`, a page on the Mac whose index links `/second.html`) opens Browser from
+the thread menu, types the address, follows a link, goes back and shows a closed port's error.

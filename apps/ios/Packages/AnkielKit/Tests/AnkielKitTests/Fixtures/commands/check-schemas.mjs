@@ -48,6 +48,7 @@ const schemas = {
   issuesList: m.IssueListInput,
   issueRef: m.IssueRef,
   issueComments: m.IssueCommentsPageInput,
+  previewList: m.PreviewListInput,
   prList: m.PullRequestListInput,
   prListStats: m.PullRequestListStatsInput,
   prRef: m.PullRequestRef,
