@@ -11,6 +11,11 @@ import os
 /// - Wakeups on a live session probe it (`server.probe`); only a failed probe replaces the socket.
 /// - A DPoP token renews in place on the live session before it expires; a failed renewal never
 ///   closes a healthy socket.
+/// - On a route other than the preferred one, better routes are checked every minute and when the
+///   network changes; one that answers is connected first and then replaces the session, so moving
+///   between a relay and the LAN never drops the computer (RN `checkBetterRoutes`).
+/// - A probe the socket leaves unanswered asks the host over HTTP; when the host answers but the
+///   socket stays silent, the socket is dead and is replaced without waiting out the timeout.
 public actor ConnectionSupervisor {
   public struct Options: Sendable {
     public var establishTimeout: TimeInterval = 30
@@ -21,6 +26,15 @@ public actor ConnectionSupervisor {
     public var renewalRetryDelay: TimeInterval = 5
     public var baseRetryDelay: TimeInterval = 1
     public var maxRetryDelay: TimeInterval = 300
+    public var betterRouteInterval: TimeInterval = 60
+    /// A better route that answered but then failed to connect rests this long, so a flaky LAN
+    /// cannot bounce the connection.
+    public var betterRouteCooldown: TimeInterval = 300
+    /// A route that keeps not answering is checked half as often each time, up to this.
+    public var silentRouteBackoffMax: TimeInterval = 1800
+    public var silentSocketCheckAfter: TimeInterval = 0.5
+    /// Off the LAN one lost packet can stall a healthy socket for a second.
+    public var remoteSilentSocketAfter: TimeInterval = 2.5
 
     public init() {}
   }
@@ -60,6 +74,9 @@ public actor ConnectionSupervisor {
   private var sessionTasks: [Task<Void, Never>] = []
   private var probe: Task<Void, Never>?
   private var hasPublished = false
+  private var routeCooldowns: [String: Date] = [:]
+  private var silentRoutes: [String: (failures: Int, until: Date)] = [:]
+  private var checkingRoutes = false
   private static let log = Logger(subsystem: "com.ankiel.code", category: "supervisor")
 
   public init(
@@ -89,8 +106,14 @@ public actor ConnectionSupervisor {
     switch phase {
     case .idle, .stopped, .connecting:
       return
-    case .connected:
+    case .connected(let session, _):
       startProbe(reason)
+      if case .networkChanged(online: true) = reason {
+        // A new network can make a skipped route reachable again.
+        silentRoutes = [:]
+        let generation = generation
+        Task { await self.checkBetterRoutes(generation, session) }
+      }
     case .backoff, .blocked, .offline:
       if case .networkChanged(online: false) = reason {
         if case .backoff = phase { enterOffline() }
@@ -230,6 +253,81 @@ public actor ConnectionSupervisor {
       },
       Task { await Self.renewInPlace(link: link, clock: clock, retryDelay: options.renewalRetryDelay) },
     ]
+    if link is any RouteSwitchingLink {
+      sessionTasks.append(
+        Task {
+          while !Task.isCancelled {
+            do { try await clock.sleep(for: options.betterRouteInterval) } catch { return }
+            await self.checkBetterRoutes(generation, session)
+          }
+        })
+    }
+  }
+
+  // MARK: - Better routes
+
+  /// Checks better routes now (an address was added or the order changed).
+  public func recheckRoutes() {
+    guard case .connected(let session, _) = phase else { return }
+    routeCooldowns = [:]
+    silentRoutes = [:]
+    let generation = generation
+    Task { await self.checkBetterRoutes(generation, session) }
+  }
+
+  /// Checks the routes preferred over the session's, and moves to the best one that answers.
+  func checkBetterRoutes(_ generation: Int, _ session: any LiveSession) async {
+    guard let link = link as? any RouteSwitchingLink, generation == self.generation, case .connected = phase, !checkingRoutes
+    else { return }
+    let now = clock.now
+    let candidates = link.betterRoutes(than: session.route).filter {
+      (routeCooldowns[$0.id] ?? .distantPast) <= now && (silentRoutes[$0.id]?.until ?? .distantPast) <= now
+    }
+    guard !candidates.isEmpty else { return }
+    checkingRoutes = true
+    defer { checkingRoutes = false }
+    let clock = clock
+    let timeout = options.quickProbeTimeout
+    let answered = await withTaskGroup(of: (String, Bool).self) { group in
+      for route in candidates {
+        group.addTask {
+          let ok = (try? await clock.withTimeout(timeout) { await link.preflight(route) }) ?? false
+          return (route.id, ok)
+        }
+      }
+      var answered: [String: Bool] = [:]
+      for await (id, ok) in group { answered[id] = ok }
+      return answered
+    }
+    for route in candidates {
+      if answered[route.id] == true {
+        silentRoutes[route.id] = nil
+      } else {
+        let failures = (silentRoutes[route.id]?.failures ?? 0) + 1
+        let delay = min(options.silentRouteBackoffMax, options.betterRouteInterval * pow(2, Double(failures)))
+        silentRoutes[route.id] = (failures, now.addingTimeInterval(delay))
+      }
+    }
+    guard generation == self.generation, case .connected = phase,
+      let best = candidates.first(where: { answered[$0.id] == true })
+    else { return }
+    Self.log.info("better route answered: \(best.kind.rawValue, privacy: .public)")
+    let next: any LiveSession
+    do {
+      next = try await clock.withTimeout(options.establishTimeout) { try await link.connect(over: best) }
+    } catch {
+      routeCooldowns[best.id] = clock.now.addingTimeInterval(options.betterRouteCooldown)
+      return
+    }
+    guard generation == self.generation, case .connected(let old, _) = phase else {
+      Task { await next.close() }
+      return
+    }
+    // The new session is up before the old one goes, so the computer never shows as offline.
+    cancelWork()
+    Task { await old.close() }
+    sink.yield(.sessionLost)
+    connected(next)
   }
 
   private func markStable(_ generation: Int) {
@@ -281,13 +379,40 @@ public actor ConnectionSupervisor {
     let generation = generation
     let clock = clock
     let start = clock.now
+    let switching = link as? any RouteSwitchingLink
+    let silentAfter = session.route.kind.answersQuickly ? options.silentSocketCheckAfter : options.remoteSilentSocketAfter
+    let checkAfter = options.silentSocketCheckAfter
     probe = Task {
-      var answered = false
-      for round in 0...tolerance where !answered {
-        let deadline = start.addingTimeInterval(timeout * Double(round + 1))
-        answered = (try? await clock.withDeadline(deadline) { try await session.probe() }) != nil
-        if Task.isCancelled { return }
+      let answered = await withTaskGroup(of: Bool?.self) { group -> Bool? in
+        group.addTask {
+          var answered = false
+          for round in 0...tolerance where !answered {
+            let deadline = start.addingTimeInterval(timeout * Double(round + 1))
+            answered = (try? await clock.withDeadline(deadline) { try await session.probe() }) != nil
+            if Task.isCancelled { return nil }
+          }
+          return answered
+        }
+        if let switching {
+          // The host answering a fresh request while the socket stays silent means the socket
+          // is dead (RN silent-socket check).
+          group.addTask {
+            do { try await clock.sleep(until: start.addingTimeInterval(checkAfter)) } catch { return nil }
+            let hostAnswered = (try? await clock.withTimeout(timeout) { await switching.preflight(session.route) }) ?? false
+            guard hostAnswered else { return nil }
+            do { try await clock.sleep(until: start.addingTimeInterval(silentAfter)) } catch { return nil }
+            return false
+          }
+        }
+        for await result in group {
+          if let result {
+            group.cancelAll()
+            return result
+          }
+        }
+        return Task.isCancelled ? nil : false
       }
+      guard let answered, !Task.isCancelled else { return }
       self.probeFinished(generation, answered: answered)
     }
   }

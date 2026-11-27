@@ -4,10 +4,16 @@ import Synchronization
 /// The routes of one environment, shared between the registry (which saves learned routes) and
 /// the link (which tries them).
 public final class RouteBook: Sendable {
-  private let state: Mutex<(routes: [EnvironmentRoute], lastUsed: String?)>
+  private let state: Mutex<(routes: [EnvironmentRoute], lastUsed: String?, order: [String]?)>
 
-  public init(routes: [EnvironmentRoute], lastUsed: String? = nil) {
-    state = Mutex((routes, lastUsed))
+  public init(routes: [EnvironmentRoute], lastUsed: String? = nil, order: [String]? = nil) {
+    state = Mutex((routes, lastUsed, order))
+  }
+
+  /// The user's preferred order (route ids), nil for the default.
+  public var order: [String]? {
+    get { state.withLock { $0.order } }
+    set { state.withLock { $0.order = newValue } }
   }
 
   public var routes: [EnvironmentRoute] {
@@ -23,7 +29,7 @@ public final class RouteBook: Sendable {
 
 /// The real `EnvironmentLink`: tries each route in order, each verified by its descriptor before
 /// a credential goes out.
-public struct LiveEnvironmentLink: EnvironmentLink {
+public struct LiveEnvironmentLink: RouteSwitchingLink {
   public let environmentId: String
   public let connector: EnvironmentConnector
   public let vault: CredentialVault
@@ -39,7 +45,7 @@ public struct LiveEnvironmentLink: EnvironmentLink {
   public func connect() async throws(ConnectionError) -> any LiveSession {
     var pairedRouteError: ConnectionError?
     var lastError: ConnectionError?
-    for route in RouteSelection.order(routes.routes, lastUsed: routes.lastUsed) {
+    for route in RouteSelection.order(routes.routes, lastUsed: routes.lastUsed, preferred: routes.order) {
       if Task.isCancelled { throw .timedOut }
       do {
         let session = try await connector.connect(environmentId: environmentId, endpoint: route.endpoint, vault: vault)
@@ -57,6 +63,21 @@ public struct LiveEnvironmentLink: EnvironmentLink {
       }
     }
     throw pairedRouteError ?? lastError ?? .unreachable("No saved route.")
+  }
+
+  public func betterRoutes(than route: EnvironmentRoute) -> [EnvironmentRoute] {
+    RouteSelection.better(than: route, in: routes.routes, order: routes.order)
+  }
+
+  /// The route answers as this environment (its public descriptor; no credential is sent).
+  public func preflight(_ route: EnvironmentRoute) async -> Bool {
+    (try? await connector.checkRoute(route.endpoint, environmentId: environmentId)) != nil
+  }
+
+  public func connect(over route: EnvironmentRoute) async throws(ConnectionError) -> any LiveSession {
+    let session = try await connector.connect(environmentId: environmentId, endpoint: route.endpoint, vault: vault)
+    routes.lastUsed = route.id
+    return LiveSessionAdapter(session: session, route: route, connector: connector, vault: vault)
   }
 
   public func credentialRenewalDate() async -> Date? {

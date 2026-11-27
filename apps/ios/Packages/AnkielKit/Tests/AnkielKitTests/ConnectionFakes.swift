@@ -78,11 +78,11 @@ final class FakeSession: LiveSession {
   let calls = Mutex<(replies: [String: String], sent: [(tag: String, payload: String)])>(([:], []))
   let scopesValue = Mutex<Set<String>?>(nil)
 
-  init(environmentId: String = "env-1", serverVersion: String = "1.0.0") throws {
+  init(environmentId: String = "env-1", serverVersion: String = "1.0.0", route: EnvironmentRoute? = nil) throws {
     initialConfig = try decode(
       ServerConfig.self,
       json: #"{"environment":{"environmentId":"\#(environmentId)","label":"Test","serverVersion":"\#(serverVersion)","orchestrationProtocolVersion":2,"capabilities":{}},"shellThreadFamilies":true,"shellOlderSettled":true}"#)
-    route = EnvironmentRoute(endpoint: EnvironmentEndpoint(httpBaseURL: URL(string: "https://example.com/")!)!)
+    self.route = route ?? EnvironmentRoute(endpoint: EnvironmentEndpoint(httpBaseURL: URL(string: "https://example.com/")!)!)
   }
 
   var isClosed: Bool { state.withLock { $0.closed } }

@@ -209,36 +209,10 @@ struct ComputerDetailView: View {
           }
       }
 
-      Section {
-        ForEach(environment.record.routes, id: \.id) { route in
-          HStack {
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-              RouteBadge(kind: route.kind)
-              Text(PairingLinkView.displayAddress(route.endpoint))
-                .font(Typography.monoSmall)
-                .foregroundStyle(Palette.textSecondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .textSelection(.enabled)
-              if route.learned {
-                Text("Found automatically")
-                  .font(Typography.caption)
-                  .foregroundStyle(Palette.textTertiary)
-              }
-            }
-            Spacer()
-            if environment.activeRoute?.id == route.id {
-              Text("In use")
-                .font(Typography.footnote)
-                .foregroundStyle(Palette.success)
-            }
-          }
-          .accessibilityElement(children: .combine)
-        }
-      } header: {
-        Text("Addresses")
-      } footer: {
-        Text("Addresses the computer reports, such as its local network address, are tried first and checked before any credential is sent.")
+      ComputerRoutesSection(environment: environment)
+
+      if environment.status.isConnected, environment.allows(AuthScope.accessRead) {
+        ComputerRelaySection(environment: environment)
       }
 
       if let scopes = environment.grantedScopes {

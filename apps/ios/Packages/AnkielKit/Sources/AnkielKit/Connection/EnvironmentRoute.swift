@@ -36,16 +36,29 @@ public enum ConnectionRouteKind: String, Sendable, Hashable, Codable {
 }
 
 /// One saved way to reach an environment. The paired route is `learned == false`; learned routes
-/// come from the server's `directEndpoints` and reuse the paired credential.
+/// come from the server's `directEndpoints` and reuse the paired credential. A `manual` route is
+/// an address the user added on this device; it reuses the credential too (`learned` is true).
 public struct EnvironmentRoute: Sendable, Hashable, Codable {
   public var kind: ConnectionRouteKind
   public var endpoint: EnvironmentEndpoint
   public var learned: Bool
+  public var manual: Bool
 
-  public init(endpoint: EnvironmentEndpoint, kind: ConnectionRouteKind? = nil, learned: Bool = false) {
+  public init(endpoint: EnvironmentEndpoint, kind: ConnectionRouteKind? = nil, learned: Bool = false, manual: Bool = false) {
     self.endpoint = endpoint
     self.kind = kind ?? ConnectionRouteKind(endpoint: endpoint)
-    self.learned = learned
+    self.learned = learned || manual
+    self.manual = manual
+  }
+
+  enum CodingKeys: String, CodingKey { case kind, endpoint, learned, manual }
+
+  public init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    endpoint = try c.decode(EnvironmentEndpoint.self, forKey: .endpoint)
+    kind = (try? c.decode(ConnectionRouteKind.self, forKey: .kind)) ?? ConnectionRouteKind(endpoint: endpoint)
+    learned = (try? c.decode(Bool.self, forKey: .learned)) ?? false
+    manual = (try? c.decodeIfPresent(Bool.self, forKey: .manual)) ?? false
   }
 
   public var id: String { endpoint.httpBaseURL.absoluteString }
@@ -80,11 +93,22 @@ public enum RouteSelection {
     return result
   }
 
-  /// The order to try routes in one attempt: the route that last worked, then local routes (they
-  /// answer or fail fast), then the paired route, then the rest.
-  public static func order(_ routes: [EnvironmentRoute], lastUsed: String?) -> [EnvironmentRoute] {
+  /// The order to try routes in one attempt: the route that last worked (a reconnect is fast),
+  /// then the preference order.
+  public static func order(_ routes: [EnvironmentRoute], lastUsed: String?, preferred: [String]? = nil) -> [EnvironmentRoute] {
+    let ranked = preference(routes, order: preferred)
+    guard let last = ranked.firstIndex(where: { $0.id == lastUsed }) else { return ranked }
+    var result = ranked
+    result.insert(result.remove(at: last), at: 0)
+    return result
+  }
+
+  /// Which routes the app would rather use, best first: the user's own order when they set one
+  /// (routes it does not name keep their default rank after it), else local routes (they answer or
+  /// fail fast), then the paired route, then the rest (RN's saved route order).
+  public static func preference(_ routes: [EnvironmentRoute], order: [String]? = nil) -> [EnvironmentRoute] {
     func rank(_ route: EnvironmentRoute) -> Int {
-      if route.id == lastUsed { return 0 }
+      if let order, let index = order.firstIndex(of: route.id) { return index - order.count }
       if route.learned, route.kind == .lan { return 1 }
       if !route.learned { return 2 }
       return 3
@@ -92,6 +116,26 @@ public enum RouteSelection {
     return routes.enumerated().sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }
       .map(\.element)
   }
+
+  /// The routes preferred over `current`, best first; empty when it is already the best.
+  public static func better(than current: EnvironmentRoute, in routes: [EnvironmentRoute], order: [String]?) -> [EnvironmentRoute] {
+    let ranked = preference(routes, order: order)
+    guard let index = ranked.firstIndex(where: { $0.id == current.id }) else { return [] }
+    return Array(ranked[..<index])
+  }
+
+  /// Whether a hand-added address may carry the credential: never plain `http` to a public
+  /// address unless the computer was itself paired over plain `http` (`sendsTokenInClear`).
+  public static func allowsCredential(_ endpoint: EnvironmentEndpoint, routes: [EnvironmentRoute]) -> Bool {
+    guard endpoint.httpBaseURL.scheme == "http" else { return true }
+    let kind = ConnectionRouteKind(endpoint: endpoint)
+    if kind == .lan || kind == .tailnet { return true }
+    return routes.contains { !$0.learned && $0.endpoint.httpBaseURL.scheme == "http" }
+  }
+
+  /// Only addresses the user added can be removed: the paired one carries the sign-in and
+  /// reported ones come back on the next connect (RN `canRemoveRoute`).
+  public static func canRemove(_ route: EnvironmentRoute) -> Bool { route.manual }
 
   static func isLoopback(_ endpoint: EnvironmentEndpoint) -> Bool {
     let host = endpoint.httpBaseURL.host()?.lowercased() ?? ""

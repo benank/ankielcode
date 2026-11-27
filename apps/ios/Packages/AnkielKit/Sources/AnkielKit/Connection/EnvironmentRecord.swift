@@ -14,6 +14,8 @@ public struct EnvironmentRecord: Sendable, Hashable, Codable, Identifiable {
   public var lastConnectedAt: Date?
   /// false when the user turned the computer off on this device; nil (older files) means on.
   public var enabled: Bool?
+  /// Route ids in the order the user prefers them; nil keeps the default order.
+  public var routeOrder: [String]?
 
   public var id: String { environmentId }
   public var label: String { customLabel ?? serverLabel }

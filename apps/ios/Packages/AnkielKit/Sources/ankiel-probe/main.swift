@@ -67,6 +67,10 @@ func run() async throws {
     try await supervise(environment, connector: connector)
     return
   }
+  if CommandLine.arguments.contains("--routes") {
+    try await probeRoutes(environment, connector: connector)
+    return
+  }
   if CommandLine.arguments.contains("--stale-resume") {
     try await staleResume(environment, connector: connector)
     return

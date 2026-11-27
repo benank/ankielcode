@@ -486,3 +486,26 @@ port and a bogus ticket. `--preview-seed <url>` makes a Replay thread whose mess
 `PreviewUITests` (live; skips without `ANKIEL_TEST_PREVIEW_THREAD_LINK` and
 `ANKIEL_TEST_PREVIEW_PORT`, a page on the Mac whose index links `/second.html`) opens Browser from
 the thread menu, types the address, follows a link, goes back and shows a closed port's error.
+
+## Addresses, relay and route switching
+
+A computer's page lists its addresses in the order this device prefers them (RN
+`EnvironmentRoutesSection`): touch and hold one to move it, add one by hand (checked against the
+computer's public descriptor before the sign-in goes there, never loopback, never plain `http` to
+a public address unless the computer was paired that way) and remove one added by hand. The order
+is `EnvironmentRecord.routeOrder`; without one, local addresses come first, then the paired one.
+Below it, **Remote relay** shows `server.getRelayStatus` read only (changing the relay changes the
+computer for every device) and offers to add the relay's address when this device has none.
+
+`ConnectionSupervisor` follows RN's better-route rule: on an address other than the first that
+answers, it checks the preferred ones every minute and at once when the network changes, connects
+over the best one that answers and only then replaces the session (no offline blip). A route that
+answered but failed to connect rests five minutes; a silent one is checked half as often each
+time, up to 30 minutes, until the network changes. A health check the socket leaves unanswered asks
+the host over HTTP after 0.5 s; if the host answers and the socket stays silent (0.5 s on the LAN,
+2.5 s elsewhere) the socket is replaced without waiting out the timeout.
+
+`swift run ankiel-probe --state <file> --routes` saves the computer with two addresses of the same
+server (`127.0.0.1` and `localhost`), flips the order and prints the switch, the statuses seen
+meanwhile, the relay status and two refused hand-added addresses. Nothing on the server changes.
+`SharingAccessUITests.testAddressesReorderAndRefuseLoopback` covers the page on fixtures.

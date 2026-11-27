@@ -66,6 +66,31 @@ final class SharingAccessUITests: HomeUITestCase {
     XCTAssertFalse(app.buttons["access.createLink"].exists)
   }
 
+  func testAddressesReorderAndRefuseLoopback() {
+    open()
+    let add = app.buttons["computer.addRoute"]
+    for _ in 0..<4 where !add.isHittable { app.swipeUp() }
+    XCTAssertTrue(add.waitForExistence(timeout: 5))
+    let first = app.descendants(matching: .any)["computer.route.0"].firstMatch
+    let second = app.descendants(matching: .any)["computer.route.1"].firstMatch
+    XCTAssertTrue(first.label.contains("Local network"), first.label)
+    shot("computer-addresses")
+    second.press(forDuration: 1)
+    let useFirst = app.buttons["Use first"]
+    XCTAssertTrue(useFirst.waitForExistence(timeout: 3))
+    useFirst.tap()
+    XCTAssertTrue(app.descendants(matching: .any)["computer.route.0"].firstMatch.label.contains("Relay"))
+
+    add.tap()
+    let field = app.alerts.textFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 3))
+    field.typeText("127.0.0.1:3773")
+    app.alerts.buttons["Add"].tap()
+    let refusal = app.alerts.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "loopback")).firstMatch
+    XCTAssertTrue(refusal.waitForExistence(timeout: 5))
+    shot("computer-address-refused")
+  }
+
   private func waitForAbsence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
     let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: element)
     return XCTWaiter.wait(for: [gone], timeout: timeout) == .completed

@@ -61,6 +61,17 @@ public protocol EnvironmentLink: Sendable {
   func renewCredential() async throws(ConnectionError)
 }
 
+/// Route switching (RN supervisor's better-route check). Links without routes (tests) keep the
+/// defaults: nothing better, nothing answers.
+public protocol RouteSwitchingLink: EnvironmentLink {
+  /// The saved routes preferred over `route`, best first.
+  func betterRoutes(than route: EnvironmentRoute) -> [EnvironmentRoute]
+  /// Whether `route` answers as this environment right now, without sending a credential.
+  func preflight(_ route: EnvironmentRoute) async -> Bool
+  /// One connect attempt over exactly `route`.
+  func connect(over route: EnvironmentRoute) async throws(ConnectionError) -> any LiveSession
+}
+
 /// `OrchestrationV2ShellHttpSnapshot`: a shell snapshot plus the opaque identities token to pass
 /// back as `knownProjectIdentities`.
 public struct ShellHTTPSnapshot: Sendable, Decodable {

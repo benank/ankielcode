@@ -45,6 +45,11 @@ public struct EnvironmentConnector: Sendable {
     try await verifiedDescriptor(target.endpoint, environmentId: expectedEnvironmentId)
   }
 
+  /// Whether an address answers as this environment (its public descriptor); nothing secret is sent.
+  public func checkRoute(_ endpoint: EnvironmentEndpoint, environmentId: String) async throws(ConnectionError) -> EnvironmentDescriptor {
+    try await verifiedDescriptor(endpoint, environmentId: environmentId)
+  }
+
   /// Step two: spends the code and saves the credential. DPoP when the server can renew tokens,
   /// bearer otherwise. A refused code (expired or already used) is `credentialRejected`.
   public func exchange(

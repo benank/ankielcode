@@ -452,7 +452,7 @@ public final class EnvironmentRegistry: SettingsSink {
   }
 
   private func startRuntime(_ model: EnvironmentModel) {
-    let routes = RouteBook(routes: model.record.routes, lastUsed: model.record.lastRouteId)
+    let routes = RouteBook(routes: model.record.routes, lastUsed: model.record.lastRouteId, order: model.record.routeOrder)
     let vault = CredentialVault(environmentId: model.id, connector: connector)
     let supervisor = ConnectionSupervisor(
       link: LiveEnvironmentLink(environmentId: model.id, connector: connector, vault: vault, routes: routes))
@@ -553,7 +553,7 @@ public final class EnvironmentRegistry: SettingsSink {
     }
   }
 
-  private func persist() {
+  func persist() {
     let snapshot = environments.map(\.record)
     let records = records
     let previous = lastSave
