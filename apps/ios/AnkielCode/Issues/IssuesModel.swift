@@ -34,9 +34,20 @@ final class IssuesModel {
   }
 
   let source: any IssueSource
-  var environmentId: String?
+  /// Another computer starts over: its projects, its trackers.
+  var environmentId: String? {
+    didSet {
+      guard environmentId != oldValue else { return }
+      switching = true
+      projectId = nil
+      switching = false
+      result = nil
+      reload()
+    }
+  }
   var state = IssueStateFilter.open { didSet { if state != oldValue { reload() } } }
-  var projectId: String? { didSet { if projectId != oldValue { reload() } } }
+  var projectId: String? { didSet { if projectId != oldValue, !switching { reload() } } }
+  @ObservationIgnored private var switching = false
   var query = ""
   private(set) var phase = Phase.idle
   private(set) var result: IssueListResult?

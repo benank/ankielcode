@@ -34,8 +34,7 @@ struct IssuesRoot: View {
     .onAppear {
       guard issues == nil else { return }
       let fixture = IssuesDebug.source
-      let environmentId = fixture == nil ? model.registry.environments.first(where: { $0.status.isConnected })?.id
-        ?? model.registry.environments.first?.id : IssuesDebug.environmentId
+      let environmentId = fixture == nil ? IssueComputers.choices(model.registry).first?.id : IssuesDebug.environmentId
       let created = IssuesModel(source: fixture ?? model.registry, environmentId: environmentId)
       issues = created
       if let entry = IssuesDebug.openedEntry(created) { path = [entry] }
@@ -52,6 +51,16 @@ struct IssuesRoot: View {
       try? await Task.sleep(for: .milliseconds(450))
       model.open(.newThread(prompt: IssueCalls.threadPrompt(entry), environmentId: environmentId, projectId: entry.projectId))
     }
+  }
+}
+
+/// Computers whose issues can be read: GitHub integration on (RN hides Issues otherwise, with
+/// pull requests), connected ones first.
+enum IssueComputers {
+  @MainActor
+  static func choices(_ registry: EnvironmentRegistry) -> [EnvironmentModel] {
+    let capable = registry.environments.filter { $0.isEnabled && $0.capabilities["pullRequests"]?.boolValue == true }
+    return capable.filter(\.status.isConnected) + capable.filter { !$0.status.isConnected }
   }
 }
 
@@ -137,11 +146,17 @@ private struct IssuesList: View {
       }
     case .loaded where issues.entries.isEmpty:
       ContentUnavailableView {
-        Label(issues.state == .closed ? "No closed issues" : "No open issues", systemImage: "smallcircle.filled.circle")
+        if issues.state == .closed {
+          Label("No closed issues", systemImage: "smallcircle.filled.circle")
+        } else {
+          Label("No open issues", systemImage: "smallcircle.filled.circle")
+        }
       } description: {
-        Text(issues.result?.trackers.isEmpty == true
-          ? "None of this computer's projects is on an issue tracker it can read."
-          : "Issues from this computer's projects show here.")
+        if issues.result?.trackers.isEmpty == true {
+          Text("None of this computer's projects is on an issue tracker it can read.")
+        } else {
+          Text("Issues from this computer's projects show here.")
+        }
       }
     default:
       EmptyView()
@@ -152,8 +167,20 @@ private struct IssuesList: View {
     environment?.shell.snapshot?.projects.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending } ?? []
   }
 
+  private var computers: [EnvironmentModel] { IssueComputers.choices(model.registry) }
+
   private var filterMenu: some View {
     Menu {
+      if computers.count > 1 {
+        Picker(selection: $issues.environmentId) {
+          ForEach(computers, id: \.id) { computer in
+            Text(verbatim: computer.label).tag(String?.some(computer.id))
+          }
+        } label: {
+          Text("Computer", comment: "filter menu heading")
+        }
+        .pickerStyle(.inline)
+      }
       Picker(selection: $issues.state) {
         Text("Open").tag(IssueStateFilter.open)
         Text("Closed").tag(IssueStateFilter.closed)

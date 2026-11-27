@@ -79,7 +79,11 @@ enum IssuesDebug {
           && (request.projectId == nil || entry.projectId == request.projectId)
           && (query == nil || entry.title.lowercased().contains(query!))
       }
-      return IssueListResult(entries: rows)
+      // Two to a page, so paging runs on fixtures too.
+      let start = request.cursors?["tide-co"].flatMap(Int.init) ?? 0
+      let page = Array(rows.dropFirst(start).prefix(2))
+      let next = start + page.count < rows.count ? ["tide-co": String(start + page.count)] : [:]
+      return IssueListResult(entries: page, nextCursors: next)
     }
 
     func detail(_ ref: IssueRef, environmentId: String) async throws(EnvironmentRequestError) -> IssueDetail {
