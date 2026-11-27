@@ -8,8 +8,8 @@ let observer: IntersectionObserver | null = null;
 let reducedMotion: MediaQueryList | null = null;
 let windowFocusTracked = false;
 
-// Animations that should hold still in an unfocused window key off this in index.css.
-function trackWindowFocus() {
+// Paused animations and greyed highlights in an unfocused window key off this in index.css.
+export function trackWindowFocus() {
   if (windowFocusTracked) return;
   windowFocusTracked = true;
   const update = () =>

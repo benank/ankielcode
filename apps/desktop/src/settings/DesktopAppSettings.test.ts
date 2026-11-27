@@ -35,6 +35,7 @@ const DesktopSettingsPatch = Schema.Struct({
   wslMode: Schema.optionalKey(Schema.Literals(["local", "wsl"])),
   wslDistro: Schema.optionalKey(Schema.NullOr(Schema.String)),
   wslOnly: Schema.optionalKey(Schema.Boolean),
+  windowBackground: Schema.optionalKey(Schema.Unknown),
 });
 
 const decodeDesktopSettingsPatch = Schema.decodeEffect(Schema.fromJsonString(DesktopSettingsPatch));
@@ -203,6 +204,7 @@ describe("DesktopSettings", () => {
           wslBackendEnabled: false,
           wslOnly: false,
           wslDistro: null,
+          windowBackground: null,
         } satisfies DesktopAppSettings.DesktopSettings);
       }),
     ),
@@ -283,6 +285,31 @@ describe("DesktopSettings", () => {
     ),
   );
 
+  it.effect("keeps the last window background and drops one Electron cannot parse", () =>
+    withSettings(
+      Effect.gen(function* () {
+        const settings = yield* DesktopAppSettings.DesktopAppSettings;
+        const background = { color: "#1b1a2e", dark: true, followsSystem: false };
+
+        assert.isTrue((yield* settings.setWindowBackground(background)).changed);
+        assert.isFalse((yield* settings.setWindowBackground({ ...background })).changed);
+        const restored = yield* Effect.gen(function* () {
+          const freshSettings = yield* DesktopAppSettings.DesktopAppSettings;
+          return yield* freshSettings.load;
+        }).pipe(Effect.provide(DesktopAppSettings.layer));
+        assert.deepEqual(restored.windowBackground, background);
+
+        yield* writeSettingsPatch({
+          serverExposureMode: "network-accessible",
+          windowBackground: { color: "oklch(0.2 0.03 290)", dark: true, followsSystem: false },
+        });
+        const loaded = yield* settings.load;
+        assert.isNull(loaded.windowBackground);
+        assert.equal(loaded.serverExposureMode, "network-accessible");
+      }),
+    ),
+  );
+
   it.effect("saves through a symlinked settings file without replacing the link", () =>
     withSettings(
       Effect.gen(function* () {
@@ -356,6 +383,7 @@ describe("DesktopSettings", () => {
           wslBackendEnabled: false,
           wslOnly: false,
           wslDistro: null,
+          windowBackground: null,
         } satisfies DesktopAppSettings.DesktopSettings);
       }),
       { appVersion: "0.0.17-nightly.20260415.1" },
@@ -385,6 +413,7 @@ describe("DesktopSettings", () => {
           wslBackendEnabled: false,
           wslOnly: false,
           wslDistro: null,
+          windowBackground: null,
         } satisfies DesktopAppSettings.DesktopSettings);
       }),
       { appVersion: "0.0.17-nightly.20260415.1" },

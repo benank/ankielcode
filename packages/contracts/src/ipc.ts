@@ -167,6 +167,16 @@ export const DesktopUpdateStatusSchema = Schema.Literals([
 ]);
 export const DesktopRuntimeArchSchema = Schema.Literals(["arm64", "x64", "other"]);
 export const DesktopThemeSchema = Schema.Literals(["light", "dark", "system"]);
+/**
+ * The colour the renderer paints behind its chrome, so a new window opens in the active theme.
+ * `followsSystem` marks a colour that is only right while the system keeps the same appearance.
+ */
+export const DesktopWindowBackgroundSchema = Schema.Struct({
+  color: Schema.String.check(Schema.isPattern(/^#[0-9a-f]{6}$/)),
+  dark: Schema.Boolean,
+  followsSystem: Schema.Boolean,
+});
+export type DesktopWindowBackground = typeof DesktopWindowBackgroundSchema.Type;
 export const DesktopUpdateChannelSchema = Schema.Literals(["latest", "nightly"]);
 export const DesktopAppStageLabelSchema = Schema.Literals(["Latest", "Dev", "Nightly"]);
 
@@ -1284,6 +1294,7 @@ export interface DesktopBridge {
   pickProjectFavicon: (initialPath?: string) => Promise<string | null>;
   pickThemeFiles: () => Promise<readonly PickedThemeFile[] | null>;
   setTheme: (theme: DesktopTheme) => Promise<void>;
+  setWindowBackground: (background: DesktopWindowBackground) => Promise<void>;
   showContextMenu: <T extends string>(
     items: readonly ContextMenuItem<T>[],
     position?: { x: number; y: number },

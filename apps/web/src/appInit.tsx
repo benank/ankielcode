@@ -48,6 +48,7 @@ import {
 import { syncBrowserChromeTheme } from "./hooks/useTheme";
 import { startThreadVisitedMigration } from "./hooks/useThreadVisitedMigration";
 import { installDesktopPasteAsText } from "./lib/desktopPasteAsText";
+import { trackWindowFocus } from "./lib/visibleAnimation";
 import {
   syncDocumentElectronPlatformClasses,
   syncDocumentWindowControlsOverlayClass,
@@ -260,6 +261,7 @@ export function startAppServices(): AppRouter {
     syncDocumentWindowControlsOverlayClass();
   }
 
+  trackWindowFocus();
   installDesktopPasteAsText(window.desktopBridge, window);
   guardDomAgainstPageTranslation();
 

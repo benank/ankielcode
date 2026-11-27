@@ -1208,6 +1208,14 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
   }
 }
 
+/* An inactive window drops the tint from its selection and accent highlights, as AppKit does.
+   Lightness and alpha stay, so contrast and layout hold. */
+:root[data-window-blurred] {
+  --accent: oklch(from var(--app-theme-accent-surface) l 0 h);
+  --sidebar-row-active: oklch(from var(--app-theme-sidebar-row-active) l 0 h);
+  --sidebar-row-selected: oklch(from var(--app-theme-sidebar-row-selected) l 0 h);
+}
+
 /* Modified files get a muted accent so added and deleted files lead. */
 :root {
   --diff-modified-icon: color-mix(in srgb, var(--info-foreground) 50%, var(--muted-foreground));
@@ -1658,9 +1666,10 @@ code {
   --pele-critical: var(--destructive);
 }
 
-/* Window drag region (frameless titlebar) */
+/* Window drag region (frameless titlebar). Titlebar text is chrome, not page content. */
 .drag-region {
   -webkit-app-region: drag;
+  user-select: none;
 }
 
 /* Electron 44 inherits app-region. Reset children to the initial value so they
@@ -1681,21 +1690,23 @@ code {
   -webkit-app-region: no-drag;
 }
 
-/* Keep parent scrollbar styles off iframe owners to avoid WebKit resize loops: https://webkit.org/b/324485 */
-:where(:not(iframe))::-webkit-scrollbar {
+/* Keep parent scrollbar styles off iframe owners to avoid WebKit resize loops: https://webkit.org/b/324485
+   Any ::-webkit-scrollbar style replaces native scrollbars, so the macOS app leaves them alone and
+   gets overlay scrollbars that follow the system "Show scroll bars" setting. */
+:where(:root:not(.electron-macos) :not(iframe))::-webkit-scrollbar {
   width: var(--app-scrollbar-width);
 }
 
-:where(:not(iframe))::-webkit-scrollbar-track {
+:where(:root:not(.electron-macos) :not(iframe))::-webkit-scrollbar-track {
   background: transparent;
 }
 
-:where(:not(iframe))::-webkit-scrollbar-thumb {
+:where(:root:not(.electron-macos) :not(iframe))::-webkit-scrollbar-thumb {
   background: var(--app-scrollbar-thumb);
   border-radius: 3px;
 }
 
-:where(:not(iframe))::-webkit-scrollbar-thumb:hover {
+:where(:root:not(.electron-macos) :not(iframe))::-webkit-scrollbar-thumb:hover {
   background: var(--app-scrollbar-thumb-hover);
 }
 

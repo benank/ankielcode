@@ -299,6 +299,11 @@ function layerTest(input: {
     setWslBackendEnabled: () => Effect.die("unexpected WSL backend toggle"),
     setWslDistro: () => Effect.die("unexpected WSL distro change"),
     setWslOnly: () => Effect.die("unexpected WSL-only toggle"),
+    setWindowBackground: (windowBackground) =>
+      Effect.sync(() => {
+        desktopSettings = { ...desktopSettings, windowBackground };
+        return { settings: desktopSettings, changed: true };
+      }),
     setLocalEnvironmentEnabled: () => Effect.die("unexpected local environment toggle"),
     applyWslWindowsFallback: Effect.die("unexpected WSL Windows fallback"),
     applyWslWindowsFallbackInMemory: Effect.die("unexpected WSL Windows fallback"),
@@ -1435,6 +1440,60 @@ describe("DesktopWindow", () => {
       assert.lengthOf(vi.mocked(framed.window.setTitleBarOverlay).mock.calls, 0);
       assert.deepEqual(vi.mocked(overlay.window.setBackgroundColor).mock.calls, [["#fbfbfa"]]);
       assert.lengthOf(vi.mocked(overlay.window.setTitleBarOverlay).mock.calls, 1);
+    }),
+  );
+
+  it("opens in the saved theme colour unless the system appearance it followed has changed", () => {
+    const fixed = { color: "#1b1a2e", dark: true, followsSystem: false };
+    const followed = { color: "#1b1a2e", dark: true, followsSystem: true };
+
+    assert.deepEqual(DesktopWindow.resolveWindowBackground(fixed, false), {
+      color: "#1b1a2e",
+      dark: true,
+    });
+    assert.deepEqual(DesktopWindow.resolveWindowBackground(followed, true), {
+      color: "#1b1a2e",
+      dark: true,
+    });
+    assert.deepEqual(DesktopWindow.resolveWindowBackground(followed, false), {
+      color: "#fbfbfa",
+      dark: false,
+    });
+    assert.deepEqual(DesktopWindow.resolveWindowBackground(null, false), {
+      color: "#fbfbfa",
+      dark: false,
+    });
+  });
+
+  it.effect("paints open windows and the next main window in the renderer's colour", () =>
+    Effect.gen(function* () {
+      const open = makeFakeBrowserWindow();
+      const created = makeFakeBrowserWindow();
+      const createdWindowOptions: Electron.BrowserWindowConstructorOptions[] = [];
+      const layer = layerTest({
+        window: created.window,
+        createCount: yield* Ref.make(0),
+        mainWindow: yield* Ref.make<Option.Option<Electron.BrowserWindow>>(Option.none()),
+        createdWindowOptions,
+        appearanceWindows: [{ window: open.window, titleBarOverlay: false }],
+        desktopSettings: {
+          ...DesktopAppSettings.DEFAULT_DESKTOP_SETTINGS,
+          localEnvironmentEnabled: false,
+        },
+      });
+
+      yield* Effect.gen(function* () {
+        const desktopWindow = yield* DesktopWindow.DesktopWindow;
+        yield* desktopWindow.setBackground({
+          color: "#1b1a2e",
+          dark: true,
+          followsSystem: false,
+        });
+        yield* desktopWindow.createMainIfBackendReady;
+      }).pipe(Effect.provide(layer));
+
+      assert.deepEqual(vi.mocked(open.window.setBackgroundColor).mock.calls, [["#1b1a2e"]]);
+      assert.equal(createdWindowOptions[0]?.backgroundColor, "#1b1a2e");
     }),
   );
 

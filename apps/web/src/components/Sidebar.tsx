@@ -3374,12 +3374,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
         <SidebarGroup className="flex-1" role="presentation">
           {isSearchingThreads ? (
             threadSearchResults.length > 0 ? (
-              <TooltipProvider
-                key="sidebar-thread-search-tooltips-150"
-                delay={150}
-                closeDelay={0}
-                timeout={400}
-              >
+              <TooltipProvider key="sidebar-thread-search-tooltips" closeDelay={0} timeout={400}>
                 <DndContext
                   sensors={dndSensors}
                   autoScroll={false}
@@ -3509,12 +3504,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
             </div>
           ) : null}
           {!isSearchingThreads ? (
-            <TooltipProvider
-              key="sidebar-thread-tooltips-150"
-              delay={150}
-              closeDelay={0}
-              timeout={400}
-            >
+            <TooltipProvider key="sidebar-thread-tooltips" closeDelay={0} timeout={400}>
               <DndContext
                 sensors={dndSensors}
                 autoScroll={isContextDrag ? false : SIDEBAR_AUTO_SCROLL}

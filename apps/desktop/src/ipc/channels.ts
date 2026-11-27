@@ -7,6 +7,7 @@ export const NOTIFICATION_EVENT_CHANNEL = "desktop:notification-event";
 export const PICK_PROJECT_FAVICON_CHANNEL = "desktop:pick-project-favicon";
 export const PICK_THEME_FILES_CHANNEL = "desktop:pick-theme-files";
 export const SET_THEME_CHANNEL = "desktop:set-theme";
+export const SET_WINDOW_BACKGROUND_CHANNEL = "desktop:set-window-background";
 export const CONTEXT_MENU_CHANNEL = "desktop:context-menu";
 export const OPEN_EXTERNAL_CHANNEL = "desktop:open-external";
 export const READ_MEDIA_CHANNEL = "desktop:read-media";

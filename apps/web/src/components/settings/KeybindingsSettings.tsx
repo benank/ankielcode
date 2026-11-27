@@ -356,7 +356,6 @@ function WhenExpressionRemoveButton({
   return (
     <Tooltip>
       <TooltipTrigger
-        delay={200}
         render={
           <Button
             type="button"

@@ -27,6 +27,7 @@ import { resolveWorkGroupScrollAnchor } from "@ankielcode/client-runtime/work-lo
 import type { WorkflowOpening } from "@ankielcode/client-runtime/state/subagentRuntime";
 import { observeResize } from "~/lib/observeResize";
 import { preserveReadingPosition } from "~/lib/preserveReadingPosition";
+import { scopeSelectAllTo } from "~/lib/selectAllWithin";
 import { useStableCallback } from "~/hooks/useStableCallback";
 
 const NOOP_USE_ARTIFACT_TEMPLATE = () => {};
@@ -1065,8 +1066,10 @@ const ConversationTimeline = memo(function ConversationTimeline({
       measureTimelineGutter(viewportElement);
       scheduleMinimapRefresh();
     });
+    const stopScopingSelectAll = scopeSelectAllTo(viewportElement);
     return () => {
       stopObserving();
+      stopScopingSelectAll();
       setTimelineViewportElement(null);
     };
   };

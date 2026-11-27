@@ -54,6 +54,7 @@ import {
   decodeComposerContextFragment,
 } from "@ankielcode/shared/composerContextClipboard";
 import { collectComposerContextReferences } from "@ankielcode/shared/composerContextReferences";
+import { isMacPlatform } from "~/lib/utils";
 
 const environmentQuery = vi.hoisted(() => ({
   error: "Pull request not found" as string | null,
@@ -983,6 +984,38 @@ describe("MessagesTimeline messages", () => {
     } finally {
       await session.send("Emulation.setEmulatedMedia", { features: [] });
     }
+  });
+
+  it("selects only the conversation on Select All after clicking message text", async () => {
+    await using screen = await renderElement(
+      <>
+        <p>Sidebar text outside the conversation.</p>
+        <MessagesTimeline
+          {...baseProps()}
+          timelineEntries={[message("Message text in the conversation.")]}
+        />
+      </>,
+    );
+    const selectAll = () =>
+      userEvent.keyboard(
+        isMacPlatform(navigator.platform) ? "{Meta>}a{/Meta}" : "{Control>}a{/Control}",
+      );
+    // In the app, clicking non-focusable message text leaves focus on the body.
+    const clickText = async (text: string) => {
+      await userEvent.tripleClick(screen.getByText(text));
+      (document.activeElement as HTMLElement | null)?.blur();
+      expect(document.activeElement).toBe(document.body);
+    };
+
+    await clickText("Message text in the conversation.");
+    await selectAll();
+    const selection = window.getSelection()?.toString() ?? "";
+    expect(selection).toContain("Message text in the conversation.");
+    expect(selection).not.toContain("Sidebar text outside the conversation.");
+
+    await clickText("Sidebar text outside the conversation.");
+    await selectAll();
+    expect(window.getSelection()?.toString()).toContain("Sidebar text outside the conversation.");
   });
 
   it("preserves XML-like tags and comparisons in user messages as text", async () => {

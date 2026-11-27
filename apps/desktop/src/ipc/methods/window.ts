@@ -6,6 +6,7 @@ import {
   DesktopMediaReadSchema,
   DesktopMenuStateSchema,
   DesktopThemeSchema,
+  DesktopWindowBackgroundSchema,
   EDITORS,
   EditorId,
   PickedThemeFileSchema,
@@ -35,6 +36,7 @@ import * as DesktopAppSettings from "../../settings/DesktopAppSettings.ts";
 import * as DesktopWslBackend from "../../wsl/DesktopWslBackend.ts";
 import * as DesktopWslEnvironment from "../../wsl/DesktopWslEnvironment.ts";
 import * as DesktopApplicationMenu from "../../window/DesktopApplicationMenu.ts";
+import * as DesktopWindow from "../../window/DesktopWindow.ts";
 import * as ElectronApp from "../../electron/ElectronApp.ts";
 import * as ElectronAudio from "../../electron/ElectronAudio.ts";
 import * as ElectronDialog from "../../electron/ElectronDialog.ts";
@@ -306,6 +308,16 @@ export const setTheme = DesktopIpc.makeIpcMethod({
   handler: Effect.fn("desktop.ipc.window.setTheme")(function* (theme) {
     const electronTheme = yield* ElectronTheme.ElectronTheme;
     yield* electronTheme.setSource(theme);
+  }),
+});
+
+export const setWindowBackground = DesktopIpc.makeIpcMethod({
+  channel: IpcChannels.SET_WINDOW_BACKGROUND_CHANNEL,
+  payload: DesktopWindowBackgroundSchema,
+  result: Schema.Void,
+  handler: Effect.fn("desktop.ipc.window.setWindowBackground")(function* (background) {
+    const desktopWindow = yield* DesktopWindow.DesktopWindow;
+    yield* desktopWindow.setBackground(background);
   }),
 });
 
