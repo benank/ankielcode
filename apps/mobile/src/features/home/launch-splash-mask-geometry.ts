@@ -4,7 +4,7 @@ export const SPLASH_MARK_COLOR = "#F2F2EE";
 export const SPLASH_ICON_SIZE = 100;
 
 export const SPLASH_DIP_SCALE = 0.86;
-export const SPLASH_DIP_DURATION_MS = 95;
+export const SPLASH_DIP_DURATION_MS = 140;
 export const SPLASH_EXPAND_DURATION_MS = 420;
 export const SPLASH_REDUCED_MOTION_FADE_MS = 200;
 

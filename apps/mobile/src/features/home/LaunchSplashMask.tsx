@@ -78,7 +78,9 @@ export function LaunchSplashMask({
     dipProgress.set(
       withTiming(1, {
         duration: SPLASH_DIP_DURATION_MS,
-        easing: Easing.out(Easing.cubic),
+        // Start from rest: the static native splash hands off to this frame, and an ease-out
+        // would jump most of the dip in the first frame, reading as a cut to a smaller mark.
+        easing: Easing.inOut(Easing.quad),
       }),
     );
     expandProgress.set(
