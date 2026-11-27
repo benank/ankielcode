@@ -23,6 +23,8 @@ public struct EnvironmentConnector: Sendable {
   public let store: any CredentialStore
   public let client: ClientIdentity
   public var rpcOptions: RpcClient.Options
+  /// Wraps each opened socket (the probe counts raw frames through it); nil in the app.
+  public var transportTap: (@Sendable (any RpcTransport) -> any RpcTransport)?
 
   public init(
     store: any CredentialStore, client: ClientIdentity, http: EnvironmentHTTPClient = EnvironmentHTTPClient(),
@@ -135,7 +137,7 @@ public struct EnvironmentConnector: Sendable {
       throw .socket(Self.describe(error))
     }
 
-    let rpc = RpcClient(transport: transport, options: rpcOptions)
+    let rpc = RpcClient(transport: transportTap?(transport) ?? transport, options: rpcOptions)
     await rpc.start()
     do {
       let events = try await rpc.stream(

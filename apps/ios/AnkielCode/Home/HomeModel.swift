@@ -450,12 +450,7 @@ final class HomeModel {
 
   func settle(_ row: ThreadRow) {
     guard let thread = thread(row.ref) else { return }
-    // `planThreadUndo("settle")`: unsettle back to the old active position, then restore the pin
-    // and the snooze settling cleared.
-    var steps: [ThreadAction] = [.unsettle(restoreUnsettledAt: .some(thread.unsettledAt))]
-    if thread.pinnedAt != nil { steps.append(.pin(orderKey: thread.pinOrderKey)) }
-    if let until = thread.snoozedUntil?.date { steps.append(.snooze(until: until)) }
-    perform(.settle, on: row.ref, undoable: .settled, undoSteps: steps)
+    perform(.settle, on: row.ref, undoable: .settled, undoSteps: ThreadUndo.plan(.settle, before: thread))
   }
 
   func snooze(_ row: ThreadRow, until: Date) {
@@ -475,9 +470,7 @@ final class HomeModel {
 
   func unpin(_ row: ThreadRow) {
     guard let thread = thread(row.ref) else { return }
-    var steps: [ThreadAction] = [.pin(orderKey: thread.pinOrderKey)]
-    if let until = thread.snoozedUntil?.date { steps.append(.snooze(until: until)) }
-    perform(.unpin, on: row.ref, undoable: .unpinned, undoSteps: steps)
+    perform(.unpin, on: row.ref, undoable: .unpinned, undoSteps: ThreadUndo.plan(.unpin, before: thread))
   }
 
   func toggleRead(_ row: ThreadRow) {

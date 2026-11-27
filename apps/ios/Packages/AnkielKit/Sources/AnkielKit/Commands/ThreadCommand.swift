@@ -31,6 +31,8 @@ public enum ThreadAction: Sendable, Hashable {
   case unsnooze
   case pin(orderKey: String?)
   case unpin
+  /// Puts an unpinned active thread at a manual position (undoing a settle restores it).
+  case reorderActive(orderKey: String)
   case markRead(visitedAt: WireTimestamp)
   case markUnread
   case rename(String)
@@ -58,6 +60,7 @@ public enum ThreadAction: Sendable, Hashable {
     case .unsnooze: "thread.unsnooze"
     case .pin: "thread.pin"
     case .unpin: "thread.unpin"
+    case .reorderActive: "thread.active.reorder"
     case .markRead: "thread.visit"
     case .markUnread: "thread.mark-unread"
     case .rename: "thread.metadata.update"
@@ -111,6 +114,8 @@ public struct ThreadCommand: Sendable, Hashable, Encodable {
       try c.encode("user", forKey: .reason)
     case .pin(let orderKey):
       try c.encodeIfPresent(orderKey, forKey: .orderKey)
+    case .reorderActive(let orderKey):
+      try c.encode(orderKey, forKey: .orderKey)
     case .markRead(let visitedAt):
       try c.encode(visitedAt, forKey: .visitedAt)
     case .rename(let title):

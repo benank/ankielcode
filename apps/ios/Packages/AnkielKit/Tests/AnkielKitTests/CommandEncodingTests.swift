@@ -48,6 +48,7 @@ struct CommandEncodingTests {
     ("interaction-mode-set", "command", thread(.setInteractionMode(.default), ":interaction-mode")),
     ("model-selection-set", "command", thread(.setModelSelection(model))),
     ("thread-stop", "command", thread(.stop)),
+    ("thread-active-reorder", "command", thread(.reorderActive(orderKey: "a0V"))),
     ("run-interrupt", "command", thread(.interruptRun(runId: "run:thread:0b7e:ordinal:3"))),
     ("queued-run-cancel", "command", thread(.cancelQueuedRun(runId: "run:thread:0b7e:ordinal:4"))),
     ("queued-run-start", "command", thread(.startQueuedRun(runId: "run:thread:0b7e:ordinal:4"))),

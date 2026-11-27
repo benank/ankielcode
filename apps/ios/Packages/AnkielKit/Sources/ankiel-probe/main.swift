@@ -71,6 +71,10 @@ func run() async throws {
     try await staleResume(environment, connector: connector)
     return
   }
+  if let mode = argument("--live") {
+    try await live(mode, environment: environment, connector: connector)
+    return
+  }
 
   let session = try await connector.connect(environment)
   let config = session.initialConfig
