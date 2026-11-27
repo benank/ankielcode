@@ -48,6 +48,50 @@ func live(_ mode: String, environment: SavedEnvironment, connector: EnvironmentC
     let session = try await tapped.connect(environment)
     defer { Task { await session.close() } }
     try await liveInterrupt(session, tap: tap.withLock { $0! })
+  case "requests":
+    let session = try await connector.connect(environment)
+    let other = try await connector.connect(environment)
+    defer { Task { await session.close(); await other.close() } }
+    try await liveRequests(session, other: other)
+  case "composer":
+    try await liveComposer(environment, connector: connector)
+  case "detail":
+    try await liveDetail(environment, connector: connector)
+  case "settings":
+    try await liveSettings(environment, connector: connector)
+  case "repair":
+    try await liveRepair(environment, connector: connector)
+  case "release":
+    let session = try await connector.connect(environment)
+    let version = session.initialConfig.environment.serverVersion
+    let update = session.initialConfig.environment.capabilities["serverSelfUpdate"]
+    await session.close()
+    do {
+      let newer = try await ReleaseLookup.live.newerVersion(than: version)
+      print("server \(version) (serverSelfUpdate \(update.map { "\($0)" } ?? "absent")): newer release \(newer ?? "none")")
+    } catch {
+      print("release check failed: \(error)")
+    }
+  case "config-key":
+    let session = try await connector.connect(environment)
+    defer { Task { await session.close() } }
+    let stream = try await session.rpc.stream(ServerConfigSubscription.rpcTag, payload: ServerConfigSubscription(), of: JSONValue.self)
+    for try await item in stream {
+      let key = argument("--key") ?? ""
+      print(findKey(key, in: item).map { String(decoding: (try? JSONEncoder.sorted.encode($0)) ?? Data(), as: UTF8.self) } ?? "absent")
+      break
+    }
+  case "rows-dump":
+    let session = try await connector.connect(environment)
+    defer { Task { await session.close() } }
+    let stream = try await session.rpc.stream(
+      ShellSubscription.rpcTag, payload: session.initialConfig.shellSubscription, of: JSONValue.self)
+    for try await item in stream where item["kind"]?.stringValue == "snapshot" {
+      var rows = item["snapshot"]?["threads"]?.arrayValue ?? []
+      rows.sort { ($0["id"]?.stringValue ?? "") < ($1["id"]?.stringValue ?? "") }
+      print(String(decoding: try JSONEncoder.sorted.encode(JSONValue.array(rows)), as: UTF8.self))
+      break
+    }
   case "cleanup":
     let session = try await connector.connect(environment)
     defer { Task { await session.close() } }

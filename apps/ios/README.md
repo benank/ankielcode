@@ -78,6 +78,22 @@ swift run ankiel-probe --state /tmp/probe.json --supervise
 swift run ankiel-probe --state /tmp/probe.json --stale-resume
 ```
 
+`--live <mode>` proves the app's wire paths against a dev server with the free `Replay (dev)`
+provider, through the same registry, thread sync, composer store, request controller and settings
+writer the app uses. Modes that write create their own threads in an `ankiel-probe live` project
+(a folder under `/tmp/ankiel-live`) and delete them; `--live cleanup` removes the project. Each run
+exits after `--limit <seconds>` (default 240).
+
+| Mode | Proves |
+| --- | --- |
+| `threads` | Every shell thread's snapshot, raw versus decoded (item kinds, unknown kinds, timeline rows, frame parts). |
+| `list --title <seeded title>` | Each list action and its undo, read back from the shell, then search and an older-settled page. |
+| `turn`, `undo`, `interrupt` | A launched Replay turn streamed and compared with a cold snapshot (approval, acks, launch retry); settle undo restoring a manual position; stop, and the server's reply to a client `Interrupt`. |
+| `requests` | A question answered, an approval declined through the composer path, one answered from another session. |
+| `composer` | Uploads and launch, a dropped reply resent with the same command id, settings before a message, steer and queue, queued edit and removal, an offline send. |
+| `detail` | Scopes, the reopen cache, subagent threads, a 401 at the upgrade, command output on expand, a socket drop mid-stream. |
+| `settings`, `repair --link-a <url> --link-b <url>`, `release` | Server settings writes and a refused write; re-pairing at the saved and a new address; the update check. |
+
 ## Debug hooks (Debug builds only)
 
 Pass these as launch environment variables, e.g.
