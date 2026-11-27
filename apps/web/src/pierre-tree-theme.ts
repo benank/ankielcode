@@ -17,7 +17,7 @@ export const PIERRE_TREE_UNSAFE_CSS = `
   button[data-type='item'], button[data-type='item']::before { border-radius: var(--radius-md); }
   svg[data-icon-name='ankiel-tree-icon-loading'] { opacity: 0.6; }
   @media (prefers-reduced-motion: no-preference) {
-    svg[data-icon-name='ankiel-tree-icon-loading'] { animation: ankiel-tree-spin 1s linear infinite; }
+    svg[data-icon-name='ankiel-tree-icon-loading'] { animation: ankiel-tree-spin 1s linear infinite var(--window-animation-play-state, running); }
   }
   @keyframes ankiel-tree-spin { to { transform: rotate(360deg); } }
 `;

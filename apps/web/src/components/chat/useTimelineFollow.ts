@@ -17,6 +17,7 @@ import {
   observeTimelineRun,
   type TimelineRunObservation,
 } from "./timelineScrollAnchoring";
+import { prefersInstantScroll } from "../../lib/lowPower";
 import { createPageScrollController, type PageScrollKey } from "./pageScrollController";
 import {
   FOLLOWING,
@@ -316,7 +317,7 @@ export function useTimelineFollow(input: TimelineFollowInput) {
       if (!list) return;
       void Promise.resolve(
         list.scrollToEnd?.({
-          animated: animated && !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+          animated: animated && !prefersInstantScroll(),
         }),
       ).then(() =>
         settleListScroll(

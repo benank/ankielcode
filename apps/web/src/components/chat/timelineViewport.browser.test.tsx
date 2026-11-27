@@ -106,4 +106,51 @@ describe("attachTimelineViewport", () => {
     ]);
     viewport.dispose();
   });
+
+  it("marks its chat column from the first scroll until the scroll ends or it detaches", async () => {
+    await using screen = await render(
+      <div data-chat-column data-testid="column">
+        <div data-testid="timeline" style={{ height: 300, overflowY: "auto" }}>
+          <div data-testid="tail" style={{ height: 1200 }} />
+        </div>
+      </div>,
+      { router: false },
+    );
+    const column = screen.getByTestId("column").element();
+    const timeline = screen.getByTestId("timeline").element() as HTMLElement;
+    const tail = screen.getByTestId("tail").element() as HTMLElement;
+    const viewport = attachTimelineViewport(timeline);
+    const next = (type: "scroll" | "scrollend") =>
+      new Promise<void>((resolve) =>
+        timeline.addEventListener(type, () => resolve(), { once: true }),
+      );
+    const scrolling = () => column.hasAttribute("data-timeline-scrolling");
+
+    let scroll = next("scroll");
+    const end = next("scrollend");
+    timeline.scrollTop = 200;
+    await scroll;
+    expect(scrolling()).toBe(true);
+    await end;
+    expect(scrolling()).toBe(false);
+
+    // Content that shrinks under the reader clamps scrollTop with no input; the mark still clears.
+    timeline.scrollTop = timeline.scrollHeight;
+    await next("scrollend");
+    scroll = next("scroll");
+    const clampEnd = next("scrollend");
+    tail.style.height = "400px";
+    void timeline.scrollTop;
+    await scroll;
+    expect(scrolling()).toBe(true);
+    await clampEnd;
+    expect(scrolling()).toBe(false);
+
+    scroll = next("scroll");
+    timeline.scrollTop = 0;
+    await scroll;
+    expect(scrolling()).toBe(true);
+    viewport.dispose();
+    expect(scrolling()).toBe(false);
+  });
 });

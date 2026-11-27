@@ -1319,6 +1319,9 @@ export interface DesktopBridge {
   onQuitShortcut: (listener: (event: QuitShortcutHintEvent) => void) => () => void;
   getWindowFullscreenState: () => boolean;
   onWindowFullscreenStateChange: (listener: (fullscreen: boolean) => void) => () => void;
+  /** On battery, or a serious or critical thermal state (macOS); absent in older desktop builds. */
+  getLowPowerState?: () => Promise<boolean>;
+  onLowPowerStateChange?: (listener: (lowPower: boolean) => void) => () => void;
   getWindowZoomFactor: () => number;
   getUpdateState: () => Promise<DesktopUpdateState>;
   /** `minimumVersion` is a track switch's checked release; nothing older is offered after. */

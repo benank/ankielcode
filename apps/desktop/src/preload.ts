@@ -336,6 +336,18 @@ contextBridge.exposeInMainWorld("desktopBridge", {
       ipcRenderer.removeListener(IpcChannels.WINDOW_FULLSCREEN_STATE_CHANNEL, wrappedListener);
     };
   },
+  getLowPowerState: () => ipcRenderer.invoke(IpcChannels.GET_LOW_POWER_STATE_CHANNEL),
+  onLowPowerStateChange: (listener) => {
+    const wrappedListener = (_event: Electron.IpcRendererEvent, lowPower: unknown) => {
+      if (typeof lowPower !== "boolean") return;
+      listener(lowPower);
+    };
+
+    ipcRenderer.on(IpcChannels.LOW_POWER_STATE_CHANNEL, wrappedListener);
+    return () => {
+      ipcRenderer.removeListener(IpcChannels.LOW_POWER_STATE_CHANNEL, wrappedListener);
+    };
+  },
   getUpdateState: () => ipcRenderer.invoke(IpcChannels.UPDATE_GET_STATE_CHANNEL),
   setUpdateChannel: (channel, minimumVersion) =>
     ipcRenderer.invoke(IpcChannels.UPDATE_SET_CHANNEL_CHANNEL, { channel, minimumVersion }),

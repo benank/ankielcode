@@ -3340,6 +3340,23 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
         },
         () => pictureInPictureSession.window.showInactive(),
       );
+      // Unthrottled until now so the hidden window paints its first frame before it shows.
+      // Once visible, an occluded or off-screen player may idle like any other window.
+      yield* attempt(
+        {
+          operation: "pictureInPicture.setBackgroundThrottling",
+          tabId,
+          webContentsId: pictureInPictureSession.webContentsId,
+        },
+        () => {
+          if (pictureInPictureSession.window.isDestroyed()) return;
+          pictureInPictureSession.window.webContents.setBackgroundThrottling(true);
+        },
+      ).pipe(
+        Effect.catch((error) =>
+          Effect.logWarning("Failed to throttle the picture-in-picture window.", { error }),
+        ),
+      );
     });
     const initializationExit = yield* Effect.gen(function* () {
       const initializationFiber = yield* Effect.forkIn(

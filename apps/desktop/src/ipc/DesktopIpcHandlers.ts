@@ -10,6 +10,7 @@ import {
 import * as DesktopIpc from "./DesktopIpc.ts";
 import { installNotificationBadge } from "./methods/notificationBadge.ts";
 import { installDesktopNotifications } from "./methods/notifications.ts";
+import { installLowPowerState } from "./methods/lowPower.ts";
 import { getClientSettings, setClientSettings } from "./methods/clientSettings.ts";
 import { getConnectionCatalog, setConnectionCatalog } from "./methods/connectionCatalog.ts";
 import {
@@ -93,6 +94,7 @@ export const installDesktopIpcHandlers = Effect.fn("desktop.ipc.installHandlers"
   const ipc = yield* DesktopIpc.DesktopIpc;
   yield* installNotificationBadge();
   yield* installDesktopNotifications();
+  yield* installLowPowerState();
   yield* PreviewIpc.installPreviewEventForwarding();
 
   yield* ipc.handle(WebLinksIpc.setReady);

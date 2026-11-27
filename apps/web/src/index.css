@@ -232,11 +232,12 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
       transparent calc(var(--chat-composer-attachment-overlap) + 10px)
     );
   --color-zinc-25: oklch(99.2% 0 0);
-  --animate-skeleton: skeleton 2.4s infinite;
+  /* Looping indicators hold still in an unfocused window (--window-animation-play-state). */
+  --animate-skeleton: skeleton 2.4s infinite var(--window-animation-play-state, running);
   /* Duty-cycled indicator animations: long holds with stepped ramps, so the
      compositor updates discrete frames instead of every vsync. */
-  --animate-status-pulse: status-pulse 2s infinite;
-  --animate-status-ping: status-ping 2s infinite;
+  --animate-status-pulse: status-pulse 2s infinite var(--window-animation-play-state, running);
+  --animate-status-ping: var(--window-status-ping, status-ping) 2s infinite;
   /* Stash pulses hold a highlight for 1.2s; the row then eases back over 200ms, the count snaps.
      The row alternates two identical keyframes so each stash restarts it without a remount. */
   --animate-stash-pulse-row: stash-pulse-row 1400ms;
@@ -562,14 +563,19 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
 
 @utility visible-animate-spin {
   animation: var(--animate-spin);
-  animation-play-state: var(--visible-animation-state, paused);
+  animation-play-state: var(--window-animation-play-state, var(--visible-animation-state, paused));
   will-change: var(--visible-animation-will-change, auto);
 }
 
+/* A 2.2s sweep stepped at 30fps, then a 0.8s rest past the text, so a long turn draws about a
+   fifth of the frames a linear sweep would at 120Hz. The pair must keep identical timing or the
+   counter-moved text jitters. */
 @keyframes live-activity-focus {
   from {
     transform: translateX(0);
+    animation-timing-function: steps(66);
   }
+  73.333%,
   to {
     transform: translateX(100%);
   }
@@ -578,7 +584,9 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
 @keyframes live-activity-focus-counter {
   from {
     transform: translateX(0);
+    animation-timing-function: steps(66);
   }
+  73.333%,
   to {
     transform: translateX(-100%);
   }
@@ -614,8 +622,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
     transparent 100%
   );
   mask-repeat: no-repeat;
-  animation: live-activity-focus 2.2s linear infinite;
-  animation-play-state: var(--visible-animation-state, paused);
+  animation: live-activity-focus 3s infinite;
+  animation-play-state: var(--window-animation-play-state, var(--visible-animation-state, paused));
   will-change: var(--visible-animation-will-change, auto);
 
   @media (prefers-reduced-motion: reduce), (forced-colors: active) {
@@ -627,8 +635,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
 
 @utility live-activity-focus-counter {
   width: 100%;
-  animation: live-activity-focus-counter 2.2s linear infinite;
-  animation-play-state: var(--visible-animation-state, paused);
+  animation: live-activity-focus-counter 3s infinite;
+  animation-play-state: var(--window-animation-play-state, var(--visible-animation-state, paused));
   will-change: var(--visible-animation-will-change, auto);
 
   @media (prefers-reduced-motion: reduce), (forced-colors: active) {
@@ -647,7 +655,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
 @utility pixel-status-strip {
   animation: pixel-status var(--pixel-duration) steps(var(--pixel-frames), jump-none)
     var(--pixel-iterations) both;
-  animation-play-state: var(--visible-animation-state, paused);
+  animation-play-state: var(--window-animation-play-state, var(--visible-animation-state, paused));
   will-change: var(--visible-animation-will-change, auto);
 
   @media (prefers-reduced-motion: reduce), (forced-colors: active) {
@@ -657,10 +665,29 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
   }
 }
 
-/* An unfocused window holds its pixels and shimmers still. */
-:root[data-window-blurred]
-  :is(.pixel-status-strip, .live-activity-focus, .live-activity-focus-counter) {
-  animation-play-state: paused;
+/* An unfocused window holds its pixels, shimmers, spinners, pulses and skeletons still. A
+   custom property, because it also has to reach shadow roots such as the Pierre file tree. A ping
+   frozen mid-burst would leave its ring on screen, so it stops instead and replays on focus. */
+:root[data-window-blurred] {
+  --window-animation-play-state: paused;
+  --window-status-ping: none;
+}
+
+/* Saving power (battery or thermal pressure, from the desktop shell): no activity shimmer, and
+   glass falls back to its opaque surface as at 100% glass opacity. The glass variables go on
+   body because appInit writes the user's glass opacity inline on the root. */
+:root[data-low-power] :is(.live-activity-focus, .live-activity-focus-counter) {
+  animation: none;
+  will-change: auto;
+}
+
+:root[data-low-power] .live-activity-focus {
+  opacity: 0;
+}
+
+:root[data-low-power] body {
+  --glass-blur: 0px;
+  --glass-opacity: 100%;
 }
 
 @utility live-activity-focus-aligned {

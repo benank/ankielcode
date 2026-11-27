@@ -573,6 +573,7 @@ const makeTestPictureInPictureWindow = (loadURL: () => Promise<void> = async () 
       webContentsListeners.delete(event);
     }),
     send,
+    setBackgroundThrottling: vi.fn(),
   };
   const pictureInPictureWindow = {
     isDestroyed: vi.fn(() => destroyed),
@@ -3320,6 +3321,15 @@ describe("PreviewManager", () => {
         expect(reopenedWindow.showInactive).toHaveBeenCalledOnce();
         expect(capturePage).toHaveBeenCalledOnce();
         expect(states.at(-1)?.pictureInPicture).toBe(true);
+        // Unthrottled while hidden so the first frame paints; throttled once it shows.
+        expect(browserWindowConstructor.mock.calls[1]?.[0]).toMatchObject({
+          webPreferences: { backgroundThrottling: false },
+        });
+        const reopenedThrottling = reopenedWindow.webContents.setBackgroundThrottling;
+        expect(reopenedThrottling.mock.calls).toEqual([[true]]);
+        expect(reopenedWindow.showInactive.mock.invocationCallOrder[0]).toBeLessThan(
+          reopenedThrottling.mock.invocationCallOrder[0]!,
+        );
 
         yield* manager.closePictureInPicture("tab_concurrent_pip");
 
