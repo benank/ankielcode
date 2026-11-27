@@ -1,0 +1,324 @@
+{
+  "providers": [
+    {
+      "instanceId": "claudeAgent",
+      "driver": "claudeAgent",
+      "displayName": "Claude",
+      "continuation": {
+        "groupKey": "claude"
+      },
+      "supportedRuntimeModes": [
+        "approval-required",
+        "auto",
+        "full-access"
+      ],
+      "enabled": true,
+      "installed": true,
+      "version": "1.0.0",
+      "status": "ready",
+      "auth": {
+        "status": "authenticated"
+      },
+      "checkedAt": "2026-11-27T09:00:00.000Z",
+      "models": [
+        {
+          "slug": "claude-opus-5-5",
+          "name": "Claude Opus 5.5",
+          "shortName": "Opus 5.5",
+          "isCustom": false,
+          "isDefault": true,
+          "capabilities": {
+            "optionDescriptors": [
+              {
+                "id": "effort",
+                "label": "Effort",
+                "type": "select",
+                "options": [
+                  {
+                    "id": "low",
+                    "label": "Low"
+                  },
+                  {
+                    "id": "medium",
+                    "label": "Medium"
+                  },
+                  {
+                    "id": "high",
+                    "label": "High",
+                    "isDefault": true
+                  },
+                  {
+                    "id": "xhigh",
+                    "label": "Extra high"
+                  },
+                  {
+                    "id": "ultrathink",
+                    "label": "Ultrathink"
+                  }
+                ],
+                "promptInjectedValues": [
+                  "ultrathink"
+                ],
+                "role": "reasoning"
+              },
+              {
+                "id": "fastMode",
+                "label": "Fast mode",
+                "type": "boolean"
+              }
+            ]
+          }
+        },
+        {
+          "slug": "claude-sonnet-5-5",
+          "name": "Claude Sonnet 5.5",
+          "shortName": "Sonnet 5.5",
+          "isCustom": false,
+          "capabilities": {
+            "optionDescriptors": [
+              {
+                "id": "effort",
+                "label": "Effort",
+                "type": "select",
+                "options": [
+                  {
+                    "id": "low",
+                    "label": "Low"
+                  },
+                  {
+                    "id": "medium",
+                    "label": "Medium"
+                  },
+                  {
+                    "id": "high",
+                    "label": "High",
+                    "isDefault": true
+                  },
+                  {
+                    "id": "xhigh",
+                    "label": "Extra high"
+                  },
+                  {
+                    "id": "ultrathink",
+                    "label": "Ultrathink"
+                  }
+                ],
+                "promptInjectedValues": [
+                  "ultrathink"
+                ],
+                "role": "reasoning"
+              }
+            ]
+          }
+        },
+        {
+          "slug": "claude-haiku-5-5",
+          "name": "Claude Haiku 5.5",
+          "shortName": "Haiku 5.5",
+          "isCustom": false,
+          "capabilities": null
+        },
+        {
+          "slug": "claude-legacy",
+          "name": "Claude Legacy",
+          "isCustom": false,
+          "isLegacy": true,
+          "capabilities": null
+        }
+      ],
+      "slashCommands": [],
+      "skills": []
+    },
+    {
+      "instanceId": "devReplay",
+      "driver": "devReplay",
+      "displayName": "Replay (dev)",
+      "enabled": true,
+      "installed": true,
+      "version": "1.0.0",
+      "status": "ready",
+      "auth": {
+        "status": "authenticated"
+      },
+      "checkedAt": "2026-11-27T09:00:00.000Z",
+      "models": [
+        {
+          "slug": "replay",
+          "name": "Replay",
+          "isCustom": false,
+          "capabilities": null
+        }
+      ],
+      "slashCommands": [],
+      "skills": []
+    },
+    {
+      "instanceId": "codex",
+      "driver": "codex",
+      "enabled": true,
+      "installed": true,
+      "version": "1.0.0",
+      "status": "ready",
+      "auth": {
+        "status": "unauthenticated"
+      },
+      "checkedAt": "2026-11-27T09:00:00.000Z",
+      "models": [
+        {
+          "slug": "gpt-5.4",
+          "name": "GPT-5.4",
+          "isCustom": false,
+          "capabilities": null
+        }
+      ],
+      "slashCommands": [],
+      "skills": []
+    }
+  ],
+  "settings": {
+    "favorites": null,
+    "providerModelPreferences": {
+      "claudeAgent": {
+        "hiddenModels": [
+          "claude-haiku-5-5"
+        ],
+        "modelOrder": []
+      }
+    },
+    "worktreeCleanup": null,
+    "storageCleanup": {
+      "worktreeKeepWhen": "uncommitted-changes",
+      "worktreeAfterDays": null,
+      "worktreeSettledAfterDays": null,
+      "worktreeOnMerge": false,
+      "worktreeOnDelete": false,
+      "worktreeUnchanged": false,
+      "browserArtifactsAfterDays": null,
+      "logsAfterDays": null
+    },
+    "worktreesDirectory": "",
+    "fastWorktreeCheckout": false,
+    "previousWorktreesDirectories": [],
+    "responseStreamingMode": "paragraph",
+    "enableProviderUpdateChecks": true,
+    "continueThreadsAfterServerUpdate": true,
+    "keepAwakeWhileAgentsWork": true,
+    "enableAgentBrowserAccess": true,
+    "githubIntegrationEnabled": false,
+    "enablePreviewTunnel": true,
+    "cloudSpeechCredentials": {
+      "openai": "",
+      "xai": "",
+      "openrouter": ""
+    },
+    "speechModelId": "handy-computer/parakeet-unified-en-0.6b-gguf",
+    "speechAcceleration": "auto",
+    "speechModelUnloadTimeout": "min_15",
+    "speechProjectCustomWords": [],
+    "speechPostProcessingModelSelection": null,
+    "projectAgentBrowserAccessOverrides": {},
+    "defaultAutoPull": false,
+    "defaultProjectScripts": [],
+    "projectScriptOverrides": {},
+    "projectAutoPullOverrides": {},
+    "defaultModelSelection": {
+      "instanceId": "claudeAgent",
+      "model": "claude-sonnet-5-5"
+    },
+    "fallbackModelSelection": null,
+    "defaultRuntimeMode": "auto",
+    "projectSettingsOverrides": {},
+    "projectSettingsFolded": false,
+    "enableAgentDeviceAccess": false,
+    "enableDeviceSupport": false,
+    "deviceOnboardingCompleted": false,
+    "deviceHosts": [],
+    "easDeviceHosts": [],
+    "simlockDeviceHosts": [],
+    "simlockDeviceHostsEnabled": false,
+    "sidebarAutoSettleAfterDays": 7,
+    "compactIdleThreads": false,
+    "snoozeLimitedThreads": false,
+    "autoResumeLimitedThreads": false,
+    "snoozePresets": [
+      {
+        "kind": "after",
+        "minutes": 60
+      },
+      {
+        "kind": "after",
+        "minutes": 180
+      },
+      {
+        "kind": "at",
+        "day": "today",
+        "time": "18:00"
+      },
+      {
+        "kind": "at",
+        "day": "tomorrow",
+        "time": "09:00"
+      },
+      {
+        "kind": "at",
+        "day": "monday",
+        "time": "09:00"
+      }
+    ],
+    "hiddenThreadTags": [],
+    "hideTaggedThreads": false,
+    "workflowsEnabled": false,
+    "promptSuggestionsEnabled": false,
+    "sidebarAutoSettleKeepPullRequests": false,
+    "sidebarAutoSettleOnMerge": true,
+    "backgroundActivity": {
+      "schemaVersion": 1,
+      "profile": "balanced",
+      "overrides": {}
+    },
+    "automaticGitFetchInterval": 30000,
+    "providerHealthRefreshInterval": 300000,
+    "backgroundActivityProfile": "balanced",
+    "defaultTheme": "",
+    "defaultThemeSetAt": "",
+    "defaultAppearance": "",
+    "defaultAppearanceSetAt": "",
+    "environmentIcon": null,
+    "newWorktreesStartFromOrigin": true,
+    "worktreeSubmodules": null,
+    "addProjectBaseDirectory": "",
+    "ghqCloneLayout": false,
+    "textGenerationModelSelection": {
+      "instanceId": "codex",
+      "model": "gpt-6-luna",
+      "options": [
+        {
+          "id": "reasoningEffort",
+          "value": "low"
+        }
+      ]
+    },
+    "threadTitleInstructions": "",
+    "branchNamingMode": "static",
+    "branchNamePrefix": "ankiel",
+    "branchNameInstructions": "",
+    "removeAgentCreditsOnMerge": false,
+    "sourceControlWritingStyle": {
+      "mode": "repo_conventions",
+      "customInstructions": "",
+      "followChangeRequestTemplates": true
+    },
+    "sourceControlWriterModelSelection": null,
+    "reviewGuidesEnabled": false,
+    "reviewGuideModelSelection": null,
+    "reviewGuideInstructions": "",
+    "pullRequestMergeMethod": null,
+    "providerInstances": {},
+    "sourceControlHosts": {},
+    "offeredSourceControlProviders": {},
+    "textGenerators": {},
+    "usageHistoryRetentionDays": 92,
+    "usagePriceOverrides": {},
+    "usageModelAliases": {}
+  }
+}

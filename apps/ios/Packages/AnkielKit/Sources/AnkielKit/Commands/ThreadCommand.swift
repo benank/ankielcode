@@ -34,6 +34,18 @@ public enum ThreadAction: Sendable, Hashable {
   case markRead(visitedAt: WireTimestamp)
   case markUnread
   case rename(String)
+  // Composer settings and turn control (§7.4, §7.5).
+  case setRuntimeMode(RuntimeMode)
+  case setInteractionMode(InteractionMode)
+  case setModelSelection(ModelSelection)
+  /// Stops the active run (servers with `capabilities.threadStop`).
+  case stop
+  /// Interrupts one run and holds the queue (older servers).
+  case interruptRun(runId: String)
+  case cancelQueuedRun(runId: String)
+  case startQueuedRun(runId: String)
+  case promoteQueuedRun(queuedRunId: String, targetRunId: String)
+  case editQueuedRun(runId: String, text: String)
 
   public var type: String {
     switch self {
@@ -49,6 +61,15 @@ public enum ThreadAction: Sendable, Hashable {
     case .markRead: "thread.visit"
     case .markUnread: "thread.mark-unread"
     case .rename: "thread.metadata.update"
+    case .setRuntimeMode: "thread.runtime-mode.set"
+    case .setInteractionMode: "thread.interaction-mode.set"
+    case .setModelSelection: "thread.model-selection.set"
+    case .stop: "thread.stop"
+    case .interruptRun: "run.interrupt"
+    case .cancelQueuedRun: "queued-run.cancel"
+    case .startQueuedRun: "queued-run.start"
+    case .promoteQueuedRun: "queued-message.promote-to-steer"
+    case .editQueuedRun: "queued-run.edit"
     }
   }
 }
@@ -67,6 +88,7 @@ public struct ThreadCommand: Sendable, Hashable, Encodable {
 
   enum CodingKeys: String, CodingKey {
     case type, commandId, threadId, reason, restoreUnsettledAt, snoozedUntil, orderKey, visitedAt, title
+    case runtimeMode, interactionMode, modelSelection, runId, holdQueue, queuedRunId, targetRunId, text
   }
 
   public func encode(to encoder: any Encoder) throws {
@@ -93,6 +115,25 @@ public struct ThreadCommand: Sendable, Hashable, Encodable {
       try c.encode(visitedAt, forKey: .visitedAt)
     case .rename(let title):
       try c.encode(title, forKey: .title)
+    case .setRuntimeMode(let mode):
+      try c.encode(mode.rawValue, forKey: .runtimeMode)
+    case .setInteractionMode(let mode):
+      try c.encode(mode.rawValue, forKey: .interactionMode)
+    case .setModelSelection(let selection):
+      try c.encode(selection, forKey: .modelSelection)
+    case .stop:
+      break
+    case .interruptRun(let runId):
+      try c.encode(runId, forKey: .runId)
+      try c.encode(true, forKey: .holdQueue)
+    case .cancelQueuedRun(let runId), .startQueuedRun(let runId):
+      try c.encode(runId, forKey: .runId)
+    case .promoteQueuedRun(let queuedRunId, let targetRunId):
+      try c.encode(queuedRunId, forKey: .queuedRunId)
+      try c.encode(targetRunId, forKey: .targetRunId)
+    case .editQueuedRun(let runId, let text):
+      try c.encode(runId, forKey: .runId)
+      try c.encode(text, forKey: .text)
     }
   }
 

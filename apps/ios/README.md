@@ -11,7 +11,9 @@ React Native app in `apps/mobile`.
   routes, shell sync and cache, the registry). Pure Swift, tested with `swift test` on the Mac.
 
 Saved environments live in `Application Support/AnkielCode/environments.json`, their last shell in
-`Application Support/AnkielCode/shell/`, and credentials plus the DPoP key in the Keychain.
+`Application Support/AnkielCode/shell/`, and credentials plus the DPoP key in the Keychain. Composer
+drafts, the outbox of unsent messages and remembered model options live in
+`Application Support/AnkielCode/composer/composer.json`, attachment copies beside it in `files/`.
 
 ## Build
 
@@ -75,10 +77,33 @@ None of them forget saved environments or credentials.
 | `ANKIEL_DEBUG_HOME` | `sample` | The thread list with canned rows across two fake computers (every status, a pin, a subagent, snoozed and settled shelves). Actions show; their commands fail as not connected. |
 | | `empty` | The list's "No threads yet" state. |
 | `ANKIEL_DEBUG_SEARCH` | a query | Home with that search typed. |
+| `ANKIEL_DEBUG_THREAD` | `short`, `markdown`, `subagents`, `rich-markdown`, `pending`, `failed`, `kinds`, `replay`, `long` | A thread from the bundled fixtures (`AnkielCode/Thread/Fixtures`, synthetic threads about a made-up project), run through the same decode, reduce and timeline path as a live stream. `replay` streams a turn in paced events; `long` repeats fixture turns to 500+ rows. No server needed; Release builds leave the fixtures out. |
+| `ANKIEL_DEBUG_THREAD_EXPAND` | `folds`, `all` | Opens the fixture's run folds (and, with `all`, every work group and call) once it loads. |
+| `ANKIEL_DEBUG_THREAD_SCROLL` | `top` | Opens the fixture scrolled to its first row (the scroll-to-latest button). |
+| `ANKIEL_DEBUG_COMPOSER` | `fake`, `slow`, `fail`, `offline` | Composers send to a fake instead of a computer, with their own store (`composer-debug/`), so nothing reaches a real server. `fake` accepts after a short wait and shows the message in fixture threads (queued sends become a queued run); `slow` never answers; `fail` refuses; `offline` has no computer. Attachments named `*fail*` fail to upload, `*slow*` stall. New thread also lists a "Fixture Mac" with sample projects. |
+| `ANKIEL_DEBUG_COMPOSER_RESET` | `1` | Empties the fake composer store at launch (UI tests). |
+| `ANKIEL_DEBUG_COMPOSER_PRESET` | `multiline`, `attachments`, `send`, `queued`, `failed`, `picker`, `keyboard` | With `ANKIEL_DEBUG_THREAD`: fills the fixture thread's composer, sends or queues a message, or opens the model sheet. |
+
+Command encoding is checked twice: `CommandEncodingTests` compares the Swift encoders with
+`Tests/AnkielKitTests/Fixtures/commands/*.json`, and `check-schemas.mjs` in that folder decodes the
+same files with the server's Effect schemas (run it from `packages/contracts`:
+`node ../../apps/ios/Packages/AnkielKit/Tests/AnkielKitTests/Fixtures/commands/check-schemas.mjs`).
+It also writes `provider-catalog.json` by encoding a sample through the real `ServerProvider` and
+`ServerSettings` schemas.
+
+Thread fixtures are in the exact wire shape (checked against the TypeScript schemas and reducer;
+`thread-reducer-golden.json` holds the TypeScript reducer's output the Swift reducer must match).
+Their text was rewritten word by word into vocabulary about a made-up tide-chart project, with
+digits remapped and ids and timestamps remapped consistently (golden included); markdown and
+punctuation shape, item kinds, statuses, tool names and option labels are kept so the parser and
+timeline see realistic structure. A test checks for the `"synthetic": true` marker and for home
+paths, real emails and tokens.
 
 UI tests (`AnkielCodeUITests`) run with `xcodebuild test … -only-testing:AnkielCodeUITests`.
-`SampleListUITests` need no server; `LiveListUITests` change real threads on the dev server at
-`127.0.0.1:14527` and put each one back, and skip when it is not running. Set
+`SampleListUITests`, `FixtureThreadUITests` and `ComposerUITests` (fake sink) need no server (`FixtureThreadUITests` includes a scroll
+measurement on the 500-row fixture); `LiveListUITests` change real threads on the dev server at
+`127.0.0.1:14527` and put each one back, and `LiveThreadUITests` open one; both skip when it is
+not running. Set
 `TEST_RUNNER_SHOTS_DIR=<dir>` to also save their screenshots there.
 
 Deep links the app accepts (any `ankielcode[-channel]` scheme): `ankielcode-native://pair?pairingUrl=<urlencoded>`

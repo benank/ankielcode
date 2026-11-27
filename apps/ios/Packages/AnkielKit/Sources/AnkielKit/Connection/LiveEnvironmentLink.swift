@@ -78,15 +78,19 @@ final class LiveSessionAdapter: LiveSession {
   private let connector: EnvironmentConnector
   private let vault: CredentialVault
   private let watcher: Task<String, Never>
+  let configUpdates: AsyncStream<ServerConfigEvent>
 
   init(session: EnvironmentSession, route: EnvironmentRoute, connector: EnvironmentConnector, vault: CredentialVault) {
     self.session = session
     self.route = route
     self.connector = connector
     self.vault = vault
+    let (updates, continuation) = AsyncStream.makeStream(of: ServerConfigEvent.self, bufferingPolicy: .bufferingNewest(8))
+    configUpdates = updates
     watcher = Task {
+      defer { continuation.finish() }
       do {
-        while try await session.nextConfigEvent() != nil {}
+        while let event = try await session.nextConfigEvent() { continuation.yield(event) }
         return "The server ended the session."
       } catch {
         return String(describing: error)
@@ -106,6 +110,10 @@ final class LiveSessionAdapter: LiveSession {
 
   func subscribeShell(_ subscription: ShellSubscription) async throws -> RpcStream<ShellStreamItem> {
     try await session.subscribeShell(subscription)
+  }
+
+  func threadItems(_ subscription: ThreadSubscription) async throws -> RpcStream<ThreadStreamItem> {
+    try await session.rpc.stream(ThreadSubscription.rpcTag, payload: subscription, of: ThreadStreamItem.self)
   }
 
   func loadShellSnapshot(_ subscription: ShellSubscription) async throws -> ShellHTTPSnapshot {

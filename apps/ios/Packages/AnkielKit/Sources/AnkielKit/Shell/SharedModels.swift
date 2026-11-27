@@ -43,14 +43,14 @@ public struct ModelSelection: Sendable, Hashable, Codable {
   }
 }
 
-public enum RuntimeMode: String, Sendable {
+public enum RuntimeMode: String, Sendable, Codable, CaseIterable {
   case approvalRequired = "approval-required"
   case autoAcceptEdits = "auto-accept-edits"
   case auto
   case fullAccess = "full-access"
 }
 
-public enum InteractionMode: String, Sendable {
+public enum InteractionMode: String, Sendable, Codable, CaseIterable {
   case `default`, plan
 }
 

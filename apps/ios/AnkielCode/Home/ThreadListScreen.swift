@@ -167,7 +167,11 @@ struct ThreadListScreen: View {
         .tint(Palette.working)
       }
     }
-    .contextMenu { menu(row, operable: operable) }
+    .contextMenu {
+      ThreadActionsMenu(
+        row: row, operable: operable, rename: { renaming = RenameRequest(ref: row.ref, title: row.title) },
+        delete: { deleting = row }, commit: commit)
+    }
   }
 
   @ViewBuilder
@@ -192,64 +196,6 @@ struct ThreadListScreen: View {
     if row.swipe.snooze {
       Button { snoozing = row } label: { Label("Snooze", systemImage: "moon.zzz") }
         .tint(Palette.attention)
-    }
-  }
-
-  /// RN's row menu (`layoutThreadListV2RowMenuActions`, nested on iOS): copy actions, the row's
-  /// primary action and snooze, pin, then the rest under More.
-  @ViewBuilder
-  private func menu(_ row: ThreadRow, operable: Bool) -> some View {
-    let home = model.home
-    Button("Copy thread link", systemImage: "link") {
-      UIPasteboard.general.string = ThreadLink.reference(row.ref)
-      Haptics.success()
-    }
-    Button("Copy thread ID", systemImage: "doc.on.doc") {
-      UIPasteboard.general.string = row.ref.threadId
-      Haptics.success()
-    }
-    if operable {
-      Divider()
-      switch row.swipe.primary {
-      case .settle: Button("Settle", systemImage: "checkmark") { commit { home.settle(row) } }
-      case .unsettle:
-        Button("Un-settle", systemImage: "arrow.uturn.backward") { commit { home.perform(.unsettle(), on: row.ref) } }
-      case .unsnooze: Button("Wake thread", systemImage: "clock") { commit { home.perform(.unsnooze, on: row.ref) } }
-      case .archive: Button("Archive", systemImage: "archivebox") { commit { home.archive(row) } }
-      }
-      if row.swipe.snooze {
-        Menu("Snooze", systemImage: "moon.zzz") {
-          ForEach(SnoozePreset.resolve(now: .now)) { preset in
-            Button {
-              commit { home.snooze(row, until: preset.wake) }
-            } label: {
-              Text(ThreadCopy.snoozeLabel(preset))
-              Text(ThreadCopy.snoozeWhen(preset, now: .now))
-            }
-          }
-        }
-      }
-      if row.isTopLevel, !row.snoozed {
-        if row.pinned {
-          Button("Unpin", systemImage: "pin.slash") { commit { home.unpin(row) } }
-        } else {
-          Button("Pin", systemImage: "pin") { commit { home.pin(row) } }
-        }
-      }
-      Menu("More", systemImage: "ellipsis.circle") {
-        Button("Rename", systemImage: "square.and.pencil") {
-          renaming = RenameRequest(ref: row.ref, title: row.title)
-        }
-        switch row.readToggle {
-        case .markRead?: Button("Mark read", systemImage: "envelope.open") { home.toggleRead(row) }
-        case .markUnread?: Button("Mark unread", systemImage: "envelope.badge") { home.toggleRead(row) }
-        case nil: EmptyView()
-        }
-        if row.swipe.primary != .archive {
-          Button("Archive", systemImage: "archivebox") { commit { home.archive(row) } }
-        }
-        Button("Delete", systemImage: "trash", role: .destructive) { deleting = row }
-      }
     }
   }
 

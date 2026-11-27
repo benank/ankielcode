@@ -136,6 +136,23 @@ final class FakeSession: LiveSession {
     return RpcStream(base: stream, stop: { continuation.finish() })
   }
 
+  /// Thread streams: scripted item lists, one per subscription, and what was subscribed.
+  let threads = Mutex<(streams: [[ThreadStreamItem]], subscriptions: [ThreadSubscription], stops: Int)>(([], [], 0))
+
+  func threadItems(_ subscription: ThreadSubscription) async throws -> RpcStream<ThreadStreamItem> {
+    let items = threads.withLock { threads -> [ThreadStreamItem]? in
+      threads.subscriptions.append(subscription)
+      return threads.streams.isEmpty ? nil : threads.streams.removeFirst()
+    }
+    let (stream, continuation) = AsyncThrowingStream.makeStream(of: ThreadStreamItem.self)
+    for item in items ?? [] { continuation.yield(item) }
+    if items == nil { continuation.finish(throwing: RpcError.interrupted) }
+    return RpcStream(base: stream, stop: { [self] in
+      self.threads.withLock { $0.stops += 1 }
+      continuation.finish()
+    })
+  }
+
   func call<Response: Decodable & Sendable>(
     _ tag: String, payload: some Encodable & Sendable, as _: Response.Type
   ) async throws -> Response {

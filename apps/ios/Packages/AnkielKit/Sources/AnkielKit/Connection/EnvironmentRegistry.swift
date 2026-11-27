@@ -30,6 +30,11 @@ public final class EnvironmentModel: Identifiable {
   public internal(set) var grantedScopes: Set<String>?
   /// The server's scratch folder ("No project"), from the last session's config.
   public internal(set) var scratchWorkspaceRoot: String?
+  /// Provider instances and models from the last config (kept while offline for drafting).
+  public internal(set) var providers: [ServerProvider] = []
+  public internal(set) var settings = ServerSettings()
+  /// `config.environment.capabilities` from the last session.
+  public internal(set) var capabilities: [String: JSONValue] = [:]
 
   @ObservationIgnored var runtime: EnvironmentRuntime?
   @ObservationIgnored var session: (any LiveSession)?
@@ -92,6 +97,15 @@ public final class EnvironmentRegistry {
   @ObservationIgnored private var networkOnline = true
   @ObservationIgnored private var networkTask: Task<Void, Never>?
   @ObservationIgnored private var lastSave: Task<Void, Never>?
+  /// Open and recently closed threads, by `ThreadRef.key`.
+  @ObservationIgnored private var threadDetails: [String: ThreadDetailModel] = [:]
+  /// How inline code, links and code tokens look in thread markdown (set by the app at launch).
+  @ObservationIgnored public var markdownStyle = MarkdownStyle()
+  /// How long a closed thread keeps its rows and cursor for a fast reopen.
+  @ObservationIgnored public var threadCacheLifetime: Duration = .seconds(90)
+  @ObservationIgnored private var assetURLs: [String: (url: URL, expires: Date)] = [:]
+  /// Attachment uploads (signed URLs, no credentials).
+  @ObservationIgnored let uploadSession = EnvironmentHTTPClient.makeSession()
 
   /// `directory` holds `environments.json` and the `shell/` cache (Application Support in the app).
   public init(connector: EnvironmentConnector, directory: URL, cachesShell: Bool = true) {
@@ -181,8 +195,104 @@ public final class EnvironmentRegistry {
       await runtime.shell.clear()
     }
     model.runtime = nil
+    for (key, detail) in threadDetails where detail.ref.environmentId == id {
+      threadDetails[key] = nil
+      detail.enqueue { await $0.detach() }
+    }
     if forgetCredential { connector.forget(id) }
     await lastSave?.value
+  }
+
+  // MARK: Threads
+
+  /// The thread's shared model. The first open starts its stream on the environment's session (and
+  /// follows replacement sessions); pair every open with `closeThread`.
+  public func openThread(_ ref: ThreadRef) -> ThreadDetailModel {
+    let model = threadDetails[ref.key] ?? makeThreadModel(ref)
+    threadDetails[ref.key] = model
+    model.expiry?.cancel()
+    model.expiry = nil
+    model.consumers += 1
+    if model.consumers == 1, let session = environment(ref.environmentId)?.session {
+      model.enqueue { await $0.attach(session) }
+    }
+    return model
+  }
+
+  /// Releases one open. The last one stops the stream (the server stops counting a viewer) and
+  /// keeps the rows for `threadCacheLifetime`.
+  public func closeThread(_ model: ThreadDetailModel) {
+    guard model.consumers > 0 else { return }
+    model.consumers -= 1
+    guard model.consumers == 0 else { return }
+    model.enqueue { await $0.detach() }
+    let key = model.ref.key
+    let lifetime = threadCacheLifetime
+    model.expiry = Task { [weak self, weak model] in
+      try? await Task.sleep(for: lifetime)
+      guard !Task.isCancelled, let self, let model, model.consumers == 0, self.threadDetails[key] === model else { return }
+      self.threadDetails[key] = nil
+    }
+  }
+
+  /// Starts a just-launched thread from the launch result's projection, so opening it resumes
+  /// after the launch instead of loading a snapshot.
+  func seedThread(_ ref: ThreadRef, result: ThreadLaunchResult) {
+    guard let projection = result.projection, let sequence = result.sequence else { return }
+    let model = threadDetails[ref.key] ?? makeThreadModel(ref)
+    if threadDetails[ref.key] == nil {
+      threadDetails[ref.key] = model
+      model.expiry = Task { [weak self, weak model] in
+        try? await Task.sleep(for: self?.threadCacheLifetime ?? .seconds(90))
+        guard let self, let model, model.consumers == 0, self.threadDetails[ref.key] === model else { return }
+        self.threadDetails[ref.key] = nil
+      }
+    }
+    model.enqueue { await $0.seed(projection, sequence: sequence) }
+  }
+
+  private func makeThreadModel(_ ref: ThreadRef) -> ThreadDetailModel {
+    let model = ThreadDetailModel(ref: ref, sync: ThreadDetailSync(threadId: ref.threadId, style: markdownStyle))
+    model.loadItem = { [weak self] itemId in
+      guard let self else { throw EnvironmentRequestError.notConnected }
+      return try await self.turnItem(itemId, in: ref)
+    }
+    return model
+  }
+
+  /// The full item (`orchestration.getTurnItem`), including what the stream strips.
+  public func turnItem(_ itemId: String, in ref: ThreadRef) async throws(EnvironmentRequestError) -> TurnItem? {
+    try await request(ref.environmentId) { session in
+      try await session.call(
+        TurnItemRequest.rpcTag, payload: TurnItemRequest(threadId: ref.threadId, itemId: itemId), as: TurnItemResult.self
+      ).item
+    }
+  }
+
+  /// A signed URL for an attachment or workspace file (no auth header needed to GET it), reused
+  /// until a minute before it expires.
+  public func assetURL(_ resource: AssetResource, in environmentId: String) async throws(EnvironmentRequestError) -> URL {
+    let key = "\(environmentId)|\(resource)"
+    if let cached = assetURLs[key], cached.expires.timeIntervalSinceNow > 60 { return cached.url }
+    guard let endpoint = environment(environmentId)?.activeRoute?.endpoint else { throw .notConnected }
+    let result = try await request(environmentId) { session in
+      try await session.call(AssetURLRequest.rpcTag, payload: AssetURLRequest(resource: resource), as: AssetURLResult.self)
+    }
+    guard let url = endpoint.resolve(relativeURL: result.relativeUrl) else { throw .failed("Unreadable asset URL.") }
+    assetURLs[key] = (url, Date(timeIntervalSince1970: result.expiresAt.value / 1000))
+    return url
+  }
+
+  private func threadSessionStarted(_ environmentId: String, _ session: any LiveSession) {
+    for model in threadDetails.values where model.ref.environmentId == environmentId && model.consumers > 0 {
+      model.enqueue { await $0.attach(session) }
+    }
+  }
+
+  private func threadSessionLost(_ environmentId: String) {
+    for model in threadDetails.values where model.ref.environmentId == environmentId {
+      model.enqueue { await $0.detach() }
+    }
   }
 
   // MARK: Requests
@@ -210,7 +320,7 @@ public final class EnvironmentRegistry {
     }
   }
 
-  private func request<Result: Sendable>(
+  func request<Result: Sendable>(
     _ environmentId: String, _ body: (any LiveSession) async throws -> Result
   ) async throws(EnvironmentRequestError) -> Result {
     guard let session = environment(environmentId)?.session else { throw .notConnected }
@@ -286,15 +396,34 @@ public final class EnvironmentRegistry {
             model.activeRoute = session.route
             model.session = session
             model.scratchWorkspaceRoot = session.initialConfig.scratchWorkspaceRoot
+            model.providers = session.initialConfig.providers
+            model.settings = session.initialConfig.settings
+            model.capabilities = session.initialConfig.environment.capabilities
+            Task { [weak model] in
+              for await event in session.configUpdates {
+                guard let model, model.session === session else { return }
+                switch event {
+                case .snapshot(let config):
+                  model.providers = config.providers
+                  model.settings = config.settings
+                  model.capabilities = config.environment.capabilities
+                case .providers(let providers): model.providers = providers
+                case .settings(let settings): model.settings = settings
+                case .other: break
+                }
+              }
+            }
             Task { [weak model] in
               let scopes = try? await session.grantedScopes()
               if let model, model.session === session, let scopes { model.grantedScopes = scopes }
             }
             self.sessionStarted(model, session: session, routes: routes)
+            self.threadSessionStarted(model.id, session)
             await shell.attach(session)
           case .sessionLost:
             model.activeRoute = nil
             model.session = nil
+            self.threadSessionLost(model.id)
             await shell.detach()
           }
         }

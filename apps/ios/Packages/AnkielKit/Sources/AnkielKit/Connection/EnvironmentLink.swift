@@ -2,7 +2,7 @@ import Foundation
 
 /// An open, ready session (socket up, first server config read). The supervisor owns its
 /// lifetime; shell sync reads from it.
-public protocol LiveSession: AnyObject, Sendable {
+public protocol LiveSession: AnyObject, Sendable, ThreadItemSource {
   var initialConfig: ServerConfig { get }
   /// The route this session went through.
   var route: EnvironmentRoute { get }
@@ -21,7 +21,13 @@ public protocol LiveSession: AnyObject, Sendable {
   /// `GET /api/auth/session`: the scopes this device holds (`permissions`, else legacy `scopes`).
   /// nil when the server does not say.
   func grantedScopes() async throws -> Set<String>?
+  /// Config events after the first snapshot (provider and settings changes), for this session.
+  var configUpdates: AsyncStream<ServerConfigEvent> { get }
   func close() async
+}
+
+extension LiveSession {
+  public var configUpdates: AsyncStream<ServerConfigEvent> { AsyncStream { $0.finish() } }
 }
 
 /// What the supervisor needs from the outside world for one environment. The live implementation

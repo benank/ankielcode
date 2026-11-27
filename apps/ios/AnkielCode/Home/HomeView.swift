@@ -16,12 +16,18 @@ struct HomeView: View {
           ThreadListScreen(zoom: nil)
             .navigationSplitViewColumnWidth(min: 320, ideal: 380, max: 460)
         } detail: {
-          NavigationStack {
-            if let ref = navigator.selection {
-              ThreadDetailView(threadRef: ref)
-                .id(ref)
-            } else {
-              ThreadPlaceholderDetail()
+          NavigationStack(path: $navigator.detailPath) {
+            Group {
+              if let ref = navigator.selection {
+                ThreadDetailView(threadRef: ref)
+                  .id(ref)
+              } else {
+                ThreadPlaceholderDetail()
+              }
+            }
+            .navigationDestination(for: AppRoute.self) { route in
+              ThreadDetailView(threadRef: route.ref)
+                .id(route.ref)
             }
           }
         }
@@ -29,11 +35,9 @@ struct HomeView: View {
         NavigationStack(path: $navigator.path) {
           ThreadListScreen(zoom: zoom)
             .navigationDestination(for: AppRoute.self) { route in
-              switch route {
-              case .thread(let ref):
-                ThreadDetailView(threadRef: ref)
-                  .navigationTransition(.zoom(sourceID: ref.key, in: zoom))
-              }
+              ThreadDetailView(threadRef: route.ref)
+                .id(route.ref)
+                .navigationTransition(.zoom(sourceID: route.ref.key, in: zoom))
             }
         }
       }

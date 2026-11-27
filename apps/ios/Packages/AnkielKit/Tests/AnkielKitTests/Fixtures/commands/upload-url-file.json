@@ -1,0 +1,9 @@
+{
+  "schema" : "uploadUrl",
+  "value" : {
+    "mimeType" : "text/plain",
+    "name" : "notes.txt",
+    "sizeBytes" : 812,
+    "type" : "file"
+  }
+}

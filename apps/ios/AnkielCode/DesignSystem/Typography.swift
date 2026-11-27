@@ -10,6 +10,7 @@ enum Typography {
   static let subheadline = Font.subheadline
   static let footnote = Font.footnote
   static let caption = Font.caption
+  static let caption2 = Font.caption2
   static let mono = Font.system(.callout, design: .monospaced)
   static let monoSmall = Font.system(.footnote, design: .monospaced)
 }

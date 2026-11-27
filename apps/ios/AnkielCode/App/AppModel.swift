@@ -19,6 +19,8 @@ final class AppModel {
   let pairing: PairingFlow
   let navigator = Navigator()
   let home: HomeModel
+  /// Drafts, uploads and the outbox for every composer.
+  let composer: ComposerStore
   /// A sheet over home or onboarding.
   var sheet: Sheet?
   /// The Computers sheet's navigation path (environment ids).
@@ -36,9 +38,34 @@ final class AppModel {
   init(store: any CredentialStore = KeychainCredentialStore(service: "com.ankiel.code.native")) {
     let connector = EnvironmentConnector(store: store, client: .current)
     registry = EnvironmentRegistry(connector: connector, directory: Self.supportDirectory)
+    registry.markdownStyle = .thread
     pairing = PairingFlow(registry: registry)
     home = HomeModel(registry: registry)
+    let (folder, sink, fake) = Self.composerTarget(registry)
+    composer = ComposerStore(directory: Self.supportDirectory.appending(path: folder, directoryHint: .isDirectory), sink: sink)
+    isComposerFake = fake
+    composer.titleLabels = .localized
+    #if DEBUG
+      if fake, ProcessInfo.processInfo.environment["ANKIEL_DEBUG_COMPOSER_RESET"] == "1" { composer.reset() }
+    #endif
   }
+
+  /// The composer's folder and sink. `ANKIEL_DEBUG_COMPOSER` (debug builds) picks a fake sink and
+  /// a separate folder, so fake drafts and messages never reach a real computer.
+  private static func composerTarget(_ registry: EnvironmentRegistry) -> (String, any ComposerSink, Bool) {
+    #if DEBUG
+      if let mode = ProcessInfo.processInfo.environment["ANKIEL_DEBUG_COMPOSER"].flatMap(FakeComposerSink.Mode.init) {
+        return ("composer-debug", FakeComposerSink(mode: mode), true)
+      }
+    #endif
+    return ("composer", registry, false)
+  }
+
+  /// The composer sends to the debug fake (`ANKIEL_DEBUG_COMPOSER`).
+  private(set) var isComposerFake = false
+
+  /// Where composer commands go (the registry, or the debug fake).
+  var composerSink: (any ComposerSink)? { composer.sink }
 
   var route: Route {
     guard registry.isLoaded else { return .launching }
@@ -52,6 +79,7 @@ final class AppModel {
 
   func launch() async {
     await registry.load(adopting: Self.takeLegacyEnvironment())
+    await composer.load()
     home.start()
     #if DEBUG
       applyDebugLaunch()
@@ -64,6 +92,25 @@ final class AppModel {
 
   /// A thread link opened before the saved computers loaded; opened once they have.
   @ObservationIgnored private var pendingThread: ThreadRef?
+
+  // MARK: Threads
+
+  /// The open thread's shared model (fixtures in debug builds); pair with `closeThread`.
+  func openThread(_ ref: ThreadRef) -> ThreadDetailModel {
+    #if DEBUG
+      if ThreadDebug.isFixture(ref) {
+        let model = ThreadDebug.model(ref, style: registry.markdownStyle)
+        applyDebugThreadPresets(model)
+        return model
+      }
+    #endif
+    return registry.openThread(ref)
+  }
+
+  func closeThread(_ model: ThreadDetailModel) {
+    guard !ThreadDebug.isFixture(model.ref) else { return }
+    registry.closeThread(model)
+  }
 
   // MARK: Links
 
@@ -124,7 +171,9 @@ final class AppModel {
   // MARK: Lifecycle
 
   func scenePhaseChanged(_ phase: ScenePhase) {
+    if phase == .background { Task { await composer.flush() } }
     guard phase == .active else { return }
+    composer.wake()
     // The first activation is launch, which connects on its own.
     if hasBeenActive { registry.wake(.foreground) }
     hasBeenActive = true
@@ -192,6 +241,70 @@ final class AppModel {
       }
       if let link = environment["ANKIEL_OPEN_URL"].flatMap(URL.init(string:)) {
         open(link)
+      }
+      if let fixture = environment["ANKIEL_DEBUG_THREAD"] {
+        let ref = ThreadRef(environmentId: ThreadDebug.environmentId, threadId: fixture)
+        navigator.open(ref)
+        if let preset = environment["ANKIEL_DEBUG_COMPOSER_PRESET"] { applyComposerPreset(preset, ref: ref) }
+      }
+    }
+
+    /// `ANKIEL_DEBUG_COMPOSER_PRESET` (with `ANKIEL_DEBUG_COMPOSER`): fills a fixture thread's
+    /// composer for screenshots. `multiline`, `attachments` (ready, uploading and failed),
+    /// `send` (sends one message), `queued` (queues one message), `failed` (with the `fail` mode,
+    /// a refused message), `picker` (opens the model sheet), `keyboard` (focuses the field).
+    private func applyComposerPreset(_ preset: String, ref: ThreadRef) {
+      guard isComposerFake else { return }
+      let key = ref.key
+      let settings = ComposerStore.ThreadSettings(
+        modelSelection: ModelSelection(instanceId: "claudeAgent", model: "claude-opus-5-5"), runtimeMode: .auto, interactionMode: .default)
+      switch preset {
+      case "multiline":
+        composer.setText(
+          "Look at the tide station sampler.\nThe harbor readings drift after midnight.\nCan you add a regression test and fix the offset?", for: key)
+      case "attachments":
+        composer.setText("Here are the charts from last night.", for: key)
+        Task {
+          _ = try? await composer.addAttachment(
+            DebugCatalog.sampleImage(hue: 0.55), name: "tide-chart.png", mimeType: "image/png", kind: .image, to: key, environmentId: ref.environmentId)
+          _ = try? await composer.addAttachment(
+            DebugCatalog.sampleImage(hue: 0.08), name: "slow-buoy.png", mimeType: "image/png", kind: .image, to: key, environmentId: ref.environmentId)
+          _ = try? await composer.addAttachment(
+            Data("tide,height\n00:00,1.2\n".utf8), name: "fail-readings.csv", mimeType: "text/csv", kind: .file, to: key,
+            environmentId: ref.environmentId)
+        }
+      case "send", "failed":
+        Task {
+          try? await Task.sleep(for: .milliseconds(900))
+          composer.setText("Also add a regression test for the midnight drift.", for: key)
+          composer.send(key, to: ref, delivery: .start, thread: settings)
+        }
+      case "queued":
+        Task {
+          try? await Task.sleep(for: .milliseconds(900))
+          composer.setText("After that, update the harbor README.", for: key)
+          composer.send(key, to: ref, delivery: .queue, thread: settings)
+        }
+      default:
+        break
+      }
+    }
+
+    /// `ANKIEL_DEBUG_THREAD_EXPAND=all|folds` opens run folds (and work groups) once the rows load;
+    /// `ANKIEL_DEBUG_THREAD_SCROLL=top` opens the thread scrolled to its first row.
+    private func applyDebugThreadPresets(_ model: ThreadDetailModel) {
+      let environment = ProcessInfo.processInfo.environment
+      guard let expand = environment["ANKIEL_DEBUG_THREAD_EXPAND"] else { return }
+      Task {
+        for _ in 0..<100 where !model.state.isLoaded { try? await Task.sleep(for: .milliseconds(50)) }
+        for row in model.state.timeline.rows {
+          switch row.content {
+          case .fold(let fold): model.expanded.insert(fold.foldId)
+          case .workGroup(let group) where expand == "all": model.expanded.insert(group.groupId)
+          case .work where expand == "all": model.expanded.insert(row.id)
+          default: break
+          }
+        }
       }
     }
 

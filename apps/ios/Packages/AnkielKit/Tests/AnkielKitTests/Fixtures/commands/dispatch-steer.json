@@ -1,0 +1,43 @@
+{
+  "schema" : "command",
+  "value" : {
+    "attachments" : [
+      {
+        "id" : "att_7k2m",
+        "mimeType" : "image/png",
+        "name" : "screenshot.png",
+        "sizeBytes" : 182044,
+        "type" : "image"
+      },
+      {
+        "id" : "att_9q1z",
+        "mimeType" : "text/plain",
+        "name" : "notes.txt",
+        "sizeBytes" : 812,
+        "type" : "file"
+      }
+    ],
+    "commandId" : "9d2e6a1f-3b4c-4d5e-8f70-1a2b3c4d5e6f",
+    "createdBy" : "user",
+    "creationSource" : "mobile",
+    "deliveryIntent" : "steer",
+    "dispatchMode" : {
+      "type" : "start_immediately"
+    },
+    "messageId" : "c41f0e2d-7a6b-4c5d-9e8f-0a1b2c3d4e5f",
+    "modelSelection" : {
+      "instanceId" : "claudeAgent",
+      "model" : "claude-opus-5-5",
+      "options" : [
+        {
+          "id" : "effort",
+          "value" : "high"
+        }
+      ]
+    },
+    "text" : "Also add a regression test.",
+    "threadId" : "0b7e4f2a-9c1d-4e8b-a6f3-5d2c1b0a9e87",
+    "titleSeed" : "Also add a regression test.",
+    "type" : "message.dispatch"
+  }
+}

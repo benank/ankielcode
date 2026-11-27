@@ -18,10 +18,30 @@ enum Palette {
   /// Text and icons on a filled accent control (`.glassProminent`): the accent is near-black in
   /// light mode and near-white in dark mode.
   static let onAccent = Color(light: 0xFFFFFF, dark: 0x0B0C0E)
+  /// The composer's send button: ink on paper, inverted in dark mode.
+  static let primaryButton = Color(light: 0x16171A, dark: 0xF1F2F4)
+  static let onPrimaryButton = Color(light: 0xFFFFFF, dark: 0x0B0C0E)
   static let working = Color(light: 0x2F6FEB, dark: 0x5B8DEF)
   static let attention = Color(light: 0xC77700, dark: 0xF0A33A)
   static let success = Color(light: 0x1F8A4C, dark: 0x45C07A)
   static let danger = Color(light: 0xC8302B, dark: 0xF0625C)
+
+  /// Conversation surfaces: the user's bubble, code and table blocks, inline code.
+  static let userBubble = Color(light: 0xECEDF1, dark: 0x1F2024)
+  static let codeBackground = Color(light: 0xF0F1F4, dark: 0x141518)
+  static let codeHeader = Color(light: 0xE7E8EC, dark: 0x1B1C20)
+  static let inlineCode = Color(light: 0xE6E7EB, dark: 0x25262B)
+  static let quoteBar = Color(light: 0xD3D6DC, dark: 0x3A3C43)
+
+  /// Code tokens: muted, so code reads as text first.
+  static let codeKeyword = Color(light: 0xA4327C, dark: 0xE38BC7)
+  static let codeString = Color(light: 0x3F7A2A, dark: 0x9BCF7F)
+  static let codeComment = Color(light: 0x8A8F98, dark: 0x6E747D)
+  static let codeNumber = Color(light: 0x9A5B00, dark: 0xE7B26A)
+  static let codeType = Color(light: 0x2C62B8, dark: 0x7FAAF0)
+  static let codeProperty = Color(light: 0x6B4FBB, dark: 0xB79CF2)
+  static let diffAdded = Color(light: 0x1F7A43, dark: 0x5CCB86)
+  static let diffRemoved = Color(light: 0xB3261E, dark: 0xF07B74)
 
   /// The app icon's tile and glyph (fixed in both appearances, like the icon).
   static let brandTile = Color(light: 0x161615, dark: 0x1E1E1C)

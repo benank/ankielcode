@@ -494,6 +494,12 @@ final class HomeModel {
     perform(.rename(trimmed), on: ref)
   }
 
+  /// The thread's list row, when the list shows it (the thread screen's menu acts on it).
+  func row(_ ref: ThreadRef) -> ThreadRow? {
+    for case .thread(let row) in layout.items where row.ref == ref { return row }
+    return nil
+  }
+
   func thread(_ ref: ThreadRef) -> ThreadShell? {
     sources.first { $0.environmentId == ref.environmentId }?.threads.first { $0.id == ref.threadId }
       ?? olderPages[ref.environmentId]?.rows.first { $0.id == ref.threadId }
@@ -596,6 +602,7 @@ final class HomeModel {
     case .unpin: String(localized: "Could not unpin thread")
     case .markRead, .markUnread: String(localized: "Could not update thread")
     case .rename: String(localized: "Could not rename thread")
+    default: String(localized: "Could not update thread")
     }
   }
 

@@ -123,7 +123,7 @@ final class SampleListUITests: HomeUITestCase {
     let target = row("done")
     XCTAssertTrue(target.waitForExistence(timeout: 5))
     target.tap()
-    XCTAssertTrue(app.staticTexts["thread.placeholder"].waitForExistence(timeout: 3))
+    XCTAssertTrue(app.buttons["thread.menu"].waitForExistence(timeout: 3))
     app.navigationBars.buttons.firstMatch.tap()
     XCTAssertTrue(row("done").waitForExistence(timeout: 3))
   }
@@ -132,7 +132,7 @@ final class SampleListUITests: HomeUITestCase {
 final class DeepLinkUITests: HomeUITestCase {
   func testThreadLinkOpensAtLaunch() {
     launch(["ANKIEL_DEBUG_HOME": "sample", "ANKIEL_OPEN_URL": "ankielcode-native://thread/debug-studio/done"])
-    XCTAssertTrue(app.staticTexts["thread.placeholder"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["thread.menu"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.navigationBars["Add the iPad split layout"].exists)
   }
 

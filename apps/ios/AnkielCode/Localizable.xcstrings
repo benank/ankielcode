@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     "“%@” will be permanently deleted, including its terminal history." : {
 
     },
@@ -116,6 +119,18 @@
     "All threads" : {
 
     },
+    "Allow for this session" : {
+
+    },
+    "Allow once" : {
+
+    },
+    "Allow reading this file?" : {
+
+    },
+    "Allow this file change?" : {
+
+    },
     "Ankiel Code" : {
 
     },
@@ -134,11 +149,20 @@
     "Ankiel Code on %@ did not answer" : {
 
     },
+    "Answer from the desktop app for now." : {
+
+    },
+    "Answered" : {
+
+    },
     "App version" : {
 
     },
     "Approval" : {
       "comment" : "thread status, waiting for approval"
+    },
+    "Approval requested" : {
+
     },
     "Archive" : {
 
@@ -161,7 +185,19 @@
     "Cause" : {
       "comment" : "diagnostics field label"
     },
+    "Changed %@" : {
+
+    },
+    "Changed %lld files" : {
+
+    },
+    "Changed 1 file" : {
+
+    },
     "Checking the computer" : {
+
+    },
+    "Checkpoint captured" : {
 
     },
     "Choose a thread from the list, or start a new one." : {
@@ -177,7 +213,7 @@
 
     },
     "Code" : {
-
+      "comment" : "label of a code block with no language"
     },
     "Collapsed" : {
 
@@ -191,6 +227,9 @@
     "Computer" : {
       "comment" : "filter menu heading"
     },
+    "Computer not saved" : {
+
+    },
     "Computers" : {
 
     },
@@ -198,6 +237,9 @@
 
     },
     "Connect this device to the internet. Ankiel Code reconnects on its own." : {
+
+    },
+    "Connect to the computer to see the output." : {
 
     },
     "Connected" : {
@@ -212,16 +254,41 @@
     "Connecting…" : {
 
     },
-    "Continue" : {
+    "Context compacted" : {
 
     },
-    "Conversation arrives in the next phase" : {
+    "Context compacted · %@ → %@ tokens" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Context compacted · %1$@ → %2$@ tokens"
+          }
+        }
+      }
+    },
+    "Context handed off" : {
+
+    },
+    "Context handed off to %@" : {
+
+    },
+    "Continue" : {
 
     },
     "Copied" : {
 
     },
+    "Copy" : {
+
+    },
+    "Copy code" : {
+
+    },
     "Copy diagnostics" : {
+
+    },
+    "Copy message" : {
 
     },
     "Copy the pairing link on your computer, then paste it here." : {
@@ -245,7 +312,13 @@
     "Could not load older threads. Retry" : {
 
     },
+    "Could not open this thread" : {
+
+    },
     "Could not pin thread" : {
+
+    },
+    "Could not read this thread" : {
 
     },
     "Could not rename thread" : {
@@ -287,6 +360,15 @@
     "Create a task to start a new coding session." : {
 
     },
+    "Created %lld threads" : {
+
+    },
+    "Created 1 thread" : {
+
+    },
+    "Decline" : {
+
+    },
     "Delete" : {
 
     },
@@ -299,6 +381,9 @@
     "Done" : {
       "comment" : "thread status, turn finished"
     },
+    "Earlier work" : {
+
+    },
     "Environment unavailable" : {
 
     },
@@ -306,6 +391,9 @@
       "comment" : "diagnostics field label"
     },
     "Exchanging the pairing code" : {
+
+    },
+    "exit %lld" : {
 
     },
     "Expanded" : {
@@ -320,6 +408,9 @@
     "Failed" : {
       "comment" : "thread status"
     },
+    "Failed %@" : {
+
+    },
     "Failed to connect. Reconnecting… Reason: %@" : {
 
     },
@@ -328,6 +419,9 @@
     },
     "Filtered" : {
 
+    },
+    "Fixture" : {
+      "comment" : "debug: a thread loaded from a bundled file"
     },
     "Follow and steer the coding agents on your own computers, from anywhere." : {
 
@@ -348,6 +442,9 @@
 
     },
     "HTTP status" : {
+
+    },
+    "Image" : {
 
     },
     "In %lld days" : {
@@ -377,6 +474,12 @@
     "Input" : {
       "comment" : "thread status, waiting for user input"
     },
+    "Input requested" : {
+
+    },
+    "Interrupt requested" : {
+
+    },
     "Keep the app open for a moment." : {
 
     },
@@ -389,7 +492,13 @@
     "Loading" : {
       "comment" : "older threads are loading"
     },
+    "Loading output…" : {
+
+    },
     "Loading projects and threads from the saved environment." : {
+
+    },
+    "Loading thread" : {
 
     },
     "Loading threads…" : {
@@ -413,6 +522,12 @@
     "Mark unread" : {
 
     },
+    "Message" : {
+
+    },
+    "Message…" : {
+
+    },
     "More" : {
 
     },
@@ -420,6 +535,12 @@
 
     },
     "Needs pairing again" : {
+
+    },
+    "New messages" : {
+
+    },
+    "New session" : {
 
     },
     "New thread" : {
@@ -440,6 +561,9 @@
     "No computers" : {
 
     },
+    "No output" : {
+
+    },
     "No project" : {
 
     },
@@ -458,6 +582,12 @@
     "Not connected" : {
 
     },
+    "Not connected · showing saved messages" : {
+
+    },
+    "Not done" : {
+
+    },
     "now" : {
       "comment" : "a snoozed thread wakes now"
     },
@@ -471,6 +601,9 @@
 
     },
     "Open Settings" : {
+
+    },
+    "Opens the subagent's thread" : {
 
     },
     "Or copy the pairing link and paste it here." : {
@@ -515,16 +648,61 @@
     "Paste link" : {
 
     },
+    "Performed %lld other actions" : {
+
+    },
+    "Performed 1 other action" : {
+
+    },
+    "Permission requested" : {
+
+    },
     "Pin" : {
 
     },
     "Pinned" : {
 
     },
+    "Plan updated" : {
+
+    },
     "Project" : {
       "comment" : "filter menu heading"
     },
+    "Proposed plan" : {
+
+    },
+    "Provider error" : {
+
+    },
+    "Ran %@" : {
+
+    },
+    "Ran %lld commands" : {
+
+    },
+    "Ran 1 command" : {
+
+    },
     "Read" : {
+
+    },
+    "Read %@" : {
+
+    },
+    "Read %lld files" : {
+
+    },
+    "Read 1 file" : {
+
+    },
+    "Read a file" : {
+
+    },
+    "Received %lld updates" : {
+
+    },
+    "Received 1 update" : {
 
     },
     "Reconnecting %lld computers" : {
@@ -563,6 +741,9 @@
     "Rename thread" : {
 
     },
+    "Resets %@" : {
+
+    },
     "Retry" : {
 
     },
@@ -573,6 +754,15 @@
 
     },
     "Retrying · attempt %lld" : {
+
+    },
+    "Run interrupted" : {
+
+    },
+    "Run this command?" : {
+
+    },
+    "Running %@" : {
 
     },
     "Save" : {
@@ -590,13 +780,52 @@
     "Scan the code it shows" : {
 
     },
+    "Scroll to latest" : {
+
+    },
     "Search" : {
       "comment" : "search field placeholder"
     },
     "Search failed" : {
 
     },
+    "Searched code %lld times" : {
+
+    },
+    "Searched code 1 time" : {
+
+    },
+    "Searched files" : {
+
+    },
+    "Searched for %@" : {
+
+    },
+    "Searched the web" : {
+
+    },
+    "Searched the web %lld times" : {
+
+    },
+    "Searched the web 1 time" : {
+
+    },
+    "Searched the web for %@" : {
+
+    },
     "Searching thread messages…" : {
+
+    },
+    "Secret requested: %@" : {
+
+    },
+    "Sending from the app is not available yet" : {
+
+    },
+    "Sent by an agent" : {
+
+    },
+    "Sent while working" : {
 
     },
     "Settings" : {
@@ -617,7 +846,16 @@
     "Show all threads" : {
 
     },
+    "Show full message" : {
+
+    },
+    "Show less" : {
+
+    },
     "Show more (%lld settled hidden)" : {
+
+    },
+    "Shows the work behind this reply" : {
 
     },
     "Snooze" : {
@@ -630,6 +868,15 @@
 
     },
     "Snoozed thread" : {
+
+    },
+    "Stopped" : {
+      "comment" : "thread status, the user stopped the turn"
+    },
+    "Stopped %@" : {
+
+    },
+    "Subagent" : {
 
     },
     "Syncing threads…" : {
@@ -659,6 +906,9 @@
     "the computer" : {
 
     },
+    "The computer did not send this thread." : {
+
+    },
     "The connected environment did not report any projects." : {
 
     },
@@ -684,6 +934,9 @@
 
     },
     "The server sent something this app couldn't read." : {
+
+    },
+    "Thinking" : {
 
     },
     "This afternoon" : {
@@ -731,16 +984,37 @@
     "This pairing link has expired or was already used" : {
 
     },
-    "This thread is not loaded yet." : {
+    "This request can no longer be answered." : {
 
     },
     "This thread is working. Interrupt it first, then try again." : {
 
     },
+    "This thread uses something this version of the app cannot read yet. Update the app." : {
+
+    },
+    "This thread was deleted on its computer." : {
+
+    },
     "This thread's computer is not saved on this device." : {
 
     },
-    "Thread" : {
+    "Thought" : {
+      "comment" : "noun, a reasoning step"
+    },
+    "Thought (×%lld)" : {
+
+    },
+    "Thread actions" : {
+
+    },
+    "Thread created" : {
+
+    },
+    "Thread deleted" : {
+
+    },
+    "Thread forked" : {
 
     },
     "Threads" : {
@@ -750,6 +1024,9 @@
 
     },
     "Tomorrow" : {
+
+    },
+    "Tool call" : {
 
     },
     "Try again" : {
@@ -779,6 +1056,9 @@
     "Unread" : {
 
     },
+    "Unsupported item (%@)" : {
+
+    },
     "Update Ankiel Code on %@." : {
 
     },
@@ -791,7 +1071,16 @@
     "Update Ankiel Code on this device." : {
 
     },
+    "Usage limit reached" : {
+
+    },
     "Use it right away" : {
+
+    },
+    "Used %lld tools" : {
+
+    },
+    "Used 1 tool" : {
 
     },
     "Version" : {
@@ -799,6 +1088,12 @@
     },
     "Waiting" : {
       "comment" : "thread status"
+    },
+    "Waiting on %lld agents" : {
+
+    },
+    "Waiting on 1 agent" : {
+
     },
     "Wake" : {
 
@@ -815,13 +1110,223 @@
     "Woke" : {
       "comment" : "thread came back from snooze"
     },
+    "Worked" : {
+
+    },
+    "Worked for %@" : {
+
+    },
     "Working" : {
       "comment" : "thread status"
     },
     "You are offline" : {
 
     },
+    "You stopped after %@" : {
+
+    },
+    "You stopped this response" : {
+
+    },
     "You'll need a new pairing link to add it again." : {
+
+    },
+    "Waiting for %@" : {
+
+    },
+    "%lld queued" : {
+
+    },
+    "%lld queued · held" : {
+
+    },
+    "^[%lld attachment](inflect: true)" : {
+
+    },
+    "A very long thread" : {
+      "comment" : "debug fixture title"
+    },
+    "Actions for queued message %lld" : {
+
+    },
+    "Add attachment" : {
+
+    },
+    "Allow commands and edits without prompts." : {
+
+    },
+    "An image exceeds the 10 MB attachment limit." : {
+
+    },
+    "Ask before commands and file changes." : {
+
+    },
+    "Attached image" : {
+
+    },
+    "Attached images" : {
+
+    },
+    "Attachments" : {
+
+    },
+    "Auto" : {
+
+    },
+    "Auto-accept edits" : {
+
+    },
+    "Auto-approve edits, ask before other actions." : {
+
+    },
+    "Camera" : {
+
+    },
+    "Choose a model first." : {
+
+    },
+    "Connect to this computer to change the model." : {
+
+    },
+    "Could not read a photo." : {
+
+    },
+    "Could not read that file." : {
+
+    },
+    "Describe a task" : {
+
+    },
+    "Edit" : {
+
+    },
+    "Edit queued message" : {
+
+    },
+    "File: %@" : {
+
+    },
+    "Files" : {
+
+    },
+    "Files can be up to 50 MB." : {
+
+    },
+    "Full access" : {
+
+    },
+    "Model" : {
+
+    },
+    "No models are set up on this computer." : {
+
+    },
+    "Not sent" : {
+
+    },
+    "Not sent · %@" : {
+
+    },
+    "Nothing here yet" : {
+
+    },
+    "Pair a computer to start a thread." : {
+
+    },
+    "Paste image" : {
+
+    },
+    "Permissions" : {
+
+    },
+    "Photo library" : {
+
+    },
+    "Queue" : {
+
+    },
+    "Queued message" : {
+
+    },
+    "Queueing…" : {
+
+    },
+    "Ready" : {
+
+    },
+    "Recent projects" : {
+
+    },
+    "Remove attachments until there are at most %lld." : {
+
+    },
+    "Retry or remove the failed attachment" : {
+
+    },
+    "Retry upload" : {
+
+    },
+    "Send" : {
+
+    },
+    "Send a message to get the agent started." : {
+
+    },
+    "Send now" : {
+
+    },
+    "Send now, queued message %lld" : {
+
+    },
+    "Sending…" : {
+
+    },
+    "Sends after the current turn" : {
+
+    },
+    "Steer" : {
+
+    },
+    "Stop" : {
+
+    },
+    "Supervised" : {
+
+    },
+    "Supported providers approve routine actions; others still ask." : {
+
+    },
+    "The computer refused this message." : {
+      "comment" : "debug: fake refusal"
+    },
+    "The folder for threads without a project could not be created." : {
+
+    },
+    "The upload was refused." : {
+      "comment" : "debug: fake upload refusal"
+    },
+    "This device can read this computer's threads but not send to them." : {
+
+    },
+    "Update queued message" : {
+
+    },
+    "Update the provider to use this model" : {
+
+    },
+    "Upload failed" : {
+
+    },
+    "Uploading, %lld percent" : {
+
+    },
+    "Uploads when sent" : {
+
+    },
+    "Waiting for the computer" : {
+
+    },
+    "What should we work on?" : {
 
     }
   },

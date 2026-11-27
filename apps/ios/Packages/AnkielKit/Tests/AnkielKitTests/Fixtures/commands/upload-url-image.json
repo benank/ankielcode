@@ -1,0 +1,8 @@
+{
+  "schema" : "uploadUrl",
+  "value" : {
+    "mimeType" : "image/jpeg",
+    "name" : "photo.jpg",
+    "sizeBytes" : 482113
+  }
+}

@@ -1,3 +1,4 @@
+import AnkielKit
 import SwiftUI
 
 struct RootView: View {
@@ -19,6 +20,8 @@ struct RootView: View {
       }
     }
     .animation(Motion.resolve(Motion.transition, reduceMotion: reduceMotion), value: model.route)
+    // A computer connecting delivers what waited for it.
+    .onChange(of: model.registry.environments.map { $0.activeRoute?.id }) { _, _ in model.composer.wake() }
     .sheet(item: sheet) { sheet in
       switch sheet {
       case .computers: ComputersView()
