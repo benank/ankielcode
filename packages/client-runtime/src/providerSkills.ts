@@ -98,7 +98,7 @@ function resolveProviderWorkspaceSnapshot(
   return provider.workspaceSnapshots?.find((snapshot) => snapshot.cwd === cwd);
 }
 
-export function hasCompleteProviderWorkspaceSnapshot(
+function hasCompleteProviderWorkspaceSnapshot(
   provider: ServerProvider | null | undefined,
   cwd: string | null | undefined,
 ): boolean {

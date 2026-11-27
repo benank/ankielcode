@@ -179,7 +179,7 @@ function byNameThenPath(left: ThreadRepositoryScope, right: ThreadRepositoryScop
 }
 
 /** The repositories a thread reaches, by name and then path. */
-export function threadRepositoryScopes(
+function threadRepositoryScopes(
   projection: Pick<OrchestrationV2ThreadProjection, "checkpointScopes">,
 ): ReadonlyArray<ThreadRepositoryScope> {
   const scopes = projection.checkpointScopes;
@@ -311,11 +311,6 @@ export function turnChanges(turn: TurnChangesSource): TurnChanges {
  */
 export function turnHasChanges(turn: TurnChangesSource): boolean {
   return turn.files.length > 0 || (turn.repositories?.length ?? 0) > 0;
-}
-
-/** A repository file's path from the thread's folder, as the turn diff sections name it. */
-export function repositoryFilePath(relativePath: string, filePath: string): string {
-  return relativePath === "" || relativePath === "." ? filePath : `${relativePath}/${filePath}`;
 }
 
 /**

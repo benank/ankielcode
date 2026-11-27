@@ -198,7 +198,7 @@ const SERVER_UPDATE_RESUME_TIMEOUT = Duration.minutes(32);
 // A live host replays its ready on subscribe within a round trip; past this, update without a baseline.
 const SERVER_UPDATE_ACCEPTING_READY_TIMEOUT = Duration.seconds(5);
 
-export function matchesServerUpdateReadyEvent(
+function matchesServerUpdateReadyEvent(
   result: ServerSelfUpdateResult,
   event: ServerLifecycleStreamReadyEvent,
 ): boolean {
@@ -212,7 +212,7 @@ export function matchesServerUpdateReadyEvent(
  * that comes back as any other process ends the wait, so validation can reject a missing
  * or foreign outcome instead of timing out.
  */
-export function matchesServerUpdateResumeEvent(
+function matchesServerUpdateResumeEvent(
   result: ServerSelfUpdateResult,
   event: ServerLifecycleStreamReadyEvent,
   acceptedAt?: string,
@@ -224,7 +224,7 @@ export function matchesServerUpdateResumeEvent(
   );
 }
 
-export function validateServerUpdateReadyEvent(
+function validateServerUpdateReadyEvent(
   result: ServerSelfUpdateResult,
   event: ServerLifecycleStreamReadyEvent,
 ): Effect.Effect<void, ServerUpdateTerminalError> {
@@ -281,7 +281,7 @@ export function nudgeReconnectDuringUpdateRestart(input: {
   );
 }
 
-export function waitForNextEnvironmentReconnect<E>(
+function waitForNextEnvironmentReconnect<E>(
   stateChanges: Stream.Stream<{ readonly phase: string }, E>,
 ): Effect.Effect<void, E> {
   return stateChanges.pipe(
@@ -320,7 +320,7 @@ export const runDesktopCommitWithReconnectObserver = Effect.fn(
   return yield* Effect.failCause(commitExit.cause);
 });
 
-export const waitForDesktopUpdateTarget = Effect.fn("waitForDesktopUpdateTarget")(function* <
+const waitForDesktopUpdateTarget = Effect.fn("waitForDesktopUpdateTarget")(function* <
   EReady,
   ECommit,
 >(
@@ -346,7 +346,7 @@ export const waitForDesktopUpdateTarget = Effect.fn("waitForDesktopUpdateTarget"
   });
 });
 
-export function serverUpdateStateForProgressEvent(
+function serverUpdateStateForProgressEvent(
   fromVersion: string,
   targetVersion: string,
   event: ServerSelfUpdateProgressEvent,
@@ -367,7 +367,7 @@ export function serverUpdateStateForProgressEvent(
   };
 }
 
-export function serverUpdateStateForServerVersion(
+function serverUpdateStateForServerVersion(
   state: ServerUpdateState,
   serverVersion: string | null,
 ): ServerUpdateState {
@@ -720,7 +720,7 @@ function serverConfigStateChanges(
   );
 }
 
-export function applyServerWelcomeEvent(
+function applyServerWelcomeEvent(
   current: EnvironmentServerWelcomeState,
   session: RpcSession,
   event: {
@@ -743,13 +743,13 @@ export interface EnvironmentServerWelcomeState {
   readonly welcome: ServerLifecycleWelcomePayload | null;
 }
 
-export function resolveServerWelcomeState(
+function resolveServerWelcomeState(
   state: EnvironmentServerWelcomeState,
 ): ServerLifecycleWelcomePayload | null {
   return state.currentSession === state.welcomeSession ? state.welcome : null;
 }
 
-export const makeEnvironmentServerWelcomeState = Effect.fn("EnvironmentServerWelcomeState.make")(
+const makeEnvironmentServerWelcomeState = Effect.fn("EnvironmentServerWelcomeState.make")(
   function* () {
     const supervisor = yield* EnvironmentSupervisor.EnvironmentSupervisor;
     const initialSession = Option.getOrNull(yield* SubscriptionRef.get(supervisor.session));
@@ -835,7 +835,7 @@ function serverWelcomeStateChanges(environmentId: EnvironmentId) {
   );
 }
 
-export function resolveServerConfigValue(
+function resolveServerConfigValue(
   projection: ServerConfigProjection | null,
   initialConfig: ServerConfig | null,
 ): ServerConfig | null {
@@ -880,7 +880,7 @@ const MAX_FETCHED_WORKSPACE_SNAPSHOTS = 32;
  * so the ones this client fetched are merged back in. Older servers send every snapshot and
  * their drops, so their config is used as is.
  */
-export function withFetchedWorkspaceSnapshots(
+function withFetchedWorkspaceSnapshots(
   config: ServerConfig,
   fetched: ReadonlyArray<FetchedWorkspaceSnapshot>,
 ): ServerConfig {
@@ -906,7 +906,7 @@ export function withFetchedWorkspaceSnapshots(
   };
 }
 
-export function recordFetchedWorkspaceSnapshot(
+function recordFetchedWorkspaceSnapshot(
   current: ReadonlyArray<FetchedWorkspaceSnapshot>,
   input: { readonly instanceId: ProviderInstanceId; readonly cwd: string; readonly fresh: boolean },
   providers: ServerConfig["providers"],

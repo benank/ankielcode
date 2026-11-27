@@ -245,7 +245,7 @@ function sameApartFromStreamedAssistantText(
  * visit mark. The same items exist, with the same status, and every other
  * field is unchanged.
  */
-export function sameThreadStructure(
+function sameThreadStructure(
   previous: OrchestrationV2ThreadProjection,
   next: OrchestrationV2ThreadProjection,
 ): boolean {

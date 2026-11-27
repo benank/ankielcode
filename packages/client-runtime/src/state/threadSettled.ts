@@ -92,7 +92,7 @@ function pendingQuestionAt(shell: ThreadSnoozeShell): string | null {
  * a snoozed long-running thread keeps waking itself for background work and stays hidden
  * until its timer.
  */
-export function threadRaisedHandWhileSnoozed(shell: ThreadSnoozeShell): boolean {
+function threadRaisedHandWhileSnoozed(shell: ThreadSnoozeShell): boolean {
   const request = shell.source?.pendingRuntimeRequest;
   if (shell.hasPendingApprovals || (request != null && request.kind !== "user_input")) return true;
   const questionAt = pendingQuestionAt(shell);

@@ -84,7 +84,7 @@ export function sortOlderSettledScopes(
  * (unsettled). Threads created after the cut never enter it, as threads settle after creation.
  * Archived-thread events arrive as removals too, each costing one count read.
  */
-export function olderSettledCountKey(
+function olderSettledCountKey(
   threads: ReadonlyArray<OrchestrationV2ThreadShell>,
   beforeMs: number,
   removedAt: ReadonlyMap<ThreadId, number>,

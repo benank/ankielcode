@@ -196,7 +196,7 @@ function routeAddressKey(route: ConnectionRoute): string | null {
 }
 
 /** The route's label in English. Display sites use `connectionRouteLabelText`. */
-export function connectionRouteLabel(route: ConnectionRoute): string {
+function connectionRouteLabel(route: ConnectionRoute): string {
   switch (connectionRouteKind(route)) {
     case "loopback":
       return msg("This device");

@@ -44,7 +44,7 @@ const REFRESH_SETTLE_TIMEOUT = Duration.seconds(10);
  * each attempt, up to a cap. A connected socket is not probed (a relay can miss the quick probe),
  * and an attempt under way is not retried, since a retry restarts it.
  */
-export const refreshEnvironmentConnections = Effect.fn("refreshEnvironmentConnections")(function* (
+const refreshEnvironmentConnections = Effect.fn("refreshEnvironmentConnections")(function* (
   environmentIds: ReadonlyArray<EnvironmentIdType>,
 ) {
   const registry = yield* EnvironmentRegistry.EnvironmentRegistry;

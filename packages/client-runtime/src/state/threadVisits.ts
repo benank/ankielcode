@@ -10,7 +10,7 @@ import type { VisitThreadInput } from "../operations/commands.ts";
 // During an active turn the thread's updatedAt advances several times per
 // second, and every server-side visit is a full command dispatch plus a
 // broadcast to all shell subscribers.
-export const VISIT_DISPATCH_THROTTLE_MS = 10_000;
+const VISIT_DISPATCH_THROTTLE_MS = 10_000;
 
 const IDLE_TRACKER: Atom.Atom<void> = Atom.make(undefined).pipe(
   Atom.withLabel("thread-visit-tracker:idle"),
