@@ -12,6 +12,7 @@ import { sortProjectsByGroupOrder } from "@ankielcode/client-runtime/state/proje
 import { resolveEnvironmentMachineKind } from "@ankielcode/contracts";
 import type {
   EnvironmentId,
+  KeybindingCommand,
   ProjectId,
   PullRequestAction,
   PullRequestInvolvement,
@@ -96,7 +97,7 @@ import { RightPanelTabs } from "../RightPanelTabs";
 import { isCommandPaletteOpen } from "~/commandPaletteBus";
 import { isElectron } from "~/env";
 import { resolveShortcutCommand, shortcutLabelForCommand } from "~/keybindings";
-import { registerCommands } from "~/shortcuts/dispatcher";
+import { registerCommands, registerMenuAction } from "~/shortcuts/dispatcher";
 import { isTerminalFocused } from "~/lib/terminalFocus";
 import { PanelLayoutControls, RightPanelMaximizeControl } from "../chat/PanelLayoutControls";
 import { Button } from "../ui/button";
@@ -1560,20 +1561,29 @@ export function PullRequestsPage() {
     event.stopPropagation();
     if (!event.repeat) toggleRightPanelMaximized();
   });
-  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- document keydown listener for the right panel and copy-reference shortcuts
+  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- document keydown listener and desktop menu actions for the right panel and copy-reference shortcuts
   useEffect(() => {
+    const commands: Partial<Record<KeybindingCommand, (event: KeyboardEvent) => void>> = {
+      "rightPanel.close": closeActiveSurfaceFromShortcut,
+      "rightPanel.toggle": toggleRightPanelFromShortcut,
+      "rightPanel.toggleMaximized": toggleRightPanelMaximizedFromShortcut,
+      "thread.copyReference": copyPullRequestFromShortcut,
+    };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || isCommandPaletteOpen()) return;
       const command = resolveShortcutCommand(event, keybindings, {
         context: getShortcutContext(),
       });
-      if (command === "rightPanel.close") closeActiveSurfaceFromShortcut(event);
-      if (command === "rightPanel.toggle") toggleRightPanelFromShortcut(event);
-      if (command === "rightPanel.toggleMaximized") toggleRightPanelMaximizedFromShortcut(event);
-      if (command === "thread.copyReference") copyPullRequestFromShortcut(event);
+      if (command !== null) commands[command]?.(event);
     };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    const unregisterMenuActions = Object.entries(commands).map(([command, run]) =>
+      registerMenuAction(command, () => run?.(new KeyboardEvent("keydown"))),
+    );
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      for (const unregister of unregisterMenuActions) unregister();
+    };
   }, [keybindings]);
 
   return (

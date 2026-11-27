@@ -1,7 +1,13 @@
 import type { KeybindingCommand, ResolvedKeybindingsConfig } from "@ankielcode/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import { dispatchMenuAction, registerCommands, registerMenuAction } from "./dispatcher";
+import {
+  dispatchMenuAction,
+  isMenuActionAvailable,
+  registerCommands,
+  registerMenuAction,
+  subscribeMenuCommands,
+} from "./dispatcher";
 
 function bindings(entries: ReadonlyArray<[string, KeybindingCommand]>): ResolvedKeybindingsConfig {
   return entries.map(([key, command]) => ({
@@ -143,5 +149,60 @@ describe("command dispatcher", () => {
 
     expect(newer).toHaveBeenCalledOnce();
     expect(older).toHaveBeenCalledOnce();
+  });
+
+  it("runs a menu bar command through the key scopes when no menu action claims it", () => {
+    const global = vi.fn();
+    const declined = vi.fn(() => false);
+    const offScreen = vi.fn();
+    using stack = new DisposableStack();
+    stack.defer(registerCommands({ "chat.new": global }, { keybindings, when: () => false }));
+    stack.defer(registerCommands({ "chat.new": declined }, { keybindings }));
+    stack.defer(registerCommands({ "chat.new": offScreen }, { keybindings, menu: () => false }));
+
+    dispatchMenuAction("chat.new");
+
+    // A key guard does not apply to a click; the scope's menu predicate does.
+    expect(offScreen).not.toHaveBeenCalled();
+    expect(declined).toHaveBeenCalledOnce();
+    expect(global).toHaveBeenCalledOnce();
+
+    const explicit = vi.fn();
+    stack.defer(registerMenuAction("chat.new", explicit));
+    dispatchMenuAction("chat.new");
+    expect(explicit).toHaveBeenCalledOnce();
+    expect(global).toHaveBeenCalledOnce();
+  });
+
+  it("leaves commands outside the menu bar to their menu actions", () => {
+    const handler = vi.fn();
+    using stack = new DisposableStack();
+    stack.defer(registerCommands({ "chat.newLocal": handler }, { keybindings }));
+
+    dispatchMenuAction("chat.newLocal");
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(isMenuActionAvailable("chat.newLocal")).toBe(false);
+  });
+
+  it("offers a menu command only while a handler for it is registered", () => {
+    const changes = vi.fn();
+    using stack = new DisposableStack();
+    stack.defer(subscribeMenuCommands(changes));
+    expect(isMenuActionAvailable("sidebar.toggle")).toBe(false);
+
+    const unregister = registerMenuAction("sidebar.toggle", vi.fn());
+    expect(isMenuActionAvailable("sidebar.toggle")).toBe(true);
+    unregister();
+    expect(isMenuActionAvailable("sidebar.toggle")).toBe(false);
+
+    let onScreen = false;
+    stack.defer(
+      registerCommands({ "navigation.back": vi.fn() }, { keybindings, menu: () => onScreen }),
+    );
+    expect(isMenuActionAvailable("navigation.back")).toBe(false);
+    onScreen = true;
+    expect(isMenuActionAvailable("navigation.back")).toBe(true);
+    expect(changes).toHaveBeenCalledTimes(3);
   });
 });

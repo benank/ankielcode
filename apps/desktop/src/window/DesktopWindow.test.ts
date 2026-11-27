@@ -209,6 +209,7 @@ const layerDesktopServerExposure = Layer.succeed(DesktopServerExposure.DesktopSe
 const layerElectronMenu = Layer.succeed(ElectronMenu.ElectronMenu, {
   pasteAndMatchStyle: Effect.void,
   setApplicationMenu: () => Effect.void,
+  setApplicationMenuItemsEnabled: () => Effect.void,
   popupTemplate: () => Effect.void,
   showContextMenu: () => Effect.succeedNone,
 } satisfies ElectronMenu.ElectronMenu["Service"]);
@@ -367,6 +368,7 @@ function layerTest(input: {
         Layer.succeed(ElectronMenu.ElectronMenu, {
           pasteAndMatchStyle: Effect.void,
           setApplicationMenu: () => Effect.void,
+          setApplicationMenuItemsEnabled: () => Effect.void,
           showContextMenu: () => Effect.succeedNone,
           popupTemplate: input.onPopupTemplate ?? (() => Effect.void),
         }),
@@ -702,56 +704,63 @@ describe("DesktopWindow", () => {
       }),
   );
 
-  it.effect("leaves Cmd+W to the renderer and blocks repeated presses", () =>
-    Effect.gen(function* () {
-      const fakeWindow = makeFakeBrowserWindow();
-      const createCount = yield* Ref.make(0);
-      const mainWindow = yield* Ref.make<Option.Option<Electron.BrowserWindow>>(Option.none());
-      const layer = layerTest({
-        window: fakeWindow.window,
-        createCount,
-        mainWindow,
-      });
+  it.effect.each([
+    { platform: "darwin", modifier: "meta" },
+    { platform: "linux", modifier: "control" },
+  ] as const)(
+    "leaves Cmd/Ctrl+W to the renderer and blocks repeated presses on $platform",
+    ({ platform, modifier }) =>
+      Effect.gen(function* () {
+        const fakeWindow = makeFakeBrowserWindow();
+        const createCount = yield* Ref.make(0);
+        const mainWindow = yield* Ref.make<Option.Option<Electron.BrowserWindow>>(Option.none());
+        const layer = layerTest({
+          window: fakeWindow.window,
+          createCount,
+          mainWindow,
+          platform,
+        });
 
-      yield* Effect.gen(function* () {
-        const desktopWindow = yield* DesktopWindow.DesktopWindow;
-        yield* desktopWindow.handleBackendReady(new URL("http://127.0.0.1:3773"));
+        yield* Effect.gen(function* () {
+          const desktopWindow = yield* DesktopWindow.DesktopWindow;
+          yield* desktopWindow.handleBackendReady(new URL("http://127.0.0.1:3773"));
 
-        const beforeInput = fakeWindow.webContentsListeners.get("before-input-event");
-        if (!beforeInput) {
-          return yield* Effect.die("before-input-event listener was not registered");
-        }
+          const beforeInput = fakeWindow.webContentsListeners.get("before-input-event");
+          if (!beforeInput) {
+            return yield* Effect.die("before-input-event listener was not registered");
+          }
 
-        let prevented = false;
-        const event = { preventDefault: () => (prevented = true) };
-        const input = {
-          type: "keyDown",
-          isAutoRepeat: true,
-          key: "W",
-          meta: true,
-          control: false,
-          alt: false,
-          shift: false,
-        };
-        beforeInput(event, input);
-        assert.isTrue(prevented);
+          let prevented = false;
+          const event = { preventDefault: () => (prevented = true) };
+          const input = {
+            type: "keyDown",
+            isAutoRepeat: true,
+            key: "W",
+            meta: false,
+            control: false,
+            alt: false,
+            shift: false,
+            [modifier]: true,
+          };
+          beforeInput(event, input);
+          assert.isTrue(prevented);
 
-        prevented = false;
-        beforeInput(event, { ...input, isAutoRepeat: false });
-        assert.isFalse(prevented);
+          prevented = false;
+          beforeInput(event, { ...input, isAutoRepeat: false });
+          assert.isFalse(prevented);
 
-        prevented = false;
-        beforeInput(event, { ...input, meta: false });
-        assert.isFalse(prevented);
+          prevented = false;
+          beforeInput(event, { ...input, [modifier]: false });
+          assert.isFalse(prevented);
 
-        assert.deepEqual(
-          fakeWindow.setIgnoreMenuShortcuts.mock.calls.map(([ignore]) => ignore),
-          [true, true, false],
-        );
-        beforeInput(event, { ...input, key: "r", isAutoRepeat: false });
-        assert.isFalse(fakeWindow.setIgnoreMenuShortcuts.mock.lastCall?.[0]);
-      }).pipe(Effect.provide(layer));
-    }),
+          assert.deepEqual(
+            fakeWindow.setIgnoreMenuShortcuts.mock.calls.map(([ignore]) => ignore),
+            [true, true, false],
+          );
+          beforeInput(event, { ...input, key: "r", isAutoRepeat: false });
+          assert.isFalse(fakeWindow.setIgnoreMenuShortcuts.mock.lastCall?.[0]);
+        }).pipe(Effect.provide(layer));
+      }),
   );
 
   it.effect("ignores input that arrives after the window is destroyed", () =>

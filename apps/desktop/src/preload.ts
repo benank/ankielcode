@@ -137,6 +137,7 @@ contextBridge.exposeInMainWorld("desktopBridge", {
     return () => ipcRenderer.removeListener(IpcChannels.TRACKPAD_SCROLL_END_CHANNEL, handler);
   },
   revealWindow: () => ipcRenderer.invoke(IpcChannels.REVEAL_WINDOW_CHANNEL),
+  closeWindow: () => ipcRenderer.invoke(IpcChannels.CLOSE_WINDOW_CHANNEL),
   getPrimaryPasteEnabled: () => primaryPasteEnabled,
   getSystemLocale: () => {
     const result = ipcRenderer.sendSync(IpcChannels.GET_SYSTEM_LOCALE_CHANNEL);
@@ -286,6 +287,7 @@ contextBridge.exposeInMainWorld("desktopBridge", {
       ipcRenderer.removeListener(IpcChannels.MENU_ACTION_CHANNEL, wrappedListener);
     };
   },
+  setMenuState: (state) => ipcRenderer.invoke(IpcChannels.SET_MENU_STATE_CHANNEL, state),
   onSnapShotEvent: (listener) => {
     const wrappedListener = (_event: Electron.IpcRendererEvent, event: unknown) => {
       if (!isSnapShotEvent(event)) return;

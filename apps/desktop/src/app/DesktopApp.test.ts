@@ -140,6 +140,7 @@ const runStubbedDesktop = (stub: StubbedDesktop) =>
         } as PreviewPasskeys.PreviewPasskeys["Service"]),
         Effect.provideService(DesktopApplicationMenu.DesktopApplicationMenu, {
           configure: stub.record("menu"),
+          setCommandState: () => Effect.void,
         }),
         Effect.provideService(DesktopUpdates.DesktopUpdates, {
           configure: Effect.void,

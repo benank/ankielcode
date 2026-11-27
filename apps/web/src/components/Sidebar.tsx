@@ -64,8 +64,10 @@ import {
 import {
   AuthOrchestrationOperateScope,
   type ContextMenuSource,
+  type KeybindingCommand,
   ProjectId,
   type ScopedThreadRef,
+  THREAD_JUMP_KEYBINDING_COMMANDS,
   type ThreadId,
 } from "@ankielcode/contracts";
 import {
@@ -137,6 +139,7 @@ import { useOrderWhileOpen } from "../hooks/useOrderWhileOpen";
 import { useProjectPin } from "../hooks/useProjectGroupUpdate";
 import { useSidebarProjectGroups } from "../hooks/useSidebarProjectGroups";
 import { isCommandPaletteOpen, openCommandPalette } from "../commandPaletteBus";
+import { registerMenuAction } from "../shortcuts/dispatcher";
 import { registerSettleAndAdvance } from "../settleAndAdvance";
 import { resolveThreadActionProjectRef, startNewThreadFromContext } from "../lib/chatThreadActions";
 import { useClientSettings } from "../hooks/useSettings";
@@ -3010,8 +3013,31 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
       handleThreadContextMenu(threadRef, position, source, true),
   );
 
-  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- subscribes to window keydown for thread navigation shortcuts using the current thread list
+  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- subscribes to window keydown and desktop menu actions for thread navigation using the current thread list
   useEffect(() => {
+    const navigateToRowKey = (targetRowKey: string | null) => {
+      if (!targetRowKey) return false;
+      const targetDraftId = draftIdByRowKey.get(targetRowKey);
+      const targetThread = parseScopedThreadKey(targetRowKey);
+      if (targetDraftId === undefined && !targetThread) return false;
+      if (targetDraftId !== undefined) navigateToDraft(targetDraftId);
+      else if (targetThread) navigateToThread(targetThread);
+      return true;
+    };
+    const runThreadNavigation = (command: KeybindingCommand | null): boolean => {
+      const traversalDirection = threadTraversalDirectionFromCommand(command);
+      if (traversalDirection !== null) {
+        return navigateToRowKey(
+          resolveAdjacentThreadId({
+            threadIds: orderedRowKeys,
+            currentThreadId: routeRowKey,
+            direction: traversalDirection,
+          }),
+        );
+      }
+      const jumpIndex = threadJumpIndexFromCommand(command ?? "");
+      return jumpIndex !== null && navigateToRowKey(orderedRowKeys[jumpIndex] ?? null);
+    };
     const onWindowKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.repeat || isCommandPaletteOpen() || isModelPickerOpen()) {
         return;
@@ -3020,34 +3046,23 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
         platform: navigator.platform,
         context: threadShortcutContext(routeThreadRef),
       });
-      const navigateToRowKey = (targetRowKey: string | null) => {
-        if (!targetRowKey) return false;
-        const targetDraftId = draftIdByRowKey.get(targetRowKey);
-        const targetThread = parseScopedThreadKey(targetRowKey);
-        if (targetDraftId === undefined && !targetThread) return false;
-        event.preventDefault();
-        event.stopPropagation();
-        if (targetDraftId !== undefined) navigateToDraft(targetDraftId);
-        else if (targetThread) navigateToThread(targetThread);
-        return true;
-      };
-      const traversalDirection = threadTraversalDirectionFromCommand(command);
-      if (traversalDirection !== null) {
-        navigateToRowKey(
-          resolveAdjacentThreadId({
-            threadIds: orderedRowKeys,
-            currentThreadId: routeRowKey,
-            direction: traversalDirection,
-          }),
-        );
-        return;
-      }
-      const jumpIndex = threadJumpIndexFromCommand(command ?? "");
-      if (jumpIndex === null) return;
-      navigateToRowKey(orderedRowKeys[jumpIndex] ?? null);
+      if (!runThreadNavigation(command)) return;
+      event.preventDefault();
+      event.stopPropagation();
     };
     window.addEventListener("keydown", onWindowKeyDown);
-    return () => window.removeEventListener("keydown", onWindowKeyDown);
+    // The menu offers only the jumps that have a thread to open.
+    const menuCommands = [
+      ...(orderedRowKeys.length > 0 ? (["thread.previous", "thread.next"] as const) : []),
+      ...THREAD_JUMP_KEYBINDING_COMMANDS.slice(0, orderedRowKeys.length),
+    ];
+    const unregisterMenuActions = menuCommands.map((command) =>
+      registerMenuAction(command, () => runThreadNavigation(command)),
+    );
+    return () => {
+      window.removeEventListener("keydown", onWindowKeyDown);
+      for (const unregister of unregisterMenuActions) unregister();
+    };
   }, [
     draftIdByRowKey,
     keybindings,

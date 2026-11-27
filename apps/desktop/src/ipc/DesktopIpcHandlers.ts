@@ -56,10 +56,12 @@ import {
   pasteAsText,
   probeRemoteEditors,
   revealWindow,
+  closeWindow,
   pickFolder,
   toLocalBackendPath,
   pickProjectFavicon,
   pickThemeFiles,
+  setMenuState,
   setTheme,
   syncHtmlFullscreen,
   showContextMenu,
@@ -151,6 +153,7 @@ export const installDesktopIpcHandlers = Effect.fn("desktop.ipc.installHandlers"
   yield* ipc.handle(pickThemeFiles);
   yield* ipc.handle(setTheme);
   yield* ipc.handle(showContextMenu);
+  yield* ipc.handle(setMenuState);
   yield* ipc.handle(openExternal);
   yield* ipc.handle(readMedia);
   yield* ipc.handle(receiveProviderAuthCallback);
@@ -162,6 +165,7 @@ export const installDesktopIpcHandlers = Effect.fn("desktop.ipc.installHandlers"
   yield* ipc.handle(appleSpeechTranscribe);
   yield* ipc.handle(pasteAsText);
   yield* ipc.handle(revealWindow);
+  yield* ipc.handle(closeWindow);
   yield* ipc.handle(syncHtmlFullscreen);
   yield* ipc.handle(probeRemoteEditors);
   yield* ipc.handle(getUpdateState);

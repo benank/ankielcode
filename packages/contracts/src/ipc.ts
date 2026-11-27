@@ -14,7 +14,11 @@ import { AdvertisedEndpoint } from "./remoteAccess.ts";
 import { ExecutionEnvironmentDescriptor } from "./environment.ts";
 import { type ClientSettings, type QuitConfirmationMode, SnapShotShortcut } from "./settings.ts";
 import type { EditorId } from "./editor.ts";
-import { KeybindingShortcut, type PreviewForwardedShortcut } from "./keybindings.ts";
+import {
+  type KeybindingCommand,
+  KeybindingShortcut,
+  type PreviewForwardedShortcut,
+} from "./keybindings.ts";
 
 export interface ContextMenuItem<T extends string = string> {
   id: T;
@@ -28,8 +32,70 @@ export interface ContextMenuItem<T extends string = string> {
   iconImage?: string;
   separatorBefore?: boolean;
   checked?: boolean;
+  /** A shortcut hint shown beside the item; native menus never register it. */
+  accelerator?: KeybindingShortcut;
   children?: readonly ContextMenuItem<T>[];
 }
+
+export type DesktopMenu = "file" | "edit" | "view" | "go" | "thread";
+
+/**
+ * Keybinding commands in the desktop menu bar, in order within each menu. A click runs the
+ * command in the renderer; the shown accelerator follows the user's binding.
+ */
+export const DESKTOP_MENU_COMMANDS = [
+  { command: "chat.new", menu: "file" },
+  { command: "chat.find", menu: "edit" },
+  { command: "sidebar.toggle", menu: "view" },
+  { command: "terminal.toggle", menu: "view", separatorBefore: true },
+  { command: "rightPanel.toggle", menu: "view" },
+  { command: "threadPanel.toggle", menu: "view" },
+  { command: "diff.toggle", menu: "view" },
+  { command: "preview.toggle", menu: "view" },
+  { command: "navigation.back", menu: "go" },
+  { command: "navigation.forward", menu: "go" },
+  { command: "commandPalette.toggle", menu: "go", separatorBefore: true },
+  { command: "thread.previous", menu: "go", separatorBefore: true },
+  { command: "thread.next", menu: "go" },
+  { command: "thread.jump.1", menu: "go", separatorBefore: true },
+  { command: "thread.jump.2", menu: "go" },
+  { command: "thread.jump.3", menu: "go" },
+  { command: "thread.jump.4", menu: "go" },
+  { command: "thread.jump.5", menu: "go" },
+  { command: "thread.jump.6", menu: "go" },
+  { command: "thread.jump.7", menu: "go" },
+  { command: "thread.jump.8", menu: "go" },
+  { command: "thread.jump.9", menu: "go" },
+  { command: "thread.stop", menu: "thread" },
+  { command: "thread.settle", menu: "thread", separatorBefore: true },
+  { command: "thread.pin", menu: "thread" },
+  { command: "thread.copyReference", menu: "thread", separatorBefore: true },
+  { command: "thread.regenerateTitle", menu: "thread" },
+] as const satisfies ReadonlyArray<{
+  readonly command: KeybindingCommand;
+  readonly menu: DesktopMenu;
+  readonly separatorBefore?: true;
+}>;
+export type DesktopMenuCommand = (typeof DESKTOP_MENU_COMMANDS)[number]["command"];
+
+const DESKTOP_MENU_COMMAND_SET: ReadonlySet<string> = new Set(
+  DESKTOP_MENU_COMMANDS.map((entry) => entry.command),
+);
+export const isDesktopMenuCommand = (value: string): value is DesktopMenuCommand =>
+  DESKTOP_MENU_COMMAND_SET.has(value);
+
+/** Changes to the menu bar's commands; keys left out keep their last value. */
+export const DesktopMenuStateSchema = Schema.Struct({
+  shortcuts: Schema.optionalKey(
+    Schema.Record(Schema.String, Schema.NullOr(KeybindingShortcut)).check(
+      Schema.isMaxProperties(64),
+    ),
+  ),
+  enabled: Schema.optionalKey(
+    Schema.Record(Schema.String, Schema.Boolean).check(Schema.isMaxProperties(64)),
+  ),
+});
+export type DesktopMenuState = typeof DesktopMenuStateSchema.Type;
 
 export type QuitShortcutHintEvent =
   | { readonly state: "down"; readonly mode: Exclude<QuitConfirmationMode, "direct"> }
@@ -46,6 +112,7 @@ export interface ContextMenuItemSchemaType {
   readonly iconImage?: string;
   readonly separatorBefore?: boolean;
   readonly checked?: boolean;
+  readonly accelerator?: KeybindingShortcut;
   readonly children?: readonly ContextMenuItemSchemaType[];
 }
 
@@ -60,6 +127,7 @@ export const ContextMenuItemSchema: Schema.Codec<ContextMenuItemSchemaType> = Sc
   iconImage: Schema.optionalKey(Schema.String),
   separatorBefore: Schema.optionalKey(Schema.Boolean),
   checked: Schema.optionalKey(Schema.Boolean),
+  accelerator: Schema.optionalKey(KeybindingShortcut),
   children: Schema.optionalKey(
     Schema.Array(
       Schema.suspend((): Schema.Codec<ContextMenuItemSchemaType> => ContextMenuItemSchema),
@@ -1141,6 +1209,8 @@ export interface DesktopBridge {
    * only the main process can spend a notification click's activation token.
    */
   revealWindow: () => Promise<void>;
+  /** Closes the main window as its close button does; absent in older desktop builds. */
+  closeWindow?: () => Promise<void>;
   /**
    * The OS locale as a BCP-47 tag, which the renderer cannot read for itself:
    * the packaged app ships only the `en-US` Chromium locale pak, so
@@ -1230,6 +1300,8 @@ export interface DesktopBridge {
   probeRemoteEditors: () => Promise<readonly EditorId[]>;
   pasteAsText: () => Promise<void>;
   onMenuAction: (listener: (action: string) => void) => () => void;
+  /** Absent in desktop builds without a command menu bar. */
+  setMenuState?: (state: DesktopMenuState) => Promise<void>;
   onSnapShotEvent: (listener: (event: DesktopSnapShotEvent) => void) => () => void;
   onQuitShortcut: (listener: (event: QuitShortcutHintEvent) => void) => () => void;
   getWindowFullscreenState: () => boolean;

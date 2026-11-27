@@ -6,6 +6,13 @@ also lists the command IDs and defaults available in your version.
 To free a default shortcut for another command, choose **Unassign** from its row's
 actions menu. **Reset to default** brings it back.
 
+## Desktop menu bar
+
+On macOS, the menu bar lists common commands under File, Edit, View, Go,
+and Thread, with the shortcut each one uses, including ones you change in
+Settings. Commands that do nothing on the current screen are greyed out.
+**Help → Keyboard Shortcuts** opens **Settings → Keybindings**.
+
 ## Composer controls
 
 `mod+shift+d` starts dictation in the focused editor, or the composer, and finishes it on the next press;
@@ -198,7 +205,9 @@ through the pages you have visited, like a browser's back and forward buttons.
 ## Reserved shortcuts
 
 `mod+w` closes the focused terminal or the active right-panel tab. When nothing
-remains to close, it does nothing; it never closes the window.
+remains to close, `Cmd+W` closes the window on macOS, like its close button, and
+the app keeps running.
+On Windows and Linux, `Ctrl+W` then does nothing; it never closes the window.
 
 `mod+shift+t` reopens the last closed tab across the app, including files,
 diffs, pull requests, browsers, and devices, in the order you closed them.

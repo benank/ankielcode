@@ -1,4 +1,4 @@
-import type { ContextMenuItem, ContextMenuSource } from "@ankielcode/contracts";
+import type { ContextMenuItem, ContextMenuSource, KeybindingShortcut } from "@ankielcode/contracts";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -7,6 +7,24 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import * as Electron from "electron";
+
+import { toElectronAccelerator } from "../snapShot/snapShot.ts";
+
+const MENU_KEY =
+  /^(?:[a-z0-9 ]|f(?:[1-9]|1\d|2[0-4])|[)!@#$%^&*(:;+=<,_\->.?/~`{\][|\\}"']|enter|tab|backspace|delete|insert|escape|arrow(?:up|down|left|right)|home|end|pageup|pagedown)$/;
+
+/**
+ * The menu's label for a binding, or none when Electron cannot show it. On macOS a key equivalent
+ * without Command reaches the menu before the page, so a Ctrl chord would leave the terminal.
+ */
+export function menuAccelerator(
+  shortcut: KeybindingShortcut,
+  platform: NodeJS.Platform,
+): string | undefined {
+  if (!MENU_KEY.test(shortcut.key)) return undefined;
+  if (platform === "darwin" && !shortcut.modKey && !shortcut.metaKey) return undefined;
+  return toElectronAccelerator(shortcut);
+}
 
 export interface ElectronMenuPosition {
   readonly x: number;
@@ -54,6 +72,10 @@ export class ElectronMenu extends Context.Service<
     readonly setApplicationMenu: (
       template: readonly Electron.MenuItemConstructorOptions[],
     ) => Effect.Effect<void>;
+    /** Flips items of the current application menu by id, without rebuilding it. */
+    readonly setApplicationMenuItemsEnabled: (
+      enabled: ReadonlyMap<string, boolean>,
+    ) => Effect.Effect<void>;
     readonly pasteAndMatchStyle: Effect.Effect<void>;
     readonly showContextMenu: (
       input: ElectronMenuContextInput,
@@ -86,6 +108,7 @@ function normalizeContextMenuItems(source: readonly ContextMenuItem[]): ContextM
       ...(sourceItem.separatorBefore === true ? { separatorBefore: true } : {}),
       ...(typeof sourceItem.checked === "boolean" ? { checked: sourceItem.checked } : {}),
       ...(typeof sourceItem.iconImage === "string" ? { iconImage: sourceItem.iconImage } : {}),
+      ...(sourceItem.accelerator ? { accelerator: sourceItem.accelerator } : {}),
     };
 
     if (sourceItem.children) {
@@ -186,6 +209,11 @@ export const make = Effect.gen(function* () {
         enabled: !item.disabled,
         ...(typeof item.checked === "boolean" ? { type: "checkbox", checked: item.checked } : {}),
       };
+      const accelerator = item.accelerator && menuAccelerator(item.accelerator, platform);
+      if (accelerator !== undefined) {
+        itemOption.accelerator = accelerator;
+        if (platform !== "darwin") itemOption.registerAccelerator = false;
+      }
       if (item.children && item.children.length > 0) {
         itemOption.submenu = buildTemplate(item.children, complete);
       } else {
@@ -234,6 +262,17 @@ export const make = Effect.gen(function* () {
           }),
       }).pipe(Effect.orDie);
     }),
+    setApplicationMenuItemsEnabled: Effect.fn("ElectronMenu.setApplicationMenuItemsEnabled")(
+      function (enabled) {
+        return Effect.sync(() => {
+          const menu = Electron.Menu.getApplicationMenu();
+          for (const [id, value] of enabled) {
+            const item = menu?.getMenuItemById(id);
+            if (item) item.enabled = value;
+          }
+        });
+      },
+    ),
     popupTemplate: Effect.fn("ElectronMenu.popupTemplate")(function (input) {
       return input.template.length === 0
         ? Effect.void

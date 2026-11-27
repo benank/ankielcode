@@ -4,6 +4,7 @@ import {
   DesktopAppBrandingSchema,
   DesktopEnvironmentBootstrapSchema,
   DesktopMediaReadSchema,
+  DesktopMenuStateSchema,
   DesktopThemeSchema,
   EDITORS,
   EditorId,
@@ -33,6 +34,7 @@ import * as DesktopPrimaryPaste from "../../app/DesktopPrimaryPaste.ts";
 import * as DesktopAppSettings from "../../settings/DesktopAppSettings.ts";
 import * as DesktopWslBackend from "../../wsl/DesktopWslBackend.ts";
 import * as DesktopWslEnvironment from "../../wsl/DesktopWslEnvironment.ts";
+import * as DesktopApplicationMenu from "../../window/DesktopApplicationMenu.ts";
 import * as ElectronApp from "../../electron/ElectronApp.ts";
 import * as ElectronAudio from "../../electron/ElectronAudio.ts";
 import * as ElectronDialog from "../../electron/ElectronDialog.ts";
@@ -329,6 +331,16 @@ export const showContextMenu = DesktopIpc.makeIpcMethod({
   }),
 });
 
+export const setMenuState = DesktopIpc.makeIpcMethod({
+  channel: IpcChannels.SET_MENU_STATE_CHANNEL,
+  payload: DesktopMenuStateSchema,
+  result: Schema.Void,
+  handler: Effect.fn("desktop.ipc.window.setMenuState")(function* (state) {
+    const menu = yield* DesktopApplicationMenu.DesktopApplicationMenu;
+    yield* menu.setCommandState(state);
+  }),
+});
+
 export const openExternal = DesktopIpc.makeIpcMethod({
   channel: IpcChannels.OPEN_EXTERNAL_CHANNEL,
   payload: Schema.String,
@@ -471,6 +483,26 @@ export const revealWindow = DesktopIpc.makeIpcMethod({
       return;
     }
     yield* electronWindow.reveal(window.value);
+  }),
+});
+
+/** Closes the main window through its normal close path, which hides it on macOS. */
+export const closeWindow = DesktopIpc.makeIpcMethod({
+  channel: IpcChannels.CLOSE_WINDOW_CHANNEL,
+  payload: Schema.Undefined,
+  result: Schema.Void,
+  handler: Effect.fn("desktop.ipc.window.closeWindow")(function* (_input, event) {
+    const electronWindow = yield* ElectronWindow.ElectronWindow;
+    const window = yield* electronWindow.main;
+    if (
+      event === undefined ||
+      Option.isNone(window) ||
+      window.value.isDestroyed() ||
+      window.value.webContents.id !== event.sender.id
+    ) {
+      return;
+    }
+    yield* Effect.sync(() => window.value.close());
   }),
 });
 

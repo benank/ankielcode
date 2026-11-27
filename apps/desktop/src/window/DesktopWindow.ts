@@ -833,7 +833,8 @@ export const make = Effect.gen(function* () {
     window.webContents.on("before-input-event", (event, input) => {
       quitShortcutHandler(event, input);
       if (window.isDestroyed()) return;
-      // Cmd/Ctrl+W reaches the renderer; DevTools uses the native menu shortcut.
+      // Cmd/Ctrl+W reaches the renderer, which asks to close the window when nothing claims it.
+      // DevTools uses the native menu shortcut.
       window.webContents.setIgnoreMenuShortcuts(
         (environment.platform === "darwin" ? input.meta : input.control) &&
           !input.alt &&

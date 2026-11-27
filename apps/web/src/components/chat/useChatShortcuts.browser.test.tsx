@@ -6,6 +6,7 @@ import { userEvent } from "vite-plus/test/browser";
 import { compileResolvedKeybindingsConfig } from "@ankielcode/shared/keybindings";
 import { isPreviewFocused } from "~/lib/previewFocus";
 import { surfaceShortcutKey } from "~/lib/surfaceShortcutKey";
+import { dispatchMenuAction, isMenuActionAvailable } from "~/shortcuts/dispatcher";
 import { render } from "../../../test/render";
 import type { ChatComposerHandle } from "./ChatComposer";
 import { useChatShortcuts } from "./useChatShortcuts";
@@ -143,6 +144,18 @@ it.each([
 
   expect(composerKeys).toEqual(composer);
   expect(received).toEqual(launcher);
+});
+
+it("runs the chat's own command from the desktop menu bar while it is mounted", async () => {
+  const finds: string[] = [];
+  await using screen = await render(<Chat composerKeys={[]} finds={finds} />, options);
+
+  expect(isMenuActionAvailable("chat.find")).toBe(true);
+  dispatchMenuAction("chat.find");
+  expect(finds).toEqual(["main"]);
+
+  await screen.unmount();
+  expect(isMenuActionAvailable("chat.find")).toBe(false);
 });
 
 const sideChatKeybindings: ResolvedKeybindingsConfig = [

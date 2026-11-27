@@ -17,6 +17,7 @@ vi.mock("electron", () => ({
 import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as ElectronDialog from "../electron/ElectronDialog.ts";
 import * as ElectronMenu from "../electron/ElectronMenu.ts";
+import * as ElectronShell from "../electron/ElectronShell.ts";
 import * as DesktopApplicationMenu from "./DesktopApplicationMenu.ts";
 import * as DesktopConfig from "../app/DesktopConfig.ts";
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
@@ -63,7 +64,15 @@ const layerElectronApp = Layer.succeed(ElectronApp.ElectronApp, {
 interface MenuServices {
   readonly checkResult?: DesktopUpdateCheckResult;
   readonly shownMessageBox?: Deferred.Deferred<Electron.MessageBoxOptions>;
+  readonly templates?: Array<readonly Electron.MenuItemConstructorOptions[]>;
+  readonly enabledChanges?: Array<ReadonlyMap<string, boolean>>;
 }
+
+const layerElectronShell = Layer.succeed(ElectronShell.ElectronShell, {
+  openExternal: () => Effect.succeed(true),
+  openSystemSettings: () => Effect.succeed(false),
+  copyText: () => Effect.void,
+} satisfies ElectronShell.ElectronShell["Service"]);
 
 const layerElectronDialog = ({ shownMessageBox }: MenuServices) =>
   Layer.succeed(ElectronDialog.ElectronDialog, {
@@ -116,6 +125,7 @@ const layerDesktopWindow = (selectedAction: Deferred.Deferred<string>) =>
 const layerElectronMenu = (
   applicationMenuTemplate: Deferred.Deferred<readonly Electron.MenuItemConstructorOptions[]>,
   platform: NodeJS.Platform,
+  { templates, enabledChanges }: MenuServices,
 ) =>
   Layer.effect(
     ElectronMenu.ElectronMenu,
@@ -123,7 +133,14 @@ const layerElectronMenu = (
       Effect.map((menu) => ({
         ...menu,
         setApplicationMenu: (template: readonly Electron.MenuItemConstructorOptions[]) =>
-          Deferred.succeed(applicationMenuTemplate, template).pipe(Effect.asVoid),
+          Effect.sync(() => templates?.push(template)).pipe(
+            Effect.andThen(Deferred.succeed(applicationMenuTemplate, template)),
+            Effect.asVoid,
+          ),
+        setApplicationMenuItemsEnabled: (enabled: ReadonlyMap<string, boolean>) =>
+          Effect.sync(() => {
+            enabledChanges?.push(new Map(enabled));
+          }),
       })),
     ),
   ).pipe(Layer.provide(Layer.succeed(HostProcess.Platform, platform)));
@@ -137,6 +154,7 @@ const configureMenu = (
   Effect.gen(function* () {
     const menu = yield* DesktopApplicationMenu.DesktopApplicationMenu;
     yield* menu.configure;
+    return menu;
   }).pipe(
     Effect.provide(
       DesktopApplicationMenu.layer.pipe(
@@ -144,8 +162,10 @@ const configureMenu = (
           layerElectronMenu(
             applicationMenuTemplate,
             environment.platform ?? environmentInput.platform,
+            services,
           ),
         ),
+        Layer.provideMerge(layerElectronShell),
         Layer.provideMerge(layerDesktopWindow(selectedAction)),
         Layer.provideMerge(layerDesktopUpdates(services)),
         Layer.provideMerge(layerElectronDialog(services)),
@@ -228,6 +248,23 @@ const pressPasteAsText = (
       triggeredByAccelerator: true,
     } as unknown as KeyboardEvent);
   };
+};
+
+const flattenMenu = (
+  template: readonly Electron.MenuItemConstructorOptions[],
+): Electron.MenuItemConstructorOptions[] =>
+  template.flatMap((item) => [
+    item,
+    ...(Array.isArray(item.submenu) ? flattenMenu(item.submenu) : []),
+  ]);
+
+const findItem = (
+  template: readonly Electron.MenuItemConstructorOptions[],
+  id: string,
+): Electron.MenuItemConstructorOptions => {
+  const item = flattenMenu(template).find((candidate) => candidate.id === id);
+  if (!item) throw new Error(`Expected a menu item with id ${id}.`);
+  return item;
 };
 
 describe("DesktopApplicationMenu", () => {
@@ -315,7 +352,7 @@ describe("DesktopApplicationMenu", () => {
     }),
   );
 
-  it.effect("never binds Cmd/Ctrl+W to closing the window", () =>
+  it.effect("closes focused DevTools with Cmd/Ctrl+W, and the window from Close Window", () =>
     Effect.gen(function* () {
       for (const platform of ["darwin", "linux", "win32"] as const) {
         const applicationMenuTemplate =
@@ -324,15 +361,7 @@ describe("DesktopApplicationMenu", () => {
           platform,
         });
 
-        const items: Electron.MenuItemConstructorOptions[] = [];
-        const collect = (template: readonly Electron.MenuItemConstructorOptions[]) => {
-          for (const item of template) {
-            items.push(item);
-            if (Array.isArray(item.submenu)) collect(item.submenu);
-          }
-        };
-        collect(yield* Deferred.await(applicationMenuTemplate));
-
+        const items = flattenMenu(yield* Deferred.await(applicationMenuTemplate));
         assert.isUndefined(
           items.find((item) => item.role === "close"),
           platform,
@@ -342,9 +371,15 @@ describe("DesktopApplicationMenu", () => {
           items.find((item) => item.role === "windowMenu" && item.submenu === undefined),
           platform,
         );
-        const closeTools = items.find((item) => item.accelerator === "CmdOrCtrl+W");
-        assert.equal(closeTools?.label, "Close Developer Tools", platform);
-        assert.isFunction(closeTools?.click);
+        const closeItems = items.filter((item) => item.accelerator === "CmdOrCtrl+W");
+        assert.lengthOf(closeItems, 1, platform);
+        const closeItem = closeItems[0];
+        assert.equal(
+          closeItem?.label,
+          platform === "darwin" ? "Close Window" : "Close Developer Tools",
+          platform,
+        );
+        assert.isFunction(closeItem?.click);
         const appContents = {
           isDestroyed: () => false,
           isDevToolsFocused: () => false,
@@ -355,20 +390,139 @@ describe("DesktopApplicationMenu", () => {
           isDevToolsFocused: () => true,
           closeDevTools: vi.fn(),
         };
+        const window = { close: vi.fn() };
         using allContents = vi
           .spyOn(Electron.webContents, "getAllWebContents")
           .mockReturnValue([
             appContents as unknown as Electron.WebContents,
             inspectedContents as unknown as Electron.WebContents,
           ]);
-        closeTools?.click?.({} as Electron.MenuItem, undefined, {} as KeyboardEvent);
+        const press = () =>
+          closeItem?.click?.(
+            {} as Electron.MenuItem,
+            window as unknown as Electron.BaseWindow,
+            { triggeredByAccelerator: true } as unknown as KeyboardEvent,
+          );
+        press();
         assert.equal(inspectedContents.closeDevTools.mock.calls.length, 1);
         assert.equal(appContents.closeDevTools.mock.calls.length, 0);
+        assert.equal(window.close.mock.calls.length, 0);
 
         allContents.mockReturnValue([appContents as unknown as Electron.WebContents]);
-        closeTools?.click?.({} as Electron.MenuItem, undefined, {} as KeyboardEvent);
+        press();
         assert.equal(appContents.closeDevTools.mock.calls.length, 0);
+        assert.equal(window.close.mock.calls.length, platform === "darwin" ? 1 : 0, platform);
       }
+    }),
+  );
+
+  it.effect("keeps Reload and Developer Tools out of packaged builds", () =>
+    Effect.gen(function* () {
+      for (const isPackaged of [true, false]) {
+        const applicationMenuTemplate =
+          yield* Deferred.make<readonly Electron.MenuItemConstructorOptions[]>();
+        yield* configureMenu(yield* Deferred.make<string>(), applicationMenuTemplate, {
+          isPackaged,
+        });
+        const labels = flattenMenu(yield* Deferred.await(applicationMenuTemplate)).map(
+          (item) => item.label,
+        );
+        for (const label of ["Reload", "Force Reload", "Toggle Developer Tools"]) {
+          assert.equal(labels.includes(label), !isPackaged, `${label}, packaged: ${isPackaged}`);
+        }
+      }
+    }),
+  );
+
+  it.effect("runs a clicked command in the renderer, never one its key already reached", () =>
+    Effect.gen(function* () {
+      const selectedAction = yield* Deferred.make<string>();
+      const applicationMenuTemplate =
+        yield* Deferred.make<readonly Electron.MenuItemConstructorOptions[]>();
+      yield* configureMenu(selectedAction, applicationMenuTemplate, { platform: "darwin" });
+
+      const newThread = findItem(yield* Deferred.await(applicationMenuTemplate), "chat.new");
+      const click = newThread.click;
+      if (typeof click !== "function") throw new Error("Expected New Thread to have a click.");
+      const window = {} as Electron.BaseWindow;
+      click({} as Electron.MenuItem, window, {
+        triggeredByAccelerator: true,
+      } as unknown as KeyboardEvent);
+      assert.isFalse(yield* Deferred.isDone(selectedAction));
+
+      click({} as Electron.MenuItem, window, {} as KeyboardEvent);
+      assert.equal(yield* Deferred.await(selectedAction), "chat.new");
+    }),
+  );
+
+  it.effect("starts disabled, then follows the renderer's enabled commands and bindings", () =>
+    Effect.gen(function* () {
+      const templates: Array<readonly Electron.MenuItemConstructorOptions[]> = [];
+      const enabledChanges: Array<ReadonlyMap<string, boolean>> = [];
+      const menu = yield* configureMenu(
+        yield* Deferred.make<string>(),
+        yield* Deferred.make<readonly Electron.MenuItemConstructorOptions[]>(),
+        { platform: "darwin" },
+        { templates, enabledChanges },
+      );
+      const latest = () => templates.at(-1) ?? [];
+      assert.isFalse(findItem(latest(), "sidebar.toggle").enabled);
+      assert.isUndefined(findItem(latest(), "sidebar.toggle").accelerator);
+
+      yield* menu.setCommandState({ enabled: { "sidebar.toggle": true, "not.a.command": true } });
+      assert.lengthOf(templates, 1);
+      assert.deepStrictEqual(enabledChanges, [new Map([["sidebar.toggle", true]])]);
+
+      // Repeating a value changes nothing.
+      yield* menu.setCommandState({ enabled: { "sidebar.toggle": true } });
+      assert.lengthOf(enabledChanges, 1);
+
+      const shortcut = {
+        key: "b",
+        modKey: true,
+        metaKey: false,
+        ctrlKey: false,
+        altKey: false,
+        shiftKey: false,
+      };
+      yield* menu.setCommandState({ shortcuts: { "sidebar.toggle": shortcut } });
+      assert.lengthOf(templates, 2);
+      assert.equal(findItem(latest(), "sidebar.toggle").accelerator, "CommandOrControl+B");
+      assert.isTrue(findItem(latest(), "sidebar.toggle").enabled);
+
+      yield* menu.setCommandState({ shortcuts: { "sidebar.toggle": { ...shortcut } } });
+      assert.lengthOf(templates, 2);
+
+      yield* menu.setCommandState({ shortcuts: { "sidebar.toggle": null } });
+      assert.lengthOf(templates, 3);
+      assert.isUndefined(findItem(latest(), "sidebar.toggle").accelerator);
+    }),
+  );
+
+  it.effect("shows command accelerators off macOS without registering them", () =>
+    Effect.gen(function* () {
+      const templates: Array<readonly Electron.MenuItemConstructorOptions[]> = [];
+      const menu = yield* configureMenu(
+        yield* Deferred.make<string>(),
+        yield* Deferred.make<readonly Electron.MenuItemConstructorOptions[]>(),
+        { platform: "win32" },
+        { templates },
+      );
+      yield* menu.setCommandState({
+        shortcuts: {
+          "chat.new": {
+            key: "n",
+            modKey: true,
+            metaKey: false,
+            ctrlKey: false,
+            altKey: false,
+            shiftKey: false,
+          },
+        },
+      });
+      const newThread = findItem(templates.at(-1) ?? [], "chat.new");
+      assert.equal(newThread.accelerator, "CommandOrControl+N");
+      assert.isFalse(newThread.registerAccelerator);
     }),
   );
 

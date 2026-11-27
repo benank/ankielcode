@@ -63,6 +63,7 @@ import { m } from "./i18n/messages";
 import { startI18n, subscribeI18n } from "./i18n/runtime";
 import { guardDomAgainstPageTranslation } from "./lib/pageTranslationGuard";
 import { installCommandPaletteCommands } from "./shortcuts/commandPaletteCommands";
+import { installDesktopMenuState } from "./shortcuts/desktopMenuState";
 import { registerOpenFavoriteEditorCommand } from "./components/chat/OpenInPickerShortcut";
 import { environmentThreadShells, threadEnvironment } from "./state/threads";
 import { resolveActiveThreadRouteRef, resolveThreadRouteTarget } from "./threadRoutes";
@@ -277,6 +278,7 @@ export function startAppServices(): AppRouter {
   startBrowserProfileReporting();
   installChatRouteCommands(router);
   installCommandPaletteCommands(router);
+  installDesktopMenuState(router);
   registerOpenFavoriteEditorCommand();
   startThreadOverlayRetention(router);
   // Drafts promote as their server threads arrive, wherever the user is.
