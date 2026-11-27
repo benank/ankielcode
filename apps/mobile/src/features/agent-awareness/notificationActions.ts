@@ -1,5 +1,5 @@
 import { buildPendingUserInputAnswers } from "@ankielcode/client-runtime/state/pending-user-input";
-import type { PendingThreadRequests } from "@ankielcode/client-runtime/state/thread-requests";
+import { derivePendingThreadRequests } from "@ankielcode/client-runtime/state/thread-requests";
 import {
   CommandId,
   EnvironmentId,
@@ -72,7 +72,11 @@ const DEFAULT_APPROVAL_DECISIONS: ReadonlyArray<ProviderApprovalDecision> = [
   "decline",
 ];
 
+type ThreadRequests = Parameters<typeof derivePendingThreadRequests>[0];
+
 export type AgentNotificationActionPlan =
+  /** The synced thread does not show the request yet. */
+  | { readonly type: "wait" }
   /** Answered elsewhere, or no longer answerable: the open thread already shows that. */
   | { readonly type: "skip" }
   | {
@@ -94,21 +98,26 @@ export type AgentNotificationActionPlan =
       };
     };
 
+const WAIT: AgentNotificationActionPlan = { type: "wait" };
 const SKIP: AgentNotificationActionPlan = { type: "skip" };
 
 /**
- * What the button sends, decided from the thread's synchronized pending requests, mirroring the
- * in-app card: Approve and Deny send what "Allow once" and "Decline" send, and Reply answers the
- * only question. The command id is fixed per request and button, so a response delivered twice
- * replays the server's receipt instead of answering again.
+ * What the button sends, decided from the thread's live projection, mirroring the in-app card:
+ * Approve and Deny send what "Allow once" and "Decline" send, and Reply answers the only question.
+ * A warm resume stays "live" on its old projection, so a request it lacks means wait, not answered.
+ * The command id is fixed per request and button, so a repeat replays the server's receipt.
  */
 export function planAgentNotificationAction(input: {
   readonly action: AgentNotificationAction;
-  readonly pending: PendingThreadRequests | null;
+  /** Null until the thread is live. */
+  readonly thread: ThreadRequests | null;
   readonly canOperate: boolean;
 }): AgentNotificationActionPlan {
-  const { action, pending } = input;
-  if (!input.canOperate || pending === null) return SKIP;
+  const { action, thread } = input;
+  const request = thread?.runtimeRequests.find((entry) => entry.id === action.requestId);
+  if (thread === null || request === undefined) return WAIT;
+  if (request.status !== "pending" || !input.canOperate) return SKIP;
+  const pending = derivePendingThreadRequests(thread);
   const commandId = CommandId.make(`notification:${action.type}:${action.requestId}`);
   if (action.type === "reply") {
     const request = pending.userInputs.find((entry) => entry.requestId === action.requestId);

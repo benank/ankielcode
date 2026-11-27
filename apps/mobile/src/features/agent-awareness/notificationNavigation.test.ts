@@ -1,8 +1,8 @@
 import type { NotificationResponse } from "expo-notifications";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import type { PendingThreadRequests } from "@ankielcode/client-runtime/state/thread-requests";
-import { RuntimeRequestId } from "@ankielcode/contracts";
+import { NodeId, ProviderSessionId, RuntimeRequestId } from "@ankielcode/contracts";
+import * as DateTime from "effect/DateTime";
 
 import { foregroundNotificationBehavior } from "./foregroundNotificationBehavior";
 import {
@@ -187,7 +187,7 @@ describe("routeAgentNotificationResponseOnce", () => {
 
     expect(navigate).not.toHaveBeenCalled();
     expect(clearLastResponse).toHaveBeenCalledOnce();
-    expect(handledResponseIds.has("notification-1")).toBe(true);
+    expect(handledResponseIds.size).toBe(1);
   });
 
   it("does not navigate twice when the initial and listener responses refer to one notification", () => {
@@ -261,50 +261,47 @@ describe("extractAgentNotificationAction", () => {
 
 describe("planAgentNotificationAction", () => {
   const requestId = RuntimeRequestId.make("request-1");
+  type Thread = NonNullable<Parameters<typeof planAgentNotificationAction>[0]["thread"]>;
+  type Request = Thread["runtimeRequests"][number];
   const action = (type: AgentNotificationAction["type"], text = ""): AgentNotificationAction => ({
     ...extractAgentNotificationAction(actionResponse("ANKIEL_APPROVE"))!,
     type,
     text,
   });
-  const approval = (
-    overrides: Partial<PendingThreadRequests["approvals"][number]> = {},
-  ): PendingThreadRequests => ({
-    approvals: [
-      {
-        requestId,
-        requestKind: "command",
-        createdAt: "2026-11-26T00:00:00.000Z",
-        responseCapability: "live",
-        ...overrides,
-      },
-    ],
-    userInputs: [],
+  const runtimeRequest = (kind: Request["kind"], overrides: Partial<Request> = {}): Request => ({
+    id: requestId,
+    nodeId: NodeId.make("node-1"),
+    providerTurnId: null,
+    nativeRequestRef: null,
+    kind,
+    status: "pending",
+    responseCapability: { type: "live", providerSessionId: ProviderSessionId.make("session-1") },
+    createdAt: DateTime.makeUnsafe(1_000),
+    resolvedAt: null,
+    ...overrides,
   });
+  // The plan reads only the card's type, request id, options and questions.
+  const thread = (request: Request, card: Record<string, unknown>): Thread =>
+    ({
+      runtimeRequests: [request],
+      turnItems: [{ requestId, ...card }],
+    }) as unknown as Thread;
+  const approval = (overrides: Partial<Request> = {}, options?: ReadonlyArray<unknown>) =>
+    thread(runtimeRequest("command", overrides), {
+      type: "approval_request",
+      requestKind: "command",
+      ...(options === undefined ? {} : { options }),
+    });
   const question = (id: string) => ({
     id,
     header: "Name",
     question: "What should the release be called?",
     options: [],
-    multiSelect: false,
   });
   const userInput = (questions: ReadonlyArray<ReturnType<typeof question>>) =>
-    ({
-      approvals: [],
-      userInputs: [
-        {
-          requestId,
-          createdAt: "2026-11-26T00:00:00.000Z",
-          questions,
-          responseCapability: "live",
-          dismissible: false,
-        },
-      ],
-    }) satisfies PendingThreadRequests;
-  const plan = (
-    next: AgentNotificationAction,
-    pending: PendingThreadRequests | null,
-    canOperate = true,
-  ) => planAgentNotificationAction({ action: next, pending, canOperate });
+    thread(runtimeRequest("user_input"), { type: "user_input_request", questions });
+  const plan = (next: AgentNotificationAction, current: Thread | null, canOperate = true) =>
+    planAgentNotificationAction({ action: next, thread: current, canOperate });
 
   it("sends what the card's Allow once, Decline and single answer send, once per button", () => {
     expect(plan(action("approve"), approval())).toEqual({
@@ -331,18 +328,24 @@ describe("planAgentNotificationAction", () => {
     });
   });
 
-  it("skips requests answered elsewhere or that the button cannot answer", () => {
-    const answeredElsewhere: PendingThreadRequests = { approvals: [], userInputs: [] };
-    expect(plan(action("approve"), answeredElsewhere).type).toBe("skip");
-    expect(plan(action("reply", "Atlas"), answeredElsewhere).type).toBe("skip");
-    expect(plan(action("approve"), null).type).toBe("skip");
+  it("waits for a request the synced thread lacks and skips one already closed", () => {
+    // A warm resume is "live" on the projection from before the alert.
+    expect(plan(action("approve"), { runtimeRequests: [], turnItems: [] }).type).toBe("wait");
+    expect(plan(action("approve"), null).type).toBe("wait");
+    expect(plan(action("approve"), approval({ status: "resolved" })).type).toBe("skip");
+    expect(plan(action("reply", "Atlas"), approval({ status: "cancelled" })).type).toBe("skip");
+  });
+
+  it("skips requests the button cannot answer the way the card would", () => {
     expect(plan(action("approve"), approval(), false).type).toBe("skip");
-    expect(plan(action("approve"), approval({ responseCapability: "not_resumable" })).type).toBe(
-      "skip",
-    );
     expect(
-      plan(action("deny"), approval({ options: [{ decision: "accept", label: "Allow once" }] }))
-        .type,
+      plan(
+        action("approve"),
+        approval({ responseCapability: { type: "not_resumable", reason: "Provider exited." } }),
+      ).type,
+    ).toBe("skip");
+    expect(
+      plan(action("deny"), approval({}, [{ decision: "accept", label: "Allow once" }])).type,
     ).toBe("skip");
     // The phone's view may be newer than the alert: a second question needs the thread.
     expect(
@@ -381,5 +384,10 @@ describe("routeAgentNotificationResponseOnce with buttons", () => {
     expect(navigate).toHaveBeenLastCalledWith("/threads/env/parent");
     expect(perform).toHaveBeenCalledOnce();
     expect(perform).toHaveBeenCalledWith(expect.objectContaining({ type: "approve" }));
+
+    // iOS gives a thread's next alert the same identifier, its collapse id.
+    const later = { ...response, notification: { ...response.notification, date: 2 } };
+    routeAgentNotificationResponseOnce({ handledResponseIds, response: later, navigate, perform });
+    expect(perform).toHaveBeenCalledTimes(2);
   });
 });

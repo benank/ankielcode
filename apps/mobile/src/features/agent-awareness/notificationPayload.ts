@@ -23,20 +23,29 @@ function dataFromNotificationResponse(response: unknown): Record<string, unknown
   return typeof data === "object" && data !== null ? (data as Record<string, unknown>) : null;
 }
 
-function identifierFromNotificationResponse(response: unknown): string | null {
+/**
+ * One delivery of one response. iOS reuses an alert's APNs collapse id (its thread) as the
+ * request identifier, so the date and button tell a thread's later alerts apart.
+ */
+function responseKey(response: unknown): string | null {
   if (typeof response !== "object" || response === null) {
     return null;
   }
-  const notification = (response as { readonly notification?: unknown }).notification;
+  const { notification, actionIdentifier } = response as {
+    readonly notification?: unknown;
+    readonly actionIdentifier?: unknown;
+  };
   if (typeof notification !== "object" || notification === null) {
     return null;
   }
-  const request = (notification as { readonly request?: unknown }).request;
+  const { request, date } = notification as { readonly request?: unknown; readonly date?: unknown };
   if (typeof request !== "object" || request === null) {
     return null;
   }
   const identifier = (request as { readonly identifier?: unknown }).identifier;
-  return typeof identifier === "string" ? identifier : null;
+  return typeof identifier === "string"
+    ? JSON.stringify([identifier, date ?? null, actionIdentifier ?? null])
+    : null;
 }
 
 function encodeThreadDeepLink(input: {
@@ -115,7 +124,7 @@ export function routeAgentNotificationResponseOnce(input: {
   readonly navigate: (deepLink: string) => void;
   readonly perform?: (action: AgentNotificationAction) => void;
 }): void {
-  const responseId = identifierFromNotificationResponse(input.response);
+  const responseId = responseKey(input.response);
   if (responseId && input.handledResponseIds.has(responseId)) {
     return;
   }

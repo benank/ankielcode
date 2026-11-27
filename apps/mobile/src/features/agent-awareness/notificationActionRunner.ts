@@ -1,8 +1,4 @@
 import { runAtomCommand } from "@ankielcode/client-runtime/state/runtime";
-import {
-  derivePendingThreadRequests,
-  type PendingThreadRequests,
-} from "@ankielcode/client-runtime/state/thread-requests";
 import type { EnvironmentThreadState } from "@ankielcode/client-runtime/state/threads";
 import { AuthOrchestrationOperateScope } from "@ankielcode/contracts";
 import * as Option from "effect/Option";
@@ -18,6 +14,7 @@ import { readEnvironmentScope } from "../../state/session";
 import { environmentThreads, threadEnvironment } from "../../state/threads";
 import {
   type AgentNotificationAction,
+  type AgentNotificationActionPlan,
   APPROVAL_CATEGORY,
   APPROVE_ACTION,
   DENY_ACTION,
@@ -28,7 +25,7 @@ import {
 import { pushSupportedOnPlatform } from "./pushRegistration";
 
 const actionDebug = createDebugLogger("notification-actions");
-/** How long a button waits for its computer to connect and sync the thread, then for the send. */
+/** How long a button waits for the thread to sync and show its request, then for the send. */
 const SYNC_TIMEOUT_MS = 20_000;
 const SEND_TIMEOUT_MS = 20_000;
 
@@ -81,84 +78,50 @@ export function installAgentNotificationCategories(): () => void {
   return subscribeActiveLocale(register);
 }
 
-/** Resolves with the thread once it is live, or null when it is gone or the wait runs out. */
-function waitForLiveThread(action: AgentNotificationAction): {
-  readonly ready: Promise<EnvironmentThreadState | null>;
-  readonly read: () => EnvironmentThreadState | null;
-  readonly release: () => void;
-} {
-  const atom = environmentThreads.stateAtom(action.environmentId, action.threadId);
-  const read = () => {
-    const result = appAtomRegistry.get(atom);
-    return AsyncResult.isSuccess(result) ? (result.value as EnvironmentThreadState) : null;
-  };
-  let settle: (state: EnvironmentThreadState | null) => void = () => undefined;
-  const ready = new Promise<EnvironmentThreadState | null>((resolve) => {
-    settle = resolve;
-  });
-  const timer = setTimeout(() => settle(null), SYNC_TIMEOUT_MS);
-  const check = () => {
-    const state = read();
-    // A cached projection can predate the request, so only a live one decides.
-    if (state?.status === "live") settle(state);
-    else if (state?.status === "deleted") settle(null);
-  };
-  const unsubscribe = appAtomRegistry.subscribe(atom, check, { immediate: true });
-  return {
-    ready: ready.finally(() => clearTimeout(timer)),
-    read,
-    release: () => {
-      clearTimeout(timer);
-      unsubscribe();
-    },
-  };
-}
-
-const pendingRequestsOf = (state: EnvironmentThreadState | null): PendingThreadRequests | null =>
-  state === null
-    ? null
-    : Option.match(state.data, {
-        onNone: () => null,
-        onSome: derivePendingThreadRequests,
-      });
-
-const stillPending = (action: AgentNotificationAction, state: EnvironmentThreadState | null) => {
-  const pending = pendingRequestsOf(state);
-  return (
-    pending === null ||
-    [...pending.approvals, ...pending.userInputs].some(
-      (request) => request.requestId === action.requestId,
-    )
-  );
-};
-
 function reportUnsent(): void {
   Dialog.alert(m(msg("Couldn't send your answer")), m(msg("Try again from the thread.")));
 }
 
+const projectionOf = (result: AsyncResult.AsyncResult<EnvironmentThreadState, unknown>) =>
+  AsyncResult.isSuccess(result) ? Option.getOrNull(result.value.data) : null;
+
 const inFlight = new Set<string>();
 
-/** Sends a button's answer once the thread it opened is live; a stale request stays quiet. */
+/** Sends a button's answer once the opened thread shows its request; a stale one stays quiet. */
 export async function performAgentNotificationAction(
   action: AgentNotificationAction,
 ): Promise<void> {
   const key = `${action.environmentId}\n${action.requestId}`;
   if (inFlight.has(key)) return;
   inFlight.add(key);
-  const thread = waitForLiveThread(action);
+  // Mounting the thread keeps it syncing while the screen it opened mounts.
+  const atom = environmentThreads.stateAtom(action.environmentId, action.threadId);
+  let settle: (plan: AgentNotificationActionPlan | null) => void = () => undefined;
+  const decided = new Promise<AgentNotificationActionPlan | null>((resolve) => {
+    settle = resolve;
+  });
+  const timer = setTimeout(() => settle(null), SYNC_TIMEOUT_MS);
+  const unsubscribe = appAtomRegistry.subscribe(
+    atom,
+    (result) => {
+      const state = AsyncResult.isSuccess(result) ? result.value : null;
+      if (state?.status === "deleted") return settle({ type: "skip" });
+      if (state?.status !== "live") return;
+      const plan = planAgentNotificationAction({
+        action,
+        thread: Option.getOrNull(state.data),
+        canOperate: readEnvironmentScope(action.environmentId, AuthOrchestrationOperateScope),
+      });
+      if (plan.type !== "wait") settle(plan);
+    },
+    { immediate: true },
+  );
   try {
-    const state = await thread.ready;
-    if (state === null) {
-      // A deleted thread has nothing to answer; a timeout means the answer never left.
-      if (thread.read()?.status !== "deleted") reportUnsent();
-      return;
-    }
-    const plan = planAgentNotificationAction({
-      action,
-      pending: pendingRequestsOf(state),
-      canOperate: readEnvironmentScope(action.environmentId, AuthOrchestrationOperateScope),
-    });
-    if (plan.type === "skip") return;
+    const plan = await decided;
+    clearTimeout(timer);
+    // Never synced, or never showed the request: the answer did not leave the phone.
+    if (plan === null) return reportUnsent();
+    if (plan.type === "skip" || plan.type === "wait") return;
     const abort = new AbortController();
     const sendTimer = setTimeout(() => abort.abort(), SEND_TIMEOUT_MS);
     const options = { reportFailure: false, signal: abort.signal };
@@ -177,13 +140,17 @@ export async function performAgentNotificationAction(
             options,
           );
     clearTimeout(sendTimer);
+    if (result._tag === "Success") return;
     // Another device may have answered while this one sent; that is not a failure to report.
-    if (result._tag === "Failure" && stillPending(action, thread.read())) {
-      actionDebug.log("notification action failed", { type: action.type });
-      reportUnsent();
-    }
+    const request = projectionOf(appAtomRegistry.get(atom))?.runtimeRequests.find(
+      (entry) => entry.id === action.requestId,
+    );
+    if (request !== undefined && request.status !== "pending") return;
+    actionDebug.log("notification action failed", { type: action.type });
+    reportUnsent();
   } finally {
-    thread.release();
+    clearTimeout(timer);
+    unsubscribe();
     inFlight.delete(key);
   }
 }
