@@ -46,6 +46,8 @@ export type DesktopMenu = "file" | "edit" | "view" | "go" | "thread";
 export const DESKTOP_MENU_COMMANDS = [
   { command: "chat.new", menu: "file" },
   { command: "chat.find", menu: "edit" },
+  { command: "chat.findNext", menu: "edit" },
+  { command: "chat.findPrevious", menu: "edit" },
   { command: "sidebar.toggle", menu: "view" },
   { command: "terminal.toggle", menu: "view", separatorBefore: true },
   { command: "rightPanel.toggle", menu: "view" },

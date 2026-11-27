@@ -55,6 +55,8 @@ type WhenToken =
   | { type: "lparen" }
   | { type: "rparen" };
 
+const THREAD_FIND_KEYS = "threadFindOpen && !terminalFocus && !previewFocus";
+
 export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
   { key: "mod+b", command: "sidebar.toggle" },
   { key: "f6", command: "workspace.focusNext" },
@@ -120,7 +122,12 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
   { key: "mod+shift+e", command: "composer.effort", when: "!terminalFocus" },
   { key: "mod+shift+a", command: "composer.mode", when: "!terminalFocus" },
   { key: "mod+shift+x", command: "composer.workspace", when: "!terminalFocus" },
-  { key: "mod+shift+g", command: "composer.branch", when: "!terminalFocus" },
+  // While find is open, mod+shift+g steps back through its matches instead.
+  { key: "mod+shift+g", command: "composer.branch", when: "!terminalFocus && !threadFindOpen" },
+  { key: "f3", command: "chat.findNext", when: THREAD_FIND_KEYS },
+  { key: "shift+f3", command: "chat.findPrevious", when: THREAD_FIND_KEYS },
+  { key: "mod+g", command: "chat.findNext", when: THREAD_FIND_KEYS },
+  { key: "mod+shift+g", command: "chat.findPrevious", when: THREAD_FIND_KEYS },
   { key: "mod+shift+l", command: "composer.previousWorktree", when: "!terminalFocus" },
   { key: "mod+shift+k", command: "pullRequest.copyNumber", when: "!terminalFocus" },
   { key: "mod+shift+arrowup", command: "modelPicker.previousProvider", when: "modelPickerOpen" },
@@ -129,6 +136,7 @@ export const DEFAULT_KEYBINDINGS: ReadonlyArray<KeybindingRule> = [
   { key: "mod+shift+[", command: "thread.previous" },
   { key: "mod+shift+]", command: "thread.next" },
   { key: "mod+shift+c", command: "thread.copyReference", when: "!terminalFocus" },
+  { key: "mod+.", command: "thread.stop", when: "!terminalFocus" },
   { key: "mod+shift+s", command: "thread.settle", when: "!terminalFocus" },
   { key: "mod+shift+p", command: "thread.pin", when: "!terminalFocus" },
   { key: "mod+z", command: "thread.undo", when: "!terminalFocus && !editableFocus" },

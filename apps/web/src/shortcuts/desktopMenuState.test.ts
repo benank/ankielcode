@@ -38,8 +38,10 @@ describe("desktop menu state", () => {
     expect(sent[0]?.enabled?.["sidebar.toggle"]).toBe(true);
     expect(sent[0]?.enabled?.["chat.new"]).toBe(false);
     expect(sent[0]?.shortcuts?.["sidebar.toggle"]).toMatchObject({ key: "b", modKey: true });
-    // Unbound by default.
-    expect(sent[0]?.shortcuts?.["thread.stop"]).toBeNull();
+    expect(sent[0]?.shortcuts?.["thread.stop"]).toMatchObject({ key: ".", modKey: true });
+    // Labelled as they run while find is open, where mod+shift+g is not the branch picker.
+    expect(sent[0]?.shortcuts?.["chat.findNext"]).toMatchObject({ key: "g", shiftKey: false });
+    expect(sent[0]?.shortcuts?.["chat.findPrevious"]).toMatchObject({ key: "g", shiftKey: true });
 
     available.add("chat.new");
     reporter.refresh();

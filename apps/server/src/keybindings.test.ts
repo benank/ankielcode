@@ -45,6 +45,14 @@ const writeKeybindingsConfig = (configPath: string, rules: readonly KeybindingRu
     yield* fileSystem.writeFileString(configPath, encoded);
   });
 
+/** How many custom rules push every default before `rule` past the keybinding limit. */
+const fillerHidingDefaultsBefore = (rule: KeybindingRule) =>
+  MAX_KEYBINDINGS_COUNT -
+  (SharedKeybindings.DEFAULT_KEYBINDINGS.length -
+    SharedKeybindings.DEFAULT_KEYBINDINGS.findIndex(
+      (entry) => entry.key === rule.key && entry.command === rule.command,
+    ));
+
 const readKeybindingsConfig = (configPath: string) =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
@@ -285,6 +293,34 @@ it.layer(NodeServices.layer)("keybindings", (it) => {
       yield* writeKeybindingsConfig(keybindingsConfigPath, [existing]);
       yield* keybindings.syncDefaultKeybindingsOnStartup;
       assert.deepStrictEqual(yield* backgroundRules, [existing]);
+    }).pipe(Effect.provide(layerKeybindings())),
+  );
+
+  it.effect("rewrites an untouched revised default once and leaves a customized one", () =>
+    Effect.gen(function* () {
+      const { keybindingsConfigPath } = yield* ServerConfig.ServerConfig;
+      const keybindings = yield* Keybindings.Keybindings;
+      const old = {
+        key: "mod+shift+g",
+        command: "composer.branch",
+        when: "!terminalFocus",
+      } as const;
+      const custom = { key: "alt+g", command: "composer.branch", when: "!terminalFocus" } as const;
+      const branchRules = Effect.map(readKeybindingsConfig(keybindingsConfigPath), (rules) =>
+        rules.filter((entry) => entry.command === "composer.branch"),
+      );
+      yield* writeKeybindingsConfig(keybindingsConfigPath, [old, custom]);
+
+      yield* keybindings.syncDefaultKeybindingsOnStartup;
+      assert.deepStrictEqual(yield* branchRules, [
+        { ...old, when: "!terminalFocus && !threadFindOpen" },
+        custom,
+      ]);
+
+      // Written back by hand after the revision, it stays.
+      yield* writeKeybindingsConfig(keybindingsConfigPath, [old]);
+      yield* keybindings.syncDefaultKeybindingsOnStartup;
+      assert.deepStrictEqual(yield* branchRules, [old]);
     }).pipe(Effect.provide(layerKeybindings())),
   );
 
@@ -533,15 +569,16 @@ it.layer(NodeServices.layer)("keybindings", (it) => {
     Effect.gen(function* () {
       const { keybindingsConfigPath } = yield* ServerConfig.ServerConfig;
       const keybindings = yield* Keybindings.Keybindings;
+      const target = { key: "mod+shift+o", command: "chat.new", when: "!terminalFocus" } as const;
+      // Enough custom rules that the target is the first default still within the limit.
       yield* writeKeybindingsConfig(
         keybindingsConfigPath,
-        Array.from({ length: 210 }, (_, index) => ({
+        Array.from({ length: fillerHidingDefaultsBefore(target) }, (_, index) => ({
           key: "mod+alt+f1",
           command: `script.filler-${index}.run` as const,
         })),
       );
 
-      const target = { key: "mod+shift+o", command: "chat.new", when: "!terminalFocus" } as const;
       const local = { ...target, key: "mod+shift+n", command: "chat.newLocal" } as const;
       const relevant = (rule: { readonly command: KeybindingCommand }) =>
         rule.command === target.command || rule.command === local.command;
@@ -566,15 +603,15 @@ it.layer(NodeServices.layer)("keybindings", (it) => {
       Effect.gen(function* () {
         const { keybindingsConfigPath } = yield* ServerConfig.ServerConfig;
         const keybindings = yield* Keybindings.Keybindings;
+        const target = { key: "mod+n", command: "chat.new", when: "!terminalFocus" } as const;
         yield* writeKeybindingsConfig(
           keybindingsConfigPath,
-          Array.from({ length: 209 }, (_, index) => ({
+          Array.from({ length: fillerHidingDefaultsBefore(target) }, (_, index) => ({
             key: "mod+alt+f1",
             command: `script.filler-${index}.run` as const,
           })),
         );
 
-        const target = { key: "mod+n", command: "chat.new", when: "!terminalFocus" } as const;
         const sibling = { ...target, key: "mod+shift+o" };
         const isChatNew = (binding: { readonly command: KeybindingCommand }) =>
           binding.command === target.command;

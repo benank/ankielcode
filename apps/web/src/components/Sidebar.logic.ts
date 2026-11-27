@@ -82,6 +82,31 @@ export function shouldNavigateAfterThreadPark(input: {
 
 export const THREAD_JUMP_HINT_SHOW_DELAY_MS = 200;
 
+/**
+ * What a key does on a focused sidebar row. On macOS Return renames, as in Finder, and Space or
+ * Cmd+Down opens; elsewhere Enter and Space open. F2 renames everywhere.
+ */
+export function sidebarRowKeyAction(
+  event: Pick<KeyboardEvent, "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey">,
+  isMac: boolean,
+): "open" | "rename" | null {
+  const modified = event.metaKey || event.ctrlKey || event.altKey || event.shiftKey;
+  switch (event.key) {
+    case "F2":
+      return "rename";
+    case "Enter":
+      return isMac && !modified ? "rename" : "open";
+    case " ":
+      return "open";
+    case "ArrowDown":
+      return isMac && event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey
+        ? "open"
+        : null;
+    default:
+      return null;
+  }
+}
+
 export function resolveSidebarRowAccessibility(input: {
   readonly title: string;
   readonly statusLabel: string | null;

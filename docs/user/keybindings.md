@@ -10,7 +10,8 @@ actions menu. **Reset to default** brings it back.
 
 On macOS, the menu bar lists common commands under File, Edit, View, Go,
 and Thread, with the shortcut each one uses, including ones you change in
-Settings. Commands that do nothing on the current screen are greyed out.
+Settings. Commands that do nothing on the current screen are greyed out;
+**Edit → Find Next** and **Find Previous** work while find is open in a thread.
 **Help → Keyboard Shortcuts** opens **Settings → Keybindings**.
 
 ## Composer controls
@@ -41,7 +42,8 @@ Use `mod+shift+m` to choose a model and `mod+shift+h` to choose a host.
 To step a new thread to the next machine instead of opening the menu, bind
 **Composer: Cycle Host** in Keybindings. It has no default shortcut.
 Use `mod+shift+e` for effort, `mod+shift+a` for permissions, `mod+shift+x` for the
-workspace, and `mod+shift+g` for the Git branch. The workspace menu includes the
+workspace, and `mod+shift+g` for the Git branch (while find is open in the thread,
+`mod+shift+g` goes to the previous match instead). The workspace menu includes the
 current checkout, a new worktree, and the previous worktree when available.
 Use `mod+shift+l` to reuse the previous worktree directly.
 
@@ -138,7 +140,8 @@ Join modifiers and a key with `+`, such as `mod+shift+d` or `ctrl+l`.
 
 Available context keys are `terminalFocus`, `terminalOpen`, `previewFocus`,
 `previewOpen`, `rightPanelOpen`, `modelPickerOpen`, `usagePageOpen`, `composerFocus`,
-`draftThreadRoute`, `turnRunning`, `composerEmpty`, `editableFocus`, `isWeb`, and `isDesktop`.
+`draftThreadRoute`, `turnRunning`, `composerEmpty`, `editableFocus`, `threadFindOpen`, `isWeb`,
+and `isDesktop`. `threadFindOpen` is true while find is open in the thread.
 In a thread, `rightPanelOpen` is true while its right panel is open; the default
 `mod+t` uses it to open the panel's new-tab menu.
 `draftThreadRoute` is true on a draft thread, including a restored draft, until it is first sent.
@@ -162,8 +165,10 @@ Combine keys with `!` for not, `&&` for and, `||` for or, and parentheses:
 `chat.find` searches conversation messages and proposed plans in the active thread. Entering a
 query searches the entire thread, including older messages. Thread search requires server support;
 update an older server to enable it. Select **Retry** if a search fails. It defaults to
-`mod+f` outside terminals and previews. Press **Enter** or **Shift+Enter** to move between matches,
-and **Escape** to close find.
+`mod+f` outside terminals and previews. Press **Enter** or **Shift+Enter** in the find field to
+move between matches, and **Escape** to close find. While find is open, `chat.findNext` (`mod+g`
+or `F3`) and `chat.findPrevious` (`mod+shift+g` or `Shift+F3`) do the same from anywhere in the
+thread.
 
 ## Find on a browser page
 
@@ -180,8 +185,8 @@ a shortcut.
 
 ## Commands with special behavior
 
-`thread.stop` interrupts the running turn in the focused thread. It has no default
-shortcut; assign one in **Settings → Keybindings**.
+`thread.stop` (`mod+.` by default) interrupts the running turn in the focused thread, like
+**Thread → Stop** in the menu bar. It does nothing when no turn is running.
 
 `thread.regenerateTitle` generates a new title for the focused thread, like
 **Regenerate title** in the thread menu. It has no default shortcut.

@@ -38,7 +38,12 @@ import { type TerminalLaunchContext, useChatTerminalActions } from "./chat/useCh
 import { useComposerSend } from "./chat/useComposerSend";
 import { useComposerResume } from "./chat/useComposerResume";
 import { ThreadFind, ThreadFindCanvas } from "./chat/ThreadFindProvider";
-import { closeThreadFind, openThreadFind, useThreadFindOpen } from "./chat/threadFindStore";
+import {
+  closeThreadFind,
+  openThreadFind,
+  stepThreadFind,
+  useThreadFindOpen,
+} from "./chat/threadFindStore";
 import { THREAD_FIND_BAR_RESERVED_HEIGHT } from "./chat/ThreadFindBar";
 import { useUsageLimitRecoveryBannerItem } from "./chat/UsageLimitRecoveryBanner";
 import {
@@ -2851,6 +2856,8 @@ export default function ChatView(props: ChatViewProps) {
     setTerminalUiLaunchContext(null);
   }
 
+  const threadFindEnabled = isServerThread && serverConfig?.threadFind === true;
+  const isThreadFindActive = useThreadFindOpen(activeThreadRef, threadFindEnabled);
   const getShortcutContext = (eventTarget: EventTarget | null = document.activeElement) => ({
     terminalFocus: getTerminalFocusOwner() !== null,
     terminalOpen: Boolean(terminalUiState.terminalOpen),
@@ -2871,6 +2878,7 @@ export default function ChatView(props: ChatViewProps) {
       !composerHasNonPromptContent &&
       promptRef.current.trim().length === 0,
     composerRequiresModifier: composerRequiresModifier(settings.sendShortcut, promptRef.current),
+    threadFindOpen: isThreadFindActive,
     isWeb: !isElectron,
     isDesktop: isElectron,
   });
@@ -2878,8 +2886,6 @@ export default function ChatView(props: ChatViewProps) {
   const timelineSkills = activeProviderStatus
     ? resolveProviderSkillsForCwd(activeProviderStatus, gitCwd)
     : EMPTY_PROVIDER_SKILLS;
-  const threadFindEnabled = isServerThread && serverConfig?.threadFind === true;
-  const isThreadFindActive = useThreadFindOpen(activeThreadRef, threadFindEnabled);
   const openThreadFindStable = useStableCallback((threadRef: ScopedThreadRef) => {
     if (threadFindEnabled && scopedThreadKey(threadRef) === activeThreadKey) {
       openThreadFind(activeThreadKey);
@@ -2912,6 +2918,12 @@ export default function ChatView(props: ChatViewProps) {
           return false;
         openThreadFind(activeThreadKey);
       },
+      ...(isThreadFindActive && activeThreadKey !== null
+        ? {
+            "chat.findNext": () => stepThreadFind(activeThreadKey, 1),
+            "chat.findPrevious": () => stepThreadFind(activeThreadKey, -1),
+          }
+        : {}),
       "composer.cycleHost": ({ event }) => {
         if (!canChangeEnvironment) return false;
         if (event.repeat) return;

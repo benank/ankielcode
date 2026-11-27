@@ -13,6 +13,10 @@ import { menuAccelerator } from "../electron/ElectronMenu.ts";
 const COMMAND_TITLES: Record<DesktopMenuCommand, () => string> = {
   "chat.new": () => m(msg("New Thread", { $context: "menu bar command" })),
   "chat.find": () => m(msg("Find", { $context: "menu command that focuses search" })),
+  "chat.findNext": () =>
+    m(msg("Find Next", { $context: "menu command that selects the next search match" })),
+  "chat.findPrevious": () =>
+    m(msg("Find Previous", { $context: "menu command that selects the previous search match" })),
   "sidebar.toggle": () => m(msg("Toggle Sidebar")),
   "terminal.toggle": () => m(msg("Toggle Terminal")),
   "rightPanel.toggle": () => m(msg("Toggle Right Panel")),

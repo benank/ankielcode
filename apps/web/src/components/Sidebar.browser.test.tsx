@@ -390,6 +390,59 @@ describe("sidebar thread rename", () => {
   );
 });
 
+describe("sidebar row keys", () => {
+  it.each([
+    { platform: "MacIntel", rename: "{Enter}", open: ["{Meta>}{ArrowDown}{/Meta}", " "] },
+    { platform: "Linux x86_64", rename: "{F2}", open: ["{Enter}", " "] },
+  ])("$platform: $rename renames the focused thread and $open opens it", async (scenario) => {
+    using _platform = vi.spyOn(navigator, "platform", "get").mockReturnValue(scenario.platform);
+    const activeProject = project("active");
+    const threads = [threadShell(activeProject.id, 0), threadShell(activeProject.id, 1)];
+    const routeThreadRef = scopeThreadRef(activeProject.environmentId, threads[0]!.id);
+    vi.mocked(readEnvironmentScope).mockReturnValue(true);
+    vi.mocked(useEnvironmentScope).mockReturnValue(true);
+    vi.mocked(useProjects).mockReturnValue([activeProject]);
+    vi.mocked(useQuietThreadShells).mockReturnValue(threads);
+    vi.mocked(useThreadRouteTarget).mockReturnValue({ kind: "server", threadRef: routeThreadRef });
+    vi.mocked(useHandleNewThread).mockReturnValue({
+      activeDraftThread: null,
+      activeThread: null,
+      defaultProjectRef: scopeProjectRef(activeProject.environmentId, activeProject.id),
+      defaultProjectFallbackReady: true,
+      handleNewThread: vi.fn().mockResolvedValue(null),
+      routeDraftId: null,
+      routeThreadRef,
+    });
+    await using screen = await render(
+      <SidebarProvider>
+        <Sidebar routeReveal={{ observedKey: null, pendingKey: null }} />
+      </SidebarProvider>,
+      { router: "/local/thread-0" },
+    );
+    const navigate = vi.spyOn(screen.router!, "navigate").mockResolvedValue(undefined);
+    const row = screen.container.querySelector<HTMLElement>('[data-sidebar-row="local:thread-1"]')!;
+    await expect.element(row).toBeVisible();
+    row.focus();
+
+    await userEvent.keyboard(scenario.rename);
+    const input = screen.getByRole("textbox", { name: "Thread title" });
+    await expect.element(input).toHaveValue("Thread 1");
+    await userEvent.keyboard("{Escape}");
+    await expect.element(input).not.toBeInTheDocument();
+    await expect.element(row).toHaveFocus();
+    expect(navigate).not.toHaveBeenCalled();
+
+    for (const key of scenario.open) {
+      navigate.mockClear();
+      await userEvent.keyboard(key);
+      expect(navigate).toHaveBeenCalledWith(
+        expect.objectContaining({ params: expect.objectContaining({ threadId: "thread-1" }) }),
+      );
+      await expect.element(row).toHaveFocus();
+    }
+  });
+});
+
 describe("sidebar thread click", () => {
   it("opens a nested side chat in the main thread route from the sidebar tree", async () => {
     const activeProject = project("active");

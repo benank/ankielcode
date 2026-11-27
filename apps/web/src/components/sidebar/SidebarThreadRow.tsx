@@ -55,7 +55,7 @@ import { readEnvironmentScope, useEnvironmentScope } from "../../state/session";
 import { formatRelativeTime, parseTimestampDate } from "../../timestampFormat";
 import type { SidebarThreadSummary } from "../../types";
 import type { EnvironmentProject } from "@ankielcode/client-runtime/state/shell";
-import { cn } from "~/lib/utils";
+import { cn, isMacPlatform } from "~/lib/utils";
 import { textDirection } from "~/textDirection";
 import { EnvironmentMachineIcon } from "../EnvironmentMachineIcon";
 import {
@@ -70,6 +70,7 @@ import {
   withoutRemovedCheckout,
   useSidebarRowSubscriptionLease,
   setFileDragActive,
+  sidebarRowKeyAction,
 } from "../Sidebar.logic";
 import { resolveLocalCheckoutBranchMismatch } from "../BranchToolbar.logic";
 import {
@@ -485,6 +486,8 @@ function ThreadRenameInput(props: {
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
     if (event.key === "Enter") {
       event.preventDefault();
+      // A Return held down from the row that opened this field must not commit it.
+      if (event.repeat) return;
       settledRef.current = true;
       props.onCommit();
     } else if (event.key === "Escape") {
@@ -657,18 +660,18 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
   };
   const handleKeyDown = (event: ReactKeyboardEvent) => {
     if (event.target !== event.currentTarget) return;
-    if (
-      event.key === "F2" &&
-      !isRenaming &&
-      readEnvironmentScope(threadRef.environmentId, AuthOrchestrationOperateScope)
-    ) {
-      event.preventDefault();
-      onStartRename(threadRef, thread.title);
+    const key = sidebarRowKeyAction(event, isMacPlatform(navigator.platform));
+    if (key === null) return;
+    event.preventDefault();
+    const canRename =
+      !isRenaming && readEnvironmentScope(threadRef.environmentId, AuthOrchestrationOperateScope);
+    if (key === "rename" && canRename) {
+      // A held Return would commit the field it just opened.
+      if (!event.repeat) onStartRename(threadRef, thread.title);
       return;
     }
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    onThreadActivate(threadRef);
+    // Return still opens a thread this device cannot rename.
+    if (key === "open" || event.key === "Enter") onThreadActivate(threadRef);
   };
   const handleDoubleClick = (event: ReactMouseEvent) => {
     if (
@@ -871,8 +874,9 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
             <div
               ref={rowRef}
               role="button"
-              tabIndex={0}
+              tabIndex={-1}
               data-sidebar-row={threadKey}
+              data-sidebar-title={thread.title}
               data-sidebar-parent={branch?.parentKey ?? props.navigationParent}
               aria-label={accessibility.label}
               aria-current={accessibility.current}

@@ -7,11 +7,18 @@ import {
 } from "@ankielcode/contracts";
 import type { AnyRouter } from "@tanstack/react-router";
 
-import { effectiveShortcutsForCommand } from "../keybindings";
+import { effectiveShortcutsForCommand, type ShortcutMatchContext } from "../keybindings";
 import { isMacPlatform } from "../lib/utils";
 import { appAtomRegistry } from "../rpc/atomRegistry";
 import { primaryServerKeybindingsAtom } from "../state/server";
 import { isMenuActionAvailable, registerCommands, subscribeMenuCommands } from "./dispatcher";
+
+// Commands that only apply on part of a screen are labelled as they run there.
+const FIND_OPEN = { threadFindOpen: true };
+const MENU_SHORTCUT_CONTEXT: Partial<Record<DesktopMenuCommand, Partial<ShortcutMatchContext>>> = {
+  "chat.findNext": FIND_OPEN,
+  "chat.findPrevious": FIND_OPEN,
+};
 
 interface DesktopMenuStateSources {
   readonly isAvailable: (command: DesktopMenuCommand) => boolean;
@@ -47,7 +54,10 @@ export function createDesktopMenuStateReporter({
       }
       if (bindings === null) continue;
       // The binding a neutral screen would run, as the app's own shortcut hints show it.
-      const shortcut = effectiveShortcutsForCommand(bindings, command)[0] ?? null;
+      const shortcut =
+        effectiveShortcutsForCommand(bindings, command, {
+          context: MENU_SHORTCUT_CONTEXT[command] ?? {},
+        })[0] ?? null;
       const key = JSON.stringify(shortcut);
       if (sentShortcuts.get(command) !== key) {
         sentShortcuts.set(command, key);

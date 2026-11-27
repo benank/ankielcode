@@ -295,9 +295,11 @@ export function surfaceShortcutActionForKey<
 export function surfaceShortcutTargetsTypingContext(
   target: { closest(selectors: string): unknown } | null,
 ): boolean {
+  // A focused sidebar row takes letters for type-to-select.
   return (
-    target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])') !=
-    null
+    target?.closest(
+      'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [data-sidebar-row]',
+    ) != null
   );
 }
 

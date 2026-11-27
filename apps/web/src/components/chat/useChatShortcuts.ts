@@ -30,6 +30,13 @@ const SIDE_CHAT_PANE_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
   "rightPanel.toggleMaximized",
 ]);
 
+/** What an embedded side chat runs anywhere in its pane: its own find. */
+const SIDE_CHAT_FIND_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
+  "chat.find",
+  "chat.findNext",
+  "chat.findPrevious",
+]);
+
 interface ChatShortcutsInput {
   readonly enabled: boolean;
   /**
@@ -127,7 +134,7 @@ export function useChatShortcuts(input: ChatShortcutsInput) {
       context: input.getShortcutContext(event.target),
     });
     let run: ChatShortcutHandler | undefined;
-    if (command === "chat.find") run = input.commands[command];
+    if (command && SIDE_CHAT_FIND_COMMANDS.has(command)) run = input.commands[command];
     else if (command && event.target instanceof Node && composerElement?.contains(event.target)) {
       run = composerShortcutCommands(input.composerRef, input.branchToolbarRef)[command];
     }

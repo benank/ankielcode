@@ -1,15 +1,17 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser";
-import { installSidebarTree } from "./sidebarTree";
+import { fakeTimers } from "../../test/render";
+import { installSidebarTree, SIDEBAR_TYPEAHEAD_RESET_MS } from "./sidebarTree";
 
 function setup() {
   const root = document.createElement("div");
   document.body.append(root);
   let dispose: (() => void) | undefined;
-  const row = (id: string, parent?: string) => {
+  const row = (id: string, parent?: string, title?: string) => {
     const element = document.createElement("button");
     element.dataset.sidebarRow = id;
     if (parent) element.dataset.sidebarParent = parent;
+    if (title !== undefined) element.dataset.sidebarTitle = title;
     element.textContent = id;
     root.append(element);
     return element;
@@ -34,7 +36,7 @@ function press(target: HTMLElement, key: string, init: KeyboardEventInit = {}) {
 }
 
 describe("sidebar keyboard navigation", () => {
-  it("moves focus without activating rows, clamps at the ends, and keeps every row in the Tab order", () => {
+  it("moves focus without activating rows, clamps at the ends, and keeps one Tab stop", () => {
     using tree = setup();
     const first = tree.row("first");
     const second = tree.row("second");
@@ -52,7 +54,28 @@ describe("sidebar keyboard navigation", () => {
     press(last, "Home");
     expect(document.activeElement).toBe(first);
     expect(activate).not.toHaveBeenCalled();
-    expect([first.tabIndex, second.tabIndex, last.tabIndex]).toEqual([0, 0, 0]);
+    expect([first.tabIndex, second.tabIndex, last.tabIndex]).toEqual([0, -1, -1]);
+  });
+
+  it("keeps one Tab stop on the open row, the first row, or the row that last had it", async () => {
+    using tree = setup();
+    const first = tree.row("first");
+    const second = tree.row("second");
+    const third = tree.row("third");
+    tree.install();
+    // Nothing is open, as in Settings or on a draft: the first row takes the stop.
+    expect([first.tabIndex, second.tabIndex, third.tabIndex]).toEqual([0, -1, -1]);
+    // Opening a thread from elsewhere moves the stop to it.
+    second.setAttribute("aria-current", "page");
+    await vi.waitFor(() => expect(second.tabIndex).toBe(0));
+    expect(first.tabIndex).toBe(-1);
+    third.focus();
+    expect([second.tabIndex, third.tabIndex]).toEqual([-1, 0]);
+    // A row that moves shelves remounts; the new element takes the stop back.
+    third.remove();
+    const moved = tree.row("third");
+    await vi.waitFor(() => expect(moved.tabIndex).toBe(0));
+    expect(tree.root.querySelectorAll('[tabindex="0"]')).toHaveLength(1);
   });
 
   it("expands a group before entering its first child and returns to the parent", () => {
@@ -96,7 +119,7 @@ describe("sidebar keyboard navigation", () => {
     expect(document.activeElement).toBe(selected);
   });
 
-  it("leaves every row's buttons in the Tab order", () => {
+  it("lets Tab reach only the focused row's buttons", () => {
     using tree = setup();
     const first = tree.row("first");
     const second = tree.row("second");
@@ -111,10 +134,10 @@ describe("sidebar keyboard navigation", () => {
     const secondAction = action("second");
     tree.install();
     first.focus();
-    expect([firstAction.tabIndex, secondAction.tabIndex]).toEqual([0, 0]);
+    expect([firstAction.tabIndex, secondAction.tabIndex]).toEqual([0, -1]);
     press(first, "ArrowDown");
     expect(document.activeElement).toBe(second);
-    expect([firstAction.tabIndex, secondAction.tabIndex]).toEqual([0, 0]);
+    expect([firstAction.tabIndex, secondAction.tabIndex]).toEqual([-1, 0]);
   });
 
   it("keeps a rendered row under a collapsed group reachable", () => {
@@ -142,6 +165,43 @@ describe("sidebar keyboard navigation", () => {
     press(first, "ArrowDown");
     expect(document.activeElement).toBe(first);
     expect(undo.tabIndex).toBe(0);
+  });
+
+  it("moves to the thread whose title starts with what was typed", () => {
+    using tree = setup();
+    const draft = tree.row("draft:1");
+    const fix = tree.row("fix", undefined, "Fix the login redirect");
+    const fixTests = tree.row("fix-tests", undefined, "Fix flaky tests");
+    const sidebar = tree.row("sidebar", undefined, "  Sidebar polish");
+    const activate = vi.fn();
+    tree.root.addEventListener("click", activate);
+    tree.install();
+    using _timers = fakeTimers();
+    draft.focus();
+    press(draft, "F", { shiftKey: true });
+    expect(document.activeElement).toBe(fix);
+    for (const key of ["i", "x", "-"]) {
+      expect(press(document.activeElement as HTMLElement, key).defaultPrevented).toBe(true);
+    }
+    expect(document.activeElement).toBe(fix);
+    expect(activate).not.toHaveBeenCalled();
+    // Space stays the row's own key and clears what was typed.
+    expect(press(fix, " ").defaultPrevented).toBe(false);
+    press(fix, "f");
+    expect(document.activeElement).toBe(fixTests);
+    vi.advanceTimersByTime(SIDEBAR_TYPEAHEAD_RESET_MS);
+    press(fixTests, "s");
+    expect(document.activeElement).toBe(sidebar);
+    vi.advanceTimersByTime(SIDEBAR_TYPEAHEAD_RESET_MS);
+    // Repeating a letter steps through the titles that start with it, wrapping around.
+    press(sidebar, "f");
+    press(fix, "f");
+    expect(document.activeElement).toBe(fixTests);
+    press(fixTests, "f");
+    expect(document.activeElement).toBe(fix);
+    vi.advanceTimersByTime(SIDEBAR_TYPEAHEAD_RESET_MS);
+    expect(press(fix, "f", { metaKey: true }).defaultPrevented).toBe(false);
+    expect(document.activeElement).toBe(fix);
   });
 
   it("keeps the scroll position when focus follows a row that moved away", async () => {

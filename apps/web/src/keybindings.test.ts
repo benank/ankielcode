@@ -249,6 +249,56 @@ describe("settle thread shortcut", () => {
   });
 });
 
+describe("thread find and stop shortcuts", () => {
+  it("steps find matches only while find is open, leaving mod+shift+g to the branch picker", () => {
+    const resolve = (
+      input: Partial<ShortcutEventLike>,
+      platform: string,
+      context: Record<string, boolean>,
+    ) => resolveShortcutCommand(event(input), DEFAULT_RESOLVED_KEYBINDINGS, { platform, context });
+    const open = { threadFindOpen: true };
+    assert.strictEqual(resolve({ key: "g", metaKey: true }, "MacIntel", open), "chat.findNext");
+    assert.strictEqual(
+      resolve({ key: "g", metaKey: true, shiftKey: true }, "MacIntel", open),
+      "chat.findPrevious",
+    );
+    assert.strictEqual(resolve({ key: "F3" }, "Win32", open), "chat.findNext");
+    assert.strictEqual(resolve({ key: "F3", shiftKey: true }, "Linux", open), "chat.findPrevious");
+    assert.strictEqual(
+      resolve({ key: "g", metaKey: true, shiftKey: true }, "MacIntel", {}),
+      "composer.branch",
+    );
+    // An upgraded config gains the find rules ahead of its saved branch rule.
+    const upgraded = mergeWithDefaultKeybindings(
+      DEFAULT_RESOLVED_KEYBINDINGS.filter((binding) => !binding.command.startsWith("chat.find")),
+    );
+    assert.strictEqual(
+      resolveShortcutCommand(event({ key: "g", metaKey: true, shiftKey: true }), upgraded, {
+        platform: "MacIntel",
+        context: open,
+      }),
+      "chat.findPrevious",
+    );
+    assert.isNull(resolve({ key: "g", ctrlKey: true }, "Win32", {}));
+    assert.isNull(resolve({ key: "g", ctrlKey: true }, "Linux", { ...open, terminalFocus: true }));
+  });
+
+  it("stops the turn with mod+. outside the terminal", () => {
+    assert.strictEqual(
+      resolveShortcutCommand(event({ key: ".", metaKey: true }), DEFAULT_RESOLVED_KEYBINDINGS, {
+        platform: "MacIntel",
+      }),
+      "thread.stop",
+    );
+    assert.isNull(
+      resolveShortcutCommand(event({ key: ".", ctrlKey: true }), DEFAULT_RESOLVED_KEYBINDINGS, {
+        platform: "Linux",
+        context: { terminalFocus: true },
+      }),
+    );
+  });
+});
+
 describe("thread undo shortcut", () => {
   it("leaves native undo alone inside text fields and terminals", () => {
     assert.isNull(

@@ -116,11 +116,12 @@ describe("surface shortcut typing contexts", () => {
     },
   });
 
-  it("treats form fields and every editable region as typing contexts", () => {
+  it("treats form fields, every editable region and sidebar rows as typing contexts", () => {
     expect(surfaceShortcutTargetsTypingContext(makeTarget("input"))).toBe(true);
     expect(surfaceShortcutTargetsTypingContext(makeTarget("textarea"))).toBe(true);
     expect(surfaceShortcutTargetsTypingContext(makeTarget("select"))).toBe(true);
     expect(surfaceShortcutTargetsTypingContext(makeTarget("[contenteditable]"))).toBe(true);
+    expect(surfaceShortcutTargetsTypingContext(makeTarget("[data-sidebar-row]"))).toBe(true);
   });
 });
 
