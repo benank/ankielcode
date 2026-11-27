@@ -77,10 +77,11 @@ None of them forget saved environments or credentials.
 | `ANKIEL_DEBUG_HOME` | `sample` | The thread list with canned rows across two fake computers (every status, a pin, a subagent, snoozed and settled shelves). Actions show; their commands fail as not connected. |
 | | `empty` | The list's "No threads yet" state. |
 | `ANKIEL_DEBUG_SEARCH` | a query | Home with that search typed. |
-| `ANKIEL_DEBUG_THREAD` | `short`, `markdown`, `subagents`, `rich-markdown`, `pending`, `failed`, `kinds`, `replay`, `long` | A thread from the bundled fixtures (`AnkielCode/Thread/Fixtures`, synthetic threads about a made-up project), run through the same decode, reduce and timeline path as a live stream. `replay` streams a turn in paced events; `long` repeats fixture turns to 500+ rows. No server needed; Release builds leave the fixtures out. |
+| `ANKIEL_DEBUG_THREAD` | `short`, `markdown`, `subagents`, `rich-markdown`, `pending`, `failed`, `kinds`, `replay`, `long`; pending requests: `approval-command`, `approval-file-change`, `approval-file-read`, `approval-permission`, `approval-mcp`, `approval-stale`, `approvals-queued`, `question-single`, `question-multi`, `question-text`, `question-other`, `question-steps`, `question-message`, `secret`, `secret-fields`, `requests-mixed`, `question-resolved` (a question the server resolves by event) | A thread from the bundled fixtures (`AnkielCode/Thread/Fixtures`, synthetic threads about a made-up project), run through the same decode, reduce and timeline path as a live stream. `replay` streams a turn in paced events; `long` repeats fixture turns to 500+ rows. No server needed; Release builds leave the fixtures out. |
 | `ANKIEL_DEBUG_THREAD_EXPAND` | `folds`, `all` | Opens the fixture's run folds (and, with `all`, every work group and call) once it loads. |
 | `ANKIEL_DEBUG_THREAD_SCROLL` | `top` | Opens the fixture scrolled to its first row (the scroll-to-latest button). |
 | `ANKIEL_DEBUG_COMPOSER` | `fake`, `slow`, `fail`, `offline` | Composers send to a fake instead of a computer, with their own store (`composer-debug/`), so nothing reaches a real server. `fake` accepts after a short wait and shows the message in fixture threads (queued sends become a queued run); `slow` never answers; `fail` refuses; `offline` has no computer. Attachments named `*fail*` fail to upload, `*slow*` stall. New thread also lists a "Fixture Mac" with sample projects. |
+| `ANKIEL_DEBUG_REQUESTS` | `readonly`, `elsewhere`, `expire` | With a request fixture: the session may not answer (read-only cards); or the first request is resolved on "another device" (or expires) 2.5 s after the thread loads. With `ANKIEL_DEBUG_COMPOSER`, answers go to the fake sink, which resolves the fixture's request like the server would (`fail` refuses, `slow` never answers). |
 | `ANKIEL_DEBUG_COMPOSER_RESET` | `1` | Empties the fake composer store at launch (UI tests). |
 | `ANKIEL_DEBUG_COMPOSER_PRESET` | `multiline`, `attachments`, `send`, `queued`, `failed`, `picker`, `keyboard` | With `ANKIEL_DEBUG_THREAD`: fills the fixture thread's composer, sends or queues a message, or opens the model sheet. |
 
@@ -91,6 +92,12 @@ same files with the server's Effect schemas (run it from `packages/contracts`:
 It also writes `provider-catalog.json` by encoding a sample through the real `ServerProvider` and
 `ServerSettings` schemas.
 
+The pending-request fixtures (`thread-approval-*`, `thread-question-*`, `thread-secret*`,
+`thread-approvals-queued`, `thread-requests-mixed`) are written by
+`Tests/AnkielKitTests/Fixtures/requests/make-request-fixtures.mjs` (run it from
+`packages/contracts`), which decodes every stream item with the server's
+`OrchestrationV2ThreadStreamItem` schema before writing it.
+
 Thread fixtures are in the exact wire shape (checked against the TypeScript schemas and reducer;
 `thread-reducer-golden.json` holds the TypeScript reducer's output the Swift reducer must match).
 Their text was rewritten word by word into vocabulary about a made-up tide-chart project, with
@@ -100,7 +107,7 @@ timeline see realistic structure. A test checks for the `"synthetic": true` mark
 paths, real emails and tokens.
 
 UI tests (`AnkielCodeUITests`) run with `xcodebuild test … -only-testing:AnkielCodeUITests`.
-`SampleListUITests`, `FixtureThreadUITests` and `ComposerUITests` (fake sink) need no server (`FixtureThreadUITests` includes a scroll
+`SampleListUITests`, `FixtureThreadUITests`, `ComposerUITests` and `RequestUITests` (fake sink) need no server (`FixtureThreadUITests` includes a scroll
 measurement on the 500-row fixture); `LiveListUITests` change real threads on the dev server at
 `127.0.0.1:14527` and put each one back, and `LiveThreadUITests` open one; both skip when it is
 not running. Set

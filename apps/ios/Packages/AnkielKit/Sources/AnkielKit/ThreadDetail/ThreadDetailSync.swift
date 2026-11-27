@@ -35,6 +35,11 @@ public struct ThreadDetailState: Sendable, Equatable {
   public var threadSelection: ModelSelection?
   /// Every message id the projection holds, so the outbox can hide what the server already shows.
   public var messageIds: Set<String> = []
+  /// What the thread waits on the user for (approvals, questions, secrets).
+  public var pending = PendingThreadRequests.none
+  /// How each request ended, for every request the thread ever held that is no longer pending,
+  /// so a card on screen can tell "answered elsewhere" from "expired".
+  public var outcomes: [String: RequestOutcome] = [:]
   /// Bumped on every publish that changed the timeline.
   public var revision = 0
 
@@ -226,6 +231,8 @@ public actor ThreadDetailSync {
       state.projectId = projection.thread.projectId
       state.parentThreadId = projection.thread.lineage?.parentThreadId
       state.activity = ThreadRunActivity.derive(projection)
+      state.pending = PendingRequestDerivation.derive(projection)
+      state.outcomes = PendingRequestDerivation.outcomes(projection)
       state.threadSelection = projection.thread.modelSelection
       var ids = Set(projection.messages.map(\.id))
       for row in projection.visibleTurnItems {
@@ -276,6 +283,49 @@ public actor ThreadDetailSync {
       if let json, let message = try? JSONDecoder().decode(ConversationMessage.self, from: json) {
         projection.messages.append(message)
       }
+      self.projection = projection
+      dirty = true
+      publishNow()
+    }
+
+    /// Ends a request as if the server had (debug builds' fake sink and resolve-elsewhere hook):
+    /// the runtime request leaves pending and its item settles; answers show in the resolved row.
+    public func debugResolveRequest(
+      _ requestId: String, status: RuntimeRequest.Status = .resolved, decision: String? = nil, answers: JSONValue? = nil
+    ) {
+      guard var projection, let index = projection.runtimeRequests.firstIndex(where: { $0.id == requestId }) else { return }
+      projection.runtimeRequests[index].status = WireEnum(status)
+      projection.runtimeRequests[index].decision = decision
+      projection.runtimeRequests[index].answers = answers
+      projection.runtimeRequests[index].resolvedAt = WireTimestamp(Date.now)
+      let settled: TurnItemStatus = status == .resolved ? .completed : .cancelled
+      func settle(_ item: inout TurnItem) {
+        switch item.body {
+        case .approvalRequest(let request) where request.requestId == requestId: item.status = WireEnum(settled)
+        case .userInputRequest(let request) where request.requestId == requestId: item.status = WireEnum(settled)
+        default: break
+        }
+      }
+      for i in projection.turnItems.indices { settle(&projection.turnItems[i]) }
+      for i in projection.visibleTurnItems.indices { settle(&projection.visibleTurnItems[i].item) }
+      projection.stampRevisions()
+      self.projection = projection
+      dirty = true
+      publishNow()
+    }
+
+    /// Settles a secret request (debug builds' fake sink).
+    public func debugSettleSecret(_ itemId: String, status: String) {
+      guard var projection else { return }
+      func settle(_ item: inout TurnItem) {
+        guard item.id == itemId, case .secretRequest(var request) = item.body else { return }
+        request.secretStatus = status
+        item.body = .secretRequest(request)
+        item.status = WireEnum(.completed)
+      }
+      for i in projection.turnItems.indices { settle(&projection.turnItems[i]) }
+      for i in projection.visibleTurnItems.indices { settle(&projection.visibleTurnItems[i].item) }
+      projection.stampRevisions()
       self.projection = projection
       dirty = true
       publishNow()

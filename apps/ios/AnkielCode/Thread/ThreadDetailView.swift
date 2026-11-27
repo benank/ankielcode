@@ -51,6 +51,10 @@ private struct ThreadScreen: View {
   @State private var renaming: String?
   @State private var deleting = false
   @State private var actionCount = 0
+  @State private var dockHeight: CGFloat = 0
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @State private var childApprovals = ChildApprovals()
+  @State private var feedbackBlocked = false
 
   private var row: ThreadRow? { model.home.row(threadRef) }
   private var shell: ThreadShell? { model.home.thread(threadRef) }
@@ -81,6 +85,15 @@ private struct ThreadScreen: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar { toolbar }
       .safeAreaInset(edge: .bottom, spacing: 0) { composer }
+      .onChange(of: childShells, initial: true) { _, threads in
+        childApprovals.update(parent: threadRef, threads: threads, model: model)
+      }
+      .onDisappear { childApprovals.close(model) }
+      .alert("Approval feedback", isPresented: $feedbackBlocked) {
+        Button("OK", role: .cancel) {}
+      } message: {
+        Text("Send approval feedback without attachments or added context.")
+      }
       .onChange(of: detail.state.messageIds, initial: true) { _, known in
         model.composer.reconcile(threadRef.key, known: known)
       }
@@ -124,8 +137,10 @@ private struct ThreadScreen: View {
       }
     default:
       if detail.state.isLoaded || awaitingCreation {
-        ThreadTimelineView(model: detail, images: images, openThread: openChild, pending: pendingRows)
+        ThreadTimelineView(
+          model: detail, images: images, openThread: openChild, pending: pendingRows, trailingSpace: dockHeight)
           .overlay(alignment: .top) { staleNotice }
+          .overlay(alignment: .bottom) { dock }
           .overlay {
             if detail.state.timeline.rows.isEmpty, pendingRows.isEmpty { EmptyThreadPrompt() }
           }
@@ -156,9 +171,44 @@ private struct ThreadScreen: View {
 
   private var target: ComposerTarget { .thread(threadRef, detail: awaitingCreation ? nil : detail, model: model) }
 
+  private var requests: PendingRequestController { model.requests(threadRef) }
+
+  /// Pending requests in the order the dock works through them.
+  private var queue: [DockRequest] {
+    guard !awaitingCreation else { return [] }
+    return DockRequest.queue(detail.state.pending, thread: threadRef, children: childApprovals.approvals)
+  }
+
+  /// Floats over the feed's end, above the composer: out of the scroll view's safe area, so a
+  /// tall card (or the keyboard) never leaves the feed a sliver; the feed adds the same room after
+  /// its last row instead.
+  private var dock: some View {
+    RequestDock(queue: queue, outcomes: detail.state.outcomes, controller: requests, canAnswer: model.canAnswer(threadRef))
+      .padding(.top, Spacing.xxl)
+      .padding(.bottom, Spacing.sm)
+      .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+        dockHeight = height > Spacing.xxl + Spacing.sm + 1 ? height - Spacing.xxl : 0
+      }
+  }
+
+  /// Shell rows under this thread that ask for an approval (subagents, side chats).
+  private var childShells: [ThreadShell] {
+    let threads = environment?.shell.threads ?? []
+    return ChildApprovalScan.children(of: threadRef.threadId, in: threads)
+  }
+
   @ViewBuilder
   private var composer: some View {
     let target = target
+    let queue = queue
+    let top = requests.visible(queue).first
+    // Questions and secrets take the composer's place; an approval leaves it, so a message can
+    // redirect the agent instead (RN).
+    let hidesComposer: Bool =
+      switch top {
+      case .question?, .secret?: true
+      default: false
+      }
     VStack(spacing: Spacing.sm) {
       if !target.activity.queued.isEmpty {
         QueuedMessagesBar(
@@ -166,13 +216,48 @@ private struct ThreadScreen: View {
         )
         .transition(.move(edge: .bottom).combined(with: .opacity))
       }
-      if !awaitingCreation {
+      if !awaitingCreation, !hidesComposer {
         ComposerView(target: target) { delivery in
-          model.composer.send(threadRef.key, to: threadRef, delivery: delivery, thread: target.threadSettings)
+          send(delivery, target: target, queue: queue)
         }
+        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
       }
     }
     .motion(Motion.snappy, value: target.activity.queued.map(\.id))
+    .motion(Motion.snappy, value: hidesComposer)
+  }
+
+  /// A message sent while approvals wait answers them first (RN `handleSendMessage`): as decline
+  /// feedback when the provider takes it, else by declining every one before the message goes.
+  private func send(_ delivery: MessageDelivery, target: ComposerTarget, queue: [DockRequest]) {
+    // Only this thread's own approvals: a subagent's request is answered on its card (RN keeps
+    // child approvals in a separate list the composer never touches).
+    let approvals: [(PendingApproval, ThreadRef)] = requests.visible(queue).compactMap { request in
+      if case .approval(let approval, let thread, _) = request, thread == threadRef { (approval, thread) } else { nil }
+    }
+    let questionWaits = queue.contains { if case .question = $0 { true } else { false } }
+    guard !approvals.isEmpty, !questionWaits, model.canAnswer(threadRef) else {
+      model.composer.send(threadRef.key, to: threadRef, delivery: delivery, thread: target.threadSettings)
+      return
+    }
+    let draft = model.composer.draft(threadRef.key)
+    let key = threadRef.key
+    let ref = threadRef
+    let settings = target.threadSettings
+    Task {
+      switch await requests.redirect(approvals, text: draft.text, hasAttachments: !draft.attachments.isEmpty) {
+      case .none, .declined:
+        // A draft edited during the declines is not what the user sent; it stays for another tap.
+        guard model.composer.draft(key).text == draft.text else { return }
+        model.composer.send(key, to: ref, delivery: delivery, thread: settings)
+      case .responded:
+        if model.composer.draft(key).text == draft.text { model.composer.setText("", for: key) }
+      case .attachmentsNotAllowed:
+        feedbackBlocked = true
+      case .failed:
+        break
+      }
+    }
   }
 
   private var pendingRows: [PendingRow] {

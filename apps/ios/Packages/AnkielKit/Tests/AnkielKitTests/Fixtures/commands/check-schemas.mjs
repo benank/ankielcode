@@ -18,6 +18,7 @@ const schemas = {
   launch: m.OrchestrationV2ThreadLaunchInput,
   uploadUrl: m.AttachmentCreateUploadUrlInput,
   attachmentDelete: m.AttachmentDeleteInput,
+  secretAnswer: m.SecretRequestAnswerInput,
 };
 
 let failures = 0;

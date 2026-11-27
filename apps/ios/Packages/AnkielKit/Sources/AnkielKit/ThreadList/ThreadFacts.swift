@@ -215,3 +215,39 @@ enum SubagentRequestRollup {
     return requests.mapValues { $0 == .approval ? .approval : .userInput }
   }
 }
+
+/// The descendants (subagents and side chats, through their own subagents) of a thread that ask
+/// the user for an approval: RN `childThreadInputsAtom` filtered to approvals. Their approvals
+/// are shown on the parent and answered on the child.
+public enum ChildApprovalScan {
+  public static func children(of parentId: String, in threads: [ThreadShell]) -> [ThreadShell] {
+    var byParent: [String: [ThreadShell]] = [:]
+    for thread in threads {
+      guard let parent = thread.lineage.parentThreadId,
+        thread.lineage.relationshipToParent == .known(.subagent) || thread.lineage.sideChat == true
+      else { continue }
+      byParent[parent, default: []].append(thread)
+    }
+    var seen: Set<String> = [parentId]
+    var queue = [parentId]
+    var result: [ThreadShell] = []
+    while !queue.isEmpty {
+      let parent = queue.removeFirst()
+      for child in byParent[parent] ?? [] where seen.insert(child.id).inserted {
+        queue.append(child.id)
+        if asksApproval(child) { result.append(child) }
+      }
+    }
+    return result
+  }
+
+  /// `asksParent` for an approval: a live subagent's or any side chat's pending approval.
+  static func asksApproval(_ thread: ThreadShell) -> Bool {
+    guard let kind = thread.pendingRuntimeRequest?.kind, kind != .known(.authRefresh), kind != .known(.userInput) else {
+      return false
+    }
+    if thread.lineage.sideChat == true { return true }
+    return thread.lineage.relationshipToParent == .known(.subagent) && thread.creationSource != .known(.provider)
+      && thread.activityRunStatus != nil
+  }
+}

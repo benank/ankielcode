@@ -220,6 +220,7 @@ public enum TurnItemBody: Sendable, Hashable {
     public var prompt: String?
     public var reason: String?
     public var appName: String?
+    public var fullAccessOverride: String?
     public var options: LossyArray<ApprovalOption>?
   }
 
@@ -336,7 +337,20 @@ public enum TurnItemBody: Sendable, Hashable {
   public struct SecretRequest: Sendable, Hashable, Decodable {
     public var label: String
     public var reason: String
+    public var url: String?
+    public var placeholder: String?
+    /// `secretRef` (default) or `file`.
+    public var delivery: String?
+    public var fields: LossyArray<Field>?
     public var secretStatus: String
+
+    /// `OrchestrationV2SecretRequestField`.
+    public struct Field: Sendable, Hashable, Decodable {
+      public var name: String
+      public var label: String
+      public var placeholder: String?
+      public var secret: Bool?
+    }
   }
 
   public struct LinkRequest: Sendable, Hashable, Decodable {
@@ -376,10 +390,38 @@ public struct UserInputQuestion: Sendable, Hashable, Decodable, Identifiable {
   public var options: LossyArray<Option>
   public var multiSelect: Bool?
   public var allowCustomAnswer: Bool?
+  /// A suggested editable answer; the free-text field starts with it.
+  public var initialAnswer: String?
+  public var required: Bool?
 
   public struct Option: Sendable, Hashable, Decodable {
     public var label: String
     public var description: String
+    /// What to answer with when chosen; nil answers with the label.
+    public var value: String?
+    /// Markdown shown under the option.
+    public var preview: String?
+
+    public init(label: String, description: String, value: String? = nil, preview: String? = nil) {
+      self.label = label
+      self.description = description
+      self.value = value
+      self.preview = preview
+    }
+  }
+
+  public init(
+    id: String, header: String, question: String, options: [Option], multiSelect: Bool? = nil,
+    allowCustomAnswer: Bool? = nil, initialAnswer: String? = nil, required: Bool? = nil
+  ) {
+    self.id = id
+    self.header = header
+    self.question = question
+    self.options = LossyArray(options)
+    self.multiSelect = multiSelect
+    self.allowCustomAnswer = allowCustomAnswer
+    self.initialAnswer = initialAnswer
+    self.required = required
   }
 }
 

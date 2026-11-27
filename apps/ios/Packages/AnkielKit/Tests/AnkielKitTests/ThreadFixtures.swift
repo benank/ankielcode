@@ -10,6 +10,14 @@ enum ThreadFixtures {
   static let names = [
     "thread-short", "thread-markdown", "thread-subagents", "thread-rich-markdown", "thread-pending",
     "thread-failed", "thread-kinds", "thread-replay",
+  ] + requestFixtures
+
+  /// Written by `Fixtures/requests/make-request-fixtures.mjs`.
+  static let requestFixtures = [
+    "thread-approval-command", "thread-approval-file-change", "thread-approval-file-read", "thread-approval-permission",
+    "thread-approval-mcp", "thread-approval-stale", "thread-approvals-queued", "thread-question-single", "thread-question-multi",
+    "thread-question-text", "thread-question-other", "thread-question-steps", "thread-question-message", "thread-secret",
+    "thread-secret-fields", "thread-requests-mixed", "thread-question-resolved",
   ]
 
   static var directory: URL {

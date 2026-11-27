@@ -8,9 +8,11 @@ struct ThreadTimelineView: View {
   let model: ThreadDetailModel
   let images: ThreadImages
   let openThread: (String) -> Void
-  var responder: RequestResponder = .readOnly
   /// Messages on their way to the server, after the server's rows.
   var pending: [PendingRow] = []
+  /// Room after the last row for what floats over the feed's end (the request dock), so the
+  /// newest row sits above it instead of under it.
+  var trailingSpace: CGFloat = 0
 
   @State private var position: ScrollPosition
   @State private var atBottom: Bool
@@ -20,13 +22,13 @@ struct ThreadTimelineView: View {
 
   init(
     model: ThreadDetailModel, images: ThreadImages, openThread: @escaping (String) -> Void,
-    responder: RequestResponder = .readOnly, pending: [PendingRow] = []
+    pending: [PendingRow] = [], trailingSpace: CGFloat = 0
   ) {
     self.model = model
     self.images = images
     self.openThread = openThread
-    self.responder = responder
     self.pending = pending
+    self.trailingSpace = trailingSpace
     let anchor = model.scrollAnchor
     _position = State(initialValue: anchor.map { ScrollPosition(id: $0, anchor: .top) } ?? ScrollPosition(idType: String.self))
     _atBottom = State(initialValue: anchor == nil)
@@ -39,7 +41,7 @@ struct ThreadTimelineView: View {
         ForEach(laid, id: \.row.id) { item in
           TimelineRowView(
             row: item.row, expanded: isExpanded(item.row), load: load(item.row), images: images, model: model,
-            openThread: openThread, responder: responder
+            openThread: openThread
           )
           .equatable()
           .padding(.top, item.spacing)
@@ -48,6 +50,9 @@ struct ThreadTimelineView: View {
           PendingRowView(row: row)
             .padding(.top, laid.isEmpty && row.id == pending.first?.id ? 0 : Spacing.xxl)
             .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+        }
+        if trailingSpace > 0 {
+          Color.clear.frame(height: trailingSpace).id(Self.trailingSpaceId)
         }
       }
       .scrollTargetLayout()
@@ -85,6 +90,9 @@ struct ThreadTimelineView: View {
         unseen = true
       }
     }
+    .onChange(of: trailingSpace) { _, _ in
+      if atBottom { scrollToLatest() }
+    }
     .onChange(of: pending) { old, new in
       // A new message of the user's own always brings the feed to it; a status change (failed,
       // with its buttons) stays in view while the reader is at the bottom.
@@ -101,7 +109,7 @@ struct ThreadTimelineView: View {
           withMotion(Motion.transition, reduceMotion: reduceMotion) { scrollToLatest() }
           unseen = false
         }
-        .padding(.bottom, Spacing.md)
+        .padding(.bottom, Spacing.md + trailingSpace)
         .transition(reduceMotion ? .opacity : .scale(scale: 0.6).combined(with: .opacity))
       }
     }
@@ -123,11 +131,11 @@ struct ThreadTimelineView: View {
 
   /// To the last row's bottom. (`scrollTo(edge: .bottom)` also moved the feed sideways and past
   /// its end on iOS 26.)
+  static let trailingSpaceId = "timeline.trailing-space"
 
-  /// To the last row's bottom. (`scrollTo(edge: .bottom)` also moved the feed sideways and past
-  /// its end on iOS 26.)
   private func scrollToLatest() {
-    guard let last = pending.last?.id ?? model.state.timeline.visibleRows(expanded: model.expanded).last?.id else { return }
+    let rowId = pending.last?.id ?? model.state.timeline.visibleRows(expanded: model.expanded).last?.id
+    guard let last = trailingSpace > 0 ? Self.trailingSpaceId : rowId else { return }
     position.scrollTo(id: last, anchor: .bottom)
   }
 
@@ -170,7 +178,6 @@ struct ThreadTimelineView: View {
     case (.work, .work), (.work, .workGroup), (.workGroup, .work), (.workGroup, .workGroup), (.fold, .workGroup),
       (.fold, .work):
       Spacing.xxs
-    case (_, .approval), (_, .question): Spacing.lg
     case (.assistant, .assistant): Spacing.md
     case (_, .assistant): Spacing.sm
     case (.assistant, _): Spacing.md
@@ -187,7 +194,6 @@ private struct TimelineRowView: View, Equatable {
   let images: ThreadImages
   let model: ThreadDetailModel
   let openThread: (String) -> Void
-  let responder: RequestResponder
 
   nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
     lhs.row == rhs.row && lhs.expanded == rhs.expanded && lhs.load == rhs.load && lhs.images == rhs.images
@@ -219,10 +225,6 @@ private struct TimelineRowView: View, Equatable {
       AnsweredRowView(row: answered)
     case .working(let working):
       WorkingRowView(row: working)
-    case .approval(let card):
-      ApprovalCardView(card: card, responder: responder)
-    case .question(let card):
-      QuestionCardView(card: card, responder: responder)
     }
   }
 
@@ -263,3 +265,4 @@ private struct ScrollToLatestButton: View {
     .accessibilityIdentifier("thread.scrollToLatest")
   }
 }
+

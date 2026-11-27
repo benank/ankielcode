@@ -500,6 +500,14 @@ final class HomeModel {
     return nil
   }
 
+  /// Listed threads waiting on the user: the seam for the app icon badge and, later, push
+  /// notifications (nothing sets the badge yet).
+  var waitingCount: Int {
+    AttentionCount.waiting(sources.flatMap { source in
+      source.threads.lazy.filter(\.isListed).map { ThreadFacts(environmentId: source.environmentId, thread: $0) }
+    })
+  }
+
   func thread(_ ref: ThreadRef) -> ThreadShell? {
     sources.first { $0.environmentId == ref.environmentId }?.threads.first { $0.id == ref.threadId }
       ?? olderPages[ref.environmentId]?.rows.first { $0.id == ref.threadId }

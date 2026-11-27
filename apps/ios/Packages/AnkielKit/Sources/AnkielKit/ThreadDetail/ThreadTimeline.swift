@@ -58,8 +58,6 @@ public struct TimelineRow: Sendable, Hashable, Identifiable {
     case notice(NoticeRow)
     case answered(AnsweredRow)
     case working(WorkingRow)
-    case approval(ApprovalCard)
-    case question(QuestionCard)
   }
 }
 
@@ -173,25 +171,6 @@ public struct WorkingRow: Sendable, Hashable {
   public var waitingOnSubagents: Int
 }
 
-/// A pending approval, read-only until approvals are answered from the app (phase 7).
-public struct ApprovalCard: Sendable, Hashable {
-  public var requestId: String
-  public var itemId: String
-  public var requestKind: String
-  public var prompt: String?
-  public var reason: String?
-  public var options: [ApprovalOption]
-  public var capability: RuntimeRequest.ResponseCapability?
-}
-
-/// A pending question, read-only until answering ships (phase 7).
-public struct QuestionCard: Sendable, Hashable {
-  public var requestId: String
-  public var itemId: String
-  public var questions: [UserInputQuestion]
-  public var capability: RuntimeRequest.ResponseCapability?
-}
-
 // MARK: - Building
 
 /// Per-item results from the last build, keyed by `id@revision`, so a streamed update only derives
@@ -238,9 +217,10 @@ public enum ThreadTimelineBuilder {
   }
 
   public static func build(
-    _ projection: ThreadProjection, markdown: MarkdownParser, cache: TimelineCache = TimelineCache()
+    _ source: ThreadProjection, markdown: MarkdownParser, cache: TimelineCache = TimelineCache()
   ) -> ThreadTimeline {
     defer { cache.commit() }
+    let projection = withResolvedAnswers(source)
     let latest = latestRun(projection)
     let activeRun = isUnsettled(latest) ? latest : nil
     let isWorking = activeRun != nil && activeRun?.status != .preparing
@@ -287,7 +267,6 @@ public enum ThreadTimelineBuilder {
           runId: activeRunId, startedAt: start, activity: current.map(WorkActivity.liveLabel),
           waitingOnSubagents: runningSubagentsAtTail(entries, runId: activeRunId)))))
     }
-    rows.append(contentsOf: pendingCards(projection))
 
     let status: ThreadDetailStatus =
       if projection.runtimeRequests.contains(where: { $0.status == .pending }) || activeRun?.status == .waiting {
@@ -385,6 +364,25 @@ public enum ThreadTimelineBuilder {
     case .error(let error): item.status == .cancelled && error.failure.code == "workspace_preparation_failed"
     default: false
     }
+  }
+
+  /// RN `createQuestionHistoryProjector`: a question whose item has no answer yet shows the
+  /// answers its resolved runtime request carries, so a live answer still leaves a resolved row.
+  /// The overlaid copy gets a distinct revision so cached rows of the unanswered item are not reused.
+  static func withResolvedAnswers(_ projection: ThreadProjection) -> ThreadProjection {
+    let answered = projection.runtimeRequests.filter { $0.status == .resolved && $0.answers != nil }
+    guard !answered.isEmpty else { return projection }
+    let byId = Dictionary(answered.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
+    var result = projection
+    for index in result.visibleTurnItems.indices {
+      guard case .userInputRequest(var request) = result.visibleTurnItems[index].item.body, request.questionAnswer == nil,
+        let runtime = byId[request.requestId], let answers = runtime.answers
+      else { continue }
+      request.questionAnswer = .object(["requestId": .string(request.requestId), "answers": answers])
+      result.visibleTurnItems[index].item.body = .userInputRequest(request)
+      result.visibleTurnItems[index].item.revision = -1 - result.visibleTurnItems[index].item.revision
+    }
+    return result
   }
 
   static func rawEntries(_ projection: ThreadProjection, cache: TimelineCache) -> [RawEntry] {
@@ -860,33 +858,5 @@ public enum ThreadTimelineBuilder {
         itemId: member.item.id, title: record?.title ?? member.item.title, status: member.item.status,
         childThreadId: call.childThreadId ?? record?.childThreadId, preview: preview.map { String($0.prefix(400)) },
         model: record?.model)), foldId: foldId)
-  }
-
-  /// Pending approvals and questions, in timeline order, as cards at the tail.
-  static func pendingCards(_ projection: ThreadProjection) -> [TimelineRow] {
-    let pending = Dictionary(
-      projection.runtimeRequests.filter { $0.status == .pending }.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
-    guard !pending.isEmpty else { return [] }
-    var cards: [TimelineRow] = []
-    var seen = Set<String>()
-    for row in projection.visibleTurnItems {
-      switch row.item.body {
-      case .approvalRequest(let request):
-        guard let runtime = pending[request.requestId], seen.insert(request.requestId).inserted else { continue }
-        cards.append(TimelineRow(
-          id: "pending:\(request.requestId)", content: .approval(ApprovalCard(
-            requestId: request.requestId, itemId: row.item.id, requestKind: request.requestKind, prompt: request.prompt,
-            reason: request.reason, options: request.options?.elements ?? [], capability: runtime.responseCapability))))
-      case .userInputRequest(let request) where request.questionAnswer == nil:
-        guard let runtime = pending[request.requestId], seen.insert(request.requestId).inserted else { continue }
-        cards.append(TimelineRow(
-          id: "pending:\(request.requestId)", content: .question(QuestionCard(
-            requestId: request.requestId, itemId: row.item.id, questions: request.questions.elements,
-            capability: runtime.responseCapability))))
-      default:
-        continue
-      }
-    }
-    return cards
   }
 }

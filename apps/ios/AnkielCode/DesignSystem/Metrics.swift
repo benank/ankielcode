@@ -18,4 +18,6 @@ enum Radius {
   static let medium: CGFloat = 12
   static let large: CGFloat = 20
   static let field: CGFloat = 14
+  /// Floating sheet-like cards (pending requests).
+  static let sheet: CGFloat = 28
 }

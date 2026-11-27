@@ -34,6 +34,8 @@ enum ThreadDebug {
     /// The fixture model already open for `ref`, if any (the fake composer sink writes into it).
     @MainActor static func existing(_ ref: ThreadRef) -> ThreadDetailModel? { models[ref.threadId] }
 
+    @MainActor static func openModels() -> [ThreadDetailModel] { Array(models.values) }
+
     /// A thread the fake sink "launched": an empty projection holding its first message.
     @MainActor static func registerLaunched(_ launch: ThreadLaunch) {
       let ref = ThreadRef(environmentId: environmentId, threadId: launch.threadId)

@@ -1,0 +1,30 @@
+{
+  "schema" : "command",
+  "value" : {
+    "answers" : {
+      "shot" : ""
+    },
+    "attachmentsByQuestionId" : {
+      "shot" : [
+        {
+          "id" : "att_7k2m",
+          "mimeType" : "image/png",
+          "name" : "screenshot.png",
+          "sizeBytes" : 182044,
+          "type" : "image"
+        },
+        {
+          "id" : "att_9q1z",
+          "mimeType" : "text/plain",
+          "name" : "notes.txt",
+          "sizeBytes" : 812,
+          "type" : "file"
+        }
+      ]
+    },
+    "commandId" : "9d2e6a1f-3b4c-4d5e-8f70-1a2b3c4d5e6f",
+    "requestId" : "runtime-request:synthetic:1",
+    "threadId" : "0b7e4f2a-9c1d-4e8b-a6f3-5d2c1b0a9e87",
+    "type" : "runtime-request.respond"
+  }
+}

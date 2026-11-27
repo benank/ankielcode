@@ -22,8 +22,6 @@ struct ThreadTimelineTests {
       case .notice: "notice"
       case .answered: "answered"
       case .working: "working"
-      case .approval: "approval"
-      case .question: "question"
       }
     }
   }
@@ -110,14 +108,15 @@ struct ThreadTimelineTests {
     #expect(command.activity.outcome == .failure)
   }
 
-  @Test("pending approvals and questions become cards at the tail")
-  func pendingCards() throws {
+  @Test("pending requests wait the thread and stay out of the feed (they dock above the composer)")
+  func pendingRequests() throws {
     let timeline = try ThreadFixtures.timeline("thread-pending")
     #expect(timeline.status == .waiting)
-    #expect(Array(kinds(timeline.rows).suffix(2)) == ["approval", "question"])
-    guard case .approval(let approval) = timeline.rows[timeline.rows.count - 2].content else { throw Expectation.failed }
-    #expect(approval.options.map(\.label) == ["Allow once", "Allow for this session", "Decline"])
-    #expect(approval.capability?.type == "live")
+    let pending = PendingRequestDerivation.derive(try ThreadFixtures.projection("thread-pending"))
+    #expect(pending.approvals.map(\.requestKind) == ["command"])
+    #expect(pending.approvals.first?.options?.map(\.label) == ["Allow once", "Allow for this session", "Decline"])
+    #expect(pending.approvals.first?.isLive == true)
+    #expect(pending.userInputs.map(\.questions.count) == [1])
   }
 
   @Test("every item kind renders a row, unknown ones quietly")

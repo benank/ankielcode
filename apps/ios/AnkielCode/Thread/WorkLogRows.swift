@@ -437,6 +437,12 @@ struct PlanRowView: View, Equatable {
 struct AnsweredRowView: View, Equatable {
   let row: AnsweredRow
 
+  /// Questions are markdown; the answered row shows their inline styling, not the asterisks.
+  static func inline(_ text: String) -> AttributedString {
+    (try? AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+      ?? AttributedString(text)
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: Spacing.sm) {
       Label("Answered", systemImage: "questionmark.bubble")
@@ -444,7 +450,7 @@ struct AnsweredRowView: View, Equatable {
         .foregroundStyle(Palette.textSecondary)
       ForEach(Array(row.pairs.enumerated()), id: \.offset) { _, pair in
         VStack(alignment: .leading, spacing: 2) {
-          Text(pair.question).font(Typography.footnote).foregroundStyle(Palette.textSecondary)
+          Text(Self.inline(pair.question)).font(Typography.footnote).foregroundStyle(Palette.textSecondary)
           Text(pair.answer ?? "—").font(Typography.subheadline.weight(.medium)).foregroundStyle(Palette.textPrimary)
         }
       }

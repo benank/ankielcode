@@ -65,7 +65,29 @@ struct CommandEncodingTests {
       UploadURLRequest(UploadFile(url: URL(filePath: "/tmp/a.txt"), kind: .file, name: "notes.txt", mimeType: "text/plain", sizeBytes: 812))
     ),
     ("attachment-delete", "attachmentDelete", DeleteAttachmentRequest(attachmentId: "att_7k2m")),
+    ("respond-accept", "command", respond(.decision("accept"))),
+    ("respond-accept-always", "command", respond(.decision("acceptAlways"))),
+    ("respond-decline-feedback", "command", respond(.decision("decline", feedback: "Run it against the staging copy instead."))),
+    (
+      "respond-answers", "command",
+      respond(.answers(["framework": .text("SwiftUI"), "targets": .choices(["iPhone", "iPad"]), "notes": .text("")]))
+    ),
+    (
+      "respond-answers-attachments", "command",
+      respond(.answers(["shot": .text("")], attachments: ["shot": [image, file]]))
+    ),
+    ("user-input-dismiss", "command", respond(.dismiss)),
+    ("secret-save", "secretAnswer", SecretAnswer(threadId: thread, turnItemId: "turn-item:secret:1", reply: .secret("tok_synthetic_0000"))),
+    (
+      "secret-save-fields", "secretAnswer",
+      SecretAnswer(threadId: thread, turnItemId: "turn-item:secret:2", reply: .values(["user": "harbor-bot", "password": "synthetic-0000"]))
+    ),
+    ("secret-decline", "secretAnswer", SecretAnswer(threadId: thread, turnItemId: "turn-item:secret:1", reply: .decline)),
   ]
+
+  static func respond(_ reply: RequestCommand.Reply) -> RequestCommand {
+    RequestCommand(reply, threadId: thread, requestId: "runtime-request:synthetic:1", commandId: command)
+  }
 
   static var directory: URL {
     URL(filePath: #filePath).deletingLastPathComponent().appending(path: "Fixtures/commands", directoryHint: .isDirectory)

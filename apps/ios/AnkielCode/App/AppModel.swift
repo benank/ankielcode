@@ -112,6 +112,28 @@ final class AppModel {
     registry.closeThread(model)
   }
 
+  // MARK: Requests
+
+  /// One controller per thread that has shown a pending request, so a half-answered question
+  /// survives leaving the thread. Each drops its drafts once their requests end.
+  @ObservationIgnored private var requestControllers: [String: PendingRequestController] = [:]
+
+  func requests(_ ref: ThreadRef) -> PendingRequestController {
+    if let controller = requestControllers[ref.key] { return controller }
+    let controller = PendingRequestController(sink: composer.sink as? any RequestSink)
+    requestControllers[ref.key] = controller
+    return controller
+  }
+
+  /// The session may answer approvals and questions (`orchestration:operate`).
+  func canAnswer(_ ref: ThreadRef) -> Bool {
+    #if DEBUG
+      if ProcessInfo.processInfo.environment["ANKIEL_DEBUG_REQUESTS"] == "readonly" { return false }
+      if ThreadDebug.isFixture(ref) { return isComposerFake }
+    #endif
+    return home.canOperate(ref)
+  }
+
   // MARK: Links
 
   /// `ankielcode-native://pair?pairingUrl=…` (any `ankielcode[-channel]` scheme), and the RN dev
@@ -294,6 +316,16 @@ final class AppModel {
     /// `ANKIEL_DEBUG_THREAD_SCROLL=top` opens the thread scrolled to its first row.
     private func applyDebugThreadPresets(_ model: ThreadDetailModel) {
       let environment = ProcessInfo.processInfo.environment
+      if let ending = environment["ANKIEL_DEBUG_REQUESTS"], ending == "elsewhere" || ending == "expire" {
+        // Another device answers (or the provider expires) the first request a moment after it shows.
+        Task {
+          for _ in 0..<100 where !model.state.isLoaded { try? await Task.sleep(for: .milliseconds(50)) }
+          try? await Task.sleep(for: .seconds(2.5))
+          let pending = model.state.pending
+          guard let id = pending.approvals.first?.requestId ?? pending.userInputs.first?.requestId else { return }
+          model.enqueue { await $0.debugResolveRequest(id, status: ending == "expire" ? .expired : .resolved, decision: "accept") }
+        }
+      }
       guard let expand = environment["ANKIEL_DEBUG_THREAD_EXPAND"] else { return }
       Task {
         for _ in 0..<100 where !model.state.isLoaded { try? await Task.sleep(for: .milliseconds(50)) }

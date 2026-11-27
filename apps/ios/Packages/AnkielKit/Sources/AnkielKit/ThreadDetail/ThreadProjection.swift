@@ -221,14 +221,25 @@ public struct RuntimeRequest: Sendable, Hashable, Decodable, Identifiable {
   public var status: WireEnum<Status>
   public var responseCapability: ResponseCapability?
   public var createdAt: WireTimestamp?
+  public var resolvedAt: WireTimestamp?
+  public var decision: String?
+  @Tolerant public var answers: JSONValue?
 
   public enum Status: String, Sendable {
     case pending, resolved, expired, cancelled
   }
 
   public struct ResponseCapability: Sendable, Hashable, Decodable {
+    /// `live`, `message` or `not_resumable`.
     public var type: String
     public var reason: String?
+    public var supportsFeedback: Bool?
+
+    public init(type: String, reason: String? = nil, supportsFeedback: Bool? = nil) {
+      self.type = type
+      self.reason = reason
+      self.supportsFeedback = supportsFeedback
+    }
   }
 }
 

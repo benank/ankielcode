@@ -96,6 +96,52 @@
     func discardUpload(_ attachmentId: String, in environmentId: String) async {}
   }
 
+  /// Answers from the request dock: fixture threads resolve as if the server took the answer
+  /// (`fail` refuses, `slow` never answers, `offline` is not connected).
+  extension FakeComposerSink: RequestSink {
+    func respond(_ command: RequestCommand, in environmentId: String) async throws(EnvironmentRequestError) -> Int {
+      try await answerRequest()
+      let ref = ThreadRef(environmentId: environmentId, threadId: command.threadId)
+      if ThreadDebug.isFixture(ref), let model = ThreadDebug.existing(ref) {
+        let requestId = command.requestId
+        switch command.reply {
+        case .decision(let decision, _):
+          model.enqueue { await $0.debugResolveRequest(requestId, decision: decision) }
+        case .answers(let answers, _):
+          let json = (try? JSONEncoder().encode(answers)).flatMap { try? JSONDecoder().decode(JSONValue.self, from: $0) }
+          model.enqueue { await $0.debugResolveRequest(requestId, answers: json) }
+        case .dismiss:
+          model.enqueue { await $0.debugResolveRequest(requestId, status: .cancelled) }
+        }
+      }
+      return 3
+    }
+
+    func answerSecret(_ answer: SecretAnswer, in environmentId: String) async throws(EnvironmentRequestError) {
+      try await answerRequest()
+      for model in ThreadDebug.openModels() {
+        let itemId = answer.turnItemId
+        let status = answer.reply == .decline ? "declined" : "saved"
+        model.enqueue { await $0.debugSettleSecret(itemId, status: status) }
+      }
+    }
+
+    private func answerRequest() async throws(EnvironmentRequestError) {
+      switch mode {
+      case .slow:
+        try? await Task.sleep(for: .seconds(3600))
+        throw .notConnected
+      case .fail:
+        try? await Task.sleep(for: .milliseconds(600))
+        throw .rejected(message: String(localized: "The computer refused this answer.", comment: "debug: fake refusal"))
+      case .offline:
+        throw .notConnected
+      case .fake:
+        try? await Task.sleep(for: .milliseconds(600))
+      }
+    }
+  }
+
   /// A provider catalog for fixture threads and the fake computer.
   enum DebugCatalog {
     static let environmentLabel = "Fixture Mac"
