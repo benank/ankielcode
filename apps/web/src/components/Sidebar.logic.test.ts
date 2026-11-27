@@ -7,6 +7,7 @@ import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import {
   ADD_PROJECT_SCOPE_ITEM_VALUE,
+  buildBulkReadContextMenuItems,
   filterSidebarProjectScopeItems,
   shouldCreateNewThreadInCurrentProject,
   deleteSelectedThreadEntries,
@@ -1787,5 +1788,21 @@ describe("filterSidebarProjectScopeItems", () => {
 
     expect(filter("")).toEqual([ADD_PROJECT_SCOPE_ITEM_VALUE, "all", "p1"]);
     expect(filter("project")).toEqual(["p1"]);
+  });
+});
+
+describe("buildBulkReadContextMenuItems", () => {
+  it("offers each read marker for the selected threads it would change", () => {
+    const markRead = { kind: "mark-read", visitedAt: "2026-06-01T00:00:00.000Z" } as const;
+    const markUnread = { kind: "mark-unread" } as const;
+    const labels = (toggles: Parameters<typeof buildBulkReadContextMenuItems>[0]) =>
+      buildBulkReadContextMenuItems(toggles).map((item) => item.label);
+
+    expect(labels([markRead, markUnread, markRead, null])).toEqual([
+      "Mark read (2)",
+      "Mark unread (1)",
+    ]);
+    expect(labels([markUnread, null])).toEqual(["Mark unread (1)"]);
+    expect(labels([null, null])).toEqual([]);
   });
 });

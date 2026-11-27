@@ -21,6 +21,8 @@ const state = vi.hoisted(() => ({
   granted: new Set<string>(),
   effects: [] as string[],
   completed: deferred<void>(),
+  readToggle: null as { kind: "mark-read"; visitedAt: string } | { kind: "mark-unread" } | null,
+  markedRead: [] as unknown[],
   show: vi.fn<
     (
       items: ReadonlyArray<ContextMenuItem<ThreadActionMenuId>>,
@@ -120,8 +122,9 @@ vi.mock("./useSettings", () => ({
 }));
 vi.mock("./useThreadActions", () => ({
   canTurnThreadIntoProject: () => false,
-  useThreadActions: () =>
-    Object.fromEntries(
+  readThreadReadToggle: () => state.readToggle,
+  useThreadActions: () => ({
+    ...Object.fromEntries(
       [
         "markThreadUnread",
         "settleThread",
@@ -140,6 +143,11 @@ vi.mock("./useThreadActions", () => ({
         },
       ]),
     ),
+    markThreadRead: (...args: unknown[]) => {
+      state.markedRead.push(args);
+      recordEffect("mark-read");
+    },
+  }),
 }));
 
 import { useThreadActionMenu } from "./useThreadActionMenu";
@@ -161,6 +169,8 @@ beforeEach(() => {
   state.granted = new Set(["primary"]);
   state.effects = [];
   state.completed = deferred<void>();
+  state.readToggle = null;
+  state.markedRead = [];
   state.show.mockReset().mockResolvedValue(null);
 });
 
@@ -191,5 +201,17 @@ describe("thread menu permissions", () => {
     expect(items[0]?.disabled).not.toBe(true);
     expect(state.effects).toEqual(["find"]);
     expect(onFind).toHaveBeenCalledExactlyOnceWith(target);
+  });
+
+  it("marks a thread read at the rule's visit time, without task permission", async () => {
+    const visitedAt = "2026-06-01T23:00:00.000Z";
+    state.readToggle = { kind: "mark-read", visitedAt };
+    state.show.mockResolvedValue("mark-read");
+    createMenu().openMenu(position);
+    await state.completed.promise;
+    const items = state.show.mock.calls[0]![0];
+    expect(items.find((item) => item.id === "mark-read")?.disabled).not.toBe(true);
+    expect(items.some((item) => item.id === "mark-unread")).toBe(false);
+    expect(state.markedRead).toEqual([[target, visitedAt]]);
   });
 });

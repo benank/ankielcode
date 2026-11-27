@@ -191,6 +191,11 @@ a shortcut.
 `thread.regenerateTitle` generates a new title for the focused thread, like
 **Regenerate title** in the thread menu. It has no default shortcut.
 
+`environments.reconnect` retries every enabled environment that is not connected, like
+**Thread → Reconnect Environments** in the menu bar or **Reconnect environments** in the
+command palette. It has no default shortcut. When your computer wakes from sleep, the desktop app
+checks every connection on its own and reconnects any that dropped.
+
 `thread.undo` (`mod+z` by default) reverses the actions shown in the notice at the
 bottom of the sidebar, such as unpin, settle, snooze, archive, or discarding a
 draft. Consecutive

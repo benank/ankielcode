@@ -2,7 +2,6 @@ import { threadSearchMatchKey } from "@ankielcode/client-runtime/state/thread-se
 import { createInboxReturnTracker } from "@ankielcode/client-runtime/state/thread-inbox";
 import { presentThreadShell } from "@ankielcode/client-runtime/state/models";
 import * as DateTime from "effect/DateTime";
-import * as Schema from "effect/Schema";
 import { planPinnedReorder } from "@ankielcode/client-runtime/state/thread-sort";
 import { buildThreadNavigationTree } from "@ankielcode/client-runtime/state/threads";
 import {
@@ -20,7 +19,6 @@ import {
   CommandId,
   EnvironmentId,
   MessageId,
-  OrchestrationV2ThreadShell,
   ProjectId,
   ProviderInstanceId,
   RunId,
@@ -41,19 +39,12 @@ import {
   resolveThreadListV2SnoozeMenuSelection,
   resolveThreadListV2SwipeActions,
   resolveThreadListV2SnoozePresets,
-  resolveThreadListV2PixelKind,
-  resolveThreadListV2ReadToggle,
-  resolveThreadListV2RowStatus,
-  resolveThreadListV2Status,
-  resolveThreadListV2WokeAt,
   threadListV2ListItemsAreEqual,
   threadListV2RowAccessibilityLabel,
-  threadHasUnseenCompletion,
   type ThreadListV2ListItem,
 } from "./threadListV2";
 
 const environmentId = EnvironmentId.make("environment-1");
-const decodeThreadShell = Schema.decodeUnknownSync(OrchestrationV2ThreadShell);
 
 function makeThread(
   input: Partial<EnvironmentThreadShell> & Pick<EnvironmentThreadShell, "id" | "title">,
@@ -151,182 +142,6 @@ describe("layoutThreadListV2RowMenuActions", () => {
       nested: true,
     });
     expect(slim.at(-1)?.subactions?.[0]?.id).toBe("arrange");
-  });
-});
-
-describe("resolveThreadListV2Status", () => {
-  it("presents decoded thread waits as Waiting while preserving requests and older servers", () => {
-    const raw = makeRawThreadShell({
-      status: "running",
-      activeRunId: RunId.make("run-wait"),
-      latestRunId: RunId.make("run-wait"),
-    });
-    const present = (shell: unknown) => presentThreadShell(environmentId, decodeThreadShell(shell));
-
-    expect(resolveThreadListV2Status(present(raw))).toBe("working");
-    const blocked = present({ ...raw, blockedOnThreadWait: true });
-    expect(
-      resolveThreadListV2Status({
-        ...blocked,
-        hasPendingApprovals: true,
-        hasPendingUserInput: true,
-      }),
-    ).toBe("approval");
-    expect(resolveThreadListV2Status({ ...blocked, hasPendingUserInput: true })).toBe("input");
-    expect(resolveThreadListV2Status(blocked)).toBe("waiting");
-    expect(resolveThreadListV2Status(present({ ...raw, blockedOnThreadWait: false }))).toBe(
-      "working",
-    );
-  });
-
-  it("lights a provider-native subagent's row while its own turn runs", () => {
-    const present = (shell: unknown) => presentThreadShell(environmentId, decodeThreadShell(shell));
-    const child = makeRawThreadShell({ latestRunId: null, status: "idle" });
-
-    const working = present({ ...child, subagentTurnActive: true });
-    expect(working.runtime).toBeNull();
-    expect(resolveThreadListV2PixelKind(working, null)).toBe("working");
-    expect(
-      resolveThreadListV2PixelKind(present({ ...child, subagentTurnActive: false }), null),
-    ).toBe(null);
-  });
-
-  it("settles a failure the user opened to ready in the row, keeping the raw status", () => {
-    const failed = presentThreadShell(
-      environmentId,
-      makeRawThreadShell({
-        status: "failed",
-        latestRunId: RunId.make("run-failed"),
-        latestRunCompletedAt: DateTime.makeUnsafe("2026-06-01T23:59:00.000Z"),
-        lastVisitedAt: DateTime.makeUnsafe(NOW),
-      }),
-    );
-
-    expect(resolveThreadListV2Status(failed)).toBe("failed");
-    expect(resolveThreadListV2RowStatus(failed)).toBe("ready");
-    expect(resolveThreadListV2RowStatus({ ...failed, lastVisitedAt: null })).toBe("failed");
-  });
-
-  it.each([
-    { roster: "dev server", task: { kind: "command" }, status: "ready" },
-    { roster: "dev server watchdog", task: { kind: "monitor" }, status: "ready" },
-    { roster: "awaited command", task: { kind: "command", awaited: true }, status: "waiting" },
-  ] as const)(
-    "presents an unseen completion with a $roster roster as $status",
-    ({ task, status }) => {
-      const thread = presentThreadShell(
-        environmentId,
-        makeRawThreadShell({
-          latestRunId: RunId.make("run-background-completion"),
-          status: "completed",
-          latestRunCompletedAt: DateTime.makeUnsafe(NOW),
-          lastVisitedAt: DateTime.makeUnsafe("2026-06-01T23:59:00.000Z"),
-          pendingBackgroundTasks: [{ taskId: "background-work", ...task }],
-        }),
-      );
-
-      expect(resolveThreadListV2Status(thread)).toBe(status);
-      expect(threadHasUnseenCompletion(thread)).toBe(true);
-    },
-  );
-
-  it.each(["interrupted", "cancelled"] as const)(
-    "does not present a %s run as an unseen completion",
-    (status) => {
-      const thread = presentThreadShell(
-        environmentId,
-        makeRawThreadShell({
-          latestRunId: RunId.make("run-stopped"),
-          status,
-          latestRunCompletedAt: DateTime.makeUnsafe(NOW),
-          lastVisitedAt: DateTime.makeUnsafe("2026-06-01T23:59:00.000Z"),
-        }),
-      );
-
-      expect(threadHasUnseenCompletion(thread)).toBe(false);
-    },
-  );
-});
-
-describe("resolveThreadListV2ReadToggle", () => {
-  const COMPLETED_AT = "2026-06-01T23:00:00.000Z";
-  const present = (input: Parameters<typeof makeRawThreadShell>[0]) =>
-    presentThreadShell(
-      environmentId,
-      makeRawThreadShell({
-        latestRunId: RunId.make("run-read-toggle"),
-        latestRunCompletedAt: DateTime.makeUnsafe(COMPLETED_AT),
-        ...input,
-      }),
-    );
-  // What the server stores after each toggle, so a test can take the next one from there.
-  const afterToggle = (thread: EnvironmentThreadShell): EnvironmentThreadShell => {
-    const toggle = resolveThreadListV2ReadToggle(thread, null);
-    if (toggle === null) throw new Error("no toggle");
-    return {
-      ...thread,
-      lastVisitedAt:
-        toggle.kind === "mark-read"
-          ? toggle.visitedAt
-          : new Date(Date.parse(COMPLETED_AT) - 1).toISOString(),
-    };
-  };
-
-  it.each(["completed", "failed"] as const)(
-    "flips a %s run between read and unread and back",
-    (status) => {
-      const unread = present({
-        status,
-        lastVisitedAt: DateTime.makeUnsafe("2026-06-01T22:00:00Z"),
-      });
-      expect(resolveThreadListV2ReadToggle(unread, null)).toEqual({
-        kind: "mark-read",
-        visitedAt: COMPLETED_AT,
-      });
-
-      const read = afterToggle(unread);
-      expect(resolveThreadListV2PixelKind(read, null)).toBeNull();
-      expect(resolveThreadListV2ReadToggle(read, null)).toEqual({ kind: "mark-unread" });
-
-      const unreadAgain = afterToggle(read);
-      expect(resolveThreadListV2PixelKind(unreadAgain, null)).not.toBeNull();
-      expect(resolveThreadListV2ReadToggle(unreadAgain, null)?.kind).toBe("mark-read");
-    },
-  );
-
-  it.each(["interrupted", "cancelled"] as const)(
-    "offers nothing for a %s run, which never shows as unread",
-    (status) => {
-      const thread = present({ status, lastVisitedAt: DateTime.makeUnsafe(NOW) });
-      expect(resolveThreadListV2ReadToggle(thread, null)).toBeNull();
-    },
-  );
-
-  it("marks a woken thread read at its wake time", () => {
-    const wokeAt = "2026-06-01T23:30:00.000Z";
-    const thread = present({
-      status: "completed",
-      lastVisitedAt: DateTime.makeUnsafe(COMPLETED_AT),
-    });
-    expect(resolveThreadListV2ReadToggle(thread, wokeAt)).toEqual({
-      kind: "mark-read",
-      visitedAt: wokeAt,
-    });
-  });
-
-  it("offers nothing while the thread is running", () => {
-    const thread = present({
-      status: "running",
-      activeRunId: RunId.make("run-read-toggle"),
-      lastVisitedAt: DateTime.makeUnsafe(NOW),
-    });
-    expect(resolveThreadListV2ReadToggle(thread, null)).toBeNull();
-  });
-
-  it("offers nothing on a server that cannot record visits", () => {
-    const thread = present({ status: "completed" });
-    expect(thread.lastVisitedAt).toBeUndefined();
-    expect(resolveThreadListV2ReadToggle(thread, null)).toBeNull();
   });
 });
 
@@ -1650,64 +1465,6 @@ describe("thread list Woke marker", () => {
     snoozedAt: isoAt(BASE_MS - 60 * MINUTE_MS),
     snoozedUntil: wokeAt,
     lastVisitedAt: null,
-  });
-
-  it("keeps a timer wake through a plain visit until acknowledgement reaches its timestamp", () => {
-    expect(resolveThreadListV2WokeAt(thread, { now: NOW })).toBe(wokeAt);
-    expect(
-      resolveThreadListV2WokeAt(
-        { ...thread, lastVisitedAt: isoAt(BASE_MS - 30 * MINUTE_MS) },
-        { now: NOW },
-      ),
-    ).toBe(wokeAt);
-    expect(
-      resolveThreadListV2WokeAt({ ...thread, lastVisitedAt: wokeAt }, { now: NOW }),
-    ).toBeNull();
-    expect(resolveThreadListV2WokeAt({ ...thread, lastVisitedAt: "invalid" }, { now: NOW })).toBe(
-      wokeAt,
-    );
-  });
-
-  it("stays hidden while snoozed, after settling, and on servers without visited tracking", () => {
-    expect(resolveThreadListV2WokeAt(thread, { now: isoAt(BASE_MS - 2 * MINUTE_MS) })).toBeNull();
-    expect(
-      resolveThreadListV2WokeAt({ ...thread, settledOverride: "settled" }, { now: NOW }),
-    ).toBeNull();
-    expect(
-      resolveThreadListV2WokeAt({ ...thread, lastVisitedAt: undefined }, { now: NOW }),
-    ).toBeNull();
-    expect(resolveThreadListV2WokeAt({ ...thread, snoozedUntil: null }, { now: NOW })).toBeNull();
-  });
-
-  it("keeps an early failure wake acknowledged after the scheduled time passes", () => {
-    const completedAt = isoAt(BASE_MS - 2 * MINUTE_MS);
-    const failed = makeThread({
-      ...thread,
-      snoozedUntil: isoAt(BASE_MS + MINUTE_MS),
-      runtime: {
-        status: "failed",
-        activeRunId: null,
-        providerInstanceId: ProviderInstanceId.make("codex"),
-        providerName: "Codex",
-        lastError: "Run failed",
-        updatedAt: completedAt,
-      },
-      latestRun: {
-        runId: RunId.make("woke-run"),
-        status: "failed",
-        requestedAt: isoAt(BASE_MS - 3 * MINUTE_MS),
-        startedAt: isoAt(BASE_MS - 3 * MINUTE_MS),
-        completedAt,
-        assistantMessageId: null,
-      },
-    });
-    expect(resolveThreadListV2WokeAt(failed, { now: NOW })).toBe(completedAt);
-    expect(
-      resolveThreadListV2WokeAt(
-        { ...failed, lastVisitedAt: completedAt },
-        { now: isoAt(BASE_MS + 2 * MINUTE_MS) },
-      ),
-    ).toBeNull();
   });
 
   it("updates a recycled row at the wake boundary even without a new shell or minute tick", () => {

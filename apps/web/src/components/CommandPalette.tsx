@@ -79,6 +79,7 @@ import {
   MonitorIcon,
   PinIcon,
   PinOffIcon,
+  RefreshCwIcon,
   SquarePenIcon,
   TextSearchIcon,
   WorkflowIcon,
@@ -100,6 +101,7 @@ import type { LegendListRef } from "@legendapp/list/react";
 import { useAtomValue } from "@effect/atom-react";
 
 import { isDesktopLocalConnectionTarget } from "../connection/desktopLocal";
+import { reconnectEnvironments } from "../connection/reconnect";
 import { useDesktopLocalBootstraps } from "../connection/useDesktopLocalBootstraps";
 import { useHandleNewThread } from "../hooks/useHandleNewThread";
 import { useOpenPanelPullRequestUrl } from "../hooks/useOpenPanelPullRequestUrl";
@@ -1676,6 +1678,18 @@ function OpenCommandPaletteDialog(props: {
       },
     });
   }
+
+  actionItems.push({
+    kind: "action",
+    value: "action:reconnect-environments",
+    searchTerms: ["reconnect", "connection", "environments", "servers", "offline", "retry"],
+    title: gt("Reconnect environments"),
+    icon: <RefreshCwIcon className={ITEM_ICON_CLASS} />,
+    shortcutCommand: "environments.reconnect",
+    run: async () => {
+      reconnectEnvironments();
+    },
+  });
 
   actionItems.push({
     kind: "action",

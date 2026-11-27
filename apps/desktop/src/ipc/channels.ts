@@ -29,6 +29,7 @@ export const WINDOW_FULLSCREEN_STATE_CHANNEL = "desktop:window-fullscreen-state"
 export const SYNC_HTML_FULLSCREEN_CHANNEL = "desktop:sync-html-fullscreen";
 export const GET_LOW_POWER_STATE_CHANNEL = "desktop:get-low-power-state";
 export const LOW_POWER_STATE_CHANNEL = "desktop:low-power-state";
+export const POWER_RESUME_CHANNEL = "desktop:power-resume";
 export const UPDATE_STATE_CHANNEL = "desktop:update-state";
 export const UPDATE_GET_STATE_CHANNEL = "desktop:update-get-state";
 export const UPDATE_SET_CHANNEL_CHANNEL = "desktop:update-set-channel";

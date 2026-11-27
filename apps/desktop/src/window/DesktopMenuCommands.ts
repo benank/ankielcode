@@ -45,6 +45,7 @@ const COMMAND_TITLES: Record<DesktopMenuCommand, () => string> = {
   "thread.pin": () => m(msg("Pin or Unpin")),
   "thread.copyReference": () => m(msg("Copy PR Link or Thread")),
   "thread.regenerateTitle": () => m(msg("Regenerate Title")),
+  "environments.reconnect": () => m(msg("Reconnect Environments")),
 };
 
 export interface DesktopMenuCommandState {

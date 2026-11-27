@@ -73,6 +73,7 @@ export const DESKTOP_MENU_COMMANDS = [
   { command: "thread.pin", menu: "thread" },
   { command: "thread.copyReference", menu: "thread", separatorBefore: true },
   { command: "thread.regenerateTitle", menu: "thread" },
+  { command: "environments.reconnect", menu: "thread", separatorBefore: true },
 ] as const satisfies ReadonlyArray<{
   readonly command: KeybindingCommand;
   readonly menu: DesktopMenu;
@@ -1322,6 +1323,8 @@ export interface DesktopBridge {
   /** On battery, or a serious or critical thermal state (macOS); absent in older desktop builds. */
   getLowPowerState?: () => Promise<boolean>;
   onLowPowerStateChange?: (listener: (lowPower: boolean) => void) => () => void;
+  /** The system woke from sleep; absent in older desktop builds. */
+  onPowerResume?: (listener: () => void) => () => void;
   getWindowZoomFactor: () => number;
   getUpdateState: () => Promise<DesktopUpdateState>;
   /** `minimumVersion` is a track switch's checked release; nothing older is offered after. */

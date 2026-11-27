@@ -1,8 +1,11 @@
 import type { EnvironmentIssueEntry } from "@ankielcode/client-runtime/issue-list";
+import { useGT } from "gt-react";
 import { MessageSquareIcon } from "lucide-react";
 import { memo } from "react";
 
 import { cn } from "~/lib/utils";
+
+import { contextMenuSourceOf } from "../../contextMenuSource";
 
 import {
   PULL_REQUEST_ROW_CLASS,
@@ -14,6 +17,7 @@ import {
   PullRequestLabelChip,
   PullRequestActorAvatar,
 } from "../pullRequest/pullRequestPresentation";
+import { showPullRequestLinkContextMenu } from "../pullRequest/pullRequestLinkContextMenu";
 import { IssueStateGlyph, issueTrackerPresentation } from "./issuePresentation";
 
 export type IssueRowTarget = Pick<
@@ -40,6 +44,7 @@ function IssueRowImpl({
   environmentLabel?: string | undefined;
   onSelect: (entry: IssueRowTarget) => void;
 }) {
+  const gt = useGT();
   const tracker = issueTrackerPresentation(entry.tracker);
   return (
     <div
@@ -52,6 +57,20 @@ function IssueRowImpl({
         type="button"
         aria-current={selected ? "true" : undefined}
         onClick={() => onSelect(entry)}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void showPullRequestLinkContextMenu({
+            url: entry.url,
+            openLabel: gt("Open on {provider}", { provider: tracker.providerName }),
+            open: {
+              label: gt("Open issue", { $context: "verb, opens the issue in the app" }),
+              run: () => onSelect(entry),
+            },
+            position: { x: event.clientX, y: event.clientY },
+            source: contextMenuSourceOf(event),
+          });
+        }}
         className={cn(PULL_REQUEST_ROW_CLASS, "@container/issue-row-meta px-3 py-2.5")}
       >
         <IssueStateGlyph state={entry.state} />

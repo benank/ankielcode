@@ -3,7 +3,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
-import { AsyncResult, Atom } from "effect/reactivity";
+import { AsyncResult, Atom, type AtomRegistry } from "effect/reactivity";
 
 import * as EnvironmentRegistry from "../connection/registry.ts";
 import type { ConnectionCatalogEntry } from "../connection/catalog.ts";
@@ -19,6 +19,7 @@ import {
   createRuntimeCommand,
   environmentSessionGenerationAtom,
   followStreamInEnvironment,
+  runAtomCommand,
 } from "./runtime.ts";
 
 export interface EnvironmentCatalogState {
@@ -246,4 +247,15 @@ export function createEnvironmentCatalogAtoms<R, E>(
     retryNow,
     setEnabled,
   };
+}
+
+type EnvironmentCatalogAtoms = ReturnType<typeof createEnvironmentCatalogAtoms>;
+
+/** Reconnects every enabled environment that is not connected, as a pull to refresh does. */
+export function reconnectEnvironments(
+  registry: AtomRegistry.AtomRegistry,
+  catalog: Pick<EnvironmentCatalogAtoms, "catalogValueAtom" | "refresh">,
+) {
+  const environmentIds = [...enabledEnvironmentIds(registry.get(catalog.catalogValueAtom))];
+  return runAtomCommand(registry, catalog.refresh, environmentIds);
 }

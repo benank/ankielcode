@@ -7,7 +7,15 @@ import {
 } from "@ankielcode/client-runtime/environment";
 import { settlePromise, squashAtomCommandFailure } from "@ankielcode/client-runtime/state/runtime";
 import { canSnooze, threadWokeAt } from "@ankielcode/client-runtime/state/thread-settled";
-import { threadRuntimeCanArchive } from "@ankielcode/client-runtime/state/models";
+import {
+  threadRuntimeCanArchive,
+  type EnvironmentThreadShell,
+} from "@ankielcode/client-runtime/state/models";
+import {
+  resolveThreadReadToggle,
+  resolveThreadWokeAt,
+  type ThreadReadToggle,
+} from "@ankielcode/client-runtime/state/thread-read";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
@@ -245,6 +253,22 @@ function useMarkThreadUnread() {
   };
 }
 
+/** The read toggle mobile shows for this thread, read at the moment a menu opens. */
+export function readThreadReadToggle(thread: EnvironmentThreadShell): ThreadReadToggle | null {
+  // Older servers cannot store a visit, so this client's own watermark stands in for it.
+  const lastVisitedAt =
+    thread.lastVisitedAt === undefined
+      ? (useUiStateStore.getState().threadLastVisitedAtById[
+          scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id))
+        ] ?? null)
+      : thread.lastVisitedAt;
+  const seen = { ...thread, lastVisitedAt };
+  return resolveThreadReadToggle(
+    seen,
+    resolveThreadWokeAt(seen, { now: new Date().toISOString() }),
+  );
+}
+
 export function useAcknowledgeThreadWoke() {
   const visitThreadMutation = useAtomCommand(threadEnvironment.visit, { reportFailure: false });
   const markThreadVisited = useUiStateStore((state) => state.markThreadVisited);
@@ -339,6 +363,7 @@ export function useThreadActions() {
     reportFailure: false,
   });
   const markThreadUnread = useMarkThreadUnread();
+  const markThreadRead = useAcknowledgeThreadWoke();
   const createProjectFromThread = useAtomCommand(projectEnvironment.createFromThread, {
     reportFailure: false,
   });
@@ -1062,6 +1087,7 @@ export function useThreadActions() {
     confirmAndUnpinThread,
     reorderPinnedThread,
     reorderActiveThread,
+    markThreadRead,
     markThreadUnread,
     setThreadAutoSettle,
     turnThreadIntoProject: (target: ScopedThreadRef) =>

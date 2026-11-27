@@ -13,7 +13,7 @@ const baseState: ThreadActionMenuState = {
   canSnoozeNow: true,
   isRegeneratingTitle: false,
   isRunning: false,
-  hasCompletedRun: true,
+  readToggle: "mark-unread",
   supports: {
     settlement: true,
     autoSettleOptOut: true,
@@ -77,11 +77,18 @@ describe("buildThreadActionMenuItems", () => {
   });
 
   it.each([
-    ["while the thread is running", { isRunning: true }],
-    ["before any run has completed", { hasCompletedRun: false }],
-  ])("omits mark unread %s", (_, overrides) => {
-    const items = buildThreadActionMenuItems({ ...baseState, ...overrides });
-    expect(items.map((item) => item.id)).not.toContain("mark-unread");
+    ["mark-read", ["mark-read"]],
+    ["mark-unread", ["mark-unread"]],
+    [null, []],
+  ] as const)("shows the read marker the shared rule picks (%s)", (readToggle, expected) => {
+    for (const canOperate of [true, false]) {
+      const markers = buildThreadActionMenuItems({ ...baseState, canOperate, readToggle }).filter(
+        (item) => item.id === "mark-read" || item.id === "mark-unread",
+      );
+      expect(markers.map((item) => item.id)).toEqual(expected);
+      // Read markers stay available to read-only connections.
+      expect(markers.some((item) => item.disabled)).toBe(false);
+    }
   });
 
   it("disables only rename where no inline title editor exists", () => {

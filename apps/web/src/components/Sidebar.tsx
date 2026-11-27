@@ -133,7 +133,11 @@ import {
   getThreadKeysToDeselectAfterDelete,
   useThreadSelectionStore,
 } from "../threadSelectionStore";
-import { canTurnThreadIntoProject, useThreadActions } from "../hooks/useThreadActions";
+import {
+  canTurnThreadIntoProject,
+  readThreadReadToggle,
+  useThreadActions,
+} from "../hooks/useThreadActions";
 import { useHandleNewThread } from "../hooks/useHandleNewThread";
 import { useOrderWhileOpen } from "../hooks/useOrderWhileOpen";
 import { useProjectPin } from "../hooks/useProjectGroupUpdate";
@@ -186,6 +190,7 @@ import {
   filterSidebarV2VisibleThreads,
   groupSidebarThreadsByProject,
   sidebarFolderExpansionKeys,
+  buildBulkReadContextMenuItems,
   buildBulkTitleRegenerationContextMenuItem,
   buildBulkUnpinContextMenuItem,
   deleteSelectedThreadEntries,
@@ -993,6 +998,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
     turnThreadIntoProject,
     reorderPinnedThread,
     reorderActiveThread,
+    markThreadRead,
     markThreadUnread,
     archiveThread,
     deleteThread,
@@ -2439,6 +2445,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
       const unpinMenuItem = buildBulkUnpinContextMenuItem({
         pinnedCount: pinnedSelectedThreads.length,
       });
+      const readToggles = selectedThreads.map(readThreadReadToggle);
       // Presets sync across environments, so the first selected thread's stand for all.
       const menuOpenedAt = new Date();
       const snoozePresets = resolveSnoozePresets(
@@ -2490,7 +2497,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                   },
                 ]
               : []),
-            { id: "mark-unread", label: gt("Mark unread ({count})", { count }) },
+            ...buildBulkReadContextMenuItems(readToggles, messages),
             {
               id: "delete",
               label: gt("Delete ({count})", { count }),
@@ -2517,7 +2524,13 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                 })
               : selectedThreads;
       if (clicked.value === "settle" && actionTargets.length === 0) return;
-      if (clicked.value !== "mark-unread" && !checkThreadOperations(actionTargets)) return;
+      if (
+        clicked.value !== "mark-read" &&
+        clicked.value !== "mark-unread" &&
+        !checkThreadOperations(actionTargets)
+      ) {
+        return;
+      }
       if (clicked.value?.startsWith("snooze:")) {
         const preset =
           clicked.value === "snooze:custom"
@@ -2595,11 +2608,16 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
         clearSelection();
         return;
       }
-      if (clicked.value === "mark-unread") {
-        for (const threadKey of threadKeys) {
-          const thread = threadByKeyRef.current.get(threadKey);
-          if (thread) markThreadUnread(scopeThreadRef(thread.environmentId, thread.id));
-        }
+      if (clicked.value === "mark-read" || clicked.value === "mark-unread") {
+        selectedThreads.forEach((thread, index) => {
+          const toggle = readToggles[index];
+          const threadRef = scopeThreadRef(thread.environmentId, thread.id);
+          if (clicked.value === "mark-read" && toggle?.kind === "mark-read") {
+            markThreadRead(threadRef, toggle.visitedAt);
+          } else if (clicked.value === "mark-unread" && toggle?.kind === "mark-unread") {
+            markThreadUnread(threadRef);
+          }
+        });
         clearSelection();
         return;
       }
@@ -2756,6 +2774,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
           timestampFormat,
           thread.environmentId,
         );
+        const readToggle = readThreadReadToggle(thread);
         const threadProjectGroup =
           projectGroupsRef.current.find((project) =>
             project.memberProjectRefs.some(
@@ -2787,7 +2806,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
               canSnoozeNow: canSnooze(thread, { now: new Date().toISOString() }),
               isRegeneratingTitle,
               isRunning: !threadRuntimeCanArchive(thread.runtime),
-              hasCompletedRun: thread.latestRun?.completedAt != null,
+              readToggle: readToggle?.kind ?? null,
               canTurnIntoProject: canTurnThreadIntoProject(threadRef),
               canRename: !fromSearch,
               supports: {
@@ -2923,6 +2942,9 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
             if (toast) toastManager.add(toast);
             return;
           }
+          case "mark-read":
+            if (readToggle?.kind === "mark-read") markThreadRead(threadRef, readToggle.visitedAt);
+            return;
           case "mark-unread":
             markThreadUnread(threadRef);
             return;

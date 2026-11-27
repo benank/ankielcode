@@ -1,6 +1,7 @@
 import type { EnvironmentServerConfig } from "@ankielcode/client-runtime/connection";
 import { scopeThreadRef, scopedThreadKey } from "@ankielcode/client-runtime/environment";
 import { resolveThreadWorkingStartedAt } from "@ankielcode/client-runtime/state/models";
+import type { ThreadReadToggle } from "@ankielcode/client-runtime/state/thread-read";
 import { isShownUnderParent } from "@ankielcode/client-runtime/state/threads";
 import { backgroundWorkHoldsCompletion } from "@ankielcode/shared/orchestrationV2PendingBackgroundWork";
 import type { PixelStatusTone } from "@ankielcode/shared/pixelStatus";
@@ -660,6 +661,33 @@ export function buildBulkUnpinContextMenuItem(input: {
 }): ContextMenuItem<"unpin"> | null {
   if (input.pinnedCount === 0) return null;
   return { id: "unpin", label: m(msg("Unpin ({count})", { count: input.pinnedCount })) };
+}
+
+/** Each read marker appears when some selected thread would change, and counts those threads. */
+export function buildBulkReadContextMenuItems(
+  toggles: ReadonlyArray<ThreadReadToggle | null>,
+  resolve: MessageResolver = m,
+): ReadonlyArray<ContextMenuItem<"mark-read" | "mark-unread">> {
+  const markRead = toggles.filter((toggle) => toggle?.kind === "mark-read").length;
+  const markUnread = toggles.filter((toggle) => toggle?.kind === "mark-unread").length;
+  return [
+    ...(markRead > 0
+      ? [
+          {
+            id: "mark-read" as const,
+            label: resolve(msg("Mark read ({count})", { count: markRead })),
+          },
+        ]
+      : []),
+    ...(markUnread > 0
+      ? [
+          {
+            id: "mark-unread" as const,
+            label: resolve(msg("Mark unread ({count})", { count: markUnread })),
+          },
+        ]
+      : []),
+  ];
 }
 
 export interface ThreadStatusPill {

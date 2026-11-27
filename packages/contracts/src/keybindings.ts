@@ -109,6 +109,7 @@ export const STATIC_KEYBINDING_COMMANDS = [
   "chat.findNext",
   "chat.findPrevious",
   "editor.openFavorite",
+  "environments.reconnect",
   "usage.cost",
   "usage.tokens",
   "usage.limits",

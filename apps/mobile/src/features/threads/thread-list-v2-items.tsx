@@ -23,6 +23,13 @@ import type { ThreadNavigationBranch } from "@ankielcode/client-runtime/state/th
 import { AuthOrchestrationOperateScope, type EnvironmentMachineKind } from "@ankielcode/contracts";
 import type { SnoozePresetSetting } from "@ankielcode/contracts/settings";
 import { canSnooze } from "@ankielcode/client-runtime/state/thread-settled";
+import {
+  resolveThreadPixelKind,
+  resolveThreadReadToggle,
+  resolveThreadRowStatus,
+  threadHasUnseenCompletion,
+  type ThreadRowStatus,
+} from "@ankielcode/client-runtime/state/thread-read";
 import { threadChipCopyTarget } from "@ankielcode/client-runtime/thread-reference";
 import type { MenuAction } from "@react-native-menu/menu";
 import { msg, T, useGT, useMessages } from "gt-react-native";
@@ -59,15 +66,10 @@ import {
   resolveThreadListV2SnoozeGateExpiryMs,
   resolveThreadListV2SnoozeMenuSelection,
   resolveThreadListV2SnoozePresets,
-  threadHasUnseenCompletion,
-  resolveThreadListV2RowStatus,
   resolveThreadListV2SwipeActions,
   layoutThreadListV2RowMenuActions,
   threadListV2RowAccessibilityLabel,
-  resolveThreadListV2PixelKind,
-  resolveThreadListV2ReadToggle,
   type ThreadListV2ProjectFolderListItem,
-  type ThreadListV2Status,
 } from "./threadListV2";
 import { QueuedMessageIcon } from "./queued-message-icon";
 import { ThreadSearchMatchExcerpt } from "./thread-search-match";
@@ -76,7 +78,7 @@ interface StatusLabel {
   // Null when the pixel light and timer carry the status on their own.
   readonly label: string | null;
 }
-const STATUS_LABEL_BY_STATUS: Partial<Record<ThreadListV2Status, StatusLabel>> = {
+const STATUS_LABEL_BY_STATUS: Partial<Record<ThreadRowStatus, StatusLabel>> = {
   approval: { label: msg("Approval", { $context: "thread status, waiting for approval" }) },
   input: { label: msg("Input", { $context: "thread status, waiting for user input" }) },
   working: { label: null },
@@ -749,7 +751,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   const selected = props.selected === true;
   const rowAppearance = getThreadListV2RowAppearance(theme, sidebarPane, selected);
 
-  const status = resolveThreadListV2RowStatus(thread);
+  const status = resolveThreadRowStatus(thread);
   const isUnread = status === "ready" && threadHasUnseenCompletion(thread);
   const workingLabel = STATUS_LABEL_BY_STATUS[status];
   const showsWoke = status === "ready" && props.wokeAt !== null;
@@ -801,7 +803,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
   }, [props.wokeAt, thread.environmentId, thread.id, visitThread]);
   const canOperateThread = useEnvironmentScope(thread.environmentId, AuthOrchestrationOperateScope);
   const readToggle = canOperateThread
-    ? resolveThreadListV2ReadToggle(thread, showsWoke ? props.wokeAt : null)
+    ? resolveThreadReadToggle(thread, showsWoke ? props.wokeAt : null)
     : null;
   const readToggleKind = readToggle?.kind ?? null;
   const readVisitedAt = readToggle?.kind === "mark-read" ? readToggle.visitedAt : null;
@@ -1280,7 +1282,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
       ? primaryAction.swipeHint
       : primaryAction.swipeSnoozeHint;
 
-  const pixelKind = resolveThreadListV2PixelKind(thread, showsWoke ? props.wokeAt : null);
+  const pixelKind = resolveThreadPixelKind(thread, showsWoke ? props.wokeAt : null);
   // Folder rows and sub-threads sit under their project, so only loose rows name it.
   const showProjectIcon = props.project !== null && !props.inFolder && branch === undefined;
   const leading =

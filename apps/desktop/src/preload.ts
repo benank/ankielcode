@@ -348,6 +348,13 @@ contextBridge.exposeInMainWorld("desktopBridge", {
       ipcRenderer.removeListener(IpcChannels.LOW_POWER_STATE_CHANNEL, wrappedListener);
     };
   },
+  onPowerResume: (listener) => {
+    const wrappedListener = () => listener();
+    ipcRenderer.on(IpcChannels.POWER_RESUME_CHANNEL, wrappedListener);
+    return () => {
+      ipcRenderer.removeListener(IpcChannels.POWER_RESUME_CHANNEL, wrappedListener);
+    };
+  },
   getUpdateState: () => ipcRenderer.invoke(IpcChannels.UPDATE_GET_STATE_CHANNEL),
   setUpdateChannel: (channel, minimumVersion) =>
     ipcRenderer.invoke(IpcChannels.UPDATE_SET_CHANNEL_CHANNEL, { channel, minimumVersion }),

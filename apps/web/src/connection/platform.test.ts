@@ -9,6 +9,8 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import * as Option from "effect/Option";
+import * as Stream from "effect/Stream";
 import { afterEach, vi } from "vite-plus/test";
 import { ClientCapabilities } from "@ankielcode/client-runtime/platform";
 import {
@@ -23,6 +25,7 @@ import {
   isRejectedBootstrapCredentialError,
   isRejectedSecondaryBootstrap,
   nextRejectedSecondaryBootstrap,
+  powerResumeWakeups,
   primaryRegistrationToRetainAfterTopologyRead,
   prepareDesktopSshEnvironment,
   provisionDesktopSshEnvironment,
@@ -449,4 +452,25 @@ describe("primary topology cache", () => {
       }),
     ).toBe(cached);
   });
+});
+
+describe("power resume wakeups", () => {
+  it.effect("turns a wake from sleep into a long-resume wakeup and unsubscribes after", () =>
+    Effect.gen(function* () {
+      const unsubscribe = vi.fn();
+      const bridge = {
+        onPowerResume: (listener: () => void) => {
+          listener();
+          return unsubscribe;
+        },
+      };
+      expect(yield* Stream.runHead(powerResumeWakeups(() => bridge))).toEqual(
+        Option.some("application-active-long"),
+      );
+      expect(unsubscribe).toHaveBeenCalledOnce();
+      // Older desktop builds and the browser have no resume signal.
+      const none = yield* Effect.forkChild(Stream.runHead(powerResumeWakeups(() => undefined)));
+      yield* Fiber.interrupt(none);
+    }),
+  );
 });

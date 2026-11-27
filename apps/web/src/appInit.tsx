@@ -49,6 +49,7 @@ import { syncBrowserChromeTheme } from "./hooks/useTheme";
 import { startThreadVisitedMigration } from "./hooks/useThreadVisitedMigration";
 import { installDesktopPasteAsText } from "./lib/desktopPasteAsText";
 import { trackLowPower } from "./lib/lowPower";
+import { installEnvironmentReconnect } from "./connection/reconnect";
 import { trackWindowFocus } from "./lib/visibleAnimation";
 import {
   syncDocumentElectronPlatformClasses,
@@ -264,6 +265,7 @@ export function startAppServices(): AppRouter {
 
   trackWindowFocus();
   trackLowPower(window.desktopBridge);
+  installEnvironmentReconnect();
   installDesktopPasteAsText(window.desktopBridge, window);
   guardDomAgainstPageTranslation();
 
