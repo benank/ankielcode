@@ -25,6 +25,10 @@ public protocol LiveSession: AnyObject, Sendable, ThreadItemSource {
   /// `GET /api/auth/session`: the scopes this device holds (`permissions`, else legacy `scopes`).
   /// nil when the server does not say.
   func grantedScopes() async throws -> Set<String>?
+  /// An authorized JSON `POST` to an HTTP route of this computer (the pull request diff).
+  func postJSON<Response: Decodable & Sendable>(
+    _ path: String, body: some Encodable & Sendable, as: Response.Type
+  ) async throws -> Response
   /// Config events after the first snapshot (provider and settings changes), for this session.
   var configUpdates: AsyncStream<ServerConfigEvent> { get }
   func close() async
@@ -32,6 +36,12 @@ public protocol LiveSession: AnyObject, Sendable, ThreadItemSource {
 
 extension LiveSession {
   public var configUpdates: AsyncStream<ServerConfigEvent> { AsyncStream { $0.finish() } }
+
+  public func postJSON<Response: Decodable & Sendable>(
+    _ path: String, body: some Encodable & Sendable, as _: Response.Type
+  ) async throws -> Response {
+    throw RpcError.connectionClosed("This session has no HTTP route.")
+  }
 
   public func stream<Item: Decodable & Sendable>(
     _ tag: String, payload: some Encodable & Sendable, of _: Item.Type

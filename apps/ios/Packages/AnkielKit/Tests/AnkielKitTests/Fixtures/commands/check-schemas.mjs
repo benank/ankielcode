@@ -38,6 +38,22 @@ const schemas = {
   archivedSnapshot: S.Struct({}),
   refreshProviders: m.WsServerRefreshProvidersRpc.payloadSchema,
   consumeResetCredit: m.ProviderConsumeResetCreditInput,
+  prList: m.PullRequestListInput,
+  prListStats: m.PullRequestListStatsInput,
+  prRef: m.PullRequestRef,
+  prInvalidate: m.PullRequestInvalidateInput,
+  prDiff: m.PullRequestDiffInput,
+  prReviewerCandidates: m.PullRequestReviewerCandidatesInput,
+  prRoutingIdentity: m.PullRequestRoutingIdentityInput,
+  prComment: m.PullRequestCommentInput,
+  prReply: m.PullRequestThreadReplyInput,
+  prReaction: m.PullRequestReactionInput,
+  prReview: m.PullRequestSubmitReviewInput,
+  prAction: m.PullRequestActionInput,
+  prReviewers: m.PullRequestReviewerRequestInput,
+  prUpdate: m.PullRequestUpdateInput,
+  prResolve: m.PullRequestThreadResolutionInput,
+  prFilesViewed: m.PullRequestSetFilesViewedInput,
 };
 
 let failures = 0;

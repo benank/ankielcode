@@ -111,6 +111,26 @@ func run() async throws {
     await session.close()
     return
   }
+  if CommandLine.arguments.contains("--pull-requests") {
+    let number = argument("--pull-requests").flatMap(Int.init)
+    // `--enable-github` turns the computer's GitHub integration on for this read and back off.
+    let toggle = CommandLine.arguments.contains("--enable-github")
+    if toggle {
+      _ = try await session.rpc.call(UpdateSettingsRequest.rpcTag, payload: UpdateSettingsRequest(patch: .githubIntegration(true)), as: ServerSettings.self)
+      print("github integration: on for this read")
+    }
+    do {
+      try await probePullRequests(session, environment: environment, connector: connector, number: number)
+    } catch {
+      print("probe error: \(error)")
+    }
+    if toggle {
+      _ = try await session.rpc.call(UpdateSettingsRequest.rpcTag, payload: UpdateSettingsRequest(patch: .githubIntegration(false)), as: ServerSettings.self)
+      print("github integration: back off")
+    }
+    await session.close()
+    return
+  }
   if CommandLine.arguments.contains("--diff") {
     let threadId = argument("--diff").flatMap { $0.hasPrefix("--") ? nil : $0 }
     try await probeDiff(session, only: threadId)

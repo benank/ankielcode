@@ -1,0 +1,11 @@
+{
+  "schema" : "prReaction",
+  "value" : {
+    "content" : "thumbs-up",
+    "host" : "github.com",
+    "number" : 42,
+    "projectId" : "proj-tide-chart",
+    "reacted" : false,
+    "repository" : "tidewater/tide-chart"
+  }
+}

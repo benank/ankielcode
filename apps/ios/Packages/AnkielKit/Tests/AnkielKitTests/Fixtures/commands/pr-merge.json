@@ -1,0 +1,13 @@
+{
+  "schema" : "prAction",
+  "value" : {
+    "action" : "merge",
+    "expectedHeadSha" : "3f2a9c1d7e5b4a6c8d0e2f4a6b8c0d2e4f6a8b0c",
+    "host" : "github.com",
+    "mergeMethod" : "squash",
+    "number" : 42,
+    "projectId" : "proj-tide-chart",
+    "replyWithSummary" : true,
+    "repository" : "tidewater/tide-chart"
+  }
+}

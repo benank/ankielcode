@@ -1,0 +1,9 @@
+{
+  "schema" : "prRef",
+  "value" : {
+    "host" : "github.com",
+    "number" : 42,
+    "projectId" : "proj-tide-chart",
+    "repository" : "tidewater/tide-chart"
+  }
+}

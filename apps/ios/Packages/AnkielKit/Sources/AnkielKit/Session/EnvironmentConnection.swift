@@ -247,6 +247,36 @@ public struct EnvironmentConnector: Sendable {
     }
   }
 
+  /// An authorized JSON `POST` (DPoP proof for this method and URL), renewing once on a
+  /// rejected credential like `shellSnapshot`. A refusal with a tagged JSON body (the server's
+  /// typed errors) throws `RpcError.failed`, as the same error over RPC would.
+  public func postJSON<Response: Decodable>(
+    _ path: String, body: some Encodable, endpoint: EnvironmentEndpoint, vault: CredentialVault, as type: Response.Type,
+    timeout: TimeInterval = 60
+  ) async throws -> Response {
+    var request = URLRequest(url: endpoint.httpURL(path))
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONEncoder().encode(body)
+    request.timeoutInterval = timeout
+    var credential = try await vault.current(at: endpoint)
+    var renewed = false
+    while true {
+      do {
+        let key: DPoPKey? = if case .dpop = credential { try dpopKey() } else { nil }
+        return try await http.authorizedSend(request, credential: credential, key: key, as: type)
+      } catch let error as EnvironmentHTTPError {
+        if case .status(let status, let body?) = error, status != 401, body["_tag"]?.stringValue != nil {
+          throw RpcError.failed(RpcFailure(error: body))
+        }
+        let mapped = Self.mapHTTP(error)
+        guard mapped == .credentialRejected, !renewed else { throw mapped }
+        renewed = true
+        credential = try await vault.renew(at: endpoint, replacing: credential.token)
+      }
+    }
+  }
+
   // MARK: Session state
 
   /// `GET /api/auth/session` with this device's credential.

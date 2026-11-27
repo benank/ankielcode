@@ -1,0 +1,28 @@
+{
+  "schema" : "prList",
+  "value" : {
+    "cursors" : {
+      "github.com tidewater/tide-chart" : "Y3Vyc29yOjMw"
+    },
+    "filters" : {
+      "author" : "mira-dev",
+      "checks" : "failing",
+      "draft" : "hide",
+      "excludedLabels" : [
+        "wontfix"
+      ],
+      "labels" : [
+        [
+          "bug",
+          "regression"
+        ]
+      ],
+      "review" : "changes-requested"
+    },
+    "involvement" : "reviewing",
+    "limit" : 60,
+    "projectId" : "proj-tide-chart",
+    "query" : "tide table",
+    "state" : "all"
+  }
+}
