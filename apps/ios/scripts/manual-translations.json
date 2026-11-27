@@ -1,4 +1,15 @@
 {
+  "Quick Look can't show this kind of file.": {
+    "de": "Quick Look kann diese Art von Datei nicht anzeigen.",
+    "es": "Vista rápida no puede mostrar este tipo de archivo.",
+    "fr": "Coup d’œil ne peut pas afficher ce type de fichier.",
+    "ja": "クイックルックではこの種類のファイルを表示できません。",
+    "ko": "훑어보기로 이 유형의 파일을 표시할 수 없습니다.",
+    "pt-BR": "A Visualização Rápida não pode mostrar este tipo de arquivo.",
+    "ru": "Быстрый просмотр не может показать файл этого типа.",
+    "sv": "Snabbtitt kan inte visa den här typen av fil.",
+    "zh-Hans": "快速查看无法显示此类文件。"
+  },
   "%@ came back still on %@. Try again, or update it on that machine.": {
     "de": "%1$@ ist zurück, aber noch auf %2$@. Versuch es erneut oder aktualisiere es auf diesem Computer.",
     "es": "%1$@ volvió, pero sigue en %2$@. Inténtalo de nuevo o actualízalo en ese equipo.",

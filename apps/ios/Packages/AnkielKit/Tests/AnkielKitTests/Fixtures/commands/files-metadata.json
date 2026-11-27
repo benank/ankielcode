@@ -1,0 +1,8 @@
+{
+  "schema" : "metadata",
+  "value" : {
+    "paths" : [
+      "/Users/dev/tide-chart/data/tides.sqlite"
+    ]
+  }
+}

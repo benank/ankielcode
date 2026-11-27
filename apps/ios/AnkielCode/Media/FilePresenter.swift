@@ -21,6 +21,8 @@ enum FileTarget: Hashable, Identifiable {
     }
   }
 
+  var isAttachment: Bool { if case .attachment = self { true } else { false } }
+
   var kind: FileKind {
     switch self {
     case .workspace(let path, _): FileKind(path: path)
@@ -73,25 +75,31 @@ final class FilePresenter {
     self.context = context
   }
 
-  var canBrowse: Bool { context != nil }
+  /// A known root, and a session that may read files (`filesystem:read`; unknown scopes allow it,
+  /// the server still decides).
+  var canBrowse: Bool {
+    context != nil && registry?.environment(environmentId)?.allows(Self.readScope) != false
+  }
+
+  static let readScope = "filesystem:read"
 
   /// Whether requests can reach the computer now (observed: views retry when it connects).
   var isConnected: Bool { registry?.environment(environmentId)?.activeRoute != nil }
 
   func openBrowser() {
-    guard context != nil else { return }
+    guard canBrowse else { return }
     sheet = .browser
   }
 
   /// A path from a work row or a link: relative to the workspace, or absolute.
   func open(path: String, line: Int? = nil) {
-    guard let context, let relative = WorkspacePath.workspaceRelative(path, root: context.cwd) else { return }
+    guard canBrowse, let context, let relative = WorkspacePath.workspaceRelative(path, root: context.cwd) else { return }
     sheet = .file(.workspace(path: relative, line: line))
   }
 
   /// A link tapped in a message. Returns false for links that are not files (the system opens those).
   func open(link url: URL) -> Bool {
-    guard context != nil, let position = FileLink.position(url) else { return false }
+    guard canBrowse, let position = FileLink.position(url) else { return false }
     open(path: position.path, line: position.line)
     return true
   }
@@ -141,7 +149,14 @@ final class FilePresenter {
   /// A workspace or attachment resource, keyed by its revision when the server sends one.
   func signed(_ resource: AssetResource) async -> (url: URL, key: String)? {
     guard let registry, let asset = try? await registry.signedAsset(resource, in: environmentId) else { return nil }
-    return (asset.url, "\(environmentId)|\(resource)|\(asset.fileRevision ?? asset.url.absoluteString)")
+    // Attachments and tool images never change; files are keyed by their revision when the server
+    // sends one (`media-file`), else by the signed URL (`workspace-file` has no revision).
+    let version: String =
+      switch resource {
+      case .attachment, .toolOutputImage: "immutable"
+      default: asset.fileRevision ?? asset.url.absoluteString
+      }
+    return (asset.url, "\(environmentId)|\(resource)|\(version)")
   }
 
   /// Downloads a target's bytes into the media cache (Quick Look, PDF, Share, text attachments).

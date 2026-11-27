@@ -85,4 +85,54 @@ final class MediaFilesUITests: HomeUITestCase {
     start.press(forDuration: 0.05, thenDragTo: image.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 1.2)))
     XCTAssertTrue(app.buttons["media.viewer.close"].waitForNonExistence(timeout: 5), "a downward drag closes the viewer")
   }
+
+  /// A seeded Claude thread whose `Read` of a PNG returned the image: the expanded row shows it,
+  /// and tapping the thumbnail opens the gallery out of it.
+  func testToolImageOpensFromItsThumbnail() throws {
+    launch([
+      "ANKIEL_OPEN_URL": "ankielcode-native://thread/2cef27d0-20c8-470a-a573-aaf4e7ff84af/06dbad7d-cc8b-4c8f-88ce-43b14a5e1f48",
+      "ANKIEL_DEBUG_FILES": "tool-images",
+    ])
+    XCTAssertTrue(app.buttons["thread.menu"].waitForExistence(timeout: 15))
+    let thumbnail = app.buttons["media.tool-thumbnail"].firstMatch
+    var swipes = 0
+    while !thumbnail.waitForExistence(timeout: 2), swipes < 40 {
+      app.swipeDown(velocity: .fast)
+      swipes += 1
+    }
+    guard thumbnail.exists else { throw XCTSkip("No tool image in this thread's feed.") }
+    shot("tool-thumbnail")
+    thumbnail.tap()
+    let image = app.images["media.viewer.image"]
+    XCTAssertTrue(image.waitForExistence(timeout: 20))
+    shot("tool-viewer")
+    app.buttons["media.viewer.close"].tap()
+    XCTAssertTrue(thumbnail.waitForExistence(timeout: 5), "closing returns to the thumbnail")
+  }
+
+  func testFindInFileAndQuickLook() {
+    launch([
+      "ANKIEL_OPEN_URL": Self.threadLink,
+      "ANKIEL_DEBUG_FILES": "file:apps/mobile/modules/ankiel-native-controls/ios/AnkielNativeImageViewer.swift",
+    ])
+    XCTAssertTrue(app.descendants(matching: .any)["file.source"].waitForExistence(timeout: 20))
+    let find = app.searchFields.firstMatch
+    XCTAssertTrue(find.waitForExistence(timeout: 5))
+    find.tap()
+    find.typeText("decode")
+    XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label ENDSWITH ' of 23'")).firstMatch.waitForExistence(timeout: 5)
+      || app.staticTexts.containing(NSPredicate(format: "label CONTAINS ' of '")).firstMatch.waitForExistence(timeout: 5))
+    app.buttons["Next match"].tap()
+    shot("find-in-file")
+
+    // A binary file offers Quick Look; Quick Look cannot read a .glb, so the downloaded bytes go to Share.
+    app.terminate()
+    launch(["ANKIEL_OPEN_URL": Self.threadLink, "ANKIEL_DEBUG_FILES": "file:apps/web/src/components/device/models/iphone-duo.glb"])
+    let quickLook = app.buttons["file.quicklook"]
+    XCTAssertTrue(quickLook.waitForExistence(timeout: 20))
+    XCTAssertTrue(app.staticTexts["3.1 MB"].waitForExistence(timeout: 10), "the card shows the file's size")
+    quickLook.tap()
+    XCTAssertTrue(app.buttons["file.share"].waitForExistence(timeout: 20))
+    shot("quicklook-glb")
+  }
 }

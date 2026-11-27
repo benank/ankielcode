@@ -27,12 +27,24 @@ func probeFiles(_ session: EnvironmentSession, base: URL, cwd: String) async thr
       case .binary: print("read \(path): binary")
       case .notFile: print("read \(path): not a file")
       }
+    } catch RpcError.failed(let failure) {
+      print("read \(path): \(failure.tag ?? "?") failure=\(failure.error["failure"]?.stringValue ?? "none")")
     } catch {
       print("read \(path): failed \(error)")
     }
   }
 
   guard let threadId = argument("--thread") else { return }
+  if let item = argument("--tool-item") {
+    let full = try await rpc.call(
+      "orchestration.getTurnItem", payload: JSONValue.object(["threadId": .string(threadId), "itemId": .string(item)]),
+      as: JSONValue.self)
+    print("tool item output:  \(ToolOutputImages.count(full["item"]?["output"])) image(s) (stream copy: outputOmitted)")
+  }
+  if let path = argument("--stat") {
+    let stat = try await WorkspaceFileCalls.metadata(WorkspacePath.resolve(path, in: cwd), via: rpc)
+    print("stat \(path): \(stat.map { "\($0.kind) \($0.byteLength ?? -1) bytes" } ?? "null")")
+  }
   let context = FileContext(environmentId: "", cwd: cwd, threadId: threadId, title: "")
   let draft = FileContext(environmentId: "", cwd: cwd, threadId: nil, title: "")
   var assets: [(String, AssetResource)] = []

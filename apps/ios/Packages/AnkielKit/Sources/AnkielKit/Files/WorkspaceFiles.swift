@@ -113,6 +113,23 @@ struct ReadFileResult: Decodable, Sendable {
   @Tolerant var exists: Bool?
 }
 
+/// `filesystem.getMetadata`: stat absolute host paths (null for missing or unreadable ones).
+struct FileMetadataRequest: Encodable, Sendable {
+  static let rpcTag = "filesystem.getMetadata"
+  var paths: [String]
+}
+
+struct FileMetadataResult: Decodable, Sendable {
+  var entries: [Tolerant<FileMetadata>]
+}
+
+/// A host path's kind and size.
+public struct FileMetadata: Codable, Sendable, Hashable {
+  public var kind: String
+  public var byteLength: Int?
+  public var mimeType: String?
+}
+
 /// What reading a file gave.
 public enum FileRead: Sendable, Hashable {
   /// The text; `truncated` means the server sent only the first 1 MiB of `byteLength`.
@@ -169,6 +186,12 @@ public enum WorkspaceFileCalls {
     }
   }
 
+  public static func metadata(_ absolutePath: String, via caller: some UnaryCaller) async throws -> FileMetadata? {
+    let result = try await caller.call(
+      FileMetadataRequest.rpcTag, payload: FileMetadataRequest(paths: [absolutePath]), as: FileMetadataResult.self)
+    return result.entries.first?.wrappedValue
+  }
+
   /// `assets.createUrl`; `relativeUrl` resolves against the environment's endpoint.
   public static func signRelative(_ resource: AssetResource, via caller: some UnaryCaller) async throws -> (relativeUrl: String, fileRevision: String?) {
     let result = try await caller.call(AssetURLRequest.rpcTag, payload: AssetURLRequest(resource: resource), as: AssetURLResult.self)
@@ -183,6 +206,12 @@ extension EnvironmentRegistry {
 
   public func searchEntries(_ query: String, in context: FileContext) async throws(EnvironmentRequestError) -> WorkspaceEntries {
     try await request(context.environmentId) { try await WorkspaceFileCalls.search(query, cwd: context.cwd, via: SessionCaller(session: $0)) }
+  }
+
+  /// Size and kind of a workspace path (relative or absolute).
+  public func fileMetadata(_ path: String, in context: FileContext) async throws(EnvironmentRequestError) -> FileMetadata? {
+    let absolute = WorkspacePath.resolve(path, in: context.cwd)
+    return try await request(context.environmentId) { try await WorkspaceFileCalls.metadata(absolute, via: SessionCaller(session: $0)) }
   }
 
   public func readFile(_ path: String, in context: FileContext) async throws(EnvironmentRequestError) -> FileRead {

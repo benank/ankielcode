@@ -25,6 +25,7 @@ const schemas = {
   searchEntries: m.ProjectSearchEntriesInput,
   readFile: m.ProjectReadFileInput,
   assetUrl: m.AssetCreateUrlInput,
+  metadata: m.FilesystemGetMetadataInput,
 };
 
 let failures = 0;

@@ -13,6 +13,8 @@ struct FilePreviewView: View {
   @State private var mode: Mode = .preview
   @State private var findQuery = ""
   @State private var findIndex = 0
+  /// Lines matching `findQuery`, found once per keystroke.
+  @State private var found: [Int] = []
   @State private var copied = 0
   @State private var reloads = 0
 
@@ -27,7 +29,8 @@ struct FilePreviewView: View {
     /// Downloaded for Quick Look (documents, archives, binary files).
     case quickLook(URL)
     /// Binary or too unusual to show inline; offers Quick Look on demand.
-    case binary(byteLength: Int?)
+    /// `downloaded`: the bytes are here but Quick Look cannot show them; Share still can.
+    case binary(byteLength: Int?, downloaded: URL? = nil)
     case folder
     case failed(String)
   }
@@ -44,7 +47,12 @@ struct FilePreviewView: View {
       .navigationSubtitle(subtitle)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar { toolbar }
-      .task(id: [reloads, presenter.isConnected ? 1 : 0]) { await load() }
+      .task(id: reloads) { await load() }
+      // Opened while the computer reconnects (or before the thread's root is known): load once it
+      // can. A file already on screen stays through a drop and a reconnect.
+      .onChange(of: ready) { _, ready in
+        if ready, needsLoad { reloads += 1 }
+      }
       .sensoryFeedback(.success, trigger: copied)
   }
 
@@ -76,10 +84,14 @@ struct FilePreviewView: View {
           }
           .accessibilityIdentifier("file.markdown")
         } else {
-          SourceTextView(document: document, targetLine: line, matches: matches(document), currentMatch: currentMatch(document))
+          SourceTextView(document: document, targetLine: line, matches: found, currentMatch: currentMatch)
             .searchable(text: $findQuery, placement: .toolbar, prompt: Text("Find in file"))
-            .onSubmit(of: .search) { advanceFind(document) }
-            .safeAreaInset(edge: .bottom) { findBar(document) }
+            .onSubmit(of: .search) { step(1, count: found.count) }
+            .safeAreaInset(edge: .bottom) { findBar }
+            .onChange(of: findQuery) { _, query in
+              found = document.matches(query)
+              findIndex = 0
+            }
         }
       }
     case .image(let loaded):
@@ -92,18 +104,24 @@ struct FilePreviewView: View {
       PDFDocumentView(url: url).ignoresSafeArea(edges: .bottom)
     case .quickLook(let url):
       QuickLookView(url: url).ignoresSafeArea(edges: .bottom)
-    case .binary(let byteLength):
+    case .binary(let byteLength, let downloaded):
       ContentUnavailableView {
         Label(target.name, systemImage: FileIcon.symbol(for: target.name, isDirectory: false))
       } description: {
         VStack(spacing: Spacing.xs) {
-          Text("This file can't be shown as text.")
+          Text(downloaded == nil ? "This file can't be shown as text." : "Quick Look can't show this kind of file.")
           if let byteLength { Text(Int64(byteLength).formatted(.byteCount(style: .file))).monospacedDigit() }
         }
       } actions: {
-        Button("Open in Quick Look") { openQuickLook() }
-          .buttonStyle(.glassProminent)
-          .accessibilityIdentifier("file.quicklook")
+        if let downloaded {
+          ShareLink(item: downloaded) { Label("Share", systemImage: "square.and.arrow.up") }
+            .buttonStyle(.glassProminent)
+            .accessibilityIdentifier("file.share")
+        } else {
+          Button("Open in Quick Look") { openQuickLook() }
+            .buttonStyle(.glassProminent)
+            .accessibilityIdentifier("file.quicklook")
+        }
       }
     case .folder:
       ContentUnavailableView("This is a folder", systemImage: "folder", description: Text("Open it from Files to see what is inside."))
@@ -119,8 +137,7 @@ struct FilePreviewView: View {
   }
 
   @ViewBuilder
-  private func findBar(_ document: SourceDocument) -> some View {
-    let found = matches(document)
+  private var findBar: some View {
     if !findQuery.trimmingCharacters(in: .whitespaces).isEmpty {
       HStack(spacing: Spacing.sm) {
         Text(found.isEmpty ? String(localized: "No matches") : String(localized: "\(min(findIndex, found.count - 1) + 1) of \(found.count)"))
@@ -145,11 +162,8 @@ struct FilePreviewView: View {
     }
   }
 
-  private func matches(_ document: SourceDocument) -> [Int] { document.matches(findQuery) }
-
-  private func currentMatch(_ document: SourceDocument) -> Int? {
-    let found = matches(document)
-    return found.isEmpty ? nil : found[min(findIndex, found.count - 1)]
+  private var currentMatch: Int? {
+    found.isEmpty ? nil : found[min(findIndex, found.count - 1)]
   }
 
   private func step(_ delta: Int, count: Int) {
@@ -157,7 +171,6 @@ struct FilePreviewView: View {
     findIndex = (min(findIndex, count - 1) + delta + count) % count
   }
 
-  private func advanceFind(_ document: SourceDocument) { step(1, count: matches(document).count) }
 
   // MARK: Toolbar
 
@@ -217,12 +230,22 @@ struct FilePreviewView: View {
 
   // MARK: Loading
 
+  private var ready: Bool { presenter.isConnected && presenter.context != nil }
+
+  private var needsLoad: Bool {
+    switch state {
+    case .loading, .failed: true
+    default: false
+    }
+  }
+
   private func load() async {
     state = .loading
     guard presenter.registry != nil else {
       state = .failed(String(localized: "This environment is not connected."))
       return
     }
+    guard ready || target.isAttachment && presenter.isConnected else { return }
     switch target {
     case .workspace(let path, _):
       await loadWorkspace(path)
@@ -236,8 +259,6 @@ struct FilePreviewView: View {
       state = .failed(String(localized: "This environment is not connected."))
       return
     }
-    // Opened while the computer reconnects: wait; the task runs again when it connects.
-    guard presenter.isConnected else { return }
     if kind.isText {
       do {
         switch try await registry.readFile(path, in: context) {
@@ -245,7 +266,9 @@ struct FilePreviewView: View {
           let parsed = await Self.parse(raw, language: SourceLanguage.named(path: path), markdown: kind == .markdown ? MarkdownStyle.thread : nil)
           state = .text(parsed.source, raw: raw, byteLength: byteLength, truncated: truncated, markdown: parsed.markdown)
           if kind == .markdown, line != nil { mode = .source }
-        case .binary: state = .binary(byteLength: nil)
+        case .binary:
+          state = .binary(byteLength: nil)
+          if let size = (try? await registry.fileMetadata(path, in: context))??.byteLength { state = .binary(byteLength: size) }
         case .notFile: state = .folder
         }
       } catch {
@@ -258,7 +281,6 @@ struct FilePreviewView: View {
 
   /// Images, video, PDFs and everything else: signed URL, then the right viewer.
   private func loadDownloaded() async {
-    guard presenter.isConnected else { return }
     switch kind {
     case .video, .audio:
       if let url = await presenter.inlineURL(target) { state = .player(url) } else { state = .failed(Self.unavailable) }
@@ -267,7 +289,7 @@ struct FilePreviewView: View {
       if let image = await ImageDecoding.decode(file) {
         state = .image(LoadedImage(image: image, file: file))
       } else {
-        state = QuickLookView.canPreview(file) ? .quickLook(file) : .binary(byteLength: Self.size(file))
+        state = QuickLookView.canPreview(file) ? .quickLook(file) : .binary(byteLength: Self.size(file), downloaded: file)
       }
     case .pdf:
       guard let file = await presenter.download(target) else { state = .failed(Self.unavailable); return }
@@ -281,7 +303,7 @@ struct FilePreviewView: View {
         let parsed = await Self.parse(raw, language: SourceLanguage.named(path: target.name), markdown: kind == .markdown ? MarkdownStyle.thread : nil)
         state = .text(parsed.source, raw: raw, byteLength: size, truncated: false, markdown: parsed.markdown)
       } else {
-        state = QuickLookView.canPreview(file) ? .quickLook(file) : .binary(byteLength: Self.size(file))
+        state = QuickLookView.canPreview(file) ? .quickLook(file) : .binary(byteLength: Self.size(file), downloaded: file)
       }
     }
   }
@@ -290,7 +312,7 @@ struct FilePreviewView: View {
     Task {
       state = .loading
       if let file = await presenter.download(target) {
-        state = QuickLookView.canPreview(file) ? .quickLook(file) : .binary(byteLength: Self.size(file))
+        state = QuickLookView.canPreview(file) ? .quickLook(file) : .binary(byteLength: Self.size(file), downloaded: file)
       } else {
         state = .failed(Self.unavailable)
       }

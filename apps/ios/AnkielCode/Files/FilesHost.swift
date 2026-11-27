@@ -41,7 +41,7 @@ private struct ThreadFilesHost: ViewModifier {
       .filesPresentation(presenter, zoom: zoom)
       .onAppear {
         if self.presenter == nil { self.presenter = presenter }
-        FilesDebug.apply(to: presenter)
+        FilesDebug.apply(to: presenter, detail: detail)
       }
   }
 
@@ -139,5 +139,41 @@ struct FilesMenuButton: View {
           .accessibilityIdentifier("thread.files")
       }
     }
+  }
+}
+
+/// Files for a project before it has a thread (RN `DraftThreadHeader`): the new-thread sheet's
+/// chosen project, read with `draft-workspace-file` assets.
+struct ProjectFilesButton: View {
+  let environmentId: String?
+  let project: ProjectShell?
+  @Environment(AppModel.self) private var model
+  @State private var presenter: FilePresenter?
+  @Namespace private var zoom
+
+  var body: some View {
+    if let environmentId, let project, environmentId != ThreadDebug.environmentId {
+      Group {
+        if let presenter {
+          button(presenter).filesPresentation(presenter, zoom: zoom)
+        } else {
+          button(nil)
+        }
+      }
+      .onChange(of: [environmentId, project.workspaceRoot], initial: true) {
+        let context = FileContext(environmentId: environmentId, cwd: project.workspaceRoot, threadId: nil, title: project.title)
+        if let presenter, presenter.environmentId == environmentId {
+          presenter.context = context
+        } else {
+          presenter = FilePresenter(environmentId: environmentId, registry: model.registry, context: context)
+        }
+      }
+    }
+  }
+
+  private func button(_ presenter: FilePresenter?) -> some View {
+    Button("Files", systemImage: "folder") { presenter?.openBrowser() }
+      .disabled(presenter?.canBrowse != true)
+      .accessibilityIdentifier("project.files")
   }
 }

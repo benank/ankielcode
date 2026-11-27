@@ -170,12 +170,15 @@ pinch and double-tap zoom, swipe between the thread's images, drag down to close
 Photos, Copy); file chips open attachments; work-row file paths, read rows and markdown links to
 paths (`src/a.ts:12`, `file://…`) open the file; expanded tool rows show the tool's images
 (`tool-output-image`, read from `orchestration.getTurnItem`). Originals are cached on disk in
-`Caches/AnkielCode/media` (256 MB, oldest first), keyed by environment, resource and the server's
-`fileRevision`, never by the signed URL.
+`Caches/AnkielCode/media` (256 MB, oldest first), keyed by environment and resource, plus the
+server's `fileRevision` for `media-file` (attachments and tool images never change; `workspace-file`
+URLs carry no revision, so those fall back to the signed URL). New-thread's toolbar has **Files**
+for the chosen project (`draft-workspace-file`). Everything is hidden without `filesystem:read`.
 
 `ankiel-probe --files <cwd>` runs the same reads against a server: list, `--search <q>`, `--read
-<path>` (repeatable; text, binary, folder), and with `--thread <id>` signs and downloads `--image
-<path>`, `--download <path>` and `--tool-item <itemId>`:
+<path>` (repeatable; text, binary, folder, with the error's `failure`), and with `--thread <id>`
+`--stat <path>` (`filesystem.getMetadata`), counts a `--tool-item <itemId>`'s images from
+`orchestration.getTurnItem` and signs and downloads them, `--image <path>` and `--download <path>`:
 
 ```sh
 swift run ankiel-probe --state /tmp/probe.json --files /path/to/checkout --read package.json \

@@ -93,6 +93,9 @@ struct NewThreadView: View {
           Button("Close", systemImage: "xmark") { dismiss() }
             .keyboardShortcut(.cancelAction)
         }
+        ToolbarItem(placement: .primaryAction) {
+          ProjectFilesButton(environmentId: computer?.id, project: project)
+        }
       }
     }
   }

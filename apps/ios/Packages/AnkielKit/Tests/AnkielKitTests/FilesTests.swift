@@ -17,6 +17,7 @@ struct FilesTests {
     ("files-list-folder", "listEntries", ListEntriesRequest(cwd: cwd, directoryPath: "Sources/TideKit")),
     ("files-search", "searchEntries", SearchEntriesRequest(cwd: cwd, query: "tide", limit: SearchEntriesRequest.maxLimit)),
     ("files-read", "readFile", ReadFileRequest(cwd: cwd, relativePath: "Sources/TideKit/Tide.swift")),
+    ("files-metadata", "metadata", FileMetadataRequest(paths: ["/Users/dev/tide-chart/data/tides.sqlite"])),
     ("asset-workspace-file", "assetUrl", AssetURLRequest(resource: context.asset("docs/chart.png"))),
     ("asset-media-video", "assetUrl", AssetURLRequest(resource: context.asset("docs/demo.mp4"))),
     ("asset-media-download", "assetUrl", AssetURLRequest(resource: context.asset("data/tides.sqlite", download: true))),
@@ -68,6 +69,13 @@ struct FilesTests {
     #expect(entries.entries[2].ignored == true)
     #expect(entries.dropped == 1)
     #expect(entries.truncated)
+  }
+
+  @Test("metadata entries decode, null and unreadable ones as nil")
+  func metadata() throws {
+    let result = try decode(
+      FileMetadataResult.self, json: #"{"entries":[{"kind":"file","byteLength":3097724},null,{"kind":7}]}"#)
+    #expect(result.entries.map(\.wrappedValue) == [FileMetadata(kind: "file", byteLength: 3_097_724, mimeType: nil), nil, nil])
   }
 
   @Test("asset results keep the file revision and image size")
