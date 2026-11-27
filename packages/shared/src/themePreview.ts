@@ -3,7 +3,7 @@ import {
   ANKIEL_CODE_LIGHT_THEME_COLORS,
   type ThemeAppearance,
   type ThemeColors,
-} from "./themePalettes.js";
+} from "./themePalettes.ts";
 
 export type ThemePreviewColors = Readonly<{
   canvas: string;
