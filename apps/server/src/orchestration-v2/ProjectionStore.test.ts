@@ -49,6 +49,7 @@ import { MCP_APP_OUTPUT_KEY } from "@ankielcode/shared/mcpApp";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import { CodexProviderCapabilitiesV2 } from "./Adapters/CodexAdapterV2.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
+import { loadSubscriberShellSnapshot } from "./ShellStream.ts";
 import {
   buildBoundedThreadProjection,
   decodeThreadHistoryCursor,
@@ -1655,14 +1656,34 @@ it.effect("SQL queue readiness skips held runs without bypassing active work", (
   }).pipe(Effect.provide(layerTest)),
 );
 
-it.effect("shells mark a native subagent thread active only while its run-less turn is live", () =>
+it.effect("subscriber shells keep a native subagent only while its run-less turn is live", () =>
   Effect.gen(function* () {
     const store = yield* ProjectionStore.ProjectionStoreV2;
-    const threadId = yield* addRolledBackRecoveryCandidate("subagent-turn");
-    const at = (yield* store.getThreadProjection(threadId)).updatedAt;
+    const sql = yield* SqlClient.SqlClient;
+    const parentId = yield* addRolledBackRecoveryCandidate("subagent-turn");
+    const { thread: parent, updatedAt: at } = yield* store.getThreadProjection(parentId);
+    const threadId = ThreadId.make("thread:subagent-turn:child");
     const nodeId = NodeId.make("node:subagent-turn:thread-root");
+    yield* store.apply({
+      id: EventId.make("event:subagent-turn:child-created"),
+      type: "thread.created",
+      threadId,
+      occurredAt: at,
+      payload: {
+        ...parent,
+        id: threadId,
+        createdBy: "agent",
+        creationSource: "provider",
+        lineage: {
+          parentThreadId: parentId,
+          relationshipToParent: "subagent",
+          rootThreadId: parentId,
+        },
+      },
+    });
     const assertActive = Effect.fnUntraced(function* (expected: boolean) {
-      const listed = (yield* store.getShellSnapshot()).threads.find((row) => row.id === threadId);
+      const full = yield* store.getShellSnapshot();
+      const listed = full.threads.find((row) => row.id === threadId);
       const shells = [
         yield* store.getThreadShell(threadId),
         listed,
@@ -1671,6 +1692,22 @@ it.effect("shells mark a native subagent thread active only while its run-less t
       assert.deepEqual(
         shells.map((shell) => shell?.subagentTurnActive ?? false),
         [expected, expected, expected],
+      );
+      const { snapshot } = yield* loadSubscriberShellSnapshot({
+        sql,
+        listShellIndex: store.listActiveShellIndex(),
+        readThreads: (threadIds) =>
+          store.readShellSnapshot({
+            location: "active",
+            ...(threadIds === undefined ? {} : { threadIds }),
+          }),
+        listProjects: Effect.succeed([]),
+        latestSequence: Effect.succeed(full.snapshotSequence),
+        options: { omitIdleSubagents: true, omitOlderSettled: true },
+      });
+      assert.sameMembers(
+        snapshot.threads.map((thread) => thread.id),
+        expected ? [parentId, threadId] : [parentId],
       );
       yield* assertShellIndexCoversShells();
     });

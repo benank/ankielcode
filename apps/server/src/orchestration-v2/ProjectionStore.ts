@@ -2335,6 +2335,14 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
     // query must filter on the same status list as the index of migration 060.
     const LIVE_NODES_INDEX = sql.literal("INDEXED BY orchestration_v2_projection_nodes_live_idx");
 
+    const liveRunlessRootTurnThreads = sql`
+      SELECT node.thread_id
+      FROM orchestration_v2_projection_nodes AS node ${LIVE_NODES_INDEX}
+      WHERE node.status IN ('pending', 'starting', 'running', 'waiting')
+        AND node.run_id IS NULL
+        AND node.kind = 'root_turn'
+    `;
+
     // An ended task whose completion was acknowledged, delivered or disposed, outside an active run.
     const settledSubagent = (row: Statement.Fragment) => sql`(
       ${row}.status IN ('completed', 'failed', 'cancelled', 'interrupted')
@@ -8455,15 +8463,8 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                 ORDER BY r.ordinal DESC, r.run_id DESC
                 LIMIT 1
               ) AS activity_run_started_at,
-              -- A native subagent's turn has no run of its own. The status list matches the
-              -- live index's predicate, which SQLite needs to use it.
               EXISTS (
-                SELECT 1 FROM orchestration_v2_projection_nodes AS node
-                  ${LIVE_NODES_INDEX}
-                WHERE node.thread_id = t.thread_id
-                  AND node.status IN ('pending', 'starting', 'running', 'waiting')
-                  AND node.run_id IS NULL
-                  AND node.kind = 'root_turn'
+                ${liveRunlessRootTurnThreads} AND node.thread_id = t.thread_id
               ) AS subagent_turn_active,
               (
                 SELECT json_extract(session.payload_json, '$.lastError')
@@ -9508,14 +9509,14 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
           ${indexedField("$.pinnedAt")} AS pinned_at,
           ${indexedField("$.pinOrderKey")} AS pin_order_key,
           ${indexedField("$.snoozedUntil")} AS snoozed_until,
-          -- A superset of isLiveSubagentShell: the sources of its run status, pending request,
-          -- and pending background work. Each source is one list for the whole read, found
-          -- through its partial index, so finished threads cost no lookups.
+          -- A superset of isLiveSubagentShell. Each source is one list for the whole read,
+          -- so finished threads cost no lookups.
           (
             t.thread_id IN (
               SELECT r.thread_id FROM orchestration_v2_projection_runs r
               WHERE r.status IN ('queued', 'preparing', 'starting', 'running', 'waiting')
             )
+            OR t.thread_id IN (${liveRunlessRootTurnThreads})
             OR t.thread_id IN (
               SELECT request.thread_id FROM orchestration_v2_projection_runtime_requests request
               WHERE request.status = 'pending'

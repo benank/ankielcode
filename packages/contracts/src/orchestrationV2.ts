@@ -2389,12 +2389,17 @@ const LIVE_SHELL_STATUSES: ReadonlySet<OrchestrationV2ShellThreadStatus> = new S
 export function isLiveSubagentShell(
   thread: Pick<
     OrchestrationV2ThreadShell,
-    "activityRunStatus" | "status" | "pendingRuntimeRequest" | "pendingBackgroundTasks"
+    | "activityRunStatus"
+    | "status"
+    | "subagentTurnActive"
+    | "pendingRuntimeRequest"
+    | "pendingBackgroundTasks"
   >,
 ): boolean {
   return (
     (thread.activityRunStatus ?? null) !== null ||
     LIVE_SHELL_STATUSES.has(thread.status) ||
+    thread.subagentTurnActive === true ||
     thread.pendingRuntimeRequest !== null ||
     (thread.pendingBackgroundTasks?.length ?? 0) > 0
   );
