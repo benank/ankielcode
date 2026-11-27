@@ -1513,18 +1513,19 @@ export interface DesktopPreviewBridge {
   onFindResult: (listener: (event: DesktopPreviewFindResultEvent) => void) => () => void;
 }
 
-export type ConfirmDialogVariant = "default" | "destructive";
-
 export interface ConfirmDialogOptions {
-  readonly variant?: ConfirmDialogVariant;
-  /** Which button takes focus on open. Defaults to Cancel; destructive confirms always keep Cancel. */
-  readonly initialFocus?: "confirm" | "cancel";
+  /** The confirm button names the action ("Delete", "Archive"), never "Confirm" or "OK". */
+  readonly confirmLabel: string;
+  /** A red confirm button, and Cancel keeps focus so Return can't confirm. Otherwise Return confirms. */
+  readonly destructive: boolean;
+  /** Keeps Cancel focused for prompts the user didn't start, so a keystroke meant for the page can't approve them. */
+  readonly focusCancel?: true;
 }
 
 export interface LocalApi {
   dialogs: {
     pickFolder: (options?: PickFolderOptions) => Promise<string | null>;
-    confirm: (message: string, options?: ConfirmDialogOptions) => Promise<boolean>;
+    confirm: (message: string, options: ConfirmDialogOptions) => Promise<boolean>;
   };
   shell: {
     openExternal: (url: string) => Promise<void>;

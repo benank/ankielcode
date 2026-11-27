@@ -1503,7 +1503,7 @@ export function PullRequestDetailPanel({
           ),
         ),
       ].join("\n"),
-      { variant: "destructive" },
+      { confirmLabel: m(msg("Delete branch")), destructive: true },
     );
     if (confirmed) void perform("delete-branch");
   };

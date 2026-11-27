@@ -11,6 +11,7 @@ import { threadRuntimeCanArchive } from "@ankielcode/client-runtime/state/models
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
+  type ConfirmDialogOptions,
   EnvironmentAuthorizationError,
   EnvironmentId,
   type ScopedThreadRef,
@@ -192,7 +193,7 @@ export class ThreadActiveReorderUnsupportedError extends Schema.TaggedError<Thre
 async function requestThreadUnpinConfirmation(input: {
   enabled: boolean;
   title: string | null;
-  confirm: ((message: string) => Promise<boolean>) | null;
+  confirm: ((message: string, options: ConfirmDialogOptions) => Promise<boolean>) | null;
 }) {
   const { confirm } = input;
   if (!input.enabled || confirm === null) {
@@ -207,6 +208,7 @@ async function requestThreadUnpinConfirmation(input: {
           : m(msg('Unpin thread "{title}"?', { title: input.title })),
         m(msg("This will move the thread out of your pinned section.")),
       ].join("\n"),
+      { confirmLabel: m(msg("Unpin")), destructive: false },
     ),
   );
 }
@@ -591,7 +593,7 @@ export function useThreadActions() {
             "",
             m(msg("Delete the worktree too?")),
           ].join("\n"),
-          { variant: "destructive" },
+          { confirmLabel: m(msg("Delete worktree")), destructive: true },
         ),
       );
       if (confirmationResult._tag === "Failure") {
@@ -885,7 +887,7 @@ export function useThreadActions() {
     const confirmationResult = await requestThreadUnpinConfirmation({
       enabled: confirmThreadUnpin,
       title: resolved?.thread.title ?? null,
-      confirm: localApi ? (message) => localApi.dialogs.confirm(message) : null,
+      confirm: localApi ? (message, options) => localApi.dialogs.confirm(message, options) : null,
     });
     if (confirmationResult._tag === "Failure") {
       return confirmationResult;
@@ -1029,7 +1031,10 @@ export function useThreadActions() {
               : m(msg('Delete thread "{title}"?', { title })),
             m(msg("This permanently clears conversation history for this thread.")),
           ].join("\n"),
-          { variant: "destructive" },
+          {
+            confirmLabel: m(msg("Delete", { $context: "verb, deletes a thread" })),
+            destructive: true,
+          },
         ),
       );
       if (confirmationResult._tag === "Failure") {

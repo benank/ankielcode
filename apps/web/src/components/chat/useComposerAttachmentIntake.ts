@@ -437,6 +437,7 @@ export function useComposerAttachmentIntake(input: {
               "Remove this image from the message?\nIt is referenced in your text; removing it also removes every reference.",
             ),
           ),
+      { confirmLabel: m(msg("Remove", { $context: "verb, removes an image" })), destructive: true },
     );
     if (!confirmation) {
       removeComposerImageFromDraft(imageId);

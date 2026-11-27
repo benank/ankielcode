@@ -313,7 +313,10 @@ export function useThreadActionMenu(input: {
         case "archive": {
           if (confirmThreadArchive) {
             const confirmed = await settlePromise(() =>
-              api.dialogs.confirm(m(msg('Archive thread "{title}"?', { title: thread.title }))),
+              api.dialogs.confirm(m(msg('Archive thread "{title}"?', { title: thread.title })), {
+                confirmLabel: m(msg("Archive", { $context: "verb, archives a thread" })),
+                destructive: false,
+              }),
             );
             if (confirmed._tag === "Failure" || !confirmed.value) return;
           }
@@ -341,7 +344,10 @@ export function useThreadActionMenu(input: {
                   m(msg('Delete thread "{title}"?', { title: thread.title })),
                   m(msg("This permanently clears conversation history for this thread.")),
                 ].join("\n"),
-                { variant: "destructive" },
+                {
+                  confirmLabel: m(msg("Delete", { $context: "verb, deletes a thread" })),
+                  destructive: true,
+                },
               ),
             );
             if (confirmed._tag === "Failure" || !confirmed.value) return;

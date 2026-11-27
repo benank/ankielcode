@@ -11,7 +11,7 @@ const showContextMenuFallbackMock =
 const dismissContextMenuMock = vi.fn<() => void>();
 
 const requestConfirmDialogMock =
-  vi.fn<(message: string, options?: ConfirmDialogOptions) => Promise<boolean> | undefined>();
+  vi.fn<(message: string, options: ConfirmDialogOptions) => Promise<boolean> | undefined>();
 
 vi.mock("./contextMenuFallback", () => ({
   showContextMenuFallback: showContextMenuFallbackMock,
@@ -69,6 +69,11 @@ describe("LocalApi", () => {
     requestConfirmDialogMock.mockReturnValue(undefined);
     const { createLocalApi } = await import("./localApi");
 
-    await expect(createLocalApi().dialogs.confirm("Delete this thread?")).resolves.toBe(false);
+    await expect(
+      createLocalApi().dialogs.confirm("Delete this thread?", {
+        confirmLabel: "Delete",
+        destructive: true,
+      }),
+    ).resolves.toBe(false);
   });
 });

@@ -13,7 +13,7 @@ const state = vi.hoisted(() => ({
   openLink: vi.fn(async () => undefined),
   navigate: vi.fn(async (): Promise<void> => undefined),
   openScratchProject: vi.fn(async () => null),
-  confirm: vi.fn(async (_message: string) => true),
+  confirm: vi.fn(async (_message: string, _options: unknown) => true),
   connectPairing: vi.fn(async (_input: { pairingUrl: string }) => ({ _tag: "Success" })),
   localEnvironmentDisabled: false,
 }));
@@ -285,6 +285,7 @@ it("adds the backend from a pairing link after the user confirms its host", asyn
   );
   expect(state.confirm).toHaveBeenCalledExactlyOnceWith(
     "Add the backend at https://vps.example.com?",
+    { confirmLabel: "Add", destructive: false, focusCancel: true },
   );
   expect(state.navigate).not.toHaveBeenCalled();
 });

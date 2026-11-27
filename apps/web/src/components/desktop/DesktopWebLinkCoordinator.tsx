@@ -135,7 +135,12 @@ export function DesktopWebLinkCoordinator() {
       return;
     }
     const confirmed =
-      (await requestConfirmDialog(gt("Add the backend at {origin}?", { origin }))) ?? false;
+      (await requestConfirmDialog(gt("Add the backend at {origin}?", { origin }), {
+        confirmLabel: gt("Add", { $context: "verb, adds a backend" }),
+        destructive: false,
+        // A link from outside the app opens this, so Return alone must not pair.
+        focusCancel: true,
+      })) ?? false;
     if (!confirmed) return;
     const result = await connectPairingEnvironment({ pairingUrl });
     if (result._tag === "Failure") {

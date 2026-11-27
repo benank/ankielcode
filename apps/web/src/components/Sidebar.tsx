@@ -2613,7 +2613,10 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
               }),
               gt("This permanently clears conversation history for these threads."),
             ].join("\n"),
-            { variant: "destructive" },
+            {
+              confirmLabel: gt("Delete", { $context: "verb, deletes a thread" }),
+              destructive: true,
+            },
           ),
         );
         if (confirmed._tag === "Failure" || !confirmed.value) return;
@@ -2950,7 +2953,10 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
           case "archive": {
             if (confirmThreadArchive) {
               const confirmed = await settlePromise(() =>
-                api.dialogs.confirm(gt('Archive thread "{title}"?', { title: thread.title })),
+                api.dialogs.confirm(gt('Archive thread "{title}"?', { title: thread.title }), {
+                  confirmLabel: gt("Archive", { $context: "verb, archives a thread" }),
+                  destructive: false,
+                }),
               );
               if (confirmed._tag === "Failure" || !confirmed.value) return;
             }
@@ -2983,7 +2989,10 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                     gt('Delete thread "{title}"?', { title: thread.title }),
                     gt("This permanently clears conversation history for this thread."),
                   ].join("\n"),
-                  { variant: "destructive" },
+                  {
+                    confirmLabel: gt("Delete", { $context: "verb, deletes a thread" }),
+                    destructive: true,
+                  },
                 ),
               );
               if (confirmed._tag === "Failure" || !confirmed.value) return;

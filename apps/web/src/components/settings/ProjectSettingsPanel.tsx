@@ -371,7 +371,10 @@ function ProjectDetail({
       resolveMessage,
     );
     const confirmed = await settlePromise(() =>
-      api.dialogs.confirm(confirmationMessage, { variant: "destructive" }),
+      api.dialogs.confirm(confirmationMessage, {
+        confirmLabel: gt("Remove", { $context: "verb, removes a checkout" }),
+        destructive: true,
+      }),
     );
     if (confirmed._tag === "Failure" || !confirmed.value) return;
     if (checkProjectAccess(members, gt("Failed to remove project"))) return;

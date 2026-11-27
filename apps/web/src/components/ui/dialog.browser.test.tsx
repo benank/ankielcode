@@ -17,16 +17,26 @@ import {
 
 describe("dialog initial focus", () => {
   it.each([
-    { label: "generic", options: undefined, focused: "Cancel", confirmed: false },
     {
-      label: "destructive opt-in",
-      options: { variant: "destructive", initialFocus: "confirm" },
+      label: "non-destructive",
+      options: { confirmLabel: "Archive", destructive: false },
+      focused: "Archive",
+      confirmed: true,
+    },
+    {
+      label: "destructive",
+      options: { confirmLabel: "Delete", destructive: true },
       focused: "Cancel",
       confirmed: false,
     },
-    { label: "opt-in", options: { initialFocus: "confirm" }, focused: "Confirm", confirmed: true },
+    {
+      label: "page-raised",
+      options: { confirmLabel: "Send", destructive: false, focusCancel: true },
+      focused: "Cancel",
+      confirmed: false,
+    },
   ] as const)(
-    "focuses $focused for a $label confirmation",
+    "Return answers a $label confirmation from $focused",
     async ({ options, focused, confirmed }) => {
       resetConfirmDialogForTests();
       await using _screen = await render(<ConfirmDialogHost />);
@@ -35,6 +45,9 @@ describe("dialog initial focus", () => {
         confirmation = requestConfirmDialog("Continue?", options);
       });
 
+      await expect
+        .element(page.getByRole("button", { name: options.confirmLabel, exact: true }))
+        .toBeVisible();
       await expect.element(page.getByRole("button", { name: focused, exact: true })).toHaveFocus();
       await userEvent.keyboard("{Enter}");
       await expect(confirmation).resolves.toBe(confirmed);

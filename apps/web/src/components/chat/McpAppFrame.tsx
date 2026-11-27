@@ -262,9 +262,13 @@ export function McpAppFrame(props: {
       };
     };
     // Return inline so approvals stay visible above the app.
-    const ask = async (message: string) => {
+    const ask = async (message: string, confirmLabel: string) => {
       flushSync(() => setDisplayMode("inline"));
-      const approved = await requestConfirmDialog(message);
+      const approved = await requestConfirmDialog(message, {
+        confirmLabel,
+        destructive: false,
+        focusCancel: true,
+      });
       if (approved === undefined) {
         throw new McpAppHostRefusal({ message: "Ankiel could not ask for approval here." });
       }
@@ -289,6 +293,7 @@ export function McpAppFrame(props: {
         if (!info.value.readOnly) {
           const approved = await ask(
             `${m(msg("Allow {server} to run {tool}?", { server: app.server, tool: info.value.title ?? name }))}\n${JSON.stringify(args, null, 2)}`,
+            m(msg("Run", { $context: "verb, runs a tool" })),
           );
           if (approved !== true) throw new McpAppHostRefusal({ message: "Declined by the user." });
         }
@@ -320,6 +325,7 @@ export function McpAppFrame(props: {
           throw new McpAppHostRefusal({ message: "Messages are not available here." });
         const approved = await ask(
           `${m(msg("Send this message from {server}?", { server: app.server }))}\n${text}`,
+          m(msg("Send", { $context: "verb, sends a message" })),
         );
         if (approved !== true) throw new McpAppHostRefusal({ message: "Declined by the user." });
         await send(text);
@@ -357,6 +363,7 @@ export function McpAppFrame(props: {
         const names = files.map((file) => file.name).join(", ");
         const approved = await ask(
           m(msg("Save {names} from {server}?", { names, server: app.server })),
+          m(msg("Save", { $context: "verb, saves a downloaded file" })),
         );
         if (approved !== true) throw new McpAppHostRefusal({ message: "Declined by the user." });
         for (const file of files) {

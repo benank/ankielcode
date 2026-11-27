@@ -351,7 +351,7 @@ describe("thread action permissions", () => {
     await useThreadActions().confirmAndDeleteThread(target, "Archived release notes");
     expect(state.confirm).toHaveBeenCalledWith(
       expect.stringContaining('Delete thread "Archived release notes"?'),
-      { variant: "destructive" },
+      { confirmLabel: "Delete", destructive: true },
     );
     expect(state.requests).toEqual([]);
   });

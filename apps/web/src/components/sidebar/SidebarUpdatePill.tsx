@@ -311,7 +311,10 @@ function SidebarUpdateControl() {
       try {
         confirmed = await ensureLocalApi().dialogs.confirm(
           getDesktopUpdateInstallConfirmationMessage(state),
-          { initialFocus: "confirm" },
+          {
+            confirmLabel: gt("Restart", { $context: "button, restarts the app" }),
+            destructive: false,
+          },
         );
       } catch (error) {
         setIsActionPending(false);

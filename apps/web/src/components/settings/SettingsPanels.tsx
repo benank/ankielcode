@@ -220,7 +220,10 @@ function AboutVersionSection() {
           getDesktopUpdateInstallConfirmationMessage(
             updateState ?? { availableVersion: null, downloadedVersion: null },
           ),
-          { initialFocus: "confirm" },
+          {
+            confirmLabel: gt("Restart", { $context: "button, restarts the app" }),
+            destructive: false,
+          },
         );
       } catch (error) {
         setIsUpdateActionPending(false);
@@ -596,7 +599,10 @@ export function useSettingsRestore(onRestored?: () => void) {
         gt("Restore default settings?"),
         gt("This will reset: {settings}.", { settings: changedSettingLabels.join(", ") }),
       ].join("\n"),
-      { variant: "destructive" },
+      {
+        confirmLabel: gt("Restore", { $context: "verb, restores default settings" }),
+        destructive: true,
+      },
     );
     if (!confirmed) return;
 

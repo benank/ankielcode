@@ -783,8 +783,10 @@ function ScheduledTaskRow({
     if (action === "delete") {
       const message = `${gt('Delete "{title}"?', { title: task.title })}\n${gt("This cannot be undone.")}`;
       const confirmed =
-        (await requestConfirmDialog(message, { variant: "destructive" })) ??
-        window.confirm(message);
+        (await requestConfirmDialog(message, {
+          confirmLabel: gt("Delete", { $context: "verb, deletes a scheduled task" }),
+          destructive: true,
+        })) ?? window.confirm(message);
       if (!confirmed) return;
     }
     setBusy(true);
@@ -1161,7 +1163,10 @@ function WebhookEndpointField({
     const confirmed =
       (await requestConfirmDialog(
         `${gt("Rotate this webhook URL?")}\n${gt("The current URL stops working.")}`,
-        { variant: "destructive" },
+        {
+          confirmLabel: gt("Rotate", { $context: "verb, rotates a webhook URL" }),
+          destructive: true,
+        },
       )) ?? window.confirm(gt("Rotate this webhook URL? The current URL stops working."));
     if (!confirmed) return;
     setRotating(true);

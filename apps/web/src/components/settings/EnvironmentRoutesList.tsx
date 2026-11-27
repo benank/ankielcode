@@ -80,6 +80,10 @@ export function EnvironmentRoutesList({
             route: connectionRouteLabelText(route, messages),
             address,
           }),
+      {
+        confirmLabel: gt("Remove", { $context: "verb, removes a connection route" }),
+        destructive: true,
+      },
     );
     if (confirmed !== true) return;
     await removeRoute({

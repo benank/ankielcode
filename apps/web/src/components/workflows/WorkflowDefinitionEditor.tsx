@@ -210,7 +210,8 @@ function Surface({
       !(await (requestConfirmDialog(
         gt("Leave without saving? Your changes to this file are lost."),
         {
-          variant: "destructive",
+          confirmLabel: gt("Leave", { $context: "verb, leaves without saving" }),
+          destructive: true,
         },
       ) ?? Promise.resolve(false))),
     enableBeforeUnload: () => dirty && !released.current,
@@ -410,7 +411,7 @@ export default function WorkflowDefinitionEditor({
   const removeFile = async (target: string) => {
     const confirmed = await (requestConfirmDialog(
       gt("Delete {file}? The workflows it defines can no longer be started.", { file: target }),
-      { variant: "destructive" },
+      { confirmLabel: gt("Delete", { $context: "verb, deletes a file" }), destructive: true },
     ) ?? Promise.resolve(false));
     if (!confirmed) return false;
     const result = await remove({ environmentId, input: { name: target } });

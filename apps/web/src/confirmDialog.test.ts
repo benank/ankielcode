@@ -10,6 +10,8 @@ import {
 } from "./confirmDialog";
 
 const mountHost = () => subscribeConfirmDialogHost(() => {});
+const deleteOptions = { confirmLabel: "Delete", destructive: true } as const;
+const continueOptions = { confirmLabel: "Continue", destructive: false } as const;
 
 function requireConfirmation(confirmation: Promise<boolean> | undefined): Promise<boolean> {
   if (!confirmation) {
@@ -26,24 +28,27 @@ describe("confirm dialog coordinator", () => {
   it("serializes concurrent confirmations", async () => {
     const unregister = mountHost();
     const first = requireConfirmation(
-      requestConfirmDialog("Delete the project?", { initialFocus: "confirm" }),
+      requestConfirmDialog("Archive the project?", { confirmLabel: "Archive", destructive: false }),
     );
-    const second = requireConfirmation(requestConfirmDialog("Delete the worktree too?"));
+    const second = requireConfirmation(
+      requestConfirmDialog("Delete the worktree too?", deleteOptions),
+    );
 
     respondToConfirmDialog(false);
     await expect(first).resolves.toBe(false);
     expect(readConfirmDialogState()).toEqual({
       status: "closing",
-      message: "Delete the project?",
-      variant: "default",
-      initialFocus: "confirm",
+      message: "Archive the project?",
+      confirmLabel: "Archive",
+      destructive: false,
     });
 
     completeConfirmDialogClose();
     expect(readConfirmDialogState()).toEqual({
       status: "confirming",
       message: "Delete the worktree too?",
-      variant: "default",
+      confirmLabel: "Delete",
+      destructive: true,
     });
 
     respondToConfirmDialog(true);
@@ -55,8 +60,10 @@ describe("confirm dialog coordinator", () => {
 
   it("cancels active and queued confirmations if the last host unmounts", async () => {
     const unregister = mountHost();
-    const active = requireConfirmation(requestConfirmDialog("Delete the thread?"));
-    const queued = requireConfirmation(requestConfirmDialog("Delete the worktree too?"));
+    const active = requireConfirmation(requestConfirmDialog("Delete the thread?", deleteOptions));
+    const queued = requireConfirmation(
+      requestConfirmDialog("Delete the worktree too?", deleteOptions),
+    );
 
     unregister();
 
@@ -65,16 +72,25 @@ describe("confirm dialog coordinator", () => {
   });
 
   it("has no host until one subscribes", () => {
-    expect(requestConfirmDialog("Continue?")).toBeUndefined();
+    expect(requestConfirmDialog("Continue?", continueOptions)).toBeUndefined();
     const unsubscribe = mountHost();
-    expect(requestConfirmDialog("Continue?")).toBeDefined();
+    expect(requestConfirmDialog("Continue?", continueOptions)).toBeDefined();
     unsubscribe();
+    expect(requestConfirmDialog("Continue?", continueOptions)).toBeUndefined();
+  });
+
+  it("requires every caller to name the action and say whether it is destructive", () => {
+    // @ts-expect-error the options are required
     expect(requestConfirmDialog("Continue?")).toBeUndefined();
+    // @ts-expect-error confirmLabel is required
+    expect(requestConfirmDialog("Continue?", { destructive: false })).toBeUndefined();
+    // @ts-expect-error destructive is required
+    expect(requestConfirmDialog("Continue?", { confirmLabel: "Continue" })).toBeUndefined();
   });
 
   it("ignores responses after the active dialog has been closed", () => {
     const unregister = mountHost();
-    const confirmation = requireConfirmation(requestConfirmDialog("Continue?"));
+    const confirmation = requireConfirmation(requestConfirmDialog("Continue?", continueOptions));
 
     respondToConfirmDialog(true);
     respondToConfirmDialog(false);
