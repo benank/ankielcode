@@ -44,9 +44,13 @@ struct NewThreadView: View {
   private var project: ProjectShell? {
     guard let computer, draft.noProject != true || !computer.offersNoProject else { return nil }
     if let chosen = computer.projects.first(where: { $0.id == draft.projectId }) { return chosen }
+    let preferences = model.preferences.values
+    if preferences.useLastProjectForNewThreads {
+      // The project this device last started a thread in, else the computer's most recent one.
+      return computer.projects.first { $0.id == preferences.lastProjectIds[computer.id] } ?? computer.projects.first
+    }
     // "Use last project" off: nothing is preselected where "No project" exists.
-    if !model.preferences.values.useLastProjectForNewThreads, computer.offersNoProject { return nil }
-    return computer.projects.first
+    return computer.offersNoProject ? nil : computer.projects.first
   }
 
   private var target: ComposerTarget {
@@ -56,6 +60,10 @@ struct NewThreadView: View {
     target.projectDefault = project?.defaultModelSelection
     target.connected = computer?.connected ?? false
     target.canSend = computer != nil && !preparing
+    if let computer, let project {
+      target.fileContext = FileContext(environmentId: computer.id, cwd: project.workspaceRoot, threadId: nil, title: project.title)
+      target.canReadFiles = model.registry.environment(computer.id)?.allows("filesystem:read") ?? true
+    }
     return target
   }
 
@@ -200,6 +208,7 @@ struct NewThreadView: View {
       thread: .init(modelSelection: selection, runtimeMode: runtime, interactionMode: nil),
       creation: .init(projectId: projectId, title: title))
     guard sent != nil else { return }
+    if project != nil { model.preferences.values.lastProjectIds[computer.id] = projectId }
     model.navigator.open(ref)
     push.newThreadStarted()
   }

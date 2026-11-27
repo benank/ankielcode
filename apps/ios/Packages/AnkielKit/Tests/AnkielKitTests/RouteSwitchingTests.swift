@@ -200,3 +200,33 @@ final class SwitchingLink: RouteSwitchingLink {
     return try next.get()
   }
 }
+
+/// Adding an address by hand against stubbed HTTP. In `ConnectorRenewalTests` so it shares that
+/// suite's serialization of the process-wide stub.
+extension ConnectorRenewalTests {
+  @MainActor @Test func `a hand-added address is saved only when it answers as this computer`() async throws {
+    let (connector, _) = try connector()
+    let directory = URL.temporaryDirectory.appending(path: "routes-\(UUID().uuidString)")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    var record = EnvironmentRecord(SavedEnvironment(environmentId: "env-1", label: "Mac", endpoint: endpoint, serverVersion: "1"))
+    record.enabled = false  // no connection attempts; only the descriptor check runs
+    try await EnvironmentRecordStore(url: directory.appending(path: "environments.json")).save([record])
+    let registry = EnvironmentRegistry(connector: connector, directory: directory, cachesShell: false)
+    await registry.load()
+
+    StubProtocol.reset(["/.well-known/ankiel/environment": [.init(status: 200, body: descriptor)]])
+    let added = try await registry.addRoute("studio.vpn.example", to: "env-1")
+    #expect(added.manual && added.endpoint.httpBaseURL.absoluteString == "https://studio.vpn.example/")
+    #expect(registry.environment("env-1")?.record.routes.count == 2)
+    #expect(StubProtocol.requested.withLock { $0 } == ["/.well-known/ankiel/environment"])
+
+    let other = descriptor.replacingOccurrences(of: "env-1", with: "env-2")
+    StubProtocol.reset(["/.well-known/ankiel/environment": [.init(status: 200, body: other)]])
+    await #expect(throws: AddRouteError.mismatch) { try await registry.addRoute("https://other.example", to: "env-1") }
+    await #expect(throws: AddRouteError.duplicate) { try await registry.addRoute("https://studio.vpn.example", to: "env-1") }
+    #expect(registry.environment("env-1")?.record.routes.count == 2)
+
+    registry.removeRoute(added.id, from: "env-1")
+    #expect(registry.environment("env-1")?.record.routes.count == 1)
+  }
+}

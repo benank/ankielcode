@@ -42,4 +42,23 @@ final class SettingsMoreUITests: HomeUITestCase {
     XCTAssertTrue(app.staticTexts["Daily processed tokens"].waitForExistence(timeout: 5))
     shot("usage-tokens")
   }
+
+  /// The fixture's preferences reset at every launch, so turning the switch off here does not stick.
+  func testNewThreadStartsWithoutAProjectWhenLastProjectIsOff() {
+    launch(["ANKIEL_DEBUG_SETTINGS": "fixture", "ANKIEL_DEBUG_COMPOSER": "fake", "ANKIEL_DEBUG_ROUTE": "settings-threads"])
+    let toggle = app.switches["threads.useLastProject"]
+    XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+    toggle.switches.firstMatch.tap()
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    let done = app.buttons["settings.done"]
+    XCTAssertTrue(done.waitForExistence(timeout: 3))
+    done.tap()
+    let newThread = app.buttons["home.newThread"]
+    XCTAssertTrue(newThread.waitForExistence(timeout: 5))
+    newThread.tap()
+    let project = app.buttons["newThread.project"]
+    XCTAssertTrue(project.waitForExistence(timeout: 5))
+    XCTAssertEqual(project.value as? String, "No project")
+    shot("new-thread-no-project")
+  }
 }

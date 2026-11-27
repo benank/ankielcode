@@ -551,8 +551,9 @@ cancels the paused "Tide chart v1.5", runs of a throwaway `ios-check` definition
 - **Response streaming** (Threads page, per computer): `responseStreamingMode` `paragraph` or
   `turn`, written with `server.updateSettings`. `ankiel-probe --streaming-setting` flips it and
   puts it back.
-- **Use last project** (Threads → New threads, this device): off, New thread starts with "No
-  project" unless a project is picked.
+- **Use last project** (Threads → New threads, this device): on, New thread starts in the project
+  this device last started a thread in on that computer (`lastProjectIds`), else the computer's
+  most recent one; off, it starts with "No project" unless a project is picked.
 - **Streaming replies** haptic (Chat → Haptics, this device): a soft tap as the open thread's reply
   streams, throttled like RN (`StreamHaptics`, 320 ms).
 - **Apply auto-settle defaults to all** (Threads, all connected computers, when they differ).
