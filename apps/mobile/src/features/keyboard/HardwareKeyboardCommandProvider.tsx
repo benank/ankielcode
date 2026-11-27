@@ -1,7 +1,11 @@
 import { StackActions, useNavigation } from "@react-navigation/native";
-import { msg, useMessages } from "gt-react-native";
+import { msg, useGT, useMessages } from "gt-react-native";
 import { Platform } from "react-native";
 import { resolveThreadReferenceCopyTarget } from "@ankielcode/client-runtime/thread-reference";
+import {
+  THREAD_JUMP_KEYBINDING_COMMANDS,
+  type ThreadJumpKeybindingCommand,
+} from "@ankielcode/contracts";
 import {
   createContext,
   use,
@@ -45,6 +49,40 @@ const COPY_FEEDBACK_DISMISS_MS = 3_000;
 
 const CommandPaletteContext = createContext<ReactNode>(null);
 
+/** Keys match the native catalog in AnkielKeyboardCommandCatalog.swift. */
+type KeyboardCommandTitleKey = HardwareKeyboardCommand | "menu.go" | "focusSearchAlternate";
+
+function useKeyboardCommandTitles(): Readonly<Record<KeyboardCommandTitleKey, string>> | undefined {
+  const gt = useGT();
+  return useMemo(() => {
+    if (Platform.OS !== "ios") return undefined;
+    const threadJumpTitles = Object.fromEntries(
+      THREAD_JUMP_KEYBINDING_COMMANDS.map((command, position) => [
+        command,
+        gt("Go to Thread {index}", { index: position + 1 }),
+      ]),
+    ) as Record<ThreadJumpKeybindingCommand, string>;
+    return {
+      ...threadJumpTitles,
+      "menu.go": gt("Go", { $context: "menu bar menu of navigation commands" }),
+      newTask: gt("New Task"),
+      focusSearch: gt("Find", { $context: "menu command that focuses search" }),
+      focusSearchAlternate: gt("Focus Search"),
+      commandPalette: gt("Command Palette"),
+      paletteNext: gt("Next Result"),
+      palettePrevious: gt("Previous Result"),
+      paletteDismiss: gt("Close Command Palette"),
+      back: gt("Back", { $context: "menu command that returns to the previous screen" }),
+      files: gt("Open Files"),
+      terminal: gt("Open Terminal"),
+      review: gt("Open Review"),
+      copyThreadReference: gt("Copy PR Link or Thread"),
+      toggleSidebar: gt("Toggle Sidebar"),
+      cycleHost: gt("Next Machine"),
+    };
+  }, [gt]);
+}
+
 /** Render inside the workspace so palette actions share its navigation and pane state. */
 export function HardwareKeyboardCommandOverlay() {
   return use(CommandPaletteContext);
@@ -56,6 +94,7 @@ export function HardwareKeyboardCommandProvider({
 }: PropsWithChildren<{ readonly pathname: string }>) {
   const navigation = useNavigation();
   const messages = useMessages();
+  const commandTitles = useKeyboardCommandTitles();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const closePalette = useCallback(() => setPaletteOpen(false), []);
   const activeThreadRef = useMemo(() => parseActiveThreadPath(pathname), [pathname]);
@@ -201,7 +240,11 @@ export function HardwareKeyboardCommandProvider({
 
   return (
     <CommandPaletteContext value={palette}>
-      <AnkielKeyboardCommands enabledCommands={enabledCommands} onCommand={onCommand}>
+      <AnkielKeyboardCommands
+        enabledCommands={enabledCommands}
+        commandTitles={commandTitles}
+        onCommand={onCommand}
+      >
         {children}
       </AnkielKeyboardCommands>
       <GitActionProgressOverlay progress={copyFeedback} onDismiss={dismissCopyFeedback} />

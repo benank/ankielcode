@@ -82,6 +82,10 @@ to show only actions.
 
 In a new thread, `Cmd+Shift+H` moves the draft to the next machine.
 
+On iPadOS 26 and later, these commands are also in the menu bar, under File,
+Edit, View, and Go. Hold `Cmd` or move the pointer to the top of the screen to
+show it.
+
 In the composer, Return sends and `Shift+Return` inserts a new line. While a
 turn is running, `Cmd+Return` sends with the other follow-up action. To make
 Return insert a new line instead, change the Return key behavior in Settings →

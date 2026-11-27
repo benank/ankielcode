@@ -6,6 +6,7 @@ import type { HardwareKeyboardCommand } from "../features/keyboard/hardwareKeybo
 export function AnkielKeyboardCommands(
   props: PropsWithChildren<{
     readonly enabledCommands: ReadonlyArray<HardwareKeyboardCommand>;
+    readonly commandTitles?: Readonly<Record<string, string>>;
     readonly onCommand: (command: HardwareKeyboardCommand) => void;
   }>,
 ) {

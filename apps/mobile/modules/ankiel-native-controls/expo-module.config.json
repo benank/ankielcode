@@ -5,7 +5,8 @@
     "appDelegateSubscribers": [
       "AnkielWorkspaceOrientationSubscriber",
       "AnkielMenuDismissTouchGateSubscriber",
-      "AnkielBackgroundGraceSubscriber"
+      "AnkielBackgroundGraceSubscriber",
+      "AnkielMainMenuSubscriber"
     ]
   },
   "android": {

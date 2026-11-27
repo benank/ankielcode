@@ -9,12 +9,16 @@ public final class AnkielKeyboardCommandsModule: Module {
       Prop("enabledCommands") { (view: AnkielKeyboardCommandsView, commands: [String]) in
         view.setEnabledCommands(commands)
       }
+      Prop("commandTitles") { (_: AnkielKeyboardCommandsView, titles: [String: String]) in
+        AnkielKeyboardCommandCatalog.setTitles(titles)
+      }
       Events("onCommand")
     }
   }
 }
 
-public final class AnkielKeyboardCommandsView: ExpoView {
+public final class AnkielKeyboardCommandsView: ExpoView, AnkielKeyboardCommandPerforming {
+  private static let paletteCommands: Set<String> = ["commandPalette", "paletteNext", "palettePrevious", "paletteDismiss"]
   let onCommand = EventDispatcher()
   private var enabledCommands = Set<String>()
   private let shortcutInputView = UIView(frame: .zero)
@@ -25,51 +29,27 @@ public final class AnkielKeyboardCommandsView: ExpoView {
   public override var inputView: UIView? { shortcutInputView }
 
   public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-    if action == #selector(openCommandPalette) || action == #selector(paletteNext) || action == #selector(palettePrevious) || action == #selector(paletteDismiss),
+    guard action == AnkielKeyboardCommandCatalog.action else {
+      return super.canPerformAction(action, withSender: sender)
+    }
+    // The menu bar sends every command through the responder chain; an instance without the
+    // command enabled passes it on, so the palette's instance never swallows a workspace command.
+    guard let id = AnkielKeyboardCommandCatalog.commandId(of: sender) else {
+      return super.canPerformAction(action, withSender: sender)
+    }
+    guard enabledCommands.contains(id) else { return false }
+    if Self.paletteCommands.contains(id),
        let input = window?.ankielFirstResponder as? UITextInput,
        input.markedTextRange != nil {
       return false
     }
-    return super.canPerformAction(action, withSender: sender)
+    return true
   }
 
   public override var keyCommands: [UIKeyCommand]? {
-    let isPad = UIDevice.current.userInterfaceIdiom == .pad
-    var commands = [
-      enabledCommand("newTask", input: "n", modifiers: .command, action: #selector(newTask), title: "New Task"),
-      enabledCommand("focusSearch", input: "f", modifiers: .command, action: #selector(focusSearch), title: "Find"),
-      isPad
-        ? enabledCommand("commandPalette", input: "k", modifiers: .command, action: #selector(openCommandPalette), title: "Command Palette")
-        : enabledCommand("focusSearch", input: "k", modifiers: .command, action: #selector(focusSearch), title: "Focus Search"),
-      enabledCommand("paletteNext", input: UIKeyCommand.inputDownArrow, modifiers: [], action: #selector(paletteNext), title: "Next Result"),
-      enabledCommand("palettePrevious", input: UIKeyCommand.inputUpArrow, modifiers: [], action: #selector(palettePrevious), title: "Previous Result"),
-      enabledCommand("paletteDismiss", input: UIKeyCommand.inputEscape, modifiers: [], action: #selector(paletteDismiss), title: "Close Command Palette"),
-      enabledCommand("back", input: "[", modifiers: .command, action: #selector(goBack), title: "Back"),
-      enabledCommand("files", input: "f", modifiers: [.command, .shift], action: #selector(openFiles), title: "Open Files"),
-      enabledCommand("terminal", input: "t", modifiers: [.command, .shift], action: #selector(openTerminal), title: "Open Terminal"),
-      enabledCommand("review", input: "r", modifiers: [.command, .shift], action: #selector(openReview), title: "Open Review"),
-      enabledCommand(
-        "copyThreadReference",
-        input: "c",
-        modifiers: [.command, .shift],
-        action: #selector(copyThreadReference),
-        title: "Copy PR Link or Thread"
-      ),
-      enabledCommand("toggleSidebar", input: "\\", modifiers: .command, action: #selector(handleToggleSidebar), title: "Toggle Sidebar"),
-      enabledCommand("cycleHost", input: "h", modifiers: [.command, .shift], action: #selector(cycleHost), title: "Next Machine"),
-    ].compactMap { $0 }
-    if isPad {
-      commands += (1...9).compactMap { index in
-        enabledCommand(
-          "thread.jump.\(index)",
-          input: String(index),
-          modifiers: .command,
-          action: #selector(jumpToThread(_:)),
-          title: "Go to Thread \(index)"
-        )
-      }
-    }
-    return commands
+    AnkielKeyboardCommandCatalog.entries(isPad: UIDevice.current.userInterfaceIdiom == .pad)
+      .filter { enabledCommands.contains($0.id) }
+      .map(AnkielKeyboardCommandCatalog.keyCommand(for:))
   }
 
   func setEnabledCommands(_ commands: [String]) {
@@ -78,17 +58,7 @@ public final class AnkielKeyboardCommandsView: ExpoView {
       resignFirstResponder()
     }
     reclaimFirstResponderIfAvailable()
-  }
-
-  private func enabledCommand(
-    _ identifier: String,
-    input: String,
-    modifiers: UIKeyModifierFlags,
-    action: Selector,
-    title: String
-  ) -> UIKeyCommand? {
-    guard enabledCommands.contains(identifier) else { return nil }
-    return command(input, modifiers: modifiers, action: action, title: title)
+    AnkielKeyboardCommandCatalog.revalidateMainMenu()
   }
 
   public required init(appContext: AppContext? = nil) {
@@ -129,35 +99,10 @@ public final class AnkielKeyboardCommandsView: ExpoView {
     reclaimFirstResponderIfAvailable()
   }
 
-  private func command(
-    _ input: String,
-    modifiers: UIKeyModifierFlags,
-    action: Selector,
-    title: String
-  ) -> UIKeyCommand {
-    let command = UIKeyCommand(input: input, modifierFlags: modifiers, action: action)
-    command.discoverabilityTitle = title
-    command.wantsPriorityOverSystemBehavior = true
-    return command
+  @objc func performAnkielKeyboardCommand(_ sender: UICommand) {
+    guard let id = AnkielKeyboardCommandCatalog.commandId(of: sender), enabledCommands.contains(id) else { return }
+    emit(id)
   }
-
-  @objc private func newTask() { emit("newTask") }
-  @objc private func openCommandPalette() { emit("commandPalette") }
-  @objc private func paletteNext() { emit("paletteNext") }
-  @objc private func palettePrevious() { emit("palettePrevious") }
-  @objc private func paletteDismiss() { emit("paletteDismiss") }
-  @objc private func jumpToThread(_ sender: UIKeyCommand) {
-    guard let input = sender.input else { return }
-    emit("thread.jump.\(input)")
-  }
-  @objc private func focusSearch() { emit("focusSearch") }
-  @objc private func goBack() { emit("back") }
-  @objc private func openFiles() { emit("files") }
-  @objc private func openTerminal() { emit("terminal") }
-  @objc private func openReview() { emit("review") }
-  @objc private func copyThreadReference() { emit("copyThreadReference") }
-  @objc private func handleToggleSidebar() { emit("toggleSidebar") }
-  @objc private func cycleHost() { emit("cycleHost") }
 
   private func emit(_ command: String) {
     onCommand(["command": command])
