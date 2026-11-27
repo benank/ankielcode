@@ -95,11 +95,12 @@ remove `%USERPROFILE%\.ankiel\bin` from your `PATH` if the installer says anothe
 
 ### Windows Subsystem for Linux
 
-The Windows app does not include a server for WSL. To run agents and projects in
-a WSL distro, install the `ankiel` command inside that distro with the
-[command line](#command-line) installer, along with the provider CLIs you use.
-Start it there with `ankiel serve` or `ankiel service install`, run `ankiel pair`,
-and paste the pairing URL into **Add environment** in the desktop app.
+Release builds of the Windows app do not include a Linux server runtime for WSL.
+To run agents and projects in a WSL distro, install the `ankiel` command inside
+that distro with the [command line](#command-line) installer, along with the
+provider CLIs you use. Start it there with `ankiel serve` or
+`ankiel service install`, run `ankiel pair`, and paste the pairing URL into
+**Add environment** in the desktop app.
 
 ### Drop a folder on the sidebar
 
