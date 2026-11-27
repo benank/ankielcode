@@ -64,25 +64,22 @@ final class PullRequestFeature {
     self.app = app
     #if DEBUG
       let debug = PullRequestDebug.current
+      trust = PullRequestRoutingStore(defaults: debug == nil ? .standard : nil)
+      if let debug, let fixture = debug.fixtureSource {
+        source = fixture
+        isFixture = true
+        sink = debug.sink ?? RecordingPullRequestSink()
+        return
+      }
+      let fake = debug?.sink
     #else
-      let debug: PullRequestDebug? = nil
+      trust = PullRequestRoutingStore(defaults: .standard)
+      let fake: (any PullRequestSink)? = nil
     #endif
-    trust = PullRequestRoutingStore(defaults: debug == nil ? .standard : nil)
-    if let debug, let fixture = debug.fixtureSource {
-      source = fixture
-      isFixture = true
-    } else {
-      let service = LivePullRequestService(router: PullRequestRouter(registry: app.registry, trust: trust))
-      source = service
-      isFixture = false
-    }
-    if let debug, let fake = debug.sink {
-      sink = fake
-    } else if let live = source as? LivePullRequestService {
-      sink = live
-    } else {
-      sink = RecordingPullRequestSink()
-    }
+    let service = LivePullRequestService(router: PullRequestRouter(registry: app.registry, trust: trust))
+    source = service
+    isFixture = false
+    sink = fake ?? service
   }
 
   /// Computers that serve pull requests (their config says `pullRequests`).
@@ -98,7 +95,9 @@ final class PullRequestFeature {
 
   /// Whether this session may send writes on `environmentId` (`source-control:write`).
   func canWrite(_ environmentId: String) -> Bool {
-    if isFixture { return PullRequestDebug.current?.readOnly != true }
+    #if DEBUG
+      if isFixture { return PullRequestDebug.current?.readOnly != true }
+    #endif
     guard let environment = app?.registry.environment(environmentId) else { return false }
     return environment.status.isConnected && environment.holds(AuthScope.sourceControlWrite)
   }
