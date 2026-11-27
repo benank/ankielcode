@@ -1249,25 +1249,6 @@ export function markdownMathRanges(text: string): Array<{ start: number; end: nu
   return ranges;
 }
 
-/** The HTML comments Words reads as raw HTML in `markdown`, not as code or text, as source offsets. */
-export function markdownHtmlComments(markdown: string): Array<{ start: number; end: number }> {
-  const openers = [...markdown.matchAll(/<!--(?!-?>)/g)].map((match) => match.index);
-  if (openers.length === 0) return [];
-  // A mark after each opener keeps a comment a comment; Words writes only real ones unescaped.
-  let marked = "";
-  let from = 0;
-  for (const [index, at] of openers.entries()) {
-    marked += `${markdown.slice(from, at + 4)}\uE000${index}\uE001`;
-    from = at + 4;
-  }
-  const html = decoder.decode(renderToHtml(marked + markdown.slice(from), { windowsPaths: true }));
-  return [...html.matchAll(/<!--\uE000(\d+)\uE001/g)].map((match) => {
-    const start = openers[Number(match[1])]!;
-    const close = markdown.indexOf("-->", start + 4);
-    return { start, end: close < 0 ? markdown.length : close + 3 };
-  });
-}
-
 /**
  * The first definition of each label in `markdown`, as one line of Markdown. Words decides which
  * `[label]:` text defines one: each label is looked up again after the text.
