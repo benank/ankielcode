@@ -251,6 +251,16 @@ thread** from its long-press menu on mobile.
 **Thread ID** copies the bare ID for scripts and the `ankiel` CLI. See
 [keybindings](./keybindings.md) for custom configuration.
 
+### Recent threads and thread links
+
+On macOS, right-click Ankiel Code in the Dock to see your recent threads; on Windows,
+right-click it in the taskbar. Choose one to open it.
+
+A link of the form `ankielcode://thread/<environment ID>/<thread ID>` opens that thread
+in the desktop app, from a browser, a note, or a script. Both IDs are percent-encoded.
+The link only opens the thread. If its environment is not saved in this app, Ankiel Code
+says so and stays where it is.
+
 ## Inspect agent work
 
 **Limited** means the provider stopped on a usage or rate limit. The conversation

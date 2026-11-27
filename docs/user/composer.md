@@ -429,6 +429,11 @@ On iPhone and iPad, you can also drag an image out of a message and drop it into
 Notes, Mail, or an app beside Ankiel Code. In a file preview, select text and drag the
 selection out the same way.
 
+On desktop, drag an image out of a message or its full-size preview to drop it into
+Finder, Explorer, or another app. Attachments and images from an environment arrive as a
+copy of the file, also when the environment is remote. In the preview, zoom back to fit
+first; while zoomed in, dragging pans the image. On Linux, only images from the web drag out.
+
 File links refer to the environment's machine, including when you connect remotely.
 Previews use the original file, even outside the workspace. Moving or deleting it
 can break the preview, so save a copy if you need to keep it.

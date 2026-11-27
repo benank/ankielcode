@@ -78,6 +78,19 @@ vi.mock(import("../../hooks/useScratchProject"), async (original) => ({
 vi.mock("../../state/use-atom-query-runner", () => ({
   useAtomQueryRunner: () => state.preview,
 }));
+vi.mock(import("../../connection/catalog"), async (original) => {
+  const { Atom } = await import("effect/reactivity");
+  const actual = await original();
+  return {
+    ...actual,
+    environmentCatalog: {
+      ...actual.environmentCatalog,
+      catalogValueAtom: Atom.make({ isReady: false, entries: new Map() }).pipe(
+        Atom.keepAlive,
+      ) as never,
+    },
+  };
+});
 vi.mock("../../browser/useOpenLink", () => ({ useOpenLink: () => state.openLink }));
 vi.mock(import("../../confirmDialog"), async (original) => ({
   ...(await original()),
@@ -98,7 +111,9 @@ vi.mock(import("../../state/use-atom-command"), async (original) => {
   };
 });
 
+import { environmentCatalog } from "../../connection/catalog";
 import { AppAtomRegistryProvider, appAtomRegistry } from "../../rpc/atomRegistry";
+import { toastManager } from "../ui/toast";
 import { allReachableShellsLiveAtom } from "../../state/shell";
 import { selectThreadDiffPanelSelection, useDiffPanelStore } from "../../diffPanelStore";
 import {
@@ -109,6 +124,10 @@ import {
 import { DesktopWebLinkCoordinator } from "./DesktopWebLinkCoordinator";
 
 const discoverySettled = allReachableShellsLiveAtom as Atom.Writable<boolean>;
+const savedEnvironments = environmentCatalog.catalogValueAtom as unknown as Atom.Writable<{
+  isReady: boolean;
+  entries: Map<string, unknown>;
+}>;
 const environmentId = EnvironmentId.make("local");
 const projectId = ProjectId.make("effect");
 const project = {
@@ -155,6 +174,7 @@ function setup() {
   useDiffPanelStore.setState({ byThreadKey: {}, branchBaseRefByThreadKey: {} });
   useRightPanelStore.setState({ byThreadKey: {}, userActionRevisionByThreadKey: {} });
   appAtomRegistry.set(discoverySettled, false);
+  appAtomRegistry.set(savedEnvironments, { isReady: false, entries: new Map() });
 }
 
 /** Mounts the coordinator behind a desktop bridge that hands over `urls` once the renderer is ready. */
@@ -346,5 +366,39 @@ it("holds a launch PR link with Local environment disabled until discovery settl
     await navigated;
   });
   expect(state.navigate).toHaveBeenCalledExactlyOnceWith(pullRequestView);
+  expect(state.openScratchProject).not.toHaveBeenCalled();
+});
+
+it("opens a thread link once the saved environments load, and only navigates", async () => {
+  setup();
+  await using _coordinator = await mount("ankielcode://thread/local/thread-1");
+  expect(state.navigate).not.toHaveBeenCalled();
+
+  const navigated = new Promise<void>((resolve) => {
+    state.navigate.mockImplementationOnce(async () => resolve());
+  });
+  await act(async () => {
+    appAtomRegistry.set(savedEnvironments, { isReady: true, entries: new Map([["local", {}]]) });
+    await navigated;
+  });
+  expect(state.navigate).toHaveBeenCalledExactlyOnceWith({
+    to: "/$environmentId/$threadId",
+    params: { environmentId: "local", threadId: "thread-1" },
+  });
+  expect(state.openScratchProject).not.toHaveBeenCalled();
+  expect(state.confirm).not.toHaveBeenCalled();
+});
+
+it("shows a toast for a thread link to an environment this computer has not saved", async () => {
+  setup();
+  using toast = vi.spyOn(toastManager, "add");
+  appAtomRegistry.set(savedEnvironments, { isReady: true, entries: new Map([["local", {}]]) });
+  await using _coordinator = await mount("ankielcode://thread/elsewhere/thread-1");
+  await vi.waitFor(() =>
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Could not open the thread" }),
+    ),
+  );
+  expect(state.navigate).not.toHaveBeenCalled();
   expect(state.openScratchProject).not.toHaveBeenCalled();
 });

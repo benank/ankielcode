@@ -12,6 +12,8 @@ import { installNotificationBadge } from "./methods/notificationBadge.ts";
 import { installDesktopNotifications } from "./methods/notifications.ts";
 import { installLowPowerState } from "./methods/lowPower.ts";
 import { installPowerResume } from "./methods/powerResume.ts";
+import { installRecentThreads } from "./methods/recentThreads.ts";
+import { installMediaDrag } from "./methods/mediaDrag.ts";
 import { getClientSettings, setClientSettings } from "./methods/clientSettings.ts";
 import { getConnectionCatalog, setConnectionCatalog } from "./methods/connectionCatalog.ts";
 import {
@@ -97,6 +99,8 @@ export const installDesktopIpcHandlers = Effect.fn("desktop.ipc.installHandlers"
   yield* installDesktopNotifications();
   yield* installLowPowerState();
   yield* installPowerResume();
+  yield* installRecentThreads();
+  yield* installMediaDrag();
   yield* PreviewIpc.installPreviewEventForwarding();
 
   yield* ipc.handle(WebLinksIpc.setReady);

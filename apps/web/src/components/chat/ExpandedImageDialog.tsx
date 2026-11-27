@@ -241,6 +241,7 @@ export const ExpandedImageDialog = memo(function ExpandedImageDialog({
                 src={item.src}
                 name={item.name}
                 mimeType={itemMimeType(item)}
+                dragSource={source}
                 onError={() => setFailedImageSrc(item.src)}
               />
             )}

@@ -1145,6 +1145,26 @@ export const DesktopMediaReadSchema = Schema.Struct({
 });
 export type DesktopMediaRead = typeof DesktopMediaReadSchema.Type;
 
+/** A file the main process downloads ahead of a drag; `name` names the file, never the URL. */
+export const DesktopMediaDragInputSchema = Schema.Struct({
+  url: Schema.String.check(Schema.isMaxLength(16_384)),
+  name: Schema.String.check(Schema.isMaxLength(1024)),
+});
+export type DesktopMediaDragInput = typeof DesktopMediaDragInputSchema.Type;
+
+export const DESKTOP_RECENT_THREADS_LIMIT = 8;
+
+export const DesktopRecentThreadSchema = Schema.Struct({
+  environmentId: Schema.String.check(Schema.isMaxLength(256)),
+  threadId: Schema.String.check(Schema.isMaxLength(256)),
+  title: Schema.String.check(Schema.isMaxLength(256)),
+});
+export type DesktopRecentThread = typeof DesktopRecentThreadSchema.Type;
+
+export const DesktopRecentThreadsSchema = Schema.Array(DesktopRecentThreadSchema).check(
+  Schema.isMaxLength(DESKTOP_RECENT_THREADS_LIMIT),
+);
+
 /** `value` is the resolved locale from `prepare` and the transcript from `transcribe`. */
 export const DesktopAppleSpeechResultSchema = Schema.Union([
   Schema.Struct({ ok: Schema.Literal(true), value: Schema.String }),
@@ -1309,6 +1329,15 @@ export interface DesktopBridge {
   openExternal: (url: string) => Promise<boolean>;
   /** Reads http(s) media in the main process, outside renderer CORS and CSP; null on network failure. */
   readMedia: (url: string) => Promise<DesktopMediaRead | null>;
+  /**
+   * Downloads an image to a temp file ahead of a drag out of the app (macOS and Windows), and
+   * returns the id `startMediaDrag` takes; null when it cannot. Absent in older desktop builds.
+   */
+  prepareMediaDrag?: (input: DesktopMediaDragInput) => Promise<string | null>;
+  /** Hands a prepared file to the OS drag; call it from `dragstart`, while the button is down. */
+  startMediaDrag?: (id: string) => Promise<boolean>;
+  /** Recent threads for the macOS dock menu and the Windows jump list; absent in older builds. */
+  setRecentThreads?: (threads: readonly DesktopRecentThread[]) => Promise<void>;
   openSystemSettings: (pane: SystemSettingsPane) => Promise<boolean>;
   checkSystemPermission: (pane: SystemSettingsPane) => Promise<boolean>;
   probeRemoteEditors: () => Promise<readonly EditorId[]>;

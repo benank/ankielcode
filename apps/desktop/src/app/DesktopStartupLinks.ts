@@ -6,7 +6,7 @@ import * as Option from "effect/Option";
 import * as Scope from "effect/Scope";
 
 import { providerAuthReturnUrl } from "@ankielcode/shared/providerAuthReturnUrl";
-import { readPairingAppLink } from "@ankielcode/shared/remote";
+import { readPairingAppLink, readThreadAppLink } from "@ankielcode/shared/remote";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as ElectronProtocol from "../electron/ElectronProtocol.ts";
@@ -93,7 +93,9 @@ export const make = Effect.gen(function* () {
         return true;
       };
       const openAppLink = (value: string | undefined) => {
-        if (!value || readPairingAppLink(value) === null) return false;
+        if (!value || (readPairingAppLink(value) === null && readThreadAppLink(value) === null)) {
+          return false;
+        }
         void runPromise(webLinks.receive(value));
         return true;
       };

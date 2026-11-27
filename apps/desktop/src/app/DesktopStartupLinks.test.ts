@@ -3,7 +3,7 @@ import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodePathLayer from "@effect/platform-node/NodePath";
-import { buildPairingAppLink } from "@ankielcode/shared/remote";
+import { buildPairingAppLink, buildThreadAppLink } from "@ankielcode/shared/remote";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -195,7 +195,8 @@ describe("DesktopStartupLinks", () => {
     const received: string[] = [];
     const first = buildPairingAppLink("https://first.example/#token=first");
     const second = buildPairingAppLink("https://second.example/#token=second");
-    const later = buildPairingAppLink("https://later.example/#token=later");
+    // A jump list item launches a second instance with its thread link in argv.
+    const later = buildThreadAppLink({ environmentId: "env-1", threadId: "thread-1" });
     const launchPair =
       "ankielcode://pair?pairingUrl=https%3A%2F%2Fvps.example.com%2F%23token%3Dabc";
     const delivered = Promise.withResolvers<void>();
@@ -337,6 +338,8 @@ it.effect("hands web and app links to the renderer and leaves other links alone"
       assert.strictEqual(open("ankielcode://new?prompt=hi"), 0);
       assert.strictEqual(open(pairLink), 1);
       assert.strictEqual(open("ankielcode://pair"), 0);
+      assert.strictEqual(open("ankielcode://thread/env-1/thread-1"), 1);
+      assert.strictEqual(open("ankielcode://thread/env-1/thread-1?approve=1"), 0);
       assert.strictEqual(open("mailto:hello@example.com"), 0);
       assert.strictEqual(open("ankielcode://somewhere-else"), 0);
       yield* Effect.yieldNow;
@@ -344,6 +347,7 @@ it.effect("hands web and app links to the renderer and leaves other links alone"
         "https://example.com/page",
         "http://localhost:3000/",
         pairLink,
+        "ankielcode://thread/env-1/thread-1",
       ]);
     }).pipe(
       Effect.provide(layerDesktopStartupLinks(true, [], "darwin", undefined, undefined, listeners)),

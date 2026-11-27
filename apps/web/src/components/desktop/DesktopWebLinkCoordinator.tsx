@@ -5,11 +5,17 @@ import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
 } from "@ankielcode/client-runtime/state/runtime";
-import type { EnvironmentId, ScopedThreadRef } from "@ankielcode/contracts";
+import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@ankielcode/contracts";
 import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
-import { readPairingAppLink, resolveRemotePairingTarget } from "@ankielcode/shared/remote";
+import {
+  readPairingAppLink,
+  readThreadAppLink,
+  resolveRemotePairingTarget,
+  type ThreadAppLink,
+} from "@ankielcode/shared/remote";
 import { useRouter } from "@tanstack/react-router";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
 import * as Stream from "effect/Stream";
 import { useGT } from "gt-react";
@@ -18,6 +24,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { openFileInPreview, openUrlInPreview } from "../../browser/openFileInPreview";
 import { isPreviewAvailableFor } from "../../browser/previewRuntime";
 import { requestConfirmDialog } from "../../confirmDialog";
+import { environmentCatalog } from "../../connection/catalog";
 import { connectPairing } from "../../connection/onboarding";
 import { isLocalEnvironmentDisabled } from "../../localEnvironment";
 import { useComposerDraftStore } from "../../composerDraftStore";
@@ -52,6 +59,16 @@ const projectsSettled = (): Promise<void> =>
       Stream.filter((settled) => settled),
       Stream.runHead,
       Effect.asVoid,
+    ),
+  );
+
+/** Resolves once the saved environments have loaded, so a missing one is really unknown. */
+const catalogLoaded = () =>
+  Effect.runPromise(
+    AtomRegistry.toStream(appAtomRegistry, environmentCatalog.catalogValueAtom).pipe(
+      Stream.filter((catalog) => catalog.isReady),
+      Stream.runHead,
+      Effect.map(Option.getOrNull),
     ),
   );
 
@@ -209,7 +226,32 @@ export function DesktopWebLinkCoordinator() {
     }
   });
 
+  // A thread link only navigates: it comes from outside the app, so nothing in it may act.
+  const openThreadLink = async (link: ThreadAppLink) => {
+    const catalog = await catalogLoaded();
+    const environmentId = EnvironmentId.make(link.environmentId);
+    if (catalog === null || !catalog.entries.has(environmentId)) {
+      toastManager.add(
+        stackedThreadToast({
+          type: "error",
+          title: gt("Could not open the thread"),
+          description: gt("Its environment is not saved on this computer."),
+        }),
+      );
+      return;
+    }
+    await router.navigate({
+      to: "/$environmentId/$threadId",
+      params: { environmentId, threadId: ThreadId.make(link.threadId) },
+    });
+  };
+
   const openLink = useEffectEvent(async (url: string) => {
+    const threadLink = readThreadAppLink(url);
+    if (threadLink !== null) {
+      await openThreadLink(threadLink);
+      return;
+    }
     const pairingUrl = readPairingAppLink(url);
     if (pairingUrl !== null) {
       await pairFromLink(pairingUrl);

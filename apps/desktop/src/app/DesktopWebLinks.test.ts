@@ -4,6 +4,7 @@ import * as NodeEvents from "node:events";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import { buildThreadAppLink } from "@ankielcode/shared/remote";
 
 import * as DesktopWindow from "../window/DesktopWindow.ts";
 import * as ElectronWindow from "../electron/ElectronWindow.ts";
@@ -79,6 +80,21 @@ describe("DesktopWebLinks", () => {
       yield* webLinks.receive("https://example.com/fourth");
       assert.strictEqual(sent.length, 3);
       assert.strictEqual(revealed.length, 2);
+    }).pipe(Effect.provide(layer));
+  });
+
+  it.effect("queues a thread link from before the renderer is ready and reveals the window", () => {
+    const { sent, revealed, layer } = makeWindow();
+    const link = buildThreadAppLink({ environmentId: "env-1", threadId: "thread-1" });
+    return Effect.gen(function* () {
+      const webLinks = yield* DesktopWebLinks.DesktopWebLinks;
+      yield* webLinks.receive(link);
+      assert.deepStrictEqual(sent, []);
+      assert.strictEqual(revealed.length, 0);
+
+      yield* webLinks.setRendererReady(true);
+      assert.deepStrictEqual(sent, [link]);
+      assert.strictEqual(revealed.length, 1);
     }).pipe(Effect.provide(layer));
   });
 

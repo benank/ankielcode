@@ -48,6 +48,7 @@ import {
 import { syncBrowserChromeTheme } from "./hooks/useTheme";
 import { startThreadVisitedMigration } from "./hooks/useThreadVisitedMigration";
 import { installDesktopPasteAsText } from "./lib/desktopPasteAsText";
+import { startDesktopRecentThreads } from "./lib/desktopRecentThreads";
 import { trackLowPower } from "./lib/lowPower";
 import { installEnvironmentReconnect } from "./connection/reconnect";
 import { trackWindowFocus } from "./lib/visibleAnimation";
@@ -312,6 +313,7 @@ export function startAppServices(): AppRouter {
   startLegacyThreadMigrationToast();
   startPermissionUpdateNotices(router);
   startThreadNotifications(appAtomRegistry, router);
+  startDesktopRecentThreads(window.desktopBridge, appAtomRegistry, router);
   startGuideRunNotifications(appAtomRegistry, router);
   if (isElectron) startDesktopUpdateLaunchNotice();
 

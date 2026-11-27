@@ -279,6 +279,19 @@ function buildThreadSearchSubject(
   };
 }
 
+/**
+ * When a thread was last used, by the same rule as `threadRecentUse` on its subject (last
+ * message or last open, this client's included), without touching the subject cache.
+ */
+export function threadLastUsedAt(thread: ThreadSearchShell): number {
+  const activityAt = getThreadSortTimestamp(thread, "updated_at");
+  return Math.max(
+    Number.isFinite(activityAt) ? activityAt : 0,
+    thread.opens?.openedAt ?? 0,
+    localThreadOpens.get(`${thread.environmentId}:${thread.id}`) ?? 0,
+  );
+}
+
 /** Message result keys in the order a search box last showed them for `query`. */
 export interface ShownOrder {
   readonly query: string;

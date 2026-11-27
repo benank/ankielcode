@@ -44,7 +44,7 @@ export interface MediaActionSource {
   readonly onOpenFile?: () => void;
 }
 
-function mediaFileName(source: MediaActionSource): string {
+export function mediaFileName(source: MediaActionSource): string {
   return (
     (source.reference && mediaReferenceFileName(source.reference)) || source.name || source.kind
   );
