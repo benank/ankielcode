@@ -49,6 +49,7 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
   let quitAndInstallCount = 0;
   let downloadCount = 0;
   let allowDowngrade = false;
+  let autoInstallOnAppQuit = false;
   const checkAllowedDowngrade: boolean[] = [];
   let fullChangelog = false;
   const listeners = new Map<string, Set<(...args: readonly unknown[]) => void>>();
@@ -75,7 +76,10 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
   const layerUpdater = Layer.succeed(ElectronUpdater.ElectronUpdater, {
     setFeedURL: () => Effect.void,
     setAutoDownload: () => Effect.void,
-    setAutoInstallOnAppQuit: () => Effect.void,
+    setAutoInstallOnAppQuit: (value) =>
+      Effect.sync(() => {
+        autoInstallOnAppQuit = value;
+      }),
     setChannel: () => Effect.void,
     setAllowPrerelease: () => Effect.void,
     allowDowngrade: Effect.sync(() => allowDowngrade),
@@ -320,6 +324,7 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
     deletedFiles,
     previousInstallRecord: () => previousInstallRecord,
     downloadCount: () => downloadCount,
+    autoInstallOnAppQuit: () => autoInstallOnAppQuit,
     fullChangelog: () => fullChangelog,
     /** Whether each feed check could offer an older release, and the flag now. */
     checkAllowedDowngrade,

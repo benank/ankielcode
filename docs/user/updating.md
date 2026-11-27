@@ -36,6 +36,19 @@ The confirmation counts the running threads that the restarts will interrupt,
 and how many can resume afterwards. See **Continue threads after restarts**
 below.
 
+## Desktop app updates
+
+The desktop app checks for updates shortly after it starts and every few hours,
+and downloads a new version in the background. While it downloads, the Dock
+icon (macOS) or taskbar button (Windows) shows its progress. When it is ready,
+choose **Restart to Update** in the **Ankiel Code** menu on macOS or the
+**Help** menu, or use the update button at the bottom of the sidebar. If you
+don't restart, the update installs the next time you quit. The .deb package on
+Linux waits for you to restart, because installing it asks for your password.
+
+Installing on quit updates only this app. Servers on other machines that are
+now behind show on the update button the next time you open the app.
+
 ## Switch between Stable and Nightly
 
 In the desktop app, change **Settings → About → Update track**. Ankiel Code shows each

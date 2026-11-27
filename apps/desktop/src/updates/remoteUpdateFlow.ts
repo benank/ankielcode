@@ -1,5 +1,7 @@
 import type { DesktopUpdateRemoteOutcome, DesktopUpdateState } from "@ankielcode/contracts";
 
+import { isInstallableDesktopUpdateState } from "./updateMachine.ts";
+
 export type RemoteDesktopUpdateStep =
   | { readonly action: "check" }
   | { readonly action: "download" }
@@ -19,15 +21,6 @@ export interface RemoteDesktopUpdateAttempts {
 
 const MAX_REMOTE_UPDATE_CHECKS = 2;
 export const MAX_REMOTE_UPDATE_DOWNLOADS = 3;
-
-function isInstallableDesktopUpdateState(state: DesktopUpdateState): boolean {
-  return (
-    state.downloadedVersion !== null &&
-    (state.status === "downloaded" ||
-      (state.status === "error" &&
-        (state.errorContext === null || state.errorContext === "install")))
-  );
-}
 
 export function nextRemoteDesktopUpdateStep(
   state: DesktopUpdateState,
@@ -52,7 +45,6 @@ export function nextRemoteDesktopUpdateStep(
       reason: `Update ${state.notAppliedVersion} did not apply on this machine. Retry it from the desktop app there.`,
     };
   }
-  // Match install admission, including retained downloads after unrelated background or earlier install errors.
   if (isInstallableDesktopUpdateState(state)) {
     return { action: "install" };
   }

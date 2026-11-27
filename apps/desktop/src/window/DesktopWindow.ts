@@ -52,6 +52,7 @@ import { makeQuitShortcutHandler } from "./QuitHold.ts";
 import { copyContextMenuImage } from "./ContextMenuImage.ts";
 import { buildNativeContextMenuTemplate } from "./NativeContextMenu.ts";
 import { installMainWindowRemoteRequestHeaderPolicy } from "./RemoteRequestHeaders.ts";
+import { makeUnresponsivePrompt, unresponsiveDialogOptions } from "./UnresponsiveDialog.ts";
 
 const TITLEBAR_HEIGHT = 40;
 
@@ -948,7 +949,25 @@ export const make = Effect.gen(function* () {
         );
       },
     );
+    // A renderer paused at a breakpoint also stops responding; main cannot tell that apart from a
+    // hang, so open DevTools (and every dev build) skip the prompt.
+    const hangPrompt = makeUnresponsivePrompt({
+      show: (signal) => Electron.dialog.showMessageBox(window, unresponsiveDialogOptions(signal)),
+      // A plain reload can land in the hung process; the render-process-gone handler reloads.
+      reload: () => {
+        if (!window.isDestroyed()) window.webContents.forcefullyCrashRenderer();
+      },
+    });
+    if (!environment.isDevelopment) {
+      window.on("unresponsive", () => {
+        if (!window.isDestroyed() && !window.webContents.isDevToolsOpened()) {
+          hangPrompt.unresponsive();
+        }
+      });
+      window.on("responsive", hangPrompt.dismiss);
+    }
     window.webContents.on("render-process-gone", (_event, details) => {
+      hangPrompt.dismiss();
       const recoverable =
         details.reason === "crashed" ||
         details.reason === "oom" ||
@@ -1042,6 +1061,7 @@ export const make = Effect.gen(function* () {
     }
 
     window.on("closed", () => {
+      hangPrompt.dismiss();
       if (!backendHasStarted) mainClosedDuringStartup = true;
       clearDevelopmentLoadRetry();
       clearBoundsPersist();

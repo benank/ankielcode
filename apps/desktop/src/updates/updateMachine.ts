@@ -251,3 +251,19 @@ export function resolveNotAppliedInstallVersion(
     ? record.targetVersion
     : null;
 }
+
+/** Matches install admission, including retained downloads after unrelated background or earlier install errors. */
+export function isInstallableDesktopUpdateState(state: DesktopUpdateState): boolean {
+  return (
+    state.downloadedVersion !== null &&
+    (state.status === "downloaded" ||
+      (state.status === "error" &&
+        (state.errorContext === null || state.errorContext === "install")))
+  );
+}
+
+/** `BrowserWindow.setProgressBar` input: a fraction while downloading, below zero to clear it. */
+export function desktopUpdateProgressBarValue(state: DesktopUpdateState): number {
+  if (state.status !== "downloading") return -1;
+  return Math.min(Math.max(state.downloadPercent ?? 0, 0), 100) / 100;
+}

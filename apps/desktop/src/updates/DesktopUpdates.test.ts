@@ -89,8 +89,9 @@ const nextPublishedState = (emit: () => void) =>
 describe("DesktopUpdates", () => {
   it.effect("updates Linux .deb installs and leaves other non-AppImage installs off", () =>
     Effect.gen(function* () {
-      const linuxState = (packageType: string | undefined) =>
-        Effect.scoped(
+      const configured = (platform: NodeJS.Platform, packageType?: string) => {
+        const harness = makeHarness({ platform, packageType });
+        return Effect.scoped(
           Effect.gen(function* () {
             const updates = yield* DesktopUpdates.DesktopUpdates;
             const desktopState = yield* DesktopState.DesktopState;
@@ -98,13 +99,19 @@ describe("DesktopUpdates", () => {
             return {
               state: yield* updates.getState,
               canInstallUpdates: yield* Ref.get(desktopState.canInstallUpdates),
+              installsOnQuit: harness.autoInstallOnAppQuit(),
             };
           }),
-        ).pipe(Effect.provide(makeHarness({ platform: "linux", packageType }).layer));
+        ).pipe(Effect.provide(harness.layer));
+      };
+      const linuxState = (packageType: string | undefined) => configured("linux", packageType);
 
       const deb = yield* linuxState("deb\n");
       assert.equal(deb.state.status, "idle");
       assert.isTrue(deb.canInstallUpdates);
+      // dpkg asks for a password, which must not pop up while the app quits.
+      assert.isFalse(deb.installsOnQuit);
+      assert.isTrue((yield* configured("darwin")).installsOnQuit);
 
       const unmarked = yield* linuxState(undefined);
       assert.equal(unmarked.state.status, "disabled");
@@ -266,25 +273,62 @@ describe("DesktopUpdates", () => {
     ).pipe(Effect.provide(Layer.merge(TestClock.layer(), harness.layer)));
   });
 
-  it.effect("checks shortly after startup and then every four hours", () => {
-    const harness = makeHarness();
+  it.effect(
+    "checks shortly after startup and then every four hours, downloading what it finds",
+    () => {
+      const harness = makeHarness({
+        checkForUpdates: Effect.sync(() => harness.emit("update-available", { version: "1.2.4" })),
+        downloadUpdate: Effect.sync(() => harness.emit("update-downloaded", { version: "1.2.4" })),
+      });
 
-    return Effect.scoped(
-      Effect.gen(function* () {
-        const updates = yield* DesktopUpdates.DesktopUpdates;
-        yield* updates.configure;
+      return Effect.scoped(
+        Effect.gen(function* () {
+          const updates = yield* DesktopUpdates.DesktopUpdates;
+          yield* updates.configure;
 
-        yield* TestClock.adjust("15 seconds");
-        assert.equal(harness.checkCount(), 1);
+          yield* TestClock.adjust("15 seconds");
+          assert.equal(harness.checkCount(), 1);
+          assert.equal(harness.downloadCount(), 1);
+          assert.equal((yield* updates.getState).status, "downloaded");
 
-        yield* TestClock.adjust("3 hours");
-        assert.equal(harness.checkCount(), 1);
+          yield* TestClock.adjust("3 hours");
+          assert.equal(harness.checkCount(), 1);
 
-        yield* TestClock.adjust("1 hour");
-        assert.equal(harness.checkCount(), 2);
-      }),
-    ).pipe(Effect.provide(Layer.merge(TestClock.layer(), harness.layer)));
-  });
+          yield* TestClock.adjust("1 hour");
+          assert.equal(harness.checkCount(), 2);
+          assert.equal(harness.downloadCount(), 1);
+        }),
+      ).pipe(Effect.provide(Layer.merge(TestClock.layer(), harness.layer)));
+    },
+  );
+
+  it.effect("leaves a version that did not apply to the user's own check", () =>
+    Effect.gen(function* () {
+      const downloaded = yield* Deferred.make<void>();
+      const harness = makeHarness({
+        installRecord: JSON.stringify({ fromVersion: "1.2.3", targetVersion: "1.2.4" }),
+        checkForUpdates: Effect.sync(() => harness.emit("update-available", { version: "1.2.4" })),
+        downloadUpdate: Deferred.succeed(downloaded, undefined),
+      });
+
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const updates = yield* DesktopUpdates.DesktopUpdates;
+          yield* updates.configure;
+
+          yield* TestClock.adjust("15 seconds");
+          assert.equal((yield* updates.getState).status, "available");
+          // Remote updates and startup recovery check without downloading.
+          yield* updates.check("remote-update");
+          assert.equal(harness.downloadCount(), 0);
+
+          yield* updates.check("web-ui", { download: true });
+          yield* Deferred.await(downloaded);
+          assert.equal(harness.downloadCount(), 1);
+        }),
+      ).pipe(Effect.provide(Layer.merge(TestClock.layer(), harness.layer)));
+    }),
+  );
 
   it.effect.each([
     { action: "download", offer: "update-available", found: null, accepted: true },

@@ -3,11 +3,13 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 import {
   type DesktopMenuCommand,
   type DesktopMenuState,
   type DesktopUpdateChannel,
+  type DesktopUpdateState,
   isDesktopMenuCommand,
   type KeybindingShortcut,
 } from "@ankielcode/contracts";
@@ -23,6 +25,7 @@ import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
 import { applyLanguage, m, onLocaleChange } from "../i18n/messages.ts";
 import * as DesktopClientSettings from "../settings/DesktopClientSettings.ts";
 import * as DesktopUpdates from "../updates/DesktopUpdates.ts";
+import { isInstallableDesktopUpdateState } from "../updates/updateMachine.ts";
 import { desktopMenuCommandItems } from "./DesktopMenuCommands.ts";
 import * as DesktopWindow from "./DesktopWindow.ts";
 
@@ -107,10 +110,34 @@ const trackLabel = (channel: DesktopUpdateChannel) =>
     ? m(msg("Nightly", { $context: "release track" }))
     : m(msg("Stable", { $context: "release track" }));
 
+// Restarting interrupts running tasks, so every install from the menu confirms first.
+const confirmRestartToUpdate = Effect.fn("desktop.menu.confirmRestartToUpdate")(function* (
+  updateState: DesktopUpdateState,
+) {
+  const updates = yield* DesktopUpdates.DesktopUpdates;
+  const electronDialog = yield* ElectronDialog.ElectronDialog;
+  const version = updateState.downloadedVersion ?? updateState.availableVersion;
+  const { response } = yield* electronDialog.showMessageBox({
+    type: "info",
+    title: m(msg("Update ready")),
+    message:
+      version === null
+        ? m(msg("A new version of Ankiel Code is ready to install."))
+        : m(msg("Ankiel Code {version} is ready to install."), { version }),
+    detail: m(
+      msg("Ankiel Code will restart to install it. Any running tasks will be interrupted."),
+    ),
+    buttons: [m(msg("Restart", { $context: "button, restarts the app" })), m(msg("Later"))],
+    defaultId: 0,
+    cancelId: 1,
+  });
+  if (response === 0) yield* updates.install;
+});
+
 const checkForUpdatesFromMenu = Effect.gen(function* () {
   const updates = yield* DesktopUpdates.DesktopUpdates;
   const electronDialog = yield* ElectronDialog.ElectronDialog;
-  const result = yield* updates.check("menu");
+  const result = yield* updates.check("menu", { download: true });
   const updateState = result.state;
 
   if (updateState.status === "up-to-date") {
@@ -122,56 +149,22 @@ const checkForUpdatesFromMenu = Effect.gen(function* () {
       }),
       buttons: [m(msg("OK"))],
     });
-  } else if (updateState.status === "available") {
-    const { response } = yield* electronDialog.showMessageBox({
-      type: "info",
-      title: m(msg("Update available")),
-      message:
-        updateState.availableVersion === null
-          ? m(msg("A new version of Ankiel Code is available."))
-          : m(msg("Ankiel Code {version} is available."), {
-              version: updateState.availableVersion,
-            }),
-      detail: m(msg("You're running Ankiel Code {version}."), {
-        version: updateState.currentVersion,
-      }),
-      buttons: [
-        m(msg("Download", { $context: "button, downloads an app update" })),
-        m(msg("Later")),
-      ],
-      defaultId: 0,
-      cancelId: 1,
-    });
-    if (response === 0) yield* updates.download;
-  } else if (updateState.status === "downloading") {
+  } else if (updateState.status === "available" || updateState.status === "downloading") {
+    // The check started the download; it no longer asks first.
     yield* electronDialog.showMessageBox({
       type: "info",
       title: m(msg("Update downloading")),
       message:
         updateState.availableVersion === null
-          ? m(msg("A new version of Ankiel Code is already downloading."))
-          : m(msg("Ankiel Code {version} is already downloading."), {
+          ? m(msg("A new version of Ankiel Code is downloading."))
+          : m(msg("Ankiel Code {version} is downloading."), {
               version: updateState.availableVersion,
             }),
+      detail: m(msg("Choose Restart to Update in the menu once it's ready.")),
       buttons: [m(msg("OK"))],
     });
   } else if (updateState.status === "downloaded") {
-    const version = updateState.downloadedVersion ?? updateState.availableVersion;
-    const { response } = yield* electronDialog.showMessageBox({
-      type: "info",
-      title: m(msg("Update ready")),
-      message:
-        version === null
-          ? m(msg("A new version of Ankiel Code is ready to install."))
-          : m(msg("Ankiel Code {version} is ready to install."), { version }),
-      detail: m(
-        msg("Ankiel Code will restart to install it. Any running tasks will be interrupted."),
-      ),
-      buttons: [m(msg("Restart", { $context: "button, restarts the app" })), m(msg("Later"))],
-      defaultId: 0,
-      cancelId: 1,
-    });
-    if (response === 0) yield* updates.install;
+    yield* confirmRestartToUpdate(updateState);
   } else if (updateState.status === "error") {
     yield* electronDialog.showMessageBox({
       type: "warning",
@@ -246,6 +239,10 @@ export const make = Effect.gen(function* () {
     );
   };
 
+  const updates = yield* DesktopUpdates.DesktopUpdates;
+  // The downloaded update "Restart to Update" installs; the item shows only while one is ready.
+  let readyUpdate: DesktopUpdateState | null = null;
+
   const shortcuts = new Map<DesktopMenuCommand, KeybindingShortcut>();
   // Disabled until the renderer reports the screen it shows.
   const enabled = new Set<DesktopMenuCommand>();
@@ -264,6 +261,18 @@ export const make = Effect.gen(function* () {
     const checkForUpdatesClick = () => {
       runMenuEffect("check-for-updates", handleCheckForUpdatesMenuClick);
     };
+    const updateItems: Electron.MenuItemConstructorOptions[] = [
+      { label: m(msg("Check for Updates...")), click: checkForUpdatesClick },
+      {
+        label: m(msg("Restart to Update")),
+        visible: readyUpdate !== null,
+        click: () => {
+          if (readyUpdate !== null) {
+            runMenuEffect("restart-to-update", confirmRestartToUpdate(readyUpdate));
+          }
+        },
+      },
+    ];
     const settingsClick = () => {
       runMenuEffect("open-settings", dispatchMenuAction("open-settings"));
     };
@@ -295,10 +304,7 @@ export const make = Effect.gen(function* () {
         label: environment.displayName,
         submenu: [
           { role: "about", label: m(msg("About {appName}"), { appName: environment.displayName }) },
-          {
-            label: m(msg("Check for Updates...")),
-            click: checkForUpdatesClick,
-          },
+          ...updateItems,
           { type: "separator" },
           {
             label: m(msg("Settings...")),
@@ -522,10 +528,7 @@ export const make = Effect.gen(function* () {
           },
           { label: m(msg("Report an Issue")), click: openUrlClick(REPORT_ISSUE_URL) },
           { type: "separator" },
-          {
-            label: m(msg("Check for Updates...")),
-            click: checkForUpdatesClick,
-          },
+          ...updateItems,
         ],
       },
     );
@@ -569,6 +572,19 @@ export const make = Effect.gen(function* () {
       );
     }
   });
+
+  // Readiness flips about once per release, so a rebuild is cheaper than tracking the item.
+  const trackReadyUpdate = Effect.fn("desktop.menu.trackReadyUpdate")(function* (
+    state: DesktopUpdateState,
+  ) {
+    const next = isInstallableDesktopUpdateState(state) ? state : null;
+    const flipped = (next === null) !== (readyUpdate === null);
+    readyUpdate = next;
+    if (flipped && configured) yield* configure;
+  });
+  const updateStates = yield* updates.subscribe;
+  yield* trackReadyUpdate(updateStates.latest);
+  yield* updateStates.changes.pipe(Stream.runForEach(trackReadyUpdate), Effect.forkScoped);
 
   let rebuildsOnLocaleChange = false;
   return DesktopApplicationMenu.of({

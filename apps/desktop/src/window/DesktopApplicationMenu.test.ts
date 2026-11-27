@@ -5,6 +5,8 @@ import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Queue from "effect/Queue";
+import * as Stream from "effect/Stream";
 
 import type { DesktopUpdateCheckResult, DesktopUpdateState } from "@ankielcode/contracts";
 import * as Electron from "electron";
@@ -64,9 +66,24 @@ const layerElectronApp = Layer.succeed(ElectronApp.ElectronApp, {
 interface MenuServices {
   readonly checkResult?: DesktopUpdateCheckResult;
   readonly shownMessageBox?: Deferred.Deferred<Electron.MessageBoxOptions>;
+  /** The button every message box answers with; Cancel when unset. */
+  readonly messageBoxResponse?: number;
   readonly templates?: Array<readonly Electron.MenuItemConstructorOptions[]>;
+  readonly builtMenus?: Queue.Queue<readonly Electron.MenuItemConstructorOptions[]>;
   readonly enabledChanges?: Array<ReadonlyMap<string, boolean>>;
+  readonly updateStates?: Queue.Queue<DesktopUpdateState>;
+  readonly installed?: Deferred.Deferred<void>;
 }
+
+const idleUpdateState: DesktopUpdateState = {
+  ...createInitialDesktopUpdateState(
+    "0.1.5",
+    { hostArch: "arm64", appArch: "arm64", runningUnderArm64Translation: false },
+    "latest",
+  ),
+  enabled: true,
+  status: "idle",
+};
 
 const layerElectronShell = Layer.succeed(ElectronShell.ElectronShell, {
   openExternal: () => Effect.succeed(true),
@@ -74,30 +91,40 @@ const layerElectronShell = Layer.succeed(ElectronShell.ElectronShell, {
   copyText: () => Effect.void,
 } satisfies ElectronShell.ElectronShell["Service"]);
 
-const layerElectronDialog = ({ shownMessageBox }: MenuServices) =>
+const layerElectronDialog = ({ shownMessageBox, messageBoxResponse }: MenuServices) =>
   Layer.succeed(ElectronDialog.ElectronDialog, {
     pickFolder: () => Effect.succeedNone,
     pickFiles: () => Effect.succeed([]),
     showMessageBox: (options) =>
       (shownMessageBox ? Deferred.succeed(shownMessageBox, options) : Effect.void).pipe(
-        Effect.as({ response: options.cancelId ?? 0, checkboxChecked: false }),
+        Effect.as({
+          response: messageBoxResponse ?? options.cancelId ?? 0,
+          checkboxChecked: false,
+        }),
       ),
     showErrorBox: () => Effect.void,
   } satisfies ElectronDialog.ElectronDialog["Service"]);
 
-const layerDesktopUpdates = ({ checkResult }: MenuServices) =>
+const layerDesktopUpdates = ({ checkResult, updateStates, installed }: MenuServices) =>
   Layer.succeed(DesktopUpdates.DesktopUpdates, {
     getState: Effect.die("unexpected getState"),
     isActionActive: Effect.succeed(false),
     isInstallActive: Effect.succeed(false),
-    subscribe: Effect.die("unexpected subscribe"),
+    subscribe: Effect.succeed({
+      latest: idleUpdateState,
+      changes: updateStates ? Stream.fromQueue(updateStates) : Stream.never,
+    }),
     emitState: Effect.void,
     disabledReason: Effect.succeedNone,
     configure: Effect.void,
     setChannel: () => Effect.die("unexpected setChannel"),
     check: () => (checkResult ? Effect.succeed(checkResult) : Effect.die("unexpected check")),
     download: Effect.die("unexpected download"),
-    install: Effect.die("unexpected install"),
+    install: installed
+      ? Deferred.succeed(installed, undefined).pipe(
+          Effect.as({ accepted: true, completed: false, state: idleUpdateState }),
+        )
+      : Effect.die("unexpected install"),
     installPrepared: () => Effect.die("unexpected installPrepared"),
   } satisfies DesktopUpdates.DesktopUpdates["Service"]);
 
@@ -126,7 +153,7 @@ const layerDesktopWindow = (selectedAction: Deferred.Deferred<string>) =>
 const layerElectronMenu = (
   applicationMenuTemplate: Deferred.Deferred<readonly Electron.MenuItemConstructorOptions[]>,
   platform: NodeJS.Platform,
-  { templates, enabledChanges }: MenuServices,
+  { templates, builtMenus, enabledChanges }: MenuServices,
 ) =>
   Layer.effect(
     ElectronMenu.ElectronMenu,
@@ -135,6 +162,7 @@ const layerElectronMenu = (
         ...menu,
         setApplicationMenu: (template: readonly Electron.MenuItemConstructorOptions[]) =>
           Effect.sync(() => templates?.push(template)).pipe(
+            Effect.andThen(builtMenus ? Queue.offer(builtMenus, template) : Effect.void),
             Effect.andThen(Deferred.succeed(applicationMenuTemplate, template)),
             Effect.asVoid,
           ),
@@ -146,16 +174,18 @@ const layerElectronMenu = (
     ),
   ).pipe(Layer.provide(Layer.succeed(HostProcess.Platform, platform)));
 
-const configureMenu = (
+const configureMenu = <A = DesktopApplicationMenu.DesktopApplicationMenu["Service"]>(
   selectedAction: Deferred.Deferred<string>,
   applicationMenuTemplate: Deferred.Deferred<readonly Electron.MenuItemConstructorOptions[]>,
   environment: Partial<DesktopEnvironment.MakeDesktopEnvironmentInput> = {},
   services: MenuServices = {},
+  /** Runs while the menu's layer, and its update-state subscription, is still alive. */
+  whileLive?: Effect.Effect<A>,
 ) =>
   Effect.gen(function* () {
     const menu = yield* DesktopApplicationMenu.DesktopApplicationMenu;
     yield* menu.configure;
-    return menu;
+    return whileLive === undefined ? (menu as A) : yield* whileLive;
   }).pipe(
     Effect.provide(
       DesktopApplicationMenu.layer.pipe(
@@ -557,6 +587,49 @@ describe("DesktopApplicationMenu", () => {
         availableVersion: "0.1.7",
       });
       assert.include(`${dialog.title ?? ""} ${dialog.message} ${dialog.detail ?? ""}`, "0.1.7");
+      // The check downloads what it finds, so the box no longer asks first.
+      assert.deepStrictEqual(dialog.buttons, ["OK"]);
+    }),
+  );
+
+  it.effect("shows Restart to Update while a downloaded update is ready", () =>
+    Effect.gen(function* () {
+      const builtMenus = yield* Queue.unbounded<readonly Electron.MenuItemConstructorOptions[]>();
+      const updateStates = yield* Queue.unbounded<DesktopUpdateState>();
+      const shownMessageBox = yield* Deferred.make<Electron.MessageBoxOptions>();
+      const installed = yield* Deferred.make<void>();
+      const restartItem = (template: readonly Electron.MenuItemConstructorOptions[]) =>
+        flattenMenu(template).find((item) => item.label === "Restart to Update");
+      yield* configureMenu(
+        yield* Deferred.make<string>(),
+        yield* Deferred.make<readonly Electron.MenuItemConstructorOptions[]>(),
+        { platform: "linux" },
+        { builtMenus, updateStates, shownMessageBox, installed, messageBoxResponse: 0 },
+        Effect.gen(function* () {
+          assert.isFalse(restartItem(yield* Queue.take(builtMenus))?.visible);
+
+          yield* Queue.offer(updateStates, {
+            ...idleUpdateState,
+            status: "downloaded",
+            availableVersion: "0.1.7",
+            downloadedVersion: "0.1.7",
+            downloadPercent: 100,
+          });
+          const ready = restartItem(yield* Queue.take(builtMenus));
+          assert.isTrue(ready?.visible);
+          if (typeof ready?.click !== "function") {
+            throw new Error("Expected Restart to Update to have a click handler.");
+          }
+          ready.click({} as Electron.MenuItem, undefined, {} as KeyboardEvent);
+          // Restarting interrupts running tasks, so the item confirms before installing.
+          assert.include((yield* Deferred.await(shownMessageBox)).message, "0.1.7");
+          yield* Deferred.await(installed);
+
+          // A state with no installable download hides it again.
+          yield* Queue.offer(updateStates, { ...idleUpdateState, status: "downloading" });
+          assert.isFalse(restartItem(yield* Queue.take(builtMenus))?.visible);
+        }),
+      );
     }),
   );
 

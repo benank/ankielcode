@@ -2,6 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   createInitialDesktopUpdateState,
+  desktopUpdateProgressBarValue,
   reduceDesktopUpdateStateOnCheckFailure,
   reduceDesktopUpdateStateOnCheckStart,
   reduceDesktopUpdateStateOnDownloadComplete,
@@ -112,5 +113,22 @@ describe("updateMachine", () => {
     expect(state.omittedReleaseCount).toBe(0);
     expect(state.message).toBeNull();
     expect(state.errorContext).toBeNull();
+  });
+
+  it("shows dock progress only while downloading", () => {
+    const base = {
+      ...createInitialDesktopUpdateState("1.0.0", runtimeInfo, "latest"),
+      enabled: true,
+    };
+    const progress = (state: Partial<typeof base>) =>
+      desktopUpdateProgressBarValue({ ...base, ...state });
+
+    expect(progress({ status: "downloading", downloadPercent: 0 })).toBe(0);
+    expect(progress({ status: "downloading", downloadPercent: 42 })).toBe(0.42);
+    expect(progress({ status: "downloading", downloadPercent: null })).toBe(0);
+    // A check keeps a retained download's 100%, which must not show as a full bar.
+    expect(progress({ status: "checking", downloadPercent: 100 })).toBe(-1);
+    expect(progress({ status: "downloaded", downloadPercent: 100 })).toBe(-1);
+    expect(progress({ status: "error", errorContext: "download" })).toBe(-1);
   });
 });
