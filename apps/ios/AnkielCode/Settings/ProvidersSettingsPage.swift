@@ -23,7 +23,10 @@ struct ProvidersSettingsPage: View {
               .foregroundStyle(Palette.textSecondary)
           }
           ForEach(providers) { provider in
-            ProviderRow(provider: provider)
+            NavigationLink(value: SettingsRoute.provider(computer.id, provider.instanceId)) {
+              ProviderRow(provider: provider)
+            }
+            .accessibilityIdentifier("providers.\(computer.id).\(provider.instanceId)")
           }
         } header: {
           HStack(spacing: Spacing.sm) {
@@ -33,6 +36,8 @@ struct ProvidersSettingsPage: View {
         } footer: {
           if !computer.status.isConnected, !computer.providers.isEmpty {
             Text("As \(computer.label) reported them when it was last connected.")
+          } else if model.usage.refresher.failed.contains(computer.id) {
+            Text("Could not refresh \(computer.label). These are its last reported providers.")
           }
         }
       }
@@ -45,6 +50,8 @@ struct ProvidersSettingsPage: View {
     }
     .navigationTitle("Providers")
     .navigationBarTitleDisplayMode(.inline)
+    // Re-probes every provider on each connected computer (`server.refreshProviders`).
+    .refreshable { await model.usage.refresher.refresh(computers.filter(\.status.isConnected).map(\.id)) }
   }
 }
 
@@ -79,20 +86,8 @@ private struct ProviderRow: View {
     .accessibilityElement(children: .combine)
   }
 
-  private var status: String {
-    if !provider.installed { return String(localized: "Not installed") }
-    if !provider.enabled { return String(localized: "Turned off") }
-    return switch provider.authStatus {
-    case "authenticated": String(localized: "Signed in")
-    case "unauthenticated": String(localized: "Not signed in")
-    default: String(localized: "Installed")
-    }
-  }
-
-  private var statusTint: Color {
-    if !provider.installed || provider.authStatus == "unauthenticated" { return Palette.attention }
-    return provider.authStatus == "authenticated" ? Palette.success : Palette.textSecondary
-  }
+  private var status: String { ProviderCopy.status(provider) }
+  private var statusTint: Color { ProviderCopy.tint(provider) }
 
   /// Version (and the latest when behind), the account, and how many models it offers.
   private var detail: String? {
@@ -105,7 +100,7 @@ private struct ProviderRow: View {
         parts.append(version)
       }
     }
-    if let account = provider.authEmail ?? provider.authLabel { parts.append(account) }
+    if let email = provider.authEmail { parts.append(ProviderCopy.masked(email)) } else if let label = provider.authLabel { parts.append(label) }
     let models = provider.models.filter { !$0.isLegacy }.count
     if models > 0 { parts.append(models == 1 ? String(localized: "1 model") : String(localized: "\(models) models")) }
     return parts.isEmpty ? nil : parts.joined(separator: " · ")

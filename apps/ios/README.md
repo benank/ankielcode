@@ -509,3 +509,14 @@ the host over HTTP after 0.5 s; if the host answers and the socket stays silent 
 server (`127.0.0.1` and `localhost`), flips the order and prints the switch, the statuses seen
 meanwhile, the relay status and two refused hand-added addresses. Nothing on the server changes.
 `SharingAccessUITests.testAddressesReorderAndRefuseLoopback` covers the page on fixtures.
+
+## Providers
+
+Settings → Providers lists each computer's providers (status, version, the account with its
+email masked until tapped, model count); pull to refresh re-probes them (`server.refreshProviders`
+through `UsageRefresher`). A provider opens its page: status, version and the latest when behind,
+the account and plan, and its models with Default, Hidden (from `providerModelPreferences`) and
+Needs update badges. Signing in or out, switching accounts and adding Claude accounts are not
+here: they act on the computer's real provider accounts and run multi-step sign-in flows, so the
+page sends users to web or desktop Settings as RN does. `ANKIEL_DEBUG_ROUTE=settings-provider`
+opens the fixture's Codex page; `SettingsMoreUITests` covers the list and a provider page.

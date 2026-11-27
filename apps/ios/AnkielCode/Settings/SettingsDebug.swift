@@ -108,6 +108,7 @@
         case "computer": .computer(studio)
         case "computer-pairing": .computer(buildBox)
         case "computer-off": .computer(laptop)
+        case "provider": .provider(studio, "codex")
         case "computer-access": .access(model.isSettingsFixture ? studio : model.registry.environments.first?.id ?? studio)
         case "general": .general
         case "appearance": .appearance
@@ -123,6 +124,11 @@
         case "usage": .usage
         default: nil
         }
+      if case .provider? = route {
+        model.openSettings(.providers)
+        model.settingsPath.append(route!)
+        return
+      }
       if case .access(let id)? = route {
         model.openSettings(.computer(id))
         model.settingsPath.append(.access(id))

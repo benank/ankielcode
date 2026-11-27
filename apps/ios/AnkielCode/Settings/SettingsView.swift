@@ -14,6 +14,8 @@ enum SettingsRoute: Hashable {
   /// Provider usage limits, and one account's page.
   case usage
   case usageAccount(String)
+  /// One provider on one computer (environment id, instance id).
+  case provider(String, String)
   /// An archived thread, read from the Archive page.
   case archivedThread(ThreadRef)
 }
@@ -156,6 +158,12 @@ struct SettingsView: View {
     case .archive: ArchivedThreadsScreen(registry: model.registry)
     case .usage: UsageLimitsPage()
     case .usageAccount(let key): UsageAccountPage(key: key)
+    case .provider(let id, let instanceId):
+      if let environment = model.registry.environment(id) {
+        ProviderDetailPage(environment: environment, instanceId: instanceId)
+      } else {
+        ContentUnavailableView("This computer is no longer saved on this device.", systemImage: "desktopcomputer")
+      }
     case .archivedThread(let ref): ThreadDetailView(threadRef: ref)
     }
   }
@@ -243,6 +251,7 @@ enum SettingsCopy {
     case .archive: String(localized: "Archive", comment: "noun, settings page of archived threads")
     case .usage: String(localized: "Usage", comment: "screen title")
     case .usageAccount: String(localized: "Account", comment: "screen title")
+    case .provider: String(localized: "Provider")
     case .archivedThread: String(localized: "Thread", comment: "fallback name for an untitled thread")
     }
   }
@@ -263,6 +272,7 @@ enum SettingsCopy {
     case .voice: "mic"
     case .archive, .archivedThread: "archivebox"
     case .usage, .usageAccount: "gauge.with.dots.needle.33percent"
+    case .provider: "person.crop.circle"
     }
   }
 
@@ -294,6 +304,7 @@ enum SettingsCopy {
     case .archivedThread(let ref): "archivedThread.\(ref.threadId)"
     case .usage: "usage"
     case .usageAccount(let key): "usageAccount.\(key)"
+    case .provider(let id, let instanceId): "provider.\(id).\(instanceId)"
     }
   }
 }
