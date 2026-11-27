@@ -28,4 +28,18 @@ final class SettingsMoreUITests: HomeUITestCase {
     waitForExpectations(timeout: 5)
     shot("threads-streaming")
   }
+
+  func testUsageCostAndTokensTabs() {
+    launch(["ANKIEL_DEBUG_SETTINGS": "fixture", "ANKIEL_DEBUG_ROUTE": "settings-usage"])
+    let cost = app.segmentedControls["usage.tab"].buttons["Cost"]
+    XCTAssertTrue(cost.waitForExistence(timeout: 5))
+    cost.tap()
+    XCTAssertTrue(app.staticTexts["Raw token cost"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Claude"].exists)
+    app.segmentedControls["usage.tab"].buttons["Tokens"].tap()
+    XCTAssertTrue(app.staticTexts["Processed tokens"].firstMatch.waitForExistence(timeout: 5))
+    app.segmentedControls["usage.window"].buttons.element(boundBy: 1).tap()
+    XCTAssertTrue(app.staticTexts["Daily processed tokens"].waitForExistence(timeout: 5))
+    shot("usage-tokens")
+  }
 }

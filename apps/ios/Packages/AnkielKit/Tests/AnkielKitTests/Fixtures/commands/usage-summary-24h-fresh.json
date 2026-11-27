@@ -1,0 +1,12 @@
+{
+  "schema" : "usageSummary",
+  "value" : {
+    "awaitRefresh" : true,
+    "resolution" : "hour",
+    "sinceDay" : "2026-11-26",
+    "sinceTime" : "2026-11-26T12:00:00Z",
+    "timeZone" : "GMT",
+    "untilDay" : "2026-11-27",
+    "untilTime" : "2026-11-27T12:00:00Z"
+  }
+}

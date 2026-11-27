@@ -1,0 +1,9 @@
+{
+  "schema" : "usageSummary",
+  "value" : {
+    "provisional" : true,
+    "sinceDay" : "2026-10-29",
+    "timeZone" : "GMT",
+    "untilDay" : "2026-11-27"
+  }
+}

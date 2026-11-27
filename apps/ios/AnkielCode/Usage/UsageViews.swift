@@ -359,13 +359,42 @@ struct UsagePoolSection: View {
 
 /// Settings → Usage: every connected account's limits, pooled per provider.
 struct UsageLimitsPage: View {
+  /// Limits, or the computer's cost and tokens (RN usage tabs).
+  @State private var tab: UsageTab = Self.initialTab
+
+  /// `ANKIEL_DEBUG_USAGE_TAB=cost|tokens` (debug builds) opens that tab.
+  private static var initialTab: UsageTab {
+    #if DEBUG
+      if let raw = ProcessInfo.processInfo.environment["ANKIEL_DEBUG_USAGE_TAB"], let tab = UsageTab(rawValue: raw) { return tab }
+    #endif
+    return .limits
+  }
+
   var body: some View {
-    TimelineView(.everyMinute) { timeline in
-      UsageLimitsList(now: timeline.date)
+    Group {
+      switch tab {
+      case .limits:
+        TimelineView(.everyMinute) { timeline in
+          UsageLimitsList(now: timeline.date)
+        }
+      case .cost, .tokens:
+        UsageSummaryList(metric: tab)
+      }
     }
     .navigationTitle(Text("Usage", comment: "screen title"))
     .navigationBarTitleDisplayMode(.inline)
-    .toolbar { ToolbarItem(placement: .primaryAction) { UsageRefreshButton() } }
+    .safeAreaInset(edge: .top, spacing: 0) {
+      Picker("View", selection: $tab) {
+        ForEach(UsageTab.allCases, id: \.self) { Text($0.title).tag($0) }
+      }
+      .pickerStyle(.segmented)
+      .padding(.horizontal, Spacing.lg)
+      .padding(.vertical, Spacing.sm)
+      .accessibilityIdentifier("usage.tab")
+    }
+    .toolbar {
+      if tab == .limits { ToolbarItem(placement: .primaryAction) { UsageRefreshButton() } }
+    }
   }
 }
 

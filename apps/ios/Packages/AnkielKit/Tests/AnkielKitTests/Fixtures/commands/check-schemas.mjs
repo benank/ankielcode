@@ -74,6 +74,7 @@ const schemas = {
   accessCreateLink: m.AuthCreatePairingCredentialInput,
   accessRevokeLink: m.AuthRevokePairingLinkInput,
   accessRevokeClient: m.AuthRevokeClientSessionInput,
+  usageSummary: m.UsageSummaryInput,
 };
 
 let failures = 0;

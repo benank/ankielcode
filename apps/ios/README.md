@@ -583,3 +583,16 @@ thread are not built. Logic is in `AnkielKit/ScheduledTasks`.
 
 `ScheduledTaskUITests` (live, with `ANKIEL_TEST_SCHEDULED=1`) creates a Replay task in the
 `ankiel-probe live` project, runs it now, pauses and deletes it; delete the thread its run made.
+
+## Usage cost and tokens
+
+Settings → Usage has three tabs: Limits (as before), Cost and Tokens (RN usage tabs). Cost and
+Tokens read one computer at a time with `server.getUsageSummary` (`diagnostics:read`) for the past
+24 hours (hourly), 7, 30 or 90 days in the phone's time zone: first the provisional answer from the
+computer's last scan, then a fresh scan when that one says it is refreshing, and again on pull to
+refresh. `UsageReport` folds the buckets into the headline, a Swift Charts bar chart stacked by
+provider, totals (cache savings, cached and uncached input, output with reasoning, the unpriced
+share) and rankings by provider and model. RN merges every computer with source de-duplication;
+here a picker chooses the computer instead. `ankiel-probe --usage-summary [days]` prints the same
+fold, read only. `ANKIEL_DEBUG_USAGE_TAB=cost|tokens` opens a tab (synthetic data with
+`ANKIEL_DEBUG_SETTINGS`).
