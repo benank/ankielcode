@@ -77,6 +77,10 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
   /// Set while this controller animates the feed to its end.
   private var adjusting = false
   private var insetsAnimating = false
+  /// Set by a row toggle: the next update animates the resize it causes.
+  private var animatesNextUpdate = false
+  /// Rows that join the feed in view and fade in: a reader's new message, rows a fold opens.
+  private var arriving: Set<String> = []
   #if DEBUG
     private var debugTop = ProcessInfo.processInfo.environment["ANKIEL_DEBUG_THREAD_SCROLL"] == "top"
   #endif
@@ -169,6 +173,15 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
 
   func update(_ next: [FeedItem], revision next_revision: Int) {
     let previousPending = items.values.count { if case .pending = $0 { true } else { false } }
+    let animates = animatesNextUpdate
+    animatesNextUpdate = false
+    let known = Set(order)
+    arriving = Set(
+      next.lazy.filter { item in
+        guard !known.contains(item.id), !known.isEmpty else { return false }
+        if case .pending = item { return true }
+        return animates
+      }.map(\.id))
     var changed: [String] = []
     var nextItems: [String: FeedItem] = [:]
     nextItems.reserveCapacity(next.count)
@@ -203,10 +216,24 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
     if pending > previousPending {
       // The reader's own new message always comes into view.
       scrollToEnd(animated: true)
+    } else if animates {
+      animateResize()
     } else {
       collection.setNeedsLayout()
     }
     publish()
+  }
+
+  /// A toggled row resizes inside one short animation. The anchor is re-applied inside it too
+  /// (as for an inset change), so the toggled row stays put while the rows after it move.
+  private func animateResize() {
+    insetsAnimating = true
+    collection.animatesLayout = true
+    UIView.animate(withDuration: 0.25, delay: 0, options: [.curveEaseInOut, .beginFromCurrentState, .allowUserInteraction]) {
+      self.collection.layoutIfNeeded()
+    }
+    insetsAnimating = false
+    collection.animatesLayout = false
   }
 
   /// Back to the end (the scroll-to-latest button, or a send).
@@ -237,7 +264,18 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
     if let top = rowTop(row) {
       scroll.toggled(row, offset: top - collection.visibleTop)
     }
+    animatesNextUpdate = !reduceMotion
     withAnimation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion)) { model.toggle(key) }
+  }
+
+  func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+    guard let id = dataSource.itemIdentifier(for: indexPath), arriving.remove(id) != nil else { return }
+    cell.alpha = 0
+    if !reduceMotion { cell.transform = CGAffineTransform(translationX: 0, y: 8) }
+    UIView.animate(withDuration: reduceMotion ? 0.15 : 0.25, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+      cell.alpha = 1
+      cell.transform = .identity
+    }
   }
 
   // MARK: Anchoring
@@ -382,6 +420,20 @@ final class FeedCollectionView: UICollectionView {
 /// padding that changed as it scrolled, so rows slid under the finger by up to the bar's height.
 final class FeedCell: UICollectionViewCell {
   override var safeAreaInsets: UIEdgeInsets { .zero }
+
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+    // An opening row grows over the rows below while they move down: clip it to its frame.
+    clipsToBounds = true
+  }
+
+  @available(*, unavailable) required init?(coder: NSCoder) { fatalError() }
+
+  override func prepareForReuse() {
+    super.prepareForReuse()
+    alpha = 1
+    transform = .identity
+  }
 }
 
 extension View {
