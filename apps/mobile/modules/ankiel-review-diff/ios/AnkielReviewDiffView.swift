@@ -1453,15 +1453,21 @@ private final class ReviewDiffContentView: UIView, UIGestureRecognizerDelegate {
   }
 
   private var codeFont: UIFont {
-    UIFont.monospacedSystemFont(ofSize: style.codeFontSize, weight: style.codeFontWeight)
+    monospaceFont(ofSize: style.codeFontSize, weight: style.codeFontWeight)
   }
 
   private var lineNumberFont: UIFont {
-    UIFont.monospacedSystemFont(ofSize: style.lineNumberFontSize, weight: style.lineNumberFontWeight)
+    monospaceFont(ofSize: style.lineNumberFontSize, weight: style.lineNumberFontWeight)
   }
 
   private var hunkFont: UIFont {
-    UIFont.monospacedSystemFont(ofSize: style.hunkFontSize, weight: style.hunkFontWeight)
+    monospaceFont(ofSize: style.hunkFontSize, weight: style.hunkFontWeight)
+  }
+
+  /// The app's bundled Geist Mono (expo-font in app.config.ts), else the system monospace.
+  private func monospaceFont(ofSize size: CGFloat, weight: UIFont.Weight) -> UIFont {
+    let name = weight >= .bold ? "GeistMono-Bold" : weight >= .medium ? "GeistMono-Medium" : "GeistMono-Regular"
+    return UIFont(name: name, size: size) ?? .monospacedSystemFont(ofSize: size, weight: weight)
   }
 
   private var fileHeaderFont: UIFont {

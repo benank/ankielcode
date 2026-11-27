@@ -113,10 +113,18 @@ const iosBundleIdentifier = isIosPersonalTeamBuild
   ? personalTeamBundleIdentifier!
   : variant.iosBundleIdentifier;
 
-const dmSansFonts = {
-  regular: "@expo-google-fonts/dm-sans/400Regular/DMSans_400Regular.ttf",
-  medium: "@expo-google-fonts/dm-sans/500Medium/DMSans_500Medium.ttf",
-  bold: "@expo-google-fonts/dm-sans/700Bold/DMSans_700Bold.ttf",
+const geistFonts = {
+  regular: "@expo-google-fonts/geist/400Regular/Geist_400Regular.ttf",
+  medium: "@expo-google-fonts/geist/500Medium/Geist_500Medium.ttf",
+  bold: "@expo-google-fonts/geist/700Bold/Geist_700Bold.ttf",
+} as const;
+
+const geistMonoFonts = {
+  regular: "@expo-google-fonts/geist-mono/400Regular/GeistMono_400Regular.ttf",
+  medium: "@expo-google-fonts/geist-mono/500Medium/GeistMono_500Medium.ttf",
+  bold: "@expo-google-fonts/geist-mono/700Bold/GeistMono_700Bold.ttf",
+  // Syntax themes italicize some tokens; iOS will not slant an upright face.
+  italic: "@expo-google-fonts/geist-mono/400Regular_Italic/GeistMono_400Regular_Italic.ttf",
 } as const;
 
 const widgetsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
@@ -305,25 +313,43 @@ const config: ExpoConfig = {
       "expo-font",
       {
         ios: {
-          fonts: [dmSansFonts.regular, dmSansFonts.medium, dmSansFonts.bold],
+          fonts: [
+            geistFonts.regular,
+            geistFonts.medium,
+            geistFonts.bold,
+            geistMonoFonts.regular,
+            geistMonoFonts.medium,
+            geistMonoFonts.bold,
+            geistMonoFonts.italic,
+          ],
         },
         android: {
           fonts: [
             {
-              fontFamily: "DMSans-Regular",
-              fontDefinitions: [{ path: dmSansFonts.regular, weight: 400 }],
+              fontFamily: "Geist-Regular",
+              fontDefinitions: [{ path: geistFonts.regular, weight: 400 }],
             },
             {
-              fontFamily: "DMSans-Medium",
-              fontDefinitions: [{ path: dmSansFonts.medium, weight: 500 }],
+              fontFamily: "Geist-Medium",
+              fontDefinitions: [{ path: geistFonts.medium, weight: 500 }],
             },
             {
-              fontFamily: "DMSans-Bold",
+              fontFamily: "Geist-Bold",
               // Android picks fallback glyphs (such as Vietnamese) at the requested weight, so bold text
               // asks for 700; the 400 entry lets a relative bold step (Typeface.BOLD) land on 700 too.
               fontDefinitions: [
-                { path: dmSansFonts.bold, weight: 400 },
-                { path: dmSansFonts.bold, weight: 700 },
+                { path: geistFonts.bold, weight: 400 },
+                { path: geistFonts.bold, weight: 700 },
+              ],
+            },
+            {
+              // One family under the iOS PostScript name, so `fontWeight` picks the weight on both.
+              fontFamily: "GeistMono-Regular",
+              fontDefinitions: [
+                { path: geistMonoFonts.regular, weight: 400 },
+                { path: geistMonoFonts.medium, weight: 500 },
+                { path: geistMonoFonts.bold, weight: 700 },
+                { path: geistMonoFonts.italic, weight: 400, style: "italic" },
               ],
             },
           ],

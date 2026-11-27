@@ -35,6 +35,7 @@ import { useEnrichedLinkVariants } from "./useEnrichedLinkVariants";
 import { useRetryingImageSource } from "./useRetryingImageSource";
 import * as Dialog from "../components/ui/Dialog";
 import { copyTextWithHaptic } from "../lib/copyTextWithHaptic";
+import { FONT_FAMILIES } from "../lib/fontFamilies";
 import type { HighlightScheme } from "../lib/highlights";
 import {
   ENRICHED_INLINE_FILE_LINK_REGEX,
@@ -49,7 +50,6 @@ function enrichedStyle(
   dark: boolean,
   fontScale: number,
 ): MarkdownStyle {
-  const monospace = Platform.OS === "ios" ? "Menlo" : "monospace";
   // Android only bolds fallback glyphs when the bold family is asked for at a bold weight (app.config.ts).
   const boldFontWeight = Platform.OS === "android" ? "bold" : undefined;
   // Keep the radius modest: iOS clips square table-cell borders without stroking the corner arcs.
@@ -104,7 +104,7 @@ function enrichedStyle(
     },
     link: { color: style.linkColor, underline: false },
     code: {
-      fontFamily: monospace,
+      fontFamily: FONT_FAMILIES.mono,
       color: style.inlineCodeColor,
       backgroundColor: "transparent",
       borderColor: "transparent",
@@ -114,7 +114,7 @@ function enrichedStyle(
       ...body,
       color: style.codeColor,
       backgroundColor: style.codeBlockBackgroundColor,
-      fontFamily: monospace,
+      fontFamily: FONT_FAMILIES.mono,
       fontSize: style.fontSize * 0.9,
       ...block,
       padding: 12,

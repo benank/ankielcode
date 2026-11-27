@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import "~/index.css";
-import { applyAppearanceFontVariables } from "./appearanceFonts";
+import {
+  applyAppearanceFontVariables,
+  DEFAULT_CODE_FONT_STACK,
+  DEFAULT_SANS_FONT_STACK,
+  displayFontFamily,
+  resolveDefaultFamilyLabel,
+} from "./appearanceFonts";
 
 function renderedFontSize(style: (probe: HTMLElement) => void): string {
   const probe = document.createElement("div");
@@ -87,5 +93,16 @@ describe("applyAppearanceFontVariables", () => {
       if (style === null) root.removeAttribute("style");
       else root.setAttribute("style", style);
     }
+  });
+});
+
+describe("default font families", () => {
+  it("names the bundled defaults before their lazy webfonts load", () => {
+    expect(resolveDefaultFamilyLabel(DEFAULT_SANS_FONT_STACK)).toBe("Geist Variable");
+    expect(resolveDefaultFamilyLabel(DEFAULT_CODE_FONT_STACK)).toBe("Geist Mono Variable");
+  });
+
+  it("previews the SF Mono choice without the bundled mono font", () => {
+    expect(displayFontFamily("SF Mono")).not.toContain("Geist");
   });
 });
