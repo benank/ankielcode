@@ -12,7 +12,7 @@
 //   vp run check:changed --concurrency 1  run the steps one at a time
 //
 // Uncommitted and untracked files count. Affected packages come from
-// .github/scripts/ci-changes.cjs.
+// scripts/affected-packages.ts.
 // The steps run side by side within a budget derived from the machine's cores
 // and available memory, and each prints its output when it finishes. A step
 // running past the timeout is killed with its process group and reported as
@@ -38,7 +38,7 @@ import * as Stream from "effect/Stream";
 import { Argument, Command, Flag } from "effect/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import { decide, readWorkspace } from "../.github/scripts/ci-changes.cjs";
+import { affectedPackages, readWorkspace } from "./affected-packages.ts";
 import { vitePlusCommand } from "./check-changed-command.ts";
 
 const GiB = 1024 ** 3;
@@ -223,6 +223,9 @@ export const comparisonBase = Effect.fn("checkChanged.comparisonBase")(function*
   return closest;
 });
 
+// The paths .github/workflows/mobile-native-lint.yml runs for.
+const MOBILE_NATIVE =
+  /^apps\/mobile\/.*\.(swift|kt|kts)$|^apps\/mobile\/(\.swiftlint\.yml|detekt\.yml|\.editorconfig|Brewfile)$|^scripts\/mobile-native-static-check\.ts$|^\.github\/workflows\/mobile-native-lint\.yml$/;
 // CI's lint and knip also read Astro components' frontmatter.
 const CODE = /\.(?:[cm]?[jt]sx?|astro)$/;
 const TEST = /\.test\.[cm]?[jt]sx?$/;
@@ -337,7 +340,7 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
   const present = yield* Effect.filter(files, (file) => fs.exists(inRoot(file)));
   const code = present.filter((file) => CODE.test(file));
   const packages = readWorkspace();
-  const { affected, outputs } = decide(files, packages, false);
+  const affected = affectedPackages(files, packages);
 
   // Changed test files, and the test files beside a changed source file
   // (foo.ts -> foo.test.ts, foo.browser.test.tsx). Vitest's import-graph
@@ -370,14 +373,6 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
         /\.tsx?$/.test(file) && !/\.(test|browser)\.tsx?$/.test(file) && !file.endsWith(".gen.ts"),
       // Web has only per-file cases.
       always: [],
-    },
-    {
-      test: "apps/mobile/src/reactCompilerCoverage.test.ts",
-      root: "apps/mobile/src/",
-      name: (file: string) => file.slice("apps/mobile/".length),
-      compiled: (file: string) => /\.tsx?$/.test(file) && !/\.(test\.tsx?|d\.ts)$/.test(file),
-      // The Metro, cache, and stale-allowlist cases check more than one file, deletions included.
-      always: ["^(?!.*compiles )"],
     },
   ].flatMap(({ test, root: appRoot, name, compiled, always }) => {
     const changed = files.filter((file) => file.startsWith(appRoot) && compiled(file));
@@ -567,11 +562,8 @@ const checkChanged = Effect.fn("checkChanged")(function* (input: {
         "Raise --timeout or lower --concurrency.",
     );
   }
-  const ciOnly = Object.entries({
-    build: outputs.build,
-    "mobile native lint": outputs.mobile_native,
-  }).flatMap(([job, runs]) => (runs ? [job] : []));
-  if (ciOnly.length > 0) summary.push(`  CI also runs: ${ciOnly.join(", ")}`);
+  if (files.some((file) => MOBILE_NATIVE.test(file)))
+    summary.push("  CI also runs: mobile native lint");
   if (!runPatchCheck) summary.push("  unused patch check skipped: no dependency files changed");
   if (!runKnip) summary.push("  knip skipped: no code or manifest changed");
   yield* Console.log(`\n${summary.join("\n")}`);

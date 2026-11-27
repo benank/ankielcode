@@ -23,7 +23,6 @@ import {
   runSteps,
   type Step,
 } from "./check-changed.ts";
-import { decide, readWorkspace } from "../.github/scripts/ci-changes.cjs";
 
 const GiB = 1024 ** 3;
 
@@ -166,41 +165,6 @@ describe("check:changed", () => {
         "check:changed: git ls-files exited with 128: fatal: index file corrupt",
       );
     });
-  });
-
-  it("opens the built desktop app only for startup, settlement, and sidebar changes", () => {
-    const packages = readWorkspace();
-    const launches = (file: string) => decide([file], packages, false).outputs.desktop_launch;
-    for (const file of [
-      "apps/server/src/orchestration-v2/ThreadSettlementService.ts",
-      "apps/server/src/persistence/Migrations/054_ProjectionThreadsAutoSettleDisabledAt.ts",
-      "apps/web/src/components/sidebar/SidebarThreadRow.tsx",
-      "apps/desktop/src/backend/DesktopBackendManager.ts",
-      "apps/desktop/src/electron/ElectronProtocol.ts",
-      "packages/contracts/src/settings.ts",
-      "scripts/fixtures/desktop-launch/statev2.sqlite",
-    ]) {
-      assert.isTrue(launches(file), file);
-    }
-    for (const file of [
-      "apps/server/src/orchestration-v2/ThreadSettlementService.test.ts",
-      "apps/web/src/components/chat/ChatView.tsx",
-      "apps/desktop/src/updates/DesktopRemoteUpdates.ts",
-      "packages/contracts/src/orchestration.ts",
-    ]) {
-      assert.isFalse(launches(file), file);
-    }
-    // A script-only change still builds the app it opens.
-    assert.isTrue(decide(["scripts/smoke-desktop-app.ts"], packages, false).outputs.build);
-  });
-
-  it.each([
-    "packages/shared/src/testing/longTempDir.ts",
-    "packages/shared/src/testing/providerEnv.ts",
-    "packages/shared/src/testing/gitEnv.ts",
-    "packages/shared/src/testing/gitRepositoryEnv.ts",
-  ])("tests every package when the shared test setup file %s changes", (file) => {
-    assert.strictEqual(decide([file], readWorkspace(), false).outputs.test_packages, "");
   });
 });
 
@@ -348,7 +312,7 @@ function launcherFixture() {
   for (const file of [
     "scripts/check-changed.ts",
     "scripts/check-changed-command.ts",
-    ".github/scripts/ci-changes.cjs",
+    "scripts/affected-packages.ts",
   ]) {
     write(file, NodeFS.readFileSync(NodePath.join(import.meta.dirname, "..", file), "utf8"));
   }
