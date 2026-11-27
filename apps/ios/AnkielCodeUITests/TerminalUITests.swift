@@ -10,21 +10,27 @@ final class TerminalUITests: HomeUITestCase {
       ?? "ankielcode-native://thread/2cef27d0-20c8-470a-a573-aaf4e7ff84af/a7de1ab3-632e-4553-822f-d86dba49e1c5"
   }
 
+  /// The shells' `ZDOTDIR` and history: a fresh empty folder under `/tmp` per test (the shell
+  /// runs on this Mac), so no rc file or history from anywhere else is read or written.
+  var history = ""
+
   override func setUp() async throws {
     let url = URL(string: "http://127.0.0.1:14527/.well-known/ankiel/environment")!
     guard (try? await URLSession.shared.data(from: url)) != nil else {
       throw XCTSkip("The dev server is not running.")
     }
+    history = "/tmp/ankiel-term-uitest-\(UUID().uuidString.prefix(8))"
+    try FileManager.default.createDirectory(atPath: history, withIntermediateDirectories: true)
   }
 
   @MainActor
   override func tearDown() async throws {
     XCUIDevice.shared.orientation = .portrait
+    if !history.isEmpty { try? FileManager.default.removeItem(atPath: history) }
   }
 
   func testOpenTypeEchoAndClose() {
-    // History files go to /tmp, not the user's home.
-    launch(["ANKIEL_OPEN_URL": Self.threadLink, "ANKIEL_DEBUG_TERMINAL_HISTORY": "/tmp/ankiel-term-agent/hist",
+    launch(["ANKIEL_OPEN_URL": Self.threadLink, "ANKIEL_DEBUG_TERMINAL_HISTORY": history,
       "ANKIEL_DEBUG_TERMINAL_INPUT": "1",
     ])
     let menu = app.buttons["thread.menu"]
@@ -89,7 +95,7 @@ final class TerminalUITests: HomeUITestCase {
     launch([
       "ANKIEL_OPEN_URL": Self.threadLink,
       "ANKIEL_DEBUG_TERMINAL": "new",
-      "ANKIEL_DEBUG_TERMINAL_HISTORY": "/tmp/ankiel-term-agent/hist",
+      "ANKIEL_DEBUG_TERMINAL_HISTORY": history,
       "ANKIEL_DEBUG_TERMINAL_INPUT": "1",
       "ANKIEL_DEBUG_TERMINAL_SEND": " for i in $(seq 1 200); do echo row-$i; done\\r",
     ])
