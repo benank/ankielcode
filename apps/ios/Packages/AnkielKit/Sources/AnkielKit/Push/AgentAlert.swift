@@ -97,16 +97,17 @@ public enum NotificationAnswer {
     case unsent
   }
 
-  /// The two limits stay inside the ~30 s iOS gives a notification action; a cold launch took
-  /// 13 s to connect and sync on the simulator.
+  /// The two limits stay inside the ~30 s iOS gives a notification action, after the ~4 s a cold
+  /// background launch takes to reach the handler; connecting and syncing took 13 s cold on the
+  /// simulator.
   public static func perform(
     _ action: AgentNotificationAction,
     states: AsyncStream<ThreadState>,
     canOperate: @escaping @Sendable () async -> Bool,
     send: @escaping @Sendable (RequestCommand) async throws -> Void,
     stillPending: @escaping @Sendable () async -> Bool,
-    syncTimeout: Duration = .seconds(20),
-    sendTimeout: Duration = .seconds(8)
+    syncTimeout: Duration = .seconds(17),
+    sendTimeout: Duration = .seconds(7)
   ) async -> Outcome {
     let plan = await first(within: syncTimeout) {
       for await state in states {
