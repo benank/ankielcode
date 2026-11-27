@@ -720,13 +720,6 @@ export const PullRequestActivity = Schema.Struct({
 });
 export type PullRequestActivity = typeof PullRequestActivity.Type;
 
-export const pullRequestConversationThreads = (
-  activity: Pick<PullRequestActivity, "reviewThreads" | "overviewThreads">,
-): ReadonlyArray<PullRequestConversationThread> =>
-  activity.overviewThreads === undefined || activity.overviewThreads.length === 0
-    ? activity.reviewThreads
-    : [...activity.reviewThreads, ...activity.overviewThreads];
-
 export const PullRequestDetailView = Schema.Struct({
   ...PullRequestDetail.fields,
   ...PullRequestActivity.fields,
