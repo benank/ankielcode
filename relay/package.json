@@ -8,7 +8,7 @@
     "deploy": "wrangler deploy",
     "setup": "node scripts/setup.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test test/*.test.ts"
+    "test": "node --experimental-strip-types --import ./test/support/register-workers-stub.mjs --test test/*.test.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261119.1",

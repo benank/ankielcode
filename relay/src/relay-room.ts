@@ -2,6 +2,13 @@ import { DurableObject } from "cloudflare:workers";
 
 import { randomNonce, verifyHostAuth } from "./crypto.ts";
 import {
+  deliverPush,
+  pushAvailability,
+  PushRateLimiter,
+  summarizePushResult,
+  type PushEnv,
+} from "./push.ts";
+import {
   BINARY_FRAME_HTTP_REQ_BODY,
   BINARY_FRAME_HTTP_RES_BODY,
   BINARY_FRAME_WS_DATA,
@@ -11,12 +18,14 @@ import {
   filterRequestHeaders,
   filterWsUpgradeHeaders,
   parseHostControlMessage,
+  parseRejectedPush,
   type HeaderEntries,
+  type PushMessage,
   type RelayToClientMessage,
   type RelayToHostMessage,
 } from "./protocol.ts";
 
-export interface RelayEnv {
+export interface RelayEnv extends PushEnv {
   readonly RELAY_ROOM: DurableObjectNamespace;
   readonly RELAY_SECRET?: string;
   readonly ALLOWED_HOST_IDS?: string;
@@ -100,6 +109,7 @@ export class RelayRoom extends DurableObject<RelayEnv> {
   // In-flight HTTP requests keep the DO awake until resolved/closed, so in-memory tracking is safe.
   private readonly pendingHttp = new Map<string, PendingHttpRequest>();
   private failedAuthTimestamps: number[] = [];
+  private pushRateLimiter: PushRateLimiter | null = null;
 
   private pruneFailedAuth(now: number): void {
     const cutoff = now - FAILED_AUTH_WINDOW_MS;
@@ -494,7 +504,7 @@ export class RelayRoom extends DurableObject<RelayEnv> {
     }
 
     if (attachment.role === "host") {
-      this.handleAuthenticatedHostMessage(ws, message);
+      await this.handleAuthenticatedHostMessage(ws, message);
       return;
     }
 
@@ -563,10 +573,29 @@ export class RelayRoom extends DurableObject<RelayEnv> {
       authenticatedAt: Date.now(),
     } satisfies SocketAttachment);
 
-    sendHostJson(ws, { type: "ready", hostId: attachment.hostId });
+    this.sendReady(ws, attachment.hostId);
   }
 
-  private handleAuthenticatedHostMessage(ws: WebSocket, message: string | ArrayBuffer): void {
+  private sendReady(ws: WebSocket, hostId: string): void {
+    sendHostJson(ws, { type: "ready", hostId, push: pushAvailability(this.env) });
+  }
+
+  private async handlePush(ws: WebSocket, message: PushMessage): Promise<void> {
+    this.pushRateLimiter ??= new PushRateLimiter(Date.now());
+    const result = await deliverPush(message, {
+      env: this.env,
+      rateLimiter: this.pushRateLimiter,
+      fetch: (input, init) => fetch(input, init),
+      now: Date.now,
+    });
+    console.log(summarizePushResult(result));
+    sendHostJson(ws, result);
+  }
+
+  private async handleAuthenticatedHostMessage(
+    ws: WebSocket,
+    message: string | ArrayBuffer,
+  ): Promise<void> {
     if (typeof message !== "string") {
       const decoded = decodeBinaryFrame(message);
       if (!decoded) {
@@ -598,6 +627,17 @@ export class RelayRoom extends DurableObject<RelayEnv> {
 
     const parsed = parseHostControlMessage(message);
     if (!parsed) {
+      const rejectedPush = parseRejectedPush(message);
+      if (rejectedPush) {
+        console.log({ event: "push_rejected", reason: rejectedPush.reason });
+        sendHostJson(ws, {
+          type: "push_result",
+          pushId: rejectedPush.pushId,
+          results: [],
+          error: "invalid_push",
+        });
+        return;
+      }
       sendHostJson(ws, {
         type: "error",
         code: "invalid_message",
@@ -645,7 +685,10 @@ export class RelayRoom extends DurableObject<RelayEnv> {
         this.failPendingHttp(parsed.reqId, parsed.status ?? 502, parsed.message);
         return;
       case "auth":
-        sendHostJson(ws, { type: "ready", hostId: this.getAttachment(ws)?.hostId ?? "" });
+        this.sendReady(ws, this.getAttachment(ws)?.hostId ?? "");
+        return;
+      case "push":
+        await this.handlePush(ws, parsed);
         return;
     }
   }

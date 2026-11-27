@@ -51,6 +51,35 @@ To ship Worker updates later, run `npm run deploy` in `relay/`.
 
 ---
 
+## Push Notifications (Optional)
+
+The relay can deliver notifications to the Ankiel Code mobile app when an agent finishes or needs you. It only signs and forwards: it stores no device tokens. Push credentials are Worker secrets on your own Cloudflare account.
+
+**iOS (APNs).** In the [Apple Developer portal](https://developer.apple.com/account/resources/authkeys/list), go to **Certificates, Identifiers & Profiles → Keys**, create a key with **Apple Push Notifications service (APNs)** enabled, and download the `AuthKey_<KEYID>.p8` file. Apple lets you download it only once. Then run:
+
+```bash
+cd relay
+npx wrangler secret put APNS_KEY_P8 < AuthKey_XXXXXXXXXX.p8
+npx wrangler secret put APNS_KEY_ID      # the 10-character key id
+npx wrangler secret put APNS_TEAM_ID     # your 10-character Apple team id
+# Optional: only push to these bundle ids
+npx wrangler secret put APNS_TOPICS      # e.g. com.example.ankiel,com.example.ankiel.dev
+```
+
+An APNs key only reaches apps signed by the same Apple team. To get notifications from your relay, build and sign the iOS app with your own team. The App Store and TestFlight builds are signed by a different team, so your key can't reach them.
+
+**Android (FCM).** In the Firebase console, open **Project settings → Service accounts → Generate new private key**, then run:
+
+```bash
+npx wrangler secret put FCM_SERVICE_ACCOUNT_JSON < service-account.json
+```
+
+The Android app must be built with the same Firebase project's `google-services.json`.
+
+`npm run setup` offers to upload these secrets from the files. When a host connects, the relay tells it which platforms are configured. Pushes for a platform without its secrets fail with `push_not_configured`. Each host can send up to 120 notifications per minute.
+
+---
+
 ## Verify Locally (No Cloudflare Deploy Required)
 
 ```bash

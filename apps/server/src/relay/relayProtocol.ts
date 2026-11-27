@@ -39,7 +39,8 @@ export type RelayToHostMessage =
       readonly timestamp: number;
       readonly requiresSecret?: boolean;
     }
-  | { readonly type: "ready"; readonly hostId: string }
+  | { readonly type: "ready"; readonly hostId: string; readonly push?: RelayPushAvailability }
+  | RelayPushResultMessage
   | {
       readonly type: "client_open";
       readonly connId: string;
@@ -64,6 +65,111 @@ export type RelayToHostMessage =
   | { readonly type: "http_request_end"; readonly reqId: string }
   | { readonly type: "error"; readonly code: string; readonly message: string }
   | { readonly type: "pong" };
+
+export interface RelayApnsPushDelivery {
+  readonly platform: "apns";
+  readonly token: string;
+  /** Bundle id of the receiving app. */
+  readonly topic: string;
+  readonly environment: "sandbox" | "production";
+  readonly payload: Readonly<Record<string, unknown>>;
+  readonly pushType?: "alert" | "background";
+  readonly priority?: 5 | 10;
+  readonly collapseId?: string;
+  /** Unix seconds; 0 means deliver once or drop. */
+  readonly expiration?: number;
+}
+
+export interface RelayFcmPushDelivery {
+  readonly platform: "fcm";
+  readonly token: string;
+  readonly data: Readonly<Record<string, string>>;
+  readonly priority?: "high" | "normal";
+  readonly collapseKey?: string;
+  readonly ttlSeconds?: number;
+}
+
+export type RelayPushDelivery = RelayApnsPushDelivery | RelayFcmPushDelivery;
+
+/** Host -> relay. The relay accepts at most 32 deliveries per message. */
+export interface RelayPushMessage {
+  readonly type: "push";
+  readonly pushId: string;
+  readonly deliveries: ReadonlyArray<RelayPushDelivery>;
+}
+
+export interface RelayPushDeliveryResult {
+  readonly token: string;
+  readonly platform: "apns" | "fcm";
+  readonly ok: boolean;
+  readonly status?: number;
+  readonly reason?: string;
+  /** The provider says this token is dead; forget the registration. */
+  readonly unregistered?: boolean;
+}
+
+export type RelayPushResultError = "push_not_configured" | "rate_limited" | "invalid_push";
+
+/** Relay -> host, one per `push`. `results` matches `deliveries` in order (empty for `invalid_push`). */
+export interface RelayPushResultMessage {
+  readonly type: "push_result";
+  readonly pushId: string;
+  readonly results: ReadonlyArray<RelayPushDeliveryResult>;
+  readonly error?: RelayPushResultError;
+}
+
+/** Relays deployed before push support omit `ready.push`; treat that as unavailable. */
+export interface RelayPushAvailability {
+  readonly apns: boolean;
+  readonly fcm: boolean;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function parseRelayPushAvailability(value: unknown): RelayPushAvailability {
+  if (!isRecord(value)) return { apns: false, fcm: false };
+  return { apns: value.apns === true, fcm: value.fcm === true };
+}
+
+function parseRelayPushDeliveryResult(value: unknown): RelayPushDeliveryResult | null {
+  if (!isRecord(value)) return null;
+  if (typeof value.token !== "string") return null;
+  if (value.platform !== "apns" && value.platform !== "fcm") return null;
+  if (typeof value.ok !== "boolean") return null;
+  return {
+    token: value.token,
+    platform: value.platform,
+    ok: value.ok,
+    ...(typeof value.status === "number" ? { status: value.status } : {}),
+    ...(typeof value.reason === "string" ? { reason: value.reason } : {}),
+    ...(value.unregistered === true ? { unregistered: true } : {}),
+  };
+}
+
+export function parseRelayPushResult(value: unknown): RelayPushResultMessage | null {
+  if (!isRecord(value) || value.type !== "push_result") return null;
+  if (typeof value.pushId !== "string" || !Array.isArray(value.results)) return null;
+  const results: RelayPushDeliveryResult[] = [];
+  for (const entry of value.results) {
+    const parsed = parseRelayPushDeliveryResult(entry);
+    if (!parsed) return null;
+    results.push(parsed);
+  }
+  const error =
+    value.error === "push_not_configured" ||
+    value.error === "rate_limited" ||
+    value.error === "invalid_push"
+      ? value.error
+      : undefined;
+  return {
+    type: "push_result",
+    pushId: value.pushId,
+    results,
+    ...(error ? { error } : {}),
+  };
+}
 
 function encodeBase32(bytes: Uint8Array): string {
   let bits = 0;

@@ -158,6 +158,8 @@ export default defineConfig({
                   ...TEST_EXCLUDE,
                   ...TEST_CONFIG_PACKAGES.map((dir) => `${dir}/**`),
                   "native/kde-snap-shot/**",
+                  // Standalone npm package; its node:test suite runs with `npm test` in relay/.
+                  "relay/**",
                 ],
               },
             },

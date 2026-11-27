@@ -43,7 +43,62 @@ export type HostControlMessage =
       readonly status?: number;
       readonly message: string;
     }
-  | { readonly type: "ping" };
+  | { readonly type: "ping" }
+  | PushMessage;
+
+export type ApnsPushDelivery = {
+  readonly platform: "apns";
+  readonly token: string;
+  /** Bundle id of the receiving app. */
+  readonly topic: string;
+  readonly environment: "sandbox" | "production";
+  readonly payload: Readonly<Record<string, unknown>>;
+  readonly pushType?: "alert" | "background";
+  readonly priority?: 5 | 10;
+  readonly collapseId?: string;
+  /** Unix seconds; 0 means deliver once or drop. */
+  readonly expiration?: number;
+};
+
+export type FcmPushDelivery = {
+  readonly platform: "fcm";
+  readonly token: string;
+  readonly data: Readonly<Record<string, string>>;
+  readonly priority?: "high" | "normal";
+  readonly collapseKey?: string;
+  readonly ttlSeconds?: number;
+};
+
+export type PushDelivery = ApnsPushDelivery | FcmPushDelivery;
+
+export type PushMessage = {
+  readonly type: "push";
+  readonly pushId: string;
+  readonly deliveries: ReadonlyArray<PushDelivery>;
+};
+
+export type PushDeliveryResult = {
+  readonly token: string;
+  readonly platform: "apns" | "fcm";
+  readonly ok: boolean;
+  /** Provider HTTP status, when the provider answered. */
+  readonly status?: number;
+  readonly reason?: string;
+  /** The provider says this token is dead; the host should forget it. */
+  readonly unregistered?: boolean;
+};
+
+/** Set when the whole message failed; `results` then repeats it per delivery (empty for `invalid_push`). */
+export type PushResultError = "push_not_configured" | "rate_limited" | "invalid_push";
+
+export type PushResultMessage = {
+  readonly type: "push_result";
+  readonly pushId: string;
+  readonly results: ReadonlyArray<PushDeliveryResult>;
+  readonly error?: PushResultError;
+};
+
+export type PushAvailability = { readonly apns: boolean; readonly fcm: boolean };
 
 export type RelayToHostMessage =
   | {
@@ -52,7 +107,8 @@ export type RelayToHostMessage =
       readonly timestamp: number;
       readonly requiresSecret: boolean;
     }
-  | { readonly type: "ready"; readonly hostId: string }
+  | { readonly type: "ready"; readonly hostId: string; readonly push?: PushAvailability }
+  | PushResultMessage
   | {
       readonly type: "client_open";
       readonly connId: string;
@@ -232,9 +288,163 @@ export function parseHostControlMessage(raw: string): HostControlMessage | null 
       return null;
     case "ping":
       return { type: "ping" };
+    case "push": {
+      const parsed = parsePushMessage(msg);
+      return parsed.ok ? parsed.message : null;
+    }
     default:
       return null;
   }
+}
+
+export const MAX_PUSH_DELIVERIES = 32;
+export const MAX_APNS_PAYLOAD_BYTES = 4096;
+export const MAX_FCM_DATA_BYTES = 4096;
+const MAX_FCM_TTL_SECONDS = 28 * 24 * 60 * 60;
+const PUSH_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,128}$/;
+// Tokens and topics land in the APNs URL path and headers, so charset matters as much as type.
+const APNS_TOKEN_PATTERN = /^[0-9a-fA-F]{32,200}$/;
+const APNS_TOPIC_PATTERN = /^[A-Za-z0-9][A-Za-z0-9.-]{0,254}$/;
+const FCM_TOKEN_PATTERN = /^[A-Za-z0-9_:.-]{1,1024}$/;
+const COLLAPSE_PATTERN = /^[\x21-\x7e]{1,64}$/;
+const FCM_RESERVED_DATA_KEYS = new Set(["from", "notification", "message_type", "collapse_key"]);
+
+export type ParsedPushMessage =
+  | { readonly ok: true; readonly message: PushMessage }
+  | { readonly ok: false; readonly pushId: string | null; readonly reason: string };
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function utf8Length(value: string): number {
+  return textEncoder.encode(value).byteLength;
+}
+
+function parseApnsDelivery(raw: Record<string, unknown>): ApnsPushDelivery | string {
+  if (typeof raw.token !== "string" || !APNS_TOKEN_PATTERN.test(raw.token)) return "invalid_token";
+  if (typeof raw.topic !== "string" || !APNS_TOPIC_PATTERN.test(raw.topic)) return "invalid_topic";
+  if (raw.environment !== "sandbox" && raw.environment !== "production") {
+    return "invalid_environment";
+  }
+  if (!isPlainObject(raw.payload)) return "invalid_payload";
+  if (utf8Length(JSON.stringify(raw.payload)) > MAX_APNS_PAYLOAD_BYTES) return "payload_too_large";
+  if (raw.pushType !== undefined && raw.pushType !== "alert" && raw.pushType !== "background") {
+    return "invalid_push_type";
+  }
+  if (raw.priority !== undefined && raw.priority !== 5 && raw.priority !== 10) {
+    return "invalid_priority";
+  }
+  if (
+    raw.collapseId !== undefined &&
+    (typeof raw.collapseId !== "string" || !COLLAPSE_PATTERN.test(raw.collapseId))
+  ) {
+    return "invalid_collapse_id";
+  }
+  if (
+    raw.expiration !== undefined &&
+    (typeof raw.expiration !== "number" ||
+      !Number.isSafeInteger(raw.expiration) ||
+      raw.expiration < 0)
+  ) {
+    return "invalid_expiration";
+  }
+  return {
+    platform: "apns",
+    token: raw.token,
+    topic: raw.topic,
+    environment: raw.environment,
+    payload: raw.payload,
+    ...(raw.pushType !== undefined ? { pushType: raw.pushType } : {}),
+    ...(raw.priority !== undefined ? { priority: raw.priority } : {}),
+    ...(raw.collapseId !== undefined ? { collapseId: raw.collapseId } : {}),
+    ...(raw.expiration !== undefined ? { expiration: raw.expiration } : {}),
+  };
+}
+
+function parseFcmDelivery(raw: Record<string, unknown>): FcmPushDelivery | string {
+  if (typeof raw.token !== "string" || !FCM_TOKEN_PATTERN.test(raw.token)) return "invalid_token";
+  if (!isPlainObject(raw.data)) return "invalid_data";
+  const data: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw.data)) {
+    if (typeof value !== "string" || key.length === 0) return "invalid_data";
+    if (FCM_RESERVED_DATA_KEYS.has(key) || key.startsWith("google.") || key.startsWith("gcm.")) {
+      return "reserved_data_key";
+    }
+    data[key] = value;
+  }
+  if (utf8Length(JSON.stringify(data)) > MAX_FCM_DATA_BYTES) return "payload_too_large";
+  if (raw.priority !== undefined && raw.priority !== "high" && raw.priority !== "normal") {
+    return "invalid_priority";
+  }
+  if (
+    raw.collapseKey !== undefined &&
+    (typeof raw.collapseKey !== "string" || !COLLAPSE_PATTERN.test(raw.collapseKey))
+  ) {
+    return "invalid_collapse_key";
+  }
+  if (
+    raw.ttlSeconds !== undefined &&
+    (typeof raw.ttlSeconds !== "number" ||
+      !Number.isSafeInteger(raw.ttlSeconds) ||
+      raw.ttlSeconds < 0 ||
+      raw.ttlSeconds > MAX_FCM_TTL_SECONDS)
+  ) {
+    return "invalid_ttl";
+  }
+  return {
+    platform: "fcm",
+    token: raw.token,
+    data,
+    ...(raw.priority !== undefined ? { priority: raw.priority } : {}),
+    ...(raw.collapseKey !== undefined ? { collapseKey: raw.collapseKey } : {}),
+    ...(raw.ttlSeconds !== undefined ? { ttlSeconds: raw.ttlSeconds } : {}),
+  };
+}
+
+/**
+ * Validates a host `push` message. Unknown fields are ignored so newer hosts keep working
+ * against relays that have not been redeployed; known fields are checked strictly.
+ */
+export function parsePushMessage(msg: Record<string, unknown>): ParsedPushMessage {
+  const pushId =
+    typeof msg.pushId === "string" && PUSH_ID_PATTERN.test(msg.pushId) ? msg.pushId : null;
+  if (pushId === null) return { ok: false, pushId: null, reason: "invalid_push_id" };
+  if (!Array.isArray(msg.deliveries) || msg.deliveries.length === 0) {
+    return { ok: false, pushId, reason: "invalid_deliveries" };
+  }
+  if (msg.deliveries.length > MAX_PUSH_DELIVERIES) {
+    return { ok: false, pushId, reason: "too_many_deliveries" };
+  }
+  const deliveries: PushDelivery[] = [];
+  for (const raw of msg.deliveries) {
+    if (!isPlainObject(raw)) return { ok: false, pushId, reason: "invalid_delivery" };
+    const parsed =
+      raw.platform === "apns"
+        ? parseApnsDelivery(raw)
+        : raw.platform === "fcm"
+          ? parseFcmDelivery(raw)
+          : "invalid_platform";
+    if (typeof parsed === "string") return { ok: false, pushId, reason: parsed };
+    deliveries.push(parsed);
+  }
+  return { ok: true, message: { type: "push", pushId, deliveries } };
+}
+
+/** Reads `pushId` from a `push` message that failed validation, so the host still gets an answer. */
+export function parseRejectedPush(
+  raw: string,
+): { readonly pushId: string; readonly reason: string } | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!isPlainObject(parsed) || parsed.type !== "push") return null;
+  const result = parsePushMessage(parsed);
+  if (result.ok || result.pushId === null) return null;
+  return { pushId: result.pushId, reason: result.reason };
 }
 
 const STRIPPED_REQUEST_HEADERS = new Set([

@@ -132,6 +132,42 @@ function saveLocalRelayConfig(stateDir, relayHost, secret) {
   return { configPath, secretPath, routingMode };
 }
 
+function putWranglerSecret(name, value) {
+  const result = runWrangler(["secret", "put", name], {
+    input: value.endsWith("\n") ? value : `${value}\n`,
+    stdio: ["pipe", "inherit", "inherit"],
+  });
+  if (result.status !== 0) {
+    throw new Error(`Failed to set ${name} on Cloudflare.`);
+  }
+}
+
+async function askYes(rl, question) {
+  const answer = (await rl.question(question)).trim().toLowerCase();
+  return answer === "y" || answer === "yes";
+}
+
+function readSecretFile(rawPath) {
+  const resolved = NodePath.resolve(rawPath.trim().replace(/^~(?=\/)/, NodeOS.homedir()));
+  return NodeFS.readFileSync(resolved, "utf8");
+}
+
+async function offerPushSecrets(rl) {
+  if (await askYes(rl, "Set up iOS push notifications (APNs .p8 key)? [y/N] ")) {
+    const keyP8 = readSecretFile(await rl.question("Path to AuthKey_XXXXXXXXXX.p8: "));
+    const keyId = (await rl.question("APNs key id: ")).trim();
+    const teamId = (await rl.question("Apple team id: ")).trim();
+    putWranglerSecret("APNS_KEY_P8", keyP8);
+    putWranglerSecret("APNS_KEY_ID", keyId);
+    putWranglerSecret("APNS_TEAM_ID", teamId);
+  }
+  if (await askYes(rl, "Set up Android push notifications (Firebase service account)? [y/N] ")) {
+    const json = readSecretFile(await rl.question("Path to the service account JSON: "));
+    JSON.parse(json);
+    putWranglerSecret("FCM_SERVICE_ACCOUNT_JSON", json);
+  }
+}
+
 function extractWorkerHost(output) {
   const match = /https:\/\/([a-z0-9.-]+\.workers\.dev)/i.exec(output);
   return match ? match[1] : null;
@@ -201,6 +237,10 @@ async function main() {
       });
       if (putSecret.status !== 0) {
         throw new Error("Failed to set RELAY_SECRET on Cloudflare.");
+      }
+
+      if (rl) {
+        await offerPushSecrets(rl);
       }
     }
 

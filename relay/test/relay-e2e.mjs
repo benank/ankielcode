@@ -110,6 +110,19 @@ async function run() {
   );
   NodeAssert.equal((await badClosePromise).code, 4401);
 
+  // 3b. Push before auth is refused like any other pre-auth traffic
+  const earlyHost = await openSocket(`${wsBaseUrl}/relay/host/${hostId}`);
+  NodeAssert.equal(JSON.parse(await nextMessage(earlyHost)).type, "challenge");
+  const earlyClosePromise = nextClose(earlyHost);
+  earlyHost.send(
+    JSON.stringify({
+      type: "push",
+      pushId: "early",
+      deliveries: [{ platform: "fcm", token: "t", data: {} }],
+    }),
+  );
+  NodeAssert.equal((await earlyClosePromise).code, 4401);
+
   // 4. Valid host auth (Ed25519 + optional RELAY_SECRET HMAC)
   const hostWs = await openSocket(`${wsBaseUrl}/relay/host/${hostId}`);
   const challenge = JSON.parse(await nextMessage(hostWs));
@@ -129,7 +142,28 @@ async function run() {
       ...(secretProof ? { secretProof } : {}),
     }),
   );
-  NodeAssert.deepEqual(JSON.parse(await nextMessage(hostWs)), { type: "ready", hostId });
+  // Run without APNs/FCM secrets: push is advertised as unavailable.
+  NodeAssert.deepEqual(JSON.parse(await nextMessage(hostWs)), {
+    type: "ready",
+    hostId,
+    push: { apns: false, fcm: false },
+  });
+
+  // 4b. Push without provider secrets fails per delivery, without touching Apple or Google
+  const pushResultPromise = nextMessage(hostWs);
+  hostWs.send(
+    JSON.stringify({
+      type: "push",
+      pushId: "e2e-1",
+      deliveries: [{ platform: "fcm", token: "fcm-token", data: { threadId: "t1" } }],
+    }),
+  );
+  NodeAssert.deepEqual(JSON.parse(await pushResultPromise), {
+    type: "push_result",
+    pushId: "e2e-1",
+    error: "push_not_configured",
+    results: [{ token: "fcm-token", platform: "fcm", ok: false, reason: "push_not_configured" }],
+  });
 
   // 5. Full HTTP POST tunnel via /h/<hostId>/api/echo?x=1 (request body + response streaming)
   const httpBodies = new Map();
