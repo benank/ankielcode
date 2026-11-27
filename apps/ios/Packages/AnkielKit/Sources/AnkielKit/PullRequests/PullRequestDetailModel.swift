@@ -210,7 +210,7 @@ public final class PullRequestDetailModel {
   /// Sends one write and reads back what it changed. Returns the error to show, if any.
   @discardableResult
   public func send(_ write: PullRequestWrite, label: String, reload: Reload = .all) async -> PullRequestError? {
-    guard busy == nil || label == "reaction" || label == "viewed" else { return .failed("Another change is still being sent.") }
+    guard busy == nil || label == "reaction" || label == "viewed" else { return .busy }
     if label != "reaction", label != "viewed" { busy = label }
     defer { if busy == label { busy = nil } }
     do throws(PullRequestError) {

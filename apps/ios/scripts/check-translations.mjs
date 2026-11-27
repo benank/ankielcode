@@ -3,14 +3,17 @@
 // literal uses a key. With --build, that build's extracted strings decide which keys are used, and
 // extracted keys missing from the catalog fail too.
 //   node apps/ios/scripts/check-translations.mjs [--catalog <path>] [--build <derived-data>]
+import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 
 import {
   catalogPath,
+  iosRoot,
   locales,
   placeholders,
   readCatalog,
   stringsExtractedBy,
+  swiftFiles,
   swiftUses,
 } from "./catalog.mjs";
 
@@ -64,6 +67,23 @@ for (const [key, entry] of Object.entries(catalog.strings)) {
         `placeholders in ${locale} ${JSON.stringify(found)} vs ${JSON.stringify(expected)}: ${JSON.stringify(key)}`,
       );
     }
+  }
+}
+
+// `Text(verbatim:)` skips the catalog, so a verbatim literal must not be copy: only names,
+// addresses and paths (debug-only files are exempt).
+const verbatimAllowed = new Set(["Ankiel Code", "Cloudflare Relay"]);
+for (const file of ["AnkielCode", "AnkielWidgets"].flatMap((dir) => swiftFiles(NodePath.join(iosRoot, dir)))) {
+  const source = NodeFS.readFileSync(file, "utf8");
+  if (/Debug\.swift$/.test(file) || source.trimStart().startsWith("#if DEBUG")) continue;
+  for (const match of source.matchAll(/verbatim:\s*"((?:[^"\\]|\\.)*)"/g)) {
+    const text = match[1];
+    // A quote inside an interpolation ends this simple match early; such literals are not copy.
+    if ((text.match(/\(/g) ?? []).length !== (text.match(/\)/g) ?? []).length) continue;
+    const words = text.replace(/\\\((?:[^()]|\([^()]*\))*\)/g, " ");
+    if (!/\p{L}{2,}/u.test(words) || /[/:]/.test(words) || verbatimAllowed.has(text)) continue;
+    const line = source.slice(0, match.index).split("\n").length;
+    problems.push(`copy in Text(verbatim:), not in the catalog: ${NodePath.relative(iosRoot, file)}:${line} ${JSON.stringify(text)}`);
   }
 }
 

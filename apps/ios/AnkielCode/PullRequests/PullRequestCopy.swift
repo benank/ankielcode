@@ -221,6 +221,7 @@ enum PullRequestCopy {
       }
     case .operation(let detail, let notFound): notFound ? String(localized: "Pull request not found. \(detail)") : detail
     case .rejected(let message, _): message ?? String(localized: "The computer refused this request.")
+    case .busy: String(localized: "Another change is still being sent.")
     case .failed(let message): message
     }
   }

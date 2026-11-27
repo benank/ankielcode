@@ -59,7 +59,7 @@ export const placeholders = (text) => {
   return found;
 };
 
-const swiftFiles = (dir) =>
+export const swiftFiles = (dir) =>
   NodeFS.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = NodePath.join(dir, entry.name);
     if (entry.isDirectory()) return swiftFiles(path);

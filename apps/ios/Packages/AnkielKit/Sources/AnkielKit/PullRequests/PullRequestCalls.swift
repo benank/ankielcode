@@ -10,6 +10,8 @@ public enum PullRequestError: Error, Sendable, Hashable {
   case operation(detail: String, notFound: Bool)
   /// Another typed refusal (scopes, a schema rejection).
   case rejected(message: String?, tag: String?)
+  /// Another write of this pull request is still on its way; nothing was sent.
+  case busy
   case failed(String)
 
   public struct Unavailable: Sendable, Hashable {
