@@ -187,6 +187,8 @@ export default defineConfig({
       "apps/mobile/modules/ankiel-highlights/cpp/generated/**",
       "apps/mobile/modules/ankiel-highlights/nitrogen/generated/**",
       "*.icon/**",
+      // Xcode rewrites asset catalogs in its own JSON style.
+      "apps/ios/**/*.xcassets/**",
     ],
     sortPackageJson: {},
     overrides: [

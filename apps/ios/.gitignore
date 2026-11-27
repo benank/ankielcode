@@ -1,0 +1,7 @@
+xcuserdata/
+*.xcuserstate
+build/
+DerivedData/
+.build/
+.swiftpm/
+Packages/AnkielKit/Package.resolved

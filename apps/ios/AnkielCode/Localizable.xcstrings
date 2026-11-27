@@ -1,0 +1,33 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A different Ankiel Code server answered at this address.": {},
+    "Connect": {},
+    "Connect to Ankiel Code": {},
+    "Connecting…": {},
+    "Connection": {},
+    "Couldn't reach the server. %@": {},
+    "Forget This Server": {},
+    "New thread": {},
+    "No threads yet": {},
+    "Offline · Tap to retry": {},
+    "Pairing link": {},
+    "Paste a pairing link.": {},
+    "Paste the pairing link from `ankiel pair` or from the desktop app's Connections settings.": {},
+    "Reconnect": {},
+    "Syncing…": {},
+    "That doesn't look like a pairing link.": {},
+    "The connection failed: %@": {},
+    "The pairing link is missing its code.": {},
+    "The server closed the session.": {},
+    "The server didn't accept this device. Pair again with a new link.": {},
+    "The server ended the session.": {},
+    "The server refused the connection (HTTP %lld).": {},
+    "This server runs a different version of Ankiel Code. Update the server or the app.": {},
+    "Threads": {},
+    "https://host/pair#token=…": {
+      "shouldTranslate": false
+    }
+  },
+  "version": "1.0"
+}
