@@ -1,0 +1,6 @@
+{
+  "schema" : "accessRevokeClient",
+  "value" : {
+    "sessionId" : "session-fixture-tablet"
+  }
+}

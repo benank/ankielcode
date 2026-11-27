@@ -1,0 +1,8 @@
+{
+  "schema" : "accessCreateLink",
+  "value" : {
+    "scopes" : [
+      "orchestration:read"
+    ]
+  }
+}

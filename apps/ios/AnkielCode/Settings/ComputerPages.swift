@@ -245,6 +245,17 @@ struct ComputerDetailView: View {
         PermissionsSection(scopes: scopes)
       }
 
+      if environment.allows(AuthScope.accessRead) {
+        Section {
+          NavigationLink(value: SettingsRoute.access(environment.id)) {
+            Label("Sharing & access", systemImage: "person.2.badge.key")
+          }
+          .accessibilityIdentifier("computer.access")
+        } footer: {
+          Text("The devices signed in to \(environment.label), and links to pair a new one.")
+        }
+      }
+
       ServerVersionSection(environment: environment)
 
       Section {

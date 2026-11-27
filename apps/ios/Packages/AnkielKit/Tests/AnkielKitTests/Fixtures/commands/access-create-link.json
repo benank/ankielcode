@@ -1,0 +1,12 @@
+{
+  "schema" : "accessCreateLink",
+  "value" : {
+    "label" : "Harbor iPad",
+    "scopes" : [
+      "orchestration:read",
+      "filesystem:read",
+      "diagnostics:read",
+      "terminal:read"
+    ]
+  }
+}

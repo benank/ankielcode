@@ -64,6 +64,9 @@ const schemas = {
   prUpdate: m.PullRequestUpdateInput,
   prResolve: m.PullRequestThreadResolutionInput,
   prFilesViewed: m.PullRequestSetFilesViewedInput,
+  accessCreateLink: m.AuthCreatePairingCredentialInput,
+  accessRevokeLink: m.AuthRevokePairingLinkInput,
+  accessRevokeClient: m.AuthRevokeClientSessionInput,
 };
 
 let failures = 0;
@@ -186,5 +189,46 @@ if (process.argv.includes("--check")) {
 } else {
   writeFileSync(catalogPath, catalog);
   console.log("wrote provider-catalog.json");
+}
+// Sharing & access: a stream as the server encodes it (`AuthAccessStreamEvent`), for the Swift
+// reducer. Synthetic devices; written or compared like the catalog.
+{
+  const scopes = ["orchestration:read", "orchestration:operate", "settings:write", "access:read", "access:write"];
+  const phone = {
+    sessionId: "session-phone", subject: "pairing-link", ...m.authScopeResponse(scopes), method: "dpop-access-token",
+    client: { label: "Tide iPhone", deviceType: "mobile", os: "iOS", ipAddress: "192.168.1.31" },
+    issuedAt: "2026-11-24T09:00:00.000Z", expiresAt: "2026-12-24T09:00:00.000Z", lastConnectedAt: "2026-11-27T08:59:00.000Z",
+    connected: true, current: true,
+  };
+  const tablet = {
+    sessionId: "session-tablet", subject: "pairing-link", ...m.authScopeResponse(["orchestration:read"]), method: "bearer-access-token",
+    client: { deviceType: "tablet", os: "Android" },
+    issuedAt: "2026-11-20T09:00:00.000Z", expiresAt: "2026-12-20T09:00:00.000Z", lastConnectedAt: null, connected: false, current: false,
+  };
+  const link = {
+    id: "link-1", ...m.authScopeResponse(["orchestration:read"]), subject: "pairing-link", label: "Harbor iPad",
+    createdAt: "2026-11-27T08:58:00.000Z", expiresAt: "2026-11-27T09:13:00.000Z",
+  };
+  const events = [
+    { version: 1, revision: 1, type: "snapshot", payload: { pairingLinks: [link], clientSessions: [phone] } },
+    { version: 1, revision: 2, type: "clientUpserted", payload: tablet },
+    { version: 1, revision: 3, type: "pairingLinkUpserted", payload: { ...link, label: "Harbor iPad 2" } },
+    { version: 1, revision: 4, type: "pairingLinkRemoved", payload: { id: "link-1" } },
+    { version: 1, revision: 5, type: "clientUpserted", payload: { ...phone, lastConnectedAt: "2026-11-27T09:00:00.000Z" } },
+    { version: 1, revision: 6, type: "clientRemoved", payload: { sessionId: "session-gone" } },
+  ].map((value) => S.encodeSync(S.toCodecJson(m.AuthAccessStreamEvent))(S.decodeUnknownSync(S.toCodecJson(m.AuthAccessStreamEvent))(value)));
+  const accessPath = join(here, "..", "access-stream.json");
+  const access = JSON.stringify(events, null, 2) + "\n";
+  if (process.argv.includes("--check")) {
+    if (readFileSync(accessPath, "utf8") === access) {
+      console.log("ok   access-stream.json matches the schemas");
+    } else {
+      failures += 1;
+      console.log("FAIL access-stream.json is stale: run this script without --check, then swift test");
+    }
+  } else {
+    writeFileSync(accessPath, access);
+    console.log("wrote access-stream.json");
+  }
 }
 process.exit(failures === 0 ? 0 : 1);

@@ -88,6 +88,11 @@ func run() async throws {
     await session.close()
     return
   }
+  if CommandLine.arguments.contains("--access") {
+    try await probeAccess(session, environment: environment, connector: connector)
+    await session.close()
+    return
+  }
   if CommandLine.arguments.contains("--issues") {
     try await probeIssues(session)
     await session.close()

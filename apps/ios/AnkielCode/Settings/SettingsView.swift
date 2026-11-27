@@ -5,6 +5,8 @@ import SwiftUI
 enum SettingsRoute: Hashable {
   case computers
   case computer(String)
+  /// A computer's pairing links and signed-in devices.
+  case access(String)
   case general, appearance, chat, notifications
   case providers, threads
   case about, storage, diagnostics
@@ -135,6 +137,12 @@ struct SettingsView: View {
       } else {
         ContentUnavailableView("This computer is no longer saved on this device.", systemImage: "desktopcomputer")
       }
+    case .access(let id):
+      if let environment = model.registry.environment(id) {
+        SharingAccessPage(environment: environment, service: SharingAccessPage.service(for: environment, model: model))
+      } else {
+        ContentUnavailableView("This computer is no longer saved on this device.", systemImage: "desktopcomputer")
+      }
     case .general: GeneralSettingsPage()
     case .appearance: AppearanceSettingsPage()
     case .chat: ChatSettingsPage()
@@ -221,6 +229,7 @@ enum SettingsCopy {
     switch route {
     case .computers: String(localized: "Computers")
     case .computer: String(localized: "Computer")
+    case .access: String(localized: "Sharing & access")
     case .general: String(localized: "General")
     case .appearance: String(localized: "Appearance")
     case .chat: String(localized: "Chat")
@@ -241,6 +250,7 @@ enum SettingsCopy {
   static func symbol(_ route: SettingsRoute) -> String {
     switch route {
     case .computers, .computer: "desktopcomputer"
+    case .access: "person.2.badge.key"
     case .general: "gearshape"
     case .appearance: "paintbrush"
     case .chat: "bubble.left.and.bubble.right"
@@ -269,6 +279,7 @@ enum SettingsCopy {
     switch route {
     case .computers: "computers"
     case .computer(let id): "computer.\(id)"
+    case .access(let id): "access.\(id)"
     case .general: "general"
     case .appearance: "appearance"
     case .chat: "chat"

@@ -429,3 +429,30 @@ linked threads, saved views and the involvement filters are not built. Logic is 
 | --- | --- | --- |
 | `ANKIEL_DEBUG_ISSUES` | `fixture`, `empty`, `fail` | Canned synthetic issues (about a made-up project) instead of a computer, none, or a refusal. |
 | `ANKIEL_DEBUG_ISSUES_OPEN` | `list`, `detail` | Opens Issues over home, or (with `fixture`) its first issue. |
+
+## Sharing & access
+
+A computer's page has **Sharing & access** (web Settings "Sharing & access"; RN has no screen):
+the devices signed in to it (`subscribeAuthAccess`: this device marked, online or last seen,
+permissions) and its open pairing links. With `access:write` the page revokes another device
+(`POST /api/auth/clients/revoke`, confirmed; the server refuses a device's own session) or a link
+(`/api/auth/pairing-links/revoke`), and creates a one-time link (`/api/auth/pairing-token`) with a
+name and permissions limited to what this device holds. A new link shows as a QR code of the
+`ankielcode://pair?pairingUrl=…` app link (Core Image) plus Share, Copy link and Copy code, through
+a saved address another device can reach (relay and tailnet first, never loopback). Codes exist
+only in the create answer, so links made elsewhere cannot be shared from here. "Revoke others" is
+not offered. Logic is in `AnkielKit/Access`.
+
+`swift run ankiel-probe --state <file> --access [--revoke-session <id>]` prints the list, creates
+and revokes a read-only link labelled "ankiel-probe access", checks that the session cannot revoke
+itself and, with `--revoke-session`, revokes that one other session. Pair a throwaway session from
+its own `--state` file for that (sessions sharing a DPoP key are revoked together).
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_ROUTE` | `settings-computer-access` | The page for the fixture's Studio Mac (with `ANKIEL_DEBUG_SETTINGS`) or the first saved computer (live). |
+| `ANKIEL_DEBUG_ACCESS` | `fail`, `denied` | With `ANKIEL_DEBUG_SETTINGS`: the fake access service refuses writes, or the session may not read access. |
+| `ANKIEL_DEBUG_ACCESS_OPEN` | `create`, `share` | Opens the create sheet, or creates a link on the fake and shows its QR. |
+
+`SharingAccessUITests` (fixtures) revoke a device, create, share and revoke a link, and check the
+denied state.
