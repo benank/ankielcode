@@ -1,0 +1,16 @@
+{
+  "schema" : "terminalAttach",
+  "value" : {
+    "cols" : 80,
+    "cwd" : "/Users/dev/tide-chart/.worktrees/tides",
+    "env" : {
+      "ANKIEL_PROJECT_ROOT" : "/Users/dev/tide-chart"
+    },
+    "maxHistoryBytes" : 524288,
+    "resume" : true,
+    "rows" : 24,
+    "terminalId" : "term-2",
+    "threadId" : "0b7e4f2a-9c1d-4e8b-a6f3-5d2c1b0a9e87",
+    "worktreePath" : "/Users/dev/tide-chart/.worktrees/tides"
+  }
+}

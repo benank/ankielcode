@@ -88,6 +88,11 @@ func run() async throws {
     await session.close()
     return
   }
+  if let cwd = argument("--terminal") {
+    try await probeTerminal(session, cwd: cwd)
+    await session.close()
+    return
+  }
   if CommandLine.arguments.contains("--rows") {
     try await printRows(session)
     await session.close()

@@ -1,0 +1,8 @@
+{
+  "schema" : "terminalWrite",
+  "value" : {
+    "data" : "ls -la\r",
+    "terminalId" : "term-1",
+    "threadId" : "0b7e4f2a-9c1d-4e8b-a6f3-5d2c1b0a9e87"
+  }
+}
