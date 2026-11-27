@@ -18,8 +18,8 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
   public var snoozePresets: [SnoozePresetSetting] = SnoozePresetSetting.defaults
 
   public static let defaultAutoSettleDays = 7
-  /// `MIN_`/`MAX_SIDEBAR_AUTO_SETTLE_AFTER_DAYS`.
-  public static let autoSettleDays: ClosedRange<Int> = 1...365
+  /// `MIN_`/`MAX_SIDEBAR_AUTO_SETTLE_AFTER_DAYS`; the server refuses a patch outside them.
+  public static let autoSettleDays: ClosedRange<Int> = 1...90
 
   public init() {
     hiddenModels = [:]
@@ -109,7 +109,8 @@ public struct ServerSettingsPatch: Sendable, Hashable, Encodable {
 
   /// nil turns inactivity settling off.
   public static func autoSettleAfterDays(_ days: Int?) -> Self {
-    Self(["sidebarAutoSettleAfterDays": days.map { .number(Double(min(max($0, 1), 365))) } ?? .null])
+    let range = ServerSettings.autoSettleDays
+    return Self(["sidebarAutoSettleAfterDays": days.map { .number(Double(min(max($0, range.lowerBound), range.upperBound))) } ?? .null])
   }
 
   public static func autoResumeLimitedThreads(_ on: Bool) -> Self { Self(["autoResumeLimitedThreads": .bool(on)]) }

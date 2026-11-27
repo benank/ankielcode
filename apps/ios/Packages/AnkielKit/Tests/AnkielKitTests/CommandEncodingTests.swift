@@ -124,7 +124,8 @@ struct CommandEncodingTests {
     let encoded = try JSONDecoder().decode(JSONValue.self, from: JSONEncoder.wire.encode(UpdateSettingsRequest(patch: .autoSettleAfterDays(nil))))
     #expect(encoded == ["patch": ["sidebarAutoSettleAfterDays": .null]])
     let days = try JSONDecoder().decode(JSONValue.self, from: JSONEncoder.wire.encode(ServerSettingsPatch.autoSettleAfterDays(900)))
-    #expect(days == ["sidebarAutoSettleAfterDays": 365])
+    // The server refuses anything over MAX_SIDEBAR_AUTO_SETTLE_AFTER_DAYS (90), live-checked.
+    #expect(days == ["sidebarAutoSettleAfterDays": 90])
   }
 
   @Test("idle sends omit the delivery intent and title seed; follow-ups carry them")
