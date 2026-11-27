@@ -1,13 +1,8 @@
 import type { ContextMenuItem, ContextMenuSource } from "@ankielcode/contracts";
-import {
-  type SourceControlDefinition,
-  UNKNOWN_SOURCE_CONTROL_CLIENT,
-} from "@ankielcode/client-runtime/source-control-clients";
-
 import { msg } from "gt-react";
 
 import { writeTextToClipboard } from "~/hooks/useCopyToClipboard";
-import { m, type MessageResolver } from "~/i18n/messages";
+import { m } from "~/i18n/messages";
 import { readLocalApi } from "~/localApi";
 
 import { toastManager } from "../ui/toast";
@@ -19,14 +14,6 @@ interface LinkContextMenuOpen {
   readonly label: string;
   readonly run: () => void;
 }
-
-export const openOnHostLabel = (
-  host: SourceControlDefinition,
-  resolve: MessageResolver = m,
-): string =>
-  host === UNKNOWN_SOURCE_CONTROL_CLIENT
-    ? resolve(msg("Open on host"))
-    : resolve(msg("Open on {host}", { host: host.label }));
 
 function pullRequestLinkContextMenuItems(
   openLabel: string,

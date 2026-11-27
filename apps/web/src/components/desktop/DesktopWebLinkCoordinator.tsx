@@ -30,8 +30,7 @@ import { isLocalEnvironmentDisabled } from "../../localEnvironment";
 import { useComposerDraftStore } from "../../composerDraftStore";
 import { useNewThreadHandler } from "../../hooks/useHandleNewThread";
 import { useScratchProject } from "../../hooks/useScratchProject";
-import { useClientSettings } from "../../hooks/useSettings";
-import { useOpenChangeRequestLink } from "../../lib/openPullRequestLink";
+import { useOpenCommitLink } from "../../lib/openCommitLink";
 import { selectActiveRightPanelSurface, useRightPanelStore } from "../../rightPanelStore";
 import { appAtomRegistry } from "../../rpc/atomRegistry";
 import { resolveThreadRouteTarget } from "../../threadRoutes";
@@ -101,8 +100,7 @@ export function DesktopWebLinkCoordinator() {
   const router = useRouter();
   const gt = useGT();
   const primaryEnvironment = usePrimaryEnvironment();
-  const openPullRequestsInApp = useClientSettings((settings) => settings.pullRequestLinksOpenInApp);
-  const openChangeRequest = useOpenChangeRequestLink();
+  const openCommitLink = useOpenCommitLink();
   const { scratchEnvironmentId, openScratchProject } = useScratchProject();
   const openThread = useNewThreadHandler();
   const openPreview = useAtomCommand(previewEnvironment.open, { reportFailure: false });
@@ -274,8 +272,7 @@ export function DesktopWebLinkCoordinator() {
     const openUnavailableCommit = () => {
       queueRef.current = queueRef.current.then(() => openInBrowser(url)).catch(() => undefined);
     };
-    if (openChangeRequest(externalClick, url, commitThreadRef, undefined, openUnavailableCommit))
-      return;
+    if (openCommitLink(externalClick, url, commitThreadRef, openUnavailableCommit)) return;
     await openInBrowser(url);
   });
 
@@ -284,11 +281,7 @@ export function DesktopWebLinkCoordinator() {
     // link delivered at launch would miss its project and fall through to the browser. Hold
     // those links until discovery settles; an ordinary link never waits for it.
     const hold =
-      openPullRequestsInApp &&
-      (sourceControlClients.parseChangeRequestUrl(url) !== null ||
-        sourceControlClients.parseCommitUrl(url) !== null)
-        ? projectsSettled()
-        : Promise.resolve();
+      sourceControlClients.parseCommitUrl(url) !== null ? projectsSettled() : Promise.resolve();
     void hold.then(() => {
       queueRef.current = queueRef.current.then(() => openLink(url)).catch(() => undefined);
     });

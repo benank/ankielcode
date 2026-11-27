@@ -39,7 +39,6 @@ import { useClientSettings } from "../../hooks/useSettings";
 import { useProject, useServerConfigs } from "../../state/entities";
 import { filesystemEnvironment } from "../../state/filesystem";
 import { useEnvironmentQuery } from "../../state/query";
-import { ThreadDetailsThreadPrRows } from "./ThreadDetailsPrRows";
 import { cn } from "../../lib/utils";
 import { SlidersHorizontalIcon } from "lucide-react";
 import { ThreadDetailsControl } from "./ThreadDetailsControl";
@@ -84,7 +83,6 @@ interface ThreadDetailsPanelProps extends Pick<
   onActiveThreadBranchOverrideChange?: (branch: string | null) => void;
   startFromOrigin: boolean;
   onStartFromOriginChange: (startFromOrigin: boolean) => void;
-  onCheckoutPullRequestRequest?: (reference: string) => void;
   onComposerFocusRequest: () => void;
   onOpenChanges?: () => void;
   onRunProjectScript: (script: ProjectScript) => void;
@@ -150,9 +148,6 @@ export function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
     envLocked: props.envLocked,
     forceNewWorktree: props.forceNewWorktree ?? false,
     onComposerFocusRequest: props.onComposerFocusRequest,
-    ...(props.onCheckoutPullRequestRequest
-      ? { onCheckoutPullRequestRequest: props.onCheckoutPullRequestRequest }
-      : {}),
   };
 
   return (
@@ -189,8 +184,6 @@ export function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
           openIn: density !== "essential" && visible.openIn && props.showOpenInPicker,
           scripts: visible.scripts && props.activeProjectScripts !== undefined,
           branch: offersGit && folderIsRepo && visible.branch,
-          // Without a branch selector, linked pull requests still need somewhere to show.
-          pullRequests: !(offersGit && folderIsRepo) && visible.branch,
           // A plain folder that tracks repositories is not asked to become one itself.
           git:
             offersGit &&
@@ -255,7 +248,7 @@ export function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
                 </ThreadDetailsSection>
               ) : null}
 
-              {show.branch || show.pullRequests || show.git || show.repositories ? (
+              {show.branch || show.git || show.repositories ? (
                 <ThreadDetailsSection
                   headingId="thread-details-version-control-heading"
                   title={gt("Version Control")}
@@ -265,13 +258,6 @@ export function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
                   <div className="flex flex-col">
                     {show.branch ? (
                       <BranchToolbar layout="panel" panelSection="branch" {...branchToolbarProps} />
-                    ) : null}
-                    {show.pullRequests ? (
-                      <ThreadDetailsThreadPrRows
-                        threadRef={activeThreadRef}
-                        project={project}
-                        composerTarget={props.composerDraftTarget}
-                      />
                     ) : null}
                     {show.git && props.gitCwd ? (
                       <GitActionsControl

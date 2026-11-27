@@ -401,7 +401,7 @@ export const PullRequestListCursors = Schema.Record(
 );
 export type PullRequestListCursors = typeof PullRequestListCursors.Type;
 
-export const PULL_REQUEST_LIST_PROJECT_LIMIT = 100;
+const PULL_REQUEST_LIST_PROJECT_LIMIT = 100;
 
 export const PullRequestListInput = Schema.Struct({
   state: PullRequestListState,

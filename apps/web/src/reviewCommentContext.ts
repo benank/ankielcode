@@ -85,7 +85,7 @@ export function buildFileReviewComment(input: {
   };
 }
 
-export function inferReviewCommentFenceLanguage(filePath: string): string {
+function inferReviewCommentFenceLanguage(filePath: string): string {
   const normalizedPath = filePath.replaceAll("\\", "/");
   const fileName = normalizedPath.slice(normalizedPath.lastIndexOf("/") + 1).toLowerCase();
   const extensionIndex = fileName.lastIndexOf(".");

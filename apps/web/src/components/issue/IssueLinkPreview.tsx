@@ -58,22 +58,6 @@ export function IssueLinkPreview({
   );
 }
 
-/** A pull request card's fallback when its reference turns out to be an issue. */
-export function IssueLinkPreviewFallback({
-  originalUrl,
-  target,
-}: {
-  originalUrl: string;
-  target: IssueLinkPreviewTarget;
-}) {
-  const detail = useEnvironmentQuery(issueEnvironment.detail(target)).data;
-  return detail === null ? (
-    <p className="break-all text-xs text-muted-foreground">{originalUrl}</p>
-  ) : (
-    <IssuePreviewCardBody detail={detail} />
-  );
-}
-
 function IssuePreviewCardBody({ detail }: { detail: IssueDetail }) {
   const state = issueStatePresentation(detail.state);
   const createdAt = <RelativeTime timestamp={detail.createdAt} />;

@@ -3,8 +3,6 @@ import type {
   PullRequestReviewGuideExcerpt,
   PullRequestReviewGuideStop,
 } from "@ankielcode/contracts";
-import { mFallback, msg } from "gt-i18n";
-import type { MFunctionType } from "gt-i18n/types";
 
 export function stepTourPosition(current: number, delta: 1 | -1, stopCount: number): number {
   return Math.max(Math.min(current + delta, stopCount - 1), 0);
@@ -17,15 +15,6 @@ export function stopFilePaths(stop: PullRequestReviewGuideStop): ReadonlyArray<s
       ...stop.files.map((file) => file.path),
     ]),
   ];
-}
-
-export function stopSubline(
-  stop: PullRequestReviewGuideStop,
-  resolve: MFunctionType = mFallback,
-): string {
-  const count = stopFilePaths(stop).length;
-  if (count === 0) return resolve(msg("Context, no code"));
-  return resolve(msg("{count, plural, one {{count} file} other {{count} files}}", { count }));
 }
 
 function noteMarker(index: number): string {

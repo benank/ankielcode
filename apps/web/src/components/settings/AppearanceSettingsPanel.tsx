@@ -21,11 +21,7 @@ import {
   useEnvironmentStageLabel,
 } from "../SidebarStageBackdrop";
 import { useCustomThemes } from "../../hooks/useCustomThemes";
-import {
-  updateClientSettings,
-  useClientSettings,
-  useEnvironmentIdentificationMode,
-} from "../../hooks/useSettings";
+import { useEnvironmentIdentificationMode } from "../../hooks/useSettings";
 import { useTheme } from "../../hooks/useTheme";
 import { useScopedSettings, useUpdateScopedSettings } from "./useScopedSettings";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
@@ -414,7 +410,6 @@ export function AppearanceSettingsPanel() {
             />
           }
         />
-        <PullRequestTabRow />
         <AdvancedSettings
           targetIds={[
             searchableSetting("panel-animations").id,
@@ -551,26 +546,5 @@ export function AppearanceSettingsPanel() {
 
       <TypographySection />
     </SettingsPageContainer>
-  );
-}
-
-function PullRequestTabRow() {
-  const gt = useGT();
-  const setting = useSearchableSetting();
-  const enabled = useClientSettings((settings) => settings.pullRequestTabEnabled);
-  return (
-    <SettingsRow
-      {...setting("pull-request-tab")}
-      description={gt("Show the pull requests list in workspace navigation. Saved on this device.")}
-      control={
-        <Switch
-          checked={enabled}
-          onCheckedChange={(checked) =>
-            void updateClientSettings({ pullRequestTabEnabled: checked })
-          }
-          aria-label={gt("Show pull requests tab")}
-        />
-      }
-    />
   );
 }

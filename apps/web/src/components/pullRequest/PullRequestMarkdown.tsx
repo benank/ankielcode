@@ -13,7 +13,7 @@ import type { MarkdownExtensions } from "~/markdown/wordsHast";
 
 import { useAssetUrlRefresh, useAssetUrlState } from "~/assets/assetUrls";
 import { cn } from "~/lib/utils";
-import { PULL_REQUESTS_PANEL_REF } from "~/rightPanelStore";
+import { ISSUES_PANEL_REF } from "~/rightPanelStore";
 
 import ChatMarkdown from "../ChatMarkdown";
 import { MediaVideoPlayer } from "../media/MediaVideoPlayer";
@@ -28,9 +28,8 @@ export const PullRequestMarkdownContext = createContext<{
   repository: string | null;
 } | null>(null);
 
-/** The list page panel that links in thread-less markdown open in; the Issues page provides its own. */
-export const PullRequestMarkdownPanelContext =
-  createContext<ScopedThreadRef>(PULL_REQUESTS_PANEL_REF);
+/** The list page panel that links in thread-less markdown open in. */
+export const PullRequestMarkdownPanelContext = createContext<ScopedThreadRef>(ISSUES_PANEL_REF);
 
 function PullRequestHostVideo({
   environmentId,

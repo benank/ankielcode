@@ -5,10 +5,7 @@ import { MessageCircle, Trash2 } from "lucide-react";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 import { Button } from "~/components/ui/button";
-import {
-  PullRequestMarkdownTextarea,
-  type PullRequestCompletionScope,
-} from "~/components/pullRequest/PullRequestMarkdownTextarea";
+import { PullRequestMarkdownTextarea } from "~/components/pullRequest/PullRequestMarkdownTextarea";
 import {
   SpeechTextField,
   TextFieldSpeechControls,
@@ -42,8 +39,6 @@ interface DiffCommentAnnotationProps {
   pending?: boolean;
   secondaryAction?: DiffCommentSecondaryAction;
   focusOnMount?: boolean;
-  /** Set only for pull request comments, where `@` completes the repository's users. */
-  completionScope?: PullRequestCompletionScope | null;
 }
 
 export function DiffCommentAnnotation({
@@ -62,7 +57,6 @@ export function DiffCommentAnnotation({
   pending = false,
   secondaryAction,
   focusOnMount = true,
-  completionScope = null,
 }: DiffCommentAnnotationProps) {
   const gt = useGT();
   const messages = useMessages();
@@ -133,7 +127,6 @@ export function DiffCommentAnnotation({
     >
       <PullRequestMarkdownTextarea
         ref={textareaRef}
-        completionScope={completionScope}
         readOnly={speech?.freezesEditor}
         autoFocus={focusOnMount}
         size="sm"

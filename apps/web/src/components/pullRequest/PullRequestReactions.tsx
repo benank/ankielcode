@@ -1,17 +1,10 @@
-import { useAtomCommand } from "~/state/use-atom-command";
-import type {
-  EnvironmentId,
-  PullRequestReaction,
-  PullRequestReactionContent,
-  PullRequestRef,
-} from "@ankielcode/contracts";
+import type { PullRequestReaction, PullRequestReactionContent } from "@ankielcode/contracts";
 import { msg, useGT, useLocale, useMessages } from "gt-react";
 import { SmilePlusIcon } from "lucide-react";
 import { useState } from "react";
 
 import { m } from "~/i18n/messages";
 import { cn } from "~/lib/utils";
-import { pullRequestEnvironment } from "~/state/pullRequests";
 
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { toastManager } from "../ui/toast";
@@ -152,49 +145,5 @@ export function ReactionBar({
         </Popover>
       ) : null}
     </div>
-  );
-}
-
-export function PullRequestReactionBar({
-  reactions,
-  canReact,
-  subjectId,
-  environmentId,
-  reference,
-  onRefresh,
-  className,
-}: {
-  readonly reactions: ReadonlyArray<PullRequestReaction>;
-  readonly canReact: boolean;
-  /** Omit to react to the pull request description. */
-  readonly subjectId?: string | undefined;
-  readonly environmentId: EnvironmentId;
-  readonly reference: PullRequestRef;
-  readonly onRefresh: () => void;
-  readonly className?: string | undefined;
-}) {
-  const setReaction = useAtomCommand(pullRequestEnvironment.setReaction, {
-    reportFailure: false,
-  });
-  return (
-    <ReactionBar
-      reactions={reactions}
-      canReact={canReact}
-      className={className}
-      onReact={async (content, reacted) => {
-        const result = await setReaction({
-          environmentId,
-          input: {
-            ...reference,
-            ...(subjectId === undefined ? {} : { subjectId }),
-            content,
-            reacted,
-          },
-        });
-        if (result._tag === "Failure") return false;
-        onRefresh();
-        return true;
-      }}
-    />
   );
 }

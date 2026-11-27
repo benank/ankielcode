@@ -719,7 +719,7 @@ export function workflowReferenceIssue(reference: WorkflowRunReference): IssueRe
 }
 
 /** A reference's pull request, when it is one and its address reads as one. */
-export function workflowReferencePullRequest(
+function workflowReferencePullRequest(
   reference: WorkflowRunReference,
 ): PullRequestRef | null {
   return reference.kind === WorkflowReferenceKind.pullRequest

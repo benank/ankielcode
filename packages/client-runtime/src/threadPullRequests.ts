@@ -2,10 +2,7 @@ import { makeThreadPullRequests } from "@ankielcode/source-control-core/shared/t
 
 import { sourceControlClients } from "./sourceControlClients.ts";
 
-export {
-  threadPullRequestSearchTerms,
-  visibleThreadPullRequests,
-} from "@ankielcode/shared/threadPullRequests";
+export { threadPullRequestSearchTerms } from "@ankielcode/shared/threadPullRequests";
 export {
   pullRequestListLines,
   type PullRequestListLine,
@@ -17,7 +14,6 @@ export {
 export const {
   normalizeThreadPullRequestKey,
   legacyThreadPullRequestKey,
-  threadPullRequestKeysEqual,
   threadPullRequestKeyOf,
   resolveThreadCurrentPullRequest,
   resolveThreadCurrentPullRequestLink,

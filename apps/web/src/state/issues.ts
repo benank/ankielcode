@@ -41,7 +41,7 @@ export function useLinkedIssueDetail(
 
 const mergedIssueLists = createMergedIssueListAtoms(issueEnvironment, formatEnvironmentQueryError);
 
-/** The same listing read across every connected environment, as the pull-request page does. */
+/** The same listing read across every connected environment. */
 export function useIssueList(targets: ReadonlyArray<IssueListTarget>): MergedIssueList & {
   readonly refresh: () => void;
   readonly reload: () => void;

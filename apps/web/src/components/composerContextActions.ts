@@ -1,5 +1,5 @@
 import type { EnvironmentId, ProjectId } from "@ankielcode/contracts";
-import { createContext, type MouseEvent } from "react";
+import { createContext } from "react";
 
 export interface ComposerContextActions {
   environmentId: EnvironmentId | null;
@@ -9,7 +9,6 @@ export interface ComposerContextActions {
   expandVideo: (fileId: string) => void;
   openFile: (fileId: string) => void;
   openMention: (path: string) => void;
-  openPullRequest: (event: MouseEvent<HTMLElement>, url: string) => void;
 }
 
 export const ComposerContextActionsContext = createContext<ComposerContextActions>({
@@ -18,5 +17,4 @@ export const ComposerContextActionsContext = createContext<ComposerContextAction
   expandVideo: () => {},
   openFile: () => {},
   openMention: () => {},
-  openPullRequest: () => {},
 });

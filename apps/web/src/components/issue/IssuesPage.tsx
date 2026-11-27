@@ -45,7 +45,6 @@ import {
   type IssueListPreferences,
 } from "~/components/issue/issueListPreferences";
 import { IssueGlyph, issueTrackerPresentation } from "~/components/issue/issuePresentation";
-import { PullRequestDetailPanel } from "~/components/pullRequest/PullRequestDetailPanel";
 import { PullRequestMarkdownPanelContext } from "~/components/pullRequest/PullRequestMarkdown";
 import { PullRequestListGhost } from "~/components/pullRequest/PullRequestGhosts";
 import {
@@ -90,7 +89,6 @@ import {
   selectSelectedRightPanelSurface,
   selectThreadRightPanelState,
   useRightPanelStore,
-  type PullRequestSurface,
   type RightPanelSurface,
 } from "~/rightPanelStore";
 import { useAtomCommand } from "~/state/use-atom-command";
@@ -362,7 +360,7 @@ export function IssuesPage() {
     key: undefined,
   } as const;
 
-  // One shared panel for the page, with a fixed sentinel ref, as the pull-request page does.
+  // One shared panel for the page, with a fixed sentinel ref.
   const rightPanelRef = capableEnvironments.length === 0 ? null : ISSUES_PANEL_REF;
   const rightPanelState = useRightPanelStore((state) =>
     selectThreadRightPanelState(state.byThreadKey, rightPanelRef),
@@ -370,10 +368,7 @@ export function IssuesPage() {
   const selectedSurface = useRightPanelStore((state) =>
     selectSelectedRightPanelSurface(state.byThreadKey, rightPanelRef),
   );
-  const panelSurface =
-    selectedSurface?.kind === "issue" || selectedSurface?.kind === "pull-request"
-      ? selectedSurface
-      : null;
+  const panelSurface = selectedSurface?.kind === "issue" ? selectedSurface : null;
   const { active: panelAnimationsActive, durationMs } = usePanelAnimationSettings();
   const presenceValue = { activeSurface: panelSurface, surfaces: rightPanelState.surfaces };
   const presence = usePanelPresence(
@@ -831,15 +826,13 @@ export function IssuesPage() {
             onAddTerminal={() => undefined}
             onAddDiff={() => undefined}
             onAddFiles={() => undefined}
-            onAddPullRequest={() => undefined}
-            onAddPullRequests={() => undefined}
+            onAddLinkedItems={() => undefined}
             onAddDevice={() => undefined}
             browserAvailable={false}
             terminalAvailable={false}
             diffAvailable={false}
             filesAvailable={false}
-            pullRequestAvailable={false}
-            pullRequestsAvailable={false}
+            linkedItemsAvailable={false}
             deviceAvailable={false}
           >
             <PullRequestMarkdownPanelContext value={rightPanelRef}>
@@ -855,15 +848,6 @@ export function IssuesPage() {
                     scope: renderedSurface.scope,
                     key: renderedSurface.key,
                   }}
-                  onSelectPullRequest={(reference) => {
-                    useRightPanelStore.getState().openPullRequest(rightPanelRef, {
-                      projectId: reference.projectId,
-                      repository: reference.repository,
-                      number: reference.number,
-                      ...(reference.host === undefined ? {} : { host: reference.host }),
-                      environmentId: panelEnvironmentId,
-                    });
-                  }}
                   onSelectIssue={({ host, ...reference }) =>
                     selectEntry({
                       ...reference,
@@ -872,22 +856,7 @@ export function IssuesPage() {
                     })
                   }
                 />
-              ) : (
-                <PullRequestDetailPanel
-                  key={renderedSurface.id}
-                  getShortcutContext={getShortcutContext}
-                  shortcutsEnabled={panelSurface?.id === renderedSurface.id}
-                  environmentId={panelEnvironmentId}
-                  reference={{
-                    projectId: (renderedSurface as PullRequestSurface).projectId as ProjectId,
-                    repository: (renderedSurface as PullRequestSurface).repository,
-                    number: (renderedSurface as PullRequestSurface).number,
-                    ...((renderedSurface as PullRequestSurface).host
-                      ? { host: (renderedSurface as PullRequestSurface).host }
-                      : {}),
-                  }}
-                />
-              )}
+              ) : null}
             </PullRequestMarkdownPanelContext>
           </RightPanelTabs>
         ) : null}

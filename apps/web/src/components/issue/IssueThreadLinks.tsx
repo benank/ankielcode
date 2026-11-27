@@ -28,7 +28,7 @@ import { useEnvironmentScope } from "~/state/session";
 import { environmentThreadShells, threadEnvironment } from "~/state/threads";
 import { useAtomCommand } from "~/state/use-atom-command";
 
-import { readableFailure } from "../pullRequest/pullRequestDetail.logic";
+import { readableFailure } from "~/lib/readableFailure";
 import { ThreadLinkPicker } from "../ThreadLinkPicker";
 import { Button } from "../ui/button";
 import { Dialog, DialogPopup, DialogTitle } from "../ui/dialog";

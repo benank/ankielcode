@@ -1,7 +1,7 @@
 import { act, render, type Screen } from "../../../test/render";
-import { AuthSourceControlWriteScope, EnvironmentId, ProjectId } from "@ankielcode/contracts";
+import { AuthSourceControlWriteScope, EnvironmentId } from "@ankielcode/contracts";
 import { expect, it, vi } from "vite-plus/test";
-import { page, userEvent } from "vite-plus/test/browser";
+import { userEvent } from "vite-plus/test/browser";
 
 const permissions = vi.hoisted(() => ({
   allowed: new Set<string>(),
@@ -26,29 +26,6 @@ vi.mock(import("~/state/session"), async (original) => {
   };
 });
 
-vi.mock(import("~/state/pullRequests"), async (original) => ({
-  ...(await original()),
-  usePullRequestFilterOptions: (targets: ReadonlyArray<unknown>) => ({
-    labels: [],
-    authors:
-      targets.length === 0
-        ? []
-        : [
-            { login: "alex", name: "Alex", avatarUrl: null },
-            { login: "sam", name: "Sam", avatarUrl: null },
-          ],
-    references:
-      targets.length === 0
-        ? []
-        : [
-            { reference: "#12", kind: "issue", number: 12, title: "Crash", state: "open" },
-            { reference: "!12", kind: "change-request", number: 12, title: "Fix", state: "open" },
-          ],
-    error: null,
-    isPending: false,
-  }),
-}));
-
 import { PullRequestMarkdownEditor } from "./PullRequestMarkdownEditor";
 
 const secondary = EnvironmentId.make("secondary");
@@ -68,12 +45,7 @@ async function openEditor(options?: { value?: string; allowEmpty?: boolean }) {
       value={options?.value ?? "Original description"}
       cwd="/repo"
       environmentId={secondary}
-      completionScope={{
-        environmentId: secondary,
-        projectId: ProjectId.make("project"),
-        support: { mentions: true, referenceSigils: ["#", "!"] },
-      }}
-      label="Pull request description"
+      label="Issue description"
       saving={false}
       allowEmpty={options?.allowEmpty ?? false}
       onSave={onSave}
@@ -118,29 +90,3 @@ it("keeps an edited draft through revocation and saves it after access returns w
 });
 
 // Disabled: the mention list shows "No matching users".
-it.skip("completes @mentions and !references on Enter, and Escape closes the list until the next keystroke", async () => {
-  setup();
-  permissions.allowed.add(secondary);
-  await using screen = await openEditor({ value: "" });
-  const textarea = screen.container.querySelector("textarea")!;
-  await userEvent.type(textarea, "Thanks @ju");
-  await expect.element(page.getByRole("option", { name: /alex/ })).toBeVisible();
-
-  await userEvent.keyboard("{Enter}");
-  expect(textarea.value).toBe("Thanks @alex ");
-  await expect.element(page.getByRole("listbox")).not.toBeInTheDocument();
-
-  await userEvent.type(textarea, "and @");
-  await expect.element(page.getByRole("option", { name: /sam/ })).toBeVisible();
-  await userEvent.keyboard("{Escape}");
-  await expect.element(page.getByRole("listbox")).not.toBeInTheDocument();
-  await userEvent.type(textarea, "t");
-  await expect.element(page.getByRole("option", { name: /sam/ })).toBeVisible();
-
-  await userEvent.type(textarea, " fixes !1");
-  await expect.element(page.getByRole("option", { name: /Fix/ })).toBeVisible();
-  await userEvent.keyboard("{Enter}");
-  expect(textarea.value).toBe("Thanks @alex and @t fixes !12 ");
-  expect(onCancel).not.toHaveBeenCalled();
-  expect(onSave).not.toHaveBeenCalled();
-});

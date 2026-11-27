@@ -30,7 +30,6 @@ import type {
   IssueListEntry,
   IssueReaction,
   IssueRef,
-  PullRequestRef,
   ScopedThreadRef,
 } from "@ankielcode/contracts";
 import {
@@ -57,7 +56,7 @@ import { Button, InlineButton } from "../ui/button";
 import { Input } from "../ui/input";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "../ui/menu";
 import { cn } from "~/lib/utils";
-import { PullRequestMetaRow, PullRequestSection } from "../pullRequest/PullRequestSummaryTab";
+import { PullRequestMetaRow, PullRequestSection } from "../pullRequest/PullRequestSection";
 import { toastManager } from "../ui/toast";
 import { PullRequestCandidatePicker } from "../pullRequest/PullRequestCandidatePicker";
 import { PullRequestCommentBody } from "../pullRequest/PullRequestCommentBody";
@@ -65,7 +64,7 @@ import { PullRequestDetailTitleRow } from "../pullRequest/PullRequestDetailLayou
 import { PullRequestEditButton } from "../pullRequest/PullRequestEditButton";
 import { PullRequestMarkdown } from "../pullRequest/PullRequestMarkdown";
 import { PullRequestMarkdownEditor } from "../pullRequest/PullRequestMarkdownEditor";
-import { readableFailure } from "../pullRequest/pullRequestDetail.logic";
+import { readableFailure } from "~/lib/readableFailure";
 import { pullRequestLabelColor } from "../pullRequest/pullRequestList.logic";
 import {
   PullRequestActorLabel,
@@ -346,12 +345,10 @@ type TimelineItem =
 function LinkedPullRequestRow({
   link,
   scope,
-  onSelect,
 }: {
   link: IssueLinkedPullRequest;
   /** The issue's own repository, left off a pull request that lives in it. */
   scope: string;
-  onSelect: (() => void) | null;
 }) {
   const body = (
     <>
@@ -372,11 +369,7 @@ function LinkedPullRequestRow({
   );
   const className =
     "flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent";
-  return onSelect ? (
-    <button type="button" className={className} onClick={onSelect}>
-      {body}
-    </button>
-  ) : (
+  return (
     <a href={link.url} target="_blank" rel="noopener noreferrer" className={className}>
       {body}
     </a>
@@ -419,7 +412,6 @@ export function IssueDetailPanel({
   reference,
   threadRef = null,
   listEntry = null,
-  onSelectPullRequest,
   onSelectIssue,
 }: {
   environmentId: EnvironmentId;
@@ -427,8 +419,6 @@ export function IssueDetailPanel({
   /** The list row this issue was opened from, shown until the detail arrives. */
   listEntry?: IssueListEntry | null;
   threadRef?: ScopedThreadRef | null;
-  /** Opens a linked change request beside this one; absent, the link goes to the host. */
-  onSelectPullRequest?: ((reference: PullRequestRef) => void) | undefined;
   /** Opens a referenced issue beside this one; absent, the link goes to the host. */
   onSelectIssue?: ((reference: IssueRef & { readonly url: string }) => void) | undefined;
 }) {
@@ -485,16 +475,7 @@ export function IssueDetailPanel({
 
   const host = reference.host === undefined ? {} : { host: reference.host };
   const openEventSource = (source: IssueEventReference) => {
-    if (source.kind === "pull-request") {
-      if (!onSelectPullRequest) return false;
-      onSelectPullRequest({
-        projectId: reference.projectId,
-        ...host,
-        repository: source.repository,
-        number: source.number,
-      });
-      return true;
-    }
+    if (source.kind === "pull-request") return false;
     if (!onSelectIssue) return false;
     onSelectIssue({
       projectId: reference.projectId,
@@ -810,7 +791,6 @@ export function IssueDetailPanel({
                 environmentId={environmentId}
                 threadRef={threadRef}
                 label={gt("Description")}
-                completionScope={null}
                 saving={saving}
                 allowEmpty
                 onSave={(next) => void save({ body: next })}
@@ -845,17 +825,6 @@ export function IssueDetailPanel({
                   key={`${link.repository}#${link.number}`}
                   link={link}
                   scope={detail.scope}
-                  onSelect={
-                    onSelectPullRequest
-                      ? () =>
-                          onSelectPullRequest({
-                            projectId: reference.projectId,
-                            ...(reference.host === undefined ? {} : { host: reference.host }),
-                            repository: link.repository,
-                            number: link.number,
-                          })
-                      : null
-                  }
                 />
               ))}
             </div>

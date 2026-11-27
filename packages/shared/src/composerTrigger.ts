@@ -90,7 +90,7 @@ export function isCurrencyAmountQuery(query: string): boolean {
   return /^\.?[0-9][0-9,._]*(?:[kKmMbBtT]|[eE][0-9]+)?[.,;:!?)]*$/.test(query);
 }
 
-export function detectComposerPullRequestTrigger(token: string, cursor: number) {
+function detectComposerPullRequestTrigger(token: string, cursor: number) {
   if (/^[@\p{Sc}]/u.test(token)) return null;
   const match = /(?:^|\p{Ps})#([\p{L}\p{N}][\p{L}\p{N}_-]*)?$/u.exec(token);
   if (!match) return null;

@@ -9,11 +9,7 @@ import {
   serializeAssistantCitation,
   withAssistantCitationComment,
 } from "@ankielcode/shared/assistantCitations";
-import {
-  detectComposerPullRequestTrigger,
-  isCurrencyAmountQuery,
-  isPathWord,
-} from "@ankielcode/shared/composerTrigger";
+import { isCurrencyAmountQuery, isPathWord } from "@ankielcode/shared/composerTrigger";
 import {
   splitPromptIntoComposerSegments,
   type ComposerPromptSegment,
@@ -25,7 +21,7 @@ import {
   type ShortcutMatchContext,
 } from "./keybindings";
 
-export type ComposerTriggerKind = "path" | "pull-request" | "slash-command" | "skill";
+export type ComposerTriggerKind = "path" | "slash-command" | "skill";
 export type ComposerSlashCommand = "model" | "side" | "btw" | "clear";
 export type ComposerSubmissionIntent = "foreground" | "background" | "alternate";
 
@@ -272,8 +268,6 @@ export function detectComposerTrigger(text: string, cursorInput: number): Compos
       rangeEnd: cursor,
     };
   }
-  const pullRequestTrigger = detectComposerPullRequestTrigger(token, cursor);
-  if (pullRequestTrigger) return pullRequestTrigger;
   const skillPrefix = /^\p{Sc}/u.exec(token);
   if (skillPrefix) {
     if (isCurrencyAmountQuery(token.slice(skillPrefix[0].length))) return null;

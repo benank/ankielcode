@@ -56,7 +56,6 @@ import { createMemoryStorage } from "./lib/storage";
 
 import {
   COMPOSER_DRAFT_STORAGE_KEY,
-  checkoutPullRequestUrlToLink,
   beginBackgroundDraftSubmissionByRef,
   clearBackgroundDraftSubmissionByRef,
   resolveDraftPromotionNavigationTarget,
@@ -992,118 +991,43 @@ describe("createDeferredStorage", () => {
   });
 });
 
-describe("composerDraftStore checkout pull request", () => {
+describe("composerDraftStore retired pull request checkout", () => {
   const projectId = ProjectId.make("project-checkout");
   const projectRef = scopeProjectRef(TEST_ENVIRONMENT_ID, projectId);
-  const otherProjectRef = scopeProjectRef(TEST_ENVIRONMENT_ID, ProjectId.make("project-other"));
   const threadId = ThreadId.make("thread-checkout");
   const draftId = DraftId.make("draft-checkout");
-  const url = "https://github.com/acme/widgets/pull/42";
-  const checkout = { url, branch: "feature/pr-42" };
 
-  beforeEach(() => {
-    resetComposerDraftStore();
-  });
-
-  const store = () => useComposerDraftStore.getState();
-  const toLink = () => checkoutPullRequestUrlToLink(store().getDraftSession(draftId));
-
-  function draftOnMain() {
-    store().setProjectDraftThreadId(projectRef, draftId, { threadId, branch: "main" });
-  }
-
-  // GitActionsControl's live branch sync writes the git status branch onto the draft. The status
-  // refresh after a checkout is forked server-side, so the prepare response lands first and the
-  // sync replays the stale pre-checkout branch before the fresh status corrects it.
-  function liveBranchSync(branch: string) {
-    store().setDraftThreadContext(draftId, {
-      branch,
-      worktreePath: null,
-      environmentSelection: "manual",
-    });
-  }
-
-  it("still links after a local checkout the live branch sync briefly reverts", () => {
-    draftOnMain();
-    store().setDraftThreadContext(draftId, {
-      branch: checkout.branch,
-      worktreePath: null,
-      envMode: "local",
-      checkoutPullRequest: checkout,
-    });
-    liveBranchSync("main");
-    liveBranchSync(checkout.branch);
-
-    expect(toLink()).toBe(url);
-  });
-
-  it("does not link once the draft has moved to another branch", () => {
-    draftOnMain();
-    store().setDraftThreadContext(draftId, {
-      branch: checkout.branch,
-      checkoutPullRequest: checkout,
-    });
-    liveBranchSync("main");
-
-    expect(toLink()).toBeNull();
-  });
-
-  it("is dropped when cleared or when the draft moves to another project", () => {
-    store().setProjectDraftThreadId(projectRef, draftId, {
-      threadId,
-      branch: checkout.branch,
-      checkoutPullRequest: checkout,
-    });
-    store().setDraftThreadContext(draftId, { checkoutPullRequest: null });
-    expect(store().getDraftSession(draftId)?.checkoutPullRequest).toBeUndefined();
-
-    store().setDraftThreadContext(draftId, {
-      checkoutPullRequest: checkout,
-      worktreeRepositories: ["/work/api"],
-    });
-    // An unrelated change keeps the repository choice; an empty choice is still a choice.
-    store().setDraftThreadContext(draftId, { envMode: "worktree" });
-    expect(store().getDraftSession(draftId)?.worktreeRepositories).toEqual(["/work/api"]);
-    store().setDraftThreadContext(draftId, { worktreeRepositories: [] });
-    expect(store().getDraftSession(draftId)?.worktreeRepositories).toEqual([]);
-
-    store().setDraftThreadContext(draftId, { projectRef: otherProjectRef });
-    expect(store().getDraftSession(draftId)?.checkoutPullRequest).toBeUndefined();
-    expect(store().getDraftSession(draftId)?.worktreeRepositories).toBeUndefined();
-  });
-
-  it("persists the pull request and still restores drafts saved without one", async () => {
+  it("restores a draft saved with a pull request checkout and drops the checkout", async () => {
     vi.useFakeTimers();
     try {
+      resetComposerDraftStore();
       await useComposerDraftStore.persist.clearStorage();
-      const legacyDraftId = DraftId.make("draft-before-checkout-links");
       const storage = useComposerDraftStore.persist.getOptions().storage;
       expect(storage).toBeDefined();
-      const persistedDraftThread = (id: ThreadId) => ({
-        threadId: id,
-        environmentId: TEST_ENVIRONMENT_ID,
-        projectId,
-        logicalProjectKey: scopedProjectKey(projectRef),
-        createdAt: "2026-08-01T00:00:00.000Z",
-        runtimeMode: "full-access",
-        interactionMode: "default",
-        branch: checkout.branch,
-        worktreePath: null,
-        envMode: "local",
-        startFromOrigin: false,
-        promotedTo: null,
-      });
       storage?.setItem(COMPOSER_DRAFT_STORAGE_KEY, {
         version: 9,
         state: {
           draftsByThreadKey: {},
           draftThreadsByThreadKey: {
             [draftId]: {
-              ...persistedDraftThread(threadId),
-              checkoutPullRequest: checkout,
+              threadId,
+              environmentId: TEST_ENVIRONMENT_ID,
+              projectId,
+              logicalProjectKey: scopedProjectKey(projectRef),
+              createdAt: "2026-08-01T00:00:00.000Z",
+              runtimeMode: "full-access",
+              interactionMode: "default",
+              branch: "feature/pr-42",
+              worktreePath: null,
+              envMode: "local",
+              startFromOrigin: false,
+              promotedTo: null,
+              checkoutPullRequest: {
+                url: "https://github.com/acme/widgets/pull/42",
+                branch: "feature/pr-42",
+              },
               worktreeRepositories: ["/work/api"],
             },
-            [legacyDraftId]: persistedDraftThread(ThreadId.make("thread-legacy")),
           },
           logicalProjectDraftThreadKeyByLogicalProjectKey: {
             [scopedProjectKey(projectRef)]: draftId,
@@ -1114,14 +1038,14 @@ describe("composerDraftStore checkout pull request", () => {
 
       await useComposerDraftStore.persist.rehydrate();
 
-      expect(toLink()).toBe(url);
-      const legacy = store().getDraftSession(legacyDraftId);
-      expect(legacy).toMatchObject({ branch: checkout.branch });
-      expect(checkoutPullRequestUrlToLink(legacy)).toBeNull();
+      const draft = useComposerDraftStore.getState().getDraftSession(draftId);
+      expect(draft).toMatchObject({ branch: "feature/pr-42", worktreeRepositories: ["/work/api"] });
+      expect(draft).not.toHaveProperty("checkoutPullRequest");
       expect(
-        partializeComposerDraftStoreState(store()).draftThreadsByThreadKey[draftId],
-      ).toMatchObject({ checkoutPullRequest: checkout, worktreeRepositories: ["/work/api"] });
-      expect(legacy).not.toHaveProperty("worktreeRepositories");
+        partializeComposerDraftStoreState(useComposerDraftStore.getState()).draftThreadsByThreadKey[
+          draftId
+        ],
+      ).not.toHaveProperty("checkoutPullRequest");
     } finally {
       await useComposerDraftStore.persist.clearStorage();
       vi.useRealTimers();

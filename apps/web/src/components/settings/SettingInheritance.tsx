@@ -15,7 +15,6 @@ import { cn } from "../../lib/utils";
 import type { EnvironmentPresentation } from "../../state/environments";
 import { EnvironmentMachineIcon } from "../EnvironmentMachineIcon";
 import { resolveEnvModeLabel, WORKTREE_SUBMODULES_LABELS } from "../BranchToolbar.logic";
-import { PULL_REQUEST_MERGE_METHOD_LABELS } from "../pullRequest/pullRequestDetail.logic";
 import { Button, InlineButton } from "../ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "../ui/collapsible";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
@@ -52,19 +51,15 @@ function formatValue(
   resolve: MessageResolver = m,
 ): string {
   if (value === null || value === undefined) {
-    return key === "pullRequestMergeMethod"
-      ? resolve(msg("Last selected"))
-      : key === "sidebarAutoSettleAfterDays"
-        ? resolve(msg("Never"))
-        : key === "defaultModelSelection"
-          ? resolve(msg("Automatic"))
-          : key === "sourceControlWriterModelSelection"
-            ? resolve(msg("Text generation model"))
-            : key === "reviewGuideModelSelection"
-              ? resolve(msg("Source control writer model"))
-              : key === "defaultThreadEnvMode" || key === "worktreeSubmodules"
-                ? resolve(msg("Inherit"))
-                : resolve(msg("Not set"));
+    return key === "sidebarAutoSettleAfterDays"
+      ? resolve(msg("Never"))
+      : key === "defaultModelSelection"
+        ? resolve(msg("Automatic"))
+        : key === "sourceControlWriterModelSelection"
+          ? resolve(msg("Text generation model"))
+          : key === "defaultThreadEnvMode" || key === "worktreeSubmodules"
+            ? resolve(msg("Inherit"))
+            : resolve(msg("Not set"));
   }
   if (typeof value === "boolean") {
     return value
@@ -82,11 +77,6 @@ function formatValue(
     }
     if (key === "worktreeSubmodules" && value in WORKTREE_SUBMODULES_LABELS) {
       return resolve(WORKTREE_SUBMODULES_LABELS[value as WorktreeSubmodules]);
-    }
-    if (key === "pullRequestMergeMethod" && value in PULL_REQUEST_MERGE_METHOD_LABELS) {
-      return resolve(
-        PULL_REQUEST_MERGE_METHOD_LABELS[value as keyof typeof PULL_REQUEST_MERGE_METHOD_LABELS],
-      );
     }
     return value === "" ? resolve(msg("Empty")) : value;
   }

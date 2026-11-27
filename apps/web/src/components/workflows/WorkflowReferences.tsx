@@ -1,30 +1,21 @@
 import {
   workflowReferenceIssue,
   workflowReferenceLabel,
-  workflowReferencePullRequest,
 } from "@ankielcode/client-runtime/workflows";
 import type { EnvironmentId, WorkflowRunReference } from "@ankielcode/contracts";
 import { useNavigate } from "@tanstack/react-router";
 import { T } from "gt-react";
 import { CircleCheckIcon, CircleDotIcon, ExternalLinkIcon, LinkIcon } from "lucide-react";
 
-import { isElectron } from "~/env";
-import { isTerminalFocused } from "../../lib/terminalFocus";
 import { cn } from "../../lib/utils";
 import { ISSUES_PANEL_REF, useRightPanelStore } from "../../rightPanelStore";
 import { IssueDetailPanel } from "../issue/IssueDetailPanel";
 import { readIssueListPreferences } from "../issue/issueListPreferences";
-import { PullRequestDetailPanel } from "../pullRequest/PullRequestDetailPanel";
 import { PULL_REQUEST_STATE_PRESENTATION } from "../pullRequest/pullRequestIcons";
 import { Button } from "../ui/button";
 
 /** The mark a reference wears: its kind's icon, in the ink its state has on its own page. */
 function referenceGlyph(reference: WorkflowRunReference) {
-  if (workflowReferencePullRequest(reference) !== null) {
-    const state =
-      reference.state === "closed" || reference.state === "merged" ? reference.state : "open";
-    return PULL_REQUEST_STATE_PRESENTATION[state];
-  }
   if (workflowReferenceIssue(reference) !== null) {
     return reference.state === "closed"
       ? {
@@ -77,15 +68,6 @@ export function WorkflowReferenceChip({
   );
 }
 
-const shortcutContext = () => ({
-  terminalFocus: isTerminalFocused(),
-  terminalOpen: false,
-  previewFocus: false,
-  previewOpen: false,
-  isWeb: !isElectron,
-  isDesktop: isElectron,
-});
-
 /** Opens the reference on its own page, where it has the whole window. Null for a kind with none. */
 export function useOpenReferencePage(
   environmentId: EnvironmentId,
@@ -119,27 +101,11 @@ export function useOpenReferencePage(
         });
       };
     }
-    const pullRequest = workflowReferencePullRequest(reference);
-    if (pullRequest !== null) {
-      return () =>
-        void navigate({
-          to: "/pull-requests",
-          search: {
-            involvement: "all",
-            state: "all",
-            repository: pullRequest.repository,
-            number: pullRequest.number,
-            ...(pullRequest.host === undefined ? {} : { selectedHost: pullRequest.host }),
-            selectedProjectId: pullRequest.projectId,
-            selectedEnvironmentId: environmentId,
-          },
-        });
-    }
     return null;
   };
 }
 
-/** A reference opened beside its run: the Issues or Pull requests page's own view of it. */
+/** A reference opened beside its run: the Issues page's own view of it. */
 export function WorkflowReferencePanel({
   environmentId,
   reference,
@@ -150,17 +116,6 @@ export function WorkflowReferencePanel({
   const issue = workflowReferenceIssue(reference);
   if (issue !== null) {
     return <IssueDetailPanel environmentId={environmentId} reference={issue} />;
-  }
-  const pullRequest = workflowReferencePullRequest(reference);
-  if (pullRequest !== null) {
-    return (
-      <PullRequestDetailPanel
-        environmentId={environmentId}
-        reference={pullRequest}
-        shortcutsEnabled={false}
-        getShortcutContext={shortcutContext}
-      />
-    );
   }
   // A kind this client does not know yet: what the run knows of it, and where it lives.
   return (

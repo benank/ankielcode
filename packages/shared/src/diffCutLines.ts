@@ -11,7 +11,3 @@ export function cutLineNoteStart(line: string): number | null {
   const note = CUT_LINE_NOTE.exec(line);
   return note === null ? null : note.index + 1;
 }
-
-export function hasCutLines(patch: string): boolean {
-  return new RegExp(CUT_LINE_NOTE.source, "m").test(patch);
-}

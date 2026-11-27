@@ -7,8 +7,6 @@ import type {
   ProjectId,
   ResolvedKeybindingsConfig,
   ScopedThreadRef,
-  ThreadLinkedPullRequest,
-  ThreadPullRequestLink,
 } from "@ankielcode/contracts";
 import { scopedThreadKey } from "@ankielcode/client-runtime/environment";
 import { lazy, Suspense } from "react";
@@ -22,11 +20,9 @@ import {
   type PersistentThreadTerminalPanelProps,
 } from "../PersistentThreadTerminals";
 import { IssueDetailPanel } from "../issue/IssueDetailPanel";
-import { pullRequestPanelContext } from "../pullRequest/pullRequestDetail.logic";
-import { PullRequestDetailPanel } from "../pullRequest/PullRequestDetailPanel";
-import { PullRequestDetailGhost } from "../pullRequest/PullRequestGhosts";
+import { ThreadLinkedItemsPanel } from "./ThreadLinkedItemsPanel";
+import { IssueDetailGhost } from "../issue/IssueDetailGhost";
 import { PullRequestsUnavailableState } from "../pullRequest/PullRequestsUnavailableState";
-import { ThreadPullRequestsPanel } from "../pullRequest/ThreadPullRequestsPanel";
 
 const PreviewPanel = lazy(() =>
   import("../preview/PreviewPanel").then((module) => ({ default: module.PreviewPanel })),
@@ -41,16 +37,6 @@ type RightPanelTerminalProps = Omit<
   PersistentThreadTerminalPanelProps,
   "visible" | "threadRef" | "surface"
 >;
-
-interface RightPanelPullRequestProps {
-  readonly capabilityKnown: boolean;
-  readonly supported: boolean;
-  readonly projectId: ProjectId | null;
-  readonly pullRequests: ReadonlyArray<ThreadPullRequestLink>;
-  readonly linkedPullRequest: ThreadLinkedPullRequest | null;
-  readonly branchPullRequest: ThreadLinkedPullRequest | null | undefined;
-  readonly onBack: (() => void) | undefined;
-}
 
 interface RightPanelFileProps {
   readonly projectId?: ProjectId | undefined;
@@ -81,7 +67,8 @@ export function RightPanelSurfaceContent(props: {
   ) => void;
   readonly onCloseSurface: (surface: RightPanelSurface) => void;
   readonly terminal: RightPanelTerminalProps;
-  readonly pullRequest: RightPanelPullRequestProps;
+  /** False until the environment's server config says whether it serves issues. */
+  readonly issuesCapabilityKnown: boolean;
   readonly issuesSupported: boolean;
   readonly files: RightPanelFileProps;
   readonly sideChatParentPanel: SideChatParentPanel;
@@ -124,67 +111,8 @@ export function RightPanelSurfaceContent(props: {
           />
         </Suspense>
       );
-    case "pull-request": {
-      const pullRequest = props.pullRequest;
-      if (!pullRequest.capabilityKnown) return <PullRequestDetailGhost />;
-      if (!pullRequest.supported) {
-        return (
-          <PullRequestsUnavailableState
-            title={gt("Pull requests unavailable")}
-            error={gt("Update this environment's Ankiel Code server to browse pull requests.")}
-          />
-        );
-      }
-      return (
-        <PullRequestDetailPanel
-          getShortcutContext={props.getShortcutContext}
-          shortcutsEnabled={visible && props.activeSurfaceId === surface.id}
-          key={`${scopedThreadKey(threadRef)}:${surface.id}`}
-          environmentId={
-            (surface.environmentId as EnvironmentId | undefined) ?? props.environmentId
-          }
-          onSelectPullRequest={(reference) => {
-            useRightPanelStore.getState().openPullRequest(threadRef, {
-              ...(surface.environmentId === undefined
-                ? {}
-                : { environmentId: surface.environmentId }),
-              projectId: reference.projectId,
-              repository: reference.repository,
-              number: reference.number,
-              ...(reference.host ? { host: reference.host } : {}),
-            });
-          }}
-          threadRef={threadRef}
-          reference={{
-            projectId: surface.projectId as ProjectId,
-            ...(surface.host ? { host: surface.host } : {}),
-            repository: surface.repository,
-            number: surface.number,
-          }}
-          initialTab={surface.detailTab ?? "summary"}
-          revealUrl={surface.revealUrl}
-          onRevealSettled={(revealUrl) => {
-            useRightPanelStore.getState().settlePullRequestReveal(threadRef, surface.id, revealUrl);
-          }}
-          onTabChange={(tab) => {
-            useRightPanelStore.getState().setPullRequestDetailTab(threadRef, surface.id, tab);
-          }}
-          context={pullRequestPanelContext(
-            {
-              projectId: pullRequest.projectId,
-              pullRequests: pullRequest.pullRequests,
-              linkedPullRequest: pullRequest.linkedPullRequest,
-              branchPullRequest: pullRequest.branchPullRequest,
-            },
-            surface,
-          )}
-          composerDraftTarget={props.composerDraftTarget}
-          onBack={pullRequest.onBack}
-        />
-      );
-    }
     case "issue":
-      if (!props.pullRequest.capabilityKnown) return <PullRequestDetailGhost />;
+      if (!props.issuesCapabilityKnown) return <IssueDetailGhost />;
       if (!props.issuesSupported) {
         return (
           <PullRequestsUnavailableState
@@ -207,17 +135,6 @@ export function RightPanelSurfaceContent(props: {
             key: surface.key,
           }}
           threadRef={threadRef}
-          onSelectPullRequest={(reference) => {
-            useRightPanelStore.getState().openPullRequest(threadRef, {
-              ...(surface.environmentId === undefined
-                ? {}
-                : { environmentId: surface.environmentId }),
-              projectId: reference.projectId,
-              repository: reference.repository,
-              number: reference.number,
-              ...(reference.host ? { host: reference.host } : {}),
-            });
-          }}
           onSelectIssue={({ host, ...reference }) => {
             useRightPanelStore.getState().openIssue(threadRef, {
               ...(surface.environmentId === undefined
@@ -229,8 +146,8 @@ export function RightPanelSurfaceContent(props: {
           }}
         />
       );
-    case "pull-requests":
-      return <ThreadPullRequestsPanel threadRef={threadRef} />;
+    case "linked-items":
+      return <ThreadLinkedItemsPanel threadRef={threadRef} />;
     case "thread":
       // Not lazy: revealing a suspended tiptap editor tears down its view and crashes the composer.
       return (

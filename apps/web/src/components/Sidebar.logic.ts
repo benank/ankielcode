@@ -4,7 +4,6 @@ import type { ThreadReadToggle } from "@ankielcode/client-runtime/state/thread-r
 import { isShownUnderParent } from "@ankielcode/client-runtime/state/threads";
 import { backgroundWorkHoldsCompletion } from "@ankielcode/shared/orchestrationV2PendingBackgroundWork";
 import type { PixelStatusTone } from "@ankielcode/shared/pixelStatus";
-import { threadPullRequestSearchTerms } from "@ankielcode/shared/threadPullRequests";
 import * as React from "react";
 import { msg } from "gt-react";
 import { m, type MessageResolver } from "../i18n/messages";
@@ -48,7 +47,6 @@ import {
   type ThreadSortInput,
 } from "@ankielcode/client-runtime/state/thread-sort";
 import type { SidebarThreadSummary, Thread } from "../types";
-import { normalizeSearchText } from "../lib/utils";
 import { isLatestRunSettled } from "../session-logic";
 import { THREAD_STATUS_TEXT } from "@ankielcode/client-runtime/state/thread-activity-announcement";
 import { observeIntersection } from "../lib/observeIntersection";
@@ -1153,16 +1151,6 @@ export function searchSidebarThreads<
     return thread && !listed.has(thread) ? [thread] : [];
   });
   return { titleMatches, contentMatches };
-}
-
-export function pullRequestMatchesSearchQuery(
-  pullRequest: Parameters<typeof threadPullRequestSearchTerms>[0],
-  query: string,
-): boolean {
-  const normalizedQuery = normalizeSearchText(query);
-  if (normalizedQuery.length === 0) return false;
-  const haystack = normalizeSearchText(threadPullRequestSearchTerms(pullRequest).join(" "));
-  return normalizedQuery.split(" ").every((token) => haystack.includes(token));
 }
 
 export const ADD_PROJECT_SCOPE_ITEM_VALUE = "add-project";

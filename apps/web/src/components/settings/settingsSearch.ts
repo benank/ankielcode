@@ -90,7 +90,7 @@ export const SETTINGS_SECTION_LABELS: Readonly<Record<SettingsPath, string>> = {
   "/settings/general": msg("General"),
   "/settings/appearance": msg("Appearance"),
   "/settings/chat": msg("Chat"),
-  "/settings/diffs": msg("Diffs & pull requests"),
+  "/settings/diffs": msg("Diffs"),
   "/settings/keybindings": msg("Keybindings"),
   "/settings/snap-shot": msg("SnapShots"),
   "/settings/providers": msg("Providers"),
@@ -219,10 +219,6 @@ function sourceControlHostSearchItems(
   });
 }
 
-/** For settings that apply to every host. */
-const SOURCE_CONTROL_HOST_LABELS = sourceControlClients.definitions
-  .map((definition) => definition.label)
-  .join(" ");
 const SOURCE_CONTROL_HOST_TERMS = sourceControlClients.definitions
   .flatMap((definition) => [definition.label, ...(definition.searchKeywords ?? [])])
   .join(" ");
@@ -368,7 +364,7 @@ const SETTINGS_SEARCH_ITEMS = [
     to: "/settings/appearance",
     searchTerms: [
       msg(
-        "customize show hide panel card environment editor scripts branch pull request git changes servers automations lineage usage limits 5 hour weekly quota tokens context window",
+        "customize show hide panel card environment editor scripts branch git changes servers automations lineage usage limits 5 hour weekly quota tokens context window",
       ),
     ],
   },
@@ -383,12 +379,6 @@ const SETTINGS_SEARCH_ITEMS = [
     title: msg("Render math"),
     to: "/settings/appearance",
     searchTerms: [msg("latex tex katex equations formulas markdown")],
-  },
-  {
-    id: "pull-request-tab",
-    title: msg("Show pull requests tab"),
-    to: "/settings/appearance",
-    searchTerms: [msg("show hide pull requests pr tab sidebar navigation")],
   },
   {
     id: "panel-animations",
@@ -667,23 +657,6 @@ const SETTINGS_SEARCH_ITEMS = [
     searchTerms: [msg("claude context compaction idle cache tokens usage summary resume")],
   },
   {
-    id: "auto-settle-merged-threads",
-    title: msg("Auto-settle merged threads"),
-    to: "/settings/threads",
-    searchTerms: [msg("pull request merge closed automatically sidebar")],
-    requiresThreadAutoSettlement: true,
-    scope: "project-defaults",
-  },
-  {
-    id: "keep-threads-with-pull-requests",
-    title: msg("Keep threads with a PR"),
-    to: "/settings/threads",
-    targetId: "auto-settle-inactive-threads",
-    searchTerms: [msg("pull request inactivity auto-settle merge close sidebar")],
-    requiresThreadAutoSettlement: true,
-    scope: "project-defaults",
-  },
-  {
     id: "days-before-auto-settle",
     title: msg("Days of inactivity before auto-settle"),
     to: "/settings/threads",
@@ -737,7 +710,7 @@ const SETTINGS_SEARCH_ITEMS = [
     id: "default-diff-file-state",
     title: msg("Default diff file state"),
     to: "/settings/diffs",
-    searchTerms: [msg("collapsed expanded collapse expand files pull request pr code tab")],
+    searchTerms: [msg("collapsed expanded collapse expand files")],
   },
   {
     id: "diff-layout",
@@ -747,11 +720,9 @@ const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "proactive-panels",
-    title: msg("Open pull requests and changes panels proactively"),
+    title: msg("Open the changes panel proactively"),
     to: "/settings/diffs",
-    searchTerms: [
-      msg("proactive automatically open diff pull request pr right panel agent completion"),
-    ],
+    searchTerms: [msg("proactive automatically open diff right panel agent completion")],
   },
   {
     id: "skills-in-slash-menu",
@@ -1128,14 +1099,6 @@ const SETTINGS_SEARCH_ITEMS = [
     searchTerms: [msg("address bar duckduckgo google bing brave kagi ecosia custom url")],
   },
   {
-    id: "pull-request-links-open-in-app",
-    title: msg("Open pull requests in Ankiel Code"),
-    to: "/settings/diffs",
-    searchTerms: [
-      `pr commit links ${SOURCE_CONTROL_HOST_LABELS} browser external click default pull request view panel`,
-    ],
-  },
-  {
     id: "browser-auto-show-floating-preview",
     title: msg("Auto-show floating preview"),
     to: "/settings/browser",
@@ -1149,27 +1112,11 @@ const SETTINGS_SEARCH_ITEMS = [
     searchTerms: [msg("auto pull default branch current checkout fast forward upstream")],
   },
   {
-    id: "remove-agent-credits-on-merge",
-    title: msg("Remove agent credits when merging"),
-    to: "/settings/source-control",
-    scope: "project-defaults",
-    searchTerms: [
-      `pull request ${SOURCE_CONTROL_HOST_LABELS} squash co-authored-by attribution claude codex generated`,
-    ],
-  },
-  {
-    id: "pull-request-merge-method",
-    title: msg("Default merge method"),
-    to: "/settings/source-control",
-    scope: "project-defaults",
-    searchTerms: [msg("pull request merge squash rebase last selected")],
-  },
-  {
     id: "github-integration",
     title: msg("GitHub integration"),
     to: "/settings/source-control",
     scope: "environment-defaults",
-    searchTerms: [msg("github issues pull requests automation")],
+    searchTerms: [msg("github issues automation")],
   },
   {
     id: "source-control",
@@ -1202,21 +1149,12 @@ const SETTINGS_SEARCH_ITEMS = [
   ...sourceControlHostSearchItems(sourceControlClients.definitions),
   {
     id: "source-control-writing-style",
-    title: msg("Commit and pull request writing"),
+    title: msg("Commit writing"),
     to: "/settings/source-control",
     searchTerms: [
       msg(
-        "repository conventions conventional commits custom instructions commit messages change pr pull request merge request titles descriptions body style prompt write my own",
+        "repository conventions conventional commits custom instructions commit messages body style prompt write my own",
       ),
-    ],
-    environmentOnly: true,
-  },
-  {
-    id: "follow-change-request-templates",
-    title: msg("Follow pull request templates"),
-    to: "/settings/source-control",
-    searchTerms: [
-      msg("repository pr pull request merge request change request description structure"),
     ],
     environmentOnly: true,
   },
@@ -1224,35 +1162,7 @@ const SETTINGS_SEARCH_ITEMS = [
     id: "source-control-writer-model",
     title: msg("Source control writer model"),
     to: "/settings/source-control",
-    searchTerms: [
-      msg("override generated commit change request pr titles descriptions branch bookmark"),
-    ],
-    environmentOnly: true,
-    scope: "project-defaults",
-  },
-  {
-    id: "review-guides",
-    title: msg("Review guides"),
-    to: "/settings/source-control",
-    searchTerms: [msg("pull request pr guided review guide tour experimental")],
-    environmentOnly: true,
-  },
-  {
-    id: "review-guide-model",
-    title: msg("Review guide model"),
-    to: "/settings/source-control",
-    // Hidden until review guides are on, so a search lands on the switch that shows it.
-    targetId: "review-guides",
-    searchTerms: [msg("pull request pr guided review guide brief maintainer")],
-    environmentOnly: true,
-    scope: "project-defaults",
-  },
-  {
-    id: "review-guide-instructions",
-    title: msg("Review guide instructions"),
-    to: "/settings/source-control",
-    targetId: "review-guides",
-    searchTerms: [msg("pull request pr guided review guide preferences taste prompt custom")],
+    searchTerms: [msg("override generated commit messages branch bookmark")],
     environmentOnly: true,
     scope: "project-defaults",
   },
@@ -1346,14 +1256,6 @@ const SETTINGS_SEARCH_ITEMS = [
       msg(
         "automatic machine environment resources cpu memory capacity preference weight shared projects",
       ),
-    ],
-  },
-  {
-    id: "pull-request-routing",
-    title: msg("Pull request sharing"),
-    to: "/settings/connections",
-    searchTerms: [
-      `pull request routing trusted environments shared credentials permissions read actions source control ${SOURCE_CONTROL_HOST_LABELS}`,
     ],
   },
   {
