@@ -11,7 +11,7 @@ Alerts travel through your own [Cloudflare Relay](./remote-access.md#cloudflare-
 
 ## Turn on alerts
 
-1. On your iPhone or iPad, open **Settings → Notifications**.
+1. In the Ankiel Code app on your iPhone or iPad, open **Settings → Notifications**.
 2. Turn on **Push notifications** and allow notifications when iOS asks.
 3. Choose which alerts you want under **Alerts**:
    - **Finished**: an agent completed its work.

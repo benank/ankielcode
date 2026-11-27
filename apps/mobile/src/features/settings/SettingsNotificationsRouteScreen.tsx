@@ -126,7 +126,7 @@ function PushSettings() {
           label={gt("Push notifications")}
           subtitle={gt("Get an alert when an agent finishes, fails or needs you.")}
           value={enabled}
-          disabled={!preferencesReady || preparing || (unavailable && !enabled)}
+          disabled={!preferencesReady || preparing}
           onValueChange={(value) => {
             if (value) void turnOn();
             else void savePreferences({ pushNotificationsEnabled: false });
