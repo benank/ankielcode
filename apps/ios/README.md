@@ -139,3 +139,42 @@ Deep links the app accepts (any `ankielcode[-channel]` scheme): `ankielcode-nati
 and the RN dev form's `…://connections/new?pairingUrl=<urlencoded>&autoConnect=1`; and thread links
 `ankielcode-native://thread/<environmentId>/<threadId>` (also the RN shape `…://threads/<environmentId>/<threadId>`). Release builds always ask
 before pairing with a host from a link; Debug builds pair at once with `autoConnect=1`.
+
+## Files and media
+
+A thread's menu has **Files**: the workspace (the thread's worktree, else its project's root) as a
+lazily listed tree (`projects.listEntries`), searchable by path (`projects.searchEntries`). Files open
+by kind: text through `projects.readFile` (1 MiB, then a "Partial file" notice and Quick Look) in
+`SourceTextView` (line numbers, the in-house highlighter, the code font and word-wrap preferences,
+find); markdown rendered with a Preview/Source switch; images zoomable; video and audio streamed
+with AVKit; PDFs in PDFKit; binary and everything else downloaded (`media-file` or
+`draft-workspace-file` with `disposition: "attachment"`) for Quick Look. Feed entry points: image
+thumbnails and markdown images open the gallery (`ImageViewer`, zoom transition from the thumbnail,
+pinch and double-tap zoom, swipe between the thread's images, drag down to close, Share, Save to
+Photos, Copy); file chips open attachments; work-row file paths, read rows and markdown links to
+paths (`src/a.ts:12`, `file://…`) open the file; expanded tool rows show the tool's images
+(`tool-output-image`, read from `orchestration.getTurnItem`). Originals are cached on disk in
+`Caches/AnkielCode/media` (256 MB, oldest first), keyed by environment, resource and the server's
+`fileRevision`, never by the signed URL.
+
+`ankiel-probe --files <cwd>` runs the same reads against a server: list, `--search <q>`, `--read
+<path>` (repeatable; text, binary, folder), and with `--thread <id>` signs and downloads `--image
+<path>`, `--download <path>` and `--tool-item <itemId>`:
+
+```sh
+swift run ankiel-probe --state /tmp/probe.json --files /path/to/checkout --read package.json \
+  --thread <threadId> --image docs/shot.png --download pnpm-lock.yaml
+```
+
+Debug hook (with `ANKIEL_DEBUG_ROUTE=thread` or an `ANKIEL_OPEN_URL` thread link):
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_FILES` | `browser` | The file browser. |
+| | `search:<query>` | The browser with that search typed. |
+| | `file:<path>[:line]` | A file in the viewer (relative to the workspace, or absolute), scrolled to the line. |
+| | `gallery` | The gallery at the thread's first image. |
+| | `images:<path>,<path>` | A gallery of workspace images, loaded live. |
+
+`MediaFilesUITests` (live, skips when the dev server is down) opens Files from the thread menu,
+lists a folder, searches and opens a file, and zooms, swipes, closes and drags the gallery closed.

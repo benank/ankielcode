@@ -83,6 +83,11 @@ func run() async throws {
     await session.close()
     return
   }
+  if let cwd = argument("--files") {
+    try await probeFiles(session, base: environment.endpoint.httpBaseURL, cwd: cwd)
+    await session.close()
+    return
+  }
   if CommandLine.arguments.contains("--rows") {
     try await printRows(session)
     await session.close()

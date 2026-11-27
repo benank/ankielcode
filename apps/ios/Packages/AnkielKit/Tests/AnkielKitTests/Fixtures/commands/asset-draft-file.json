@@ -1,0 +1,10 @@
+{
+  "schema" : "assetUrl",
+  "value" : {
+    "resource" : {
+      "_tag" : "draft-workspace-file",
+      "cwd" : "/Users/dev/tide-chart",
+      "path" : "docs/chart.png"
+    }
+  }
+}

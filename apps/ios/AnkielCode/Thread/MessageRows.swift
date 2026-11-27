@@ -9,6 +9,7 @@ struct UserMessageView: View, Equatable {
   let expanded: Bool
   let images: ThreadImages
   let toggle: () -> Void
+  @Environment(\.filePresenter) private var files
 
   nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
     lhs.row == rhs.row && lhs.expanded == rhs.expanded && lhs.images == rhs.images
@@ -40,13 +41,19 @@ struct UserMessageView: View, Equatable {
             }
             .frame(width: 112, height: 112)
             .clipShape(.rect(cornerRadius: Radius.medium, style: .continuous))
+            .galleryThumbnail(ThreadImage.id(itemId: row.itemId, source: .attachment(attachment)))
             .accessibilityLabel(Text(attachment.name))
           }
         }
       }
       if !row.text.isEmpty || !fileAttachments.isEmpty {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-          ForEach(fileAttachments) { FileChip(attachment: $0) }
+          ForEach(fileAttachments) { attachment in
+            Button { files?.open(attachment: attachment) } label: { FileChip(attachment: attachment) }
+              .buttonStyle(.plain)
+              .disabled(files == nil)
+              .accessibilityHint(Text("Opens the file"))
+          }
           if !row.text.isEmpty {
             Text(row.text)
               .font(Typography.body)
@@ -116,6 +123,7 @@ struct AssistantMessageView: View, Equatable {
   var body: some View {
     VStack(alignment: .leading, spacing: Spacing.sm) {
       MarkdownView(document: row.document, images: images, streaming: row.streaming)
+        .environment(\.mediaOwner, row.itemId)
       if let footer = row.footer {
         HStack(spacing: Spacing.xs) {
           Button {

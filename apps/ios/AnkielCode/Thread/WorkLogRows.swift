@@ -70,8 +70,17 @@ struct WorkRowView: View, Equatable {
   }
 
   @ScaledMetric(relativeTo: .footnote) private var indent: CGFloat = 28
+  @Environment(\.filePresenter) private var files
 
   private var activity: WorkActivity { row.activity }
+
+  /// The file a read or single-file change names, for opening it in the viewer.
+  private var filePath: String? {
+    switch activity.label {
+    case .read(let path?), .changedFile(let path): files?.canBrowse == true ? path : nil
+    default: nil
+    }
+  }
   private var isCommandText: Bool { if case .activity(.command) = row.label { true } else { false } }
 
   /// An open thought shows its text below, so its label becomes "Thought" (`workEntryRowLabel`).
@@ -85,7 +94,9 @@ struct WorkRowView: View, Equatable {
 
   var body: some View {
     VStack(alignment: .leading, spacing: Spacing.xs) {
-      Button(action: toggle) {
+      Button {
+        if activity.detail == nil, let filePath { files?.open(path: filePath) } else { toggle() }
+      } label: {
         HStack(alignment: .firstTextBaseline, spacing: Spacing.sm + 2) {
           WorkIcon(kind: activity.kind, live: row.live)
           Text(label)
@@ -101,14 +112,16 @@ struct WorkRowView: View, Equatable {
         .contentShape(.rect)
       }
       .buttonStyle(.plain)
-      .disabled(activity.detail == nil)
+      .disabled(activity.detail == nil && filePath == nil)
       .accessibilityValue(activity.detail == nil ? Text("") : expanded ? Text("Expanded") : Text("Collapsed"))
       if expanded, let detail = activity.detail {
-        WorkDetailView(detail: detail, load: load)
+        WorkDetailView(detail: detail, load: load, filePath: filePath)
           .padding(.leading, indent)
           .padding(.bottom, Spacing.xs)
           .task(id: activity.revision) {
             if case .command(_, _, nil, true) = detail { loadDetail() }
+            // A tool's images (screenshots, image reads) are only in the full item.
+            if activity.type == "dynamic_tool", load == nil { loadDetail() }
           }
       }
     }
@@ -119,6 +132,8 @@ struct WorkRowView: View, Equatable {
 private struct WorkDetailView: View {
   let detail: WorkDetail
   let load: ThreadDetailModel.DetailLoad?
+  var filePath: String?
+  @Environment(\.filePresenter) private var files
 
   var body: some View {
     switch detail {
@@ -172,18 +187,26 @@ private struct WorkDetailView: View {
           DiffCounts(additions: additions, deletions: deletions)
         }
         ForEach(files, id: \.path) { file in
-          HStack(spacing: Spacing.sm) {
-            Text(file.path)
-              .font(Typography.monoSmall)
-              .foregroundStyle(Palette.textSecondary)
-              .lineLimit(1)
-              .truncationMode(.middle)
-            if let operation = file.operation, operation != "update" {
-              Text(operation)
-                .font(Typography.caption)
-                .foregroundStyle(Palette.textTertiary)
+          Button { self.files?.open(path: file.path) } label: {
+            HStack(spacing: Spacing.sm) {
+              Text(file.path)
+                .font(Typography.monoSmall)
+                .foregroundStyle(self.files?.canBrowse == true ? Palette.working : Palette.textSecondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+              if let operation = file.operation, operation != "update" {
+                Text(operation)
+                  .font(Typography.caption)
+                  .foregroundStyle(Palette.textTertiary)
+              }
+              Spacer(minLength: 0)
             }
+            .frame(minHeight: 44)
+            .contentShape(.rect)
           }
+          .buttonStyle(.plain)
+          .disabled(self.files?.canBrowse != true || file.operation == "delete")
+          .accessibilityHint(Text("Opens the file"))
         }
       }
     case .text(let text):
@@ -209,6 +232,20 @@ private struct WorkDetailView: View {
             .foregroundStyle(Palette.textSecondary)
             .lineLimit(12)
             .textSelection(.enabled)
+        }
+        if let filePath {
+          Button { files?.open(path: filePath) } label: {
+            Label("Open \(WorkspacePath.basename(filePath))", systemImage: "doc.text.magnifyingglass")
+              .font(Typography.footnote.weight(.medium))
+              .frame(minHeight: 44)
+              .contentShape(.rect)
+          }
+          .buttonStyle(.plain)
+          .foregroundStyle(Palette.working)
+        }
+        if case .loaded(let item)? = load, case .dynamicTool(let tool) = item.body {
+          let count = ToolOutputImages.count(tool.output)
+          if count > 0 { ToolImageStrip(itemId: item.id, count: count).padding(.top, Spacing.xs) }
         }
       }
     }

@@ -28,7 +28,7 @@ public final class EnvironmentRegistry: SettingsSink {
   @ObservationIgnored public var markdownStyle = MarkdownStyle()
   /// How long a closed thread keeps its rows and cursor for a fast reopen.
   @ObservationIgnored public var threadCacheLifetime: Duration = .seconds(90)
-  @ObservationIgnored private var assetURLs: [String: (url: URL, expires: Date)] = [:]
+  @ObservationIgnored private var assetURLs: [String: (asset: SignedAsset, expires: Date)] = [:]
   /// Attachment uploads (signed URLs, no credentials).
   @ObservationIgnored let uploadSession = EnvironmentHTTPClient.makeSession()
 
@@ -258,15 +258,23 @@ public final class EnvironmentRegistry: SettingsSink {
   /// A signed URL for an attachment or workspace file (no auth header needed to GET it), reused
   /// until a minute before it expires.
   public func assetURL(_ resource: AssetResource, in environmentId: String) async throws(EnvironmentRequestError) -> URL {
+    try await signedAsset(resource, in: environmentId).url
+  }
+
+  /// `assetURL` with the file's revision and image size, for caches keyed by content.
+  public func signedAsset(
+    _ resource: AssetResource, in environmentId: String, fresh: Bool = false
+  ) async throws(EnvironmentRequestError) -> SignedAsset {
     let key = "\(environmentId)|\(resource)"
-    if let cached = assetURLs[key], cached.expires.timeIntervalSinceNow > 60 { return cached.url }
+    if !fresh, let cached = assetURLs[key], cached.expires.timeIntervalSinceNow > 60 { return cached.asset }
     guard let endpoint = environment(environmentId)?.activeRoute?.endpoint else { throw .notConnected }
     let result = try await request(environmentId) { session in
       try await session.call(AssetURLRequest.rpcTag, payload: AssetURLRequest(resource: resource), as: AssetURLResult.self)
     }
     guard let url = endpoint.resolve(relativeURL: result.relativeUrl) else { throw .failed("Unreadable asset URL.") }
-    assetURLs[key] = (url, Date(timeIntervalSince1970: result.expiresAt.value / 1000))
-    return url
+    let asset = SignedAsset(url: url, fileRevision: result.fileRevision, imageDimensions: result.imageDimensions)
+    assetURLs[key] = (asset, Date(timeIntervalSince1970: result.expiresAt.value / 1000))
+    return asset
   }
 
   private func threadSessionStarted(_ environmentId: String, _ session: any LiveSession) {

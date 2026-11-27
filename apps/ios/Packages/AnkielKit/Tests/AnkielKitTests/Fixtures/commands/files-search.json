@@ -1,0 +1,8 @@
+{
+  "schema" : "searchEntries",
+  "value" : {
+    "cwd" : "/Users/dev/tide-chart",
+    "limit" : 200,
+    "query" : "tide"
+  }
+}

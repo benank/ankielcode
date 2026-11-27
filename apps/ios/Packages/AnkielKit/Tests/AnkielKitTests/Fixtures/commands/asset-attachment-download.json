@@ -1,0 +1,12 @@
+{
+  "schema" : "assetUrl",
+  "value" : {
+    "resource" : {
+      "_tag" : "attachment",
+      "attachmentId" : "att_9q1z",
+      "disposition" : "attachment",
+      "fileName" : "notes.pdf",
+      "mimeType" : "application/pdf"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "schema" : "listEntries",
+  "value" : {
+    "cwd" : "/Users/dev/tide-chart",
+    "directoryPath" : "Sources/TideKit"
+  }
+}

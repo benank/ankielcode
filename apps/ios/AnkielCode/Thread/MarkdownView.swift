@@ -251,6 +251,7 @@ private struct MarkdownImageView: View {
   let alt: String
   let source: String
   let images: ThreadImages
+  @Environment(\.mediaOwner) private var owner
 
   var body: some View {
     RemoteImage(source: .markdown(source), images: images, maxPixel: 1600) {
@@ -262,6 +263,7 @@ private struct MarkdownImageView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: 360, alignment: .leading)
     .clipShape(.rect(cornerRadius: Radius.medium, style: .continuous))
+    .galleryThumbnail(owner.isEmpty ? nil : ThreadImage.id(itemId: owner, source: .markdown(source)))
     .accessibilityLabel(alt.isEmpty ? Text("Image") : Text(alt))
   }
 }

@@ -1,0 +1,7 @@
+{
+  "schema" : "readFile",
+  "value" : {
+    "cwd" : "/Users/dev/tide-chart",
+    "relativePath" : "Sources/TideKit/Tide.swift"
+  }
+}

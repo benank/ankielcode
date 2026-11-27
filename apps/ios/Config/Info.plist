@@ -18,6 +18,8 @@
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
 	</dict>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Ankiel Code saves images you choose to your photo library.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
