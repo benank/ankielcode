@@ -2189,6 +2189,126 @@ it.effect("starts, finishes and follows up a task without reading the parent's h
   }).pipe(Effect.provide(layerTest)),
 );
 
+it.effect("ends a task a removed linked environment was running, without waking its parent", () =>
+  Effect.gen(function* () {
+    const orchestrator = yield* Orchestrator.OrchestratorV2;
+    const projections = yield* ProjectionStore.ProjectionStoreV2;
+    const eventSink = yield* EventSink.EventSinkV2;
+    const sql = yield* SqlClient.SqlClient;
+    const threadId = ThreadId.make("thread:remote-parent");
+    const now = yield* DateTime.now;
+    yield* orchestrator.dispatch({
+      type: "thread.create",
+      commandId: CommandId.make("create-remote-parent"),
+      threadId,
+      projectId: ProjectId.make("project:remote-parent"),
+      title: "Parent",
+      modelSelection,
+      runtimeMode: "full-access",
+      interactionMode: "default",
+      branch: null,
+      worktreePath: null,
+      createdBy: "user",
+      creationSource: "web",
+    });
+    yield* orchestrator.dispatch({
+      type: "message.dispatch",
+      commandId: CommandId.make("start-remote-parent"),
+      threadId,
+      messageId: MessageId.make("message:remote-parent"),
+      text: "Delegate the work",
+      attachments: [],
+      dispatchMode: { type: "start_immediately" },
+      createdBy: "user",
+      creationSource: "web",
+    });
+    const parentRun = (yield* projections.getThreadRecords(threadId, ["runs"])).runs[0]!;
+    yield* orchestrator.dispatch({
+      type: "delegated_task.request",
+      commandId: CommandId.make("delegate-remote-parent"),
+      parentThreadId: threadId,
+      parentRunId: parentRun.id,
+      parentNodeId: parentRun.rootNodeId!,
+      task: "Do the work there",
+      completionWake: "always",
+      modelSelection,
+      runtimeMode: "full-access",
+      interactionMode: "default",
+      createdBy: "agent",
+      creationSource: "mcp",
+    });
+    const local = yield* projections.getThreadRecords(threadId, ["subagents", "turnItems"], {
+      turnItemTypes: ["subagent"],
+    });
+    const task = local.subagents[0]!;
+    const item = local.turnItems.find((candidate) => candidate.type === "subagent")!;
+    // What a remote task recorded before linked environments were removed.
+    const remote = { driver: ProviderDriverKind.make("remote"), childThreadId: null };
+    const remoteChild = { environmentId: "env-gone", threadId: "thread-there", label: "There" };
+    const legacyTask = { ...task, ...remote, remoteChild };
+    yield* eventSink.write({
+      commandId: CommandId.make("command:remote-parent:legacy"),
+      events: [
+        {
+          id: EventId.make("event:remote-parent:task"),
+          type: "subagent.updated",
+          threadId,
+          runId: parentRun.id,
+          nodeId: task.id,
+          occurredAt: now,
+          payload: legacyTask,
+        },
+        {
+          id: EventId.make("event:remote-parent:item"),
+          type: "turn-item.updated",
+          threadId,
+          runId: parentRun.id,
+          nodeId: task.id,
+          occurredAt: now,
+          payload: { ...item, ...remote },
+        },
+        {
+          id: EventId.make("event:remote-parent:run"),
+          type: "run.updated",
+          threadId,
+          runId: parentRun.id,
+          occurredAt: now,
+          payload: { ...parentRun, status: "completed", completedAt: now },
+        },
+      ],
+    });
+    const effectCount = () =>
+      sql<{
+        readonly count: number;
+      }>`SELECT COUNT(*) AS count FROM orchestration_v2_effect_outbox`.pipe(
+        Effect.map((rows) => rows[0]!.count),
+      );
+    const effectsBefore = yield* effectCount();
+
+    yield* orchestrator.recoverDelegatedTasks;
+
+    const ended = yield* projections.getThreadRecords(threadId, [
+      "subagents",
+      "nodes",
+      "turnItems",
+      "runs",
+    ]);
+    assert.deepEqual(
+      [
+        ended.subagents.find((candidate) => candidate.id === task.id)?.status,
+        ended.nodes.find((node) => node.id === task.id)?.status,
+        ended.turnItems.find((candidate) => candidate.type === "subagent")?.status,
+        ended.runs.map((run) => run.status),
+      ],
+      ["cancelled", "cancelled", "cancelled", ["completed"]],
+    );
+    assert.equal(yield* effectCount(), effectsBefore);
+    const sequence = yield* orchestrator.getThreadEventSequence(threadId);
+    yield* orchestrator.recoverDelegatedTasks;
+    assert.equal(yield* orchestrator.getThreadEventSequence(threadId), sequence);
+  }).pipe(Effect.provide(layerTest)),
+);
+
 it.effect("records a secret card without reading the thread's history", () =>
   Effect.gen(function* () {
     const orchestrator = yield* Orchestrator.OrchestratorV2;

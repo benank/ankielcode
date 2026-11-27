@@ -16253,6 +16253,59 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
     Effect.forkScoped,
   );
 
+  // Linked environments were removed, so nothing reports a remote task's result any more.
+  const cancelOrphanedRemoteTasks = Effect.fn("Orchestrator.cancelOrphanedRemoteTasks")(function* (
+    threadId: ThreadId,
+  ) {
+    const projection = yield* projectionStore.getThreadRecords(
+      threadId,
+      ["subagents", "nodes", "turnItems"],
+      { turnItemTypes: ["subagent"] },
+    );
+    const now = yield* DateTime.now;
+    const events = projection.subagents.flatMap((task) => {
+      if (
+        task.origin !== "app_owned" ||
+        task.childThreadId !== null ||
+        task.driver !== "remote" ||
+        !isOrchestrationV2WorkActive(task.status)
+      )
+        return [];
+      const cancelled = cancelledAppOwnedTask(task, now);
+      const scope = {
+        threadId,
+        ...(task.runId === null ? {} : { runId: task.runId }),
+        nodeId: task.id,
+        occurredAt: now,
+      };
+      const node = projection.nodes.find((candidate) => candidate.id === task.id);
+      return [
+        { ...scope, type: "subagent.updated" as const, payload: cancelled },
+        ...(node === undefined
+          ? []
+          : [
+              {
+                ...scope,
+                type: "node.updated" as const,
+                payload: { ...node, status: cancelled.status, completedAt: now },
+              },
+            ]),
+        ...projection.turnItems.flatMap((item) =>
+          item.type === "subagent" && item.subagentId === task.id
+            ? [
+                {
+                  ...scope,
+                  type: "turn-item.updated" as const,
+                  payload: { ...item, status: cancelled.status, completedAt: now, updatedAt: now },
+                },
+              ]
+            : [],
+        ),
+      ];
+    });
+    if (events.length > 0) yield* writeSystemEvents(events);
+  });
+
   const recoverDelegatedTasks = Effect.gen(function* () {
     yield* projectionStore.getRecoveryThreadIds("subagent-results").pipe(
       Effect.tap((threadIds) =>
@@ -16344,6 +16397,26 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         Effect.logWarning("Failed to inspect delegated completion delivery during recovery", {
           cause,
         }),
+      ),
+    );
+    yield* projectionStore.getRecoveryThreadIds("orphaned-remote-tasks").pipe(
+      Effect.flatMap((threadIds) =>
+        Effect.forEach(
+          threadIds,
+          (threadId) =>
+            threadDispatch.withLock(threadId, cancelOrphanedRemoteTasks(threadId)).pipe(
+              Effect.catchCause((cause) =>
+                Effect.logWarning("Failed to end an orphaned remote task during recovery", {
+                  threadId,
+                  cause,
+                }),
+              ),
+            ),
+          { discard: true },
+        ),
+      ),
+      Effect.catchCause((cause) =>
+        Effect.logWarning("Failed to inspect orphaned remote tasks during recovery", { cause }),
       ),
     );
     // Recovery leaves a steer the provider had not read pending, and no run update follows it.

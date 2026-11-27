@@ -192,6 +192,7 @@ export type ProjectionRecoveryKind =
   | "runtime"
   | "restart-continuations"
   | "subagent-results"
+  | "orphaned-remote-tasks"
   | "delegated-completions"
   | "unread-steers";
 
@@ -5203,6 +5204,13 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
                       AND target_thread_id = json_extract(child.payload_json, '$.lineage.parentThreadId')
                       AND type = 'subagent_result'
                   )))
+              `;
+            // Tasks delegated to a linked environment, which this server can no longer follow.
+            case "orphaned-remote-tasks":
+              return sql`
+                SELECT thread_id FROM orchestration_v2_projection_subagents
+                WHERE child_thread_id IS NULL AND origin = 'app_owned' AND driver = 'remote'
+                  AND status IN ('pending', 'running', 'waiting')
               `;
             case "restart-continuations":
               return sql`
