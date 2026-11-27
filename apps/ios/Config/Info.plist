@@ -18,6 +18,10 @@
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
 	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Ankiel Code uses the microphone when you dictate a message. Speech is transcribed on this device.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Ankiel Code transcribes your dictation on this device.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Ankiel Code saves images you choose to your photo library.</string>
 	<key>NSAppTransportSecurity</key>

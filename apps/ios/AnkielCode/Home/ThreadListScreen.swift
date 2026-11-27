@@ -16,6 +16,7 @@ struct ThreadListScreen: View {
   @State private var deleting: ThreadRow?
   @State private var snoozing: ThreadRow?
   @State private var actionCount = 0
+  @FocusState private var searchFocused: Bool
 
   private struct RenameRequest: Identifiable {
     let ref: ThreadRef
@@ -28,6 +29,13 @@ struct ThreadListScreen: View {
     dialogs(
       list
         .searchable(text: $home.searchQuery, prompt: Text("Search", comment: "search field placeholder"))
+        .searchFocused($searchFocused)
+        .onChange(of: model.navigator.searchRequested, initial: true) { _, requested in
+          guard requested else { return }
+          model.navigator.searchRequested = false
+          // After the key press that asked for it finishes, or the focus change is dropped.
+          Task { searchFocused = true }
+        }
         .refreshable {
           Haptics.tap(.soft)
           await home.refresh()

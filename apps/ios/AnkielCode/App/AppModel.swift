@@ -83,6 +83,7 @@ final class AppModel {
     composer = ComposerStore(directory: directory.appending(path: folder, directoryHint: .isDirectory), sink: sink)
     isComposerFake = fake
     composer.titleLabels = .localized
+    AppEntryInbox.shared.attach { [weak self] in self?.open($0) }
     composer.sendTimeoutMessage = String(localized: "The computer did not confirm the message within 60 seconds.")
     #if DEBUG
       if fake, ProcessInfo.processInfo.environment["ANKIEL_DEBUG_COMPOSER_RESET"] == "1" { composer.reset() }
@@ -127,6 +128,48 @@ final class AppModel {
     if let pendingThread {
       self.pendingThread = nil
       navigator.open(pendingThread)
+    }
+    if let pendingEntry {
+      self.pendingEntry = nil
+      open(pendingEntry)
+    }
+  }
+
+  /// An entry point that arrived before the saved computers loaded (an intent at cold launch).
+  @ObservationIgnored private var pendingEntry: AppEntry?
+
+  /// Where App Shortcuts, quick actions, Spotlight and links go (`AppEntry`). Never waits on a
+  /// connection: a prompt lands in the new-thread draft, which sends once a computer connects.
+  func open(_ entry: AppEntry) {
+    guard registry.isLoaded else {
+      pendingEntry = entry
+      return
+    }
+    guard route == .home else { return }
+    sheet = nil
+    switch entry {
+    case .thread(let ref):
+      navigator.open(ref)
+    case .newThread(let prompt, let environmentId, let projectId):
+      composer.updateDraft(ComposerTarget.newThreadKey) { draft in
+        // An unsent draft is never replaced: the prompt joins it.
+        if let prompt, !draft.text.contains(prompt) {
+          draft.text = draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? prompt : draft.text + "\n\n" + prompt
+        }
+        if let environmentId, registry.environment(environmentId) != nil {
+          draft.environmentId = environmentId
+          if let projectId {
+            draft.projectId = projectId
+            draft.noProject = nil
+          }
+        }
+      }
+      navigator.newThread()
+    case .search(let query):
+      navigator.sheet = nil
+      navigator.stack = []
+      if let query { home.searchQuery = query }
+      navigator.searchRequested = true
     }
   }
 
@@ -182,6 +225,10 @@ final class AppModel {
   func open(_ url: URL) {
     if UsageLink.matches(url) {
       openSettings(.usage)
+      return
+    }
+    if let entry = AppEntry.parse(url), !(entry.isThread) {
+      open(entry)
       return
     }
     if let ref = ThreadLink.parse(url) {

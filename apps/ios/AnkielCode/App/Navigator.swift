@@ -23,10 +23,20 @@ final class Navigator {
   var stack: [ThreadRef] = []
   /// A sheet over home.
   var sheet: HomeSheet?
+  /// Set to focus home's search field (the Search quick action and keyboard command); the list
+  /// clears it once focused, so a request made before the list appears still lands.
+  var searchRequested = false
 
   enum HomeSheet: String, Identifiable {
     case newThread
     var id: String { rawValue }
+  }
+
+  /// The split view's columns (the keyboard's Toggle sidebar).
+  var sidebarVisibility = NavigationSplitViewVisibility.automatic
+
+  func toggleSidebar() {
+    sidebarVisibility = sidebarVisibility == .detailOnly ? .all : .detailOnly
   }
 
   /// The thread chosen from the list (the split view's selection).

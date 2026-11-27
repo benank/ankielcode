@@ -17,6 +17,8 @@ struct ComposerView: View {
   @Environment(AppModel.self) private var model
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.dynamicTypeSize) private var typeSize
+  @Environment(\.filePresenter) private var filePresenter
+  @Environment(\.reviewPresenter) private var reviewPresenter
   @FocusState private var focused: Bool
   @State private var picker: Picker?
   @State private var photoItems: [PhotosPickerItem] = []
@@ -43,11 +45,23 @@ struct ComposerView: View {
       followUp: model.preferences.values.followUpBehavior)
   }
 
+  private var dictation: Dictation { VoiceInput.dictation }
+  /// This composer's draft is being dictated into: the field shows the live text and is frozen,
+  /// and nothing sends until it settles.
+  private var dictating: Bool { dictation.isBusy(target.draftKey) }
+
   private var alternate: ComposerPrimaryAction? { ComposerPrimaryAction.alternate(primary, activity: target.activity) }
 
   var body: some View {
     VStack(spacing: Spacing.sm) {
-      if let notice = notice ?? blockNotice {
+      if let failure = dictation.failure(target.draftKey) {
+        DictationFailureNotice(failure: failure) {
+          startDictation()
+        } dismiss: {
+          dictation.dismissFailure(target.draftKey)
+        }
+        .transition(.opacity)
+      } else if let notice = notice ?? blockNotice {
         Text(notice)
           .font(Typography.footnote)
           .foregroundStyle(Palette.textSecondary)
@@ -67,6 +81,9 @@ struct ComposerView: View {
     .padding(.horizontal, Spacing.md)
     .padding(.bottom, Spacing.xs)
     .motion(Motion.micro, value: notice ?? blockNotice)
+    .motion(Motion.micro, value: dictation.failure(target.draftKey))
+    .modifier(DictationLifecycle(draftKey: target.draftKey))
+    .focusedSceneValue(\.threadKeyCommands, keyCommands)
     .sensoryFeedback(.impact(weight: .medium), trigger: sends)
     .photosPicker(
       isPresented: isPresented(.photos), selection: $photoItems, maxSelectionCount: 10, matching: .images,
@@ -132,17 +149,28 @@ struct ComposerView: View {
         .padding(.top, Spacing.md)
         .padding(.bottom, Spacing.xs)
         .accessibilityIdentifier("composer.field")
+        .allowsHitTesting(!dictating)
         .onKeyPress(.return, phases: .down) { press in
           guard press.modifiers.contains(.command) else { return .ignored }
           sendFromKeyboard()
           return .handled
         }
-      HStack(spacing: Spacing.sm) {
-        modelChip
-        Spacer(minLength: 0)
-        sendCluster
+      Group {
+        if dictating {
+          DictationBar(dictation: dictation)
+            .transition(.opacity)
+        } else {
+          HStack(spacing: Spacing.sm) {
+            modelChip
+            Spacer(minLength: 0)
+            DictationMicButton(disabled: !target.canSend, start: startDictation)
+            sendCluster
+          }
+          .transition(.opacity)
+        }
       }
       .padding(.bottom, Spacing.sm)
+      .motion(Motion.micro, value: dictating)
     }
     .padding(.horizontal, Spacing.sm)
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -151,7 +179,35 @@ struct ComposerView: View {
   }
 
   private var text: Binding<String> {
-    Binding(get: { draft.text }, set: { store.setText($0, for: target.draftKey) })
+    Binding(
+      get: { dictation.display(target.draftKey, draft: draft.text) },
+      set: { if !dictating { store.setText($0, for: target.draftKey) } })
+  }
+
+  /// The open thread's keyboard commands (`AppCommands`); none for the new-thread sheet.
+  private var keyCommands: ThreadKeyCommands? {
+    guard let ref = target.threadRef else { return nil }
+    let files = filePresenter.flatMap { presenter in presenter.canBrowse ? { presenter.openBrowser() } : nil }
+    return ThreadKeyCommands(
+      focusComposer: { focused = true },
+      stop: primary == .stop ? { actions.stop() } : nil,
+      files: files,
+      review: reviewPresenter.map { presenter in { presenter.openReview() } },
+      copyLink: {
+        UIPasteboard.general.string = ThreadLink.reference(ref)
+        Haptics.success()
+      })
+  }
+
+  private func startDictation() {
+    focused = false
+    dictation.start(target.draftKey, draft: draft.text, commit: commitDictation)
+  }
+
+  private var commitDictation: (String) -> Void {
+    let store = store
+    let key = target.draftKey
+    return { store.setText($0, for: key) }
   }
 
   // MARK: Attach
@@ -296,12 +352,12 @@ struct ComposerView: View {
   /// Command-Return from the field. The send button's shortcut may fire for the same press; the
   /// second one finds the draft sent and does nothing.
   private func sendFromKeyboard() {
-    guard primary != .stop else { return }
+    guard primary != .stop, !dictating else { return }
     submit(primary.delivery)
   }
 
   private func submit(_ delivery: MessageDelivery) {
-    guard draft.hasContent else { return }
+    guard draft.hasContent, !dictating else { return }
     if case .send(false) = primary { return }
     sends += 1
     withMotion(Motion.snappy, reduceMotion: reduceMotion) { send(delivery) }

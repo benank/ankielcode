@@ -12,7 +12,7 @@ struct HomeView: View {
     @Bindable var navigator = model.navigator
     Group {
       if sizeClass == .regular {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $navigator.sidebarVisibility) {
           ThreadListScreen(zoom: nil)
             .navigationSplitViewColumnWidth(min: 320, ideal: 380, max: 460)
         } detail: {
