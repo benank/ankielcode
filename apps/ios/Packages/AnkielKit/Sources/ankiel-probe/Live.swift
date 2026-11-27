@@ -124,6 +124,10 @@ func live(_ mode: String, environment: SavedEnvironment, connector: EnvironmentC
     let session = try await connector.connect(environment)
     defer { Task { await session.close() } }
     try await livePush(session, token: argument("--token"))
+  case "archive":
+    let session = try await connector.connect(environment)
+    defer { Task { await session.close() } }
+    try await liveArchive(session)
   default:
     throw ProbeFailure(description: "Unknown --live mode \(mode).")
   }

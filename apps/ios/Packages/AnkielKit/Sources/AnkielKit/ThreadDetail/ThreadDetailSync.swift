@@ -29,6 +29,8 @@ public struct ThreadDetailState: Sendable, Equatable {
   public var title: String?
   public var projectId: String?
   public var parentThreadId: String?
+  /// Archived threads open read-only; unarchiving brings the composer back.
+  public var isArchived = false
   /// The active run and the user's queued messages (the composer's send rules).
   public var activity = ThreadRunActivity.idle
   /// The thread's model pick, for the composer when the shell row is not loaded.
@@ -231,6 +233,7 @@ public actor ThreadDetailSync {
       }
       state.title = projection.thread.title
       state.projectId = projection.thread.projectId
+      state.isArchived = projection.thread.archivedAt != nil
       state.parentThreadId = projection.thread.lineage?.parentThreadId
       state.activity = ThreadRunActivity.derive(projection)
       state.pending = PendingRequestDerivation.derive(projection)

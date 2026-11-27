@@ -221,7 +221,10 @@ private struct ThreadScreen: View {
         )
         .motionTransition(.move(edge: .bottom).combined(with: .opacity))
       }
-      if !awaitingCreation, !hidesComposer {
+      if detail.state.isArchived {
+        ArchivedThreadBar(threadRef: threadRef)
+          .transition(.opacity)
+      } else if !awaitingCreation, !hidesComposer {
         ComposerView(target: target) { delivery in
           send(delivery, target: target, queue: queue)
         }
@@ -232,6 +235,7 @@ private struct ThreadScreen: View {
     .frame(maxWidth: .infinity)
     .motion(Motion.snappy, value: target.activity.queued.map(\.id))
     .motion(Motion.snappy, value: hidesComposer)
+    .motion(Motion.snappy, value: detail.state.isArchived)
   }
 
   /// A message sent while approvals wait answers them first (RN `handleSendMessage`): as decline

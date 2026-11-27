@@ -35,6 +35,7 @@ const schemas = {
   assetUrl: m.AssetCreateUrlInput,
   metadata: m.FilesystemGetMetadataInput,
   pushRegister: m.PushRegisterInput,
+  archivedSnapshot: S.Struct({}),
 };
 
 let failures = 0;

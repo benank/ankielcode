@@ -8,6 +8,9 @@ enum SettingsRoute: Hashable {
   case general, appearance, chat, notifications
   case providers, threads
   case about, storage, diagnostics
+  case voice, archive
+  /// An archived thread, read from the Archive page.
+  case archivedThread(ThreadRef)
 }
 
 /// Settings: the saved computers first, then device preferences, then what each computer's
@@ -78,6 +81,7 @@ struct SettingsView: View {
       SettingsLink(.appearance)
       SettingsLink(.chat)
       SettingsLink(.notifications)
+      SettingsLink(.voice)
     }
 
     Section("Agents") {
@@ -87,6 +91,7 @@ struct SettingsView: View {
 
     Section {
       SettingsLink(.about)
+      SettingsLink(.archive)
     }
   }
 
@@ -135,6 +140,9 @@ struct SettingsView: View {
     case .about: AboutSettingsPage()
     case .storage: ClientStoragePage()
     case .diagnostics: DiagnosticsPage()
+    case .voice: VoiceSettingsPage()
+    case .archive: ArchivedThreadsScreen(registry: model.registry)
+    case .archivedThread(let ref): ThreadDetailView(threadRef: ref)
     }
   }
 
@@ -216,6 +224,9 @@ enum SettingsCopy {
     case .about: String(localized: "About")
     case .storage: String(localized: "Client storage")
     case .diagnostics: String(localized: "Diagnostics")
+    case .voice: String(localized: "Voice")
+    case .archive: String(localized: "Archive", comment: "noun, settings page of archived threads")
+    case .archivedThread: String(localized: "Thread", comment: "fallback name for an untitled thread")
     }
   }
 
@@ -231,12 +242,14 @@ enum SettingsCopy {
     case .about: "info.circle"
     case .storage: "internaldrive"
     case .diagnostics: "stethoscope"
+    case .voice: "mic"
+    case .archive, .archivedThread: "archivebox"
     }
   }
 
   static func tint(_ route: SettingsRoute) -> Color {
     switch route {
-    case .notifications: Palette.settingsRed
+    case .notifications, .voice: Palette.settingsRed
     case .appearance, .threads: Palette.settingsBlue
     case .chat, .providers: Palette.settingsGreen
     default: Palette.settingsGray
@@ -256,6 +269,9 @@ enum SettingsCopy {
     case .about: "about"
     case .storage: "storage"
     case .diagnostics: "diagnostics"
+    case .voice: "voice"
+    case .archive: "archive"
+    case .archivedThread(let ref): "archivedThread.\(ref.threadId)"
     }
   }
 }
@@ -286,6 +302,8 @@ enum SettingsSearch {
       (.about, [String(localized: "Version"), String(localized: "Legal"), String(localized: "Source code"), String(localized: "Remove all computers")]),
       (.storage, [String(localized: "Clear caches"), String(localized: "Drafts")]),
       (.diagnostics, [String(localized: "Copy diagnostics")]),
+      (.voice, [String(localized: "Dictation"), String(localized: "Microphone access"), String(localized: "Language")]),
+      (.archive, [String(localized: "Archived threads"), String(localized: "Unarchive", comment: "verb, swipe action")]),
     ]
   }
 
