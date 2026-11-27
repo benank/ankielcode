@@ -15,8 +15,7 @@ name: Mobile EAS Production
 # production and the committed app version, built manually. Both receive OTAs
 # for their own major version. Android continues using production automatically.
 # TestFlight beta review may still be required for subsequent builds.
-# Hold native-change PRs (the "📱 Native Change" label) and merge them as a
-# batch to avoid a store build per PR.
+# Batch native changes to avoid a store build per merge.
 # workflow_dispatch remains as a manual override for both modes (e.g. to
 # retry an errored build or force an OTA).
 on:
