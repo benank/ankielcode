@@ -14,6 +14,10 @@ import {
   projectThreadAwarenessV2,
   turnItemCanChangeUserWait,
 } from "@ankielcode/shared/agentAwareness";
+import {
+  agentNotificationButtons,
+  findRequestCard,
+} from "@ankielcode/shared/agentNotificationButtons";
 import { makeDrainableWorker } from "@ankielcode/shared/DrainableWorker";
 import {
   backgroundWorkHoldsCompletion,
@@ -135,45 +139,17 @@ const KIND_BY_PHASE: Partial<Record<AgentAwarenessPhase, PushAlertKind>> = {
   waiting_for_input: "input",
 };
 
-/**
- * Which buttons a waiting request can carry, or null when only opening the thread answers it
- * correctly. Approve and Deny send `accept` and `decline`, as the in-app card's "Allow once" and
- * "Decline" do. App access requests stay tap-only: their decline is saved as a lasting denial and
- * a link request turns accept into cancel, which two blind buttons would hide.
- */
+/** Maps the shared button rule to the iOS category that registers those buttons. */
 export function alertCategory(
   request: OrchestrationV2RuntimeRequest,
   item: OrchestrationV2TurnItem | undefined,
 ): AlertCategory | null {
-  if (request.status !== "pending") return null;
-  if (request.kind === "user_input") {
-    if (request.responseCapability.type === "not_resumable") return null;
-    if (item?.type !== "user_input_request" || item.questions.length !== 1) return null;
-    const question = item.questions[0]!;
-    return question.options.length === 0 &&
-      question.allowCustomAnswer !== false &&
-      question.multiSelect !== true
+  const buttons = agentNotificationButtons(request, item);
+  return buttons === "approval"
+    ? "ANKIEL_APPROVAL"
+    : buttons === "reply"
       ? "ANKIEL_INPUT_REPLY"
       : null;
-  }
-  if (
-    request.kind === "auth_refresh" ||
-    request.kind === "dynamic_tool_call" ||
-    request.kind === "mcp-elicitation" ||
-    request.responseCapability.type !== "live" ||
-    item?.type !== "approval_request"
-  ) {
-    return null;
-  }
-  // Without options the card offers accept, accept for the session, and decline.
-  const options = item.options;
-  if (options === undefined) return "ANKIEL_APPROVAL";
-  return options.some((option) => option.decision === "accept") &&
-    options.some((option) => option.decision === "decline") &&
-    // A warning the card shows must not be skipped by a button that never shows it.
-    options.every((option) => option.warning === undefined)
-    ? "ANKIEL_APPROVAL"
-    : null;
 }
 
 const utf8Length = (value: string) => new TextEncoder().encode(value).byteLength;
@@ -382,11 +358,7 @@ const make = Effect.gen(function* () {
         },
       );
       const pending = records.runtimeRequests.find((entry) => entry.id === request.id);
-      const item = records.turnItems.findLast(
-        (entry) =>
-          (entry.type === "approval_request" || entry.type === "user_input_request") &&
-          entry.requestId === request.id,
-      );
+      const item = findRequestCard(records.turnItems, request.id);
       const category = pending === undefined ? null : alertCategory(pending, item);
       return category === null
         ? null

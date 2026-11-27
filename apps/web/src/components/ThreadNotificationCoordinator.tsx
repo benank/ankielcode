@@ -8,7 +8,16 @@ import {
 import { isShownUnderParent } from "@ankielcode/client-runtime/state/threads";
 import type { AnyRouter } from "@tanstack/react-router";
 import { parseThreadKey, threadKey } from "@ankielcode/client-runtime/state/entities";
-import type { EnvironmentId, OrchestrationV2ThreadShell, ThreadId } from "@ankielcode/contracts";
+import {
+  type DesktopBridge,
+  type DesktopNotificationEvent,
+  type DesktopNotificationInput,
+  type EnvironmentId,
+  type OrchestrationV2ThreadShell,
+  RuntimeRequestId,
+  type ThreadId,
+} from "@ankielcode/contracts";
+import type { AgentNotificationButtons } from "@ankielcode/shared/agentNotificationButtons";
 import { monitorHoldsWakeCompletion } from "@ankielcode/shared/orchestrationV2PendingBackgroundWork";
 import type { ClientSettings } from "@ankielcode/contracts/settings";
 import * as Option from "effect/Option";
@@ -29,6 +38,7 @@ import {
   unlockNotificationAudio,
 } from "../threadNotifications";
 import { resolveBackgroundThreadRequest } from "./backgroundThreadAnnouncement";
+import { answerFromNotification, resolveNotificationButtons } from "./notificationActionRunner";
 import { resolveSidebarThreadStatus, type SidebarThreadStatus } from "./Sidebar.logic";
 import {
   createThreadNotificationGate,
@@ -54,28 +64,56 @@ interface WatchedEnvironment {
   readonly gate: ReturnType<typeof createThreadNotificationGate<ThreadId>>;
 }
 
+/** An OS notification on screen, by its per-thread tag. */
+interface ShownNotification {
+  readonly environmentId: EnvironmentId;
+  readonly threadId: ThreadId;
+  /** The attention it announced, which closes it once the thread moves on; null for a completion. */
+  readonly attention: string | null;
+  /** The thread's own request its buttons answer. */
+  readonly requestId: string | null;
+  readonly kind: ThreadNotificationKind;
+  readonly status: SidebarThreadStatus;
+  readonly title: string;
+  readonly body: string;
+  readonly close: () => void;
+}
+
+const needsYou = (status: SidebarThreadStatus) => status === "approval" || status === "input";
+
+function desktopButtons(
+  buttons: AgentNotificationButtons | null,
+): DesktopNotificationInput["buttons"] {
+  if (buttons === "approval") {
+    return {
+      type: "approval",
+      approve: m(msg("Approve", { $context: "verb, notification button" })),
+      deny: m(msg("Deny", { $context: "verb, notification button" })),
+    };
+  }
+  return buttons === "reply" ? { type: "reply", placeholder: m(msg("Type your answer")) } : null;
+}
+
 /**
- * Turns thread status transitions in every connected environment into sounds, in-app toasts,
- * and desktop notifications, and keeps the dock badge in step with the unread ones.
+ * Turns thread status transitions in every connected environment into in-app toasts and OS
+ * notifications, with a sound for whichever shows, and keeps the dock badge counting the
+ * threads that need you. The desktop app shows OS notifications from its main process, so
+ * approvals and questions can carry buttons.
  */
 export function startThreadNotifications(
   registry: AtomRegistry.AtomRegistry,
   router: AnyRouter,
 ): () => void {
-  const pending = new Map<
-    string,
-    { environmentId: EnvironmentId; threadId: ThreadId; notification: Notification }
-  >();
+  const pending = new Map<string, ShownNotification>();
+  // Presentations still looking up buttons, so a slower lookup never shows over a newer alert.
+  const presentations = new Map<string, number>();
+  let presentationSequence = 0;
   const watched = new Map<EnvironmentId, WatchedEnvironment>();
+  let badgeCount = -1;
 
-  const trackNotification = (
-    environmentId: EnvironmentId,
-    threadId: ThreadId,
-    notification: Notification,
-  ) => {
-    pending.get(notification.tag)?.notification.close();
-    pending.set(notification.tag, { environmentId, threadId, notification });
-    setNotificationBadge(pending.size);
+  const closePending = (tag: string) => {
+    pending.get(tag)?.close();
+    pending.delete(tag);
   };
   // Toast ids by thread key, so hiding or opening a thread, or removing its environment, closes them.
   const openToasts = new Map<string, Array<ToastId>>();
@@ -101,6 +139,29 @@ export function startThreadNotifications(
     if (environmentId === undefined || threadId === undefined) return;
     const opened = threadKey({ environmentId, threadId });
     closeToasts((key) => key === opened);
+    closePending(threadNotificationTag(environmentId, threadId));
+  };
+  const updateBadge = () => {
+    let count = 0;
+    if (hasDesktopNotifications(getClientSettings().notificationMode)) {
+      const hidden = registry.get(environmentThreadShells.hiddenThreadKeysAtom);
+      const now = Date.now();
+      for (const [environmentId, entry] of watched) {
+        for (const { thread, status } of entry.previous.values()) {
+          if (
+            needsYou(status) &&
+            thread.archivedAt === null &&
+            !hidden.has(threadKey({ environmentId, threadId: thread.id })) &&
+            !isSnoozedForNotification(thread, null, now)
+          ) {
+            count += 1;
+          }
+        }
+      }
+    }
+    if (count === badgeCount) return;
+    badgeCount = count;
+    setNotificationBadge(count);
   };
   // A notification shown before the tag filter turned on must not stay on screen. While hiding,
   // one whose thread left the live list (archived) cannot be judged, so it closes too.
@@ -111,18 +172,175 @@ export function startThreadNotifications(
       : null;
     const shouldClose = (key: string) => hidden.has(key) || (live !== null && !live.has(key));
     closeToasts(shouldClose);
-    const count = pending.size;
     for (const [tag, entry] of pending) {
-      if (!shouldClose(threadKey(entry))) continue;
-      entry.notification.close();
-      pending.delete(tag);
+      if (shouldClose(threadKey(entry))) closePending(tag);
     }
-    if (count !== pending.size) setNotificationBadge(pending.size);
+    updateBadge();
   };
   const clearPending = () => {
-    for (const { notification } of pending.values()) notification.close();
-    pending.clear();
-    setNotificationBadge(0);
+    for (const tag of pending.keys()) closePending(tag);
+    presentations.clear();
+  };
+
+  const playSound = (kind: ThreadNotificationKind) => {
+    if (!hasNotificationSound(getClientSettings().notificationMode)) return;
+    void playNotificationSound(kind, () =>
+      hasNotificationSound(getClientSettings().notificationMode),
+    );
+  };
+  const openThread = (environmentId: EnvironmentId, threadId: ThreadId) => {
+    window.focus();
+    void window.desktopBridge?.revealWindow().catch(() => undefined);
+    void router.navigate({
+      to: "/$environmentId/$threadId",
+      params: { environmentId, threadId },
+    });
+  };
+  const showToast = (
+    environmentId: EnvironmentId,
+    input: Pick<ShownNotification, "threadId" | "kind" | "status" | "title" | "body">,
+    options: { readonly persistent: boolean },
+  ) => {
+    const { threadId, kind, status } = input;
+    const toastKey = threadKey({ environmentId, threadId });
+    const toastId: ToastId = toastManager.add({
+      onRemove: (): void => forgetToast(toastKey, toastId),
+      type: kind === "completion" ? "success" : status === "failed" ? "error" : "warning",
+      title: input.title,
+      description: input.body,
+      ...(options.persistent ? { timeout: 0 } : {}),
+      data: {
+        hideCopyButton: true,
+        leadingIcon: (
+          <PixelStatus
+            kind={kind === "completion" ? "done" : status === "failed" ? "failed" : "attention"}
+          />
+        ),
+      },
+      actionProps: {
+        children: m(msg("Open thread")),
+        onClick: () => {
+          toastManager.close(toastId);
+          void router.navigate({
+            to: "/$environmentId/$threadId",
+            params: { environmentId, threadId },
+          });
+        },
+      },
+    });
+    openToasts.set(toastKey, [...(openToasts.get(toastKey) ?? []), toastId]);
+  };
+
+  // The main process could not show it, as in unsigned macOS builds: the app shows it instead.
+  const fallBackToToast = (tag: string) => {
+    const entry = pending.get(tag);
+    if (entry === undefined) return;
+    pending.delete(tag);
+    showToast(entry.environmentId, entry, { persistent: true });
+    playSound(entry.kind);
+  };
+
+  const onDesktopNotificationEvent = (event: DesktopNotificationEvent) => {
+    const entry = pending.get(event.id);
+    if (entry === undefined) return;
+    if (event.type === "failed") return fallBackToToast(event.id);
+    pending.delete(event.id);
+    const { environmentId, threadId, requestId } = entry;
+    const text = event.text.trim();
+    if (event.type === "click" || requestId === null || (event.type === "reply" && !text)) {
+      return openThread(environmentId, threadId);
+    }
+    const action = {
+      type: event.type,
+      environmentId,
+      threadId,
+      requestId: RuntimeRequestId.make(requestId),
+      text: event.type === "reply" ? text : "",
+    };
+    void answerFromNotification(registry, action).then((outcome) => {
+      if (outcome !== "unsent") return;
+      openThread(environmentId, threadId);
+      toastManager.add({
+        type: "error",
+        title: m(msg("Couldn't send your answer")),
+        description: m(msg("Try again from the thread.")),
+      });
+    });
+  };
+
+  /** Whether the OS notification on its way brings the system sound, so the app plays none. */
+  const showDesktopNotification = (
+    bridge: DesktopBridge,
+    entry: Omit<ShownNotification, "close">,
+  ): boolean => {
+    // Most Linux notification daemons play no sound of their own.
+    const systemSound = bridge.getClientPlatform() !== "linux";
+    const tag = threadNotificationTag(entry.environmentId, entry.threadId);
+    const presentation = ++presentationSequence;
+    presentations.set(tag, presentation);
+    const show = (buttons: AgentNotificationButtons | null) => {
+      if (presentations.get(tag) !== presentation) return;
+      presentations.delete(tag);
+      const current = watched.get(entry.environmentId)?.previous.get(entry.threadId);
+      // Answered, or notifications turned off, while the buttons were looked up.
+      if (
+        (entry.attention !== null && current?.attention !== entry.attention) ||
+        !hasDesktopNotifications(getClientSettings().notificationMode)
+      ) {
+        return;
+      }
+      pending.set(tag, {
+        ...entry,
+        close: () => void bridge.closeNotification(tag).catch(() => undefined),
+      });
+      void bridge
+        .showNotification({
+          id: tag,
+          groupId: tag,
+          title: entry.title,
+          body: entry.body,
+          sound: systemSound && hasNotificationSound(getClientSettings().notificationMode),
+          attention: needsYou(entry.status),
+          buttons: desktopButtons(buttons),
+        })
+        .catch(() => fallBackToToast(tag));
+    };
+    if (entry.requestId === null) show(null);
+    else {
+      void resolveNotificationButtons(registry, {
+        environmentId: entry.environmentId,
+        threadId: entry.threadId,
+        requestId: RuntimeRequestId.make(entry.requestId),
+      }).then(show);
+    }
+    return systemSound;
+  };
+
+  const showBrowserNotification = (entry: Omit<ShownNotification, "close">): boolean => {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return false;
+    const { environmentId, threadId } = entry;
+    const tag = threadNotificationTag(environmentId, threadId);
+    try {
+      const notification = new Notification(entry.title, {
+        body: entry.body,
+        tag,
+        silent: !hasNotificationSound(getClientSettings().notificationMode),
+        // Windows drops clicks after a toast moves into Notification Center.
+        requireInteraction: entry.kind === "completion" && isWindowsPlatform(navigator.platform),
+      });
+      closePending(tag);
+      const shown = { ...entry, close: () => notification.close() };
+      pending.set(tag, shown);
+      notification.addEventListener("click", () => {
+        notification.close();
+        if (pending.get(tag) === shown) pending.delete(tag);
+        openThread(environmentId, threadId);
+      });
+      return true;
+    } catch {
+      // Some browsers expose Notification but reject desktop presentation.
+      return false;
+    }
   };
 
   const present = (
@@ -149,73 +367,32 @@ export function startThreadNotifications(
             : status === "failed"
               ? m(msg("Thread failed"))
               : m(msg("Input needed"));
-    if (hasNotificationSound(mode)) {
-      void playNotificationSound(kind, () =>
-        hasNotificationSound(getClientSettings().notificationMode),
-      );
-    }
+    const entry = {
+      environmentId,
+      threadId: thread.id,
+      attention: kind === "input" ? state.attention : null,
+      requestId: kind === "input" && needsYou(status) ? state.requestId : null,
+      kind,
+      status,
+      title,
+      body: thread.title,
+    };
+    const focused = document.visibilityState === "visible" && document.hasFocus();
     if (
       inAppNotificationsEnabled &&
-      document.visibilityState === "visible" &&
-      document.hasFocus() &&
+      focused &&
       (active.environmentId !== environmentId || active.threadId !== thread.id)
     ) {
-      const toastKey = threadKey({ environmentId, threadId: thread.id });
-      const toastId: ToastId = toastManager.add({
-        onRemove: (): void => forgetToast(toastKey, toastId),
-        type: kind === "completion" ? "success" : status === "failed" ? "error" : "warning",
-        title,
-        description: thread.title,
-        data: {
-          hideCopyButton: true,
-          leadingIcon: (
-            <PixelStatus
-              kind={kind === "completion" ? "done" : status === "failed" ? "failed" : "attention"}
-            />
-          ),
-        },
-        actionProps: {
-          children: m(msg("Open thread")),
-          onClick: () => {
-            toastManager.close(toastId);
-            void router.navigate({
-              to: "/$environmentId/$threadId",
-              params: { environmentId, threadId: thread.id },
-            });
-          },
-        },
-      });
-      openToasts.set(toastKey, [...(openToasts.get(toastKey) ?? []), toastId]);
+      showToast(environmentId, entry, { persistent: false });
+      playSound(kind);
       return;
     }
-    if (
-      !hasDesktopNotifications(mode) ||
-      (document.visibilityState === "visible" && document.hasFocus()) ||
-      typeof Notification === "undefined" ||
-      Notification.permission !== "granted"
-    )
-      return;
-    try {
-      const notification = new Notification(title, {
-        body: thread.title,
-        tag: threadNotificationTag(environmentId, thread.id),
-        silent: true,
-        // Windows drops clicks after a toast moves into Notification Center.
-        requireInteraction: kind === "completion" && isWindowsPlatform(navigator.platform),
-      });
-      trackNotification(environmentId, thread.id, notification);
-      notification.addEventListener("click", () => {
-        notification.close();
-        window.focus();
-        void window.desktopBridge?.revealWindow().catch(() => undefined);
-        void router.navigate({
-          to: "/$environmentId/$threadId",
-          params: { environmentId, threadId: thread.id },
-        });
-      });
-    } catch {
-      // Some browsers expose Notification but reject desktop presentation.
-    }
+    const bridge = window.desktopBridge;
+    const systemSound =
+      hasDesktopNotifications(mode) &&
+      !focused &&
+      (bridge ? showDesktopNotification(bridge, entry) : showBrowserNotification(entry));
+    if (!systemSound) playSound(kind);
   };
 
   const observeThreads = (
@@ -275,6 +452,17 @@ export function startThreadNotifications(
     entry.reconnecting = false;
     entry.previous = next;
     entry.gate.retain(new Set(next.keys()));
+    // A handled request, or a thread that left the list, takes its notification with it.
+    for (const [tag, shown] of pending) {
+      if (shown.environmentId !== environmentId) continue;
+      const current = next.get(shown.threadId);
+      if (
+        current === undefined ||
+        (shown.attention !== null && current.attention !== shown.attention)
+      )
+        closePending(tag);
+    }
+    updateBadge();
     const now = Date.now();
     for (const [prior, state] of changed) {
       entry.gate.observe(state.thread.id, prior, state, {
@@ -346,13 +534,9 @@ export function startThreadNotifications(
   const pruneRemovedEnvironments = () => {
     const activeIds = new Set(registry.get(environmentSummaries.environmentIdsAtom));
     closeToasts((key) => !activeIds.has(parseThreadKey(key).environmentId));
-    const count = pending.size;
     for (const [tag, entry] of pending) {
-      if (activeIds.has(entry.environmentId)) continue;
-      entry.notification.close();
-      pending.delete(tag);
+      if (!activeIds.has(entry.environmentId)) closePending(tag);
     }
-    if (count !== pending.size) setNotificationBadge(pending.size);
   };
 
   // Listeners that only exist for some notification modes, rebuilt when the mode changes.
@@ -366,11 +550,14 @@ export function startThreadNotifications(
     clearPending();
     const stops: Array<() => void> = [];
     if (hasDesktopNotifications(nextMode)) {
-      const unsubscribeBadgeClear = window.desktopBridge?.onNotificationBadgeClear(clearPending);
-      window.addEventListener("focus", clearPending);
+      const unsubscribeEvents = window.desktopBridge?.onNotificationEvent(
+        onDesktopNotificationEvent,
+      );
+      // Coming back to the thread a notification is about handles it.
+      window.addEventListener("focus", closeOpenedThreadToasts);
       stops.push(() => {
-        unsubscribeBadgeClear?.();
-        window.removeEventListener("focus", clearPending);
+        unsubscribeEvents?.();
+        window.removeEventListener("focus", closeOpenedThreadToasts);
         clearPending();
       });
     }
@@ -392,6 +579,7 @@ export function startThreadNotifications(
   const onSettings = () => {
     applyMode();
     syncEnvironments();
+    updateBadge();
   };
   const unsubscribeSettings = subscribeClientSettings(onSettings);
   const unsubscribeEnvironmentIds = registry.subscribe(
@@ -399,6 +587,7 @@ export function startThreadNotifications(
     () => {
       pruneRemovedEnvironments();
       syncEnvironments();
+      updateBadge();
     },
   );
   const unsubscribeHidden = [
@@ -418,5 +607,6 @@ export function startThreadNotifications(
     watched.clear();
     stopModeListeners();
     closeToasts(() => true);
+    if (badgeCount > 0) setNotificationBadge(0);
   };
 }

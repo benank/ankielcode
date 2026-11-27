@@ -91,6 +91,8 @@ Install Xcode Command Line Tools (`xcode-select --install`) and Rust. For cross-
 rustup target add aarch64-apple-darwin x86_64-apple-darwin
 ```
 
+macOS can refuse notifications from apps without a Developer ID signature, which includes unsigned builds and possibly the ad-hoc signed `vp run dev` launcher. Electron then emits `failed`, and the app shows the alert as an in-app toast without its Approve, Deny or Reply buttons. Test OS notifications with a `--signed` build.
+
 ### Windows installer prerequisites
 
 Install Rust, Python 3, and Visual Studio Build Tools (**Desktop development with C++**, Windows SDK, MSVC build tools, Spectre-mitigated libraries), then add the Rust target:

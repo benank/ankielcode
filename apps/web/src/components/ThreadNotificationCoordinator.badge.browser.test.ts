@@ -1,5 +1,9 @@
 import type { AnyRouter } from "@tanstack/react-router";
-import { EnvironmentId } from "@ankielcode/contracts";
+import {
+  type DesktopNotificationEvent,
+  type DesktopNotificationInput,
+  EnvironmentId,
+} from "@ankielcode/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import { Atom, AtomRegistry } from "effect/reactivity";
@@ -18,7 +22,13 @@ const state = vi.hoisted(() => ({
   sound: vi.fn(),
   unlock: vi.fn(),
   badge: vi.fn(),
+  buttons: vi.fn(() => Promise.resolve(null as string | null)),
+  answer: vi.fn(() => Promise.resolve("sent")),
   settingsListeners: new Set<() => void>(),
+}));
+vi.mock(import("./notificationActionRunner"), () => ({
+  resolveNotificationButtons: state.buttons as never,
+  answerFromNotification: state.answer as never,
 }));
 vi.mock(import("./ui/toast"), async (original) => {
   const actual = await original();
@@ -82,6 +92,7 @@ vi.mock(import("../threadNotifications"), async (original) => ({
   setNotificationBadge: state.badge,
 }));
 
+import { threadNotificationTag } from "../threadNotifications";
 import { startThreadNotifications } from "./ThreadNotificationCoordinator";
 
 let registry: AtomRegistry.AtomRegistry;
@@ -276,7 +287,7 @@ it.each(["hasPendingApprovals", "hasPendingUserInput"] as const)(
   },
 );
 
-it("presents completion notifications and sound as soon as the shell completes", async () => {
+it("presents completion notifications with the system sound as soon as the shell completes", async () => {
   await using app = setup();
   state.mode = "notifications-and-sound";
   app.start();
@@ -286,8 +297,20 @@ it("presents completion notifications and sound as soon as the shell completes",
       latestTurn: { turnId: "turn", state: "completed", completedAt: "2026-09-13T07:00:01.000Z" },
     }),
   );
-  expect(TestNotification.sent.map((sent) => sent.title)).toEqual(["Thread completed"]);
-  expect(state.sound).toHaveBeenCalledWith("completion", expect.any(Function));
+  expect(TestNotification.sent.map((sent) => [sent.title, sent.options.silent])).toEqual([
+    ["Thread completed", false],
+  ]);
+  expect(state.sound).not.toHaveBeenCalled();
+});
+
+it("plays the app's sound when no notification shows", async () => {
+  await using app = setup();
+  state.mode = "notifications-and-sound";
+  focused = true;
+  app.start();
+  state.shells.set("one", shell({ hasPendingApprovals: true }));
+  expect(TestNotification.sent).toEqual([]);
+  expect(state.sound).toHaveBeenCalledWith("input", expect.any(Function));
 });
 
 it.each([
@@ -362,7 +385,7 @@ it.each([false, true])(
     vi.advanceTimersByTime(RELEASED_COMPLETION_GRACE_MS);
     state.shells.set("one", watching("final", "completed", "2026-09-13T07:00:11.000Z", false, []));
     expect(titles()).toEqual(["Thread completed", "Thread completed"]);
-    expect(state.sound).toHaveBeenCalledTimes(2);
+    expect(TestNotification.sent.map(({ options }) => options.silent)).toEqual([false, false]);
   },
 );
 
@@ -462,4 +485,193 @@ it("opening a thread or removing its environment closes only its in-app toasts, 
   state.inApp = false;
   app.changeSettings();
   expect(state.closeToast.mock.calls.slice(3)).toEqual([["one-other"]]);
+});
+
+function desktopBridge(platform = "darwin") {
+  let listener: ((event: DesktopNotificationEvent) => void) | undefined;
+  const bridge = {
+    getClientPlatform: () => platform,
+    revealWindow: vi.fn(() => Promise.resolve()),
+    showNotification: vi.fn((_input: DesktopNotificationInput) => Promise.resolve()),
+    closeNotification: vi.fn((_id: string) => Promise.resolve()),
+    onNotificationEvent: (next: (event: DesktopNotificationEvent) => void) => {
+      listener = next;
+      return () => {
+        listener = undefined;
+      };
+    },
+  };
+  return {
+    bridge,
+    emit: (type: DesktopNotificationEvent["type"], text = "") =>
+      listener?.({
+        id: threadNotificationTag(EnvironmentId.make("one"), "thread" as never),
+        type,
+        text,
+      }),
+  };
+}
+
+const tag = () => threadNotificationTag(EnvironmentId.make("one"), "thread" as never);
+// Button lookups settle on a promise.
+const shown = (bridge: ReturnType<typeof desktopBridge>["bridge"], times: number) =>
+  vi.waitFor(() => expect(bridge.showNotification).toHaveBeenCalledTimes(times));
+
+it("shows an approval from the desktop app with buttons that answer it, and keeps the badge on focus", async () => {
+  await using app = setup();
+  const desktop = desktopBridge();
+  using _bridge = stubGlobal("desktopBridge", desktop.bridge);
+  state.mode = "notifications-and-sound";
+  state.buttons.mockResolvedValueOnce("approval");
+  app.start();
+  state.shells.set("one", shell({ hasPendingApprovals: true }));
+  await shown(desktop.bridge, 1);
+  expect(state.buttons).toHaveBeenCalledWith(expect.anything(), {
+    environmentId: "one",
+    threadId: "thread",
+    requestId: "request-1",
+  });
+  expect(desktop.bridge.showNotification.mock.calls).toEqual([
+    [
+      {
+        id: tag(),
+        groupId: tag(),
+        title: "Approval needed",
+        body: "Test thread",
+        sound: true,
+        attention: true,
+        buttons: { type: "approval", approve: "Approve", deny: "Deny" },
+      },
+    ],
+  ]);
+  expect(state.sound).not.toHaveBeenCalled();
+  expect(TestNotification.sent).toEqual([]);
+  expect(state.badge).toHaveBeenLastCalledWith(1);
+  focused = true;
+  window.dispatchEvent(new Event("focus"));
+  expect(state.badge).toHaveBeenLastCalledWith(1);
+
+  desktop.emit("approve");
+  expect(state.answer).toHaveBeenCalledWith(expect.anything(), {
+    type: "approve",
+    environmentId: "one",
+    threadId: "thread",
+    requestId: "request-1",
+    text: "",
+  });
+  state.shells.set("one", shell());
+  expect(state.badge).toHaveBeenLastCalledWith(0);
+});
+
+it("removes a desktop notification once its request is answered elsewhere", async () => {
+  await using app = setup();
+  const desktop = desktopBridge();
+  using _bridge = stubGlobal("desktopBridge", desktop.bridge);
+  state.buttons.mockResolvedValueOnce("reply");
+  app.start();
+  state.shells.set("one", shell({ hasPendingUserInput: true }));
+  await shown(desktop.bridge, 1);
+  expect(desktop.bridge.showNotification.mock.calls[0]?.[0]).toMatchObject({
+    title: "Input needed",
+    sound: false,
+    buttons: { type: "reply", placeholder: "Type your answer" },
+  });
+  state.shells.set("one", shell());
+  expect(desktop.bridge.closeNotification).toHaveBeenCalledWith(tag());
+  // An answer that arrives after the request moved on is dropped with it.
+  desktop.emit("reply", "Ship it");
+  expect(state.answer).not.toHaveBeenCalled();
+});
+
+it("opens the thread from a desktop notification, or after an answer that could not be sent", async () => {
+  await using app = setup();
+  const desktop = desktopBridge();
+  using _bridge = stubGlobal("desktopBridge", desktop.bridge);
+  state.buttons.mockResolvedValueOnce("approval");
+  state.answer.mockResolvedValueOnce("unsent");
+  app.start();
+  state.shells.set(
+    "one",
+    shell({
+      latestTurn: { turnId: "turn", state: "completed", completedAt: "2026-09-13T07:00:01.000Z" },
+    }),
+  );
+  expect(desktop.bridge.showNotification.mock.calls[0]?.[0]).toMatchObject({
+    title: "Thread completed",
+    attention: false,
+    buttons: null,
+  });
+  expect(state.buttons).not.toHaveBeenCalled();
+  desktop.emit("click");
+  const opened = {
+    to: "/$environmentId/$threadId",
+    params: { environmentId: "one", threadId: "thread" },
+  };
+  expect(state.navigate).toHaveBeenLastCalledWith(opened);
+  expect(desktop.bridge.revealWindow).toHaveBeenCalledTimes(1);
+
+  state.shells.set("one", shell({ hasPendingApprovals: true, pendingRequestId: "request-2" }));
+  await shown(desktop.bridge, 2);
+  state.navigate.mockClear();
+  desktop.emit("deny");
+  await vi.waitFor(() =>
+    expect(state.toast).toHaveBeenLastCalledWith(
+      expect.objectContaining({ type: "error", title: "Couldn't send your answer" }),
+    ),
+  );
+  expect(state.navigate).toHaveBeenLastCalledWith(opened);
+});
+
+it("falls back to a lasting in-app toast and sound when the OS refuses a notification", async () => {
+  await using app = setup();
+  const desktop = desktopBridge();
+  using _bridge = stubGlobal("desktopBridge", desktop.bridge);
+  state.mode = "notifications-and-sound";
+  app.start();
+  state.shells.set("one", shell({ hasPendingApprovals: true }));
+  await shown(desktop.bridge, 1);
+  expect(state.sound).not.toHaveBeenCalled();
+  desktop.emit("failed");
+  desktop.emit("failed");
+  expect(state.toast).toHaveBeenCalledTimes(1);
+  expect(state.toast).toHaveBeenLastCalledWith(
+    expect.objectContaining({ title: "Approval needed", description: "Test thread", timeout: 0 }),
+  );
+  expect(state.sound).toHaveBeenCalledTimes(1);
+});
+
+it("removes the open thread's notification when the window comes back", async () => {
+  await using app = setup();
+  const desktop = desktopBridge();
+  using _bridge = stubGlobal("desktopBridge", desktop.bridge);
+  app.start();
+  app.openThread("one", "thread");
+  state.shells.set(
+    "one",
+    shell({
+      latestTurn: { turnId: "turn", state: "completed", completedAt: "2026-09-13T07:00:01.000Z" },
+    }),
+  );
+  await shown(desktop.bridge, 1);
+  expect(desktop.bridge.closeNotification).not.toHaveBeenCalled();
+  focused = true;
+  window.dispatchEvent(new Event("focus"));
+  expect(desktop.bridge.closeNotification).toHaveBeenCalledWith(tag());
+});
+
+it("keeps the app's sound on Linux, whose notifications play none", async () => {
+  await using app = setup();
+  const desktop = desktopBridge("linux");
+  using _bridge = stubGlobal("desktopBridge", desktop.bridge);
+  state.mode = "notifications-and-sound";
+  app.start();
+  state.shells.set(
+    "one",
+    shell({
+      latestTurn: { turnId: "turn", state: "completed", completedAt: "2026-09-13T07:00:01.000Z" },
+    }),
+  );
+  await shown(desktop.bridge, 1);
+  expect(desktop.bridge.showNotification.mock.calls[0]?.[0]).toMatchObject({ sound: false });
+  expect(state.sound).toHaveBeenCalledWith("completion", expect.any(Function));
 });

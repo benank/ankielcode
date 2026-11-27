@@ -67,6 +67,10 @@
       "types": "./src/advertisedEndpoint.ts",
       "import": "./src/advertisedEndpoint.ts"
     },
+    "./agentNotificationButtons": {
+      "types": "./src/agentNotificationButtons.ts",
+      "import": "./src/agentNotificationButtons.ts"
+    },
     "./agentAwareness": {
       "types": "./src/agentAwareness.ts",
       "import": "./src/agentAwareness.ts"

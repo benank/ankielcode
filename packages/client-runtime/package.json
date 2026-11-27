@@ -399,6 +399,10 @@
       "types": "./src/state/threadExecution.ts",
       "default": "./src/state/threadExecution.ts"
     },
+    "./state/notification-actions": {
+      "types": "./src/state/notificationActions.ts",
+      "default": "./src/state/notificationActions.ts"
+    },
     "./state/pending-user-input": {
       "types": "./src/state/pendingUserInput.ts",
       "default": "./src/state/pendingUserInput.ts"

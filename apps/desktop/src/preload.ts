@@ -1,5 +1,6 @@
 import type {
   DesktopBridge,
+  DesktopNotificationEvent,
   DesktopPreviewAnnotationVoiceEvent,
   DesktopPreviewFindResultEvent,
   DesktopPreviewOpenLinkEvent,
@@ -113,10 +114,17 @@ contextBridge.exposeInMainWorld("desktopBridge", {
   restartAudioService: () => ipcRenderer.invoke(IpcChannels.RESTART_AUDIO_SERVICE_CHANNEL),
   setNotificationBadge: (badge) =>
     ipcRenderer.invoke(IpcChannels.SET_NOTIFICATION_BADGE_CHANNEL, badge),
-  onNotificationBadgeClear: (listener) => {
-    const handler = () => listener();
-    ipcRenderer.on(IpcChannels.SET_NOTIFICATION_BADGE_CHANNEL, handler);
-    return () => ipcRenderer.removeListener(IpcChannels.SET_NOTIFICATION_BADGE_CHANNEL, handler);
+  showNotification: (notification) =>
+    ipcRenderer.invoke(IpcChannels.SHOW_NOTIFICATION_CHANNEL, notification),
+  closeNotification: (id) => ipcRenderer.invoke(IpcChannels.CLOSE_NOTIFICATION_CHANNEL, id),
+  onNotificationEvent: (listener) => {
+    const handler = (_event: Electron.IpcRendererEvent, payload: unknown) => {
+      if (typeof payload === "object" && payload !== null) {
+        listener(payload as DesktopNotificationEvent);
+      }
+    };
+    ipcRenderer.on(IpcChannels.NOTIFICATION_EVENT_CHANNEL, handler);
+    return () => ipcRenderer.removeListener(IpcChannels.NOTIFICATION_EVENT_CHANNEL, handler);
   },
   onTrackpadScrollBegin: (listener) => {
     const handler = () => listener();

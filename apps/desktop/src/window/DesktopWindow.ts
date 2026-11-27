@@ -408,6 +408,7 @@ export const make = Effect.gen(function* () {
   const context = yield* Effect.context<DesktopWindowRuntimeServices>();
   const runFork = Effect.runForkWith(context);
   const runPromise = Effect.runPromiseWith(context);
+  const runSync = Effect.runSyncWith(context);
   const mainWindowMutex = yield* Semaphore.make(1);
   const pendingMainReveals = new WeakMap<Electron.BrowserWindow, Effect.Effect<void>>();
   const revealMain = Effect.fn("desktop.window.revealMain")((window: Electron.BrowserWindow) =>
@@ -871,8 +872,22 @@ export const make = Effect.gen(function* () {
     window.on("move", scheduleBoundsPersist);
     window.on("maximize", scheduleBoundsPersist);
     window.on("unmaximize", scheduleBoundsPersist);
-    window.on("close", () => {
+    window.on("close", (event) => {
       runFork(flushBoundsPersist);
+      if (environment.platform !== "darwin" || runSync(Ref.get(desktopState.quitting))) {
+        return;
+      }
+      // Mac apps outlive their window: hiding keeps the renderer's notifications and badge running.
+      event.preventDefault();
+      if (!window.isFullScreen()) {
+        window.hide();
+        return;
+      }
+      // Hiding a full-screen window leaves its Space behind, black.
+      window.once("leave-full-screen", () => {
+        if (!window.isDestroyed()) window.hide();
+      });
+      window.setFullScreen(false);
     });
 
     if (environment.platform === "darwin") {

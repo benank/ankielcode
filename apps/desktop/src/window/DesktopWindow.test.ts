@@ -1,5 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
+import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import { DesktopSnapShotId } from "@ankielcode/contracts";
 import * as Effect from "effect/Effect";
@@ -139,6 +140,7 @@ function makeFakeBrowserWindow() {
     setTitleBarOverlay: vi.fn(),
     setWindowButtonPosition: vi.fn(),
     show: vi.fn(),
+    hide: vi.fn(),
     webContents,
   };
 
@@ -146,6 +148,7 @@ function makeFakeBrowserWindow() {
     window: window as unknown as Electron.BrowserWindow,
     getBounds: window.getBounds,
     getNormalBounds: window.getNormalBounds,
+    hide: window.hide,
     isDestroyed: window.isDestroyed,
     isFullScreen: window.isFullScreen,
     isMaximized: window.isMaximized,
@@ -263,6 +266,7 @@ function layerTest(input: {
   }>;
   readonly primaryPasteEnabled?: boolean;
   readonly previewPasskeyBridgeEnabled?: boolean;
+  readonly quitting?: Ref.Ref<boolean>;
 }) {
   let desktopSettings = input.desktopSettings ?? DesktopAppSettings.DEFAULT_DESKTOP_SETTINGS;
   const layerDesktopAppSettings = Layer.succeed(DesktopAppSettings.DesktopAppSettings, {
@@ -347,7 +351,18 @@ function layerTest(input: {
         layerDesktopAppSettings,
         layerDesktopClientSettings,
         layerDesktopServerExposure,
-        DesktopState.layer,
+        input.quitting === undefined
+          ? DesktopState.layer
+          : Layer.effect(
+              DesktopState.DesktopState,
+              DesktopState.layer.pipe(
+                Layer.build,
+                Effect.map((context) => ({
+                  ...Context.get(context, DesktopState.DesktopState),
+                  quitting: input.quitting!,
+                })),
+              ),
+            ),
         layerElectronApp,
         Layer.succeed(ElectronMenu.ElectronMenu, {
           pasteAndMatchStyle: Effect.void,
@@ -1132,6 +1147,47 @@ describe("DesktopWindow", () => {
       }),
   );
 
+  it.effect.each([
+    { name: "hides on macOS", platform: "darwin", fullScreen: false, quitting: false, hidden: 1 },
+    {
+      name: "leaves full screen, then hides, on macOS",
+      platform: "darwin",
+      fullScreen: true,
+      quitting: false,
+      hidden: 1,
+    },
+    { name: "closes while quitting on macOS", platform: "darwin", quitting: true, hidden: 0 },
+    { name: "closes on Windows", platform: "win32", quitting: false, hidden: 0 },
+  ] as const)("the main window's close button $name", ({ platform, quitting, hidden, ...input }) =>
+    Effect.gen(function* () {
+      const fakeWindow = makeFakeBrowserWindow();
+      fakeWindow.isFullScreen.mockReturnValue("fullScreen" in input && input.fullScreen);
+      const quittingRef = yield* Ref.make(false);
+      const layer = layerTest({
+        window: fakeWindow.window,
+        createCount: yield* Ref.make(0),
+        mainWindow: yield* Ref.make<Option.Option<Electron.BrowserWindow>>(Option.none()),
+        platform,
+        quitting: quittingRef,
+      });
+
+      yield* Effect.gen(function* () {
+        const desktopWindow = yield* DesktopWindow.DesktopWindow;
+        yield* desktopWindow.handleBackendReady(new URL("http://127.0.0.1:3773"));
+        yield* Ref.set(quittingRef, quitting);
+        const event = { preventDefault: vi.fn() };
+        fakeWindow.windowListeners.get("close")!(event);
+        if ("fullScreen" in input && input.fullScreen) {
+          assert.deepEqual(fakeWindow.setFullScreen.mock.calls, [[false]]);
+          assert.equal(fakeWindow.hide.mock.calls.length, 0);
+          fakeWindow.windowListeners.get("leave-full-screen")!();
+        }
+        assert.equal(event.preventDefault.mock.calls.length, hidden);
+        assert.equal(fakeWindow.hide.mock.calls.length, hidden);
+      }).pipe(Effect.provide(layer));
+    }),
+  );
+
   it.effect("persists normal bounds and state for a maximized window", () =>
     Effect.gen(function* () {
       const fakeWindow = makeFakeBrowserWindow();
@@ -1158,7 +1214,7 @@ describe("DesktopWindow", () => {
         if (!close) {
           return yield* Effect.die("window close listener was not registered");
         }
-        close();
+        close({ preventDefault: vi.fn() });
         yield* Effect.promise(() => Promise.resolve());
 
         assert.deepEqual(mainWindowBoundsUpdates, [{ x: 220, y: 140, width: 1380, height: 920 }]);
@@ -1260,7 +1316,7 @@ describe("DesktopWindow", () => {
           return yield* Effect.die("window lifecycle listeners were not registered");
         }
 
-        close();
+        close({ preventDefault: vi.fn() });
         yield* Effect.promise(() => Promise.resolve());
         assert.deepEqual(mainWindowBoundsUpdates, []);
 
@@ -1503,7 +1559,7 @@ describe("DesktopWindow", () => {
         if (!close) {
           return yield* Effect.die("window close listener was not registered");
         }
-        close();
+        close({ preventDefault: vi.fn() });
         yield* Deferred.await(writeStarted);
         fakeWindow.isDestroyed.mockReturnValue(true);
 

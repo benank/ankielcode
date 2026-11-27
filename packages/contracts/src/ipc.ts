@@ -1080,6 +1080,48 @@ export const DesktopAppleSpeechTranscribeInputSchema = Schema.Struct({
   pcm: Schema.Uint8Array,
 });
 
+const DesktopNotificationIdSchema = Schema.String.check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(64),
+);
+const DesktopNotificationLabelSchema = Schema.String.check(Schema.isMaxLength(128));
+
+/** A thread's OS notification, shown by the desktop main process so it can carry buttons. */
+export const DesktopNotificationInputSchema = Schema.Struct({
+  /** One per thread: showing it again replaces the thread's earlier notification. */
+  id: DesktopNotificationIdSchema,
+  groupId: DesktopNotificationIdSchema,
+  title: Schema.String.check(Schema.isMaxLength(256)),
+  body: Schema.String.check(Schema.isMaxLength(1024)),
+  /** Plays the system notification sound, which Focus and the OS sound settings control. */
+  sound: Schema.Boolean,
+  /** A new approval or question: bounce the dock or flash the taskbar while unfocused. */
+  attention: Schema.Boolean,
+  buttons: Schema.NullOr(
+    Schema.Union([
+      Schema.Struct({
+        type: Schema.Literal("approval"),
+        approve: DesktopNotificationLabelSchema,
+        deny: DesktopNotificationLabelSchema,
+      }),
+      Schema.Struct({
+        type: Schema.Literal("reply"),
+        placeholder: DesktopNotificationLabelSchema,
+      }),
+    ]),
+  ),
+});
+export type DesktopNotificationInput = typeof DesktopNotificationInputSchema.Type;
+
+/** `failed` means the OS refused to show it, as unsigned macOS builds do. */
+export const DesktopNotificationEventSchema = Schema.Struct({
+  id: Schema.String,
+  type: Schema.Literals(["click", "approve", "deny", "reply", "failed"]),
+  /** The reply's text; empty otherwise. */
+  text: Schema.String,
+});
+export type DesktopNotificationEvent = typeof DesktopNotificationEventSchema.Type;
+
 export const SystemSettingsPaneSchema = Schema.Literals(["full-disk-access"]);
 export type SystemSettingsPane = typeof SystemSettingsPaneSchema.Type;
 
@@ -1089,7 +1131,9 @@ export interface DesktopBridge {
   getClientPlatform: () => string;
   restartAudioService?: () => Promise<boolean>;
   setNotificationBadge: (badge: { count: number; image: string | null }) => Promise<void>;
-  onNotificationBadgeClear: (listener: () => void) => () => void;
+  showNotification: (notification: DesktopNotificationInput) => Promise<void>;
+  closeNotification: (id: string) => Promise<void>;
+  onNotificationEvent: (listener: (event: DesktopNotificationEvent) => void) => () => void;
   onTrackpadScrollBegin: (listener: () => void) => () => void;
   onTrackpadScrollEnd: (listener: () => void) => () => void;
   /**
