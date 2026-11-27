@@ -130,7 +130,8 @@ final class LiveComposerUITests: HomeUITestCase {
     let model = app.buttons["composer.model"]
     XCTAssertTrue(model.waitForExistence(timeout: 15))
     model.tap()
-    let replay = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'modelPicker.model.' AND label CONTAINS[c] 'replay'")).firstMatch
+    // Replay's models are its scenarios ("Showcase", "Multi turn", …); none is labeled "Replay".
+    let replay = app.buttons["modelPicker.model.multi-turn"]
     for _ in 0..<6 where !replay.exists { app.swipeUp(velocity: .slow) }
     guard replay.exists else { throw XCTSkip("Replay (dev) is not registered on this server.") }
     replay.tap()
@@ -143,7 +144,11 @@ final class LiveComposerUITests: HomeUITestCase {
     XCTAssertTrue(app.descendants(matching: .any)["pending.sending"].waitForNonExistence(timeout: 20), "the launch is acknowledged")
     shot("live-composer")
     app.buttons["thread.menu"].tap()
-    app.buttons["Delete thread"].tap()
+    app.buttons["More"].tap()
+    let delete = app.buttons["Delete"].firstMatch
+    XCTAssertTrue(delete.waitForExistence(timeout: 5))
+    delete.tap()
     app.alerts.buttons["Delete"].tap()
+    XCTAssertTrue(app.buttons["thread.menu"].waitForNonExistence(timeout: 10), "deleting closes the thread")
   }
 }

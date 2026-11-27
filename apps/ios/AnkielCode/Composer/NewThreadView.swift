@@ -22,14 +22,14 @@ struct NewThreadView: View {
         id: environment.id, label: environment.label, connected: model.composerSink?.canSend(to: environment.id) ?? false,
         projects: Self.projects(environment.shell, scratchRoot: environment.scratchWorkspaceRoot),
         scratchProjectId: Self.scratchProject(environment.shell, scratchRoot: environment.scratchWorkspaceRoot),
-        providers: environment.providers, settings: environment.settings)
+        offersNoProject: environment.scratchWorkspaceRoot != nil, providers: environment.providers, settings: environment.settings)
     }
     #if DEBUG
       if model.isComposerFake {
         list.insert(
           Computer(
             id: ThreadDebug.environmentId, label: DebugCatalog.environmentLabel, connected: true, projects: DebugCatalog.projects,
-            scratchProjectId: "fx-scratch", providers: DebugCatalog.providers, settings: ServerSettings()), at: 0)
+            scratchProjectId: "fx-scratch", offersNoProject: true, providers: DebugCatalog.providers, settings: ServerSettings()), at: 0)
       }
     #endif
     return list
@@ -41,7 +41,7 @@ struct NewThreadView: View {
   }
 
   private var project: ProjectShell? {
-    guard let computer, draft.noProject != true else { return nil }
+    guard let computer, draft.noProject != true || !computer.offersNoProject else { return nil }
     return computer.projects.first { $0.id == draft.projectId } ?? computer.projects.first
   }
 
@@ -135,10 +135,13 @@ struct NewThreadView: View {
               }
             }
           }
-          Button {
-            store.updateDraft(ComposerTarget.newThreadKey) { $0.noProject = true }
-          } label: {
-            Label("No project", systemImage: draft.noProject == true ? "checkmark" : "tray")
+          // Servers with project-less threads turned off send no `scratchWorkspaceRoot` (RN hides it too).
+          if computer.offersNoProject {
+            Button {
+              store.updateDraft(ComposerTarget.newThreadKey) { $0.noProject = true }
+            } label: {
+              Label("No project", systemImage: draft.noProject == true ? "checkmark" : "tray")
+            }
           }
         }
       } label: {
@@ -169,7 +172,12 @@ struct NewThreadView: View {
         do {
           projectId = try await model.registry.ensureScratchProject(in: computer.id)
         } catch {
-          failure = String(localized: "The folder for threads without a project could not be created.")
+          // The server says why (for example, project-less threads are off on this computer).
+          if case .rejected(let message?, _) = error, !message.isEmpty {
+            failure = message
+          } else {
+            failure = String(localized: "The folder for threads without a project could not be created.")
+          }
           return
         }
       }
@@ -196,6 +204,8 @@ struct NewThreadView: View {
     var connected: Bool
     var projects: [ProjectShell]
     var scratchProjectId: String?
+    /// The server allows threads without a project (`config.scratchWorkspaceRoot`).
+    var offersNoProject: Bool
     var providers: [ServerProvider]
     var settings: ServerSettings
   }
