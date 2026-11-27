@@ -159,16 +159,15 @@ async function readFcmError(
   try {
     body = (await response.json()) as FcmErrorBody;
   } catch {
-    return { reason: undefined, unregistered: response.status === 404 };
+    return { reason: undefined, unregistered: false };
   }
   const details = Array.isArray(body.error?.details) ? body.error.details : [];
   const fcmCode = details.find((detail) => detail["@type"] === FCM_ERROR_TYPE)?.errorCode;
   const status = body.error?.status;
   const reason =
     typeof fcmCode === "string" ? fcmCode : typeof status === "string" ? status : undefined;
-  if (response.status === 404 || reason === "UNREGISTERED") {
-    return { reason, unregistered: true };
-  }
+  // A bare 404 can also mean a wrong project id, so only FCM's own code proves the token is dead.
+  if (reason === "UNREGISTERED") return { reason, unregistered: true };
   if (reason !== "INVALID_ARGUMENT") return { reason, unregistered: false };
   // INVALID_ARGUMENT also covers bad payloads, so only treat it as a dead token when FCM blames the token.
   const blamesTokenField = details.some(

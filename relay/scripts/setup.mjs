@@ -238,10 +238,6 @@ async function main() {
       if (putSecret.status !== 0) {
         throw new Error("Failed to set RELAY_SECRET on Cloudflare.");
       }
-
-      if (rl) {
-        await offerPushSecrets(rl);
-      }
     }
 
     const setupString = `ankiel-relay://${relayHost}#${secret}`;
@@ -283,6 +279,16 @@ async function main() {
     console.log(
       "\nNext: restart your Ankiel Code server/desktop app and scan its QR code on your phone.",
     );
+
+    if (rl && !args.dryRun) {
+      try {
+        await offerPushSecrets(rl);
+      } catch (err) {
+        console.warn(
+          `\nPush setup skipped: ${err instanceof Error ? err.message : String(err)}\nSee "Push Notifications" in SETUP_CLOUDFLARE.md to set the secrets by hand.`,
+        );
+      }
+    }
   } finally {
     rl?.close();
   }

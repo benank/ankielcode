@@ -357,6 +357,7 @@ describe("FCM", () => {
     });
     const cases: Array<[() => Response, boolean]> = [
       [fcmError(404, "UNREGISTERED"), true],
+      [() => new Response("Not Found", { status: 404 }), false],
       [
         fcmError(400, "INVALID_ARGUMENT", {
           message: "The registration token is not a valid FCM registration token",

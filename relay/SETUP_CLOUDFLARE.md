@@ -76,7 +76,7 @@ npx wrangler secret put FCM_SERVICE_ACCOUNT_JSON < service-account.json
 
 The Android app must be built with the same Firebase project's `google-services.json`.
 
-`npm run setup` offers to upload these secrets from the files. When a host connects, the relay tells it which platforms are configured. Pushes for a platform without its secrets fail with `push_not_configured`. Each host can send up to 120 notifications per minute.
+If your relay was deployed before push support, run `npm run deploy` first. `npm run setup` offers to upload these secrets from the files. When a host connects, the relay tells it which platforms are configured. Pushes for a platform without its secrets fail with `push_not_configured`. Each host can send up to 120 notifications per minute.
 
 ---
 
