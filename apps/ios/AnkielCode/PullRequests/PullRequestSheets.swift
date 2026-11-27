@@ -220,7 +220,7 @@ struct PullRequestMergeSheet: View {
               .accessibilityIdentifier("pr.merge.method.\(candidate.rawValue)")
             }
           } footer: {
-            Text("Merging \(value.headBranch) into \(value.baseBranch).")
+            Text("Merging \(value.headBranch) into \(value.baseBranch)")
           }
           if let block = PullRequestStatus.mergeBlock(value, canWrite: true) {
             Section { Text(PullRequestCopy.mergeBlock(block)).foregroundStyle(Palette.attention) }
@@ -519,6 +519,7 @@ struct PullRequestInlineSheet: View {
   let target: PullRequestInlineTarget
   @Environment(\.dismiss) private var dismiss
   @State private var text = ""
+  @FocusState private var focused: Bool
 
   private var existing: PullRequestReviewCommentDraft? {
     detail.reviewDrafts.first { $0.path == target.path && $0.position == target.position && $0.startPosition == target.start }
@@ -538,6 +539,7 @@ struct PullRequestInlineSheet: View {
           .lineLimit(4...12)
           .padding(Spacing.md)
           .background(Palette.surface, in: .rect(cornerRadius: Radius.field, style: .continuous))
+          .focused($focused)
           .accessibilityIdentifier("pr.inline.field")
         Text("Comments are sent together when you submit the review.").font(Typography.caption).foregroundStyle(Palette.textTertiary)
         Spacer()
@@ -573,6 +575,7 @@ struct PullRequestInlineSheet: View {
       }
       .onAppear {
         if text.isEmpty, let existing { text = existing.body }
+        focused = true
       }
     }
     .presentationDetents([.medium, .large])

@@ -166,7 +166,7 @@ struct PullRequestDetailScreen: View {
         }
         if value.state == .open, PullRequestStatus.canPerform(.merge, on: value) {
           Button { sheet = .merge } label: {
-            Label("Merge", systemImage: "arrow.triangle.merge").frame(maxWidth: .infinity, minHeight: 36)
+            Label("Merge", systemImage: "arrow.triangle.merge").foregroundStyle(Palette.onAccent).frame(maxWidth: .infinity, minHeight: 36)
           }
           .buttonStyle(.glassProminent)
           .accessibilityIdentifier("pr.action.merge")
@@ -183,7 +183,9 @@ struct PullRequestDetailScreen: View {
       .frame(maxWidth: .infinity)
       .background {
         // Long descriptions scroll under the floating buttons; fade them out behind the bar.
-        LinearGradient(colors: [Palette.canvas.opacity(0), Palette.canvas], startPoint: .top, endPoint: .center)
+        LinearGradient(
+          stops: [.init(color: Palette.canvas.opacity(0), location: 0), .init(color: Palette.canvas, location: 0.3)], startPoint: .top,
+          endPoint: .bottom)
           .ignoresSafeArea()
           .allowsHitTesting(false)
       }

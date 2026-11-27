@@ -115,7 +115,7 @@ struct PullRequestFileRow: View {
       }
       Spacer(minLength: Spacing.sm)
       if threads > 0 {
-        Label("\(threads)", systemImage: "text.bubble").font(Typography.caption).foregroundStyle(Palette.working)
+        Label { Text(verbatim: "\(threads)") } icon: { Image(systemName: "text.bubble") }.font(Typography.caption).foregroundStyle(Palette.working)
           .accessibilityLabel(Text("^[\(threads) open thread](inflect: true)"))
       }
       if file.additions + file.deletions > 0 { PullRequestCounts(additions: file.additions, deletions: file.deletions) }

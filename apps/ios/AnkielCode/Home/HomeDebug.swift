@@ -71,6 +71,18 @@
         },
         debugThread("done", "Add the iPad split layout", project: "p1", minutesAgo: 25) {
           $0["lastVisitedAt"] = earlier(60)
+          // A synthetic linked pull request, for the row's chip.
+          $0["pullRequests"] = [
+            [
+              "host": "github.com", "repository": "tidewater/tide-chart", "number": 128,
+              "url": "https://github.com/tidewater/tide-chart/pull/128", "source": "agent", "linkedAt": earlier(90),
+              "stack": NSNull(),
+              "snapshot": [
+                "state": "open", "title": "Cache the last tide table for offline use", "headBranch": "offline-tables",
+                "baseBranch": "main", "isDraft": false, "updatedAt": earlier(30), "syncedAt": earlier(5), "checksState": "passing",
+              ],
+            ]
+          ]
         },
         debugThread("input", "Pick a name for the new command", project: "p2", minutesAgo: 8) {
           $0["pendingRuntimeRequest"] = ["id": "r2", "kind": "user_input", "createdAt": earlier(8)]

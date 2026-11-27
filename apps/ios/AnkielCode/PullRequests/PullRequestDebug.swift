@@ -70,7 +70,7 @@ import SwiftUI
   @MainActor
   final class RefusingPullRequestSink: PullRequestSink {
     func send(_ write: PullRequestWrite, in environmentId: String) async throws(PullRequestError) -> PullRequestSummary? {
-      throw .rejected(message: String(localized: "Writes are turned off in this debug launch."), tag: "Debug")
+      throw .rejected(message: String(localized: "Writes are turned off in this debug launch.", comment: "debug: refusing sink"), tag: "Debug")
     }
   }
 

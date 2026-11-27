@@ -215,7 +215,7 @@ enum PullRequestCopy {
         if let host = unavailable.host {
           String(localized: "No project in Ankiel Code is on \(host). Add any \(host) project to read its change requests.")
         } else {
-          String(localized: "\(unavailable.repository ?? String(localized: "This repository")) is not a project in Ankiel Code. Add it as a project to read its change requests.")
+          missingProject(unavailable.repository)
         }
       case nil: unavailable.requirement ?? String(localized: "Pull requests are unavailable on this computer.")
       }
@@ -223,6 +223,11 @@ enum PullRequestCopy {
     case .rejected(let message, _): message ?? String(localized: "The computer refused this request.")
     case .failed(let message): message
     }
+  }
+
+  static func missingProject(_ repository: String?) -> String {
+    let name = repository ?? String(localized: "This repository")
+    return String(localized: "\(name) is not a project in Ankiel Code. Add it as a project to read its change requests.")
   }
 
   static func signedOut(_ error: PullRequestError) -> Bool {

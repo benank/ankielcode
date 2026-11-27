@@ -375,3 +375,37 @@ closes the named ones with their history. Use a throwaway folder under `/tmp`.
 
 `TerminalUITests` (live; skips when the dev server is down) opens a new terminal from the thread
 menu in the `ankiel-probe live` project, types `echo`, rotates and closes it.
+
+## Pull requests
+
+Home's toolbar opens **Pull requests** (a full-screen stack; the list beside the open pull request
+on iPad), and a thread's pull request chip (rows and the thread header) opens its pull request.
+Logic lives in `AnkielKit/PullRequests`, views in `AnkielCode/PullRequests`. The list reads
+`pullRequests.list` from every computer whose config says `pullRequests`, filters on the device
+like RN (`PullRequestQuery`, `PullRequestList`), fills line counts with `pullRequests.listStats`
+and keeps the last first page per request plus the stats in `Caches/AnkielCode/pull-requests` so
+it shows at once. Pull to refresh sends `pullRequests.invalidate` first. The diff is the HTTP route
+`POST /api/pull-requests/diff` (`EnvironmentConnector.postJSON`), parsed by the Review parser and
+drawn by `DiffLinesView` with review threads and pending inline comments under their lines.
+Every write is a `PullRequestWrite` sent through a `PullRequestSink`. Reads and writes go through
+`PullRequestRouter`: another computer answers only when both are trusted in **Pull request
+routing** (the list's menu; per device, keyed by the saved addresses) and it verifies the same host
+account; a write never moves to another computer once the server may have run it. "Start work"
+fills the new-thread (or a linked thread's) draft with the pull request's link and the task's
+prompt; nothing runs until it is sent.
+
+`swift run ankiel-probe --state <file> --pull-requests [number] [--pr-state open|closed|merged|all]
+[--pr-ref <projectId>:<owner/repo>:<number>] [--enable-github]` lists pull requests, reads one's
+detail, conversation, checks, viewed files, linked threads and every diff page, and prints counts
+only. It never writes to the host. `--enable-github` turns the computer's GitHub integration on
+for that read and off again (it changes the server's settings).
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_PULL_REQUESTS` | `fixture`, `empty`, `signed-out`, `failing`, `readonly` | Synthetic pull requests on an invented repository (`PullRequestFixtures`), no server. `readonly` hides write controls. |
+| `ANKIEL_DEBUG_PR_WRITES` | `fake`, `fail`, `slow`, `refuse` | Where writes go: a recording fake (the default with fixtures; its last write shows in a debug pill), one that refuses or never answers, or `refuse` for live reads with every write stopped on the device. |
+| `ANKIEL_DEBUG_PR_OPEN` | `list`, `routing`, `link:<url>`, `pr:<n>`, `activity:<n>`, `files:<n>`, `file:<n>:<path>`, `review:<n>`, `merge:<n>`, `comment:<n>`, `edit:<n>`, `reviewers:<n>`, `thread:<n>`, `confirm-close:<n>` | Opens that screen or sheet at launch. |
+
+`PullRequestUITests` run on fixtures: list → detail → files → a diff, search, the thread row chip,
+and each write (comment, inline comment and review, merge with its confirmation, close, edit,
+reviewers, thread reply and resolve, reaction) against the recording sink.

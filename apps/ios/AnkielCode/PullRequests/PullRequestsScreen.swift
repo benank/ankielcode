@@ -589,7 +589,7 @@ struct PullRequestLinkSheet: View {
     NavigationStack {
       Form {
         Section {
-          TextField("https://github.com/owner/repo/pull/123", text: $text)
+          TextField(text: $text, prompt: Text(verbatim: "https://github.com/owner/repo/pull/123")) { Text("Open a pull request link") }
             .keyboardType(.URL)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
