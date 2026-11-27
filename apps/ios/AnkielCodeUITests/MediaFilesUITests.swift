@@ -101,6 +101,8 @@ final class MediaFilesUITests: HomeUITestCase {
       swipes += 1
     }
     guard thumbnail.exists else { throw XCTSkip("No tool image in this thread's feed.") }
+    // It can appear just under the bar first: rows join the tree as they come on screen.
+    for _ in 0..<3 where !thumbnail.isHittable { app.swipeDown(velocity: .slow) }
     shot("tool-thumbnail")
     thumbnail.tap()
     let image = app.images["media.viewer.image"]

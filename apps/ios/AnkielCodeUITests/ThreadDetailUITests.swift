@@ -27,13 +27,11 @@ final class FixtureThreadUITests: HomeUITestCase {
     XCTAssertTrue(app.staticTexts["Show every item kind."].exists || group.isHittable)
   }
 
-  /// A large fold opened at the bottom expands in place; the feed stays on screen.
+  /// A large fold near the bottom expands in place; the feed stays on screen.
   func testOpeningALargeFoldAtTheBottom() {
     launch(["ANKIEL_DEBUG_THREAD": "markdown"])
-    let fold = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Worked for'")).element(boundBy: 0)
-    XCTAssertTrue(fold.waitForExistence(timeout: 5))
-    let folds = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Worked for'"))
-    let last = folds.element(boundBy: folds.count - 1)
+    let last = lastFoldOnScreen()
+    XCTAssertTrue(last.isHittable)
     last.tap()
     sleep(1)
     shot("thread-markdown-fold-open")

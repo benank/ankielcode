@@ -1,9 +1,9 @@
 import AnkielKit
 import SwiftUI
 
-/// The conversation feed: a lazy stack of identity-stable rows that opens at the bottom, follows
-/// new content only while the reader is at the bottom, offers a way back when they scroll up, and
-/// restores where they were when they come back to the thread.
+/// The conversation feed: identity-stable rows that open at the end, follow new content only while
+/// the reader is at the end, offer a way back when they scroll up, and restore where they were when
+/// they come back to the thread. Scrolling lives in `FeedCollection` and its rules in `FeedScroll`.
 struct ThreadTimelineView: View {
   let model: ThreadDetailModel
   let images: ThreadImages
@@ -14,143 +14,43 @@ struct ThreadTimelineView: View {
   /// newest row sits above it instead of under it.
   var trailingSpace: CGFloat = 0
 
-  @State private var position: ScrollPosition
-  @State private var atBottom: Bool
-  @State private var unseen = false
-  @State private var topVisible: String?
-  /// Set while the reader opens or closes a row: it grows in place instead of the bottom anchor
-  /// pushing it up out of view.
-  @State private var holdingAnchor = false
+  @State private var status = FeedStatus()
+  @State private var insets = EdgeInsets()
+  @Environment(AppModel.self) private var app
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-  init(
-    model: ThreadDetailModel, images: ThreadImages, openThread: @escaping (String) -> Void,
-    pending: [PendingRow] = [], trailingSpace: CGFloat = 0
-  ) {
-    self.model = model
-    self.images = images
-    self.openThread = openThread
-    self.pending = pending
-    self.trailingSpace = trailingSpace
-    let anchor = model.scrollAnchor
-    _position = State(initialValue: anchor.map { ScrollPosition(id: $0, anchor: .top) } ?? ScrollPosition(idType: String.self))
-    _atBottom = State(initialValue: anchor == nil)
-  }
-
   var body: some View {
-    let laid = Self.layout(model.state.timeline.visibleRows(expanded: model.expanded))
-    ScrollView {
-      LazyVStack(alignment: .leading, spacing: 0) {
-        ForEach(laid, id: \.row.id) { item in
-          TimelineRowView(
-            row: item.row, expanded: isExpanded(item.row), load: load(item.row), images: images, model: model,
-            openThread: openThread, toggle: toggle
-          )
-          .equatable()
-          .padding(.top, item.spacing)
-        }
-        ForEach(pending) { row in
-          PendingRowView(row: row)
-            .padding(.top, laid.isEmpty && row.id == pending.first?.id ? 0 : Spacing.xxl)
-            .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
-        }
-        // The feed's end, so following new content lands exactly where opening did (a row's
-        // bottom edge would leave out this room and move the feed when the first update arrives).
-        Color.clear.frame(height: Spacing.xl + trailingSpace).id(Self.endId)
+    Color.clear
+      .onGeometryChange(for: EdgeInsets.self) { $0.safeAreaInsets } action: { insets = $0 }
+      .overlay {
+        // The whole pane scrolls under the bars and the composer; the feed insets itself by them.
+        FeedCollection(
+          items: items, revision: model.state.revision, model: model, images: images, openThread: openThread,
+          status: status, insets: insets, trailingSpace: trailingSpace, app: app
+        )
+        .ignoresSafeArea()
       }
-      .scrollTargetLayout()
-      .padding(.horizontal, Spacing.lg + 2)
-      .padding(.top, Spacing.sm)
-      .frame(maxWidth: Layout.readingWidth)
-      // Exactly the container's width: wider content would let bottom anchoring scroll sideways.
-      .containerRelativeFrame(.horizontal)
-    }
-    // The whole pane scrolls (and carries the edge effects), not just the reading column.
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .defaultScrollAnchor(model.scrollAnchor == nil ? .bottom : .top)
-    // The composer growing or the keyboard rising keeps the newest row in view, unless the reader
-    // scrolled up. While a row opens or closes the top holds, so it grows in place instead of
-    // being pushed up (nil would fall back to the anchor above).
-    .defaultScrollAnchor(holdingAnchor ? .top : (atBottom ? .bottom : nil), for: .sizeChanges)
-    .scrollPosition($position)
-    .scrollDismissesKeyboard(.interactively)
-    // Hard at the top: the title sits over long-form text, which the soft edge left legible under it.
-    .scrollEdgeEffectStyle(.hard, for: .top)
-    .scrollEdgeEffectStyle(.soft, for: .bottom)
-    .onScrollGeometryChange(for: CGFloat.self) { geometry in
-      // The visible rect runs under the bars; the composer's inset is not content.
-      (geometry.contentSize.height - (geometry.visibleRect.maxY - geometry.contentInsets.bottom)).rounded()
-    } action: { _, distance in
-      // A Bool here missed its last change during the first anchoring; the distance always moves.
-      let isAtBottom = distance <= 56
-      guard isAtBottom != atBottom else { return }
-      atBottom = isAtBottom
-      if isAtBottom { unseen = false }
-    }
-    .onScrollTargetVisibilityChange(idType: String.self, threshold: 0.05) { ids in
-      topVisible = ids.first
-    }
-    .onChange(of: model.state.revision) { _, _ in
-      if atBottom {
-        scrollToLatest()
-      } else {
-        unseen = true
-      }
-    }
-    .onChange(of: trailingSpace) { _, _ in
-      if atBottom { scrollToLatest() }
-    }
-    .onChange(of: pending) { old, new in
-      // A new message of the user's own always brings the feed to it; a status change (failed,
-      // with its buttons) stays in view while the reader is at the bottom.
-      if new.count > old.count {
-        withMotion(Motion.transition, reduceMotion: reduceMotion) { scrollToLatest() }
-        unseen = false
-      } else if atBottom {
-        withMotion(Motion.micro, reduceMotion: reduceMotion) { scrollToLatest() }
-      }
-    }
     .overlay(alignment: .bottom) {
-      if !atBottom, model.state.isLoaded {
-        ScrollToLatestButton(unseen: unseen) {
-          withMotion(Motion.transition, reduceMotion: reduceMotion) { scrollToLatest() }
-          unseen = false
+      if !status.following, model.state.isLoaded {
+        ScrollToLatestButton(unseen: status.unseen) {
+          status.controller?.scrollToEnd(animated: true)
         }
         .padding(.bottom, Spacing.md + trailingSpace)
         .transition(reduceMotion ? .opacity : .scale(scale: 0.6).combined(with: .opacity))
       }
     }
-    .motion(Motion.micro, value: atBottom)
-    .onDisappear {
-      model.scrollAnchor = atBottom ? nil : topVisible
-    }
-    #if DEBUG
-      .task {
-        // `ANKIEL_DEBUG_THREAD_SCROLL=top`: start at the first row (screenshots of the scrolled-up state).
-        guard ProcessInfo.processInfo.environment["ANKIEL_DEBUG_THREAD_SCROLL"] == "top" else { return }
-        try? await Task.sleep(for: .milliseconds(600))
-        if let first = model.state.timeline.visibleRows(expanded: model.expanded).first {
-          position.scrollTo(id: first.id, anchor: .top)
-        }
-      }
-    #endif
+    .motion(Motion.micro, value: status.following)
   }
 
-  /// To the feed's end. (`scrollTo(edge: .bottom)` also moved the feed sideways and past its end
-  /// on iOS 26.)
-  static let endId = "timeline.end"
-
-  private func scrollToLatest() {
-    position.scrollTo(id: Self.endId, anchor: .bottom)
-  }
-
-  private func toggle(_ id: String) {
-    holdingAnchor = true
-    withMotion(Motion.snappy, reduceMotion: reduceMotion) { model.toggle(id) }
-    Task {
-      try? await Task.sleep(for: .milliseconds(500))
-      holdingAnchor = false
+  private var items: [FeedItem] {
+    let laid = Self.layout(model.state.timeline.visibleRows(expanded: model.expanded))
+    var items = laid.map { item in
+      FeedItem.row(item.row, spacing: item.spacing, expanded: isExpanded(item.row), load: load(item.row))
     }
+    for row in pending {
+      items.append(.pending(row, spacing: laid.isEmpty && row.id == pending.first?.id ? 0 : Spacing.xxl))
+    }
+    return items
   }
 
   private func isExpanded(_ row: TimelineRow) -> Bool {
@@ -201,7 +101,7 @@ struct ThreadTimelineView: View {
 }
 
 /// One row. Equatable on its data, so a streaming update re-renders only the rows that changed.
-private struct TimelineRowView: View, Equatable {
+struct TimelineRowView: View, Equatable {
   let row: TimelineRow
   let expanded: Bool
   let load: ThreadDetailModel.DetailLoad?

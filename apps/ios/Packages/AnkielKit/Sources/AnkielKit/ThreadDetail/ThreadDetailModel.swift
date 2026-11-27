@@ -10,8 +10,8 @@ public final class ThreadDetailModel {
   public private(set) var state = ThreadDetailState()
   /// Open run folds and work groups.
   public var expanded: Set<String> = []
-  /// The row at the top of the screen when the reader left, nil when they were at the bottom.
-  public var scrollAnchor: String?
+  /// Where the feed was when the reader left (`.end` when they were at the bottom).
+  public var scrollAnchor: FeedScroll.Anchor = .end
   /// Full items fetched when a row expands (the stream strips command output).
   public private(set) var details: [String: DetailLoad] = [:]
 
