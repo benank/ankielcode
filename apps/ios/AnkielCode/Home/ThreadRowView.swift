@@ -6,25 +6,31 @@ import SwiftUI
 struct ThreadRowView: View, Equatable {
   let row: ThreadRow
   let selected: Bool
+  @Environment(\.dynamicTypeSize) private var typeSize
+
+  nonisolated static func == (lhs: Self, rhs: Self) -> Bool { lhs.row == rhs.row && lhs.selected == rhs.selected }
 
   var body: some View {
-    HStack(alignment: .center, spacing: Spacing.md) {
+    // At accessibility sizes the status moves under the title instead of squeezing it to a word.
+    let large = typeSize.isAccessibilitySize
+    HStack(alignment: large ? .firstTextBaseline : .center, spacing: Spacing.md) {
       ThreadLightView(light: row.light, pinned: row.pinned && row.light == nil)
       VStack(alignment: .leading, spacing: Spacing.xxs) {
         Text(row.title.isEmpty ? String(localized: "New thread") : row.title)
           .font(row.variant == .card ? Typography.body.weight(row.unread ? .semibold : .regular) : Typography.body)
           .foregroundStyle(row.variant == .slim ? Palette.textSecondary : Palette.textPrimary)
           .opacity(row.regeneratingTitle ? 0.55 : 1)
-          .lineLimit(1)
+          .lineLimit(large ? 3 : 1)
         if let subtitle {
           Text(subtitle)
             .font(Typography.footnote)
             .foregroundStyle(Palette.textTertiary)
-            .lineLimit(row.searchHit == nil ? 1 : 2)
+            .lineLimit(row.searchHit == nil && !large ? 1 : 2)
         }
+        if large { ThreadMetaView(row: row) }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
-      ThreadMetaView(row: row)
+      if !large { ThreadMetaView(row: row) }
     }
     .padding(.vertical, Spacing.sm)
     .padding(.leading, CGFloat(row.depth) * Spacing.lg)
@@ -66,7 +72,7 @@ struct ThreadLightView: View {
           .font(.system(size: Self.size(light), weight: .semibold))
           .foregroundStyle(Self.tint(light))
           .contentTransition(.symbolEffect(.replace))
-          .transition(.scale(scale: 0.4).combined(with: .opacity))
+          .motionTransition(.scale(scale: 0.4).combined(with: .opacity))
       } else if pinned {
         Image(systemName: "pin.fill")
           .font(.system(size: 10, weight: .semibold))
@@ -75,7 +81,7 @@ struct ThreadLightView: View {
       }
     }
     .frame(width: 16, height: 16)
-    .animation(Motion.micro, value: light)
+    .motion(Motion.micro, value: light)
     .accessibilityHidden(true)
   }
 
@@ -128,7 +134,7 @@ private struct ThreadMetaView: View {
     .foregroundStyle(Palette.textTertiary)
     .lineLimit(1)
     .fixedSize()
-    .animation(Motion.micro, value: row.statusLabel)
+    .motion(Motion.micro, value: row.statusLabel)
   }
 
   private func tint(_ label: ThreadStatusLabel) -> Color {

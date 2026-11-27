@@ -59,6 +59,7 @@ struct ModelPickerSheet: View {
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button("Done", systemImage: "checkmark") { dismiss() }
+            .keyboardShortcut(.cancelAction)
             .accessibilityIdentifier("modelPicker.done")
         }
       }

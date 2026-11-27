@@ -148,7 +148,7 @@ struct ThreadSettingsPage: View {
       Text("Settled threads move to the Settled shelf. Nothing is deleted.")
     }
     .disabled(!canWrite)
-    .animation(.snappy(duration: 0.18), value: settings.autoSettleAfterDays == nil)
+    .motion(Motion.microSlow, value: settings.autoSettleAfterDays == nil)
   }
 
   // MARK: Writing
@@ -215,7 +215,7 @@ struct ThreadSettingsPage: View {
   static func describe(_ error: EnvironmentRequestError) -> String {
     switch error {
     case .notConnected: String(localized: "Not connected.")
-    case .rejected(let message): message ?? String(localized: "The computer refused the change.")
+    case .rejected(let message, _): message ?? String(localized: "The computer refused the change.")
     case .failed(let message): message
     }
   }

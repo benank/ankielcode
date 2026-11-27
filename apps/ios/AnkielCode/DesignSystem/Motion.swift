@@ -42,6 +42,22 @@ private struct MotionModifier<Value: Equatable>: ViewModifier {
   }
 }
 
+extension View {
+  /// `.transition(_:)` that becomes a cross-fade under Reduce Motion.
+  func motionTransition(_ transition: AnyTransition) -> some View {
+    modifier(MotionTransitionModifier(transition: transition))
+  }
+}
+
+private struct MotionTransitionModifier: ViewModifier {
+  let transition: AnyTransition
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+  func body(content: Content) -> some View {
+    content.transition(reduceMotion ? .opacity : transition)
+  }
+}
+
 /// `withAnimation` that honors Reduce Motion (pass the environment value from the view).
 func withMotion<Result>(
   _ animation: Animation, reduceMotion: Bool, _ body: () throws -> Result

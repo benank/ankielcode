@@ -272,6 +272,26 @@ struct PendingRequestDerivationTests {
   }
 }
 
+@Suite("Secret refusals")
+struct SecretRefusalTests {
+  @Test("only secret and authorization refusals show the server's words")
+  func filtered() {
+    #expect(EnvironmentRequestError.rejected(message: "The secret store is locked.", tag: "SecretRequestError").secretRefusalMessage
+      == "The secret store is locked.")
+    #expect(EnvironmentRequestError.rejected(message: "Not allowed.", tag: "EnvironmentAuthorizationError").secretRefusalMessage == "Not allowed.")
+    #expect(EnvironmentRequestError.rejected(message: "Expected string, got hunter2", tag: "SchemaError").secretRefusalMessage == nil)
+    #expect(EnvironmentRequestError.rejected(message: "No tag").secretRefusalMessage == nil)
+    #expect(EnvironmentRequestError.rejected(message: "  ", tag: "SecretRequestError").secretRefusalMessage == nil)
+    #expect(EnvironmentRequestError.failed("socket").secretRefusalMessage == nil)
+  }
+
+  @Test("a server refusal keeps its tag")
+  func tagCarried() {
+    let failure = RpcFailure(error: .object(["_tag": .string("SecretRequestError"), "message": .string("Locked.")]))
+    #expect(EnvironmentRequestError(RpcError.failed(failure)) == .rejected(message: "Locked.", tag: "SecretRequestError"))
+  }
+}
+
 @Suite("Request fixtures")
 struct RequestFixtureTests {
   @Test("every request fixture derives the requests it is named for")
@@ -310,7 +330,7 @@ struct RequestResolutionTests {
     #expect(PendingRequestDerivation.derive(try #require(before)).userInputs.count == 1)
     let after = try ThreadFixtures.projection("thread-question-resolved")
     #expect(PendingRequestDerivation.derive(after).isEmpty)
-    #expect(PendingRequestDerivation.outcomes(after)["runtime-request:synthetic:question:8"] == .resolved(decision: nil))
+    #expect(PendingRequestDerivation.outcomes(after)["runtime-request:requests:question:8"] == .resolved(decision: nil))
     let answered = try ThreadFixtures.timeline("thread-question-resolved").rows.compactMap { row -> AnsweredRow? in
       if case .answered(let answered) = row.content { answered } else { nil }
     }

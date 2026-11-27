@@ -204,7 +204,7 @@ struct QueuedMessagesBar: View {
         }
       }
     }
-    .glassEffect(.regular, in: .rect(cornerRadius: 20, style: .continuous))
+    .glassEffect(.regular, in: .rect(cornerRadius: Radius.large, style: .continuous))
     .padding(.horizontal, Spacing.md)
     .alert("Edit queued message", isPresented: editPresented) {
       TextField("Message", text: $editText, axis: .vertical)

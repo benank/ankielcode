@@ -115,7 +115,7 @@ struct RequestCardChrome<Body: View, Actions: View>: View {
       actions.fixedSize(horizontal: false, vertical: true)
     }
     .padding(Spacing.lg)
-    .frame(maxWidth: 760, alignment: .leading)
+    .frame(maxWidth: Layout.readingWidth, alignment: .leading)
     .background {
       if reduceTransparency {
         RoundedRectangle(cornerRadius: Radius.sheet, style: .continuous).fill(Palette.surfaceRaised)
@@ -295,7 +295,7 @@ struct RequestConfirmationView: View {
     }
     .padding(.horizontal, Spacing.lg)
     .frame(minHeight: 52)
-    .frame(maxWidth: 760)
+    .frame(maxWidth: Layout.readingWidth)
     .background {
       if reduceTransparency { Capsule().fill(Palette.surfaceRaised) }
     }

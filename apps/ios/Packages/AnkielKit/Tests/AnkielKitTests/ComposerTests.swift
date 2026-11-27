@@ -21,6 +21,8 @@ final class FakeComposerSink: ComposerSink {
   var uploads: [UploadFile] = []
   var discarded: [String] = []
   var launched: [String] = []
+  /// Message sends never answer (a computer that took the frame and went quiet).
+  var hangs = false
 
   func canSend(to environmentId: String) -> Bool { connected }
 
@@ -35,6 +37,7 @@ final class FakeComposerSink: ComposerSink {
 
   func send(_ message: MessageDispatch, in environmentId: String) async throws(EnvironmentRequestError) -> Int {
     sent.append(.message(message))
+    if hangs { try? await Task.sleep(for: .seconds(3600)) }
     try next()
     return 42
   }
@@ -138,6 +141,25 @@ struct ComposerStoreTests {
     store.send(ref.key, to: ref, delivery: .start, thread: settings)
     await store.idle()
     #expect(store.outbox.first?.state == .failed(message: "timeout", retriesSameCommand: true))
+  }
+
+  @Test("a send the computer never answers times out and resends with the same command id")
+  func unansweredSendTimesOut() async throws {
+    let sink = FakeComposerSink()
+    sink.hangs = true
+    let store = await makeStore(sink)
+    store.sendTimeout = .milliseconds(20)
+    store.maxTransportAttempts = 2
+    store.setText("Hello", for: ref.key)
+    let message = try #require(store.send(ref.key, to: ref, delivery: .start, thread: settings))
+    await store.idle()
+    #expect(sink.messages.count == 2, "resent once before giving up")
+    #expect(store.outbox.first?.state == .failed(message: store.sendTimeoutMessage, retriesSameCommand: true))
+    sink.hangs = false
+    store.retry(message.messageId)
+    await store.idle()
+    #expect(Set(sink.messages.map(\.commandId)).count == 1)
+    #expect(store.outbox.first?.state.isSent == true)
   }
 
   @Test("offline messages wait, then send when woken")

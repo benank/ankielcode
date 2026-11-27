@@ -14,7 +14,7 @@ enum ConnectionPresentation {
       return String(localized: "Connected", comment: "connection status")
     case .reconnecting(_, _, let failure):
       if let failure {
-        return String(localized: "Failed to connect. Reconnecting… Reason: \(reason(failure, host: host))")
+        return String(localized: "Could not connect: \(reason(failure, host: host)) Reconnecting…")
       }
       return String(localized: "Reconnecting…")
     case .offline:

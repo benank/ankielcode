@@ -81,6 +81,7 @@ final class AppModel {
     composer = ComposerStore(directory: directory.appending(path: folder, directoryHint: .isDirectory), sink: sink)
     isComposerFake = fake
     composer.titleLabels = .localized
+    composer.sendTimeoutMessage = String(localized: "The computer did not confirm the message within 60 seconds.")
     #if DEBUG
       if fake, ProcessInfo.processInfo.environment["ANKIEL_DEBUG_COMPOSER_RESET"] == "1" { composer.reset() }
     #endif
@@ -114,7 +115,7 @@ final class AppModel {
   }
 
   func launch() async {
-    await registry.load(adopting: Self.takeLegacyEnvironment())
+    await registry.load()
     await composer.load()
     home.start()
     #if DEBUG
@@ -248,6 +249,9 @@ final class AppModel {
   }
 
   /// Settings, optionally on one page.
+  /// The thread list with nothing presented over it (where keyboard shortcuts act).
+  var isOnHome: Bool { route == .home && sheet == nil && navigator.sheet == nil }
+
   func openSettings(_ route: SettingsRoute? = nil) {
     settingsPath = route.map { [$0] } ?? []
     sheet = .settings
@@ -279,14 +283,6 @@ final class AppModel {
     URL.applicationSupportDirectory.appending(path: "AnkielCode", directoryHint: .isDirectory)
   }
 
-  /// Phase 2 kept one environment in UserDefaults; the registry adopts it once.
-  private static func takeLegacyEnvironment() -> SavedEnvironment? {
-    let key = "pairedEnvironment"
-    guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
-    UserDefaults.standard.removeObject(forKey: key)
-    return try? JSONDecoder().decode(SavedEnvironment.self, from: data)
-  }
-
   // MARK: Debug hooks (documented in apps/ios/README.md)
 
   #if DEBUG
@@ -315,8 +311,15 @@ final class AppModel {
       case "new-thread":
         navigator.sheet = .newThread
       case "thread":
-        if let first = registry.environments.first, let thread = first.shell.threads.first(where: \.isListed) {
-          navigator.open(ThreadRef(environmentId: first.id, threadId: thread.id))
+        // The shell may still be loading (cold start, no cache): wait for its first thread.
+        Task {
+          for _ in 0..<100 {
+            if let first = registry.environments.first, let thread = first.shell.threads.first(where: \.isListed) {
+              navigator.open(ThreadRef(environmentId: first.id, threadId: thread.id))
+              return
+            }
+            try? await Task.sleep(for: .milliseconds(100))
+          }
         }
       case let value? where value.hasPrefix("pairing-"):
         debugForcesOnboarding = true
@@ -339,7 +342,15 @@ final class AppModel {
       }
       if let fixture = environment["ANKIEL_DEBUG_THREAD"] {
         let ref = ThreadRef(environmentId: ThreadDebug.environmentId, threadId: fixture)
-        navigator.open(ref)
+        if let delay = environment["ANKIEL_DEBUG_THREAD_DELAY"].flatMap(Double.init) {
+          // Pushes the thread over the list a moment after launch, like a tap (transition checks).
+          Task {
+            try? await Task.sleep(for: .seconds(delay))
+            navigator.open(ref)
+          }
+        } else {
+          navigator.open(ref)
+        }
         if let preset = environment["ANKIEL_DEBUG_COMPOSER_PRESET"] { applyComposerPreset(preset, ref: ref) }
       }
     }

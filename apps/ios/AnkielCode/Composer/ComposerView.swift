@@ -16,6 +16,7 @@ struct ComposerView: View {
 
   @Environment(AppModel.self) private var model
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Environment(\.dynamicTypeSize) private var typeSize
   @FocusState private var focused: Bool
   @State private var picker: Picker?
   @State private var photoItems: [PhotosPickerItem] = []
@@ -121,11 +122,11 @@ struct ComposerView: View {
       if !draft.attachments.isEmpty {
         AttachmentStrip(target: target)
           .padding(.top, Spacing.sm + 2)
-          .transition(.opacity.combined(with: .move(edge: .bottom)))
+          .motionTransition(.opacity.combined(with: .move(edge: .bottom)))
       }
       TextField(placeholder, text: text, axis: .vertical)
         .font(Typography.body)
-        .lineLimit(1...8)
+        .lineLimit(1...(typeSize.isAccessibilitySize ? 4 : 8))
         .focused($focused)
         .padding(.horizontal, Spacing.xs + 2)
         .padding(.top, Spacing.md)
@@ -133,7 +134,7 @@ struct ComposerView: View {
         .accessibilityIdentifier("composer.field")
         .onKeyPress(.return, phases: .down) { press in
           guard press.modifiers.contains(.command) else { return .ignored }
-          submit(primary.delivery)
+          sendFromKeyboard()
           return .handled
         }
       HStack(spacing: Spacing.sm) {
@@ -145,7 +146,7 @@ struct ComposerView: View {
     }
     .padding(.horizontal, Spacing.sm)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .glassEffect(.regular, in: .rect(cornerRadius: 24, style: .continuous))
+    .glassEffect(.regular, in: .rect(cornerRadius: Radius.composer, style: .continuous))
     .motion(Motion.snappy, value: draft.attachments.map(\.id))
   }
 
@@ -173,6 +174,9 @@ struct ComposerView: View {
         .contentShape(.circle)
     }
     .glassEffect(.regular.interactive(), in: .circle)
+    // Bar buttons keep their size; the large content viewer shows them big instead.
+    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    .accessibilityShowsLargeContentViewer()
     .accessibilityLabel(Text("Add attachment"))
     .accessibilityIdentifier("composer.attach")
   }
@@ -186,23 +190,29 @@ struct ComposerView: View {
       Button {
         picker = .model
       } label: {
+        // At accessibility sizes the effort goes under the model instead of truncating both.
+        let layout = typeSize.isAccessibilitySize
+          ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: Spacing.xs))
         HStack(spacing: Spacing.xs) {
-          Text(label.model)
-            .foregroundStyle(Palette.textPrimary)
-          if let effort = label.effort {
-            Text(effort)
-              .foregroundStyle(Palette.textSecondary)
+          layout {
+            Text(label.model)
+              .foregroundStyle(Palette.textPrimary)
+            if let effort = label.effort {
+              Text(effort)
+                .foregroundStyle(Palette.textSecondary)
+            }
           }
           Image(systemName: "chevron.down")
             .font(Typography.caption2.weight(.semibold))
             .foregroundStyle(Palette.textTertiary)
         }
         .font(Typography.footnote.weight(.medium))
-        .lineLimit(1)
+        .lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
+        .padding(.vertical, typeSize.isAccessibilitySize ? Spacing.xs : 0)
         .padding(.horizontal, Spacing.md - 2)
         .frame(minHeight: 32)
-        .background(Palette.fill, in: .capsule)
-        .contentShape(.capsule)
+        .background(Palette.fill, in: .rect(cornerRadius: typeSize.isAccessibilitySize ? Radius.field : 16, style: .continuous))
+        .contentShape(.rect(cornerRadius: Radius.field, style: .continuous))
         .frame(minHeight: 44)
       }
       .buttonStyle(.plain)
@@ -248,10 +258,13 @@ struct ComposerView: View {
       }
       .buttonStyle(.plain)
       .disabled(!enabled)
-      .keyboardShortcut(.return, modifiers: .command)
+      // Never Stop from the keyboard: Command-Return right after a send must not end the turn.
+      .keyboardShortcut(primary == .stop ? nil : KeyboardShortcut(.return, modifiers: .command))
       .accessibilityLabel(Text(label))
       .accessibilityIdentifier("composer.send")
     }
+    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    .accessibilityShowsLargeContentViewer()
     .motion(Motion.snappy, value: primary)
   }
 
@@ -278,6 +291,13 @@ struct ComposerView: View {
     case .stop: "Stop"
     case .update: "Update queued message"
     }
+  }
+
+  /// Command-Return from the field. The send button's shortcut may fire for the same press; the
+  /// second one finds the draft sent and does nothing.
+  private func sendFromKeyboard() {
+    guard primary != .stop else { return }
+    submit(primary.delivery)
   }
 
   private func submit(_ delivery: MessageDelivery) {

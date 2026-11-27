@@ -45,7 +45,7 @@ enum RequestCopy {
   static func failure(_ error: EnvironmentRequestError, fallback: String) -> String {
     switch error {
     case .notConnected: String(localized: "Not connected to the computer. Try again when it is back.")
-    case .rejected(let message): message.flatMap { $0.isEmpty ? nil : $0 } ?? fallback
+    case .rejected(let message, _): message.flatMap { $0.isEmpty ? nil : $0 } ?? fallback
     case .failed: fallback
     }
   }

@@ -12,7 +12,8 @@ enum Palette {
 
   static let textPrimary = Color(light: 0x16171A, dark: 0xF1F2F4)
   static let textSecondary = Color(light: 0x5E626B, dark: 0xA3A7AF)
-  static let textTertiary = Color(light: 0x8E929B, dark: 0x6E727A)
+  /// Still WCAG AA (4.5:1) on the canvas: timestamps, timers and placeholders are read, not decoration.
+  static let textTertiary = Color(light: 0x686C75, dark: 0x8C9098)
 
   static let accent = Color.accentColor
   /// Text and icons on a filled accent control (`.glassProminent`): the accent is near-black in
@@ -36,7 +37,7 @@ enum Palette {
   /// Code tokens: muted, so code reads as text first.
   static let codeKeyword = Color(light: 0xA4327C, dark: 0xE38BC7)
   static let codeString = Color(light: 0x3F7A2A, dark: 0x9BCF7F)
-  static let codeComment = Color(light: 0x8A8F98, dark: 0x6E747D)
+  static let codeComment = Color(light: 0x656A73, dark: 0x878D96)
   static let codeNumber = Color(light: 0x9A5B00, dark: 0xE7B26A)
   static let codeType = Color(light: 0x2C62B8, dark: 0x7FAAF0)
   static let codeProperty = Color(light: 0x6B4FBB, dark: 0xB79CF2)

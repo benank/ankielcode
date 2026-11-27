@@ -18,7 +18,7 @@ struct AboutSettingsPage: View {
       Section {
         LabeledContent("Version", value: AppInfo.versionLabel)
           .accessibilityIdentifier("about.version")
-        NavigationLink(value: SettingsRoute.storage) { Label("Client Storage", systemImage: "internaldrive") }
+        NavigationLink(value: SettingsRoute.storage) { Label("Client storage", systemImage: "internaldrive") }
           .accessibilityIdentifier("settings.storage")
         NavigationLink(value: SettingsRoute.diagnostics) { Label("Diagnostics", systemImage: "stethoscope") }
           .accessibilityIdentifier("settings.diagnostics")
@@ -94,7 +94,7 @@ struct ClientStoragePage: View {
           }
           .swipeActions {
             if (shellSizes[environment.id] ?? 0) > 0 {
-              Button("Clear Cache", role: .destructive) { clearing = .computer(environment.id) }
+              Button("Clear cache", role: .destructive) { clearing = .computer(environment.id) }
             }
           }
         }
@@ -119,7 +119,7 @@ struct ClientStoragePage: View {
         Text("Unsent messages are delivered when their computer connects; delete one from its thread. Clearing drafts keeps them.")
       }
     }
-    .navigationTitle("Client Storage")
+    .navigationTitle("Client storage")
     .navigationBarTitleDisplayMode(.inline)
     .task(id: model.registry.environments.map(\.id)) { await measure() }
     .confirmationDialog(title, isPresented: Binding(get: { clearing != nil }, set: { if !$0 { clearing = nil } }), titleVisibility: .visible, presenting: clearing) { target in
@@ -140,16 +140,16 @@ struct ClientStoragePage: View {
 
   private func confirmLabel(_ target: ClearTarget) -> String {
     switch target {
-    case .computer: String(localized: "Clear Cache")
-    case .all: String(localized: "Clear All Caches")
-    case .drafts: String(localized: "Clear Drafts")
+    case .computer: String(localized: "Clear cache")
+    case .all: String(localized: "Clear all caches")
+    case .drafts: String(localized: "Clear drafts")
     }
   }
 
   private func message(_ target: ClearTarget) -> String {
     switch target {
     case .computer:
-      String(localized: "This removes the offline thread list for this environment. The saved connection and credentials stay intact.")
+      String(localized: "This removes the saved thread list for this computer. Its connection and sign-in stay.")
     case .all:
       String(localized: "This removes offline data for every environment. Connections, credentials and app preferences stay intact.")
     case .drafts:

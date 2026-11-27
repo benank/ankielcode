@@ -65,11 +65,11 @@ struct AppearanceSettingsPage: View {
         }
         Toggle("Word break", isOn: $preferences.values.codeWordBreak)
       } header: {
-        Text("Code & Diffs")
+        Text("Code and diffs")
       } footer: {
         Text("Word break wraps long lines instead of scrolling them sideways.")
       }
-      .animation(.snappy(duration: 0.18), value: preferences.values.codeFontSize == nil)
+      .motion(Motion.microSlow, value: preferences.values.codeFontSize == nil)
 
       Section {
       } header: {
@@ -199,6 +199,6 @@ struct ChoiceRows<Value: Hashable>: View {
       .accessibilityAddTraits(selection == value ? .isSelected : [])
       .sensoryFeedback(.selection, trigger: selection)
     }
-    .animation(.snappy(duration: 0.15), value: selection)
+    .motion(Motion.microFast, value: selection)
   }
 }

@@ -131,13 +131,13 @@ final class RequestUITests: HomeUITestCase {
     XCTAssertTrue(question.waitForExistence(timeout: 8))
     let field = app.textFields["question.field"]
     field.tap()
-    field.typeText("North jetty gauge")
+    field.typeText("Mill Reach pier")
     XCTAssertTrue(app.keyboards.firstMatch.exists)
     XCTAssertTrue(app.buttons["question.submit"].isHittable, "the actions stay above the keyboard")
     shot("question-text-keyboard")
     field.typeText("\n")
     XCTAssertTrue(question.waitForNonExistence(timeout: 6), "Return submits the last question")
-    XCTAssertTrue(app.staticTexts["North jetty gauge"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Mill Reach pier"].waitForExistence(timeout: 5))
   }
 
   func testMultiStepForm() {
@@ -146,23 +146,23 @@ final class RequestUITests: HomeUITestCase {
     XCTAssertTrue(app.staticTexts["Question 1 of 3"].exists)
     let next = app.buttons["question.next"]
     XCTAssertFalse(next.isEnabled, "a step needs an answer before Next")
-    app.buttons["question.option.South inlet"].tap()
+    app.buttons["question.option.Inlet"].tap()
     next.tap()
     XCTAssertTrue(app.staticTexts["Question 2 of 3"].waitForExistence(timeout: 3))
     XCTAssertTrue(next.isEnabled, "an optional multi-select can be left empty")
     shot("question-steps-2")
     app.buttons["question.previous"].tap()
-    XCTAssertTrue(app.buttons["question.option.South inlet"].isSelected, "going back keeps the answer")
+    XCTAssertTrue(app.buttons["question.option.Inlet"].isSelected, "going back keeps the answer")
     next.tap()
     next.tap()
     XCTAssertTrue(app.staticTexts["Question 3 of 3"].waitForExistence(timeout: 3))
     let field = app.textViews["question.field"].exists ? app.textViews["question.field"] : app.textFields["question.field"]
-    XCTAssertEqual(field.value as? String, "Add the north harbor tide chart", "the suggested answer is filled in")
+    XCTAssertEqual(field.value as? String, "Add the north coast tide chart", "the suggested answer is filled in")
     field.tap()
-    field.typeText("\nCovers the north jetty.")
+    field.typeText("\nCovers Gull Rock too.")
     XCTAssertTrue(question.exists, "Return adds a line in a multi-line answer instead of submitting")
     let edited = field.value as? String ?? ""
-    XCTAssertTrue(edited.contains("\nCovers the north jetty.") && edited.contains("Add the north harbor tide chart"), edited)
+    XCTAssertTrue(edited.contains("\nCovers Gull Rock too.") && edited.contains("Add the north coast tide chart"), edited)
     shot("question-steps-3")
     app.buttons["question.submit"].tap()
     XCTAssertTrue(question.waitForNonExistence(timeout: 6))

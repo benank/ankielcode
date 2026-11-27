@@ -19,7 +19,7 @@ final class SettingsUITests: HomeUITestCase {
     XCTAssertTrue(done.waitForExistence(timeout: 5))
     shot("settings-root")
     let pages: [(String, String)] = [
-      ("settings.general", "Project grouping"), ("settings.appearance", "Code & Diffs"), ("settings.chat", "Steer"),
+      ("settings.general", "Project grouping"), ("settings.appearance", "Code and diffs"), ("settings.chat", "Steer"),
       ("settings.notifications", "Push notifications"), ("settings.providers", "Claude"),
       ("settings.threads", "Default permissions"), ("settings.about", "Remove all computers"),
     ]

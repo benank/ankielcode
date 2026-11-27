@@ -88,7 +88,7 @@ struct HomeEmptyState: View {
       ContentUnavailableView {
         Label("Environment unavailable", systemImage: "bolt.horizontal.circle")
       } description: {
-        Text(reason ?? String(localized: "The saved environment is offline. Check the URL or start the environment, then retry."))
+        Text(reason ?? String(localized: "This computer is offline. Check its address or start it, then try again."))
       } actions: {
         Button("Computers", action: computers)
           .buttonStyle(.glass)

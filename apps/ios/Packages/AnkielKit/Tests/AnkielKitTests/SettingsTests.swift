@@ -11,26 +11,6 @@ import Testing
     return defaults
   }
 
-  @Test func `phase 4 thread list keys move into the one value and are removed`() {
-    let defaults = defaults()
-    defaults.set("env-2", forKey: "threadList.environmentId")
-    defaults.set("env-2:proj", forKey: "threadList.projectKey")
-    defaults.set(true, forKey: "threadList.settledShelfExpanded")
-    defaults.set(["env-2:a", "env-2:b"], forKey: "threadList.collapsedProjectGroups")
-
-    let preferences = ClientPreferences(defaults: defaults)
-    #expect(preferences.values.threadListEnvironmentId == "env-2")
-    #expect(preferences.values.threadListProjectKey == "env-2:proj")
-    #expect(preferences.values.settledShelfExpanded)
-    #expect(!preferences.values.snoozedShelfExpanded)
-    #expect(preferences.values.collapsedProjectGroups == ["env-2:a", "env-2:b"])
-    for key in ClientPreferences.LegacyKeys.all { #expect(defaults.object(forKey: key) == nil) }
-
-    // A later launch reads the migrated value, not the (gone) legacy keys.
-    defaults.set("stale", forKey: "threadList.environmentId")
-    #expect(ClientPreferences(defaults: defaults).values.threadListEnvironmentId == "env-2")
-  }
-
   @Test func `changes persist and an unreadable field keeps the others`() throws {
     let defaults = defaults()
     let preferences = ClientPreferences(defaults: defaults)

@@ -153,13 +153,10 @@ struct SecretCardView: View {
     }
   }
 
-  /// Only the server's own refusal passes through; anything else gets the generic copy, so a
-  /// typed value can never surface in the UI (RN `secretRequestFailureMessage`).
+  /// Only the server's own secret and authorization refusals pass through; anything else gets the
+  /// generic copy, so a typed value can never surface in the UI.
   static func failure(_ error: EnvironmentRequestError) -> String {
-    switch error {
-    case .notConnected: String(localized: "Not connected to the computer. Try again when it is back.")
-    case .rejected(let message?) where !message.isEmpty: message
-    default: String(localized: "Could not answer the request. Try again.")
-    }
+    if case .notConnected = error { return String(localized: "Not connected to the computer. Try again when it is back.") }
+    return error.secretRefusalMessage ?? String(localized: "Could not answer the request. Try again.")
   }
 }

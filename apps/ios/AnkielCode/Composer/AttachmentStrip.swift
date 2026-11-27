@@ -22,13 +22,15 @@ struct AttachmentStrip: View {
               }
             },
             remove: { store.removeAttachment(attachment.id, from: target.draftKey) })
-          .transition(.scale(scale: 0.8).combined(with: .opacity))
+          .motionTransition(.scale(scale: 0.8).combined(with: .opacity))
         }
       }
       .padding(.horizontal, Spacing.xs)
       .padding(.top, Spacing.xs)
     }
     .scrollIndicators(.hidden)
+    // Thumbnails are a fixed size; past this their captions only truncate.
+    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     .accessibilityIdentifier("composer.attachments")
   }
 }
@@ -52,11 +54,11 @@ private struct AttachmentChip: View {
             .foregroundStyle(Palette.onPrimaryButton)
             .frame(width: 20, height: 20)
             .background(Palette.primaryButton.opacity(0.85), in: .circle)
-            .frame(width: 32, height: 32)
+            .frame(width: 44, height: 44)
             .contentShape(.circle)
         }
         .buttonStyle(.plain)
-        .offset(x: 10, y: -10)
+        .offset(x: 16, y: -16)
         .accessibilityLabel(Text("Remove \(attachment.name)"))
       }
       .padding(.top, Spacing.xs)
@@ -126,7 +128,7 @@ private struct AttachmentChip: View {
           .stroke(.white, style: StrokeStyle(lineWidth: 3, lineCap: .round))
           .rotationEffect(.degrees(-90))
           .frame(width: 24, height: 24)
-          .animation(.easeOut(duration: 0.16), value: progress)
+          .motion(Motion.micro, value: progress)
       }
       .allowsHitTesting(false)
     case .failed? where attachment.kind == .image:

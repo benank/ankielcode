@@ -43,6 +43,13 @@ public final class ComposerStore {
   @ObservationIgnored public var titleLabels = ThreadTitleSeed.Labels()
   /// Transport failures (not "offline") before a message shows as failed.
   @ObservationIgnored public var maxTransportAttempts = 6
+  /// RN's `MESSAGE_DISPATCH_TIMEOUT`: a live socket can carry a message the computer never
+  /// answers, which would hold the thread's outbox forever. A dispatch that takes longer counts as
+  /// a transport failure: it resends with the same command id (the server answers a repeat from its
+  /// receipt if the first one landed) and, after `maxTransportAttempts`, shows Retry.
+  @ObservationIgnored public var sendTimeout: Duration = .seconds(60)
+  /// Shown on a message that timed out (the app passes localized copy).
+  @ObservationIgnored public var sendTimeoutMessage = "The computer did not confirm the message within 60 seconds."
 
   @ObservationIgnored private var uploadTasks: [String: Task<String, any Error>] = [:]
   @ObservationIgnored private var deliveries: [String: Task<Void, Never>] = [:]
@@ -285,7 +292,7 @@ public final class ComposerStore {
       let failure = EnvironmentRequestError(error)
       if case .notConnected = failure {
         uploads[key] = nil
-      } else if case .rejected(let message) = failure {
+      } else if case .rejected(let message, _) = failure {
         uploads[key] = .failed(message ?? "")
       } else if case .failed(let message) = failure {
         uploads[key] = .failed(message)
@@ -567,6 +574,44 @@ public final class ComposerStore {
     }
     // The user may have deleted it while attachments uploaded.
     guard outbox.contains(where: { $0.messageId == message.messageId }) else { return .accepted(nil) }
+    // RN times out message dispatches only; a launch waits for its answer.
+    if message.creation != nil { return await dispatch(message, attachments: attachments) }
+    return await firstOf(timeout: sendTimeout, else: .transport(sendTimeoutMessage)) { [weak self] in
+      await self?.dispatch(message, attachments: attachments) ?? .offline
+    }
+  }
+
+  /// `work`'s outcome, or `fallback` if it takes longer than `timeout`. The send keeps running; a
+  /// late answer is ignored (the resend carries the same command id).
+  private func firstOf(
+    timeout: Duration, else fallback: Outcome, _ work: @escaping @MainActor () async -> Outcome
+  ) async -> Outcome {
+    let once = Once()
+    return await withCheckedContinuation { continuation in
+      once.continuation = continuation
+      let timer = Task { @MainActor in
+        try? await Task.sleep(for: timeout)
+        if !Task.isCancelled { once.resume(fallback) }
+      }
+      Task { @MainActor in
+        let outcome = await work()
+        timer.cancel()
+        once.resume(outcome)
+      }
+    }
+  }
+
+  @MainActor private final class Once {
+    var continuation: CheckedContinuation<Outcome, Never>?
+    func resume(_ outcome: Outcome) {
+      continuation?.resume(returning: outcome)
+      continuation = nil
+    }
+  }
+
+  private func dispatch(_ message: OutboxMessage, attachments: [ChatAttachment]) async -> Outcome {
+    let environmentId = message.environmentId
+    guard let sink else { return .offline }
     do {
       if let creation = message.creation {
         guard let model = message.modelSelection else { return .refused(nil) }
@@ -602,7 +647,7 @@ public final class ComposerStore {
   private func outcome(_ error: EnvironmentRequestError) -> Outcome {
     switch error {
     case .notConnected: .offline
-    case .rejected(let message): .refused(message)
+    case .rejected(let message, _): .refused(message)
     case .failed(let message): .transport(message)
     }
   }

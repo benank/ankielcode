@@ -618,7 +618,7 @@ final class HomeModel {
     switch error {
     case EnvironmentRequestError.notConnected:
       return String(localized: "This computer is not connected. Try again when it reconnects.")
-    case EnvironmentRequestError.rejected(let message?) where !message.isEmpty:
+    case EnvironmentRequestError.rejected(let message?, _) where !message.isEmpty:
       return message
     default:
       return String(localized: "Try again.")

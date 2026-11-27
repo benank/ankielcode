@@ -66,7 +66,9 @@ private struct ThreadScreen: View {
 
   private var title: String {
     let title = detail.state.title ?? shell?.title ?? row?.title ?? pendingCreation?.creation?.title ?? ""
-    return title.isEmpty ? String(localized: "New thread") : title
+    // Blank while the thread loads, so its real title does not replace a placeholder.
+    guard title.isEmpty, detail.state.isLoaded || awaitingCreation else { return title }
+    return String(localized: "New thread")
   }
 
   private var subtitle: String {
@@ -98,6 +100,7 @@ private struct ThreadScreen: View {
         model.composer.reconcile(threadRef.key, known: known)
       }
       .sensoryFeedback(.impact(weight: .light), trigger: actionCount)
+      .sensoryFeedback(.error, trigger: failedSends) { old, new in new > old }
       .alert("Rename thread", isPresented: renamePresented) {
         TextField("Title", text: renameText)
         Button("Cancel", role: .cancel) {}
@@ -214,7 +217,7 @@ private struct ThreadScreen: View {
         QueuedMessagesBar(
           queued: target.activity.queued, held: target.activity.queueHeld, actions: ComposerActions(model: model, target: target)
         )
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .motionTransition(.move(edge: .bottom).combined(with: .opacity))
       }
       if !awaitingCreation, !hidesComposer {
         ComposerView(target: target) { delivery in
@@ -223,6 +226,8 @@ private struct ThreadScreen: View {
         .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
       }
     }
+    .frame(maxWidth: Layout.readingWidth)
+    .frame(maxWidth: .infinity)
     .motion(Motion.snappy, value: target.activity.queued.map(\.id))
     .motion(Motion.snappy, value: hidesComposer)
   }
@@ -257,6 +262,14 @@ private struct ThreadScreen: View {
       case .failed:
         break
       }
+    }
+  }
+
+  /// Messages of this thread the server refused or that gave up retrying.
+  private var failedSends: Int {
+    model.composer.outbox.count { message in
+      guard message.threadKey == threadRef.key, case .failed = message.state else { return false }
+      return true
     }
   }
 

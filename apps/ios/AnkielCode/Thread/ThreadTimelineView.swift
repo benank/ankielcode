@@ -18,6 +18,9 @@ struct ThreadTimelineView: View {
   @State private var atBottom: Bool
   @State private var unseen = false
   @State private var topVisible: String?
+  /// Set while the reader opens or closes a row: it grows in place instead of the bottom anchor
+  /// pushing it up out of view.
+  @State private var holdingAnchor = false
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   init(
@@ -41,7 +44,7 @@ struct ThreadTimelineView: View {
         ForEach(laid, id: \.row.id) { item in
           TimelineRowView(
             row: item.row, expanded: isExpanded(item.row), load: load(item.row), images: images, model: model,
-            openThread: openThread
+            openThread: openThread, toggle: toggle
           )
           .equatable()
           .padding(.top, item.spacing)
@@ -51,25 +54,29 @@ struct ThreadTimelineView: View {
             .padding(.top, laid.isEmpty && row.id == pending.first?.id ? 0 : Spacing.xxl)
             .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
         }
-        if trailingSpace > 0 {
-          Color.clear.frame(height: trailingSpace).id(Self.trailingSpaceId)
-        }
+        // The feed's end, so following new content lands exactly where opening did (a row's
+        // bottom edge would leave out this room and move the feed when the first update arrives).
+        Color.clear.frame(height: Spacing.xl + trailingSpace).id(Self.endId)
       }
       .scrollTargetLayout()
       .padding(.horizontal, Spacing.lg + 2)
       .padding(.top, Spacing.sm)
-      .padding(.bottom, Spacing.xl)
-      .frame(maxWidth: 760)
+      .frame(maxWidth: Layout.readingWidth)
       // Exactly the container's width: wider content would let bottom anchoring scroll sideways.
       .containerRelativeFrame(.horizontal)
     }
+    // The whole pane scrolls (and carries the edge effects), not just the reading column.
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .defaultScrollAnchor(model.scrollAnchor == nil ? .bottom : .top)
     // The composer growing or the keyboard rising keeps the newest row in view, unless the reader
-    // scrolled up.
-    .defaultScrollAnchor(atBottom ? .bottom : nil, for: .sizeChanges)
+    // scrolled up. While a row opens or closes the top holds, so it grows in place instead of
+    // being pushed up (nil would fall back to the anchor above).
+    .defaultScrollAnchor(holdingAnchor ? .top : (atBottom ? .bottom : nil), for: .sizeChanges)
     .scrollPosition($position)
     .scrollDismissesKeyboard(.interactively)
-    .scrollEdgeEffectStyle(.soft, for: .all)
+    // Hard at the top: the title sits over long-form text, which the soft edge left legible under it.
+    .scrollEdgeEffectStyle(.hard, for: .top)
+    .scrollEdgeEffectStyle(.soft, for: .bottom)
     .onScrollGeometryChange(for: CGFloat.self) { geometry in
       // The visible rect runs under the bars; the composer's inset is not content.
       (geometry.contentSize.height - (geometry.visibleRect.maxY - geometry.contentInsets.bottom)).rounded()
@@ -129,14 +136,21 @@ struct ThreadTimelineView: View {
     #endif
   }
 
-  /// To the last row's bottom. (`scrollTo(edge: .bottom)` also moved the feed sideways and past
-  /// its end on iOS 26.)
-  static let trailingSpaceId = "timeline.trailing-space"
+  /// To the feed's end. (`scrollTo(edge: .bottom)` also moved the feed sideways and past its end
+  /// on iOS 26.)
+  static let endId = "timeline.end"
 
   private func scrollToLatest() {
-    let rowId = pending.last?.id ?? model.state.timeline.visibleRows(expanded: model.expanded).last?.id
-    guard let last = trailingSpace > 0 ? Self.trailingSpaceId : rowId else { return }
-    position.scrollTo(id: last, anchor: .bottom)
+    position.scrollTo(id: Self.endId, anchor: .bottom)
+  }
+
+  private func toggle(_ id: String) {
+    holdingAnchor = true
+    withMotion(Motion.snappy, reduceMotion: reduceMotion) { model.toggle(id) }
+    Task {
+      try? await Task.sleep(for: .milliseconds(500))
+      holdingAnchor = false
+    }
   }
 
   private func isExpanded(_ row: TimelineRow) -> Bool {
@@ -194,6 +208,7 @@ private struct TimelineRowView: View, Equatable {
   let images: ThreadImages
   let model: ThreadDetailModel
   let openThread: (String) -> Void
+  let toggle: (String) -> Void
 
   nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
     lhs.row == rhs.row && lhs.expanded == rhs.expanded && lhs.load == rhs.load && lhs.images == rhs.images
@@ -228,11 +243,6 @@ private struct TimelineRowView: View, Equatable {
     }
   }
 
-  @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-  private func toggle(_ id: String) {
-    withMotion(Motion.snappy, reduceMotion: reduceMotion) { model.toggle(id) }
-  }
 }
 
 /// The floating glass button back to the newest message; a dot says new content arrived.
@@ -256,7 +266,7 @@ private struct ScrollToLatestButton: View {
           .fill(Palette.working)
           .frame(width: 10, height: 10)
           .offset(x: -2, y: 2)
-          .transition(.scale.combined(with: .opacity))
+          .motionTransition(.scale.combined(with: .opacity))
       }
     }
     .motion(Motion.micro, value: unseen)

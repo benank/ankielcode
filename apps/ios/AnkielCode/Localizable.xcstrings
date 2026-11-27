@@ -4,24 +4,15 @@
     "" : {
 
     },
-    "“%@” will be permanently deleted, including its terminal history." : {
-
-    },
-    "%@ · %@" : {
+    "%@ came back still on %@. Try again, or update it on that machine." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$@ · %2$@"
+            "value" : "%1$@ came back still on %2$@. Try again, or update it on that machine."
           }
         }
       }
-    },
-    "%@ · Failed" : {
-      "comment" : "connection hop status"
-    },
-    "%@ · Not checked" : {
-
     },
     "%@ closed the connection while pairing. Try again in a moment." : {
 
@@ -30,6 +21,12 @@
 
     },
     "%@ did not respond in time." : {
+
+    },
+    "%@ is saved with a different address. If it moved, update it to use this one: its sign-in is replaced and the old addresses stay as fallbacks." : {
+
+    },
+    "%@ is turned off" : {
 
     },
     "%@ is unavailable" : {
@@ -47,6 +44,42 @@
     "%@ runs an older Ankiel Code." : {
 
     },
+    "%@ use different values. These rows show %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ use different values. These rows show %2$@."
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · Failed" : {
+      "comment" : "connection hop status"
+    },
+    "%@ · Latest %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · Latest %2$@"
+          }
+        }
+      }
+    },
+    "%@ · Not checked" : {
+
+    },
     "%@, done" : {
 
     },
@@ -57,6 +90,28 @@
 
     },
     "%@, working" : {
+
+    },
+    "%lld models" : {
+
+    },
+    "%lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "%lld pt" : {
+
+    },
+    "%lld queued" : {
+
+    },
+    "%lld queued · held" : {
 
     },
     "%lld." : {
@@ -71,10 +126,7 @@
     "%lldm" : {
       "comment" : "compact elapsed minutes"
     },
-    "^[%lld settled thread](inflect: true)" : {
-
-    },
-    "^[%lld snoozed thread](inflect: true)" : {
+    "1 model" : {
 
     },
     "<1m" : {
@@ -92,10 +144,28 @@
     "A pairing link works once and expires after a few minutes. Make a new one if it stops working." : {
 
     },
+    "A very long thread" : {
+      "comment" : "debug fixture title"
+    },
+    "About" : {
+
+    },
+    "Across computers" : {
+
+    },
+    "Actions for queued message %lld" : {
+
+    },
     "Add a computer" : {
 
     },
+    "Add a computer to change its defaults." : {
+
+    },
     "Add an environment to load projects and start coding sessions." : {
+
+    },
+    "Add attachment" : {
 
     },
     "Address" : {
@@ -107,7 +177,13 @@
     "Addresses the computer reports, such as its local network address, are tried first and checked before any credential is sent." : {
 
     },
+    "Agents" : {
+
+    },
     "All computers" : {
+
+    },
+    "All connected computers" : {
 
     },
     "All projects" : {
@@ -116,13 +192,31 @@
     "All threads" : {
 
     },
+    "Allow commands and edits without prompts." : {
+
+    },
     "Allow once" : {
+
+    },
+    "Allow session" : {
+
+    },
+    "Allowed" : {
+
+    },
+    "An image exceeds the 10 MB attachment limit." : {
 
     },
     "Ankiel Code" : {
 
     },
     "Ankiel Code connection to %@: %@" : {
+
+    },
+    "Ankiel Code follows the text size you choose for your device in Display & Brightness, including the larger accessibility sizes." : {
+
+    },
+    "Ankiel Code is open source under the MIT license. This app includes no third-party code." : {
 
     },
     "Ankiel Code keeps every saved computer connected and reconnects on its own." : {
@@ -137,14 +231,38 @@
     "Ankiel Code on %@ did not answer" : {
 
     },
+    "Answer sent" : {
+
+    },
     "Answered" : {
+
+    },
+    "Answered on another device" : {
+
+    },
+    "App" : {
+      "comment" : "settings section about this mobile app"
+    },
+    "App access approval" : {
+
+    },
+    "App permission approval" : {
 
     },
     "App version" : {
 
     },
+    "Appearance" : {
+
+    },
     "Approval" : {
       "comment" : "thread status, waiting for approval"
+    },
+    "Approval feedback" : {
+
+    },
+    "Approval from %@" : {
+
     },
     "Approval requested" : {
 
@@ -155,8 +273,53 @@
     "Archived thread" : {
 
     },
+    "As %@ reported them when it was last connected." : {
+
+    },
+    "Ask before commands and file changes." : {
+
+    },
+    "Attached image" : {
+
+    },
+    "Attached images" : {
+
+    },
+    "Attachment copies" : {
+
+    },
+    "Attachments" : {
+
+    },
     "Attempts" : {
       "comment" : "diagnostics field label"
+    },
+    "Auto" : {
+
+    },
+    "Auto-accept edits" : {
+
+    },
+    "Auto-approve edits, ask before other actions." : {
+
+    },
+    "Auto-settle" : {
+
+    },
+    "Auto-settle inactive threads" : {
+
+    },
+    "Auto-settle merged threads" : {
+
+    },
+    "Automatically resume threads when their usage limits reset. You can cancel auto-resume in each thread." : {
+
+    },
+    "Cached thread lists show threads before a computer connects. They download again on the next connection." : {
+
+    },
+    "Camera" : {
+
     },
     "Camera access needed" : {
 
@@ -179,10 +342,28 @@
     "Changed 1 file" : {
 
     },
+    "Changes here are written to every connected computer now. Computers that are offline keep their own values." : {
+
+    },
+    "Chat" : {
+
+    },
+    "Check for updates" : {
+
+    },
+    "Checkbox" : {
+
+    },
     "Checking the computer" : {
 
     },
+    "Checking…" : {
+
+    },
     "Checkpoint captured" : {
+
+    },
+    "Choose a model first." : {
 
     },
     "Choose a thread from the list, or start a new one." : {
@@ -194,11 +375,41 @@
     "Choose another project or create a new task." : {
 
     },
+    "Clear all caches" : {
+
+    },
+    "Clear all client caches?" : {
+
+    },
+    "Clear all drafts?" : {
+
+    },
+    "Clear cache" : {
+
+    },
+    "Clear cache for %@?" : {
+
+    },
+    "Clear caches" : {
+
+    },
+    "Clear drafts" : {
+
+    },
+    "Client storage" : {
+
+    },
     "Close" : {
 
     },
     "Code" : {
       "comment" : "label of a code block with no language"
+    },
+    "Code and diffs" : {
+
+    },
+    "Collapse user input" : {
+
     },
     "Collapsed" : {
 
@@ -207,6 +418,12 @@
 
     },
     "Collapses the snoozed threads." : {
+
+    },
+    "Command approval" : {
+
+    },
+    "Composer" : {
 
     },
     "Computer" : {
@@ -218,13 +435,34 @@
     "Computers" : {
 
     },
+    "Configure a provider with in-app sign-in in web or desktop Settings." : {
+
+    },
     "Connect" : {
+
+    },
+    "Connect %@ to manage it. These are the values it reported when it was last connected." : {
+
+    },
+    "Connect %@ to see and change its defaults." : {
+
+    },
+    "Connect a computer to change its defaults." : {
+
+    },
+    "Connect on this device" : {
 
     },
     "Connect this device to the internet. Ankiel Code reconnects on its own." : {
 
     },
+    "Connect to load models" : {
+
+    },
     "Connect to the computer to see the output." : {
+
+    },
+    "Connect to this computer to change the model." : {
 
     },
     "Connected" : {
@@ -288,13 +526,25 @@
     "Copy thread link" : {
 
     },
+    "Could not answer the request. Try again." : {
+
+    },
     "Could not archive thread" : {
+
+    },
+    "Could not check for updates." : {
+
+    },
+    "Could not check releases (%lld). Try again." : {
+
+    },
+    "Could not connect: %@ Reconnecting…" : {
 
     },
     "Could not delete thread" : {
 
     },
-    "Could not load older threads. Retry" : {
+    "Could not load older threads. Tap to retry." : {
 
     },
     "Could not open this thread" : {
@@ -303,10 +553,25 @@
     "Could not pin thread" : {
 
     },
+    "Could not read a photo." : {
+
+    },
+    "Could not read that file." : {
+
+    },
     "Could not read this thread" : {
 
     },
     "Could not rename thread" : {
+
+    },
+    "Could not save settings" : {
+
+    },
+    "Could not search messages for “%@”. Change the search to try again." : {
+
+    },
+    "Could not send your answers. Try again." : {
 
     },
     "Could not settle thread" : {
@@ -336,9 +601,6 @@
     "Couldn't reach %@" : {
 
     },
-    "Couldn't search messages for “%@”. Change the search to try again." : {
-
-    },
     "Create a task to start a new coding runtime in one of your connected projects." : {
 
     },
@@ -351,7 +613,19 @@
     "Created 1 thread" : {
 
     },
+    "Custom font size" : {
+
+    },
+    "Dark" : {
+      "comment" : "dark appearance"
+    },
     "Decline" : {
+      "comment" : "verb, refuses the secret request\nverb, rejects the approval request"
+    },
+    "Declined" : {
+      "comment" : "a secret request was declined\nan approval was declined"
+    },
+    "Default permissions" : {
 
     },
     "Delete" : {
@@ -360,13 +634,43 @@
     "Delete thread?" : {
 
     },
+    "Describe a task" : {
+
+    },
+    "Development" : {
+      "comment" : "build variant"
+    },
+    "Diagnostics" : {
+
+    },
     "Direct" : {
       "comment" : "a direct internet connection route"
+    },
+    "Dismiss" : {
+
+    },
+    "Dismiss without answering" : {
+
+    },
+    "Dismissed" : {
+
     },
     "Done" : {
       "comment" : "thread status, turn finished"
     },
+    "Drafts" : {
+
+    },
     "Earlier work" : {
+
+    },
+    "Edit" : {
+
+    },
+    "Edit queued message" : {
+
+    },
+    "Environment caches" : {
 
     },
     "Environment unavailable" : {
@@ -378,7 +682,7 @@
     "Exchanging the pairing code" : {
 
     },
-    "exit %lld" : {
+    "Expand user input, ^[%lld question](inflect: true)" : {
 
     },
     "Expanded" : {
@@ -396,7 +700,22 @@
     "Failed %@" : {
 
     },
-    "Failed to connect. Reconnecting… Reason: %@" : {
+    "Failed to submit approval decision." : {
+
+    },
+    "File change approval" : {
+
+    },
+    "File read approval" : {
+
+    },
+    "File: %@" : {
+
+    },
+    "Files" : {
+
+    },
+    "Files can be up to 50 MB." : {
 
     },
     "Filter" : {
@@ -411,14 +730,50 @@
     "Follow and steer the coding agents on your own computers, from anywhere." : {
 
     },
+    "Font size" : {
+
+    },
     "For machines on your local network or tailnet, or anywhere through your own relay. The machine keeps its own provider credentials." : {
 
     },
     "For machines on your local network or tailnet. The machine keeps its own provider credentials." : {
 
     },
+    "Forgets every computer's sign-in and cached threads on this device. Your preferences stay. The computers keep listing this device until you revoke it there." : {
+
+    },
+    "Found automatically" : {
+
+    },
+    "Full access" : {
+
+    },
+    "Full access skips approvals, but an ask rule in the agent's own settings matches this action, so it still asks. Remove or narrow that rule to stop these prompts." : {
+
+    },
+    "Full access skips approvals, but the agent still stops for a few safety checks of its own that no setting can skip, such as a delete whose path it can't verify. Ankiel Code can't turn these off, so check the request and approve it if it's what you expect." : {
+
+    },
+    "General" : {
+
+    },
+    "Get an alert when an agent finishes, fails or needs you." : {
+
+    },
     "Goal" : {
       "comment" : "thread status, working toward a goal"
+    },
+    "Group by repository" : {
+
+    },
+    "Group by repository path" : {
+
+    },
+    "HTTP status" : {
+
+    },
+    "Hide" : {
+
     },
     "Host version" : {
 
@@ -426,7 +781,7 @@
     "How do I get a pairing link?" : {
 
     },
-    "HTTP status" : {
+    "How the project filter on the thread list combines the same project across computers." : {
 
     },
     "Image" : {
@@ -456,20 +811,50 @@
     "In use" : {
 
     },
+    "Inactive days" : {
+
+    },
     "Input" : {
       "comment" : "thread status, waiting for user input"
     },
     "Input requested" : {
 
     },
+    "Install Ankiel Code %@. The server will restart and reconnect. Running threads may be interrupted." : {
+
+    },
+    "Installed" : {
+
+    },
     "Interrupt requested" : {
+
+    },
+    "Keep monorepo paths separate." : {
+
+    },
+    "Keep separate" : {
 
     },
     "Keep the app open for a moment." : {
 
     },
+    "Kept out of chat, in a private file this agent's commands can read for 24 hours" : {
+
+    },
+    "Kept out of chat, in private files this agent's commands can read for 24 hours" : {
+
+    },
     "Last connected" : {
 
+    },
+    "Legal" : {
+
+    },
+    "License (MIT)" : {
+
+    },
+    "Light" : {
+      "comment" : "light appearance"
     },
     "Limited" : {
       "comment" : "thread status, usage limit reached"
@@ -507,10 +892,16 @@
     "Mark unread" : {
 
     },
+    "Matching repositories appear as one project." : {
+
+    },
     "Message" : {
 
     },
-    "Message…" : {
+    "Model" : {
+
+    },
+    "Models" : {
 
     },
     "More" : {
@@ -531,6 +922,12 @@
     "New thread" : {
 
     },
+    "New threads start with these permissions. You can change them for one thread from its composer." : {
+
+    },
+    "Next" : {
+      "comment" : "goes to the next question"
+    },
     "Next %@" : {
 
     },
@@ -540,10 +937,16 @@
     "Next week" : {
 
     },
+    "No %@ release was found." : {
+
+    },
     "No camera here" : {
 
     },
     "No computers" : {
+
+    },
+    "No models are set up on this computer." : {
 
     },
     "No output" : {
@@ -553,6 +956,12 @@
 
     },
     "No projects found" : {
+
+    },
+    "No providers reported." : {
+
+    },
+    "No sign-in details or thread content are included." : {
 
     },
     "No thread selected" : {
@@ -567,19 +976,49 @@
     "Not connected" : {
 
     },
+    "Not connected to the computer. Try again when it is back." : {
+
+    },
     "Not connected · showing saved messages" : {
+
+    },
+    "Not connected." : {
 
     },
     "Not done" : {
 
     },
-    "now" : {
-      "comment" : "a snoozed thread wakes now"
+    "Not granted" : {
+
+    },
+    "Not installed" : {
+
+    },
+    "Not sent" : {
+
+    },
+    "Not sent · %@" : {
+
+    },
+    "Not signed in" : {
+
+    },
+    "Nothing here yet" : {
+
+    },
+    "Notifications" : {
+
+    },
+    "OK" : {
+
     },
     "Offline" : {
       "comment" : "connection status"
     },
     "Only pair with computers you own. It will be able to show this device its threads." : {
+
+    },
+    "Open %@" : {
 
     },
     "Open Ankiel Code on your computer" : {
@@ -591,13 +1030,22 @@
     "Opens the subagent's thread" : {
 
     },
+    "Option" : {
+
+    },
     "Or copy the pairing link and paste it here." : {
 
     },
     "Or enter it" : {
 
     },
+    "Or type a custom answer" : {
+
+    },
     "Pair" : {
+
+    },
+    "Pair a computer to start a thread." : {
 
     },
     "Pair again" : {
@@ -630,13 +1078,25 @@
     "Paste a pairing link" : {
 
     },
+    "Paste image" : {
+
+    },
     "Paste link" : {
+
+    },
+    "Paste the secret" : {
 
     },
     "Performed %lld other actions" : {
 
     },
     "Performed 1 other action" : {
+
+    },
+    "Permissions" : {
+
+    },
+    "Photo library" : {
 
     },
     "Pin" : {
@@ -648,13 +1108,47 @@
     "Plan updated" : {
 
     },
+    "Previous" : {
+      "comment" : "goes to the previous question"
+    },
     "Project" : {
       "comment" : "filter menu heading"
+    },
+    "Project grouping" : {
+
     },
     "Proposed plan" : {
 
     },
     "Provider error" : {
+
+    },
+    "Providers" : {
+
+    },
+    "Push notifications" : {
+
+    },
+    "Push notifications aren't available in this build." : {
+
+    },
+    "Question %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Question %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Queue" : {
+      "comment" : "verb, follow-up behavior"
+    },
+    "Queued message" : {
+
+    },
+    "Queueing…" : {
 
     },
     "Ran %@" : {
@@ -681,10 +1175,16 @@
     "Read a file" : {
 
     },
+    "Ready" : {
+
+    },
     "Received %lld updates" : {
 
     },
     "Received 1 update" : {
+
+    },
+    "Recent projects" : {
 
     },
     "Reconnecting %lld computers" : {
@@ -699,9 +1199,6 @@
     "Reconnecting…" : {
 
     },
-    "regenerating title" : {
-
-    },
     "Relay" : {
 
     },
@@ -714,19 +1211,56 @@
     "Remove %@?" : {
 
     },
+    "Remove all" : {
+
+    },
+    "Remove all computers" : {
+
+    },
+    "Remove all computers?" : {
+
+    },
+    "Remove attachments until there are at most %lld." : {
+
+    },
+    "Removing forgets this computer's sign-in and cached threads on this device. %@ keeps listing this device until you revoke it there." : {
+
+    },
     "Rename" : {
 
     },
     "Rename thread" : {
 
     },
+    "Request %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Request %1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "Resets %@" : {
+
+    },
+    "Restarting and reconnecting…" : {
+
+    },
+    "Resume after usage limits" : {
 
     },
     "Retry" : {
 
     },
     "Retry now" : {
+
+    },
+    "Retry or remove the failed attachment" : {
+
+    },
+    "Retry upload" : {
 
     },
     "Retry. If it keeps failing, copy the diagnostics." : {
@@ -744,10 +1278,16 @@
     "Save" : {
 
     },
-    "Scan a new code" : {
+    "Save securely" : {
+
+    },
+    "Saved securely and kept private" : {
 
     },
     "Scan QR code" : {
+
+    },
+    "Scan a new code" : {
 
     },
     "Scan the code from `ankiel pair` or desktop Connections settings" : {
@@ -763,6 +1303,9 @@
       "comment" : "search field placeholder"
     },
     "Search failed" : {
+
+    },
+    "Search settings" : {
 
     },
     "Searched code %lld times" : {
@@ -795,13 +1338,43 @@
     "Secret requested: %@" : {
 
     },
-    "Sending from the app is not available yet" : {
+    "Select a connected environment." : {
+
+    },
+    "Send" : {
+
+    },
+    "Send a message to get the agent started." : {
+
+    },
+    "Send approval feedback without attachments or added context." : {
+
+    },
+    "Send now" : {
+
+    },
+    "Send now, queued message %lld" : {
+
+    },
+    "Sending" : {
+
+    },
+    "Sending…" : {
+
+    },
+    "Sends after the current turn" : {
+
+    },
+    "Sends into the current turn" : {
 
     },
     "Sent by an agent" : {
 
     },
     "Sent while working" : {
+
+    },
+    "Set when the pairing link was made. To change them, pair again with a link that grants more." : {
 
     },
     "Settings" : {
@@ -816,7 +1389,16 @@
     "Settled thread" : {
 
     },
+    "Settled threads move to the Settled shelf. Nothing is deleted." : {
+
+    },
+    "Show" : {
+
+    },
     "Show all threads" : {
+
+    },
+    "Show every workspace as its own project." : {
 
     },
     "Show full message" : {
@@ -831,10 +1413,19 @@
     "Shows the work behind this reply" : {
 
     },
+    "Signed in" : {
+
+    },
     "Snooze" : {
 
     },
+    "Snooze threads until their usage limits reset. Enable auto-resume to continue the agent after the reset." : {
+
+    },
     "Snooze until" : {
+
+    },
+    "Snooze until limits reset" : {
 
     },
     "Snoozed" : {
@@ -843,19 +1434,52 @@
     "Snoozed thread" : {
 
     },
+    "Source code" : {
+
+    },
+    "Steer" : {
+      "comment" : "verb, follow-up behavior"
+    },
+    "Stop" : {
+
+    },
     "Stopped" : {
       "comment" : "thread status, the user stopped the turn"
     },
     "Stopped %@" : {
 
     },
+    "Stored securely, never shown to the agent" : {
+
+    },
     "Subagent" : {
+
+    },
+    "Submit" : {
+      "comment" : "verb, submits answers"
+    },
+    "Submit answers" : {
+
+    },
+    "Supervised" : {
+
+    },
+    "Supported providers approve routine actions; others still ask." : {
 
     },
     "Syncing threads…" : {
 
     },
+    "System" : {
+      "comment" : "appearance follows the system"
+    },
     "Tailnet" : {
+
+    },
+    "Text" : {
+      "comment" : "settings section for text size"
+    },
+    "Text size" : {
 
     },
     "That address claims to be %@" : {
@@ -873,14 +1497,20 @@
     "The address reached another Ankiel Code computer than the link was made for." : {
 
     },
-    "The composer arrives in a later phase." : {
-
-    },
-    "the computer" : {
+    "The computer did not confirm the message within 60 seconds." : {
 
     },
     "The computer did not send this thread." : {
 
+    },
+    "The computer refused the change." : {
+
+    },
+    "The computer refused this answer." : {
+      "comment" : "debug: fake refusal"
+    },
+    "The computer refused this message." : {
+      "comment" : "debug: fake refusal"
     },
     "The connected environment did not report any projects." : {
 
@@ -891,13 +1521,19 @@
     "The connection dropped." : {
 
     },
+    "The folder for threads without a project could not be created." : {
+
+    },
+    "The other choice stays one tap away, in the small button beside Send." : {
+
+    },
     "The pairing code is missing" : {
 
     },
-    "The saved address now reaches another computer. Remove %@ and pair it again." : {
+    "The provider process for this request is no longer available. Interrupt or restart the run to continue." : {
 
     },
-    "The saved environment is offline. Check the URL or start the environment, then retry." : {
+    "The saved address now reaches another computer. Remove %@ and pair it again." : {
 
     },
     "The server answered with HTTP %lld. Try again in a moment." : {
@@ -907,6 +1543,12 @@
 
     },
     "The server sent something this app couldn't read." : {
+
+    },
+    "The upload was refused." : {
+      "comment" : "debug: fake upload refusal"
+    },
+    "Theme" : {
 
     },
     "Thinking" : {
@@ -921,16 +1563,46 @@
     "This app is too old for %@." : {
 
     },
+    "This app needs a newer version of Ankiel Code on this machine." : {
+
+    },
+    "This computer is no longer saved on this device." : {
+
+    },
     "This computer is not connected. Try again when it reconnects." : {
+
+    },
+    "This computer is offline. Check its address or start it, then try again." : {
+
+    },
+    "This connection cannot answer secret requests." : {
 
     },
     "This connection cannot change threads." : {
 
     },
+    "This connection cannot respond to approvals." : {
+
+    },
+    "This connection cannot submit answers." : {
+
+    },
+    "This connection does not have permission to change settings on %@." : {
+
+    },
+    "This connection does not have permission to manage the environment." : {
+
+    },
     "This device" : {
 
     },
+    "This device can read this computer's threads but not send to them." : {
+
+    },
     "This device can't scan codes. Paste the pairing link instead." : {
+
+    },
+    "This device doesn't connect to %@ or show its threads. Its sign-in stays saved." : {
 
     },
     "This device is offline" : {
@@ -948,6 +1620,9 @@
     "This device's sign-in to %@ expired or was revoked. Pair it again with a new pairing link from %@." : {
 
     },
+    "This empties every composer and removes its attachments. Unsent messages stay." : {
+
+    },
     "This evening" : {
 
     },
@@ -955,6 +1630,18 @@
 
     },
     "This pairing link has expired or was already used" : {
+
+    },
+    "This removes offline data for every environment. Connections, credentials and app preferences stay intact." : {
+
+    },
+    "This removes the saved thread list for this computer. Its connection and sign-in stay." : {
+
+    },
+    "This request expired" : {
+
+    },
+    "This request was cancelled" : {
 
     },
     "This thread is working. Interrupt it first, then try again." : {
@@ -988,7 +1675,7 @@
 
     },
     "Threads" : {
-
+      "comment" : "settings page title"
     },
     "Title" : {
 
@@ -1011,6 +1698,15 @@
     "Turn on automatic date and time on this device and on %@, then retry." : {
 
     },
+    "Turned off" : {
+
+    },
+    "Turned off on this device" : {
+
+    },
+    "Type your answer" : {
+
+    },
     "Un-settle" : {
 
     },
@@ -1026,7 +1722,22 @@
     "Unread" : {
 
     },
+    "Unsent messages" : {
+
+    },
+    "Unsent messages are delivered when their computer connects; delete one from its thread. Clearing drafts keeps them." : {
+
+    },
     "Unsupported item (%@)" : {
+
+    },
+    "Update" : {
+
+    },
+    "Update %@" : {
+
+    },
+    "Update %@?" : {
 
     },
     "Update Ankiel Code on %@." : {
@@ -1041,7 +1752,40 @@
     "Update Ankiel Code on this device." : {
 
     },
+    "Update and restart Ankiel Code on this machine." : {
+
+    },
+    "Update failed" : {
+
+    },
+    "Update queued message" : {
+
+    },
+    "Update the desktop app on this machine." : {
+
+    },
+    "Update the provider to use this model" : {
+
+    },
+    "Update to %@" : {
+
+    },
+    "Updated to %@." : {
+
+    },
+    "Upload failed" : {
+
+    },
+    "Uploading, %lld percent" : {
+
+    },
+    "Uploads when sent" : {
+
+    },
     "Usage limit reached" : {
+
+    },
+    "Usage limits" : {
 
     },
     "Use it right away" : {
@@ -1053,11 +1797,29 @@
     "Used 1 tool" : {
 
     },
+    "User input needed" : {
+
+    },
     "Version" : {
+
+    },
+    "Version %@" : {
+
+    },
+    "Version %@ is available." : {
+
+    },
+    "Version unknown" : {
 
     },
     "Waiting" : {
       "comment" : "thread status"
+    },
+    "Waiting for %@" : {
+
+    },
+    "Waiting for the computer" : {
+
     },
     "Waiting on %lld agents" : {
 
@@ -1074,11 +1836,29 @@
     "Wakes %@" : {
 
     },
+    "Website" : {
+
+    },
+    "What should we work on?" : {
+
+    },
     "What to try" : {
+
+    },
+    "While the agent is running" : {
+
+    },
+    "Why am I being asked this?" : {
 
     },
     "Woke" : {
       "comment" : "thread came back from snooze"
+    },
+    "Word break" : {
+
+    },
+    "Word break wraps long lines instead of scrolling them sideways." : {
+
     },
     "Worked" : {
 
@@ -1092,535 +1872,19 @@
     "You are offline" : {
 
     },
+    "You are up to date." : {
+
+    },
     "You stopped after %@" : {
 
     },
     "You stopped this response" : {
 
     },
+    "You'll need a new pairing link to add each one again." : {
+
+    },
     "You'll need a new pairing link to add it again." : {
-
-    },
-    "Waiting for %@" : {
-
-    },
-    "%lld queued" : {
-
-    },
-    "%lld queued · held" : {
-
-    },
-    "^[%lld attachment](inflect: true)" : {
-
-    },
-    "A very long thread" : {
-      "comment" : "debug fixture title"
-    },
-    "Actions for queued message %lld" : {
-
-    },
-    "Add attachment" : {
-
-    },
-    "Allow commands and edits without prompts." : {
-
-    },
-    "An image exceeds the 10 MB attachment limit." : {
-
-    },
-    "Ask before commands and file changes." : {
-
-    },
-    "Attached image" : {
-
-    },
-    "Attached images" : {
-
-    },
-    "Attachments" : {
-
-    },
-    "Auto" : {
-
-    },
-    "Auto-accept edits" : {
-
-    },
-    "Auto-approve edits, ask before other actions." : {
-
-    },
-    "Camera" : {
-
-    },
-    "Choose a model first." : {
-
-    },
-    "Connect to this computer to change the model." : {
-
-    },
-    "Could not read a photo." : {
-
-    },
-    "Could not read that file." : {
-
-    },
-    "Describe a task" : {
-
-    },
-    "Edit" : {
-
-    },
-    "Edit queued message" : {
-
-    },
-    "File: %@" : {
-
-    },
-    "Files" : {
-
-    },
-    "Files can be up to 50 MB." : {
-
-    },
-    "Full access" : {
-
-    },
-    "Model" : {
-
-    },
-    "No models are set up on this computer." : {
-
-    },
-    "Not sent" : {
-
-    },
-    "Not sent · %@" : {
-
-    },
-    "Nothing here yet" : {
-
-    },
-    "Pair a computer to start a thread." : {
-
-    },
-    "Paste image" : {
-
-    },
-    "Permissions" : {
-
-    },
-    "Photo library" : {
-
-    },
-    "Queue" : {
-
-    },
-    "Queued message" : {
-
-    },
-    "Queueing…" : {
-
-    },
-    "Ready" : {
-
-    },
-    "Recent projects" : {
-
-    },
-    "Remove attachments until there are at most %lld." : {
-
-    },
-    "Retry or remove the failed attachment" : {
-
-    },
-    "Retry upload" : {
-
-    },
-    "Send" : {
-
-    },
-    "Send a message to get the agent started." : {
-
-    },
-    "Send now" : {
-
-    },
-    "Send now, queued message %lld" : {
-
-    },
-    "Sending…" : {
-
-    },
-    "Sends after the current turn" : {
-
-    },
-    "Steer" : {
-
-    },
-    "Stop" : {
-
-    },
-    "Supervised" : {
-
-    },
-    "Supported providers approve routine actions; others still ask." : {
-
-    },
-    "The computer refused this message." : {
-      "comment" : "debug: fake refusal"
-    },
-    "The folder for threads without a project could not be created." : {
-
-    },
-    "The upload was refused." : {
-      "comment" : "debug: fake upload refusal"
-    },
-    "This device can read this computer's threads but not send to them." : {
-
-    },
-    "Update queued message" : {
-
-    },
-    "Update the provider to use this model" : {
-
-    },
-    "Upload failed" : {
-
-    },
-    "Uploading, %lld percent" : {
-
-    },
-    "Uploads when sent" : {
-
-    },
-    "Waiting for the computer" : {
-
-    },
-    "What should we work on?" : {
-
-    },
-    "%lld of %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld of %2$lld"
-          }
-        }
-      }
-    },
-    "^[%lld question](inflect: true)" : {
-
-    },
-    "Allow session" : {
-
-    },
-    "Allowed" : {
-
-    },
-    "Answer sent" : {
-
-    },
-    "Answered on another device" : {
-
-    },
-    "App access approval" : {
-
-    },
-    "App permission approval" : {
-
-    },
-    "Approval feedback" : {
-
-    },
-    "Approval from %@" : {
-
-    },
-    "Checkbox" : {
-
-    },
-    "Collapse user input" : {
-
-    },
-    "Command approval" : {
-
-    },
-    "Could not answer the request. Try again." : {
-
-    },
-    "Could not send your answers. Try again." : {
-
-    },
-    "Declined" : {
-      "comment" : "an approval was declined"
-    },
-    "Dismiss" : {
-
-    },
-    "Dismiss without answering" : {
-
-    },
-    "Dismissed" : {
-
-    },
-    "Expand user input, ^[%lld question](inflect: true)" : {
-
-    },
-    "Failed to submit approval decision." : {
-
-    },
-    "File change approval" : {
-
-    },
-    "File read approval" : {
-
-    },
-    "Full access skips approvals, but an ask rule in the agent's own settings matches this action, so it still asks. Remove or narrow that rule to stop these prompts." : {
-
-    },
-    "Full access skips approvals, but the agent still stops for a few safety checks of its own that no setting can skip, such as a delete whose path it can't verify. Ankiel Code can't turn these off, so check the request and approve it if it's what you expect." : {
-
-    },
-    "Hide" : {
-
-    },
-    "Kept out of chat, in a private file this agent's commands can read for 24 hours" : {
-
-    },
-    "Kept out of chat, in private files this agent's commands can read for 24 hours" : {
-
-    },
-    "Next" : {
-      "comment" : "goes to the next question"
-    },
-    "Not connected to the computer. Try again when it is back." : {
-
-    },
-    "OK" : {
-
-    },
-    "Open %@" : {
-
-    },
-    "Option" : {
-
-    },
-    "Or type a custom answer" : {
-
-    },
-    "Paste the secret" : {
-
-    },
-    "Previous" : {
-      "comment" : "goes to the previous question"
-    },
-    "Question %lld of %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Question %1$lld of %2$lld"
-          }
-        }
-      }
-    },
-    "Request %lld of %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Request %1$lld of %2$lld"
-          }
-        }
-      }
-    },
-    "Save securely" : {
-
-    },
-    "Saved securely and kept private" : {
-
-    },
-    "Send approval feedback without attachments or added context." : {
-
-    },
-    "Sending" : {
-
-    },
-    "Show" : {
-
-    },
-    "Stored securely, never shown to the agent" : {
-
-    },
-    "Submit" : {
-      "comment" : "verb, submits answers"
-    },
-    "Submit answers" : {
-
-    },
-    "The computer refused this answer." : {
-      "comment" : "debug: fake refusal"
-    },
-    "The provider process for this request is no longer available. Interrupt or restart the run to continue." : {
-
-    },
-    "This connection cannot answer secret requests." : {
-
-    },
-    "This connection cannot respond to approvals." : {
-
-    },
-    "This connection cannot submit answers." : {
-
-    },
-    "This request expired" : {
-
-    },
-    "This request was cancelled" : {
-
-    },
-    "Type your answer" : {
-
-    },
-    "User input needed" : {
-
-    },
-    "Why am I being asked this?" : {
-
-    },
-    "Search settings" : {
-
-    },
-    "Agents" : {
-
-    },
-    "This computer is no longer saved on this device." : {
-
-    },
-    "General" : {
-
-    },
-    "Appearance" : {
-
-    },
-    "Chat" : {
-
-    },
-    "Notifications" : {
-
-    },
-    "Providers" : {
-
-    },
-    "About" : {
-
-    },
-    "Client Storage" : {
-
-    },
-    "Diagnostics" : {
-
-    },
-    "Project grouping" : {
-
-    },
-    "Group by repository" : {
-
-    },
-    "Theme" : {
-
-    },
-    "Dark" : {
-
-    },
-    "Light" : {
-
-    },
-    "Code & Diffs" : {
-
-    },
-    "Font size" : {
-
-    },
-    "Word break" : {
-
-    },
-    "Text size" : {
-
-    },
-    "While the agent is running" : {
-
-    },
-    "Push notifications" : {
-
-    },
-    "Signed in" : {
-
-    },
-    "Models" : {
-
-    },
-    "Default permissions" : {
-
-    },
-    "Usage limits" : {
-
-    },
-    "Auto-settle" : {
-
-    },
-    "Legal" : {
-
-    },
-    "Source code" : {
-
-    },
-    "Remove all computers" : {
-
-    },
-    "Clear caches" : {
-
-    },
-    "Drafts" : {
-
-    },
-    "%@ is saved with a different address. If it moved, update it to use this one: its sign-in is replaced and the old addresses stay as fallbacks." : {
-
-    },
-    "Matching repositories appear as one project." : {
-
-    },
-    "Group by repository path" : {
-
-    },
-    "Keep monorepo paths separate." : {
-
-    },
-    "Keep separate" : {
-
-    },
-    "Show every workspace as its own project." : {
-
-    },
-    "How the project filter on the thread list combines the same project across computers." : {
-
-    },
-    "System" : {
-      "comment" : "appearance follows the system"
-    },
-    "Custom font size" : {
-
-    },
-    "%lld pt" : {
-
-    },
-    "Word break wraps long lines instead of scrolling them sideways." : {
-
-    },
-    "Text" : {
-      "comment" : "settings section for text size"
-    },
-    "Ankiel Code follows the text size you choose for your device in Display & Brightness, including the larger accessibility sizes." : {
 
     },
     "Your message reaches the agent right away, changing what it is working on." : {
@@ -1629,307 +1893,34 @@
     "Your message waits and runs after the current turn finishes." : {
 
     },
-    "The other choice stays one tap away, in the small button beside Send." : {
-
-    },
-    "Get an alert when an agent finishes, fails or needs you." : {
-
-    },
-    "Push notifications aren't available in this build." : {
-
-    },
-    "Turned off on this device" : {
-
-    },
-    "%@ is turned off" : {
-
-    },
-    "Update %@" : {
-
-    },
-    "Connect on this device" : {
-
-    },
-    "This device doesn't connect to %@ or show its threads. Its sign-in stays saved." : {
-
-    },
-    "Found automatically" : {
-
-    },
-    "Removing forgets this computer's sign-in and cached threads on this device. %@ keeps listing this device until you revoke it there." : {
-
-    },
-    "Not granted" : {
-
-    },
     "Your permissions" : {
 
     },
-    "Set when the pairing link was made. To change them, pair again with a link that grants more." : {
+    "^[%lld attachment](inflect: true)" : {
 
     },
-    "Update %@?" : {
+    "^[%lld question](inflect: true)" : {
 
     },
-    "Update to %@" : {
+    "^[%lld settled thread](inflect: true)" : {
 
     },
-    "Version %@" : {
+    "^[%lld snoozed thread](inflect: true)" : {
 
     },
-    "Restarting and reconnecting…" : {
+    "exit %lld" : {
 
     },
-    "Updated to %@." : {
-
-    },
-    "Update failed" : {
-
-    },
-    "This app needs a newer version of Ankiel Code on this machine." : {
-
-    },
-    "Checking…" : {
-
-    },
-    "Version %@ is available." : {
-
-    },
-    "You are up to date." : {
-
-    },
-    "Check for updates" : {
-
-    },
-    "Update the desktop app on this machine." : {
-
-    },
-    "Update and restart Ankiel Code on this machine." : {
-
-    },
-    "This connection does not have permission to manage the environment." : {
-
-    },
-    "Update" : {
-
-    },
-    "Install Ankiel Code %@. The server will restart and reconnect. Running threads may be interrupted." : {
-
-    },
-    "Could not check releases (%lld). Try again." : {
-
-    },
-    "No %@ release was found." : {
-
-    },
-    "Could not check for updates." : {
-
-    },
-    "Remove all computers?" : {
-
-    },
-    "Development" : {
-      "comment" : "build variant"
-    },
-    "App" : {
-      "comment" : "settings section about this mobile app"
-    },
-    "Website" : {
-
-    },
-    "License (MIT)" : {
-
-    },
-    "Ankiel Code is open source under the MIT license. This app includes no third-party code." : {
-
-    },
-    "Forgets every computer's sign-in and cached threads on this device. Your preferences stay. The computers keep listing this device until you revoke it there." : {
-
-    },
-    "Remove all" : {
-
-    },
-    "You'll need a new pairing link to add each one again." : {
-
-    },
-    "Clear Cache" : {
-
-    },
-    "Environment caches" : {
-
-    },
-    "Cached thread lists show threads before a computer connects. They download again on the next connection." : {
-
-    },
-    "Unsent messages" : {
-
-    },
-    "Attachment copies" : {
-
-    },
-    "Clear drafts" : {
-
-    },
-    "Composer" : {
-
-    },
-    "Unsent messages are delivered when their computer connects; delete one from its thread. Clearing drafts keeps them." : {
-
-    },
-    "Clear cache for %@?" : {
-
-    },
-    "Clear all drafts?" : {
-
-    },
-    "Clear all client caches?" : {
-
-    },
-    "Clear All Caches" : {
-
-    },
-    "Clear Drafts" : {
-
+    "now" : {
+      "comment" : "a snoozed thread wakes now"
     },
-    "This removes the offline thread list for this environment. The saved connection and credentials stay intact." : {
+    "regenerating title" : {
 
-    },
-    "This removes offline data for every environment. Connections, credentials and app preferences stay intact." : {
-
-    },
-    "This empties every composer and removes its attachments. Unsent messages stay." : {
-
-    },
-    "No sign-in details or thread content are included." : {
-
-    },
-    "Could not save settings" : {
-
-    },
-    "Across computers" : {
-
-    },
-    "All connected computers" : {
-
-    },
-    "Changes here are written to every connected computer now. Computers that are offline keep their own values." : {
-
-    },
-    "This connection does not have permission to change settings on %@." : {
-
-    },
-    "Add a computer to change its defaults." : {
-
-    },
-    "Connect a computer to change its defaults." : {
-
-    },
-    "%@ use different values. These rows show %@." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ use different values. These rows show %2$@."
-          }
-        }
-      }
-    },
-    "Not connected." : {
-
-    },
-    "New threads start with these permissions. You can change them for one thread from its composer." : {
-
-    },
-    "Resume after usage limits" : {
-
-    },
-    "Automatically resume threads when their usage limits reset. You can cancel auto-resume in each thread." : {
-
-    },
-    "Snooze until limits reset" : {
-
-    },
-    "Snooze threads until their usage limits reset. Enable auto-resume to continue the agent after the reset." : {
-
-    },
-    "Auto-settle merged threads" : {
-
-    },
-    "Auto-settle inactive threads" : {
-
-    },
-    "Inactive days" : {
-
-    },
-    "Settled threads move to the Settled shelf. Nothing is deleted." : {
-
-    },
-    "The computer refused the change." : {
-
-    },
-    "Sends into the current turn" : {
-
-    },
-    "Select a connected environment." : {
-
-    },
-    "No providers reported." : {
-
-    },
-    "Connect to load models" : {
-
-    },
-    "As %@ reported them when it was last connected." : {
-
-    },
-    "Configure a provider with in-app sign-in in web or desktop Settings." : {
-
-    },
-    "Not installed" : {
-
-    },
-    "Turned off" : {
-
-    },
-    "Not signed in" : {
-
-    },
-    "Installed" : {
-
-    },
-    "%@ · Latest %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · Latest %2$@"
-          }
-        }
-      }
-    },
-    "1 model" : {
-
-    },
-    "%lld models" : {
-
-    },
-    "Version unknown" : {
-
-    },
-    "%@ came back still on %@. Try again, or update it on that machine." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ came back still on %2$@. Try again, or update it on that machine."
-          }
-        }
-      }
     },
-    "Connect %@ to see and change its defaults." : {
+    "the computer" : {
 
     },
-    "Connect %@ to manage it. These are the values it reported when it was last connected." : {
+    "“%@” will be permanently deleted, including its terminal history." : {
 
     }
   },

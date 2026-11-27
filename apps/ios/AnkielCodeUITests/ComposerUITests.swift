@@ -52,8 +52,7 @@ final class ComposerUITests: HomeUITestCase {
     XCTAssertFalse(edit.exists)
   }
 
-  /// Return adds a line instead of sending. (Command-Return sends through a key command; the
-  /// simulator's synthesized key events do not reach it, so that path is not covered here.)
+  /// Return adds a line instead of sending.
   func testReturnAddsALine() {
     open(["ANKIEL_DEBUG_COMPOSER": "slow"])
     field.tap()

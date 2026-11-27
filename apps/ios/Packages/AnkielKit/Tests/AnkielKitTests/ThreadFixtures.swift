@@ -12,7 +12,7 @@ enum ThreadFixtures {
     "thread-failed", "thread-kinds", "thread-replay",
   ] + requestFixtures
 
-  /// Written by `Fixtures/requests/make-request-fixtures.mjs`.
+  /// Pending-request scenarios over one shared conversation.
   static let requestFixtures = [
     "thread-approval-command", "thread-approval-file-change", "thread-approval-file-read", "thread-approval-permission",
     "thread-approval-mcp", "thread-approval-stale", "thread-approvals-queued", "thread-question-single", "thread-question-multi",

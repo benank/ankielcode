@@ -18,7 +18,7 @@ struct RunFoldView: View, Equatable {
         DisclosureChevron(expanded: expanded)
         Spacer(minLength: 0)
       }
-      .frame(minHeight: 36)
+      .frame(minHeight: 44)
       .contentShape(.rect)
     }
     .buttonStyle(.plain)

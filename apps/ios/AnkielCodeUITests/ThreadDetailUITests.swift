@@ -61,7 +61,7 @@ final class FixtureThreadUITests: HomeUITestCase {
       "ANKIEL_DEBUG_THREAD": "subagents", "ANKIEL_DEBUG_THREAD_EXPAND": "folds", "ANKIEL_DEBUG_THREAD_SCROLL": "top",
     ])
     XCTAssertTrue(app.buttons["thread.menu"].waitForExistence(timeout: 5))
-    let row = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Reef forecast' OR label CONTAINS[c] 'Fathom vessel'")).firstMatch
+    let row = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Check inlet stations' OR label CONTAINS[c] 'Check north coast stations'")).firstMatch
     for _ in 0..<20 where !(row.exists && row.isHittable) { app.swipeUp(velocity: .slow) }
     XCTAssertTrue(row.isHittable)
     shot("thread-subagent-row")

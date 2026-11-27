@@ -42,6 +42,7 @@ struct QRScannerView: View {
     }
     .overlay(alignment: .topTrailing) {
       Button("Close", systemImage: "xmark") { dismiss() }
+        .keyboardShortcut(.cancelAction)
         .labelStyle(.iconOnly)
         .font(.title3.weight(.semibold))
         .frame(width: 44, height: 44)
@@ -97,7 +98,7 @@ private struct ScannerOverlay: View {
   var body: some View {
     VStack(spacing: Spacing.xl) {
       Spacer()
-      RoundedRectangle(cornerRadius: 28, style: .continuous)
+      RoundedRectangle(cornerRadius: Radius.sheet, style: .continuous)
         .strokeBorder(rejected ? Palette.danger : .white.opacity(0.85), lineWidth: 3)
         .frame(width: 240, height: 240)
         .accessibilityHidden(true)

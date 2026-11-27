@@ -179,10 +179,11 @@ final class LiveListUITests: HomeUITestCase {
       app.buttons[id].press(forDuration: 1.0)
       app.buttons["More"].tap()
       app.buttons["Rename"].tap()
-      let field = app.textFields["rename.field"]
+      // A text field in a system alert loses its identifier.
+      let field = app.alerts.textFields.firstMatch
       XCTAssertTrue(field.waitForExistence(timeout: 3))
       field.clearAndType(title)
-      app.buttons["rename.save"].tap()
+      app.buttons["rename.save"].firstMatch.tap()
     }
     rename(to: "UI test rename")
     XCTAssertTrue(

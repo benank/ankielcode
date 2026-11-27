@@ -37,6 +37,7 @@ struct SettingsView: View {
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Done", systemImage: "xmark") { dismiss() }
+            .keyboardShortcut(.cancelAction)
             .accessibilityIdentifier("settings.done")
         }
       }
@@ -213,7 +214,7 @@ enum SettingsCopy {
     case .providers: String(localized: "Providers")
     case .threads: String(localized: "Threads", comment: "settings page title")
     case .about: String(localized: "About")
-    case .storage: String(localized: "Client Storage")
+    case .storage: String(localized: "Client storage")
     case .diagnostics: String(localized: "Diagnostics")
     }
   }
@@ -277,7 +278,7 @@ enum SettingsSearch {
   static func entries() -> [(SettingsRoute, [String])] {
     [
       (.general, [String(localized: "Project grouping"), String(localized: "Group by repository")]),
-      (.appearance, [String(localized: "Theme"), String(localized: "Dark"), String(localized: "Light"), String(localized: "Code & Diffs"), String(localized: "Font size"), String(localized: "Word break"), String(localized: "Text size")]),
+      (.appearance, [String(localized: "Theme"), String(localized: "Dark"), String(localized: "Light"), String(localized: "Code and diffs"), String(localized: "Font size"), String(localized: "Word break"), String(localized: "Text size")]),
       (.chat, [String(localized: "While the agent is running"), String(localized: "Steer", comment: "verb, follow-up behavior"), String(localized: "Queue", comment: "verb, follow-up behavior")]),
       (.notifications, [String(localized: "Push notifications")]),
       (.providers, [String(localized: "Signed in"), String(localized: "Models")]),

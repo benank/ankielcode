@@ -30,7 +30,7 @@ public struct ClientPreferenceValues: Sendable, Hashable, Codable {
   public var followUpBehavior: FollowUpBehavior = .steer
   public var projectGroupingMode: ProjectGroupingMode = .repository
 
-  // Thread list options (phase 4 kept these under loose `threadList.*` keys).
+  // Thread list options.
   public var threadListEnvironmentId: String?
   public var threadListProjectKey: String?
   public var snoozedShelfExpanded = false
@@ -78,16 +78,6 @@ public final class ClientPreferences {
 
   static let storageKey = "ankiel.preferences.v1"
 
-  /// Phase 4's separate keys, adopted once into the JSON value and then removed.
-  enum LegacyKeys {
-    static let environment = "threadList.environmentId"
-    static let project = "threadList.projectKey"
-    static let snoozedShelf = "threadList.snoozedShelfExpanded"
-    static let settledShelf = "threadList.settledShelfExpanded"
-    static let collapsedFolders = "threadList.collapsedProjectGroups"
-    static let all = [environment, project, snoozedShelf, settledShelf, collapsedFolders]
-  }
-
   public init(defaults: UserDefaults = .standard) {
     self.defaults = defaults
     values = Self.load(defaults)
@@ -99,22 +89,8 @@ public final class ClientPreferences {
   }
 
   static func load(_ defaults: UserDefaults) -> ClientPreferenceValues {
-    if let data = defaults.data(forKey: storageKey),
-      let values = try? JSONDecoder().decode(ClientPreferenceValues.self, from: data)
-    {
-      return values
-    }
-    var values = ClientPreferenceValues()
-    values.threadListEnvironmentId = defaults.string(forKey: LegacyKeys.environment)
-    values.threadListProjectKey = defaults.string(forKey: LegacyKeys.project)
-    values.snoozedShelfExpanded = defaults.bool(forKey: LegacyKeys.snoozedShelf)
-    values.settledShelfExpanded = defaults.bool(forKey: LegacyKeys.settledShelf)
-    values.collapsedProjectGroups = defaults.stringArray(forKey: LegacyKeys.collapsedFolders) ?? []
-    if let data = try? JSONEncoder().encode(values) {
-      defaults.set(data, forKey: storageKey)
-      for key in LegacyKeys.all { defaults.removeObject(forKey: key) }
-    }
-    return values
+    defaults.data(forKey: storageKey).flatMap { try? JSONDecoder().decode(ClientPreferenceValues.self, from: $0) }
+      ?? ClientPreferenceValues()
   }
 
   private func save() {

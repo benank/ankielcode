@@ -153,3 +153,14 @@ public enum SecretRequestForm {
     return url
   }
 }
+
+extension EnvironmentRequestError {
+  /// The server's message for a refused secret answer, only for the refusals RN shows as they are
+  /// (`secretRequestFailureMessage`). Anything else could echo the typed value, so it gets none.
+  public var secretRefusalMessage: String? {
+    guard case .rejected(let message?, let tag?) = self, Self.secretRefusalTags.contains(tag) else { return nil }
+    return message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : message
+  }
+
+  static let secretRefusalTags: Set<String> = ["SecretRequestError", "EnvironmentAuthorizationError"]
+}

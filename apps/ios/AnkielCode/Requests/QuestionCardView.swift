@@ -130,7 +130,7 @@ struct QuestionCardView: View {
       }
       .padding(.horizontal, Spacing.lg)
       .frame(minHeight: 52)
-      .frame(maxWidth: 760)
+      .frame(maxWidth: Layout.readingWidth)
       .contentShape(.capsule)
     }
     .buttonStyle(.plain)

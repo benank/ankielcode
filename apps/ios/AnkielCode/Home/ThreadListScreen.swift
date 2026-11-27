@@ -28,7 +28,10 @@ struct ThreadListScreen: View {
     dialogs(
       list
         .searchable(text: $home.searchQuery, prompt: Text("Search", comment: "search field placeholder"))
-        .refreshable { await home.refresh() }
+        .refreshable {
+          Haptics.tap(.soft)
+          await home.refresh()
+        }
         .overlay { emptyState }
         .navigationTitle("Threads")
         .navigationSubtitle(statusText ?? "")
@@ -216,13 +219,20 @@ struct ThreadListScreen: View {
       Button("Settings", systemImage: "gearshape") { model.openSettings() }
         .accessibilityIdentifier("home.settings")
     }
-    // Search and compose share the bottom bar, as in iOS 26 Mail.
-    DefaultToolbarItem(kind: .search, placement: .bottomBar)
-    ToolbarSpacer(.fixed, placement: .bottomBar)
-    ToolbarItem(placement: .bottomBar) {
-      Button("New thread", systemImage: "square.and.pencil") { model.navigator.sheet = .newThread }
-        .accessibilityIdentifier("home.newThread")
+    if zoom == nil {
+      // The sidebar keeps search at its top, so compose joins the top bar (iPad Mail).
+      ToolbarItem(placement: .topBarTrailing) { newThreadButton }
+    } else {
+      // Search and compose share the bottom bar, as in iOS 26 Mail.
+      DefaultToolbarItem(kind: .search, placement: .bottomBar)
+      ToolbarSpacer(.fixed, placement: .bottomBar)
+      ToolbarItem(placement: .bottomBar) { newThreadButton }
     }
+  }
+
+  private var newThreadButton: some View {
+    Button("New thread", systemImage: "square.and.pencil") { model.navigator.sheet = .newThread }
+      .accessibilityIdentifier("home.newThread")
   }
 
   private var bottomChrome: some View {
@@ -233,7 +243,7 @@ struct ThreadListScreen: View {
           actionCount += 1
           home.performUndo()
         }
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .motionTransition(.move(edge: .bottom).combined(with: .opacity))
       }
     }
     .padding(.horizontal, Spacing.lg)
@@ -289,7 +299,7 @@ struct ThreadListScreen: View {
           ContentUnavailableView {
             Label("Search failed", systemImage: "exclamationmark.magnifyingglass")
           } description: {
-            Text("Couldn't search messages for “\(home.searchQuery)”. Change the search to try again.")
+            Text("Could not search messages for “\(home.searchQuery)”. Change the search to try again.")
           }
         } else {
           ContentUnavailableView.search(text: home.searchQuery)
@@ -363,7 +373,7 @@ private struct ShowMoreRow: View {
       Group {
         switch state {
         case .loading: Text("Loading", comment: "older threads are loading")
-        case .failed: Text("Could not load older threads. Retry")
+        case .failed: Text("Could not load older threads. Tap to retry.")
         case .ready: Text("Show more (\(hidden) settled hidden)")
         }
       }

@@ -144,7 +144,7 @@ private struct StepRow: View {
         case .done:
           Image(systemName: "checkmark.circle.fill")
             .foregroundStyle(Palette.success)
-            .transition(.scale.combined(with: .opacity))
+            .motionTransition(.scale.combined(with: .opacity))
         case .active:
           ProgressView()
             .controlSize(.small)

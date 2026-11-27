@@ -53,7 +53,7 @@ enum ThreadDebug {
     }
 
     /// `short`, `markdown`, `subagents`, `rich-markdown`, `pending`, `failed`, `kinds`, `replay`
-    /// (a streaming turn, paced like a live one), `long` (500+ rows, built from the real fixtures).
+    /// (a streaming turn, paced like a live one), `long` (500+ rows, built from the markdown and subagent fixtures).
     static func source(_ name: String) -> FixtureSource? {
       switch name {
       case "long": longThread().map { FixtureSource(items: $0, pace: nil) }
@@ -66,7 +66,26 @@ enum ThreadDebug {
       guard let url = Bundle.main.url(forResource: file, withExtension: "json"), let data = try? Data(contentsOf: url)
       else { return nil }
       struct Document: Decodable { var items: [ThreadStreamItem] }
-      return try? JSONDecoder().decode(Document.self, from: data).items
+      return try? JSONDecoder().decode(Document.self, from: recent(data)).items
+    }
+
+    /// Fixture files have fixed dates; shift every timestamp so the latest one is now, so times
+    /// and working timers read like a live thread.
+    private static func recent(_ data: Data) -> Data {
+      // NSRegularExpression: Swift Regex took seconds over the larger fixtures.
+      guard let stamp = try? NSRegularExpression(pattern: #""(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)""#) else { return data }
+      let text = String(decoding: data, as: UTF8.self) as NSString
+      let style = Date.ISO8601FormatStyle(includingFractionalSeconds: true)
+      let matches = stamp.matches(in: text as String, range: NSRange(location: 0, length: text.length))
+      let dates = matches.map { try? style.parse(text.substring(with: $0.range(at: 1))) }
+      guard let latest = dates.compactMap(\.self).max() else { return data }
+      let shift = Date.now.timeIntervalSince(latest)
+      let shifted = NSMutableString(string: text)
+      for (match, date) in zip(matches, dates).reversed() {
+        guard let date else { continue }
+        shifted.replaceCharacters(in: match.range(at: 1), with: style.format(date.addingTimeInterval(shift)))
+      }
+      return Data((shifted as String).utf8)
     }
 
     /// The fixture's id of the thread each item belongs to (fixtures set it to the file's thread).
@@ -75,7 +94,7 @@ enum ThreadDebug {
       return snapshot.projection.thread.id
     }
 
-    /// A long thread: the real markdown and subagent threads' turns repeated until it has 500+
+    /// A long thread: the markdown and subagent fixtures' turns repeated until it has 500+
     /// visible rows, with ids and ordinals rewritten so every row is distinct.
     static func longThread() -> [ThreadStreamItem]? {
       guard case .snapshot(let base)? = items("thread-markdown")?.first,

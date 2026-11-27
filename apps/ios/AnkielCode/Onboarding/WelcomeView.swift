@@ -57,12 +57,16 @@ struct WelcomeView: View {
           }
         }
 
-        Button("How do I get a pairing link?") {
+        Button {
           model.sheet = .help
+        } label: {
+          Text("How do I get a pairing link?")
+            .font(Typography.subheadline)
+            .foregroundStyle(Palette.textSecondary)
+            .frame(minHeight: 44)
+            .contentShape(.rect)
         }
-        .font(Typography.subheadline)
-        .foregroundStyle(Palette.textSecondary)
-        .frame(minHeight: 44)
+        .buttonStyle(.plain)
       }
       .padding(.horizontal, Spacing.xl)
       .padding(.bottom, Spacing.lg)
@@ -132,6 +136,7 @@ struct PairingHelpView: View {
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button("Done") { dismiss() }
+            .keyboardShortcut(.cancelAction)
         }
       }
     }

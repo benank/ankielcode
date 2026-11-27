@@ -69,6 +69,7 @@ struct PairingLinkView: View {
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Cancel", systemImage: "xmark") { dismiss() }
+            .keyboardShortcut(.cancelAction)
         }
         ToolbarItem(placement: .confirmationAction) {
           Button("Connect", systemImage: "checkmark", action: connect)

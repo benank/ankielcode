@@ -91,6 +91,7 @@ struct NewThreadView: View {
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Close", systemImage: "xmark") { dismiss() }
+            .keyboardShortcut(.cancelAction)
         }
       }
     }

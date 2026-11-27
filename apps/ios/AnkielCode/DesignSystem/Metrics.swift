@@ -18,6 +18,15 @@ enum Radius {
   static let medium: CGFloat = 12
   static let large: CGFloat = 20
   static let field: CGFloat = 14
-  /// Floating sheet-like cards (pending requests).
+  /// The composer's glass card.
+  static let composer: CGFloat = 24
+  /// Floating sheet-like cards (pending requests, the scanner frame).
   static let sheet: CGFloat = 28
+}
+
+/// Widths for wide panes (iPad).
+enum Layout {
+  /// The conversation's column: a comfortable line length for body text, centered in wide panes.
+  /// The feed, the request dock and the composer share it so their edges line up.
+  static let readingWidth: CGFloat = 720
 }
