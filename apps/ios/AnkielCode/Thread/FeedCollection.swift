@@ -110,7 +110,7 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
     collection.onLayout = { [weak self] in self?.layoutDidPass() }
     collection.onUserScroll = { [weak self] in self?.readerScrolled() }
 
-    let registration = UICollectionView.CellRegistration<UICollectionViewCell, String> { [weak self] cell, _, id in
+    let registration = UICollectionView.CellRegistration<FeedCell, String> { [weak self] cell, _, id in
       guard let self, let item = items[id] else { return }
       cell.contentConfiguration = configuration(item)
       cell.backgroundConfiguration = .clear()
@@ -378,6 +378,13 @@ final class FeedCollectionView: UICollectionView {
     externalScroll = false
     onUserScroll()
   }
+}
+
+/// A feed row. It reports no safe area: the feed runs under the bars and the composer and insets
+/// itself by them, and a hosted row under a bar was otherwise padded by the part it overlapped, a
+/// padding that changed as it scrolled, so rows slid under the finger by up to the bar's height.
+final class FeedCell: UICollectionViewCell {
+  override var safeAreaInsets: UIEdgeInsets { .zero }
 }
 
 extension View {
