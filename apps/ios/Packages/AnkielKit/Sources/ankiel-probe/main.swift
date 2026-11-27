@@ -88,6 +88,11 @@ func run() async throws {
     await session.close()
     return
   }
+  if CommandLine.arguments.contains("--issues") {
+    try await probeIssues(session)
+    await session.close()
+    return
+  }
   if let threadId = argument("--terminal-list") {
     try await probeTerminalList(session, threadId: threadId)
     await session.close()

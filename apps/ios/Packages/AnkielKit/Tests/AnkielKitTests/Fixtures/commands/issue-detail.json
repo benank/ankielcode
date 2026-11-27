@@ -1,0 +1,10 @@
+{
+  "schema" : "issueRef",
+  "value" : {
+    "host" : "github.com",
+    "key" : "42",
+    "projectId" : "proj-tide",
+    "scope" : "tide-co/tide-chart",
+    "tracker" : "github"
+  }
+}

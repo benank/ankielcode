@@ -1,0 +1,11 @@
+{
+  "schema" : "issueComments",
+  "value" : {
+    "cursor" : "Y3Vyc29yOjQy",
+    "host" : "github.com",
+    "key" : "42",
+    "projectId" : "proj-tide",
+    "scope" : "tide-co/tide-chart",
+    "tracker" : "github"
+  }
+}

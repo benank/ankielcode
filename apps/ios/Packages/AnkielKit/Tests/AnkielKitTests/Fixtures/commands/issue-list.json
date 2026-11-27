@@ -1,0 +1,7 @@
+{
+  "schema" : "issuesList",
+  "value" : {
+    "limit" : 50,
+    "state" : "open"
+  }
+}

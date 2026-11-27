@@ -1,0 +1,10 @@
+{
+  "schema" : "issuesList",
+  "value" : {
+    "limit" : 50,
+    "projectId" : "proj-tide",
+    "query" : "tides",
+    "refresh" : true,
+    "state" : "closed"
+  }
+}

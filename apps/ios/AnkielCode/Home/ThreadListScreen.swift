@@ -16,6 +16,7 @@ struct ThreadListScreen: View {
   @State private var deleting: ThreadRow?
   @State private var snoozing: ThreadRow?
   @State private var actionCount = 0
+  @State private var issuesShown = IssuesDebug.opensAtLaunch
   @FocusState private var searchFocused: Bool
 
   private struct RenameRequest: Identifiable {
@@ -41,6 +42,7 @@ struct ThreadListScreen: View {
           await home.refresh()
         }
         .overlay { emptyState }
+        .fullScreenCover(isPresented: $issuesShown) { IssuesRoot() }
         .navigationTitle("Threads")
         .navigationSubtitle(statusText ?? "")
         .toolbar { toolbar }
@@ -229,6 +231,8 @@ struct ThreadListScreen: View {
       UsageToolbarButton()
       Button("Pull requests", systemImage: "arrow.triangle.pull") { model.pullRequests.openList() }
         .accessibilityIdentifier("home.pullRequests")
+      Button("Issues", systemImage: "smallcircle.filled.circle") { issuesShown = true }
+        .accessibilityIdentifier("home.issues")
       Button("Settings", systemImage: "gearshape") { model.openSettings() }
         .accessibilityIdentifier("home.settings")
     }

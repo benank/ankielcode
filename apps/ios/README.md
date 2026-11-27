@@ -412,3 +412,20 @@ for that read and off again (it changes the server's settings).
 `PullRequestUITests` run on fixtures: list → detail → files → a diff, search, the thread row chip,
 and each write (comment, inline comment and review, merge with its confirmation, close, edit,
 reviewers, thread reply and resolve, reaction) against the recording sink.
+
+## Issues
+
+Home's toolbar has **Issues** (RN's Issues tab): one computer's issues across its projects' trackers
+(`issues.list`: open, closed or all, one project or every one, a search the trackers run, more
+pages per scope as the list scrolls), each opening read-only (`issues.detail`, older pages with
+`issues.comments`) with its description and comments as markdown. Rows and the detail offer Start a
+thread (the new-thread sheet in the issue's project with its title and link), Copy link and Open on
+the tracker. Writes (comment, close or reopen, edit, labels, assignees, reactions, new issues),
+linked threads, saved views and the involvement filters are not built. Logic is in
+`AnkielKit/Issues`; `swift run ankiel-probe --state <file> --issues [--project <id>] [--query <q>]
+[--closed]` lists and opens the newest issue without writing anything.
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_ISSUES` | `fixture`, `empty`, `fail` | Canned synthetic issues (about a made-up project) instead of a computer, none, or a refusal. |
+| `ANKIEL_DEBUG_ISSUES_OPEN` | `list`, `detail` | Opens Issues over home, or (with `fixture`) its first issue. |

@@ -5269,5 +5269,82 @@
     "ru": "оставил(а) ревью",
     "sv": "granskade",
     "zh-Hans": "已评审"
+  },
+  "Issues from this computer's projects show here.": {
+    "de": "Issues aus den Projekten dieses Computers werden hier angezeigt.",
+    "es": "Aquí aparecen las incidencias de los proyectos de este ordenador.",
+    "fr": "Les tickets des projets de cet ordinateur s'affichent ici.",
+    "ja": "このコンピューターのプロジェクトの Issue がここに表示されます。",
+    "ko": "이 컴퓨터 프로젝트의 이슈가 여기에 표시됩니다.",
+    "pt-BR": "As issues dos projetos deste computador aparecem aqui.",
+    "ru": "Здесь появляются задачи из проектов этого компьютера.",
+    "sv": "Ärenden från datorns projekt visas här.",
+    "zh-Hans": "此电脑项目的议题会显示在这里。"
+  },
+  "No closed issues": {
+    "de": "Keine geschlossenen Issues",
+    "es": "No hay incidencias cerradas",
+    "fr": "Aucun ticket fermé",
+    "ja": "クローズされた Issue はありません",
+    "ko": "닫힌 이슈 없음",
+    "pt-BR": "Nenhuma issue fechada",
+    "ru": "Нет закрытых задач",
+    "sv": "Inga stängda ärenden",
+    "zh-Hans": "没有已关闭的议题"
+  },
+  "No open issues": {
+    "de": "Keine offenen Issues",
+    "es": "No hay incidencias abiertas",
+    "fr": "Aucun ticket ouvert",
+    "ja": "オープンな Issue はありません",
+    "ko": "열린 이슈 없음",
+    "pt-BR": "Nenhuma issue aberta",
+    "ru": "Нет открытых задач",
+    "sv": "Inga öppna ärenden",
+    "zh-Hans": "没有未关闭的议题"
+  },
+  "No comments yet.": {
+    "de": "Noch keine Kommentare.",
+    "es": "Aún no hay comentarios.",
+    "fr": "Aucun commentaire pour l'instant.",
+    "ja": "まだコメントはありません。",
+    "ko": "아직 댓글이 없습니다.",
+    "pt-BR": "Ainda não há comentários.",
+    "ru": "Комментариев пока нет.",
+    "sv": "Inga kommentarer än.",
+    "zh-Hans": "还没有评论。"
+  },
+  "None of this computer's projects is on an issue tracker it can read.": {
+    "de": "Keines der Projekte dieses Computers liegt bei einem Issue-Tracker, den er lesen kann.",
+    "es": "Ninguno de los proyectos de este ordenador está en un gestor de incidencias que pueda leer.",
+    "fr": "Aucun projet de cet ordinateur n'est sur un outil de suivi qu'il peut lire.",
+    "ja": "このコンピューターのプロジェクトは、読み取れる Issue トラッカーにありません。",
+    "ko": "이 컴퓨터의 프로젝트 중 읽을 수 있는 이슈 트래커에 있는 것이 없습니다.",
+    "pt-BR": "Nenhum projeto deste computador está em um rastreador de issues que ele consiga ler.",
+    "ru": "Ни один проект этого компьютера не находится в трекере задач, который он может прочитать.",
+    "sv": "Inget av datorns projekt finns i ett ärendesystem som den kan läsa.",
+    "zh-Hans": "此电脑的项目都不在它可读取的议题跟踪器上。"
+  },
+  "Start a thread": {
+    "de": "Thread starten",
+    "es": "Iniciar un hilo",
+    "fr": "Démarrer un fil",
+    "ja": "スレッドを開始",
+    "ko": "스레드 시작",
+    "pt-BR": "Iniciar um thread",
+    "ru": "Начать тред",
+    "sv": "Starta en tråd",
+    "zh-Hans": "开始线程"
+  },
+  "Unknown": {
+    "de": "Unbekannt",
+    "es": "Desconocido",
+    "fr": "Inconnu",
+    "ja": "不明",
+    "ko": "알 수 없음",
+    "pt-BR": "Desconhecido",
+    "ru": "Неизвестно",
+    "sv": "Okänd",
+    "zh-Hans": "未知"
   }
 }
