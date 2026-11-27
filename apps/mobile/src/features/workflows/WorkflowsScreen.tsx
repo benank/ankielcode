@@ -78,8 +78,8 @@ export function WorkflowStateWord(props: {
 
 export function WorkflowChip(props: { readonly name: string }) {
   return (
-    <View className="h-5 w-6 items-center justify-center rounded-md bg-subtle-strong">
-      <Text className="font-ankiel-bold text-3xs text-foreground-secondary">
+    <View className="min-h-5 min-w-6 items-center justify-center rounded-md bg-subtle-strong">
+      <Text chrome textRole="micro" className="font-ankiel-bold text-foreground-secondary">
         {workflowChip(props.name).letters}
       </Text>
     </View>

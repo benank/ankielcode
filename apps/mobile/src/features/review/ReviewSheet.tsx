@@ -222,7 +222,14 @@ function ReviewSelectionActionBar(props: {
         tintColorClassName="accent-primary-foreground"
         type="monochrome"
       />
-      <Text className="text-base font-ankiel-bold text-primary-foreground">{props.title}</Text>
+      <Text
+        chrome
+        textRole="body"
+        numberOfLines={1}
+        className="shrink font-ankiel-bold text-primary-foreground"
+      >
+        {props.title}
+      </Text>
     </>
   );
 

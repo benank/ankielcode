@@ -10,24 +10,29 @@ import {
 import { MOBILE_TEXT_CLASSES } from "../../lib/typography";
 
 import { cn } from "../../lib/cn";
+import { ChromeText } from "./ChromeText";
+
+type TextRole = keyof typeof MOBILE_TEXT_CLASSES;
 
 export type AppTextProps = RNTextProps & {
   readonly className?: string;
-  readonly textRole?: keyof typeof MOBILE_TEXT_CLASSES;
-};
-
-export function AppText({ className, textRole, ...props }: AppTextProps) {
-  return (
-    <RNText
-      className={cn(
-        "font-sans text-foreground",
-        textRole && MOBILE_TEXT_CLASSES[textRole],
-        className,
-      )}
-      selectionColorClassName={Platform.OS === "android" ? "accent-focus/32" : undefined}
-      {...props}
-    />
+} & (
+    | { readonly textRole?: TextRole; readonly chrome?: false }
+    /** Compact chrome in a fixed-height holder: stops growing at `CHROME_MAX_FONT_SCALE`. */
+    | { readonly textRole: TextRole; readonly chrome: true }
   );
+
+export function AppText({ className, textRole, chrome, ...props }: AppTextProps) {
+  const textProps = {
+    className: cn(
+      "font-sans text-foreground",
+      textRole && MOBILE_TEXT_CLASSES[textRole],
+      className,
+    ),
+    selectionColorClassName: Platform.OS === "android" ? "accent-focus/32" : undefined,
+  };
+  if (chrome) return <ChromeText textRole={textRole} {...textProps} {...props} />;
+  return <RNText {...textProps} {...props} />;
 }
 
 export type AppTextInputProps = Omit<RNTextInputProps, "placeholderTextColor"> & {

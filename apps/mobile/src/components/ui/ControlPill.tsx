@@ -57,7 +57,7 @@ export function ControlPill(props: {
     props.className,
   );
   const labelClassName = cn(
-    "text-center text-xs font-ankiel-bold",
+    "text-center font-ankiel-bold",
     variant === "primary"
       ? props.disabled
         ? "text-foreground-muted"
@@ -126,7 +126,11 @@ export function ControlPill(props: {
           type="monochrome"
         />
       ) : null}
-      {props.label ? <Text className={labelClassName}>{props.label}</Text> : null}
+      {props.label ? (
+        <Text chrome textRole="label" className={labelClassName}>
+          {props.label}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }

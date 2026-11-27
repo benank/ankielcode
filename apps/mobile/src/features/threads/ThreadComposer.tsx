@@ -1066,7 +1066,11 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
                   ))}
                   {stripAttachments.length > compactAttachmentLimit ? (
                     <View className="size-[30px] items-center justify-center rounded-lg bg-subtle-strong">
-                      <Text className="text-foreground-muted text-2xs font-ankiel-bold">
+                      <Text
+                        chrome
+                        textRole="caption"
+                        className="text-foreground-muted font-ankiel-bold"
+                      >
                         +{stripAttachments.length - compactAttachmentLimit}
                       </Text>
                     </View>

@@ -215,7 +215,12 @@ export function FloatingWorkingControl(props: {
           className="h-11 flex-row items-center px-3 active:opacity-70"
         >
           {hasStatus ? <View className="absolute left-0 h-4 w-px bg-border" /> : null}
-          <Text className="shrink font-ankiel-medium text-xs text-foreground" numberOfLines={1}>
+          <Text
+            chrome
+            textRole="label"
+            className="shrink font-ankiel-medium text-foreground"
+            numberOfLines={1}
+          >
             {extensionStatus.label}
           </Text>
         </Pressable>
@@ -236,7 +241,12 @@ export function FloatingWorkingControl(props: {
                 onPress={action.onPress}
                 className={`h-11 items-center justify-center px-3 active:opacity-70 ${action.disabled ? "opacity-50" : ""}`}
               >
-                <Text className="font-ankiel-medium text-xs text-foreground" numberOfLines={1}>
+                <Text
+                  chrome
+                  textRole="label"
+                  className="font-ankiel-medium text-foreground"
+                  numberOfLines={1}
+                >
                   {action.label}
                 </Text>
               </Pressable>
@@ -269,7 +279,12 @@ export function FloatingWorkingControl(props: {
         >
           {hasStatus || hasPreview ? <View className="absolute left-0 h-4 w-px bg-border" /> : null}
           <SymbolView name="person.2" size={13} tintColorClassName="accent-foreground" />
-          <Text className="font-ankiel-medium text-xs tabular-nums" numberOfLines={1}>
+          <Text
+            chrome
+            textRole="label"
+            className="font-ankiel-medium tabular-nums"
+            numberOfLines={1}
+          >
             {agents.label}
           </Text>
         </Pressable>
@@ -290,7 +305,12 @@ export function FloatingWorkingControl(props: {
             <View className="absolute left-0 h-4 w-px bg-border" />
           ) : null}
           <SymbolView name="list.number" size={13} tintColorClassName="accent-foreground" />
-          <Text className="shrink font-ankiel-medium text-xs tabular-nums" numberOfLines={1}>
+          <Text
+            chrome
+            textRole="label"
+            className="shrink font-ankiel-medium tabular-nums"
+            numberOfLines={1}
+          >
             {gt("{count, plural, other {{count} queued}}", { count: props.queuedCount })}
           </Text>
         </Pressable>
@@ -401,7 +421,12 @@ function FloatingStatusLabel(props: {
         className="gap-1.5"
         animated={false}
       >
-        <Text className="shrink font-ankiel-medium text-xs text-foreground" numberOfLines={1}>
+        <Text
+          chrome
+          textRole="label"
+          className="shrink font-ankiel-medium text-foreground"
+          numberOfLines={1}
+        >
           {props.status.label}
         </Text>
         <SymbolView name="chevron.down" size={10} tintColorClassName="accent-foreground" />
@@ -419,7 +444,12 @@ function FloatingStatusLabel(props: {
         onPress={props.status.onPress}
       >
         <SymbolView name="text.bubble" size={13} tintColorClassName="accent-foreground" />
-        <Text className="shrink font-ankiel-medium text-xs text-foreground" numberOfLines={1}>
+        <Text
+          chrome
+          textRole="label"
+          className="shrink font-ankiel-medium text-foreground"
+          numberOfLines={1}
+        >
           {props.status.label}
         </Text>
       </StatusLabelRow>
@@ -437,7 +467,9 @@ function FloatingStatusLabel(props: {
       >
         <View className="h-2 w-2 rounded-full bg-danger-foreground" />
         <Text
-          className="max-w-[260px] shrink font-ankiel-medium text-xs text-foreground"
+          chrome
+          textRole="label"
+          className="max-w-[260px] shrink font-ankiel-medium text-foreground"
           numberOfLines={1}
         >
           {props.status.label}
@@ -463,7 +495,12 @@ function FloatingStatusLabel(props: {
         ) : (
           <AppActivityIndicator size="small" colorClassName="accent-icon-muted" />
         )}
-        <Text className="shrink font-ankiel-medium text-xs text-foreground" numberOfLines={1}>
+        <Text
+          chrome
+          textRole="label"
+          className="shrink font-ankiel-medium text-foreground"
+          numberOfLines={1}
+        >
           {props.status.label}
         </Text>
       </StatusLabelRow>
@@ -483,7 +520,12 @@ function FloatingStatusLabel(props: {
           tintColorClassName="accent-foreground"
           type="monochrome"
         />
-        <Text className="shrink font-ankiel-medium text-xs text-foreground" numberOfLines={1}>
+        <Text
+          chrome
+          textRole="label"
+          className="shrink font-ankiel-medium text-foreground"
+          numberOfLines={1}
+        >
           {props.status.label}
         </Text>
       </StatusLabelRow>

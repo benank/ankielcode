@@ -5,6 +5,7 @@ import { SymbolView } from "../../../components/ui/AppSymbol";
 import { AppText as Text } from "../../../components/ui/AppText";
 import { Menu } from "../../../components/ui/Menu";
 import { useAndroidControlSizing } from "../../../components/ui/useAndroidControlSizing";
+import { CHROME_MAX_FONT_SCALE } from "../../../lib/typography";
 import { isSharedSlotTab, type SharedSlotTab } from "./navigation-tab-order";
 import { usePullRequestTabEnabled } from "./navigation-tabs";
 import { useSelectWorkspaceTab } from "./useSelectWorkspaceTab";
@@ -24,7 +25,7 @@ export function SharedSlotTitle(props: { readonly tab: SharedSlotTab }) {
   const title = (
     <Text
       allowFontScaling={Platform.OS === "ios"}
-      maxFontSizeMultiplier={1.4}
+      maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE}
       numberOfLines={1}
       className="font-ankiel-bold text-foreground"
       style={{ fontSize: 20 * scale, letterSpacing: -0.4 * scale }}

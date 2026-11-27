@@ -4,9 +4,15 @@ import { createRoot } from "react-dom/client";
 import type { StackHeaderConfigProps } from "react-native-screens";
 import { expect, it, vi } from "vite-plus/test";
 
-const bridge = vi.hoisted(() => ({ ios: undefined as StackHeaderConfigProps["ios"] }));
+const bridge = vi.hoisted(() => ({
+  ios: undefined as StackHeaderConfigProps["ios"],
+  fontScale: 1,
+}));
 
-vi.mock("react-native", () => ({ StyleSheet: { flatten: (style: unknown) => style } }));
+vi.mock("react-native", () => ({
+  StyleSheet: { flatten: (style: unknown) => style },
+  useWindowDimensions: () => ({ fontScale: bridge.fontScale }),
+}));
 vi.mock("react-native-keyboard-controller", () => ({
   KeyboardController: { dismiss: vi.fn() },
   useKeyboardState: () => false,
@@ -74,3 +80,25 @@ it.each(["leadingItems", "trailingItems", "toolbarItems"] as const)(
     }
   },
 );
+
+it("scales a fixed bar title with Dynamic Type up to the chrome cap", () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  const root = createRoot(document.createElement("div"));
+  try {
+    const titleSizes = [1.235, 3.571].map((fontScale) => {
+      bridge.fontScale = fontScale;
+      act(() =>
+        root.render(
+          <V5StackHeader canGoBack={false} options={{ headerTitleStyle: { fontSize: 18 } }} />,
+        ),
+      );
+      return bridge.ios?.standardAppearance?.titleFontSize;
+    });
+    expect(titleSizes[0]).toBeCloseTo(18 * 1.235);
+    expect(titleSizes[1]).toBeCloseTo(18 * 1.4);
+  } finally {
+    bridge.fontScale = 1;
+    act(() => root.unmount());
+    vi.unstubAllGlobals();
+  }
+});

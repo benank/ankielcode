@@ -646,7 +646,7 @@ export function CommandPalette(props: {
               }}
             >
               <View className="px-3 pb-2.5 pt-3.5">
-                <View className="h-[38px] flex-row items-center gap-1.5 pr-2.5 pl-[11px]">
+                <View className="min-h-[38px] flex-row items-center gap-1.5 pr-2.5 pl-[11px]">
                   <SymbolView
                     name="magnifyingglass"
                     size={15}
@@ -661,7 +661,7 @@ export function CommandPalette(props: {
                     autoCorrect={false}
                     autoCapitalize="none"
                     clearButtonMode="while-editing"
-                    className="h-[34px] flex-1 px-0 py-0 font-sans text-base text-foreground"
+                    className="min-h-[34px] flex-1 px-0 py-0 font-sans text-base text-foreground"
                     value={query}
                     onChangeText={(value) => {
                       setQuery(value);

@@ -36,6 +36,7 @@ export function Chip(props: {
         <SymbolView name={props.icon} size={15} tintColorClassName={iconColor} />
       ) : null}
       <AppText
+        chrome
         textRole={small ? "caption" : "footnote"}
         numberOfLines={small ? undefined : 1}
         className={cn(

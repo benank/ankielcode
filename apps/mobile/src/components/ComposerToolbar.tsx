@@ -98,10 +98,10 @@ export function ComposerInlineControl(props: {
             entering={animatesLabel && !reducedMotion ? INLINE_CONTROL_LABEL_ENTERING : undefined}
           >
             <Text
+              chrome
+              textRole={props.size === "large" ? "body" : "footnote"}
               className={cn(
-                props.size === "large"
-                  ? "text-base font-ankiel-medium"
-                  : "text-sm font-ankiel-medium",
+                "font-ankiel-medium",
                 props.tone === "warning" || props.emphasized || props.selected
                   ? "text-foreground"
                   : "text-foreground-muted",

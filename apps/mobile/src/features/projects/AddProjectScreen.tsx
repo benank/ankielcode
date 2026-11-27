@@ -319,7 +319,7 @@ function ProjectPathInput(props: {
 }) {
   return (
     <TextInput
-      className="h-12 min-h-12 rounded-panel px-4 py-0 text-base leading-snug"
+      className="min-h-12 rounded-panel px-4 py-0 text-base leading-snug"
       value={props.value}
       onChangeText={(text) => props.onChangeText(resolvePastedPath(props.value, text))}
       autoCapitalize="none"
@@ -1010,7 +1010,7 @@ export function AddProjectRepositoryScreen(props: {
       {environment ? (
         <>
           <TextInput
-            className="h-12 min-h-12 rounded-panel px-4 py-0 text-base leading-snug"
+            className="min-h-12 rounded-panel px-4 py-0 text-base leading-snug"
             value={repositoryInput}
             onChangeText={setRepositoryInput}
             autoCapitalize="none"
@@ -1323,7 +1323,7 @@ export function AddProjectNewScreen(props: { readonly environmentId?: string | s
       {environment ? (
         <>
           <TextInput
-            className="h-12 min-h-12 rounded-panel px-4 py-0 text-base leading-snug"
+            className="min-h-12 rounded-panel px-4 py-0 text-base leading-snug"
             value={name}
             onChangeText={setName}
             autoCorrect={false}

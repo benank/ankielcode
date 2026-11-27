@@ -5,9 +5,10 @@ import type {
 } from "@react-navigation/native-stack";
 import { useGT } from "gt-react-native";
 import { isValidElement, useEffect, useRef } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, useWindowDimensions } from "react-native";
 import { KeyboardController, useKeyboardState } from "react-native-keyboard-controller";
 import { isDuoDevice } from "../lib/device-type";
+import { chromeFontScale } from "../lib/typography";
 import { useMobileNavigationTheme } from "../lib/useMobileNavigationTheme";
 import { useDeviceType, useNativeLayoutMetrics } from "./native-layout-metrics";
 import { HeaderItemsWidthContext } from "./header-items-width";
@@ -165,6 +166,7 @@ export function V5StackHeader(props: {
   const theme = useMobileNavigationTheme();
   const nativeMetrics = useNativeLayoutMetrics();
   const deviceType = useDeviceType();
+  const { fontScale } = useWindowDimensions();
   const keyboardVisible = useKeyboardState((state) => state.isVisible);
   const searchRef = useRef<SearchBarCommands>(null);
   const itemProps = { tintColor: options.headerTintColor, canGoBack: props.canGoBack };
@@ -319,17 +321,20 @@ export function V5StackHeader(props: {
     );
   const titleStyle = StyleSheet.flatten(options.headerTitleStyle);
   const headerStyle = StyleSheet.flatten(options.headerStyle);
+  // The fork sets a fixed UIFont, so the bar title follows Dynamic Type only through this size.
+  const titleScale = chromeFontScale(fontScale);
   const appearance = {
     // Clear colors remove UIKit material; let translucent bars supply their own blur background.
     backgroundColor: options.headerTransparent
       ? undefined
       : (headerStyle?.backgroundColor ?? theme.colors.card),
     shadowColor: options.headerShadowVisible === false ? "transparent" : undefined,
-    titleFontSize: titleStyle?.fontSize,
+    titleFontSize: titleStyle?.fontSize && titleStyle.fontSize * titleScale,
     titleFontFamily: titleStyle?.fontFamily,
     titleFontWeight: titleStyle?.fontWeight,
     titleFontColor: titleStyle?.color,
-    subtitleFontSize: options.headerSubtitleStyle?.fontSize,
+    subtitleFontSize:
+      options.headerSubtitleStyle?.fontSize && options.headerSubtitleStyle.fontSize * titleScale,
     subtitleFontColor: options.headerSubtitleStyle?.color,
   };
   return (

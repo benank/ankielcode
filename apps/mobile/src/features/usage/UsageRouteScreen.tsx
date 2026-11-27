@@ -444,10 +444,15 @@ function UsageUpdating({
           entering={FadeIn.delay(150).duration(150).reduceMotion(ReduceMotion.System)}
           accessibilityLiveRegion="polite"
           pointerEvents="none"
-          className="absolute right-4 top-4 h-5 max-w-[55%] flex-row items-center gap-1.5"
+          className="absolute right-4 top-4 min-h-5 max-w-[55%] flex-row items-center gap-1.5"
         >
           <AppActivityIndicator size="small" colorClassName="accent-foreground-muted" />
-          <Text className="shrink text-sm text-foreground-muted" numberOfLines={1}>
+          <Text
+            chrome
+            textRole="footnote"
+            className="shrink text-foreground-muted"
+            numberOfLines={1}
+          >
             {label}
           </Text>
         </Animated.View>

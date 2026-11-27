@@ -8,9 +8,9 @@ import { AppText as Text } from "./ui/AppText";
 import { AnkielWordmark } from "./AnkielWordmark";
 import { IPAD_HOME_TITLE_OFFSET } from "../lib/layoutMetrics";
 import { resolveMobileStageLabel } from "../lib/mobileBranding";
+import { CHROME_MAX_FONT_SCALE } from "../lib/typography";
 import { useAndroidControlSizing } from "./ui/useAndroidControlSizing";
 
-const BRAND_MAX_FONT_SCALE = 1.4;
 const WORDMARK_SUFFIX = "Code";
 
 export function brandTitleOffset(): number {
@@ -57,7 +57,7 @@ export function CompactBrandTitle(
       {/* A logo beside a fixed-size wordmark: it may grow with Dynamic Type, not crowd the bar. */}
       <Text
         allowFontScaling={props.allowFontScaling}
-        maxFontSizeMultiplier={BRAND_MAX_FONT_SCALE}
+        maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE}
         className="font-ankiel-medium text-foreground-muted"
         style={{ fontSize: 21 * scale, letterSpacing: -0.5 * scale }}
       >
@@ -74,7 +74,7 @@ export function CompactBrandTitle(
         >
           <Text
             allowFontScaling={props.allowFontScaling}
-            maxFontSizeMultiplier={BRAND_MAX_FONT_SCALE}
+            maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE}
             className="font-ankiel-bold text-foreground-muted uppercase"
             style={{ fontSize: 9 * scale, letterSpacing: 0.9 * scale }}
           >

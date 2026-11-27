@@ -31,3 +31,25 @@ export const MOBILE_TEXT_CLASSES = {
   largeTitle: "text-2xl",
   display: "text-3xl",
 } as const satisfies Record<keyof typeof MOBILE_TYPOGRAPHY, string>;
+
+/**
+ * Compact chrome (bar titles, chips, pills, badges, toolbar labels) follows the system text size
+ * only to just past the largest standard size (xxxLarge is 1.353); body content scales freely.
+ */
+export const CHROME_MAX_FONT_SCALE = 1.4;
+
+export function chromeFontScale(fontScale: number): number {
+  return Math.min(fontScale, CHROME_MAX_FONT_SCALE);
+}
+
+/**
+ * Android scales `lineHeight` by the full font scale, past `maxFontSizeMultiplier`. Returns the
+ * line height that lands on the capped size there, or undefined when the cap does not bite.
+ */
+export function androidCappedLineHeight(
+  lineHeight: number,
+  fontScale: number,
+  maxFontScale: number,
+): number | undefined {
+  return fontScale > maxFontScale ? (lineHeight * maxFontScale) / fontScale : undefined;
+}

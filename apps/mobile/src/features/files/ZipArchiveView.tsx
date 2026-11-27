@@ -444,7 +444,7 @@ function ZipArchiveList(props: {
         contentContainerStyle={{ paddingBottom: 4 }}
         ListHeaderComponent={
           <View className="px-4 pt-3 pb-2.5">
-            <View className="h-[38px] flex-row items-center gap-2 rounded-[10px] bg-subtle px-3">
+            <View className="min-h-[38px] flex-row items-center gap-2 rounded-[10px] bg-subtle px-3">
               <SymbolView name="magnifyingglass" size={15} tintColorClassName="accent-icon-muted" />
               <TextInput
                 accessibilityLabel={gt("Filter files in ZIP")}

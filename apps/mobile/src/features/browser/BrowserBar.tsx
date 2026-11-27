@@ -21,6 +21,7 @@ import { isDarkThemeColor, themeColorWithAlpha } from "../../lib/mobileTheme";
 import { useBarInset } from "../../components/ui/useBarInset";
 import { WorkspaceColumnMetricsContext } from "../../native/v5-workspace-context";
 import { isDuoDevice } from "../../lib/device-type";
+import { CHROME_MAX_FONT_SCALE } from "../../lib/typography";
 import { useDeviceType, useNativeColumnLayoutMetrics } from "../../native/native-layout-metrics";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 
@@ -215,6 +216,7 @@ function BrowserBar(
                 selectTextOnFocus
                 lineBreakModeIOS="middle"
                 numberOfLines={1}
+                maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE}
                 textAlign={draft === null ? "center" : "left"}
                 className="h-11 min-w-0 flex-1 pl-3 font-sans text-[15px]"
                 style={{ color: inkColor }}
@@ -259,7 +261,7 @@ function BrowserBar(
           onPress={props.onExpand}
         >
           <Glass ink={ink} className="h-7 justify-center rounded-full px-3.5">
-            <AppText numberOfLines={1} className="text-xs" style={{ color: inkColor }}>
+            <AppText chrome textRole="label" numberOfLines={1} style={{ color: inkColor }}>
               {hostOf(props.url)}
             </AppText>
           </Glass>

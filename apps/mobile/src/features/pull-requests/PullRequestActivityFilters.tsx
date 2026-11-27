@@ -92,7 +92,7 @@ export function PullRequestActivityFilters({
             size={18}
             tintColorClassName="accent-icon-muted"
           />
-          <Text className="text-xs text-foreground-muted">
+          <Text chrome textRole="label" className="text-foreground-muted">
             {value.newestFirst
               ? gt("Newest", { $context: "sort order" })
               : gt("Oldest", { $context: "sort order" })}

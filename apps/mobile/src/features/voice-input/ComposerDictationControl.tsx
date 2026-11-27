@@ -18,6 +18,7 @@ import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView, type AppSymbolName } from "../../components/ui/AppSymbol";
 import { useAndroidControlSizing } from "../../components/ui/useAndroidControlSizing";
 import { cn } from "../../lib/cn";
+import { CHROME_MAX_FONT_SCALE } from "../../lib/typography";
 import type { VoiceComposerPresentation } from "./voiceInputPresentation";
 import { VOICE_WAVEFORM_SAMPLE_COUNT } from "./voiceInputMetering";
 
@@ -243,6 +244,7 @@ export function DictationElapsedTime(props: {
   return (
     <SystemText
       className={cn("text-xs", props.className)}
+      maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE}
       numberOfLines={1}
       style={{ fontVariant: ["tabular-nums"] }}
     >
@@ -385,7 +387,12 @@ export function ComposerDictationStatus(props: {
           <DictationElapsedTime className="text-foreground-muted" seconds={props.elapsedSeconds} />
         </Animated.View>
         <Animated.View className="absolute inset-0 justify-center px-2" style={labelStyle}>
-          <Text className="text-center text-sm text-foreground-muted" numberOfLines={1}>
+          <Text
+            chrome
+            textRole="footnote"
+            className="text-center text-foreground-muted"
+            numberOfLines={1}
+          >
             {props.presentation.statusLabel}
           </Text>
         </Animated.View>

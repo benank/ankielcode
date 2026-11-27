@@ -38,7 +38,7 @@ function FileCardHeader(props: PreviewProps) {
       accessibilityLabel={gt("Open {name}", { name: props.source.name })}
       onPress={props.onOpen}
       onLongPress={props.onLongPress}
-      className="h-[72px] flex-row items-center gap-3 p-3 active:bg-subtle"
+      className="min-h-[72px] flex-row items-center gap-3 p-3 active:bg-subtle"
     >
       <View className="h-12 w-10 shrink-0 items-center justify-center rounded-lg bg-subtle">
         <PierreEntryIcon path={props.source.name ?? "file"} kind="file" size={26} />
@@ -234,7 +234,7 @@ function InlineAudio(
           >
             <View className="h-1 bg-foreground-muted" style={{ width: `${progress * 100}%` }} />
           </View>
-          <Text className="text-xs text-foreground-muted" numberOfLines={1}>
+          <Text chrome textRole="label" className="text-foreground-muted" numberOfLines={1}>
             {error || status.error
               ? gt("Unavailable · tap play to retry")
               : busy

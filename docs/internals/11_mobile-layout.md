@@ -57,3 +57,7 @@ Platform splits live in layers 1, 2 and 4, as `.ios` and `.android` files.
   and UIKit shows them over the visible pane.
 - A route opened from the inspector sheet must wait for the sheet to close, through
   `InspectorSheetContext`. Presenting over a closing sheet races its dismissal on iOS.
+- Text in fixed-height chrome (chips, pills, badges, bar labels) is `<AppText chrome textRole=…>`,
+  which stops growing at `CHROME_MAX_FONT_SCALE`; content text scales freely. A bare
+  `maxFontSizeMultiplier` is not enough on Android, which scales `lineHeight` by the full font
+  scale, so the line box still outgrows the holder. The `chrome` path corrects it from the role.

@@ -139,7 +139,7 @@ export function PullRequestDescription(props: {
                 }
                 className="min-h-11 flex-row items-center justify-center gap-1 py-2 active:opacity-70"
               >
-                <Text className="text-xs font-ankiel-medium text-foreground">
+                <Text chrome textRole="label" className="font-ankiel-medium text-foreground">
                   {expanded ? gt("Show less") : gt("Show more")}
                 </Text>
                 <SymbolView

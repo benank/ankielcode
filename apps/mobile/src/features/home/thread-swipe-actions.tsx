@@ -44,6 +44,7 @@ import Animated, {
 
 import { AppText as Text } from "../../components/ui/AppText";
 import type { MessageResolver } from "../../i18n/messages";
+import { androidCappedLineHeight } from "../../lib/typography";
 import { useScaledTextRole } from "../settings/appearance/useScaledTextRole";
 import { SwipeRowActivationContext, type SwipeRowActivation } from "./swipe-row-activation";
 import { registerThreadDismissal } from "./thread-dismissal";
@@ -694,12 +695,11 @@ function SwipeActionButton(props: {
       ? (props.rowHeight - circleSize) / Math.min(fontScale, ACTION_LABEL_MAX_FONT_SCALE)
       : Infinity;
   const labelLineHeight = Math.min(useScaledTextRole("micro").lineHeight, labelRoom);
-  // Android scales lineHeight by the full font scale, past maxFontSizeMultiplier.
   const labelTextStyle = {
     lineHeight:
-      Platform.OS === "android" && fontScale > ACTION_LABEL_MAX_FONT_SCALE
-        ? (labelLineHeight * ACTION_LABEL_MAX_FONT_SCALE) / fontScale
-        : labelLineHeight,
+      (Platform.OS === "android"
+        ? androidCappedLineHeight(labelLineHeight, fontScale, ACTION_LABEL_MAX_FONT_SCALE)
+        : undefined) ?? labelLineHeight,
   };
   const actionStyle = useAnimatedStyle(() => {
     const reveal = swipeReveal(translation.value, side);

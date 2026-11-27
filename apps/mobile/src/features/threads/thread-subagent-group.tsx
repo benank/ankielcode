@@ -153,7 +153,9 @@ export function ThreadSubagentGroup(props: {
             ))}
             {agents.length > 3 ? (
               <View className="-ml-2 h-7 w-7 items-center justify-center rounded-full border border-border bg-card">
-                <Text className="text-2xs text-foreground-muted">+{agents.length - 3}</Text>
+                <Text chrome textRole="caption" className="text-foreground-muted">
+                  +{agents.length - 3}
+                </Text>
               </View>
             ) : null}
           </View>
