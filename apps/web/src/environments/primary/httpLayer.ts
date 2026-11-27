@@ -36,7 +36,7 @@ function withPrimaryBearerToken(client: HttpClient.HttpClient): HttpClient.HttpC
   );
 }
 
-function layerForCurrentOrigin() {
+export function layerForCurrentOrigin() {
   return Layer.unwrap(
     Effect.sync(() => {
       const layerBase = layerRemoteHttpClient(globalThis.fetch);

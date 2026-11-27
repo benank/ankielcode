@@ -143,7 +143,7 @@ export const generateDpopProofKeyPair = Effect.fn("dpop.generateDpopProofKeyPair
   },
 );
 
-const loadOrCreateDpopProofKeyPair = Effect.fn("dpop.loadOrCreateDpopProofKeyPair")(
+export const loadOrCreateDpopProofKeyPair = Effect.fn("dpop.loadOrCreateDpopProofKeyPair")(
   function* (): Effect.fn.Return<DpopProofKeyPair, CloudDpopError> {
     const stored = yield* Effect.tryPromise({
       try: () => SecureStore.getItemAsync(DPOP_PROOF_KEY_STORAGE_KEY),

@@ -16,6 +16,6 @@ export function readDesktopPrimaryBearerToken(): Promise<string | null> {
   return desktopBearerTokenPromise;
 }
 
-function __resetDesktopPrimaryAuthForTests(): void {
+export function __resetDesktopPrimaryAuthForTests(): void {
   desktopBearerTokenPromise = null;
 }

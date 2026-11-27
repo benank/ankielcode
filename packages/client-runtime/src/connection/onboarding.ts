@@ -122,7 +122,7 @@ function differentMachineError(label: string) {
   });
 }
 
-const preparePairingRegistration = Effect.fn(
+export const preparePairingRegistration = Effect.fn(
   "clientRuntime.connection.onboarding.preparePairingRegistration",
 )(function* (input: PairingConnectionInput) {
   const target = yield* resolvePairingTarget(input);
@@ -291,7 +291,7 @@ const updateBearerConnection = Effect.fn(
   yield* registry.register(registration);
 });
 
-const prepareBearerConnectionUpdate = Effect.fn(
+export const prepareBearerConnectionUpdate = Effect.fn(
   "clientRuntime.connection.onboarding.prepareBearerConnectionUpdate",
 )(function* (options: {
   readonly input: BearerConnectionUpdateInput;
@@ -355,7 +355,7 @@ const prepareBearerConnectionUpdate = Effect.fn(
   });
 });
 
-const prepareSshRegistration = Effect.fn(
+export const prepareSshRegistration = Effect.fn(
   "clientRuntime.connection.onboarding.prepareSshRegistration",
 )(function* (input: SshConnectionInput) {
   const gateway = yield* ClientCapabilities.SshEnvironmentGateway;

@@ -208,3 +208,30 @@ it("Enter on an empty prompt resumes an interrupted thread", async () => {
     ),
   );
 });
+
+it("typing a message and pressing Enter sends it on an existing thread", async () => {
+  const thread = threadWithHistory("plain-send", 1);
+  using _environment = installFakeEnvironment([thread], { acceptCommands: true });
+  __setClientSettingsForTests({
+    ...DEFAULT_CLIENT_SETTINGS,
+    onboardingCompletedAt: "2026-01-01T00:00:00.000Z",
+  });
+  const router = getRouter(
+    createMemoryHistory({ initialEntries: [`/${ENVIRONMENT_ID}/${thread.id}`] }),
+  );
+  await router.load();
+  await using _app = await render(<AppRoot router={router} />, {
+    // AppRoot brings its own router.
+    router: false,
+  });
+  await expect.element(page.getByText("Answer 0 for plain-send.")).toBeVisible();
+
+  await userEvent.click(page.getByTestId("composer-editor"));
+  await userEvent.keyboard("hello there{Enter}");
+
+  await vi.waitFor(() =>
+    expect(dispatchedCommands()).toContainEqual(
+      expect.objectContaining({ type: "message.dispatch", threadId: thread.id }),
+    ),
+  );
+});

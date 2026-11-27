@@ -121,7 +121,9 @@ const networkPathChanges = Stream.callback<"network-changed">((queue) =>
 );
 
 /** A wake from sleep can leave sockets that still read as connected, so it probes them all. */
-const powerResumeWakeups = (readBridge: () => Pick<DesktopBridge, "onPowerResume"> | undefined) =>
+export const powerResumeWakeups = (
+  readBridge: () => Pick<DesktopBridge, "onPowerResume"> | undefined,
+) =>
   Stream.callback<"application-active-long">((queue) =>
     Effect.acquireRelease(
       Effect.sync(() =>
@@ -232,74 +234,74 @@ const ensureDesktopSshEnvironment = (bridge: DesktopBridge, target: DesktopSshEn
     catch: sshPreparationError,
   });
 
-const provisionDesktopSshEnvironment = Effect.fn("web.connectionPlatform.ssh.provisionDesktop")(
-  function* (
-    bridge: DesktopBridge,
-    target: DesktopSshEnvironmentTarget,
-    expectedEnvironmentId?: EnvironmentId,
-  ) {
-    const bootstrap = yield* ensureDesktopSshEnvironment(bridge, target);
-    const pairingToken = bootstrap.pairingToken;
-    if (pairingToken === null) {
-      return yield* new ConnectionBlockedError({
-        reason: "authentication",
-        detail: m(msg("The SSH environment did not issue a pairing credential.")),
-      });
-    }
-    const descriptor = yield* Effect.tryPromise({
-      try: () => bridge.fetchSshEnvironmentDescriptor(bootstrap.httpBaseUrl),
-      catch: sshPreparationError,
+export const provisionDesktopSshEnvironment = Effect.fn(
+  "web.connectionPlatform.ssh.provisionDesktop",
+)(function* (
+  bridge: DesktopBridge,
+  target: DesktopSshEnvironmentTarget,
+  expectedEnvironmentId?: EnvironmentId,
+) {
+  const bootstrap = yield* ensureDesktopSshEnvironment(bridge, target);
+  const pairingToken = bootstrap.pairingToken;
+  if (pairingToken === null) {
+    return yield* new ConnectionBlockedError({
+      reason: "authentication",
+      detail: m(msg("The SSH environment did not issue a pairing credential.")),
     });
-    if (expectedEnvironmentId !== undefined && descriptor.environmentId !== expectedEnvironmentId) {
-      return yield* new ConnectionBlockedError({
+  }
+  const descriptor = yield* Effect.tryPromise({
+    try: () => bridge.fetchSshEnvironmentDescriptor(bootstrap.httpBaseUrl),
+    catch: sshPreparationError,
+  });
+  if (expectedEnvironmentId !== undefined && descriptor.environmentId !== expectedEnvironmentId) {
+    return yield* new ConnectionBlockedError({
+      reason: "configuration",
+      detail: m(
+        msg(
+          "That host reaches {label}, a different machine. Add it as its own environment instead.",
+          { label: descriptor.label },
+        ),
+      ),
+    });
+  }
+  const access = yield* Effect.tryPromise({
+    try: () => bridge.bootstrapSshBearerSession(bootstrap.httpBaseUrl, pairingToken),
+    catch: (cause) => {
+      const error = sshPreparationError(cause);
+      // A reused remote server on another build can fail to decode the grant
+      // the desktop's runner just minted, and answers 500 on every retry.
+      if (
+        error._tag === "ConnectionBlockedError" ||
+        descriptor.serverVersion === APP_VERSION ||
+        !error.detail.includes("[ssh_http:500]")
+      ) {
+        return error;
+      }
+      return new ConnectionBlockedError({
         reason: "configuration",
         detail: m(
           msg(
-            "That host reaches {label}, a different machine. Add it as its own environment instead.",
-            { label: descriptor.label },
+            "{label} runs Ankiel Code {serverVersion}, but this desktop is {appVersion}, and that server could not accept its pairing. Restart the Ankiel server on {label} so it runs {appVersion}, then retry.",
+            {
+              label: descriptor.label,
+              serverVersion: descriptor.serverVersion,
+              appVersion: APP_VERSION,
+            },
           ),
         ),
       });
-    }
-    const access = yield* Effect.tryPromise({
-      try: () => bridge.bootstrapSshBearerSession(bootstrap.httpBaseUrl, pairingToken),
-      catch: (cause) => {
-        const error = sshPreparationError(cause);
-        // A reused remote server on another build can fail to decode the grant
-        // the desktop's runner just minted, and answers 500 on every retry.
-        if (
-          error._tag === "ConnectionBlockedError" ||
-          descriptor.serverVersion === APP_VERSION ||
-          !error.detail.includes("[ssh_http:500]")
-        ) {
-          return error;
-        }
-        return new ConnectionBlockedError({
-          reason: "configuration",
-          detail: m(
-            msg(
-              "{label} runs Ankiel Code {serverVersion}, but this desktop is {appVersion}, and that server could not accept its pairing. Restart the Ankiel server on {label} so it runs {appVersion}, then retry.",
-              {
-                label: descriptor.label,
-                serverVersion: descriptor.serverVersion,
-                appVersion: APP_VERSION,
-              },
-            ),
-          ),
-        });
-      },
-    });
-    return {
-      environmentId: descriptor.environmentId,
-      label: descriptor.label,
-      bootstrap,
-      bearerToken: access.access_token,
-    };
-  },
-);
+    },
+  });
+  return {
+    environmentId: descriptor.environmentId,
+    label: descriptor.label,
+    bootstrap,
+    bearerToken: access.access_token,
+  };
+});
 
 /** Reuses SSH pairing tokens with all standard scopes to avoid adding a session on each connection. */
-const prepareDesktopSshEnvironment = Effect.fn("web.connectionPlatform.ssh.prepareDesktop")(
+export const prepareDesktopSshEnvironment = Effect.fn("web.connectionPlatform.ssh.prepareDesktop")(
   function* (
     bridge: DesktopBridge,
     input: {
@@ -538,14 +540,14 @@ function readPrimaryEnvironmentTargetResult(
   }
 }
 
-function primaryRegistrationToRetainAfterTopologyRead(
+export function primaryRegistrationToRetainAfterTopologyRead(
   previous: ReadonlyMap<string, CachedPlatformRegistration>,
   topologyRead: PrimaryEnvironmentTargetRead,
 ): CachedPlatformRegistration | undefined {
   return topologyRead._tag === "Failure" ? previous.get(PRIMARY_LOCAL_ENVIRONMENT_ID) : undefined;
 }
 
-function canReuseCachedPlatformRegistration(
+export function canReuseCachedPlatformRegistration(
   cached: CachedPlatformRegistration,
   signature: string,
   nowEpochMs: number,
@@ -556,7 +558,7 @@ function canReuseCachedPlatformRegistration(
   );
 }
 
-function canRetainCachedPlatformRegistrationAfterRefreshFailure(
+export function canRetainCachedPlatformRegistrationAfterRefreshFailure(
   cached: CachedPlatformRegistration,
   signature: string,
   nowEpochMs: number,
@@ -578,7 +580,7 @@ export interface RejectedSecondaryBootstrap {
 }
 
 /** Retry with backoff: a backend can restart on the same port with a fresh grant and no topology change. */
-function isRejectedSecondaryBootstrap(
+export function isRejectedSecondaryBootstrap(
   rejected: RejectedSecondaryBootstrap | undefined,
   signature: string,
   nowEpochMs: number,
@@ -590,7 +592,7 @@ function isRejectedSecondaryBootstrap(
   );
 }
 
-function nextRejectedSecondaryBootstrap(
+export function nextRejectedSecondaryBootstrap(
   previous: RejectedSecondaryBootstrap | undefined,
   signature: string,
   nowEpochMs: number,
@@ -602,11 +604,11 @@ function nextRejectedSecondaryBootstrap(
   return { signature, retryAtEpochMs: nowEpochMs + delayMs, delayMs };
 }
 
-function isRejectedBootstrapCredentialError(error: ConnectionAttemptError): boolean {
+export function isRejectedBootstrapCredentialError(error: ConnectionAttemptError): boolean {
   return error._tag === "ConnectionBlockedError" && error.reason === "authentication";
 }
 
-function secondaryRegistrationsToRetainAfterTopologyRead(
+export function secondaryRegistrationsToRetainAfterTopologyRead(
   previous: ReadonlyMap<string, CachedPlatformRegistration>,
   topologyRead: DesktopSecondaryBootstrapsRead,
   nowEpochMs: number,
