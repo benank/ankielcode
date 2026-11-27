@@ -25,7 +25,7 @@ const EXTENSIONS: Readonly<Record<string, string>> = {
  * names, and an extension from the media type when the name has none. It comes from the
  * attachment or alt text, never from the URL, which can carry a signed token.
  */
-export function mediaDragFileName(name: string, mimeType: string): string {
+function mediaDragFileName(name: string, mimeType: string): string {
   const cleaned = [...(name.split(/[/\\]/).at(-1) ?? "")]
     .map((char) => (char.charCodeAt(0) < 0x20 || '<>:"|?*\u007f'.includes(char) ? "_" : char))
     .join("")

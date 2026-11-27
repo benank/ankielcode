@@ -7,7 +7,7 @@ import * as DesktopIpc from "../DesktopIpc.ts";
 import { GET_LOW_POWER_STATE_CHANNEL, LOW_POWER_STATE_CHANNEL } from "../channels.ts";
 
 /** While this holds the renderer drops glass, the activity shimmer and animated scrolling. */
-export function isLowPower(
+function isLowPower(
   onBattery: boolean,
   thermalState: ElectronPowerMonitor.ElectronThermalState,
 ): boolean {

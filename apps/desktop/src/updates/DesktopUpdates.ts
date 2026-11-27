@@ -87,7 +87,7 @@ const UpdateInfo = Schema.Struct({
 const DownloadProgressInfo = Schema.Struct({
   percent: Schema.Number,
 });
-export const DESKTOP_UPDATE_INSTALL_RECORD_FILE = "desktop-update-install.json";
+const DESKTOP_UPDATE_INSTALL_RECORD_FILE = "desktop-update-install.json";
 const DesktopUpdateInstallRecord = Schema.fromJsonString(
   Schema.Struct({ fromVersion: Schema.String, targetVersion: Schema.String }),
 );
@@ -269,7 +269,7 @@ function summarizeCause(cause: unknown, depth: number): string {
   return `${errorTag(cause)}${code}${message}${nested}`;
 }
 
-export function describeUpdateErrorCause(cause: unknown): string {
+function describeUpdateErrorCause(cause: unknown): string {
   try {
     return summarizeCause(cause, 0).slice(0, 1024);
   } catch {

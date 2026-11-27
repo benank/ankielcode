@@ -2,8 +2,8 @@
 
 import type { QuitConfirmationMode, QuitShortcutHintEvent } from "@ankielcode/contracts";
 
-export const QUIT_HOLD_DURATION_MS = 1200;
-export const QUIT_DOUBLE_PRESS_MS = 500;
+const QUIT_HOLD_DURATION_MS = 1200;
+const QUIT_DOUBLE_PRESS_MS = 500;
 // Auto-repeat keydowns prove the hold: macOS drops a letter keyUp while Command is down,
 // so a release-based timer would quit anyway. Once held, quitting waits for Q keyUp or a
 // quiet grace period so trailing repeats cannot reach the next app.

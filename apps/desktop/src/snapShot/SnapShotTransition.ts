@@ -83,7 +83,7 @@ function snapShotAnimationOverlayBounds(
   return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
-export function snapShotAnimationDisplayBounds(
+function snapShotAnimationDisplayBounds(
   displays: ReadonlyArray<Pick<Electron.Display, "bounds">>,
   source: Electron.Rectangle,
   destination: Electron.Rectangle,

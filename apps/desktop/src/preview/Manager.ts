@@ -196,7 +196,7 @@ const buildPreviewPictureInPictureDataUrl = (): string => {
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
 };
 
-export const fitPictureInPictureContentSize = (
+const fitPictureInPictureContentSize = (
   current: ReadonlyArray<number>,
   aspectRatio: number,
 ): readonly [width: number, height: number] => {
@@ -492,7 +492,7 @@ const POPUP_WINDOW_OPTIONS = {
  * OAuth needs a surviving popup opener. `blob:`, app links (behind the session's `openExternal`
  * prompt) and form POSTs stay in place.
  */
-export const previewWindowOpenAction = (details: {
+const previewWindowOpenAction = (details: {
   readonly url: string;
   readonly disposition: Electron.HandlerDetails["disposition"];
   readonly postBody?: Electron.PostBody;
@@ -515,10 +515,7 @@ const isPreviewRefreshShortcut = (input: Electron.Input, platform: NodeJS.Platfo
   !input.shift &&
   !input.alt;
 
-export const isPreviewEditingShortcut = (
-  input: Electron.Input,
-  platform: NodeJS.Platform,
-): boolean => {
+const isPreviewEditingShortcut = (input: Electron.Input, platform: NodeJS.Platform): boolean => {
   const isMac = platform === "darwin";
   if (isMac ? !input.meta || input.control : !input.control || input.meta) return false;
 

@@ -20,7 +20,7 @@ export interface RemoteDesktopUpdateAttempts {
 }
 
 const MAX_REMOTE_UPDATE_CHECKS = 2;
-export const MAX_REMOTE_UPDATE_DOWNLOADS = 3;
+const MAX_REMOTE_UPDATE_DOWNLOADS = 3;
 
 export function nextRemoteDesktopUpdateStep(
   state: DesktopUpdateState,

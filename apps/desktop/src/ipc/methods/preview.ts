@@ -263,7 +263,7 @@ const cancelPickElement = tabMethod(
   "desktop.ipc.preview.cancelPickElement",
   (manager, tabId) => manager.cancelPickElement(tabId),
 );
-export const startRecording = DesktopIpc.makeIpcMethod({
+const startRecording = DesktopIpc.makeIpcMethod({
   channel: IpcChannels.PREVIEW_RECORDING_START_CHANNEL,
   payload: DesktopPreviewTabInputSchema,
   // Void encodes any value as undefined, so the tagged failure must be tried first.
@@ -320,7 +320,7 @@ const clearCache = DesktopIpc.makeIpcMethod({
 });
 
 /** Keep the default profile's bare environment id so existing logins retain their partition. */
-export function resolvePartitionScope(
+function resolvePartitionScope(
   environmentId: string,
   profileId: string | undefined,
 ): {
@@ -501,7 +501,7 @@ const setAnnotationSendEnabled = DesktopIpc.makeIpcMethod({
   }),
 });
 
-export const captureScreenshot = DesktopIpc.makeIpcMethod({
+const captureScreenshot = DesktopIpc.makeIpcMethod({
   channel: IpcChannels.PREVIEW_CAPTURE_SCREENSHOT_CHANNEL,
   payload: DesktopPreviewTabInputSchema,
   result: Schema.Union([DesktopPreviewScreenshotArtifactSchema, PreviewCaptureFailure]),

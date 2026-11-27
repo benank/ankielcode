@@ -167,7 +167,7 @@ function getInitialWindowBackgroundColor(shouldUseDarkColors: boolean): string {
  * The colour the renderer last painted, so a window opens in the user's theme. A colour that
  * followed the system is dropped once the system appearance no longer matches it.
  */
-export function resolveWindowBackground(
+function resolveWindowBackground(
   stored: DesktopWindowBackground | null,
   shouldUseDarkColors: boolean,
 ): { readonly color: string; readonly dark: boolean } {
@@ -259,7 +259,7 @@ function windowBoundsEqual(
   );
 }
 
-export function resolveInitialMainWindowBounds(
+function resolveInitialMainWindowBounds(
   persistedBounds: DesktopAppSettings.DesktopWindowBounds | null,
   displays: readonly DisplayBounds[],
 ): DesktopAppSettings.DesktopWindowBounds | typeof DesktopAppSettings.DEFAULT_MAIN_WINDOW_SIZE {
@@ -286,7 +286,7 @@ function buildConnectingSplashDataUrl({
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
 }
 
-export function isSameOriginRendererNavigation(input: {
+function isSameOriginRendererNavigation(input: {
   readonly applicationUrl: string;
   readonly navigationUrl: string;
 }): boolean {

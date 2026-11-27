@@ -96,7 +96,7 @@ export class DesktopIpc extends Context.Service<
 >()("@ankielcode/desktop/ipc/DesktopIpc") {}
 
 // ipcMain is shared by every webContents, including preview guests that load arbitrary pages.
-export const make = (
+const make = (
   ipcMain: DesktopIpcMain,
   isTrustedSender: DesktopIpcSenderGuard,
 ): DesktopIpc["Service"] =>
@@ -194,12 +194,6 @@ export const layer = (ipcMain: DesktopIpcMain) =>
         ),
       );
     }),
-  );
-
-export const layerTest = (ipcMain: DesktopIpcMain) =>
-  Layer.succeed(
-    DesktopIpc,
-    make(ipcMain, () => Effect.succeed(true)),
   );
 
 export interface DesktopIpcMethodRegistration<
