@@ -8,7 +8,15 @@ struct AnkielCodeApp: App {
     WindowGroup {
       RootView()
         .environment(model)
-        .task { await model.restore() }
+        .task {
+          await model.restore()
+          #if DEBUG
+          // Lets `simctl launch` pair without the system "Open in app?" prompt.
+          if let link = ProcessInfo.processInfo.environment["ANKIEL_OPEN_URL"].flatMap(URL.init(string:)) {
+            model.open(link)
+          }
+          #endif
+        }
         .onOpenURL { model.open($0) }
     }
   }
