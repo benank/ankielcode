@@ -148,7 +148,7 @@ import * as AgentAlertPush from "./relay/AgentAlertPush.ts";
 import * as PushRegistry from "./relay/PushRegistry.ts";
 import * as AuthHttp from "./auth/http.ts";
 import * as ReplayMarkers from "./auth/replayMarkers.ts";
-import * as RemovedLinearTokens from "./issue/removedLinearTokens.ts";
+import * as RemovedFeatureSecrets from "./removedFeatureSecrets.ts";
 import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
 import * as CodexManagedTokenBroker from "./provider/CodexManagedTokenBroker.ts";
 import * as WebhookRoute from "./scheduledTasks/webhookRoute.ts";
@@ -632,7 +632,7 @@ const layerRuntimeCoreDependenciesBase = Layer.mergeAll(
   layerProviderInstallationRefresh,
   ProviderInstallation.layer,
   ReplayMarkers.layer,
-  RemovedLinearTokens.layer,
+  RemovedFeatureSecrets.layer,
   Layer.effectDiscard(ProjectSettingsOverrideSweep.sweep),
 ).pipe(
   Layer.provideMerge(layerOrchestrationApplication),

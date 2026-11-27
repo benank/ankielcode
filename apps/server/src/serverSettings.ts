@@ -55,6 +55,7 @@ import {
 } from "@ankielcode/shared/serverSettings";
 import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
 import { watchDirectoryReplacements } from "./watchDirectoryReplacements.ts";
+import { sourceControlDefinitions } from "./sourceControl/sourceControlDefinitions.ts";
 import {
   readSecretFieldValues,
   sourceControlHostSecretName,
@@ -119,11 +120,25 @@ const foldProviderInstanceEnabledFlags = (settings: ServerSettings): ServerSetti
   };
 };
 
+const SOURCE_CONTROL_KINDS: ReadonlySet<string> = new Set(
+  sourceControlDefinitions.definitions.map((definition) => definition.kind),
+);
+
+// A removed forge's host has no secret fields, so its tokens would sit in the file and reach clients.
+const withoutRemovedSourceControlHosts = (settings: ServerSettings): ServerSettings => {
+  const hosts = Object.entries(settings.sourceControlHosts);
+  const kept = hosts.filter(([kind]) => SOURCE_CONTROL_KINDS.has(kind));
+  return kept.length === hosts.length
+    ? settings
+    : { ...settings, sourceControlHosts: Object.fromEntries(kept) };
+};
+
 const normalizeServerSettings = (
   settings: ServerSettings,
 ): Effect.Effect<ServerSettings, ServerSettingsError> =>
   encodeServerSettings(settings).pipe(
     Effect.flatMap(decodeServerSettings),
+    Effect.map(withoutRemovedSourceControlHosts),
     Effect.map(foldProviderInstanceEnabledFlags),
     Effect.map((next) => withIdleCompaction(next, globalIdleCompaction(next))),
     Effect.map((next) => ({ ...next, ...deriveLegacyProjectOverrides(next) })),
@@ -324,7 +339,8 @@ const decodePersistedServerSettingsJsonExit = Schema.decodeUnknownExit(
 const LegacyProviderSettingsJson = fromLenientJson(
   Schema.Struct({
     providers: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
-    bitbucket: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
+    // Read only so the rewrite drops the removed forge's tokens from the file.
+    bitbucket: Schema.optionalKey(Schema.Unknown),
     github: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
   }),
 );
@@ -357,46 +373,36 @@ function decodeSettingsFile(raw: string) {
   return { settings, legacy: Exit.isSuccess(legacy) ? legacy.value : undefined, failure };
 }
 
-const LEGACY_BITBUCKET_SECRET_NAMES: Readonly<Record<string, string>> = {
-  accessToken: "bitbucket-access-token",
-  apiToken: "bitbucket-api-token",
-};
 const legacyGitHubTokenSecretName = (host: string) =>
   `github-token-${Buffer.from(host.trim().toLowerCase(), "utf8").toString("base64url")}`;
 
-function migrateLegacySourceControlSettings(
+function migrateLegacyGitHubSettings(
   settings: ServerSettings,
-  legacy: {
-    readonly bitbucket?: Readonly<Record<string, unknown>> | undefined;
-    readonly github?: Readonly<Record<string, unknown>> | undefined;
-  },
+  legacyGitHub: Readonly<Record<string, unknown>> | undefined,
 ): {
   readonly settings: ServerSettings;
   readonly secretMoves: ReadonlyArray<{ readonly from: string; readonly to: string }>;
 } {
-  const sourceControlHosts = { ...settings.sourceControlHosts };
-  const secretMoves: Array<{ readonly from: string; readonly to: string }> = [];
-  if (legacy.bitbucket !== undefined && sourceControlHosts.bitbucket === undefined) {
-    sourceControlHosts.bitbucket = legacy.bitbucket;
-    for (const [field, from] of Object.entries(LEGACY_BITBUCKET_SECRET_NAMES)) {
-      if (legacy.bitbucket[field] !== SECRET_REDACTED) continue;
-      secretMoves.push({
-        from,
-        to: sourceControlHostSecretName({ kind: "bitbucket", field, serverHost: null }),
-      });
-    }
+  if (legacyGitHub === undefined || settings.sourceControlHosts.github !== undefined) {
+    return { settings, secretMoves: [] };
   }
-  if (legacy.github !== undefined && sourceControlHosts.github === undefined) {
-    sourceControlHosts.github = legacy.github;
-    for (const [serverHost, value] of readSecretFieldValues(legacy.github.tokens)) {
-      if (serverHost === null || value !== SECRET_REDACTED) continue;
-      secretMoves.push({
-        from: legacyGitHubTokenSecretName(serverHost),
-        to: sourceControlHostSecretName({ kind: "github", field: "tokens", serverHost }),
-      });
-    }
-  }
-  return { settings: { ...settings, sourceControlHosts }, secretMoves };
+  const secretMoves = readSecretFieldValues(legacyGitHub.tokens).flatMap(([serverHost, value]) =>
+    serverHost === null || value !== SECRET_REDACTED
+      ? []
+      : [
+          {
+            from: legacyGitHubTokenSecretName(serverHost),
+            to: sourceControlHostSecretName({ kind: "github", field: "tokens", serverHost }),
+          },
+        ],
+  );
+  return {
+    settings: {
+      ...settings,
+      sourceControlHosts: { ...settings.sourceControlHosts, github: legacyGitHub },
+    },
+    secretMoves,
+  };
 }
 
 const HISTORY_RESTORED_DRIVERS: ReadonlySet<ProviderDriverKind> = new Set(
@@ -712,16 +718,20 @@ const make = Effect.gen(function* () {
   const loadSettingsFromDisk = Effect.gen(function* () {
     let settings = DEFAULT_SERVER_SETTINGS;
     let legacyProviders: Readonly<Record<string, unknown>> | undefined;
-    let legacySourceControl: Parameters<typeof migrateLegacySourceControlSettings>[1] = {};
+    let legacyGitHub: Readonly<Record<string, unknown>> | undefined;
+    let hasLegacyBitbucket = false;
+    let droppedRemovedSourceControlHosts = false;
     let parseFailure = Option.none<unknown>();
 
     if (yield* readConfigExists) {
       const file = decodeSettingsFile(yield* readRawConfig);
       if (file.legacy !== undefined) {
         legacyProviders = file.legacy.providers;
-        legacySourceControl = { bitbucket: file.legacy.bitbucket, github: file.legacy.github };
+        legacyGitHub = file.legacy.github;
+        hasLegacyBitbucket = file.legacy.bitbucket !== undefined;
       }
-      settings = file.settings;
+      settings = withoutRemovedSourceControlHosts(file.settings);
+      droppedRemovedSourceControlHosts = settings !== file.settings;
       if (file.failure !== undefined) {
         parseFailure = Option.some(Cause.squash(file.failure));
         yield* Effect.logWarning("failed to parse settings.json, using defaults", {
@@ -799,9 +809,7 @@ const make = Effect.gen(function* () {
       : loaded;
     // Remove retired keys only after copying secrets and writing the new file; failures retry on next load.
     const legacySecretsCopied = yield* Effect.forEach(
-      settingsFileTrusted
-        ? migrateLegacySourceControlSettings(folded, legacySourceControl).secretMoves
-        : [],
+      settingsFileTrusted ? migrateLegacyGitHubSettings(folded, legacyGitHub).secretMoves : [],
       (move) =>
         secretStore.get(move.from).pipe(
           Effect.flatMap((secret) =>
@@ -818,9 +826,9 @@ const make = Effect.gen(function* () {
     const hasLegacySourceControl =
       settingsFileTrusted &&
       legacySecretsCopied &&
-      (legacySourceControl.bitbucket !== undefined || legacySourceControl.github !== undefined);
+      (hasLegacyBitbucket || legacyGitHub !== undefined || droppedRemovedSourceControlHosts);
     const sourceControlMigration = hasLegacySourceControl
-      ? migrateLegacySourceControlSettings(folded, legacySourceControl)
+      ? migrateLegacyGitHubSettings(folded, legacyGitHub)
       : { settings: folded, secretMoves: [] };
     const migrated = settingsFileTrusted
       ? yield* moveInlineSettingsSecrets(sourceControlMigration.settings)
