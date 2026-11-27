@@ -20,6 +20,7 @@ export const STATUS_TONE_TEXT_CLASS: Record<PixelStatusTone, string> = {
   active: "text-signal-active",
   attention: "text-warning",
   failed: "text-destructive",
+  success: "text-success",
   done: "text-muted-foreground",
 };
 
@@ -27,6 +28,7 @@ export const STATUS_TONE_DOT_CLASS: Record<PixelStatusTone, string> = {
   active: "bg-signal-active",
   attention: "bg-warning",
   failed: "bg-destructive",
+  success: "bg-success",
   done: "bg-muted-foreground/60",
 };
 

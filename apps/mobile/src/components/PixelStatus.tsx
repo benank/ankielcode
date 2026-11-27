@@ -25,6 +25,7 @@ export const STATUS_TONE_VARIABLE: Record<PixelStatusTone, keyof MobileThemeVari
   active: "--color-signal-active",
   attention: "--color-warning-foreground",
   failed: "--color-danger-foreground",
+  success: "--color-signal-success",
   done: "--color-foreground-muted",
 };
 
