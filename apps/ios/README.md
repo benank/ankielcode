@@ -559,3 +559,27 @@ cancels the paused "Tide chart v1.5", runs of a throwaway `ios-check` definition
 
 Not built: tool-call visibility (the thread feed is being rebuilt separately) and project-scoped
 overrides of model and permission defaults (RN's project overview).
+
+## Scheduled tasks
+
+Settings → **Scheduled tasks** lists every computer's tasks (`scheduledTasks.subscribe`) with
+their schedule in the server's time zone (PST/PDT by the next run, PT otherwise) and the next run.
+A row opens the editor; swipe or long-press to pause or resume, run now (not for webhooks), open a
+bound thread or delete. The editor (new and edit) sets the name, prompt, project, model, workspace
+(new worktree with an automatic base branch from `vcs.listRefs`, the project checkout, or a
+checkout path), the schedule (a time on chosen weekdays, once, or every N minutes) and whether it
+is enabled, and saves with `scheduledTasks.upsert`. Changing needs `orchestration:operate`.
+Webhook schedules are shown and saved back unchanged; editing their signature, filters and
+deduplication, rotating the URL, webhook deliveries, thread modes and binding to an existing
+thread are not built. Logic is in `AnkielKit/ScheduledTasks`.
+
+`swift run ankiel-probe --state <file> --scheduled-tasks` lists them read-only.
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_SCHEDULED` | `fixture`, `readonly` | Synthetic tasks on a "Fixture Mac" with a recording sink (use with `ANKIEL_DEBUG_ROUTE=settings-scheduled`). |
+| `ANKIEL_DEBUG_SCHEDULED_OPEN` | `new`, `edit:<taskId>` | Opens the editor once the page shows. |
+| `ANKIEL_DEBUG_SCHEDULED_PRESET` | `project=<title>;model=<instance>/<model>;workspace=root` | A new task's defaults (live tests use the Replay model). |
+
+`ScheduledTaskUITests` (live, with `ANKIEL_TEST_SCHEDULED=1`) creates a Replay task in the
+`ankiel-probe live` project, runs it now, pauses and deletes it; delete the thread its run made.

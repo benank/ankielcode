@@ -11,6 +11,8 @@ enum SettingsRoute: Hashable {
   case providers, threads
   case about, storage, diagnostics
   case voice, archive
+  /// Every computer's scheduled tasks.
+  case scheduledTasks
   /// Provider usage limits, and one account's page.
   case usage
   case usageAccount(String)
@@ -95,6 +97,7 @@ struct SettingsView: View {
       SettingsLink(.providers)
       SettingsLink(.usage)
       SettingsLink(.threads)
+      SettingsLink(.scheduledTasks)
     }
 
     Section {
@@ -156,6 +159,7 @@ struct SettingsView: View {
     case .diagnostics: DiagnosticsPage()
     case .voice: VoiceSettingsPage()
     case .archive: ArchivedThreadsScreen(registry: model.registry)
+    case .scheduledTasks: ScheduledTasksPage()
     case .usage: UsageLimitsPage()
     case .usageAccount(let key): UsageAccountPage(key: key)
     case .provider(let id, let instanceId):
@@ -249,6 +253,7 @@ enum SettingsCopy {
     case .diagnostics: String(localized: "Diagnostics")
     case .voice: String(localized: "Voice")
     case .archive: String(localized: "Archive", comment: "noun, settings page of archived threads")
+    case .scheduledTasks: String(localized: "Scheduled tasks")
     case .usage: String(localized: "Usage", comment: "screen title")
     case .usageAccount: String(localized: "Account", comment: "screen title")
     case .provider: String(localized: "Provider")
@@ -271,6 +276,7 @@ enum SettingsCopy {
     case .diagnostics: "stethoscope"
     case .voice: "mic"
     case .archive, .archivedThread: "archivebox"
+    case .scheduledTasks: "calendar.badge.clock"
     case .usage, .usageAccount: "gauge.with.dots.needle.33percent"
     case .provider: "person.crop.circle"
     }
@@ -281,6 +287,7 @@ enum SettingsCopy {
     case .notifications, .voice: Palette.settingsRed
     case .appearance, .threads: Palette.settingsBlue
     case .chat, .providers, .usage: Palette.settingsGreen
+    case .scheduledTasks: Palette.settingsBlue
     default: Palette.settingsGray
     }
   }
@@ -301,6 +308,7 @@ enum SettingsCopy {
     case .diagnostics: "diagnostics"
     case .voice: "voice"
     case .archive: "archive"
+    case .scheduledTasks: "scheduledTasks"
     case .archivedThread(let ref): "archivedThread.\(ref.threadId)"
     case .usage: "usage"
     case .usageAccount(let key): "usageAccount.\(key)"

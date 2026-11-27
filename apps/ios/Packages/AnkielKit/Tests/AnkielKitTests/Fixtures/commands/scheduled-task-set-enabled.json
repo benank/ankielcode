@@ -1,0 +1,7 @@
+{
+  "schema" : "scheduledTaskSetEnabled",
+  "value" : {
+    "enabled" : false,
+    "id" : "task-1"
+  }
+}

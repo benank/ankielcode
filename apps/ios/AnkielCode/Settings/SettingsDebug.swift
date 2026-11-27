@@ -121,6 +121,7 @@
         case "diagnostics": .diagnostics
         case "voice": .voice
         case "archive": .archive
+        case "scheduled": .scheduledTasks
         case "usage": .usage
         default: nil
         }

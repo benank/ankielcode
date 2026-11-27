@@ -92,6 +92,11 @@ func run() async throws {
     await session.close()
     return
   }
+  if CommandLine.arguments.contains("--usage-summary") {
+    try await probeUsageSummary(session)
+    await session.close()
+    return
+  }
   if CommandLine.arguments.contains("--streaming-setting") {
     try await probeStreamingSetting(session)
     await session.close()
@@ -109,6 +114,11 @@ func run() async throws {
   }
   if argument("--workflow-setup") != nil || argument("--workflow-teardown") != nil {
     try await probeWorkflowSetup(session, file: argument("--workflow-setup"), teardown: argument("--workflow-teardown"))
+    await session.close()
+    return
+  }
+  if CommandLine.arguments.contains("--scheduled-tasks") {
+    try await probeScheduledTasks(session)
     await session.close()
     return
   }

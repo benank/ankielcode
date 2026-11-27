@@ -1,0 +1,32 @@
+{
+  "schema" : "scheduledTaskUpsert",
+  "value" : {
+    "creationSource" : "mobile",
+    "enabled" : true,
+    "interactionMode" : "default",
+    "modelSelection" : {
+      "instanceId" : "devReplay",
+      "model" : "showcase"
+    },
+    "projectId" : "proj-tide",
+    "prompt" : "Check the tide table",
+    "runtimeMode" : "full-access",
+    "schedule" : {
+      "timeOfDay" : "09:00",
+      "type" : "fixed_time",
+      "weekdays" : [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "title" : "Morning tides",
+    "workspaceStrategy" : {
+      "baseRef" : "main",
+      "startFromOrigin" : true,
+      "type" : "worktree"
+    }
+  }
+}

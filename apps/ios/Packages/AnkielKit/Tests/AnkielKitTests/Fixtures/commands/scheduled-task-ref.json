@@ -1,0 +1,6 @@
+{
+  "schema" : "scheduledTaskRef",
+  "value" : {
+    "id" : "task-1"
+  }
+}
