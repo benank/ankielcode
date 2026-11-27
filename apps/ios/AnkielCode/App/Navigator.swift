@@ -25,7 +25,7 @@ final class Navigator {
   var sheet: HomeSheet?
 
   enum HomeSheet: String, Identifiable {
-    case settings, newThread
+    case newThread
     var id: String { rawValue }
   }
 

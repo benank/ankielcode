@@ -133,3 +133,58 @@ final class StubProtocol: URLProtocol {
     #expect(StubProtocol.requested.withLock { $0 } == ["/.well-known/ankiel/environment"])
   }
 }
+
+/// Re-pairing a saved computer at a new address (same stub, so in the serialized suite).
+extension ConnectorRenewalTests {
+  @MainActor @Test func `a new address for a saved computer needs the caller to name it, then updates it`() async throws {
+    let directory = URL.temporaryDirectory.appending(path: "repair-\(UUID().uuidString)")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    StubProtocol.reset([
+      "/.well-known/ankiel/environment": [.init(status: 200, body: descriptor)],
+      "/oauth/token": [.init(status: 200, body: token)],
+    ])
+    let (connector, store) = try connector()
+    let registry = EnvironmentRegistry(connector: connector, directory: directory, cachesShell: false)
+    await registry.load(adopting: SavedEnvironment(environmentId: "env-1", label: "Mac", endpoint: endpoint, serverVersion: "1"))
+    let target = try PairingInput.resolve(pairingURL: "http://10.0.0.5:3773/pair#token=ABCDEFGHJKMN")
+
+    do {
+      _ = try await registry.pair(target)
+      Issue.record("expected the unnamed new address to be refused")
+    } catch {
+      #expect(error == .claimsSavedEnvironment(environmentId: "env-1", label: "Mac"))
+    }
+    #expect(!StubProtocol.requested.withLock { $0 }.contains("/oauth/token"))
+
+    let model = try await registry.pair(target, updating: "env-1")
+    #expect(registry.environments.count == 1)
+    #expect(model.record.routes.first?.endpoint == target.endpoint)
+    #expect(model.record.routes.first?.learned == false)
+    #expect(model.record.routes.contains { $0.endpoint == endpoint && $0.learned })
+    #expect(try store.value(AccessCredential.self, for: CredentialKeys.credential("env-1"))?.token == "new-token")
+    await registry.remove("env-1")
+  }
+
+  @MainActor @Test func `naming a computer refuses an address that answers as another one`() async throws {
+    let directory = URL.temporaryDirectory.appending(path: "repair-\(UUID().uuidString)")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    StubProtocol.reset([
+      "/.well-known/ankiel/environment": [.init(status: 200, body: descriptor)],
+      "/oauth/token": [.init(status: 200, body: token)],
+    ])
+    let (connector, _) = try connector()
+    let registry = EnvironmentRegistry(connector: connector, directory: directory, cachesShell: false)
+    await registry.load()
+    let target = try PairingInput.resolve(pairingURL: "http://10.0.0.5:3773/pair#token=ABCDEFGHJKMN")
+    do {
+      _ = try await registry.pair(target, updating: "env-other")
+      Issue.record("expected a mismatch")
+    } catch {
+      guard case .connection(.environmentMismatch) = error else {
+        Issue.record("unexpected \(error)")
+        return
+      }
+    }
+    #expect(!StubProtocol.requested.withLock { $0 }.contains("/oauth/token"))
+  }
+}

@@ -101,12 +101,14 @@ public enum ConnectionStatus: Sendable, Hashable {
   case incompatible(ConnectionFailure)
   /// Blocked on something else a timer cannot fix (another machine answered, clock skew).
   case failed(ConnectionFailure)
+  /// Turned off on this device; nothing connects until it is turned back on.
+  case disabled
 
   public var isConnected: Bool { self == .connected }
 
   public var lastFailure: ConnectionFailure? {
     switch self {
-    case .connecting, .connected, .offline: nil
+    case .connecting, .connected, .offline, .disabled: nil
     case .reconnecting(_, _, let failure): failure
     case .needsPairing(let failure), .incompatible(let failure), .failed(let failure): failure
     }

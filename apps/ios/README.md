@@ -14,6 +14,10 @@ Saved environments live in `Application Support/AnkielCode/environments.json`, t
 `Application Support/AnkielCode/shell/`, and credentials plus the DPoP key in the Keychain. Composer
 drafts, the outbox of unsent messages and remembered model options live in
 `Application Support/AnkielCode/composer/composer.json`, attachment copies beside it in `files/`.
+Device preferences (theme, code text, follow-up default, project grouping, thread list options)
+are one JSON value in `UserDefaults` under `ankiel.preferences.v1` (`ClientPreferences`; phase 4's
+`threadList.*` keys are adopted once and removed). Server defaults are written to the computer
+they belong to with `server.updateSettings` (`SettingsWriter`, optimistic with rollback).
 
 ## Build
 
@@ -66,14 +70,16 @@ None of them forget saved environments or credentials.
 | | `onboarding-help` | Welcome with "How do I get a pairing link?" open. |
 | | `pairing-link` | The paste or enter-address form. |
 | | `scanner` | The QR scanner (on the simulator: its no-camera state). |
-| | `computers` | Home with the Computers sheet open. |
-| | `settings`, `new-thread` | Home with the Settings or New thread placeholder sheet open. |
+| | `computers` | Settings on its Computers page. |
+| | `settings`, `new-thread` | Home with Settings or the New thread sheet open. |
+| | `settings-<page>` | Settings on a page: `general`, `appearance`, `chat`, `notifications`, `providers`, `threads`, `about`, `storage`, `diagnostics`, `computers`; with `ANKIEL_DEBUG_SETTINGS`, also `computer`, `computer-pairing`, `computer-off` (the fixture computers). |
 | | `thread` | The first listed thread of the first computer, opened. |
 | | `computer` | The first computer's detail page. |
 | | `pairing-confirm`, `pairing-checking`, `pairing-exchanging`, `pairing-connecting`, `pairing-success` | The pairing sheet in that state (fake host). |
 | | `pairing-expired`, `pairing-unreachable`, `pairing-incompatible`, `pairing-claims`, `pairing-clock`, `pairing-invalid` | The pairing sheet with that failure. |
 | `ANKIEL_DEBUG_STATUS` | `reconnecting`, `offline`, `connecting`, `needs-pairing`, `incompatible`, `mismatch` | Every computer shows that connection status (display only; it stops following the real connection for that launch). Combine with `computers`, `computer` or no route (home, for the status indicator). |
 
+| `ANKIEL_DEBUG_SETTINGS` | `fixture`, `fail`, `slow` | Three canned computers (connected, needs pairing, turned off) with their own folder, credential store and `UserDefaults` suite, a fake settings sink (`fail` refuses writes, `slow` never answers) and a fake release check offering 0.1.12. Removing, clearing and writing never reach the real saved computers or a server. |
 | `ANKIEL_DEBUG_HOME` | `sample` | The thread list with canned rows across two fake computers (every status, a pin, a subagent, snoozed and settled shelves). Actions show; their commands fail as not connected. |
 | | `empty` | The list's "No threads yet" state. |
 | `ANKIEL_DEBUG_SEARCH` | a query | Home with that search typed. |
@@ -107,7 +113,7 @@ timeline see realistic structure. A test checks for the `"synthetic": true` mark
 paths, real emails and tokens.
 
 UI tests (`AnkielCodeUITests`) run with `xcodebuild test … -only-testing:AnkielCodeUITests`.
-`SampleListUITests`, `FixtureThreadUITests`, `ComposerUITests` and `RequestUITests` (fake sink) need no server (`FixtureThreadUITests` includes a scroll
+`SampleListUITests`, `FixtureThreadUITests`, `ComposerUITests`, `RequestUITests` (fake sink) and `SettingsUITests` (settings fixture) need no server (`FixtureThreadUITests` includes a scroll
 measurement on the 500-row fixture); `LiveListUITests` change real threads on the dev server at
 `127.0.0.1:14527` and put each one back, and `LiveThreadUITests` open one; both skip when it is
 not running. Set

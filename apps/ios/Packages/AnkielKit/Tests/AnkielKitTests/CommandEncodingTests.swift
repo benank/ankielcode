@@ -83,6 +83,13 @@ struct CommandEncodingTests {
       SecretAnswer(threadId: thread, turnItemId: "turn-item:secret:2", reply: .values(["user": "harbor-bot", "password": "synthetic-0000"]))
     ),
     ("secret-decline", "secretAnswer", SecretAnswer(threadId: thread, turnItemId: "turn-item:secret:1", reply: .decline)),
+    ("settings-auto-settle-off", "updateSettings", UpdateSettingsRequest(patch: .autoSettleAfterDays(nil))),
+    ("settings-auto-settle-days", "updateSettings", UpdateSettingsRequest(patch: .autoSettleAfterDays(14))),
+    ("settings-auto-settle-merge", "updateSettings", UpdateSettingsRequest(patch: .autoSettleOnMerge(false))),
+    ("settings-auto-resume", "updateSettings", UpdateSettingsRequest(patch: .autoResumeLimitedThreads(true))),
+    ("settings-snooze-limited", "updateSettings", UpdateSettingsRequest(patch: .snoozeLimitedThreads(true))),
+    ("settings-runtime-mode", "updateSettings", UpdateSettingsRequest(patch: .defaultRuntimeMode(.autoAcceptEdits))),
+    ("server-update", "serverUpdate", ServerUpdateRequest(targetVersion: "0.1.12")),
   ]
 
   static func respond(_ reply: RequestCommand.Reply) -> RequestCommand {
@@ -109,6 +116,14 @@ struct CommandEncodingTests {
     let fixture = try JSONDecoder().decode(JSONValue.self, from: Data(contentsOf: url))
     #expect(fixture["schema"] == .string(sample.schema))
     #expect(try JSONDecoder().decode(JSONValue.self, from: encoded) == fixture["value"])
+  }
+
+  @Test("turning auto-settle off sends an explicit null, not an absent key")
+  func explicitNull() throws {
+    let encoded = try JSONDecoder().decode(JSONValue.self, from: JSONEncoder.wire.encode(UpdateSettingsRequest(patch: .autoSettleAfterDays(nil))))
+    #expect(encoded == ["patch": ["sidebarAutoSettleAfterDays": .null]])
+    let days = try JSONDecoder().decode(JSONValue.self, from: JSONEncoder.wire.encode(ServerSettingsPatch.autoSettleAfterDays(900)))
+    #expect(days == ["sidebarAutoSettleAfterDays": 365])
   }
 
   @Test("idle sends omit the delivery intent and title seed; follow-ups carry them")

@@ -38,16 +38,32 @@ public enum ProjectGrouping {
   }
 
   static func isRepositoryRoot(_ project: ProjectShell) -> Bool {
-    guard let root = project.repositoryIdentity?.rootPath?.trimmingCharacters(in: .whitespaces), !root.isEmpty else {
-      return false
-    }
-    return normalizedPath(project.workspaceRoot) == normalizedPath(root)
+    relativePath(project) == ""
   }
 
-  static func logicalKey(_ scoped: ScopedProject) -> String {
+  /// `deriveRepositoryRelativeProjectPath`: the workspace inside its repository ("" at the root),
+  /// nil when it is not inside the repository root it reports.
+  static func relativePath(_ project: ProjectShell) -> String? {
+    guard let root = project.repositoryIdentity?.rootPath?.trimmingCharacters(in: .whitespaces), !root.isEmpty else {
+      return nil
+    }
+    let projectPath = normalizedPath(project.workspaceRoot), rootPath = normalizedPath(root)
+    guard !projectPath.isEmpty, !rootPath.isEmpty else { return nil }
+    if projectPath == rootPath { return "" }
+    let prefix = rootPath + (rootPath.contains("\\") ? "\\" : "/")
+    guard projectPath.hasPrefix(prefix) else { return nil }
+    return String(projectPath.dropFirst(prefix.count)).replacingOccurrences(of: "\\", with: "/")
+  }
+
+  /// `deriveLogicalProjectKey` with scratch projects grouped.
+  static func logicalKey(_ scoped: ScopedProject, mode: ProjectGroupingMode = .repository) -> String {
     if scoped.isScratch { return scratchKey }
-    if let key = scoped.project.repositoryIdentity?.groupingKey, !key.contains("\u{0}") { return key }
-    return "\(scoped.environmentId):\(normalizedPath(scoped.project.workspaceRoot))"
+    let physical = "\(scoped.environmentId):\(normalizedPath(scoped.project.workspaceRoot))"
+    guard mode != .separate, let key = scoped.project.repositoryIdentity?.groupingKey, !key.contains("\u{0}") else {
+      return physical
+    }
+    guard mode == .repositoryPath, let relative = relativePath(scoped.project), !relative.isEmpty else { return key }
+    return "\(key)::\(relative)"
   }
 
   static func freshness(_ project: ProjectShell) -> Date {
@@ -55,7 +71,7 @@ public enum ProjectGrouping {
   }
 
   /// The scopes the filter menu offers, unsorted.
-  public static func scopes(_ projects: [ScopedProject]) -> [ProjectScope] {
+  public static func scopes(_ projects: [ScopedProject], mode: ProjectGroupingMode = .repository) -> [ProjectScope] {
     // One winner per physical folder (the freshest), then group winners by logical key.
     var physical: [String: [ScopedProject]] = [:]
     var physicalOrder: [String] = []
@@ -78,7 +94,7 @@ public enum ProjectGrouping {
         ? winner : (members.filter { $0.project.repositoryIdentity != nil }.max { freshness($0.project) < freshness($1.project) } ?? winner)
       var keyed = identitySource
       keyed.isScratch = winner.isScratch
-      let logical = logicalKey(keyed)
+      let logical = logicalKey(keyed, mode: mode)
       logicalByPhysical[key] = logical
       if groups[logical] == nil { groupOrder.append(logical) }
       groups[logical, default: []].append(winner)
@@ -86,7 +102,7 @@ public enum ProjectGrouping {
     var keysByGroup: [String: Set<String>] = [:]
     for scoped in projects {
       let physicalKey = "\(scoped.environmentId):\(normalizedPath(scoped.project.workspaceRoot))"
-      keysByGroup[logicalByPhysical[physicalKey] ?? logicalKey(scoped), default: []].insert(scoped.key)
+      keysByGroup[logicalByPhysical[physicalKey] ?? logicalKey(scoped, mode: mode), default: []].insert(scoped.key)
     }
     return groupOrder.map { key in
       let members = groups[key]!

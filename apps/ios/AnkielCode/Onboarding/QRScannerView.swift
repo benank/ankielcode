@@ -73,7 +73,7 @@ struct QRScannerView: View {
   }
 
   private func switchToLink() {
-    model.sheet = .pairingLink
+    model.showPairingLink()
   }
 }
 

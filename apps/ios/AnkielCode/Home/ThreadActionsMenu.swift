@@ -35,7 +35,7 @@ struct ThreadActionsMenu: View {
       }
       if row.swipe.snooze {
         Menu("Snooze", systemImage: "moon.zzz") {
-          ForEach(SnoozePreset.resolve(now: .now)) { preset in
+          ForEach(SnoozePreset.resolve(model.snoozePresets(row.ref.environmentId), now: .now)) { preset in
             Button {
               commit { home.snooze(row, until: preset.wake) }
             } label: {

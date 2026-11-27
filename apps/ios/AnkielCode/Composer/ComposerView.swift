@@ -38,8 +38,11 @@ struct ComposerView: View {
     ComposerPrimaryAction.resolve(
       hasContent: draft.hasContent, activity: target.activity,
       blocked: store.hasFailedUpload(target.draftKey, environmentId: target.environmentId) || !target.canSend
-        || (target.isNewThread && selection == nil))
+        || (target.isNewThread && selection == nil),
+      followUp: model.preferences.values.followUpBehavior)
   }
+
+  private var alternate: ComposerPrimaryAction? { ComposerPrimaryAction.alternate(primary, activity: target.activity) }
 
   var body: some View {
     VStack(spacing: Spacing.sm) {
@@ -213,11 +216,11 @@ struct ComposerView: View {
 
   private var sendCluster: some View {
     HStack(spacing: Spacing.sm) {
-      if primary == .steer {
+      if let alternate {
         Button {
-          submit(.queue)
+          submit(alternate.delivery)
         } label: {
-          Image(systemName: "list.number")
+          Image(systemName: alternate == .steer ? "arrow.turn.left.up" : "list.number")
             .font(Typography.subheadline.weight(.semibold))
             .foregroundStyle(Palette.textPrimary)
             .frame(width: 34, height: 34)
@@ -227,9 +230,9 @@ struct ComposerView: View {
         }
         .buttonStyle(.plain)
         .transition(reduceMotion ? .opacity : .scale(scale: 0.5).combined(with: .opacity))
-        .accessibilityLabel(Text("Queue"))
-        .accessibilityHint(Text("Sends after the current turn"))
-        .accessibilityIdentifier("composer.queue")
+        .accessibilityLabel(alternate == .steer ? Text("Steer") : Text("Queue"))
+        .accessibilityHint(alternate == .steer ? Text("Sends into the current turn") : Text("Sends after the current turn"))
+        .accessibilityIdentifier(alternate == .steer ? "composer.steer" : "composer.queue")
       }
       Button {
         if primary == .stop { actions.stop() } else { submit(primary.delivery) }

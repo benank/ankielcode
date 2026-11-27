@@ -7,7 +7,7 @@ public enum PairingFailure: Error, Sendable, Hashable {
   case connection(ConnectionError)
   /// The address claims to be a saved environment it is not a known route of. The descriptor is
   /// unauthenticated, so pairing there could hand that environment's slot to another machine.
-  case claimsSavedEnvironment(label: String)
+  case claimsSavedEnvironment(environmentId: String, label: String)
 }
 
 /// Where a pairing is, for progress UI.
@@ -35,6 +35,9 @@ public final class EnvironmentModel: Identifiable {
   public internal(set) var settings = ServerSettings()
   /// `config.environment.capabilities` from the last session.
   public internal(set) var capabilities: [String: JSONValue] = [:]
+  /// A server config arrived since launch, so `settings`, `providers` and `capabilities` are the
+  /// computer's own (they are not persisted; before this they are defaults).
+  public internal(set) var hasConfig = false
 
   @ObservationIgnored var runtime: EnvironmentRuntime?
   @ObservationIgnored var session: (any LiveSession)?
@@ -56,6 +59,44 @@ public final class EnvironmentModel: Identifiable {
   public func allows(_ scope: String) -> Bool {
     grantedScopes?.contains(scope) ?? true
   }
+
+  /// Whether the server said this session holds `scope`. Settings and maintenance require a
+  /// known answer (RN `useEnvironmentScope`), unlike list actions.
+  public func holds(_ scope: String) -> Bool {
+    grantedScopes?.contains(scope) == true
+  }
+
+  /// Patches sent but not yet confirmed, oldest first.
+  public internal(set) var pendingSettings: [PendingSettingsWrite] = []
+
+  /// The confirmed settings with pending patches applied: what settings screens show.
+  public var effectiveSettings: ServerSettings {
+    pendingSettings.reduce(settings) { $0.applying($1.patch) }
+  }
+
+  /// Connected, with a confirmed `settings:write`.
+  public var canWriteSettings: Bool { status.isConnected && holds(AuthScope.settingsWrite) }
+
+  /// The server's `ExecutionEnvironmentCapabilities.serverSelfUpdate` (`boot-service`, `respawn`,
+  /// `desktop-managed`), nil when it cannot update itself.
+  public var selfUpdateMethod: String? { capabilities["serverSelfUpdate"]?.stringValue }
+
+  /// A server update this device started, until the computer next reconnects.
+  public internal(set) var serverUpdate: ServerUpdateState = .idle
+
+  /// The user turned this computer off on this device (no connection, rows kept).
+  public var isEnabled: Bool { record.enabled != false }
+}
+
+/// A self-update this device asked a computer to run (`boot-service`/`respawn` hosts only).
+public enum ServerUpdateState: Sendable, Hashable {
+  case idle
+  /// The server accepted it and is restarting; ends at the next session start.
+  case restarting(targetVersion: String)
+  case updated(version: String)
+  /// It came back still on `version`.
+  case notUpdated(version: String)
+  case failed(String)
 }
 
 /// Why a command, search or page read did not reach a result.
@@ -87,7 +128,7 @@ struct EnvironmentRuntime {
 /// Every saved environment: persists records (file) and credentials (Keychain), connects to all of
 /// them, and removes one cleanly.
 @MainActor @Observable
-public final class EnvironmentRegistry {
+public final class EnvironmentRegistry: SettingsSink {
   public private(set) var environments: [EnvironmentModel] = []
   public private(set) var isLoaded = false
 
@@ -145,18 +186,21 @@ public final class EnvironmentRegistry {
     return try await pair(target, progress: progress)
   }
 
-  /// Reads the descriptor (before the one-time code is spent), refuses an address that claims to be
-  /// a saved environment it is not a route of, exchanges the code, then saves and connects.
+  /// Reads the descriptor (before the one-time code is spent), exchanges the code, then saves and
+  /// connects. An address that claims to be a saved environment it is not a known route of is
+  /// refused unless the caller names that environment in `updating` (the user chose to move it
+  /// there): the descriptor is unauthenticated, so pairing there replaces that computer's sign-in.
+  /// The computer's other addresses stay as fallbacks.
   public func pair(
-    _ target: PairingTarget, progress: (PairingStep) -> Void = { _ in }
+    _ target: PairingTarget, updating: String? = nil, progress: (PairingStep) -> Void = { _ in }
   ) async throws(PairingFailure) -> EnvironmentModel {
     progress(.checkingServer)
     let descriptor: EnvironmentDescriptor
-    do { descriptor = try await connector.describe(target) } catch { throw .connection(error) }
+    do { descriptor = try await connector.describe(target, expectedEnvironmentId: updating) } catch { throw .connection(error) }
     if let existing = environment(descriptor.environmentId),
-      !existing.record.routes.contains(where: { $0.endpoint == target.endpoint })
+      !existing.record.routes.contains(where: { $0.endpoint == target.endpoint }), updating != existing.id
     {
-      throw .claimsSavedEnvironment(label: existing.label)
+      throw .claimsSavedEnvironment(environmentId: existing.id, label: existing.label)
     }
     progress(.exchangingCode)
     let paired: SavedEnvironment
@@ -184,23 +228,81 @@ public final class EnvironmentRegistry {
     persist()
   }
 
-  /// Closes the connection and deletes the credential and cached rows.
+  /// Closes the connection and deletes the credential and cached rows. Nothing changes on the
+  /// computer: a session cannot revoke itself (`current_session_revoke_not_allowed`) and there is
+  /// no sign-out route, so the server lists this device until someone revokes it there.
   public func remove(_ id: String, forgetCredential: Bool = true) async {
     guard let index = environments.firstIndex(where: { $0.id == id }) else { return }
     let model = environments.remove(at: index)
     persist()
-    if let runtime = model.runtime {
-      for task in runtime.tasks { task.cancel() }
-      await runtime.supervisor.stop()
-      await runtime.shell.clear()
+    await stopRuntime(model, clearingShell: true)
+    await shellCache?.remove(id)
+    if forgetCredential { connector.forget(id) }
+    await lastSave?.value
+  }
+
+  /// Removes every saved computer from this device.
+  public func removeAll() async {
+    for id in environments.map(\.id) { await remove(id) }
+  }
+
+  /// Turns a computer off on this device (closes its connection, keeps its sign-in and cached
+  /// rows on disk) or back on.
+  public func setEnabled(_ id: String, _ enabled: Bool) async {
+    guard let model = environment(id), model.isEnabled != enabled else { return }
+    model.record.enabled = enabled ? nil : false
+    persist()
+    let saved = lastSave
+    if enabled {
+      guard model.runtime == nil else { return }
+      #if DEBUG
+        if let status = debugFixtureStatus[id] {
+          model.status = status
+          model.activeRoute = status.isConnected ? model.record.lastRoute : nil
+          return
+        }
+      #endif
+      model.status = .connecting
+      startRuntime(model)
+    } else {
+      await stopRuntime(model)
+      // Turned back on while stopping: that call owns the status and runtime now.
+      guard !model.isEnabled else { return }
+      model.status = .disabled
+      model.shell = ShellState()
+      await saved?.value
     }
-    model.runtime = nil
-    for (key, detail) in threadDetails where detail.ref.environmentId == id {
+  }
+
+  /// Stops connecting. Removal also clears the shell sync, which otherwise may still write its cache.
+  private func stopRuntime(_ model: EnvironmentModel, clearingShell: Bool = false) async {
+    for (key, detail) in threadDetails where detail.ref.environmentId == model.id {
       threadDetails[key] = nil
       detail.enqueue { await $0.detach() }
     }
-    if forgetCredential { connector.forget(id) }
-    await lastSave?.value
+    // Detached before the awaits, so a runtime started meanwhile (turned back on) is not cleared.
+    guard let runtime = model.runtime else { return }
+    model.runtime = nil
+    model.session = nil
+    model.activeRoute = nil
+    model.pendingSettings = []
+    for task in runtime.tasks { task.cancel() }
+    await runtime.supervisor.stop()
+    if clearingShell { await runtime.shell.clear() } else { await runtime.shell.detach() }
+  }
+
+  // MARK: Client storage
+
+  /// Bytes of the cached thread list for one computer.
+  public func shellCacheSize(_ id: String) async -> Int64 {
+    guard let shellCache else { return 0 }
+    return await shellCache.size(id)
+  }
+
+  /// Forgets one computer's cached thread list; a live computer writes a fresh one.
+  public func clearShellCache(_ id: String) async {
+    await shellCache?.remove(id)
+    if let model = environment(id), !model.status.isConnected { model.shell = ShellState() }
   }
 
   // MARK: Threads
@@ -320,6 +422,37 @@ public final class EnvironmentRegistry {
     }
   }
 
+  /// `server.updateSettings`: the server's settings after the patch.
+  public func updateSettings(
+    _ patch: ServerSettingsPatch, in environmentId: String
+  ) async throws(EnvironmentRequestError) -> ServerSettings {
+    try await request(environmentId) { session in
+      try await session.call(UpdateSettingsRequest.rpcTag, payload: UpdateSettingsRequest(patch: patch), as: ServerSettings.self)
+    }
+  }
+
+  /// Asks the computer to update itself (`server.updateServer`). Only for hosts whose
+  /// `serverSelfUpdate` is `boot-service` or `respawn`; desktop-managed hosts update through
+  /// their app. The socket dropping before the answer is the handoff, not a failure.
+  public func updateServer(_ id: String, to targetVersion: String) async {
+    guard let model = environment(id), model.status.isConnected, model.holds(AuthScope.environmentMaintain),
+      let method = model.selfUpdateMethod, method == "boot-service" || method == "respawn"
+    else { return }
+    model.serverUpdate = .restarting(targetVersion: targetVersion)
+    do {
+      _ = try await request(id) { session in
+        try await session.call(ServerUpdateRequest.rpcTag, payload: ServerUpdateRequest(targetVersion: targetVersion), as: ServerUpdateResult.self)
+      }
+    } catch {
+      switch error {
+      // The socket dropping before the answer is the handoff; the next session start resolves it.
+      case .notConnected: return
+      case .rejected(let message): model.serverUpdate = .failed(message ?? "")
+      case .failed(let message): model.serverUpdate = .failed(message)
+      }
+    }
+  }
+
   func request<Result: Sendable>(
     _ environmentId: String, _ body: (any LiveSession) async throws -> Result
   ) async throws(EnvironmentRequestError) -> Result {
@@ -365,6 +498,49 @@ public final class EnvironmentRegistry {
   }
 
   #if DEBUG
+    /// A canned computer for screenshots and UI tests: no runtime, no network.
+    public struct DebugFixture {
+      public var record: EnvironmentRecord
+      public var status: ConnectionStatus
+      public var settings: ServerSettings
+      public var providers: [ServerProvider]
+      public var scopes: Set<String>?
+      public var capabilities: [String: JSONValue]
+
+      public init(
+        record: EnvironmentRecord, status: ConnectionStatus, settings: ServerSettings = ServerSettings(),
+        providers: [ServerProvider] = [], scopes: Set<String>? = nil, capabilities: [String: JSONValue] = [:]
+      ) {
+        self.record = record
+        self.status = status
+        self.settings = settings
+        self.providers = providers
+        self.scopes = scopes
+        self.capabilities = capabilities
+      }
+    }
+
+    @ObservationIgnored private var debugFixtureStatus: [String: ConnectionStatus] = [:]
+
+    /// Loads canned computers instead of the saved ones (the caller gives this registry its own
+    /// directory and credential store). Turning one back on restores its canned status.
+    public func debugLoad(_ fixtures: [DebugFixture]) {
+      guard !isLoaded else { return }
+      for fixture in fixtures {
+        let model = EnvironmentModel(record: fixture.record)
+        model.status = fixture.record.enabled == false ? .disabled : fixture.status
+        model.settings = fixture.settings
+        model.providers = fixture.providers
+        model.grantedScopes = fixture.scopes
+        model.capabilities = fixture.capabilities
+        model.hasConfig = fixture.status.isConnected
+        if fixture.status.isConnected { model.activeRoute = fixture.record.lastRoute }
+        debugFixtureStatus[model.id] = fixture.status
+        environments.append(model)
+      }
+      isLoaded = true
+    }
+
     /// Shows `status` on every environment and stops their supervisors from overwriting it
     /// (screenshots of failure states without breaking a real connection).
     public func debugPresent(status: ConnectionStatus) {
@@ -379,6 +555,11 @@ public final class EnvironmentRegistry {
   // MARK: Runtime
 
   private func start(_ model: EnvironmentModel) {
+    environments.append(model)
+    if model.isEnabled { startRuntime(model) } else { model.status = .disabled }
+  }
+
+  private func startRuntime(_ model: EnvironmentModel) {
     let routes = RouteBook(routes: model.record.routes, lastUsed: model.record.lastRouteId)
     let vault = CredentialVault(environmentId: model.id, connector: connector)
     let supervisor = ConnectionSupervisor(
@@ -399,6 +580,7 @@ public final class EnvironmentRegistry {
             model.providers = session.initialConfig.providers
             model.settings = session.initialConfig.settings
             model.capabilities = session.initialConfig.environment.capabilities
+            model.hasConfig = true
             Task { [weak model] in
               for await event in session.configUpdates {
                 guard let model, model.session === session else { return }
@@ -439,7 +621,6 @@ public final class EnvironmentRegistry {
       },
     ]
     model.runtime = EnvironmentRuntime(supervisor: supervisor, shell: shell, routes: routes, tasks: tasks)
-    environments.append(model)
   }
 
   private func sessionStarted(_ model: EnvironmentModel, session: any LiveSession, routes: RouteBook) {
@@ -448,6 +629,11 @@ public final class EnvironmentRegistry {
     record.lastConnectedAt = .now
     record.lastRouteId = session.route.id
     record.serverVersion = config.environment.serverVersion
+    if case .restarting(let target) = model.serverUpdate {
+      model.serverUpdate =
+        SemanticVersion.compare(record.serverVersion, target) >= 0
+        ? .updated(version: record.serverVersion) : .notUpdated(version: record.serverVersion)
+    }
     if config.environment.label != record.serverLabel, !config.environment.label.isEmpty {
       record.serverLabel = config.environment.label
     }

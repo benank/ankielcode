@@ -21,6 +21,8 @@ enum ConnectionPresentation {
       return String(localized: "Offline", comment: "connection status")
     case .needsPairing:
       return String(localized: "Needs pairing again")
+    case .disabled:
+      return String(localized: "Turned off on this device")
     case .incompatible(let failure), .failed(let failure):
       return reason(failure, host: host)
     }
@@ -30,6 +32,7 @@ enum ConnectionPresentation {
   static func indicatorText(_ status: ConnectionStatus, host: String) -> String {
     switch status {
     case .offline: String(localized: "Offline", comment: "connection status")
+    case .disabled: String(localized: "\(host) is turned off")
     case .needsPairing: String(localized: "\(host) needs pairing")
     case .incompatible, .failed: String(localized: "\(host) is unavailable")
     case .connecting, .reconnecting: String(localized: "Reconnecting to \(host)…")
@@ -58,12 +61,14 @@ enum ConnectionPresentation {
     case .connected: Palette.success
     case .connecting, .reconnecting: Palette.attention
     case .offline, .needsPairing, .incompatible, .failed: Palette.danger
+    case .disabled: Palette.textTertiary
     }
   }
 
   static func symbol(_ status: ConnectionStatus) -> String {
     switch status {
     case .offline: "wifi.slash"
+    case .disabled: "power"
     case .needsPairing: "key.slash"
     case .incompatible: "arrow.up.circle"
     case .failed: "exclamationmark.triangle"

@@ -116,7 +116,7 @@ struct ThreadListScreen: View {
       }
       .confirmationDialog("Snooze until", isPresented: snoozePresented, titleVisibility: .visible, presenting: snoozing) {
         row in
-        ForEach(SnoozePreset.resolve(now: .now)) { preset in
+        ForEach(SnoozePreset.resolve(model.snoozePresets(row.ref.environmentId), now: .now)) { preset in
           Button("\(ThreadCopy.snoozeLabel(preset)) · \(ThreadCopy.snoozeWhen(preset, now: .now))") {
             commit { home.snooze(row, until: preset.wake) }
           }
@@ -213,8 +213,8 @@ struct ThreadListScreen: View {
       FilterMenu()
     }
     ToolbarItemGroup(placement: .topBarTrailing) {
-      Button("Computers", systemImage: "desktopcomputer") { model.sheet = .computers }
-      Button("Settings", systemImage: "gearshape") { model.navigator.sheet = .settings }
+      Button("Settings", systemImage: "gearshape") { model.openSettings() }
+        .accessibilityIdentifier("home.settings")
     }
     // Search and compose share the bottom bar, as in iOS 26 Mail.
     DefaultToolbarItem(kind: .search, placement: .bottomBar)
@@ -243,7 +243,7 @@ struct ThreadListScreen: View {
 
   /// `WorkspaceConnectionTitle`: the workspace status under the title while something is off.
   private var statusText: String? {
-    let environments = model.registry.environments
+    let environments = model.registry.environments.filter(\.isEnabled)
     guard !environments.isEmpty else { return nil }
     if environments.allSatisfy({ $0.status == .offline }) { return String(localized: "You are offline") }
     let ready = environments.filter { $0.status.isConnected }
@@ -276,7 +276,7 @@ struct ThreadListScreen: View {
         HomeEmptyState(environments: model.registry.environments) {
           model.navigator.sheet = .newThread
         } computers: {
-          model.sheet = .computers
+          model.openSettings(.computers)
         }
       } else if !home.searchQuery.trimmingCharacters(in: .whitespaces).isEmpty {
         if home.search.pending {

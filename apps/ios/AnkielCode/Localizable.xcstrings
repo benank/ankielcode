@@ -32,9 +32,6 @@
     "%@ did not respond in time." : {
 
     },
-    "%@ is already saved with a different address. Remove it from Computers first if it really moved." : {
-
-    },
     "%@ is unavailable" : {
 
     },
@@ -717,9 +714,6 @@
     "Remove %@?" : {
 
     },
-    "Removing forgets this computer's sign-in and cached threads on this device. Nothing changes on the computer." : {
-
-    },
     "Rename" : {
 
     },
@@ -811,9 +805,6 @@
 
     },
     "Settings" : {
-
-    },
-    "Settings arrive in a later phase." : {
 
     },
     "Settle" : {
@@ -1495,6 +1486,450 @@
 
     },
     "Why am I being asked this?" : {
+
+    },
+    "Search settings" : {
+
+    },
+    "Agents" : {
+
+    },
+    "This computer is no longer saved on this device." : {
+
+    },
+    "General" : {
+
+    },
+    "Appearance" : {
+
+    },
+    "Chat" : {
+
+    },
+    "Notifications" : {
+
+    },
+    "Providers" : {
+
+    },
+    "About" : {
+
+    },
+    "Client Storage" : {
+
+    },
+    "Diagnostics" : {
+
+    },
+    "Project grouping" : {
+
+    },
+    "Group by repository" : {
+
+    },
+    "Theme" : {
+
+    },
+    "Dark" : {
+
+    },
+    "Light" : {
+
+    },
+    "Code & Diffs" : {
+
+    },
+    "Font size" : {
+
+    },
+    "Word break" : {
+
+    },
+    "Text size" : {
+
+    },
+    "While the agent is running" : {
+
+    },
+    "Push notifications" : {
+
+    },
+    "Signed in" : {
+
+    },
+    "Models" : {
+
+    },
+    "Default permissions" : {
+
+    },
+    "Usage limits" : {
+
+    },
+    "Auto-settle" : {
+
+    },
+    "Legal" : {
+
+    },
+    "Source code" : {
+
+    },
+    "Remove all computers" : {
+
+    },
+    "Clear caches" : {
+
+    },
+    "Drafts" : {
+
+    },
+    "%@ is saved with a different address. If it moved, update it to use this one: its sign-in is replaced and the old addresses stay as fallbacks." : {
+
+    },
+    "Matching repositories appear as one project." : {
+
+    },
+    "Group by repository path" : {
+
+    },
+    "Keep monorepo paths separate." : {
+
+    },
+    "Keep separate" : {
+
+    },
+    "Show every workspace as its own project." : {
+
+    },
+    "How the project filter on the thread list combines the same project across computers." : {
+
+    },
+    "System" : {
+      "comment" : "appearance follows the system"
+    },
+    "Custom font size" : {
+
+    },
+    "%lld pt" : {
+
+    },
+    "Word break wraps long lines instead of scrolling them sideways." : {
+
+    },
+    "Text" : {
+      "comment" : "settings section for text size"
+    },
+    "Ankiel Code follows the text size you choose for your device in Display & Brightness, including the larger accessibility sizes." : {
+
+    },
+    "Your message reaches the agent right away, changing what it is working on." : {
+
+    },
+    "Your message waits and runs after the current turn finishes." : {
+
+    },
+    "The other choice stays one tap away, in the small button beside Send." : {
+
+    },
+    "Get an alert when an agent finishes, fails or needs you." : {
+
+    },
+    "Push notifications aren't available in this build." : {
+
+    },
+    "Turned off on this device" : {
+
+    },
+    "%@ is turned off" : {
+
+    },
+    "Update %@" : {
+
+    },
+    "Connect on this device" : {
+
+    },
+    "This device doesn't connect to %@ or show its threads. Its sign-in stays saved." : {
+
+    },
+    "Found automatically" : {
+
+    },
+    "Removing forgets this computer's sign-in and cached threads on this device. %@ keeps listing this device until you revoke it there." : {
+
+    },
+    "Not granted" : {
+
+    },
+    "Your permissions" : {
+
+    },
+    "Set when the pairing link was made. To change them, pair again with a link that grants more." : {
+
+    },
+    "Update %@?" : {
+
+    },
+    "Update to %@" : {
+
+    },
+    "Version %@" : {
+
+    },
+    "Restarting and reconnecting…" : {
+
+    },
+    "Updated to %@." : {
+
+    },
+    "Update failed" : {
+
+    },
+    "This app needs a newer version of Ankiel Code on this machine." : {
+
+    },
+    "Checking…" : {
+
+    },
+    "Version %@ is available." : {
+
+    },
+    "You are up to date." : {
+
+    },
+    "Check for updates" : {
+
+    },
+    "Update the desktop app on this machine." : {
+
+    },
+    "Update and restart Ankiel Code on this machine." : {
+
+    },
+    "This connection does not have permission to manage the environment." : {
+
+    },
+    "Update" : {
+
+    },
+    "Install Ankiel Code %@. The server will restart and reconnect. Running threads may be interrupted." : {
+
+    },
+    "Could not check releases (%lld). Try again." : {
+
+    },
+    "No %@ release was found." : {
+
+    },
+    "Could not check for updates." : {
+
+    },
+    "Remove all computers?" : {
+
+    },
+    "Development" : {
+      "comment" : "build variant"
+    },
+    "App" : {
+      "comment" : "settings section about this mobile app"
+    },
+    "Website" : {
+
+    },
+    "License (MIT)" : {
+
+    },
+    "Ankiel Code is open source under the MIT license. This app includes no third-party code." : {
+
+    },
+    "Forgets every computer's sign-in and cached threads on this device. Your preferences stay. The computers keep listing this device until you revoke it there." : {
+
+    },
+    "Remove all" : {
+
+    },
+    "You'll need a new pairing link to add each one again." : {
+
+    },
+    "Clear Cache" : {
+
+    },
+    "Environment caches" : {
+
+    },
+    "Cached thread lists show threads before a computer connects. They download again on the next connection." : {
+
+    },
+    "Unsent messages" : {
+
+    },
+    "Attachment copies" : {
+
+    },
+    "Clear drafts" : {
+
+    },
+    "Composer" : {
+
+    },
+    "Unsent messages are delivered when their computer connects; delete one from its thread. Clearing drafts keeps them." : {
+
+    },
+    "Clear cache for %@?" : {
+
+    },
+    "Clear all drafts?" : {
+
+    },
+    "Clear all client caches?" : {
+
+    },
+    "Clear All Caches" : {
+
+    },
+    "Clear Drafts" : {
+
+    },
+    "This removes the offline thread list for this environment. The saved connection and credentials stay intact." : {
+
+    },
+    "This removes offline data for every environment. Connections, credentials and app preferences stay intact." : {
+
+    },
+    "This empties every composer and removes its attachments. Unsent messages stay." : {
+
+    },
+    "No sign-in details or thread content are included." : {
+
+    },
+    "Could not save settings" : {
+
+    },
+    "Across computers" : {
+
+    },
+    "All connected computers" : {
+
+    },
+    "Changes here are written to every connected computer now. Computers that are offline keep their own values." : {
+
+    },
+    "This connection does not have permission to change settings on %@." : {
+
+    },
+    "Add a computer to change its defaults." : {
+
+    },
+    "Connect a computer to change its defaults." : {
+
+    },
+    "%@ use different values. These rows show %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ use different values. These rows show %2$@."
+          }
+        }
+      }
+    },
+    "Not connected." : {
+
+    },
+    "New threads start with these permissions. You can change them for one thread from its composer." : {
+
+    },
+    "Resume after usage limits" : {
+
+    },
+    "Automatically resume threads when their usage limits reset. You can cancel auto-resume in each thread." : {
+
+    },
+    "Snooze until limits reset" : {
+
+    },
+    "Snooze threads until their usage limits reset. Enable auto-resume to continue the agent after the reset." : {
+
+    },
+    "Auto-settle merged threads" : {
+
+    },
+    "Auto-settle inactive threads" : {
+
+    },
+    "Inactive days" : {
+
+    },
+    "Settled threads move to the Settled shelf. Nothing is deleted." : {
+
+    },
+    "The computer refused the change." : {
+
+    },
+    "Sends into the current turn" : {
+
+    },
+    "Select a connected environment." : {
+
+    },
+    "No providers reported." : {
+
+    },
+    "Connect to load models" : {
+
+    },
+    "As %@ reported them when it was last connected." : {
+
+    },
+    "Configure a provider with in-app sign-in in web or desktop Settings." : {
+
+    },
+    "Not installed" : {
+
+    },
+    "Turned off" : {
+
+    },
+    "Not signed in" : {
+
+    },
+    "Installed" : {
+
+    },
+    "%@ · Latest %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · Latest %2$@"
+          }
+        }
+      }
+    },
+    "1 model" : {
+
+    },
+    "%lld models" : {
+
+    },
+    "Version unknown" : {
+
+    },
+    "%@ came back still on %@. Try again, or update it on that machine." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ came back still on %2$@. Try again, or update it on that machine."
+          }
+        }
+      }
+    },
+    "Connect %@ to see and change its defaults." : {
+
+    },
+    "Connect %@ to manage it. These are the values it reported when it was last connected." : {
 
     }
   },

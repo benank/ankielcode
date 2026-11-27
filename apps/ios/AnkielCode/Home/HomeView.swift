@@ -44,7 +44,6 @@ struct HomeView: View {
     }
     .sheet(item: $navigator.sheet) { sheet in
       switch sheet {
-      case .settings: SettingsPlaceholderView()
       case .newThread: NewThreadView()
       }
     }

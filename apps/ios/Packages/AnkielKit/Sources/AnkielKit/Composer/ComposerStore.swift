@@ -439,6 +439,29 @@ public final class ComposerStore {
     deliver(outbox[index].threadKey)
   }
 
+  // MARK: Client storage
+
+  /// Drafts that hold text or attachments.
+  public var draftCount: Int { drafts.values.filter(\.hasContent).count }
+
+  /// Bytes of attachment copies kept for drafts and unsent messages.
+  public func attachmentBytes() async -> Int64 {
+    let directory = filesDirectory
+    return await Task.detached {
+      let urls = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.fileSizeKey])) ?? []
+      return urls.reduce(Int64(0)) { $0 + Int64((try? $1.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0) }
+    }.value
+  }
+
+  /// Empties every composer's text and attachments (model picks stay); copies unsent messages
+  /// still use are kept.
+  public func clearDrafts() {
+    for (key, draft) in drafts where draft.hasContent {
+      for attachment in draft.attachments { removeAttachment(attachment.id, from: key) }
+      setText("", for: key)
+    }
+  }
+
   public func delete(_ messageId: String) {
     guard let index = outbox.firstIndex(where: { $0.messageId == messageId }), !outbox[index].state.isSent,
       outbox[index].state != .sending

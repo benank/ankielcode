@@ -11,7 +11,7 @@ final class AppModel {
   enum Route: Equatable { case launching, onboarding, home }
 
   enum Sheet: String, Identifiable {
-    case computers, pairingLink, scanner, help
+    case settings, pairingLink, scanner, help
     var id: String { rawValue }
   }
 
@@ -23,8 +23,19 @@ final class AppModel {
   let composer: ComposerStore
   /// A sheet over home or onboarding.
   var sheet: Sheet?
-  /// The Computers sheet's navigation path (environment ids).
-  var computersPath: [String] = []
+  /// Settings' navigation path.
+  var settingsPath: [SettingsRoute] = []
+  /// Pairing screens opened from inside Settings, presented by Settings itself (one sheet at a
+  /// time per presenter, so they cannot go through `sheet` while Settings is up).
+  var settingsPairing: Sheet?
+  /// Device preferences (theme, code text, follow-ups, grouping, list options).
+  let preferences: ClientPreferences
+  /// Server settings writes (the registry, or a fake in the settings fixture).
+  let settingsWriter: SettingsWriter
+  /// Finds newer Ankiel Code releases for the update check.
+  let releaseLookup: ReleaseLookup
+  /// Settings shows canned computers (`ANKIEL_DEBUG_SETTINGS`): nothing reaches a server.
+  private(set) var isSettingsFixture = false
   #if DEBUG
     /// `ANKIEL_DEBUG_ROUTE=onboarding` shows onboarding without forgetting saved environments.
     private(set) var debugForcesOnboarding = false
@@ -36,13 +47,38 @@ final class AppModel {
   private var onboardingPairing = false
 
   init(store: any CredentialStore = KeychainCredentialStore(service: "com.ankiel.code.native")) {
+    var store = store
+    var directory = Self.supportDirectory
+    var defaults = UserDefaults.standard
+    var settingsSink: (any SettingsSink)?
+    var releaseLookup = ReleaseLookup.live
+    #if DEBUG
+      let fixture = SettingsDebug.Mode(ProcessInfo.processInfo.environment["ANKIEL_DEBUG_SETTINGS"])
+      if let fixture {
+        // Its own folder, credentials and defaults: removing or clearing never touches the real ones.
+        store = InMemoryCredentialStore()
+        directory = SettingsDebug.directory
+        defaults = SettingsDebug.defaults
+        settingsSink = SettingsDebug.sink(fixture)
+        releaseLookup = SettingsDebug.releaseLookup
+      }
+    #endif
     let connector = EnvironmentConnector(store: store, client: .current)
-    registry = EnvironmentRegistry(connector: connector, directory: Self.supportDirectory)
+    registry = EnvironmentRegistry(connector: connector, directory: directory)
     registry.markdownStyle = .thread
     pairing = PairingFlow(registry: registry)
-    home = HomeModel(registry: registry)
+    preferences = ClientPreferences(defaults: defaults)
+    home = HomeModel(registry: registry, preferences: preferences)
+    settingsWriter = SettingsWriter(sink: settingsSink ?? registry)
+    self.releaseLookup = releaseLookup
+    #if DEBUG
+      if let fixture {
+        isSettingsFixture = true
+        registry.debugLoad(SettingsDebug.fixtures(fixture))
+      }
+    #endif
     let (folder, sink, fake) = Self.composerTarget(registry)
-    composer = ComposerStore(directory: Self.supportDirectory.appending(path: folder, directoryHint: .isDirectory), sink: sink)
+    composer = ComposerStore(directory: directory.appending(path: folder, directoryHint: .isDirectory), sink: sink)
     isComposerFake = fake
     composer.titleLabels = .localized
     #if DEBUG
@@ -155,6 +191,8 @@ final class AppModel {
       let target = try? PairingInput.resolve(pairingURL: pairingURL)
     else { return }
     sheet = nil
+    settingsPairing = nil
+    pairing.updatingEnvironmentId = nil
     onboardingPairing = self.route == .onboarding
     #if DEBUG
       if components.queryItems?.contains(where: { $0.name == "autoConnect" && $0.value == "1" }) == true
@@ -170,15 +208,49 @@ final class AppModel {
   // MARK: Pairing entry points
 
   func pair(_ input: String) {
-    onboardingPairing = route == .onboarding
-    sheet = nil
+    closePairingInput()
     pairing.start(input)
   }
 
   func pair(host: String, code: String) {
-    onboardingPairing = route == .onboarding
-    sheet = nil
+    closePairingInput()
     pairing.start(host: host, code: code)
+  }
+
+  /// Leaves the link or scanner screen for the pairing sheet, staying in Settings when pairing
+  /// started there.
+  private func closePairingInput() {
+    onboardingPairing = route == .onboarding
+    if sheet == .settings { settingsPairing = nil } else { sheet = nil }
+  }
+
+  /// The computer's snooze choices (its server settings), else the defaults.
+  func snoozePresets(_ environmentId: String) -> [SnoozePresetSetting] {
+    registry.environment(environmentId)?.settings.snoozePresets ?? SnoozePresetSetting.defaults
+  }
+
+  /// The scanner or form closed without pairing: a "Pair again" target must not carry over.
+  func pairingInputClosed() {
+    if !pairing.isActive { pairing.updatingEnvironmentId = nil }
+  }
+
+  /// The paste-or-type form, over Settings when it is open.
+  func showPairingLink() {
+    pairing.updatingEnvironmentId = nil
+    if sheet == .settings { settingsPairing = .pairingLink } else { sheet = .pairingLink }
+  }
+
+  /// The QR scanner, over Settings when it is open. `updating` names a saved computer the next
+  /// pairing may move to a new address (its own Pair again).
+  func showScanner(updating environmentId: String? = nil) {
+    pairing.updatingEnvironmentId = environmentId
+    if sheet == .settings { settingsPairing = .scanner } else { sheet = .scanner }
+  }
+
+  /// Settings, optionally on one page.
+  func openSettings(_ route: SettingsRoute? = nil) {
+    settingsPath = route.map { [$0] } ?? []
+    sheet = .settings
   }
 
   func finishPairing() {
@@ -233,12 +305,13 @@ final class AppModel {
         debugForcesOnboarding = true
         sheet = .scanner
       case "computers":
-        sheet = .computers
+        openSettings(.computers)
       case "computer":
-        sheet = .computers
-        computersPath = registry.environments.first.map { [$0.id] } ?? []
+        openSettings(registry.environments.first.map { .computer($0.id) })
       case "settings":
-        navigator.sheet = .settings
+        openSettings()
+      case let value? where value.hasPrefix("settings-"):
+        SettingsDebug.applyRoute(String(value.dropFirst("settings-".count)), to: self)
       case "new-thread":
         navigator.sheet = .newThread
       case "thread":

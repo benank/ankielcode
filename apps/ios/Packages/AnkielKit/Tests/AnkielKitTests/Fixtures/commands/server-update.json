@@ -1,0 +1,6 @@
+{
+  "schema" : "serverUpdate",
+  "value" : {
+    "targetVersion" : "0.1.12"
+  }
+}

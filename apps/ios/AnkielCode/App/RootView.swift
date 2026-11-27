@@ -24,7 +24,7 @@ struct RootView: View {
     .onChange(of: model.registry.environments.map { $0.activeRoute?.id }) { _, _ in model.composer.wake() }
     .sheet(item: sheet) { sheet in
       switch sheet {
-      case .computers: ComputersView()
+      case .settings: SettingsView()
       case .pairingLink: PairingLinkView()
       case .help: PairingHelpView()
       case .scanner: EmptyView()
@@ -35,6 +35,10 @@ struct RootView: View {
     }
     .sheet(isPresented: pairingPresented) {
       PairingProgressView()
+    }
+    .environment(\.codeAppearance, CodeAppearance(fontSize: model.preferences.values.codeFontSize, wraps: model.preferences.values.codeWordBreak))
+    .onChange(of: model.preferences.values.themeMode, initial: true) { _, mode in
+      Appearance.apply(mode)
     }
   }
 
@@ -47,7 +51,12 @@ struct RootView: View {
   private var scanner: Binding<Bool> {
     Binding(
       get: { model.sheet == .scanner },
-      set: { if !$0, model.sheet == .scanner { model.sheet = nil } })
+      set: {
+        if !$0, model.sheet == .scanner {
+          model.sheet = nil
+          model.pairingInputClosed()
+        }
+      })
   }
 
   /// The pairing sheet follows the flow; dismissing it ends the flow.

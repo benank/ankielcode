@@ -19,17 +19,45 @@ const schemas = {
   uploadUrl: m.AttachmentCreateUploadUrlInput,
   attachmentDelete: m.AttachmentDeleteInput,
   secretAnswer: m.SecretRequestAnswerInput,
+  updateSettings: S.Struct({ patch: m.ClientServerSettingsPatch }),
+  serverUpdate: m.ServerSelfUpdateInput,
 };
 
 let failures = 0;
 for (const name of readdirSync(here).filter((file) => file.endsWith(".json")).sort()) {
   const { schema, value } = JSON.parse(readFileSync(join(here, name), "utf8"));
-  const exit = S.decodeUnknownExit(schemas[schema])(value);
+  // Strict: an unknown key must fail, or a misspelled setting would decode as an empty no-op patch.
+  const exit = S.decodeUnknownExit(schemas[schema])(value, { onExcessProperty: "error" });
+  if (exit._tag === "Success" && schema === "updateSettings") {
+    const roundTrip = JSON.stringify(S.encodeSync(schemas[schema])(exit.value));
+    const scopes = m.requiredScopesForServerSettingsPatch(exit.value.patch);
+    if (roundTrip !== JSON.stringify(value) && JSON.stringify(JSON.parse(roundTrip)) !== JSON.stringify(value)) {
+      failures += 1;
+      console.log(`FAIL ${name}: round trip changed it: ${roundTrip}`);
+      continue;
+    }
+    if (scopes.length !== 1 || scopes[0] !== "settings:write") {
+      failures += 1;
+      console.log(`FAIL ${name}: needs ${scopes.join(", ")}, expected settings:write only`);
+      continue;
+    }
+  }
   if (exit._tag === "Success") {
     console.log(`ok   ${name} (${schema})`);
   } else {
     failures += 1;
     console.log(`FAIL ${name} (${schema}): ${String(exit.cause)}`);
+  }
+}
+
+// A misspelled key must be refused by the strict decode above.
+{
+  const exit = S.decodeUnknownExit(schemas.updateSettings)({ patch: { sidebarAutoSettleAfterDay: null } }, { onExcessProperty: "error" });
+  if (exit._tag === "Success") {
+    failures += 1;
+    console.log("FAIL strictness: a misspelled settings key decoded");
+  } else {
+    console.log("ok   strictness: a misspelled settings key is refused");
   }
 }
 

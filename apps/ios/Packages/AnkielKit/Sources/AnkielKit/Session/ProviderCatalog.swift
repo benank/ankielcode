@@ -19,6 +19,16 @@ public struct ServerProvider: Sendable, Hashable, Decodable, Identifiable {
   public var availability: String?
   public var models: [ServerProviderModel]
   public var updateRequiredModelSlugs: [String]
+  /// Read-only status for Settings: CLI version, `ready|warning|error|disabled`, the account.
+  public var version: String?
+  public var state: String?
+  public var message: String?
+  public var unavailableReason: String?
+  public var authLabel: String?
+  public var authEmail: String?
+  public var latestVersion: String?
+  /// `versionAdvisory.status == "behind_latest"`.
+  public var isBehindLatest = false
 
   public var id: String { instanceId }
 
@@ -38,10 +48,19 @@ public struct ServerProvider: Sendable, Hashable, Decodable, Identifiable {
   enum CodingKeys: String, CodingKey {
     case instanceId, driver, displayName, accentColor, badgeLabel, continuation, showInteractionModeToggle
     case supportedRuntimeModes, enabled, installed, auth, availability, models, updateRequiredModels
+    case version, status, message, unavailableReason, versionAdvisory
   }
 
   struct Continuation: Decodable { var groupKey: String? }
-  struct Auth: Decodable { var status: String? }
+  struct Auth: Decodable {
+    var status: String?
+    var label: String?
+    var email: String?
+  }
+  struct VersionAdvisory: Decodable {
+    var status: String?
+    var latestVersion: String?
+  }
   struct Slug: Decodable { var slug: String }
 
   public init(from decoder: any Decoder) throws {
@@ -56,7 +75,17 @@ public struct ServerProvider: Sendable, Hashable, Decodable, Identifiable {
     supportedRuntimeModes = c.loose([String].self, .supportedRuntimeModes)?.compactMap(RuntimeMode.init(rawValue:))
     enabled = c.loose(Bool.self, .enabled) ?? false
     installed = c.loose(Bool.self, .installed) ?? false
-    authStatus = c.loose(Auth.self, .auth)?.status
+    let auth = c.loose(Auth.self, .auth)
+    authStatus = auth?.status
+    authLabel = auth?.label
+    authEmail = auth?.email
+    version = c.loose(String.self, .version)
+    state = c.loose(String.self, .status)
+    message = c.loose(String.self, .message)
+    unavailableReason = c.loose(String.self, .unavailableReason)
+    let advisory = c.loose(VersionAdvisory.self, .versionAdvisory)
+    latestVersion = advisory?.latestVersion
+    isBehindLatest = advisory?.status == "behind_latest"
     availability = c.loose(String.self, .availability)
     models = c.loose(LossyArray<ServerProviderModel>.self, .models)?.elements ?? []
     updateRequiredModelSlugs = c.loose(LossyArray<Slug>.self, .updateRequiredModels)?.elements.map(\.slug) ?? []
@@ -191,35 +220,4 @@ public struct OptionDescriptor: Sendable, Hashable, Decodable, Identifiable {
   }
 
   static let reasoningIds: Set<String> = ["effort", "reasoningEffort", "reasoning", "thinking"]
-}
-
-/// The parts of `ServerSettings` the composer reads.
-public struct ServerSettings: Sendable, Hashable, Decodable {
-  public var defaultModelSelection: ModelSelection?
-  public var fallbackModelSelection: ModelSelection?
-  public var defaultRuntimeMode: RuntimeMode?
-  /// Hidden models per instance (`providerModelPreferences[instanceId].hiddenModels`).
-  public var hiddenModels: [String: Set<String>]
-  public var modelOrder: [String: [String]]
-
-  public init() {
-    hiddenModels = [:]
-    modelOrder = [:]
-  }
-
-  enum CodingKeys: String, CodingKey { case defaultModelSelection, fallbackModelSelection, defaultRuntimeMode, providerModelPreferences }
-  struct Preferences: Decodable {
-    var hiddenModels: [String]?
-    var modelOrder: [String]?
-  }
-
-  public init(from decoder: any Decoder) throws {
-    let c = try decoder.container(keyedBy: CodingKeys.self)
-    defaultModelSelection = c.loose(ModelSelection.self, .defaultModelSelection)
-    fallbackModelSelection = c.loose(ModelSelection.self, .fallbackModelSelection)
-    defaultRuntimeMode = c.loose(String.self, .defaultRuntimeMode).flatMap(RuntimeMode.init(rawValue:))
-    let preferences = c.loose([String: Preferences].self, .providerModelPreferences) ?? [:]
-    hiddenModels = preferences.mapValues { Set($0.hiddenModels ?? []) }
-    modelOrder = preferences.compactMapValues(\.modelOrder)
-  }
 }

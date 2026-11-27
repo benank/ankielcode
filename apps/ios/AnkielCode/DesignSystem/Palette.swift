@@ -43,6 +43,12 @@ enum Palette {
   static let diffAdded = Color(light: 0x1F7A43, dark: 0x5CCB86)
   static let diffRemoved = Color(light: 0xB3261E, dark: 0xF07B74)
 
+  /// Settings row icon tiles (system-like hues, used only on Settings' root rows).
+  static let settingsBlue = Color(light: 0x2F6FEB, dark: 0x3D7BF0)
+  static let settingsGreen = Color(light: 0x2E9E5B, dark: 0x34A865)
+  static let settingsRed = Color(light: 0xE0443C, dark: 0xE5524A)
+  static let settingsGray = Color(light: 0x8A8F98, dark: 0x6E737C)
+
   /// The app icon's tile and glyph (fixed in both appearances, like the icon).
   static let brandTile = Color(light: 0x161615, dark: 0x1E1E1C)
   static let brandGlyph = Color(light: 0xF2F2EE, dark: 0xF2F2EE)

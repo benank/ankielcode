@@ -59,6 +59,11 @@ public struct ShellCache: Sendable {
     }
   }
 
+  @concurrent public func size(_ environmentId: String) async -> Int64 {
+    let values = try? url(environmentId).resourceValues(forKeys: [.fileSizeKey])
+    return Int64(values?.fileSize ?? 0)
+  }
+
   @concurrent public func remove(_ environmentId: String) async {
     try? FileManager.default.removeItem(at: url(environmentId))
   }

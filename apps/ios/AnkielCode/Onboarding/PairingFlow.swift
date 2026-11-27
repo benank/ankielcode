@@ -16,6 +16,9 @@ final class PairingFlow {
   }
 
   private(set) var phase = Phase.idle
+  /// A saved computer the next pairing may move to a new address (set by its own Pair again,
+  /// or by the user choosing to update it after a "claims to be" refusal).
+  var updatingEnvironmentId: String?
   @ObservationIgnored private let registry: EnvironmentRegistry
   @ObservationIgnored private var lastTarget: PairingTarget?
   @ObservationIgnored private var task: Task<Void, Never>?
@@ -59,7 +62,7 @@ final class PairingFlow {
     phase = .working(.checkingServer, host: host)
     task = Task {
       do {
-        let model = try await registry.pair(target) { step in
+        let model = try await registry.pair(target, updating: updatingEnvironmentId) { step in
           self.phase = .working(step, host: host)
         }
         await waitUntilSettled(model)
@@ -80,10 +83,18 @@ final class PairingFlow {
     run(lastTarget)
   }
 
+  /// After "that address claims to be X": move X to this address with the same, unspent code.
+  func update(_ environmentId: String) {
+    guard let lastTarget else { return reset() }
+    updatingEnvironmentId = environmentId
+    run(lastTarget)
+  }
+
   func reset() {
     task?.cancel()
     task = nil
     phase = .idle
+    updatingEnvironmentId = nil
   }
 
   /// Waits briefly for the first connect so the user lands on a home that has data. A slow host
@@ -123,7 +134,7 @@ final class PairingFlow {
         case "success": .succeeded(host: host)
         case "expired": .failed(PairingProblem(.connection(.credentialRejected), host: host))
         case "incompatible": .failed(PairingProblem(.connection(.incompatibleProtocol(serverVersion: 1)), host: host))
-        case "claims": .failed(PairingProblem(.claimsSavedEnvironment(label: "Hyperspeed"), host: host))
+        case "claims": .failed(PairingProblem(.claimsSavedEnvironment(environmentId: "env-fixture", label: "Hyperspeed"), host: host))
         case "clock": .failed(PairingProblem(.connection(.clockSkew), host: host))
         case "invalid": .failed(PairingProblem(.input(.pairingURLInvalid), host: nil))
         default: .failed(PairingProblem(.connection(.unreachable("Could not connect to the server.")), host: host))
@@ -150,6 +161,12 @@ struct PairingProblem: Equatable {
   let systemImage: String
   /// The same link may still work (the code was not spent).
   let canRetry: Bool
+  /// A saved computer the user can move to this address instead.
+  var updates: (environmentId: String, label: String)?
+
+  static func == (lhs: Self, rhs: Self) -> Bool {
+    lhs.title == rhs.title && lhs.message == rhs.message && lhs.updates?.environmentId == rhs.updates?.environmentId
+  }
 
   init(_ failure: PairingFailure, host: String?) {
     let host = host ?? String(localized: "the computer")
@@ -168,13 +185,14 @@ struct PairingProblem: Equatable {
         title = String(localized: "The pairing code is missing")
         message = String(localized: "Copy the whole link, including the part after #token=, or enter the code.")
       }
-    case .claimsSavedEnvironment(let label):
+    case .claimsSavedEnvironment(let environmentId, let label):
       systemImage = "exclamationmark.shield"
       canRetry = false
+      updates = (environmentId, label)
       title = String(localized: "That address claims to be \(label)")
       message = String(
         localized:
-          "\(label) is already saved with a different address. Remove it from Computers first if it really moved.")
+          "\(label) is saved with a different address. If it moved, update it to use this one: its sign-in is replaced and the old addresses stay as fallbacks.")
     case .connection(let error):
       (title, message, systemImage, canRetry) = Self.describe(error, host: host)
     }

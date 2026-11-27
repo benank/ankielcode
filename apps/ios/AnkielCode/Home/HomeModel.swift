@@ -68,7 +68,7 @@ final class HomeModel {
   // MARK: Internals
 
   @ObservationIgnored private let registry: EnvironmentRegistry
-  @ObservationIgnored private let defaults: UserDefaults
+  @ObservationIgnored private let preferences: ClientPreferences
   @ObservationIgnored private var sources: [ThreadListSource] = []
   @ObservationIgnored private var scopes: [ProjectScope] = []
   @ObservationIgnored private var layoutTask: Task<Void, Never>?
@@ -91,22 +91,22 @@ final class HomeModel {
     var expiry: Task<Void, Never>?
   }
 
-  init(registry: EnvironmentRegistry, defaults: UserDefaults = .standard) {
+  init(registry: EnvironmentRegistry, preferences: ClientPreferences) {
     self.registry = registry
-    self.defaults = defaults
-    environmentFilter = defaults.string(forKey: Keys.environment)
-    projectFilterKey = defaults.string(forKey: Keys.project)
-    snoozedExpanded = defaults.bool(forKey: Keys.snoozedShelf)
-    settledExpanded = defaults.bool(forKey: Keys.settledShelf)
-    collapsedFolders = Set(defaults.stringArray(forKey: Keys.collapsedFolders) ?? [])
+    self.preferences = preferences
+    let values = preferences.values
+    environmentFilter = values.threadListEnvironmentId
+    projectFilterKey = values.threadListProjectKey
+    snoozedExpanded = values.snoozedShelfExpanded
+    settledExpanded = values.settledShelfExpanded
+    collapsedFolders = Set(values.collapsedProjectGroups)
   }
 
-  private enum Keys {
-    static let environment = "threadList.environmentId"
-    static let project = "threadList.projectKey"
-    static let snoozedShelf = "threadList.snoozedShelfExpanded"
-    static let settledShelf = "threadList.settledShelfExpanded"
-    static let collapsedFolders = "threadList.collapsedProjectGroups"
+  /// The project filter's grouping changed in Settings.
+  func groupingChanged() {
+    rebuildScopes()
+    scheduleSearch()
+    scheduleLayout()
   }
 
   /// Starts following the registry's shells.
@@ -150,7 +150,7 @@ final class HomeModel {
 
   func setEnvironmentFilter(_ id: String?) {
     environmentFilter = id
-    defaults.set(id, forKey: Keys.environment)
+    preferences.values.threadListEnvironmentId = id
     rebuildScopes()
     scheduleSearch()
     scheduleLayout()
@@ -158,7 +158,7 @@ final class HomeModel {
 
   func setProjectFilter(_ key: String?) {
     projectFilterKey = key
-    defaults.set(key, forKey: Keys.project)
+    preferences.values.threadListProjectKey = key
     scheduleSearch()
     scheduleLayout()
   }
@@ -167,10 +167,10 @@ final class HomeModel {
     switch shelf {
     case .snoozed:
       snoozedExpanded.toggle()
-      defaults.set(snoozedExpanded, forKey: Keys.snoozedShelf)
+      preferences.values.snoozedShelfExpanded = snoozedExpanded
     case .settled:
       settledExpanded.toggle()
-      defaults.set(settledExpanded, forKey: Keys.settledShelf)
+      preferences.values.settledShelfExpanded = settledExpanded
       settledLimit = ThreadListLayout.settledInitialCount
     }
     scheduleLayout()
@@ -178,7 +178,7 @@ final class HomeModel {
 
   func toggleFolder(_ key: String) {
     if collapsedFolders.contains(key) { collapsedFolders.remove(key) } else { collapsedFolders.insert(key) }
-    defaults.set(Array(collapsedFolders).sorted(), forKey: Keys.collapsedFolders)
+    preferences.values.collapsedProjectGroups = Array(collapsedFolders).sorted()
     scheduleLayout()
   }
 
@@ -233,7 +233,7 @@ final class HomeModel {
             isScratch: ProjectGrouping.isScratch($0, scratchRoot: scratch))
         }
       }
-    scopes = ProjectGrouping.scopes(projects)
+    scopes = ProjectGrouping.scopes(projects, mode: preferences.values.projectGroupingMode)
     let threads = sources.flatMap { source in source.threads.map { (source.environmentId, $0) } }
     let choices = ProjectGrouping.filterChoices(scopes, threads: threads, projects: projects)
     if choices != projectChoices { projectChoices = choices }

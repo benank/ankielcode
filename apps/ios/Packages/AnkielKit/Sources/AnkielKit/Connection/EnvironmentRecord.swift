@@ -12,6 +12,8 @@ public struct EnvironmentRecord: Sendable, Hashable, Codable, Identifiable {
   public var serverVersion: String
   public var pairedAt: Date
   public var lastConnectedAt: Date?
+  /// false when the user turned the computer off on this device; nil (older files) means on.
+  public var enabled: Bool?
 
   public var id: String { environmentId }
   public var label: String { customLabel ?? serverLabel }

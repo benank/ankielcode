@@ -144,6 +144,16 @@ private struct ListBlockView: View {
 struct CodeBlockView: View {
   let code: CodeBlock
   @State private var copied = 0
+  @Environment(\.codeAppearance) private var codeAppearance
+
+  private var codeText: some View {
+    Text(code.highlighted)
+      .font(codeAppearance.font)
+      .foregroundStyle(Palette.textPrimary)
+      .lineSpacing(2)
+      .textSelection(.enabled)
+      .padding(Spacing.md)
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
@@ -169,17 +179,17 @@ struct CodeBlockView: View {
       }
       .padding(.leading, Spacing.md)
       .background(Palette.codeHeader)
-      ScrollView(.horizontal) {
-        Text(code.highlighted)
-          .font(Typography.monoSmall)
-          .foregroundStyle(Palette.textPrimary)
-          .lineSpacing(2)
-          .fixedSize(horizontal: true, vertical: true)
-          .textSelection(.enabled)
-          .padding(Spacing.md)
+      if codeAppearance.wraps {
+        codeText
+          .fixedSize(horizontal: false, vertical: true)
+          .frame(maxWidth: .infinity, alignment: .leading)
+      } else {
+        ScrollView(.horizontal) {
+          codeText.fixedSize(horizontal: true, vertical: true)
+        }
+        .scrollIndicators(.hidden)
+        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
       }
-      .scrollIndicators(.hidden)
-      .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
     }
     .background(Palette.codeBackground, in: .rect(cornerRadius: Radius.medium, style: .continuous))
     .clipShape(.rect(cornerRadius: Radius.medium, style: .continuous))

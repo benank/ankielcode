@@ -132,4 +132,17 @@ public struct AuthSessionState: Sendable, Hashable, Decodable {
 public enum AuthScope {
   public static let orchestrationRead = "orchestration:read"
   public static let orchestrationOperate = "orchestration:operate"
+  public static let settingsWrite = "settings:write"
+  public static let providersManage = "providers:manage"
+  public static let environmentMaintain = "environment:maintain"
+  public static let accessRead = "access:read"
+  public static let accessWrite = "access:write"
+  public static let diagnosticsRead = "diagnostics:read"
+
+  /// Every grant scope (`AuthGrantScope`), in the server's order, for "Your permissions".
+  public static let grants = [
+    "orchestration:read", "orchestration:operate", "settings:write", "providers:manage", "environment:maintain",
+    "preview:operate", "diagnostics:read", "terminal:read", "terminal:operate", "source-control:write",
+    "filesystem:read", "filesystem:write", "access:read", "access:write",
+  ]
 }

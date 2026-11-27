@@ -73,13 +73,26 @@ public enum ComposerPrimaryAction: Sendable, Hashable {
   /// Saving an edit to a queued message.
   case update
 
+  /// `followUp` is the user's default while the agent works; a turn still setting up always queues.
   public static func resolve(
-    hasContent: Bool, activity: ThreadRunActivity, blocked: Bool = false, editingQueued: Bool = false
+    hasContent: Bool, activity: ThreadRunActivity, blocked: Bool = false, editingQueued: Bool = false,
+    followUp: FollowUpBehavior = .steer
   ) -> ComposerPrimaryAction {
     if editingQueued { return .update }
     guard activity.isRunning else { return .send(enabled: hasContent && !blocked) }
     guard hasContent else { return .stop }
-    return activity.isSettingUp ? .queue : .steer
+    return activity.isSettingUp || followUp == .queue ? .queue : .steer
+  }
+
+  /// The other choice offered beside the primary button while the agent works.
+  public static func alternate(
+    _ primary: ComposerPrimaryAction, activity: ThreadRunActivity
+  ) -> ComposerPrimaryAction? {
+    switch primary {
+    case .steer: .queue
+    case .queue where !activity.isSettingUp: .steer
+    default: nil
+    }
   }
 
   /// The delivery this action sends with.

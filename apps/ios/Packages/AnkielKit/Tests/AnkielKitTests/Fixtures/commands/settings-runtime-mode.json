@@ -1,0 +1,8 @@
+{
+  "schema" : "updateSettings",
+  "value" : {
+    "patch" : {
+      "defaultRuntimeMode" : "auto-accept-edits"
+    }
+  }
+}

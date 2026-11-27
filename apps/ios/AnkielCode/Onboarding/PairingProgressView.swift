@@ -190,7 +190,11 @@ private struct FailureCard: View {
           .multilineTextAlignment(.center)
           .fixedSize(horizontal: false, vertical: true)
       }
-      if problem.canRetry {
+      if let updates = problem.updates {
+        ActionButtons(
+          primary: ("Update \(updates.label)", { model.pairing.update(updates.environmentId) }),
+          secondary: ("Cancel", { model.finishPairing() }))
+      } else if problem.canRetry {
         ActionButtons(
           primary: ("Try again", { model.pairing.retry() }),
           secondary: ("Close", { model.finishPairing() }))
@@ -198,7 +202,7 @@ private struct FailureCard: View {
         ActionButtons(
           primary: ("Scan a new code", {
             model.finishPairing()
-            model.sheet = .scanner
+            model.showScanner()
           }),
           secondary: ("Close", { model.finishPairing() }))
       }

@@ -33,3 +33,37 @@ import Testing
     #expect(reloaded.environments.isEmpty)
   }
 }
+
+extension EnvironmentRegistryTests {
+  @Test func `turning a computer off persists, and back on while it stops keeps the new connection`() async throws {
+    let directory = URL.temporaryDirectory.appending(path: "enable-\(UUID().uuidString)")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = InMemoryCredentialStore()
+    let endpoint = EnvironmentEndpoint(httpBaseURL: URL(string: "http://127.0.0.1:9/")!)!
+    let connector = EnvironmentConnector(
+      store: store, client: ClientIdentity(label: "test", deviceType: .phone, os: "iOS", appVersion: "1"))
+    let registry = EnvironmentRegistry(connector: connector, directory: directory, cachesShell: false)
+    await registry.load(adopting: SavedEnvironment(environmentId: "env-1", label: "Mac", endpoint: endpoint, serverVersion: "1"))
+    let model = try #require(registry.environment("env-1"))
+
+    await registry.setEnabled("env-1", false)
+    #expect(model.status == .disabled)
+    #expect(model.runtime == nil)
+    let reloaded = EnvironmentRegistry(connector: connector, directory: directory, cachesShell: false)
+    await reloaded.load()
+    #expect(reloaded.environment("env-1")?.status == .disabled)
+    #expect(reloaded.environment("env-1")?.runtime == nil)
+
+    // Off and on again without waiting: the second call's runtime must survive the first.
+    await registry.setEnabled("env-1", true)
+    let off = Task { await registry.setEnabled("env-1", false) }
+    await eventually { !model.isEnabled }
+    await registry.setEnabled("env-1", true)
+    await off.value
+    #expect(model.isEnabled)
+    #expect(model.runtime != nil)
+    #expect(model.status != .disabled)
+    await registry.remove("env-1")
+    await reloaded.remove("env-1")
+  }
+}
