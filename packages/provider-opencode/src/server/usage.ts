@@ -126,7 +126,7 @@ const LEGACY_STAT_CONCURRENCY = 4;
 // Batch stats so huge directories do not stay in memory.
 const LEGACY_STAT_BATCH = 256;
 
-export const readOpenCodeUsage = Effect.fn("readOpenCodeUsage")(function* (
+const readOpenCodeUsage = Effect.fn("readOpenCodeUsage")(function* (
   root: string,
   sinceMs: number,
   retentionCutoffMs = sinceMs,

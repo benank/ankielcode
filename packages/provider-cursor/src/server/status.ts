@@ -96,7 +96,7 @@ function cursorSdkDefaultParameterValue(model: SDKModel, parameterId: string): s
     ?.params.find((parameter) => parameter.id === parameterId)?.value;
 }
 
-export function buildCursorCapabilitiesFromSdkModel(model: SDKModel): ModelCapabilities {
+function buildCursorCapabilitiesFromSdkModel(model: SDKModel): ModelCapabilities {
   const seen = new Set<string>();
   const optionDescriptors: Array<ProviderOptionDescriptor> = [];
   const parameters = (model.parameters ?? [])
@@ -221,7 +221,7 @@ function joinProviderMessages(...messages: ReadonlyArray<string | undefined>): s
   return parts.length > 0 ? parts.join(" ") : undefined;
 }
 
-export function buildCursorProviderSnapshot(input: {
+function buildCursorProviderSnapshot(input: {
   readonly checkedAt: string;
   readonly cursorSettings: CursorSettings;
   readonly parsed: CursorProviderProbeResult;

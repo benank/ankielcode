@@ -92,7 +92,7 @@ const DRIVER_KIND = ProviderDriverKind.make("opencode");
 
 // A loopback server runs on this environment, but can outlive its CLI installation.
 // Its reported version may therefore differ from the installed executable after an update.
-export function isLocalOpenCodeServerUrl(serverUrl: string): boolean {
+function isLocalOpenCodeServerUrl(serverUrl: string): boolean {
   const url = URL.parse(serverUrl.trim());
   if (url?.protocol !== "http:" && url?.protocol !== "https:") return false;
   return (
@@ -118,7 +118,7 @@ function openCodeNativeHome(commandPath: string): string | null {
 }
 
 /** Update only within the installed package generation; 2.x converts the shared database in place. */
-export const openCodeUpdateFor = (generation: ProbedOpenCode["generation"]) =>
+const openCodeUpdateFor = (generation: ProbedOpenCode["generation"]) =>
   makePackageManagedProviderMaintenanceResolver({
     provider: DRIVER_KIND,
     npmPackageName: generation === "v2" ? "@opencode/cli" : "opencode-ai",

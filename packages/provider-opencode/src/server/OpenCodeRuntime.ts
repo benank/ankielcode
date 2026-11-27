@@ -71,7 +71,7 @@ function resolveOpenCodeConfigContent(
   );
 }
 
-export function resolveOpenCodeServerPassword(
+function resolveOpenCodeServerPassword(
   input: {
     readonly external: boolean;
     readonly serverPassword?: string;

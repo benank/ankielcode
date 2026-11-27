@@ -335,7 +335,7 @@ type OpenCodeAdmissionSignal =
   | "user-message";
 type OpenCodeAdmissionAction = "hold" | "reconcile-idle" | "release";
 
-export function advanceOpenCodePromptAdmission(
+function advanceOpenCodePromptAdmission(
   admission: Pick<
     ActiveOpenCodeTurn,
     "admissionAccepted" | "admissionMessageObserved" | "admissionPending" | "idleDuringAdmission"
@@ -361,7 +361,7 @@ export function advanceOpenCodePromptAdmission(
   return "release";
 }
 
-export function cancelOpenCodePromptAdmission(
+function cancelOpenCodePromptAdmission(
   admission: Pick<ActiveOpenCodeTurn, "admissionGeneration" | "admissionPending">,
   nextGeneration: number,
 ): void {
@@ -369,26 +369,26 @@ export function cancelOpenCodePromptAdmission(
   admission.admissionPending = false;
 }
 
-export const reconcileOpenCodePromptAdmissionStatus = Effect.fn(
-  "reconcileOpenCodePromptAdmissionStatus",
-)(function* (
-  admission: Pick<ActiveOpenCodeTurn, "admissionGeneration" | "admissionPending">,
-  generation: number,
-  readStatus: Effect.Effect<"busy" | "idle" | "unknown">,
-) {
-  if (admission.admissionGeneration !== generation || !admission.admissionPending) {
-    return "stale" as const;
-  }
-  const status = yield* readStatus.pipe(
-    Effect.timeoutOption("10 seconds"),
-    Effect.map(Option.getOrElse(() => "unknown" as const)),
-  );
-  if (admission.admissionGeneration !== generation || !admission.admissionPending) {
-    return "stale" as const;
-  }
-  if (status !== "unknown") admission.admissionPending = false;
-  return status;
-});
+const reconcileOpenCodePromptAdmissionStatus = Effect.fn("reconcileOpenCodePromptAdmissionStatus")(
+  function* (
+    admission: Pick<ActiveOpenCodeTurn, "admissionGeneration" | "admissionPending">,
+    generation: number,
+    readStatus: Effect.Effect<"busy" | "idle" | "unknown">,
+  ) {
+    if (admission.admissionGeneration !== generation || !admission.admissionPending) {
+      return "stale" as const;
+    }
+    const status = yield* readStatus.pipe(
+      Effect.timeoutOption("10 seconds"),
+      Effect.map(Option.getOrElse(() => "unknown" as const)),
+    );
+    if (admission.admissionGeneration !== generation || !admission.admissionPending) {
+      return "stale" as const;
+    }
+    if (status !== "unknown") admission.admissionPending = false;
+    return status;
+  },
+);
 
 interface OpenCodeSubagentContext {
   readonly nativeItemId: string;
@@ -491,7 +491,7 @@ function formatOpenCodeProtocolLogPayload(event: OpenCodeProtocolLogEvent) {
   };
 }
 
-export function makeOpenCodeProtocolLogger(input: {
+function makeOpenCodeProtocolLogger(input: {
   readonly nativeEventLogger: ProviderEventLoggers.EventNdjsonLogger | undefined;
   readonly idAllocator: IdAllocator.IdAllocatorV2["Service"];
   readonly providerInstanceId: ProviderInstanceId;

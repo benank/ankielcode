@@ -117,7 +117,7 @@ const decodeFxToolError = Schema.decodeUnknownOption(
  * fx clips every tool result to 199 bytes, so a long sub-agent reply arrives
  * as cut-off `{"ok":…,"result":"…` JSON. Keeps the readable prefix and marks the cut.
  */
-export function fxSubagentOutcome(
+function fxSubagentOutcome(
   text: string,
 ): { readonly ok: boolean; readonly result: string | null } | undefined {
   const whole = decodeFxSubagentResult(text);

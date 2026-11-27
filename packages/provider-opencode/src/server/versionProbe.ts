@@ -34,8 +34,7 @@ function probed(version: string | null | undefined): ProbedOpenCode | undefined 
   return { generation: major >= 2 ? "v2" : "v1", version };
 }
 
-export const classifyOpenCodeCliVersion = (output: string) =>
-  probed(parseGenericCliVersion(output));
+const classifyOpenCodeCliVersion = (output: string) => probed(parseGenericCliVersion(output));
 
 // Cross-version paths return HTML 200s, so require JSON; either version returns 401 for bad passwords.
 function classifyOpenCodeProbeResponse(

@@ -158,7 +158,7 @@ const makeLiveProbes = Effect.gen(function* () {
   } satisfies CursorSdkCatalogProbes;
 });
 
-export const makeCursorSdkCatalog = Effect.fn("CursorSdkCatalog.make")(function* (
+const makeCursorSdkCatalog = Effect.fn("CursorSdkCatalog.make")(function* (
   probes: CursorSdkCatalogProbes,
 ) {
   const modelCache = yield* Cache.makeWith(probes.readModels, {
@@ -189,9 +189,3 @@ export const layer = Layer.effect(
   CursorSdkCatalog,
   Effect.flatMap(makeLiveProbes, makeCursorSdkCatalog),
 );
-
-export function layerTest(
-  read: CursorSdkCatalog["Service"]["read"],
-): Layer.Layer<CursorSdkCatalog> {
-  return Layer.succeed(CursorSdkCatalog, CursorSdkCatalog.of({ read }));
-}

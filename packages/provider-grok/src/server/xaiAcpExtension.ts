@@ -488,7 +488,7 @@ export interface XAiSubagentFinishedNotice {
   readonly result: string | null;
 }
 
-export function xAiSubagentFinishedNotice(
+function xAiSubagentFinishedNotice(
   notification: XAiSessionUpdateNotification,
 ): XAiSubagentFinishedNotice | null {
   const update = notification.update;
@@ -962,7 +962,7 @@ function unwrapExitPlanModeParams(params: XAiExitPlanModeRequest): XAiExitPlanMo
   return "params" in params ? params.params : params;
 }
 
-export const XAI_EMPTY_PLAN_MARKDOWN =
+const XAI_EMPTY_PLAN_MARKDOWN =
   "# No plan written yet\n\n(The agent exited plan mode without writing a plan.)";
 
 export function extractXAiExitPlanMarkdown(
@@ -1046,10 +1046,7 @@ const CASE_INSENSITIVE_CANONICAL_HOME_GROK_SESSION_PATH = new RegExp(
   "i",
 );
 
-export function isGrokPlanMarkdownPath(
-  path: string | undefined | null,
-  host: GrokPlanPathHost,
-): boolean {
+function isGrokPlanMarkdownPath(path: string | undefined | null, host: GrokPlanPathHost): boolean {
   if (typeof path !== "string") {
     return false;
   }

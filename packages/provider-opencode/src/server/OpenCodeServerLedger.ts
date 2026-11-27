@@ -94,7 +94,7 @@ const groupExists = (pgid: number) => {
   }
 };
 
-export const make = Effect.fn("OpenCodeServerLedger.make")(function* (input: {
+const make = Effect.fn("OpenCodeServerLedger.make")(function* (input: {
   readonly stateDir: string;
   readonly ownerPid?: number;
 }) {

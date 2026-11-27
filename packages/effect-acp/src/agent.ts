@@ -556,9 +556,6 @@ export const make = Effect.fn("effect-acp/AcpAgent.make")(function* (
   });
 });
 
-export const layer = (stdio: Stdio.Stdio, options: AcpAgentOptions = {}): Layer.Layer<AcpAgent> =>
-  Layer.effect(AcpAgent, make(stdio, options));
-
 export const layerStdio = (
   options: AcpAgentOptions = {},
 ): Layer.Layer<AcpAgent, never, Stdio.Stdio> =>

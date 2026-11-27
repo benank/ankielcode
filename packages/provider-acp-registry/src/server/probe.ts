@@ -276,7 +276,7 @@ const emptyAcpRegistryAvailableCommands = (): AcpRegistryAvailableCommands => ({
   skills: [],
 });
 
-export function acpRegistryAdvertisesModelCatalog(
+function acpRegistryAdvertisesModelCatalog(
   configOptions: ReadonlyArray<EffectAcpSchema.SessionConfigOption> | null | undefined,
   modelState?: EffectAcpSchema.SessionModelState | null,
 ): boolean {

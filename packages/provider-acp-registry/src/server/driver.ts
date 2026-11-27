@@ -92,7 +92,7 @@ interface AcpRegistryEnrichmentCache {
   } | null;
 }
 
-export function isAcpRegistryCacheValid(
+function isAcpRegistryCacheValid(
   entry: NonNullable<AcpRegistryEnrichmentCache["entry"]>,
   inspectedVersion: string | null,
   local: boolean,
@@ -104,7 +104,7 @@ export function isAcpRegistryCacheValid(
   );
 }
 
-export function updateAcpRegistryEnrichmentCache(input: {
+function updateAcpRegistryEnrichmentCache(input: {
   readonly cache: AcpRegistryEnrichmentCache;
   readonly configuration: AcpRegistryLiveConfiguration;
   readonly customModels: ReadonlyArray<CustomModelSetting>;
@@ -346,7 +346,7 @@ function baseSnapshot(
   };
 }
 
-export function applyAcpRegistryAvailableCommands(
+function applyAcpRegistryAvailableCommands(
   provider: ServerProvider,
   commands: Option.Option<AcpRegistryAvailableCommands>,
 ): ServerProvider {
@@ -356,7 +356,7 @@ export function applyAcpRegistryAvailableCommands(
   });
 }
 
-export function applyAcpRegistryLiveConfiguration(
+function applyAcpRegistryLiveConfiguration(
   provider: ServerProvider,
   configuration: AcpRegistryLiveConfiguration,
   customModels: ReadonlyArray<CustomModelSetting>,
@@ -455,7 +455,7 @@ const buildInitialAcpRegistrySnapshot = Effect.fn("AcpRegistryDriver.buildInitia
   },
 );
 
-export function buildCheckedAcpRegistrySnapshot(
+function buildCheckedAcpRegistrySnapshot(
   input: SnapshotIdentity & {
     readonly settings: AcpRegistrySettings;
     readonly checkedAt: string;
@@ -519,7 +519,7 @@ export function buildCheckedAcpRegistrySnapshot(
   });
 }
 
-export const checkAcpRegistryProviderStatus = Effect.fn("AcpRegistryDriver.checkProviderStatus")(
+const checkAcpRegistryProviderStatus = Effect.fn("AcpRegistryDriver.checkProviderStatus")(
   function* <Requirements>(
     input: SnapshotIdentity & {
       readonly settings: AcpRegistrySettings;
@@ -591,37 +591,37 @@ export const checkAcpRegistryProviderStatus = Effect.fn("AcpRegistryDriver.check
   },
 );
 
-export const checkAcpRegistryProviderReadiness = Effect.fn(
-  "AcpRegistryDriver.checkProviderReadiness",
-)(function* (
-  input: SnapshotIdentity & {
-    readonly settings: AcpRegistrySettings;
-    readonly environment: NodeJS.ProcessEnv;
-  },
-): Effect.fn.Return<ServerProvider, never, AcpRegistrySupport.AcpRegistryCatalog> {
-  const checkedAt = DateTime.formatIso(yield* DateTime.now);
-  if (!input.settings.enabled) {
-    return yield* buildInitialAcpRegistrySnapshot(input);
-  }
-  const catalog = yield* AcpRegistrySupport.AcpRegistryCatalog;
-  const inspected = yield* Effect.result(catalog.inspect(input.settings, input.environment));
-  const snapshot = buildCheckedAcpRegistrySnapshot({
-    ...input,
-    checkedAt,
-    inspection: Result.isFailure(inspected)
+const checkAcpRegistryProviderReadiness = Effect.fn("AcpRegistryDriver.checkProviderReadiness")(
+  function* (
+    input: SnapshotIdentity & {
+      readonly settings: AcpRegistrySettings;
+      readonly environment: NodeJS.ProcessEnv;
+    },
+  ): Effect.fn.Return<ServerProvider, never, AcpRegistrySupport.AcpRegistryCatalog> {
+    const checkedAt = DateTime.formatIso(yield* DateTime.now);
+    if (!input.settings.enabled) {
+      return yield* buildInitialAcpRegistrySnapshot(input);
+    }
+    const catalog = yield* AcpRegistrySupport.AcpRegistryCatalog;
+    const inspected = yield* Effect.result(catalog.inspect(input.settings, input.environment));
+    const snapshot = buildCheckedAcpRegistrySnapshot({
+      ...input,
+      checkedAt,
+      inspection: Result.isFailure(inspected)
+        ? {
+            status: "failed",
+            message: `Could not inspect ACP Registry agent: ${inspected.failure.message}`,
+          }
+        : inspected.success,
+    });
+    return inspected._tag === "Success" && inspected.success.status === "ready"
       ? {
-          status: "failed",
-          message: `Could not inspect ACP Registry agent: ${inspected.failure.message}`,
+          ...snapshot,
+          message: "Checking ACP authentication, models, and commands in the background...",
         }
-      : inspected.success,
-  });
-  return inspected._tag === "Success" && inspected.success.status === "ready"
-    ? {
-        ...snapshot,
-        message: "Checking ACP authentication, models, and commands in the background...",
-      }
-    : snapshot;
-});
+      : snapshot;
+  },
+);
 
 export type AcpRegistryDriverEnv =
   | AcpRegistryAdapterV2DriverEnv

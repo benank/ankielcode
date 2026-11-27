@@ -187,7 +187,7 @@ export interface CursorRuntimeAgentPolicy {
   readonly sandboxEnabled: boolean;
 }
 
-export function cursorRuntimeAgentPolicy(
+function cursorRuntimeAgentPolicy(
   runtimePolicy: ProviderAdapter.ProviderAdapterV2RuntimePolicy,
   platform: NodeJS.Platform,
 ): CursorRuntimeAgentPolicy {
@@ -697,7 +697,7 @@ function nestedLsDirectory(rawNode: unknown): CursorLsDirectoryNode {
   };
 }
 
-export function nestedToolCallFromEnvelope(
+function nestedToolCallFromEnvelope(
   envelope: Record<string, unknown>,
 ): { readonly callId: string; readonly toolCall: ToolCall } | undefined {
   const callId = typeof envelope.toolCallId === "string" ? envelope.toolCallId : undefined;
