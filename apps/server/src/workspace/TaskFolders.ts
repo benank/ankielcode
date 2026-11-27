@@ -211,7 +211,7 @@ const failureDetail = (cause: unknown) =>
       : String(cause);
 
 /** The deepest folder that holds every one of `folders`, or null when they share none. */
-export const commonAncestor = (path: Path.Path, folders: ReadonlyArray<string>) => {
+const commonAncestor = (path: Path.Path, folders: ReadonlyArray<string>) => {
   let ancestor = folders[0]!;
   for (const folder of folders.slice(1)) {
     while (!isWithinRoot(path, folder, ancestor)) {
@@ -228,7 +228,7 @@ export const commonAncestor = (path: Path.Path, folders: ReadonlyArray<string>) 
  * The folder a task folder mirrors: the deepest one holding the project and every tracked
  * repository that shares a root with it. The rest are `unreachable` and cannot be laid out.
  */
-export const layoutAnchor = (
+const layoutAnchor = (
   path: Path.Path,
   projectRoot: string,
   repositories: ReadonlyArray<string>,

@@ -408,7 +408,7 @@ export const WindowsShellEnvironment = Context.Reference<WindowsShellEnvironment
   },
 );
 
-export const CommandAvailability = Context.Reference<CommandAvailabilityChecker>(
+const CommandAvailability = Context.Reference<CommandAvailabilityChecker>(
   "@ankielcode/shared/shell/CommandAvailability",
   {
     defaultValue: () => isCommandAvailable,

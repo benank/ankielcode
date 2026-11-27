@@ -414,7 +414,7 @@ const decodeRow = Effect.fnUntraced(
     ),
 );
 
-export const listDueTasks = Effect.fn("ScheduledTaskService.listDueTasks")(function* (
+const listDueTasks = Effect.fn("ScheduledTaskService.listDueTasks")(function* (
   now: DateTime.DateTime,
 ) {
   const sql = yield* SqlClient.SqlClient;

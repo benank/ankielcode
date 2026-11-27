@@ -558,7 +558,7 @@ export const spawnPiped = (
   };
 };
 
-export const layer = Layer.unwrap(
+const layer = Layer.unwrap(
   Effect.gen(function* () {
     const platform = yield* HostProcess.Platform;
     const pool = yield* Effect.acquireRelease(

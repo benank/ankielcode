@@ -194,7 +194,7 @@ const isLowSurrogate = (code: number) => code >= 0xdc00 && code <= 0xdfff;
  * whitespace collapsed, with ellipses where the text was cut. The client finds
  * the highlights again in the result.
  */
-export function buildSearchSnippet(text: string, matchStart: number): string {
+function buildSearchSnippet(text: string, matchStart: number): string {
   let start = Math.max(0, matchStart - SNIPPET_LEAD);
   const wordStart = text.slice(start, matchStart).search(/\s/);
   if (start > 0 && wordStart !== -1) start += wordStart + 1;
@@ -219,7 +219,7 @@ export function buildSearchSnippet(text: string, matchStart: number): string {
 // Both paths narrow ASCII tokens with Latin-1 and Extended-A/B/Additional accent variants.
 // Without FTS5 trigrams, or for two-character CJK words, scan the same eligible messages;
 // accented queries and non-Latin case can still miss: "fermée"/"fermee", "ОШИБКА"/"ошибка".
-export const messageHitsQuery = (
+const messageHitsQuery = (
   sql: SqlClient.SqlClient,
   { match, substrings, shortSpellings, projectId, excludedThreadIds }: typeof SearchRequest.Encoded,
 ) => sql`

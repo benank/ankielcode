@@ -192,7 +192,7 @@ export class DevServerNotProxiableError extends Schema.TaggedError<DevServerNotP
 const isDevServerNotProxiableError = Schema.is(DevServerNotProxiableError);
 
 /** Publish the single-origin web dev port, which proxies the backend. Serve requires HTTP targets. */
-export const resolveTailscaleLocalTarget = (
+const resolveTailscaleLocalTarget = (
   state: PersistedServerRuntimeState,
 ): { readonly localPort: number; readonly localHost?: string } | DevServerNotProxiableError => {
   if (state.devUrl !== undefined) {

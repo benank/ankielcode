@@ -322,7 +322,7 @@ const resolveEditorConfig = Effect.fn("ws.resolveEditorConfig")(function* <E, R>
   };
 });
 
-export const withLateConfigDiscovery = <E, R>(
+const withLateConfigDiscovery = <E, R>(
   config: ClientServerConfig,
   liveUpdates: Stream.Stream<ServerConfigStreamEvent, E, R>,
   launcher: EditorDiscovery,
@@ -407,7 +407,7 @@ export const withLateConfigDiscovery = <E, R>(
 
 // Discoveries run side by side so the slowest one, not their sum, bounds the
 // server config snapshot. Each degrades on timeout rather than failing it.
-export const resolveOpenDiscoveryForConfig = <T, D, E1, R1, E2, R2, E3, R3, E4, R4>(discovery: {
+const resolveOpenDiscoveryForConfig = <T, D, E1, R1, E2, R2, E3, R3, E4, R4>(discovery: {
   readonly editors: Effect.Effect<ReadonlyArray<EditorId>, E1, R1>;
   readonly fileManagerRevealKind: Effect.Effect<FileManagerRevealKind | undefined, E2, R2>;
   readonly remoteOpenTargets: Effect.Effect<ReadonlyArray<T>, E3, R3>;

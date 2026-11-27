@@ -1301,7 +1301,7 @@ function providerThreadForRun(
     : projection.providerThreads.find((candidate) => candidate.id === run.providerThreadId);
 }
 
-export function providerTurnForRun(
+function providerTurnForRun(
   projection: Pick<OrchestrationV2ThreadProjection, "providerTurns" | "attempts">,
   run: OrchestrationV2Run,
 ): OrchestrationV2ProviderTurn | undefined {

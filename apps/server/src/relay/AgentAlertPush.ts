@@ -140,7 +140,7 @@ const KIND_BY_PHASE: Partial<Record<AgentAwarenessPhase, PushAlertKind>> = {
 };
 
 /** Maps the shared button rule to the iOS category that registers those buttons. */
-export function alertCategory(
+function alertCategory(
   request: OrchestrationV2RuntimeRequest,
   item: OrchestrationV2TurnItem | undefined,
 ): AlertCategory | null {

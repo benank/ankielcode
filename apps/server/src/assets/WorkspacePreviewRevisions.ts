@@ -8,7 +8,7 @@ import * as Semaphore from "effect/Semaphore";
 import { readFileRevision } from "./MediaFile.ts";
 
 const MAX_TRACKED_DOCUMENTS = 64;
-export const MAX_TRACKED_FILES_PER_DOCUMENT = 256;
+const MAX_TRACKED_FILES_PER_DOCUMENT = 256;
 const REVISION_READ_CONCURRENCY = 8;
 
 /** One opened HTML page: the canonical workspace root and the page's path below it. */

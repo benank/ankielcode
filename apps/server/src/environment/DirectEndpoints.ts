@@ -58,7 +58,7 @@ const isTailscaleInterface = (
   /^tailscale/i.test(name) ||
   entries.some((entry) => entry.family === "IPv6" && isTailnetHost(entry.address));
 
-export function resolveBoundEndpoints(input: {
+function resolveBoundEndpoints(input: {
   readonly platform: NodeJS.Platform;
   readonly host: string | undefined;
   readonly port: number;

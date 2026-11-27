@@ -158,7 +158,7 @@ const launcherArguments = Effect.fn("ProcessLauncher.launcherArguments")(functio
 // On Linux, libuv forks the whole server for every spawn and blocks the event loop while the
 // kernel copies its page tables, so commands are launched by a small long-lived helper instead.
 // The helper passes each child's pipes back, so the native spawner keeps all of its semantics.
-export const make = Effect.fn("ProcessLauncher.make")(function* (
+const make = Effect.fn("ProcessLauncher.make")(function* (
   replyTimeout: Duration.Input = SPAWN_REPLY_TIMEOUT,
 ) {
   const fallback = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -391,7 +391,7 @@ export const make = Effect.fn("ProcessLauncher.make")(function* (
 });
 
 /** Replaces the ChildProcessSpawner in context, which stays the fallback when the launcher cannot start. */
-export const layer = Layer.effectContext(make());
+const layer = Layer.effectContext(make());
 
 /** The server's one spawner: memoized, so every build site shares a single launcher. */
 export const layerServer = layer.pipe(Layer.provide(NonBlockingSpawner.layer));

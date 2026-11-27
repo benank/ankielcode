@@ -183,7 +183,7 @@ const evaluate = async (url: string, evaluation: Evaluation): Promise<ReadonlyAr
  * `load` tells one loading of a file from the next: Node keeps a module by its address, so the
  * same address would give back the file as it was the first time.
  */
-export const loadDefinitions = Effect.fn("WorkflowRuntime.loadDefinitions")(function* (
+const loadDefinitions = Effect.fn("WorkflowRuntime.loadDefinitions")(function* (
   module: string,
   load = 0,
   deadlineMs = LOAD_DEADLINE_MS,
@@ -288,7 +288,7 @@ const definitionProblems = (
  * something to run or `kept` says there are runs to read, since the engine's modules are not worth
  * loading for nothing. `where` is the folder of definition files, or one file.
  */
-export const make = Effect.fn("WorkflowRuntime.make")(function* <E, R>(
+const make = Effect.fn("WorkflowRuntime.make")(function* <E, R>(
   engine: Effect.Effect<
     (definitions: ReadonlyArray<WorkflowDefinition>) => Layer.Layer<Workflows.Workflows, E, R>
   >,
@@ -776,7 +776,7 @@ export const make = Effect.fn("WorkflowRuntime.make")(function* <E, R>(
  * no engine runs, and every request is refused. Turning on runs it in a scope of its own, which
  * turning off closes; runs stay stored and go on once it is on again. `where` is as for `make`.
  */
-export const gate = Effect.fn("WorkflowRuntime.gate")(function* <E, R>(
+const gate = Effect.fn("WorkflowRuntime.gate")(function* <E, R>(
   runtime: Effect.Effect<
     Context.Context<Workflows.Workflows | WorkflowDefinitions>,
     E,

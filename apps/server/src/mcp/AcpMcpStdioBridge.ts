@@ -203,7 +203,7 @@ function callAcpMcpTool(options: {
   );
 }
 
-export function runAcpMcpStdioBridge(options: AcpMcpStdioBridgeOptions): Effect.Effect<void> {
+function runAcpMcpStdioBridge(options: AcpMcpStdioBridgeOptions): Effect.Effect<void> {
   const fetchImplementation = options.fetchImplementation ?? fetch;
   return Effect.gen(function* () {
     let sessionId: string | null = null;

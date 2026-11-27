@@ -977,7 +977,7 @@ function countLineBreaks(data: string): number {
   return lineBreaks;
 }
 
-export class BoundedTerminalHistory {
+class BoundedTerminalHistory {
   private readonly maxLines: number;
   private readonly maxBytes: number;
   private chunks: Array<TerminalHistoryChunk | undefined> = [];
@@ -1429,7 +1429,7 @@ function unfinishedSequenceReplay(session: TerminalSessionState): string {
   return held.slice(0, 2) + (/[\u001b\ud800-\udbff]$/.exec(held)?.[0] ?? "");
 }
 
-export function sanitizeTerminalHistoryChunk(
+function sanitizeTerminalHistoryChunk(
   pendingControlSequence: string,
   data: string,
 ): { visibleText: string; pendingControlSequence: string } {
@@ -1824,7 +1824,7 @@ export const make = Effect.fn("TerminalManager.make")(function* (
   });
 });
 
-export const makeWithOptions = Effect.fn("TerminalManager.makeWithOptions")(function* (
+const makeWithOptions = Effect.fn("TerminalManager.makeWithOptions")(function* (
   options: TerminalManagerOptions,
 ) {
   const fileSystem = yield* FileSystem.FileSystem;

@@ -28,7 +28,7 @@ const AGENTS_PARENT_SLICE = "app-ankielcode.slice";
 // below logind's 33% per-user task limit, leaving forks for the server.
 const AGENTS_PARENT_PROPERTIES = ["CPUWeight=10", "IOWeight=10", "TasksMax=25%"];
 
-export function ownedAgentSlice(stateDir: string): string {
+function ownedAgentSlice(stateDir: string): string {
   const hash = NodeCrypto.createHash("sha256").update(stateDir).digest("hex").slice(0, 12);
   return `app-ankielcode-agents-${hash}.slice`;
 }
@@ -56,7 +56,7 @@ export interface ScopeState {
 }
 
 /** Pipes can close before systemd records oom-kill; stopping, empty or OOM-counted scopes remain pending. */
-export function classifyScope(state: ScopeState): "oom-killed" | "gone" | "running" | "stopping" {
+function classifyScope(state: ScopeState): "oom-killed" | "gone" | "running" | "stopping" {
   if (state.result === "oom-kill") return "oom-killed";
   if (
     state.loadState !== "loaded" ||
@@ -98,7 +98,7 @@ const CLEAR_FAILED_INTERVAL = "1 second";
 const CLEAR_FAILED_ATTEMPTS = 120;
 const MAX_TRACKED_THREADS = 500;
 
-export const make = Effect.gen(function* () {
+const make = Effect.gen(function* () {
   const platform = yield* HostProcess.Platform;
   if (platform !== "linux") return AgentScope.defaultValue();
 

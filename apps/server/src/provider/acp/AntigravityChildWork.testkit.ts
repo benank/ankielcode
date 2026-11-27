@@ -47,10 +47,8 @@ export const invokeStep = (input: {
       ),
     ),
   );
-export const plannerStep = (callIds: ReadonlyArray<string>) =>
-  proto(field(20, proto(...callIds.map((id) => field(7, toolCall(id))))));
 
-export const transcriptLines = [
+const transcriptLines = [
   // Trimmed from 1.4.5: the launch envelope around the prompt the parent record already holds.
   {
     step_index: 0,
@@ -100,13 +98,3 @@ export const makeProfile = Effect.fn("makeProfile")(function* (input: {
   database.close();
   return { profile, transcriptPath, logUri };
 });
-
-export const autoApproved = (logUri: string) =>
-  [
-    [1, 15, plannerStep(["call-a"])],
-    [
-      2,
-      127,
-      invokeStep({ callId: "call-a", launches: [LAUNCH], children: [{ id: CHILD, logUri }] }),
-    ],
-  ] as const;

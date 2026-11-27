@@ -26,7 +26,7 @@ const decodeTraceSpanLine = Schema.decodeUnknownOption(
   ),
 );
 
-export function makeTraceSpanSummary(sinceMs = -Infinity) {
+function makeTraceSpanSummary(sinceMs = -Infinity) {
   const byName = new Map<string, { durations: number[]; interrupted: number; failures: number }>();
   let spanCount = 0;
   let skippedLineCount = 0;
@@ -100,7 +100,7 @@ export function makeTraceSpanSummary(sinceMs = -Infinity) {
 const formatMs = (ms: number) =>
   Math.round(ms) < 1_000 ? `${Math.round(ms)}ms` : `${Math.round(ms / 100) / 10}s`;
 
-export function formatTraceSummary(
+function formatTraceSummary(
   summary: ReturnType<ReturnType<typeof makeTraceSpanSummary>["finish"]>,
   limit: number,
 ) {

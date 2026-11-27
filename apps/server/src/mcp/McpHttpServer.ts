@@ -297,7 +297,7 @@ const layerMcpAuthMiddleware = HttpRouter.middleware<{
 }>()(makeMcpAuthMiddleware).layer;
 
 /** Claude Code spills oversized results to files, losing locators; bound both text and its preferred structuredContent. */
-export const MAX_SNAPSHOT_TEXT_BYTES = 20_000;
+const MAX_SNAPSHOT_TEXT_BYTES = 20_000;
 const MAX_SNAPSHOT_VISIBLE_TEXT_CHARS = 8_000;
 // Page text and the ARIA tree both shrink to this before either drops below it.
 const SNAPSHOT_TEXT_FLOOR_CHARS = 2_000;
@@ -1061,7 +1061,7 @@ const imageToolRegistration = <Tools extends Record<string, Tool.Any>, A, E, R, 
     Layer.provide(McpToolAccess.HandlersLayer.layer(handlers)),
   );
 
-export const layerHtmlToolkit = Layer.mergeAll(
+const layerHtmlToolkit = Layer.mergeAll(
   toolkitRegistration(HtmlRenderToolkit, HtmlHandlers.layerRender),
   imageToolRegistration(registerHtmlPreview(), HtmlHandlers.layerPreview),
 ).pipe(Layer.provide(HtmlRender.layer));
@@ -1089,7 +1089,7 @@ export const layerOrchestratorToolkit = toolkitRegistration(
 export const layerThreadToolkit = toolkitRegistration(ThreadToolkit, ThreadHandlers.layer);
 const layerWorkflowToolkit = toolkitRegistration(WorkflowToolkit, WorkflowHandlers.layer);
 
-export const layerMessageToolkit = toolkitRegistration(MessageToolkit, MessageHandlers.layer);
+const layerMessageToolkit = toolkitRegistration(MessageToolkit, MessageHandlers.layer);
 
 const layerWorktreeToolkitRegistration = toolkitRegistration(
   WorktreeToolkit,
@@ -1127,7 +1127,7 @@ const layerDeviceScreenshotRegistration = imageToolRegistration(
   DeviceHandlers.layerScreenshot,
 );
 
-export const layerDeviceToolkit = Layer.mergeAll(
+const layerDeviceToolkit = Layer.mergeAll(
   layerDeviceStandardToolkitRegistration,
   layerDeviceScreenshotRegistration,
 );
@@ -1221,7 +1221,7 @@ const layerDeferredListing = McpServer.visibility(
 );
 
 /** Outside layerTools: the clients its budget measures never list `tool_search`. */
-export const layerToolSearch = Layer.mergeAll(
+const layerToolSearch = Layer.mergeAll(
   toolkitRegistration(ToolSearchToolkit, ToolSearchHandlers.layer),
   layerDeferredListing,
 ).pipe(Layer.provide(layerToolExposure));
@@ -1266,7 +1266,7 @@ const layerWebhookTransport = Layer.unwrap(
  * Milestones as MCP events (SEP-3415) for outside clients to poll, stream or receive by webhook.
  * Protocol-level, so no thread lists them.
  */
-export const layerMilestoneEvents = Layer.effectDiscard(
+const layerMilestoneEvents = Layer.effectDiscard(
   Effect.gen(function* () {
     const annotations = Context.make(McpSchema.EnabledWhen, McpInvocationContext.hiddenFromThreads);
     const events = yield* MilestoneEvents.make;

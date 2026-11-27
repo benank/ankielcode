@@ -372,7 +372,7 @@ export function boundProviderEventForLogging(event: unknown): unknown {
   return summarizeProviderEvent(event);
 }
 
-export const writeBatchedMessages = Effect.fnUntraced(function* (
+const writeBatchedMessages = Effect.fnUntraced(function* (
   sink: AsyncFileSink,
   records: ReadonlyArray<PendingRecord>,
   maxBytes: number,

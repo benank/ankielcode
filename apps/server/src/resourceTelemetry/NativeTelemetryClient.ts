@@ -280,7 +280,7 @@ function resolveNativeSampleIntervalMs(
 }
 
 // Desktop power samples also commit control state; avoid a span for each sample.
-export const commitCollectionControlUpdate = Effect.fnUntraced(function* <E, R>(
+const commitCollectionControlUpdate = Effect.fnUntraced(function* <E, R>(
   desiredState: Ref.Ref<CollectionControl>,
   appliedState: Ref.Ref<CollectionControl>,
   update: (current: CollectionControl) => CollectionControl,
@@ -296,7 +296,7 @@ export const commitCollectionControlUpdate = Effect.fnUntraced(function* <E, R>(
   return [previousDesired, next] as const;
 });
 
-export function synchronizeCollectionControlOnStart<E1, R1, E2, R2>(
+function synchronizeCollectionControlOnStart<E1, R1, E2, R2>(
   mutex: Semaphore.Semaphore,
   desiredState: Ref.Ref<CollectionControl>,
   appliedState: Ref.Ref<CollectionControl>,
@@ -1061,67 +1061,3 @@ export const make = Effect.fn("resourceTelemetry.nativeTelemetryClient.make")(fu
 });
 
 export const layer = Layer.effect(NativeTelemetryClient, make());
-
-export const layerTest = (
-  overrides: Partial<NativeTelemetryClient["Service"]> = {},
-): Layer.Layer<NativeTelemetryClient> => {
-  const health =
-    overrides.health ??
-    Effect.succeed({
-      status: "unavailable" as const,
-      hello: Option.none<ResourceMonitorHelloEvent>(),
-      lastSampleAt: Option.none<DateTime.Utc>(),
-      lastError: Option.some("Resource monitor test implementation is unavailable."),
-      restartCount: 0,
-      sampleIntervalMs: IDLE_SAMPLE_INTERVAL_MS,
-    });
-  return Layer.succeed(
-    NativeTelemetryClient,
-    NativeTelemetryClient.of({
-      capabilities: Effect.succeed({
-        cumulativeCpuTime: true,
-        currentCpuPercent: true,
-        residentMemory: true,
-        virtualMemory: true,
-        ioBytes: true,
-        processStartTime: true,
-        processTree: true,
-      }),
-      snapshots: Stream.empty,
-      readHistory: Effect.fn("NativeTelemetryClient.readHistory")(function () {
-        return Effect.fail(
-          new NativeTelemetryUnavailable({
-            reason: "No resource monitor history was configured for this test.",
-          }),
-        );
-      }),
-      setExternalProcesses: Effect.fn("NativeTelemetryClient.setExternalProcesses")(function () {
-        return Effect.void;
-      }),
-      setHostPowerState: Effect.fn("NativeTelemetryClient.setHostPowerState")(function () {
-        return Effect.void;
-      }),
-      sampleNow: Effect.fail(
-        new NativeTelemetryUnavailable({
-          reason: "No resource monitor sample was configured for this test.",
-        }),
-      ),
-      processTable: Effect.fail(
-        new NativeTelemetryUnavailable({
-          reason: "No resource monitor process table was configured for this test.",
-        }),
-      ),
-      retry: Effect.succeed(false),
-      health,
-      subscribeHealth:
-        overrides.subscribeHealth ??
-        health.pipe(
-          Effect.map((initial) => ({
-            latest: initial,
-            changes: Stream.empty,
-          })),
-        ),
-      ...overrides,
-    }),
-  );
-};

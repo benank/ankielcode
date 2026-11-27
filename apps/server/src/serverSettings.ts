@@ -183,7 +183,7 @@ function withEchoedSecretReferences(current: ServerSettings, next: ServerSetting
   );
 }
 
-export function applyProviderInstanceMutation(
+function applyProviderInstanceMutation(
   settings: ServerSettings,
   mutation: ProviderInstanceMutation,
 ): ServerSettings {

@@ -115,7 +115,7 @@ export function projectedRowEncodedBytes(row: HistoryRow): number {
 }
 
 /** Charge local items twice because bounded snapshots also include projection.turnItems; inherited rows appear only once. */
-export function projectedRowBoundedSnapshotEncodedBytes(
+function projectedRowBoundedSnapshotEncodedBytes(
   row: OrchestrationV2ProjectedTurnItem,
   threadId: ThreadId | string,
 ): number {
@@ -632,7 +632,7 @@ function messagesForBoundedProjection(
 }
 
 /** Watermark prevents old missing updates from appending newest when bounded windows lack local rows. */
-export function computeLatestLocalTurnOrdinal(
+function computeLatestLocalTurnOrdinal(
   turnItems: ReadonlyArray<{ readonly ordinal: number }>,
 ): number | null {
   let latest: number | null = null;
@@ -642,20 +642,6 @@ export function computeLatestLocalTurnOrdinal(
     }
   }
   return latest;
-}
-
-export function boundedTimelineEncodedBytes(input: {
-  readonly visibleTurnItems: ReadonlyArray<OrchestrationV2ProjectedTurnItem>;
-  readonly turnItems: ReadonlyArray<OrchestrationV2TurnItem>;
-}): number {
-  let total = 0;
-  for (const row of input.visibleTurnItems) {
-    total += projectedRowEncodedBytes(row);
-  }
-  for (const item of input.turnItems) {
-    total += bytesOfJson(item);
-  }
-  return total;
 }
 
 export function buildBoundedThreadProjection(input: {

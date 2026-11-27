@@ -170,7 +170,7 @@ interface ActiveRemotePoller {
   readonly demandCwds: Ref.Ref<ReadonlyMap<string, number>>;
 }
 
-export class VcsAutoPullPolicy extends Context.Reference<{
+class VcsAutoPullPolicy extends Context.Reference<{
   readonly isEnabled: (cwd: string) => Effect.Effect<boolean, never>;
 }>("ankiel/vcs/VcsAutoPullPolicy", {
   defaultValue: () => ({ isEnabled: () => Effect.succeed(false) }),

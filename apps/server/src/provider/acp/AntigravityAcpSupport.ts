@@ -80,7 +80,7 @@ export const antigravitySteersWithPrompt = (
 };
 
 /** Older releases offer non-Gemini models only to allowlisted clients such as Zed. */
-export function antigravityClientInfo(version: string | null | undefined) {
+function antigravityClientInfo(version: string | null | undefined) {
   const parsed = parseAntigravityVersion(version);
   return parsed !== undefined && compareVersions(parsed, OPEN_MODEL_ACCESS_RELEASE) >= 0
     ? { name: "ankiel-code", title: "Ankiel Code", version: packageJson.version }

@@ -2,7 +2,7 @@ import { serializeComposerFileLink } from "@ankielcode/shared/composerTrigger";
 
 /** Keep TRIAGE_PLAYBOOK byte-identical to .github/triage/PLAYBOOK.md after unescaping backticks and backslashes. */
 
-export const TRIAGE_PLAYBOOK = `# Ankiel Code triage playbook
+const TRIAGE_PLAYBOOK = `# Ankiel Code triage playbook
 
 You are a support engineer for Ankiel Code (https://github.com/benank/ankielcode), working
 inside a coding-agent session on the machine of a user whose install is misbehaving:

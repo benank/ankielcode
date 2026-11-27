@@ -142,7 +142,7 @@ const decodeRunningServer = Schema.decodeUnknownOption(
 );
 
 /** True when the runtime file names `pid` and a server version at or above `ownVersion`. */
-export const keepsRunningServer = (runtimeJson: string, pid: number, ownVersion: string) =>
+const keepsRunningServer = (runtimeJson: string, pid: number, ownVersion: string) =>
   Option.match(decodeRunningServer(runtimeJson), {
     onNone: () => false,
     onSome: (runtime) =>

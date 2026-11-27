@@ -97,7 +97,7 @@ const settleQueuedCommand = <A, E>(deferred: Deferred.Deferred<A, E>, exit: Exit
     ? Deferred.succeed(deferred, exit.value)
     : Deferred.failCause(deferred, exit.cause);
 
-export const makeCommandGate = Effect.gen(function* () {
+const makeCommandGate = Effect.gen(function* () {
   const commandReady = yield* Deferred.make<void, ServerRuntimeStartupError>();
   const commandQueue = yield* Queue.unbounded<QueuedCommand>();
   const commandReadinessState = yield* Ref.make<CommandReadinessState>("pending");
@@ -153,7 +153,7 @@ interface AutoBootstrapWelcomeTargets {
   readonly bootstrapThreadId?: ThreadId;
 }
 
-export const autoPullProjects = Effect.fn("autoPullProjects")(function* (
+const autoPullProjects = Effect.fn("autoPullProjects")(function* (
   projects: ReadonlyArray<Pick<Project, "id" | "workspaceRoot" | "autoPull">>,
   settings = DEFAULT_SERVER_SETTINGS,
 ) {
@@ -318,17 +318,17 @@ const resolveStartupBrowserTarget = Effect.gen(function* () {
 });
 
 /** Prints the one-time admin pairing URL to stdout only; logger records reach trace files and collectors. */
-export const announceStartupPairingUrl = (pairingUrl: string) =>
+const announceStartupPairingUrl = (pairingUrl: string) =>
   Effect.logInfo("Authentication required. Open Ankiel Code using the pairing URL.").pipe(
     Effect.andThen(Console.log(`  pairingUrl: ${pairingUrl}`)),
   );
 
 // Pairing tokens belong only in announceStartupPairingUrl's stdout output.
-export const logBrowserAutoOpenUnavailable = Effect.logInfo("browser auto-open unavailable", {
+const logBrowserAutoOpenUnavailable = Effect.logInfo("browser auto-open unavailable", {
   hint: "Open the pairing URL above in your browser.",
 });
 
-export const maybeOpenBrowser = Effect.fn("serverRuntimeStartup.maybeOpenBrowser")(function* (
+const maybeOpenBrowser = Effect.fn("serverRuntimeStartup.maybeOpenBrowser")(function* (
   target: string,
 ) {
   const serverConfig = yield* ServerConfig.ServerConfig;

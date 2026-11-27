@@ -182,7 +182,7 @@ function parseGrokRecord(parsed: unknown): readonly UsageRecord[] {
   return results;
 }
 
-export const grokUsageFormat: TranscriptUsageFormat<void> = {
+const grokUsageFormat: TranscriptUsageFormat<void> = {
   selectFields: {
     timestamp: true,
     params: {

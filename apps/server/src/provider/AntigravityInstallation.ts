@@ -179,7 +179,7 @@ function isRunning(state: ProviderInstallState) {
   );
 }
 
-export const makeAntigravityInstallation = Effect.fn("AntigravityInstallation.make")(function* (
+const makeAntigravityInstallation = Effect.fn("AntigravityInstallation.make")(function* (
   options: AntigravityInstallationOptions,
 ) {
   const manifestService = yield* ModelManifest.ModelManifest;

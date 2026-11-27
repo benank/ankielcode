@@ -749,7 +749,7 @@ const WsServerUnregisterPushRpc = Rpc.make(WS_METHODS.serverUnregisterPush, {
   error: Schema.Union([PushRegistrationError, EnvironmentAuthorizationError]),
 });
 
-export const WsServerRefreshProvidersRpc = Rpc.make(WS_METHODS.serverRefreshProviders, {
+const WsServerRefreshProvidersRpc = Rpc.make(WS_METHODS.serverRefreshProviders, {
   payload: Schema.Struct({
     instanceId: Schema.optional(ProviderInstanceId),
     cwd: Schema.optional(TrimmedNonEmptyString),

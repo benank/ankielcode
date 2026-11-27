@@ -355,7 +355,7 @@ const listGitCheckouts = Effect.fn("cli.thread.listGitCheckouts")(function* (dir
  * A path inside a git worktree resolves as the same path in the repository's
  * other checkouts.
  */
-export const resolveProject = Effect.fn("cli.thread.resolveProject")(function* (
+const resolveProject = Effect.fn("cli.thread.resolveProject")(function* (
   tools: ThreadTools,
   identifier: string,
 ) {
@@ -455,7 +455,7 @@ const readTimeline = Effect.fn("cli.thread.readTimeline")(function* (
  * count every timeline item, so the read starts near the end and widens
  * backward only while tool and plan items leave too few messages.
  */
-export const readLatestMessages = Effect.fn("cli.thread.readLatestMessages")(function* (
+const readLatestMessages = Effect.fn("cli.thread.readLatestMessages")(function* (
   tools: ThreadTools,
   threadId: ThreadId,
   count: number,
@@ -554,7 +554,7 @@ const runResultText = Effect.fn("cli.thread.runResultText")(function* (
 });
 
 /** The latest run's last error once it ended without completing, else null. */
-export const latestRunError = Effect.fn("cli.thread.latestRunError")(function* (
+const latestRunError = Effect.fn("cli.thread.latestRunError")(function* (
   tools: ThreadTools,
   thread: Pick<OrchestratorMcpThreadDetail, "threadId" | "status" | "latestRunId">,
 ) {
@@ -622,7 +622,7 @@ const runsAfter = Effect.fn("cli.thread.runsAfter")(function* (
  * With `followWakes`, a completed run is followed further to the runs its
  * background work wakes, as long as no one else sends to the thread.
  */
-export const waitForRun = Effect.fn("cli.thread.waitForRun")(function* (
+const waitForRun = Effect.fn("cli.thread.waitForRun")(function* (
   tools: ThreadTools,
   threadId: ThreadId,
   runId: RunId,
@@ -763,7 +763,7 @@ const finishRun = Effect.fn("cli.thread.finishRun")(function* (
   }
 });
 
-export const titleFromMessage = (message: string) => {
+const titleFromMessage = (message: string) => {
   const firstLine = message.trim().split("\n")[0]?.trim() ?? "";
   if (firstLine.length <= TITLE_MAX_CHARS) return firstLine;
   let end = TITLE_MAX_CHARS - 1;
@@ -797,7 +797,7 @@ const launchWorkspaceStrategy = (input: {
  * `false` become booleans because boolean options such as fastMode only match
  * a boolean.
  */
-export const launchModelSelection = Effect.fn("cli.thread.launchModelSelection")(function* (input: {
+const launchModelSelection = Effect.fn("cli.thread.launchModelSelection")(function* (input: {
   readonly provider: Option.Option<string>;
   readonly model: Option.Option<string>;
   readonly option: ReadonlyArray<string>;
@@ -850,7 +850,7 @@ const outputSchemaFlag = Flag.String("output-schema").pipe(
 const decodeOutputSchema = Schema.decodeUnknownEffect(
   Schema.fromJsonString(Schema.Record(Schema.String, Schema.Json)),
 );
-export const readOutputSchema = Effect.fn("cli.thread.readOutputSchema")(function* (
+const readOutputSchema = Effect.fn("cli.thread.readOutputSchema")(function* (
   path: Option.Option<string>,
 ) {
   if (Option.isNone(path)) return {};

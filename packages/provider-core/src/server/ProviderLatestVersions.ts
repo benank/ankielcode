@@ -30,7 +30,7 @@ export class ProviderLatestVersions extends Context.Service<
   }
 >()("@ankielcode/provider-core/server/ProviderLatestVersions") {}
 
-export const make = Effect.fn("ProviderLatestVersions.make")(function* (
+const make = Effect.fn("ProviderLatestVersions.make")(function* (
   seed: Iterable<readonly [key: string, version: string | null]> = [],
 ) {
   const entries = yield* Ref.make(

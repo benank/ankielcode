@@ -221,7 +221,7 @@ function heldForLimitRecovery(
 }
 
 /** PR metadata refreshes must not reset the inactivity clock. */
-export function storageCleanupActivityAt(thread: OrchestrationV2ThreadShell): number {
+function storageCleanupActivityAt(thread: OrchestrationV2ThreadShell): number {
   return Math.max(
     ...[
       thread.createdAt,

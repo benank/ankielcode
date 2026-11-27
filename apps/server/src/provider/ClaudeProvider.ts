@@ -243,13 +243,7 @@ const CLAUDE_CAPABILITIES_PROBE_SETTING_SOURCES = [
  * that stops answering freezes the server. `env` enters the cwd and finds the CLI in the child.
  * A shell would not do: dash drops the exported Bash functions a launcher may call.
  */
-export function spawnClaudeProbeThroughEnv({
-  command,
-  args,
-  cwd,
-  env,
-  signal,
-}: ClaudeSpawnOptions) {
+function spawnClaudeProbeThroughEnv({ command, args, cwd, env, signal }: ClaudeSpawnOptions) {
   const launch = envTrampoline(command, args, cwd) ?? { command, args, cwd };
   return NodeChildProcess.spawn(launch.command, launch.args, {
     ...("cwd" in launch ? { cwd: launch.cwd } : {}),
@@ -268,7 +262,7 @@ function spawnClaudeProbeOffThread({ command, args, cwd, env, signal }: ClaudeSp
   return child;
 }
 
-export function buildClaudeCapabilitiesProbeQueryOptions(input: {
+function buildClaudeCapabilitiesProbeQueryOptions(input: {
   readonly executablePath: string;
   readonly abortController: AbortController;
   readonly environment: NodeJS.ProcessEnv;

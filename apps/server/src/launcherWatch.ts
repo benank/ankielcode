@@ -20,7 +20,7 @@ interface LauncherWatchOptions {
  * otherwise an orphan backend keeps its ownership lock and blocks replacement launches.
  * Skip init-launched backends and Windows, which retains the exited parent's id.
  */
-export const awaitLauncherLoss = Effect.fn("launcherWatch.awaitLauncherLoss")(function* (
+const awaitLauncherLoss = Effect.fn("launcherWatch.awaitLauncherLoss")(function* (
   options?: LauncherWatchOptions,
 ): Effect.fn.Return<void> {
   const platform = yield* HostProcess.Platform;

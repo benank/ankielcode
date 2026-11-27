@@ -101,7 +101,7 @@ const systemdUnsafeValue = (plan: BootServicePlan) =>
   /[\x00-\x1f\x7f"'\\]/.test(plan.program[0] ?? "");
 
 /** Service units cannot rely on the user's shell or PATH. */
-export function renderBootServiceUnit(plan: BootServicePlan): string {
+function renderBootServiceUnit(plan: BootServicePlan): string {
   if (systemdUnsafeValue(plan)) {
     throw new BootServiceBaseDirUnsupportedError({ baseDir: plan.baseDir });
   }
@@ -153,7 +153,7 @@ function escapeXmlText(value: string): string {
 }
 
 /** Launch agents cannot rely on the user's shell or PATH. */
-export function renderBootServicePlist(
+function renderBootServicePlist(
   plan: BootServicePlan,
   options: { readonly homeDir: string; readonly environmentPath: string },
 ): string {
@@ -213,7 +213,7 @@ export function renderBootServicePlist(
  * flags. A console program started by a task opens a window unless a headless console hosts it.
  * No XML declaration: the file is written as UTF-16LE with a BOM (see `encodeServiceTask`).
  */
-export function renderBootServiceTask(
+function renderBootServiceTask(
   plan: BootServicePlan,
   options: { readonly userId: string; readonly homeDir: string; readonly conhostPath: string },
 ): string {
@@ -814,7 +814,7 @@ export interface BootServiceHost {
   readonly execPath: string;
 }
 
-export const make = Effect.fn("cloud.boot_service.make")(function* (input: {
+const make = Effect.fn("cloud.boot_service.make")(function* (input: {
   readonly baseDir: string;
   readonly logsDir: string;
   readonly cliVersion: string;

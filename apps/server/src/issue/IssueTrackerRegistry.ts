@@ -16,9 +16,7 @@ export class IssueTrackerRegistry extends Context.Service<
 >()("@ankielcode/server/issue/IssueTrackerRegistry") {}
 
 /** Exported for tests, which stand a registry up from trackers they supply themselves. */
-export function fromTrackers(
-  trackers: ReadonlyArray<IssueTrackerApi>,
-): IssueTrackerRegistry["Service"] {
+function fromTrackers(trackers: ReadonlyArray<IssueTrackerApi>): IssueTrackerRegistry["Service"] {
   const byKind = new Map(trackers.map((tracker) => [tracker.kind, tracker]));
   return {
     get: (kind) => byKind.get(kind) ?? null,

@@ -122,7 +122,7 @@ function routesToNativeOpenai(config: unknown): boolean {
 }
 
 /** The origin of the custom endpoint Codex sends model requests to, if it uses one. */
-export function codexCustomEndpoint(config: unknown): string | undefined {
+function codexCustomEndpoint(config: unknown): string | undefined {
   const baseUrl = codexRouteBaseUrl(config);
   const url = baseUrl ? URL.parse(baseUrl) : null;
   return url && /^https?:$/.test(url.protocol) && !routesToNativeOpenai(config)
@@ -131,7 +131,7 @@ export function codexCustomEndpoint(config: unknown): string | undefined {
 }
 
 // A stored login does not mean this provider's traffic spends that login's quota.
-export const codexRoutesSpendNativeQuota = (
+const codexRoutesSpendNativeQuota = (
   account: CodexSchema.V2GetAccountResponse,
   config: unknown,
 ): boolean =>
@@ -357,7 +357,7 @@ function parseCodexModelListResponse(
   }));
 }
 
-export function applyPreferredCodexDefaultModel(
+function applyPreferredCodexDefaultModel(
   models: ReadonlyArray<ServerProviderModel>,
 ): ReadonlyArray<ServerProviderModel> {
   const preferredSlug = PREFERRED_DEFAULT_CODEX_MODELS.flatMap((slug) =>

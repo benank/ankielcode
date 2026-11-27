@@ -123,7 +123,7 @@ const UploadedRecordingArtifact = Schema.Struct({
 });
 const decodeUploadedRecordingArtifact = Schema.decodeUnknownEffect(UploadedRecordingArtifact);
 
-export const claimPreviewRecording = Effect.fn("PreviewToolkit.claimRecording")(function* (
+const claimPreviewRecording = Effect.fn("PreviewToolkit.claimRecording")(function* (
   threadId: ThreadId,
   response: unknown,
 ) {

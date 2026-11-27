@@ -295,7 +295,7 @@ function autoSettlementConfigured(
 }
 
 /** @internal Exported for tests. */
-export function autoSettlementSettingsKey(
+function autoSettlementSettingsKey(
   settings: import("@ankielcode/contracts").ServerSettings,
 ): string {
   return JSON.stringify([

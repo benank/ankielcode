@@ -41,7 +41,7 @@ const requireForNodePty = NodeModule.createRequire(import.meta.url);
 const loadNodePty: NodePtyModuleLoader = () =>
   Promise.resolve().then(() => requireForNodePty("node-pty") as typeof import("node-pty"));
 
-export const NodePtyModuleLoaderRef = Context.Reference<NodePtyModuleLoader>(
+const NodePtyModuleLoaderRef = Context.Reference<NodePtyModuleLoader>(
   "server/terminal/NodePtyModuleLoader",
   { defaultValue: () => loadNodePty },
 );

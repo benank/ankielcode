@@ -7,9 +7,6 @@ import {
   ANKIEL_CODE_ORCHESTRATION_SECTIONS,
 } from "@ankielcode/provider-core/server/orchestrationInstructions";
 
-/** Codex silently truncates additionalContext values over 1,000 tokens, counted as UTF-8 bytes / 4. */
-export const CODEX_ADDITIONAL_CONTEXT_VALUE_MAX_BYTES = 4_000;
-
 export interface AnkielCodeToolAvailability {
   readonly browser: boolean;
   readonly device: boolean;

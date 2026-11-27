@@ -117,17 +117,3 @@ export interface FakeSourceControlDriverOptions {
   readonly discovery?: SourceControlProviderDiscoverySpec;
   readonly fetchMedia?: SourceControlDriverInstance["fetchMedia"];
 }
-
-/** A driver instance for a host named `kind` that needs none of the server's services. */
-export function fakeSourceControlDriverInstance(
-  kind: string,
-  options: FakeSourceControlDriverOptions = {},
-): SourceControlDriverInstance {
-  return {
-    sourceControl: fakeSourceControlProvider(kind, options.sourceControl),
-    discovery: options.discovery ?? fakeDiscovery(kind),
-    pullRequests:
-      options.pullRequests === null ? null : fakePullRequestProvider(kind, options.pullRequests),
-    ...(options.fetchMedia === undefined ? {} : { fetchMedia: options.fetchMedia }),
-  };
-}

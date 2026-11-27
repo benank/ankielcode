@@ -303,7 +303,7 @@ const decodeKiroConfigTemplate = Schema.decodeUnknownOption(KiroConfigTemplate);
  * opening a session. The template reads no workspace, so a project's
  * `.kiro/agents` are not offered.
  */
-export function kiroAgentDescriptor(template: unknown): ProviderOptionDescriptor | undefined {
+function kiroAgentDescriptor(template: unknown): ProviderOptionDescriptor | undefined {
   const decoded = Option.getOrUndefined(decodeKiroConfigTemplate(template));
   const mode = decoded?.configOptions.find(
     (option) => option.id === KIRO_AGENT_CONFIG_ID && option.type === "select",

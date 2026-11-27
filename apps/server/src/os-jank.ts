@@ -102,7 +102,7 @@ function hydratePosixPath(env: NodeJS.ProcessEnv, platform: NodeJS.Platform): vo
   applyLoginShellEnvironment(env, platform, shellEnvironment, launchctlPath);
 }
 
-export function hydratePosixHome(
+function hydratePosixHome(
   env: NodeJS.ProcessEnv,
   resolveHomeDir = () => NodeOS.userInfo().homedir,
 ): void {

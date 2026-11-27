@@ -27,7 +27,7 @@ class MachineLockError extends Schema.TaggedError<MachineLockError>()("MachineLo
 const lockDirectory = () => NodePath.join(NodeOS.tmpdir(), "ankielcode-provider-updates");
 
 /** @internal */
-export const machineLockFile = (lockKey: string) =>
+const machineLockFile = (lockKey: string) =>
   NodePath.join(
     lockDirectory(),
     NodeCrypto.createHash("sha256").update(lockKey).digest("hex").slice(0, 32),

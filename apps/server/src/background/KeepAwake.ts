@@ -28,7 +28,7 @@ const WINDOWS_HOLD_SCRIPT = `$t = Add-Type -Name Power -Namespace Ankiel -PassTh
  * Each command writes a line to stdout once it holds its inhibitor, holds it until it exits, and
  * exits on its own if the server dies.
  */
-export function inhibitorCommand(
+function inhibitorCommand(
   platform: NodeJS.Platform,
   serverPid: number,
   isWsl: boolean,
@@ -97,7 +97,7 @@ export function inhibitorCommand(
  * Runs `hold` while `wanted` is true and for `grace` after it turns false; a true inside the
  * grace keeps the same hold. `hold` runs until interrupted.
  */
-export const holdWhileWanted = <E, R>(
+const holdWhileWanted = <E, R>(
   wanted: Stream.Stream<boolean, E, R>,
   hold: Effect.Effect<void>,
   grace: Duration.Input = RELEASE_GRACE,

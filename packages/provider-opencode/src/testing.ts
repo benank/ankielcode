@@ -3,4 +3,3 @@ export {
   OPENCODE_PROVIDER,
   OPENCODE_SDK_PROTOCOL,
 } from "./server/adapter.ts";
-export { OPENCODE_2_STILL_STOPPING, ankielMcpServerName } from "./server/v2/adapter.ts";

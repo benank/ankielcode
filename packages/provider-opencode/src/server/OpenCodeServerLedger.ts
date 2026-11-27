@@ -310,12 +310,3 @@ export const layer = (input: { readonly stateDir: string }) =>
       return OpenCodeServerLedger.of({ track: ledger.track });
     }),
   );
-
-export const layerTest = Layer.succeed(
-  OpenCodeServerLedger,
-  OpenCodeServerLedger.of({
-    track: Effect.fn("OpenCodeServerLedger.track")(function () {
-      return Effect.succeed(Effect.void);
-    }),
-  }),
-);

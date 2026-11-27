@@ -379,7 +379,7 @@ export class WorkflowStore extends Context.Service<
   }
 >()("@ankielcode/server/workflows/WorkflowStore") {}
 
-export const make = Effect.gen(function* () {
+const make = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;
   const changes = yield* PubSub.unbounded<string>();
   // A write here is bookkeeping for a run the engine already journaled: failing it would park a

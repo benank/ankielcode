@@ -322,7 +322,7 @@ export function normalizeAcpRegistryCommands(
   return { slashCommands, skills };
 }
 
-export function acpRegistryProbeResult(
+function acpRegistryProbeResult(
   instanceId: ProviderInstanceId,
   started: AcpSessionRuntime.AcpSessionRuntimeStartResult,
   icon: string | null = null,
@@ -356,7 +356,7 @@ export function acpRegistryProbeResult(
   });
 }
 
-export function acpRegistryProbeFailure(
+function acpRegistryProbeFailure(
   error: EffectAcpErrors.AcpError,
   authMethods: ReadonlyArray<AcpRegistryProbeAuthMethod> = [],
   authAction?: AcpRegistryUrlAuthAction,

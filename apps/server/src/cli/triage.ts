@@ -89,7 +89,7 @@ export class TriageAgentSpawnError extends Schema.TaggedError<TriageAgentSpawnEr
   }
 }
 
-export const matchAgentAnswer = <Agent extends { readonly id: string }>(
+const matchAgentAnswer = <Agent extends { readonly id: string }>(
   agents: ReadonlyArray<Agent>,
   answer: string,
 ) => {

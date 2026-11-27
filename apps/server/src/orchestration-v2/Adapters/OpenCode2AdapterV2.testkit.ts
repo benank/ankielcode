@@ -218,7 +218,7 @@ const replayHttpClient = (
     ),
   );
 
-export const replayServer = (
+const replayServer = (
   transcript: ProviderReplayTranscript,
   options?: {
     readonly external?: boolean;

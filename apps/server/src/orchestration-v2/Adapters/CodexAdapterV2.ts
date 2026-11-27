@@ -297,7 +297,7 @@ export function canReuseCodexContextUsage(previous: ModelSelection, next: ModelS
   );
 }
 
-export function codexProviderTurnTokenUsage(
+function codexProviderTurnTokenUsage(
   tokenUsage: CodexSchema.V2ThreadTokenUsageUpdatedNotification["tokenUsage"],
   updatedAt: string,
 ) {
@@ -336,7 +336,7 @@ const decodeCodexBackgroundTerminalsListResponse = Schema.decodeUnknownEffect(
 const CODEX_INITIALIZE_TIMEOUT = "30 seconds";
 const CodexThreadSampleResponse = Schema.Struct({ text: Schema.NullOr(Schema.String) });
 const decodeCodexThreadSampleResponse = Schema.decodeUnknownEffect(CodexThreadSampleResponse);
-export const CODEX_PROMPT_SUGGESTION_PROMPT =
+const CODEX_PROMPT_SUGGESTION_PROMPT =
   "Predict the next message the user will send in this conversation. Reply with only that message, written as the user would type it, in under 20 words. Do not use tools. If there is no clear next step, reply with nothing.";
 const CODEX_CLIENT_CAPABILITIES = {
   experimentalApi: true,
@@ -650,7 +650,7 @@ function codexMcpAppResourceUri(item: CodexDynamicToolItem): string | undefined 
 
 const CODEX_IMAGE_DATA_URL = /^data:(image\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/i;
 
-export function codexDynamicToolOutput(
+function codexDynamicToolOutput(
   item: Extract<CodexDynamicToolItem, { readonly type: "dynamicToolCall" }>,
 ): unknown | undefined {
   if (item.contentItems !== null && item.contentItems !== undefined) {

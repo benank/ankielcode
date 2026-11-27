@@ -552,7 +552,7 @@ export class EnvironmentVoiceBodyLimit extends HttpApiMiddleware.Service<Environ
   { error: EnvironmentRequestInvalidError },
 ) {}
 
-export class EnvironmentVoiceHttpApi extends HttpApiGroup.make("voice")
+class EnvironmentVoiceHttpApi extends HttpApiGroup.make("voice")
   .add(
     HttpApiEndpoint.get("cloudKeys", "/api/voice/cloud/keys", {
       headers: OptionalBearerHeaders,

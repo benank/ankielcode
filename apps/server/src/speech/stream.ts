@@ -24,7 +24,7 @@ const SPEECH_SOCKET_IDLE_TIMEOUT = "15 seconds";
 const decodeCommand = Schema.decodeUnknownEffect(Schema.fromJsonString(SpeechStreamCommand));
 
 /** One socket owns one stream. Audio is processed and acknowledged in arrival order. */
-export const runSpeechSocket = Effect.fn("speech.runSocket")(function* (
+const runSpeechSocket = Effect.fn("speech.runSocket")(function* (
   socket: Socket.Socket,
   speech: Pick<SpeechService.SpeechService["Service"], "startStream">,
 ) {

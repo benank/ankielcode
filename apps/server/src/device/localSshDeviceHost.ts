@@ -7,7 +7,7 @@ import { runSshCommand } from "@ankielcode/ssh/command";
 import * as Effect from "effect/Effect";
 import { HostnameLookupError } from "@ankielcode/shared/HostProcess";
 
-export const LocalDeviceHostAddresses = Context.Reference<ReadonlySet<string>>(
+const LocalDeviceHostAddresses = Context.Reference<ReadonlySet<string>>(
   "LocalDeviceHostAddresses",
   {
     defaultValue: () =>

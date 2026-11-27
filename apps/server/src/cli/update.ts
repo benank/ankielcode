@@ -57,7 +57,7 @@ export class CliUpdateError extends Schema.TaggedError<CliUpdateError>()("CliUpd
   }
 }
 
-export const resolveNewestVersion = Effect.fn("cli.update.resolve_newest")(function* (
+const resolveNewestVersion = Effect.fn("cli.update.resolve_newest")(function* (
   channel: CliReleaseChannel,
 ) {
   const version = yield* resolveNewestCliRelease(channel).pipe(
@@ -72,7 +72,7 @@ export const resolveNewestVersion = Effect.fn("cli.update.resolve_newest")(funct
  * plain copy of the executable, or a launcher for some other install, is left alone. It is
  * recorded before it moves, so prune never meets a repointed launcher it does not know about.
  */
-export const repointLauncher = Effect.fn("cli.update.repoint_launcher")(function* (input: {
+const repointLauncher = Effect.fn("cli.update.repoint_launcher")(function* (input: {
   readonly launchedAs: string | undefined;
   readonly baseDir: string;
   readonly targetEntryPath: string;
@@ -269,7 +269,7 @@ const belongsToBootService = Effect.fn("cli.update.belongs_to_boot_service")(fun
   return false;
 });
 
-export const runUpdate = Effect.fn("cli.update.run")(function* (input: {
+const runUpdate = Effect.fn("cli.update.run")(function* (input: {
   readonly baseDir: string;
   readonly logsDir: string;
   readonly databasePath: string;
