@@ -213,7 +213,7 @@ struct ScheduledTaskEditor: View {
             .onAppear { if draft.schedule.runAt == nil { draft.schedule.runAt = .now.addingTimeInterval(3600) } }
         case .interval:
           LabeledContent("Minutes between runs") {
-            TextField("15", text: $draft.schedule.intervalMinutes)
+            TextField("Minutes between runs", text: $draft.schedule.intervalMinutes, prompt: Text(verbatim: "15"))
               .keyboardType(.decimalPad)
               .multilineTextAlignment(.trailing)
               .frame(maxWidth: 100)
