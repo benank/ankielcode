@@ -71,6 +71,26 @@ final class PullRequestUITests: HomeUITestCase {
     XCTAssertTrue(header.waitForExistence(timeout: 5), "Close returns to the thread")
   }
 
+  /// The row chips are small but take a 44 pt tap: a tap just above the pull request chip opens
+  /// it, not the row's thread.
+  func testRowChipHitAreaReaches44Points() {
+    launch(["ANKIEL_DEBUG_HOME": "sample", "ANKIEL_DEBUG_PULL_REQUESTS": "fixture"])
+    let chip = app.buttons["thread.row.pullRequest"].firstMatch
+    XCTAssertTrue(chip.waitForExistence(timeout: 15))
+    // Its frame is the hit area: at least 44 pt, centred on the ~18 pt capsule.
+    XCTAssertGreaterThanOrEqual(chip.frame.height, 44)
+    let nearTop = chip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0)).withOffset(CGVector(dx: 0, dy: 4))
+    nearTop.tap()
+    XCTAssertTrue(app.descendants(matching: .any)["pr.description"].waitForExistence(timeout: 10), "a tap well above the capsule opened it")
+    XCTAssertFalse(app.buttons["thread.menu"].exists, "the row's thread did not open")
+    app.buttons["pr.close"].tap()
+
+    // Between the issue chip and the pull request chip, the nearer chip wins, never the row.
+    let issue = app.buttons["thread.row.issue"].firstMatch
+    XCTAssertTrue(issue.waitForExistence(timeout: 5))
+    XCTAssertTrue(issue.isHittable)
+  }
+
   /// A pasted link opens its pull request.
   func testOpenByLink() {
     fixture("link:https://github.com/tidewater/tide-chart/pull/127")

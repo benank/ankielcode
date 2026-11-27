@@ -132,7 +132,7 @@ final class AppModel {
     #endif
     if let pendingThread {
       self.pendingThread = nil
-      navigator.open(pendingThread)
+      open(.thread(pendingThread))
     }
     if let pendingEntry {
       self.pendingEntry = nil
@@ -248,8 +248,7 @@ final class AppModel {
       return
     }
     if let ref = ThreadLink.parse(url) {
-      sheet = nil
-      if registry.isLoaded { navigator.open(ref) } else { pendingThread = ref }
+      if registry.isLoaded { open(.thread(ref)) } else { pendingThread = ref }
       return
     }
     guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),

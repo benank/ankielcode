@@ -107,7 +107,7 @@ private struct ThreadRowChipButton<Label: View>: View {
     Button(action: action) { label }
       .buttonStyle(.borderless)
       // The chip is ~18 pt tall; its hit area reaches 44 pt without growing the row.
-      .contentShape(.rect.inset(by: -13))
+      .contentShape(.rect.inset(by: -14))
       .accessibilityHint(Text(hint))
       .accessibilityIdentifier(identifier)
   }

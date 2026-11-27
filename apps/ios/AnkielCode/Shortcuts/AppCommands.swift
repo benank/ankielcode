@@ -26,7 +26,10 @@ struct AppCommands: Commands {
   @FocusedValue(\.threadKeyCommands) private var thread
 
   /// Home with no sheet over it (thread screens included).
-  private var free: Bool { model.route == .home && model.sheet == nil && model.navigator.sheet == nil }
+  private var free: Bool {
+    model.route == .home && model.sheet == nil && model.navigator.sheet == nil && model.navigator.cover == nil
+      && !model.pullRequests.presented
+  }
 
   var body: some Commands {
     CommandGroup(replacing: .newItem) {
