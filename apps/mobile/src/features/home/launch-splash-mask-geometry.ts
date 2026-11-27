@@ -27,11 +27,8 @@ export const ANKIEL_MARK_APEX_RADIUS = 0.1055;
 const CORNER_CLEARANCE_MARGIN = 1.12;
 const MARK_FADE_END_PROGRESS = 0.28;
 
-export function computeSplashTargetScale(
-  width: number,
-  height: number,
-  iconSize = SPLASH_ICON_SIZE,
-): number {
+export function computeSplashTargetScale(width: number, height: number): number {
+  const iconSize = SPLASH_ICON_SIZE;
   const safeWidth = Math.max(1, width);
   const safeHeight = Math.max(1, height);
   const pivotY = safeHeight / 2 + ANKIEL_MARK_PIVOT_NY * iconSize;
@@ -62,13 +59,9 @@ export function computeMarkFillOpacity(expandProgress: number): number {
   return 1 - expandProgress / MARK_FADE_END_PROGRESS;
 }
 
-export function buildAnkielMarkPath(
-  width: number,
-  height: number,
-  scale: number,
-  iconSize = SPLASH_ICON_SIZE,
-): string {
+export function buildAnkielMarkPath(width: number, height: number, scale: number): string {
   "worklet";
+  const iconSize = SPLASH_ICON_SIZE;
   const cx = width / 2;
   const cy = height / 2;
   const pivotY = cy + ANKIEL_MARK_PIVOT_NY * iconSize;
@@ -92,12 +85,7 @@ export function buildAnkielMarkPath(
   return `M${x0} ${y0}L${x1} ${y1}L${x2} ${y2}L${x3} ${y3}L${x4} ${y4}L${x5} ${y5}L${x6} ${y6}Z`;
 }
 
-export function buildSplashCutoutPath(
-  width: number,
-  height: number,
-  scale: number,
-  iconSize = SPLASH_ICON_SIZE,
-): string {
+export function buildSplashCutoutPath(width: number, height: number, scale: number): string {
   "worklet";
-  return `M0 0H${width}V${height}H0Z ${buildAnkielMarkPath(width, height, scale, iconSize)}`;
+  return `M0 0H${width}V${height}H0Z ${buildAnkielMarkPath(width, height, scale)}`;
 }
