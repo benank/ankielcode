@@ -1,188 +1,185 @@
 import AnkielKit
 import Foundation
 import Observation
+import SwiftUI
 import UIKit
 
-/// Owns the one paired environment, its session and the shell rows the UI shows.
+/// The app's root state: the environment registry, the pairing flow, and which sheet is up.
+/// No saved environments means onboarding; otherwise home.
 @Observable
 final class AppModel {
-  enum Phase: Equatable {
-    case launching
-    case onboarding
-    case connecting
-    case connected
-    case disconnected(String)
+  enum Route: Equatable { case launching, onboarding, home }
+
+  enum Sheet: String, Identifiable {
+    case computers, pairingLink, scanner, help
+    var id: String { rawValue }
   }
 
-  private(set) var phase = Phase.launching
-  private(set) var environment: SavedEnvironment?
-  private(set) var shell = ShellState()
-  private(set) var isPairing = false
-  private(set) var pairingError: String?
+  let registry: EnvironmentRegistry
+  let pairing: PairingFlow
+  /// A sheet over home or onboarding.
+  var sheet: Sheet?
+  /// The Computers sheet's navigation path (environment ids).
+  var computersPath: [String] = []
+  #if DEBUG
+    /// `ANKIEL_DEBUG_ROUTE=onboarding` shows onboarding without forgetting saved environments.
+    private(set) var debugForcesOnboarding = false
+  #endif
 
-  @ObservationIgnored private let connector: EnvironmentConnector
-  @ObservationIgnored private let defaults: UserDefaults
-  @ObservationIgnored private var session: EnvironmentSession?
-  @ObservationIgnored private var sessionTasks: [Task<Void, Never>] = []
-  /// Bumped by every connect, so a slower connect that loses a race closes its own socket.
-  @ObservationIgnored private var connectGeneration = 0
-  private static let environmentKey = "pairedEnvironment"
+  @ObservationIgnored private var hasBeenActive = false
+  /// Kept on onboarding while a pairing started there runs, so its progress is not cut off when
+  /// the new environment lands in the registry.
+  private var onboardingPairing = false
 
-  init(
-    store: any CredentialStore = KeychainCredentialStore(service: "com.ankiel.code.native"),
-    defaults: UserDefaults = .standard
-  ) {
-    connector = EnvironmentConnector(store: store, client: .current)
-    self.defaults = defaults
+  init(store: any CredentialStore = KeychainCredentialStore(service: "com.ankiel.code.native")) {
+    let connector = EnvironmentConnector(store: store, client: .current)
+    registry = EnvironmentRegistry(connector: connector, directory: Self.supportDirectory)
+    pairing = PairingFlow(registry: registry)
   }
 
-  /// Reconnects to the saved environment, or shows onboarding.
-  func restore() async {
-    guard phase == .launching else { return }
-    if let data = defaults.data(forKey: Self.environmentKey),
-      let saved = try? JSONDecoder().decode(SavedEnvironment.self, from: data)
-    {
-      environment = saved
-      await connect()
-    } else {
-      phase = .onboarding
-    }
+  var route: Route {
+    guard registry.isLoaded else { return .launching }
+    #if DEBUG
+      if debugForcesOnboarding { return .onboarding }
+    #endif
+    if registry.environments.isEmpty { return .onboarding }
+    if onboardingPairing, pairing.isActive { return .onboarding }
+    return .home
   }
 
-  /// `ankielcode-native://pair?pairingUrl=<urlencoded>` (and the other channel schemes).
+  func launch() async {
+    await registry.load(adopting: Self.takeLegacyEnvironment())
+    #if DEBUG
+      applyDebugLaunch()
+    #endif
+  }
+
+  // MARK: Links
+
+  /// `ankielcode-native://pair?pairingUrl=…` (any `ankielcode[-channel]` scheme), and the RN dev
+  /// form's `…://connections/new?pairingUrl=…&autoConnect=1`. Links from outside the app always
+  /// ask before pairing; only debug builds honor `autoConnect`.
   func open(_ url: URL) {
-    guard let pairingURL = PairingInput.appLinkPairingURL(url.absoluteString) else { return }
-    Task { await pair(pairingURL) }
-  }
-
-  func pair(_ input: String) async {
-    guard !isPairing else { return }
-    isPairing = true
-    pairingError = nil
-    defer { isPairing = false }
-    do {
-      let target = try PairingInput.resolve(input)
-      let (paired, _) = try await connector.pair(target)
-      if let previous = environment, previous.environmentId != paired.environmentId {
-        connector.forget(previous.environmentId)
-      }
-      environment = paired
-      defaults.set(try JSONEncoder().encode(paired), forKey: Self.environmentKey)
-      Haptics.success()
-      await connect()
-    } catch let error as PairingInputError {
-      pairingError = Self.message(for: ConnectionError.pairingInput(error))
-      Haptics.error()
-    } catch let error as ConnectionError {
-      pairingError = Self.message(for: error)
-      Haptics.error()
-    } catch {
-      pairingError = error.localizedDescription
-      Haptics.error()
-    }
-  }
-
-  func connect() async {
-    guard let environment else {
-      phase = .onboarding
-      return
-    }
-    connectGeneration += 1
-    let generation = connectGeneration
-    closeSession()
-    phase = .connecting
-    do {
-      let session = try await connector.connect(environment)
-      guard generation == connectGeneration else {
-        await session.close()
+    guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+      let scheme = components.scheme?.lowercased(), scheme.wholeMatch(of: /ankielcode(?:-[a-z]+)?/) != nil
+    else { return }
+    let route = [components.host, components.path.trimmingCharacters(in: ["/"])]
+      .compactMap { $0?.isEmpty == false ? $0 : nil }.joined(separator: "/")
+    let pairingURL = components.queryItems?.first { $0.name == "pairingUrl" }?.value
+    guard route == "pair" || route == "connections/new", let pairingURL,
+      let target = try? PairingInput.resolve(pairingURL: pairingURL)
+    else { return }
+    sheet = nil
+    onboardingPairing = self.route == .onboarding
+    #if DEBUG
+      if components.queryItems?.contains(where: { $0.name == "autoConnect" && $0.value == "1" }) == true
+        || ProcessInfo.processInfo.environment["ANKIEL_OPEN_URL"] == url.absoluteString
+      {
+        pairing.run(target)
         return
       }
-      self.session = session
-      shell = ShellState()
-      phase = .connected
-      sessionTasks = [
-        Task { await followShell(session) },
-        Task { await followConfig(session) },
-      ]
-    } catch {
-      guard generation == connectGeneration else { return }
-      phase = .disconnected(Self.message(for: error))
-    }
+    #endif
+    pairing.confirm(target)
   }
 
-  /// Forgets the paired environment and its credential.
-  func forget() {
-    connectGeneration += 1
-    closeSession()
-    if let environment { connector.forget(environment.environmentId) }
-    defaults.removeObject(forKey: Self.environmentKey)
-    environment = nil
-    shell = ShellState()
-    phase = .onboarding
+  // MARK: Pairing entry points
+
+  func pair(_ input: String) {
+    onboardingPairing = route == .onboarding
+    sheet = nil
+    pairing.start(input)
   }
 
-  private func followShell(_ session: EnvironmentSession) async {
-    do {
-      for try await item in try await session.subscribeShell() {
-        shell.apply(item)
+  func pair(host: String, code: String) {
+    onboardingPairing = route == .onboarding
+    sheet = nil
+    pairing.start(host: host, code: code)
+  }
+
+  func finishPairing() {
+    let succeeded = if case .succeeded = pairing.phase { true } else { false }
+    pairing.reset()
+    onboardingPairing = false
+    #if DEBUG
+      if succeeded { debugForcesOnboarding = false }
+    #endif
+  }
+
+  // MARK: Lifecycle
+
+  func scenePhaseChanged(_ phase: ScenePhase) {
+    guard phase == .active else { return }
+    // The first activation is launch, which connects on its own.
+    if hasBeenActive { registry.wake(.foreground) }
+    hasBeenActive = true
+  }
+
+  // MARK: Storage
+
+  static var supportDirectory: URL {
+    URL.applicationSupportDirectory.appending(path: "AnkielCode", directoryHint: .isDirectory)
+  }
+
+  /// Phase 2 kept one environment in UserDefaults; the registry adopts it once.
+  private static func takeLegacyEnvironment() -> SavedEnvironment? {
+    let key = "pairedEnvironment"
+    guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+    UserDefaults.standard.removeObject(forKey: key)
+    return try? JSONDecoder().decode(SavedEnvironment.self, from: data)
+  }
+
+  // MARK: Debug hooks (documented in apps/ios/README.md)
+
+  #if DEBUG
+    private func applyDebugLaunch() {
+      let environment = ProcessInfo.processInfo.environment
+      switch environment["ANKIEL_DEBUG_ROUTE"] {
+      case "onboarding":
+        debugForcesOnboarding = true
+      case "onboarding-help":
+        debugForcesOnboarding = true
+        sheet = .help
+      case "pairing-link":
+        debugForcesOnboarding = true
+        sheet = .pairingLink
+      case "scanner":
+        debugForcesOnboarding = true
+        sheet = .scanner
+      case "computers":
+        sheet = .computers
+      case "computer":
+        sheet = .computers
+        computersPath = registry.environments.first.map { [$0.id] } ?? []
+      case let value? where value.hasPrefix("pairing-"):
+        debugForcesOnboarding = true
+        onboardingPairing = true
+        pairing.debugPreset(String(value.dropFirst("pairing-".count)))
+      default:
+        break
       }
-      end(String(localized: "The server ended the session."))
-    } catch {
-      end(Self.message(for: error))
-    }
-  }
-
-  /// Drains the config stream (later phases read its events). Its end is the session's end.
-  private func followConfig(_ session: EnvironmentSession) async {
-    do {
-      while try await session.nextConfigEvent() != nil {}
-      end(String(localized: "The server ended the session."))
-    } catch {
-      end(Self.message(for: error))
-    }
-  }
-
-  private func end(_ message: String) {
-    guard !Task.isCancelled else { return }
-    closeSession()
-    phase = .disconnected(message)
-  }
-
-  private func closeSession() {
-    for task in sessionTasks { task.cancel() }
-    sessionTasks = []
-    if let session {
-      Task { await session.close() }
-    }
-    session = nil
-  }
-
-  static func message(for error: any Error) -> String {
-    switch error {
-    case ConnectionError.pairingInput(let input):
-      switch input {
-      case .backendURLMissing: String(localized: "Paste a pairing link.")
-      case .pairingURLInvalid, .backendURLInvalid: String(localized: "That doesn't look like a pairing link.")
-      case .tokenMissing, .codeMissing: String(localized: "The pairing link is missing its code.")
+      if let status = environment["ANKIEL_DEBUG_STATUS"] {
+        registry.debugPresent(status: Self.debugStatus(status))
       }
-    case ConnectionError.credentialRejected:
-      String(localized: "The server didn't accept this device. Pair again with a new link.")
-    case ConnectionError.environmentMismatch:
-      String(localized: "A different Ankiel Code server answered at this address.")
-    case ConnectionError.incompatibleProtocol:
-      String(localized: "This server runs a different version of Ankiel Code. Update the server or the app.")
-    case ConnectionError.unreachable(let detail), ConnectionError.socket(let detail):
-      String(localized: "Couldn't reach the server. \(detail)")
-    case ConnectionError.socketRefused(let status):
-      String(localized: "The server refused the connection (HTTP \(status)).")
-    case ConnectionError.rpc(let rpc), let rpc as RpcError:
-      String(localized: "The connection failed: \(String(describing: rpc))")
-    case ConnectionError.configStreamEnded:
-      String(localized: "The server closed the session.")
-    default:
-      error.localizedDescription
+      if let link = environment["ANKIEL_OPEN_URL"].flatMap(URL.init(string:)) {
+        open(link)
+      }
     }
-  }
+
+    /// `ANKIEL_DEBUG_STATUS`: a connection status to show on every computer (display only).
+    private static func debugStatus(_ name: String) -> ConnectionStatus {
+      switch name {
+      case "offline": .offline
+      case "connecting": .connecting
+      case "needs-pairing": .needsPairing(ConnectionFailure(.credentialRejected, httpStatus: 401))
+      case "incompatible": .incompatible(ConnectionFailure(.serverTooOld(serverProtocol: 1)))
+      case "mismatch": .failed(ConnectionFailure(.environmentMismatch(found: "env-other")))
+      default:
+        .reconnecting(
+          attempt: 3, retryAt: .now.addingTimeInterval(12),
+          lastFailure: ConnectionFailure(.unreachable, detail: "Could not connect to the server."))
+      }
+    }
+  #endif
 }
 
 extension ClientIdentity {

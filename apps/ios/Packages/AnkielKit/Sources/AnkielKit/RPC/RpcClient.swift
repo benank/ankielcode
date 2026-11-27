@@ -34,6 +34,7 @@ public actor RpcClient {
   private var routes: [Int: Route] = [:]
   private var joiner = FrameJoiner()
   private var lastFrameAt = ContinuousClock.now
+  private var lastHeartbeatAt = ContinuousClock.now
   private var closeReason: RpcError?
   private var closeWaiters: [CheckedContinuation<RpcError, Never>] = []
   private var tasks: [Task<Void, Never>] = []
@@ -51,6 +52,7 @@ public actor RpcClient {
     guard !started else { return }
     started = true
     lastFrameAt = .now
+    lastHeartbeatAt = .now
     let transport = transport
     let outboxStream = outboxStream
     tasks.append(Task { [weak self] in
@@ -175,7 +177,15 @@ public actor RpcClient {
 
   private func heartbeat() -> Bool {
     guard closeReason == nil else { return false }
-    if ContinuousClock.now - lastFrameAt > options.livenessTimeout {
+    let now = ContinuousClock.now
+    // A tick far later than its interval means the app was suspended. Silence while suspended
+    // says nothing about the socket, and the supervisor's resume probe decides; restart the
+    // window instead of killing the socket on the first tick after resuming.
+    if let interval = options.pingInterval, now - lastHeartbeatAt > interval * 3 {
+      lastFrameAt = now
+    }
+    lastHeartbeatAt = now
+    if now - lastFrameAt > options.livenessTimeout {
       shutdown(.connectionClosed("No frames from the server for \(options.livenessTimeout)."))
       return false
     }

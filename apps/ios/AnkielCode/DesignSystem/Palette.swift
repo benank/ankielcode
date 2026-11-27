@@ -15,15 +15,25 @@ enum Palette {
   static let textTertiary = Color(light: 0x8E929B, dark: 0x6E727A)
 
   static let accent = Color.accentColor
+  /// Text and icons on a filled accent control (`.glassProminent`): the accent is near-black in
+  /// light mode and near-white in dark mode.
+  static let onAccent = Color(light: 0xFFFFFF, dark: 0x0B0C0E)
   static let working = Color(light: 0x2F6FEB, dark: 0x5B8DEF)
   static let attention = Color(light: 0xC77700, dark: 0xF0A33A)
   static let success = Color(light: 0x1F8A4C, dark: 0x45C07A)
   static let danger = Color(light: 0xC8302B, dark: 0xF0625C)
+
+  /// The app icon's tile and glyph (fixed in both appearances, like the icon).
+  static let brandTile = Color(light: 0x161615, dark: 0x1E1E1C)
+  static let brandGlyph = Color(light: 0xF2F2EE, dark: 0xF2F2EE)
+  /// A soft light behind the brand mark on the welcome screen.
+  static let welcomeGlow = Color(light: 0xFFFFFF, dark: 0x23252B)
 }
 
 extension Color {
-  /// A color that resolves per appearance, from `0xRRGGBB` literals.
-  init(light: UInt32, dark: UInt32) {
+  /// A color that resolves per appearance, from `0xRRGGBB` literals. Nonisolated: SwiftUI
+  /// resolves dynamic colors off the main thread (async list rendering).
+  nonisolated init(light: UInt32, dark: UInt32) {
     self.init(
       uiColor: UIColor { traits in
         UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
@@ -32,7 +42,7 @@ extension Color {
 }
 
 extension UIColor {
-  convenience init(rgb: UInt32) {
+  nonisolated convenience init(rgb: UInt32) {
     self.init(
       red: CGFloat((rgb >> 16) & 0xFF) / 255,
       green: CGFloat((rgb >> 8) & 0xFF) / 255,

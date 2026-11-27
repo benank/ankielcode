@@ -6,12 +6,15 @@ public enum ConnectionError: Error, Sendable, Hashable {
   case unreachable(String)
   case environmentMismatch(expected: String, found: String)
   case incompatibleProtocol(serverVersion: Int)
-  /// The credential was refused after one renewal: pair again.
+  /// The credential (or a pairing code) was refused after one renewal: pair again.
   case credentialRejected
+  /// The server refused a DPoP proof's `iat`: the device clock is off by more than 5 minutes.
+  case clockSkew
   case socketRefused(status: Int)
   case socket(String)
   case rpc(RpcError)
   case configStreamEnded
+  case timedOut
 }
 
 /// Pairs with an environment and opens authenticated RPC sockets to it.
@@ -33,57 +36,84 @@ public struct EnvironmentConnector: Sendable {
 
   // MARK: Pairing
 
-  /// Reads the descriptor (before spending the one-time code), exchanges the code, and saves the
-  /// credential. DPoP when the server can renew tokens; bearer otherwise.
-  public func pair(_ target: PairingTarget, expectedEnvironmentId: String? = nil) async throws(ConnectionError)
-    -> (SavedEnvironment, AccessCredential)
-  {
-    let descriptor = try await verifiedDescriptor(target.endpoint, environmentId: expectedEnvironmentId)
+  /// Step one of pairing: who answers at the target, checked before the one-time code is spent.
+  public func describe(
+    _ target: PairingTarget, expectedEnvironmentId: String? = nil
+  ) async throws(ConnectionError) -> EnvironmentDescriptor {
+    try await verifiedDescriptor(target.endpoint, environmentId: expectedEnvironmentId)
+  }
+
+  /// Step two: spends the code and saves the credential. DPoP when the server can renew tokens,
+  /// bearer otherwise. A refused code (expired or already used) is `credentialRejected`.
+  public func exchange(
+    _ target: PairingTarget, descriptor: EnvironmentDescriptor
+  ) async throws(ConnectionError) -> SavedEnvironment {
     let key = descriptor.capability("accessTokenRenewal") ? try dpopKey() : nil
     let result: AccessTokenResult
     do {
       result = try await http.exchangePairingCode(target.credential, at: target.endpoint, key: key, client: client)
-    } catch let error as EnvironmentHTTPError where error.isAuthInvalid {
-      throw .credentialRejected
+    } catch let error as EnvironmentHTTPError {
+      throw Self.mapHTTP(error)
     } catch {
       throw .unreachable(Self.describe(error))
     }
-    let credential = AccessCredential(result)
     let environment = SavedEnvironment(
       environmentId: descriptor.environmentId,
       label: result.environmentLabel ?? descriptor.label,
       endpoint: target.endpoint,
       serverVersion: descriptor.serverVersion)
-    try save(credential, for: environment.environmentId)
-    return (environment, credential)
+    try save(AccessCredential(result), for: environment.environmentId)
+    return environment
+  }
+
+  /// Both pairing steps.
+  public func pair(_ target: PairingTarget, expectedEnvironmentId: String? = nil) async throws(ConnectionError)
+    -> SavedEnvironment
+  {
+    let descriptor = try await describe(target, expectedEnvironmentId: expectedEnvironmentId)
+    return try await exchange(target, descriptor: descriptor)
   }
 
   // MARK: Connecting
 
-  /// Verifies the endpoint, renews the token if due, mints a ticket, opens the socket and waits
-  /// for the first server config snapshot (the readiness signal).
-  public func connect(_ environment: SavedEnvironment) async throws(ConnectionError) -> EnvironmentSession {
-    guard var credential = try loadCredential(environment.environmentId) else { throw .credentialRejected }
-    let endpoint = environment.endpoint
-    _ = try await verifiedDescriptor(endpoint, environmentId: environment.environmentId)
+  /// One connect through one route: verifies the endpoint answers as `environmentId` before any
+  /// credential goes out, renews the token if due, mints a ticket, opens the socket and waits for
+  /// the first server config snapshot (the readiness signal). A 401 at the ticket or at the
+  /// upgrade renews once and retries before the credential counts as rejected.
+  public func connect(
+    environmentId: String, endpoint: EnvironmentEndpoint, vault: CredentialVault
+  ) async throws(ConnectionError) -> EnvironmentSession {
+    _ = try await verifiedDescriptor(endpoint, environmentId: environmentId)
+    var credential = try await vault.current(at: endpoint)
     let key: DPoPKey? = if case .dpop = credential { try dpopKey() } else { nil }
 
-    if credential.needsRenewal(), let key {
-      credential = try await renew(credential, environment: environment, key: key)
+    var renewed = false
+    while true {
+      do {
+        return try await open(environmentId: environmentId, endpoint: endpoint, credential: credential, key: key)
+      } catch .credentialRejected where !renewed && key != nil {
+        // A clock jump or a restored server: renew once and retry.
+        renewed = true
+        credential = try await vault.renew(at: endpoint, replacing: credential.token)
+      }
     }
+  }
 
+  /// Phase-2 entry point kept for the probe CLI: one saved environment, its paired route.
+  public func connect(_ environment: SavedEnvironment) async throws(ConnectionError) -> EnvironmentSession {
+    try await connect(
+      environmentId: environment.environmentId, endpoint: environment.endpoint,
+      vault: CredentialVault(environmentId: environment.environmentId, connector: self))
+  }
+
+  private func open(
+    environmentId: String, endpoint: EnvironmentEndpoint, credential: AccessCredential, key: DPoPKey?
+  ) async throws(ConnectionError) -> EnvironmentSession {
     let ticket: WebSocketTicket
     do {
       ticket = try await http.webSocketTicket(at: endpoint, credential: credential, key: key)
-    } catch let error as EnvironmentHTTPError where error.isAuthInvalid {
-      // A clock jump or a restored server: renew once and retry.
-      guard let key, case .dpop = credential else { throw .credentialRejected }
-      credential = try await renew(credential, environment: environment, key: key)
-      do {
-        ticket = try await http.webSocketTicket(at: endpoint, credential: credential, key: key)
-      } catch {
-        throw (error as? EnvironmentHTTPError)?.isAuthInvalid == true ? .credentialRejected : .unreachable(Self.describe(error))
-      }
+    } catch let error as EnvironmentHTTPError {
+      throw Self.mapHTTP(error)
     } catch {
       throw .unreachable(Self.describe(error))
     }
@@ -99,6 +129,8 @@ public struct EnvironmentConnector: Sendable {
       transport = try await WebSocketTransport.connect(to: url)
     } catch WebSocketOpenError.httpStatus(let status) {
       throw status == 401 ? .credentialRejected : .socketRefused(status: status)
+    } catch WebSocketOpenError.timedOut {
+      throw .timedOut
     } catch {
       throw .socket(Self.describe(error))
     }
@@ -113,12 +145,12 @@ public struct EnvironmentConnector: Sendable {
         await rpc.close()
         throw ConnectionError.configStreamEnded
       }
-      guard config.environment.environmentId == environment.environmentId else {
+      guard config.environment.environmentId == environmentId else {
         await rpc.close()
-        throw ConnectionError.environmentMismatch(
-          expected: environment.environmentId, found: config.environment.environmentId)
+        throw ConnectionError.environmentMismatch(expected: environmentId, found: config.environment.environmentId)
       }
-      return EnvironmentSession(environment: environment, rpc: rpc, initialConfig: config, configFeed: feed)
+      return EnvironmentSession(
+        environmentId: environmentId, endpoint: endpoint, rpc: rpc, initialConfig: config, configFeed: feed)
     } catch let error as ConnectionError {
       throw error
     } catch let error as RpcError {
@@ -163,19 +195,53 @@ public struct EnvironmentConnector: Sendable {
 
   /// Renews a DPoP token and saves the result. Rejection means the session is gone.
   public func renew(
-    _ credential: AccessCredential, environment: SavedEnvironment, key: DPoPKey
+    _ credential: AccessCredential, environmentId: String, endpoint: EnvironmentEndpoint
   ) async throws(ConnectionError) -> AccessCredential {
+    let key = try dpopKey()
     do {
-      let result = try await http.renew(credential.token, at: environment.endpoint, key: key)
+      let result = try await http.renew(credential.token, at: endpoint, key: key)
       let renewed = AccessCredential(result)
-      try save(renewed, for: environment.environmentId)
+      try save(renewed, for: environmentId)
       return renewed
-    } catch let error as EnvironmentHTTPError where error.isAuthInvalid {
-      throw .credentialRejected
+    } catch let error as EnvironmentHTTPError {
+      throw Self.mapHTTP(error)
     } catch let error as ConnectionError {
       throw error
     } catch {
       throw .unreachable(Self.describe(error))
+    }
+  }
+
+  // MARK: Shell over HTTP
+
+  /// `GET /api/orchestration/shell` with the subscription's omission flags (§5.5).
+  public func shellSnapshot(
+    _ subscription: ShellSubscription, endpoint: EnvironmentEndpoint, vault: CredentialVault
+  ) async throws(ConnectionError) -> ShellHTTPSnapshot {
+    var components = URLComponents(
+      url: endpoint.httpURL("/api/orchestration/shell"), resolvingAgainstBaseURL: false)!
+    var items: [URLQueryItem] = []
+    if subscription.omitIdleSubagents == true { items.append(URLQueryItem(name: "omitIdleSubagents", value: "1")) }
+    if subscription.omitOlderSettled == true { items.append(URLQueryItem(name: "omitOlderSettled", value: "1")) }
+    components.queryItems = items.isEmpty ? nil : items
+    var request = URLRequest(url: components.url!)
+    request.timeoutInterval = 20
+    var credential = try await vault.current(at: endpoint)
+    var renewed = false
+    while true {
+      do {
+        let key: DPoPKey? = if case .dpop = credential { try dpopKey() } else { nil }
+        return try await http.authorizedSend(request, credential: credential, key: key, as: ShellHTTPSnapshot.self)
+      } catch let error as EnvironmentHTTPError {
+        let mapped = Self.mapHTTP(error)
+        guard mapped == .credentialRejected, !renewed else { throw mapped }
+        renewed = true
+        credential = try await vault.renew(at: endpoint, replacing: credential.token)
+      } catch let error as ConnectionError {
+        throw error
+      } catch {
+        throw .unreachable(Self.describe(error))
+      }
     }
   }
 
@@ -203,6 +269,20 @@ public struct EnvironmentConnector: Sendable {
 
   private func dpopKey() throws(ConnectionError) -> DPoPKey {
     do { return try store.dpopKey() } catch { throw .unreachable("Could not load the DPoP key: \(error)") }
+  }
+
+  /// 401 is a rejected credential unless the proof's timestamp was the problem.
+  static func mapHTTP(_ error: EnvironmentHTTPError) -> ConnectionError {
+    switch error {
+    case .status(401, let body):
+      body?["dpopFailureReason"]?.stringValue == "time_window" ? .clockSkew : .credentialRejected
+    case .environmentMismatch(let expected, let found):
+      .environmentMismatch(expected: expected, found: found)
+    case .incompatibleProtocol(let version):
+      .incompatibleProtocol(serverVersion: version)
+    default:
+      .unreachable(describe(error))
+    }
   }
 
   private func verifiedDescriptor(
@@ -233,7 +313,8 @@ public struct EnvironmentConnector: Sendable {
 
 /// An open, authenticated socket after session start.
 public struct EnvironmentSession: Sendable {
-  public let environment: SavedEnvironment
+  public let environmentId: String
+  public let endpoint: EnvironmentEndpoint
   public let rpc: RpcClient
   public let initialConfig: ServerConfig
   /// The rest of the config stream (the first snapshot was consumed). It ending means the session

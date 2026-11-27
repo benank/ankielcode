@@ -163,4 +163,30 @@ public struct ShellState: Sendable, Hashable {
   public mutating func apply(_ item: ShellStreamItem) {
     apply(CollectionOfOne(item))
   }
+
+  /// A new subscription starts: held rows stay visible but are no longer live until it catches up.
+  public mutating func beginSubscription(awaitingCompletion: Bool = true) {
+    self.awaitingCompletion = awaitingCompletion
+    needsSnapshotReload = false
+    status = snapshot == nil ? .empty : (awaitingCompletion ? .synchronizing : .live)
+  }
+
+  /// The transport dropped: keep the rows, stop claiming they are live.
+  public mutating func markStale() {
+    awaitingCompletion = true
+    if snapshot != nil { status = .synchronizing }
+  }
+
+  /// Applies an authoritative HTTP snapshot (§5.5). Ignored when it is older than the held rows,
+  /// so a slow download never overwrites newer live data. Rows without their deferred pull
+  /// request links keep the ones they had. Returns whether it was applied.
+  @discardableResult
+  public mutating func replace(with next: ShellSnapshot) -> Bool {
+    needsSnapshotReload = false
+    if let held = snapshot, next.snapshotSequence < held.snapshotSequence { return false }
+    snapshot = ShellReducer.merge(
+      snapshot, with: ShellReducer.reuseDeferredLinks(snapshot, in: next), resolvedRepositoryIdentityRoots: nil)
+    status = awaitingCompletion ? .synchronizing : .live
+    return true
+  }
 }

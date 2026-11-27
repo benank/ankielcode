@@ -31,7 +31,7 @@ func run() async throws {
   let pairURL = argument("--pair-url")
   let statePath = argument("--state")
   guard pairURL != nil || statePath != nil else {
-    throw ProbeFailure(description: "usage: ankiel-probe [--pair-url <url>] [--state <file>] [--force-renew] [--trace]")
+    throw ProbeFailure(description: "usage: ankiel-probe [--pair-url <url>] [--state <file>] [--force-renew] [--trace] [--supervise | --stale-resume]")
   }
   let store: any CredentialStore =
     if let statePath { try FileCredentialStore(url: URL(filePath: statePath)) } else { InMemoryCredentialStore() }
@@ -43,10 +43,10 @@ func run() async throws {
   let environment: SavedEnvironment
   if let pairURL {
     let target = try PairingInput.resolve(pairURL)
-    let (paired, credential) = try await connector.pair(target)
+    let paired = try await connector.pair(target)
     environment = paired
     try store.set(paired, for: "environment")
-    let kind = if case .dpop = credential { "DPoP" } else { "bearer" }
+    let kind = if case .dpop? = try connector.loadCredential(paired.environmentId) { "DPoP" } else { "bearer" }
     print("paired:            \(paired.label) via \(paired.endpoint.httpBaseURL.absoluteString) (\(kind))")
   } else if let saved = try store.value(SavedEnvironment.self, for: "environment") {
     environment = saved
@@ -58,8 +58,18 @@ func run() async throws {
   if CommandLine.arguments.contains("--force-renew"),
     let credential = try connector.loadCredential(environment.environmentId), case .dpop = credential
   {
-    let renewed = try await connector.renew(credential, environment: environment, key: try store.dpopKey())
+    let renewed = try await connector.renew(
+      credential, environmentId: environment.environmentId, endpoint: environment.endpoint)
     if case .dpop(_, let expiresAt) = renewed { print("renewed:           expires \(expiresAt.formatted(.iso8601))") }
+  }
+
+  if CommandLine.arguments.contains("--supervise") {
+    try await supervise(environment, connector: connector)
+    return
+  }
+  if CommandLine.arguments.contains("--stale-resume") {
+    try await staleResume(environment, connector: connector)
+    return
   }
 
   let session = try await connector.connect(environment)

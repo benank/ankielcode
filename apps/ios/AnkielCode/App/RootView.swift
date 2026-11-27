@@ -7,17 +7,50 @@ struct RootView: View {
   var body: some View {
     ZStack {
       CanvasBackground()
-      switch model.phase {
+      switch model.route {
       case .launching:
         Color.clear
       case .onboarding:
-        PairingView()
+        WelcomeView()
           .transition(.opacity)
-      case .connecting, .connected, .disconnected:
+      case .home:
         ThreadListView()
           .transition(.opacity)
       }
     }
-    .animation(Motion.resolve(Motion.transition, reduceMotion: reduceMotion), value: model.phase == .onboarding)
+    .animation(Motion.resolve(Motion.transition, reduceMotion: reduceMotion), value: model.route)
+    .sheet(item: sheet) { sheet in
+      switch sheet {
+      case .computers: ComputersView()
+      case .pairingLink: PairingLinkView()
+      case .help: PairingHelpView()
+      case .scanner: EmptyView()
+      }
+    }
+    .fullScreenCover(isPresented: scanner) {
+      QRScannerView()
+    }
+    .sheet(isPresented: pairingPresented) {
+      PairingProgressView()
+    }
+  }
+
+  private var sheet: Binding<AppModel.Sheet?> {
+    Binding(
+      get: { model.sheet == .scanner ? nil : model.sheet },
+      set: { next in if next != nil || model.sheet != .scanner { model.sheet = next } })
+  }
+
+  private var scanner: Binding<Bool> {
+    Binding(
+      get: { model.sheet == .scanner },
+      set: { if !$0, model.sheet == .scanner { model.sheet = nil } })
+  }
+
+  /// The pairing sheet follows the flow; dismissing it ends the flow.
+  private var pairingPresented: Binding<Bool> {
+    Binding(
+      get: { model.pairing.isActive && model.sheet == nil },
+      set: { presented in if !presented { model.finishPairing() } })
   }
 }

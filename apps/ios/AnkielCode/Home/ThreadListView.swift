@@ -1,22 +1,52 @@
 import AnkielKit
 import SwiftUI
 
-/// Minimal home: the shell's thread titles, newest first. The real home comes in a later phase.
+/// Minimal home: every computer's threads, newest first. Phase 4 rebuilds home.
 struct ThreadListView: View {
   @Environment(AppModel.self) private var model
 
-  private var threads: [ThreadShell] {
-    model.shell.threads.filter(\.isListed).sorted { $0.updatedAt > $1.updatedAt }
+  private struct Row: Identifiable {
+    let id: String
+    let thread: ThreadShell
+    let projectTitle: String?
+    let environmentLabel: String?
   }
 
-  private var projectTitles: [String: String] {
-    Dictionary(model.shell.projects.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first })
+  private var rows: [Row] {
+    let environments = model.registry.environments
+    let showsEnvironment = environments.count > 1
+    return environments.flatMap { environment in
+      let titles = Dictionary(
+        environment.shell.projects.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first })
+      return environment.shell.threads.filter(\.isListed).map { thread in
+        Row(
+          id: "\(environment.id)/\(thread.id)", thread: thread, projectTitle: titles[thread.projectId],
+          environmentLabel: showsEnvironment ? environment.label : nil)
+      }
+    }
+    .sorted { $0.thread.updatedAt > $1.thread.updatedAt }
+  }
+
+  private var isLoading: Bool {
+    model.registry.environments.contains { $0.shell.snapshot == nil && Self.isTrying($0.status) }
+  }
+
+  private var allUnavailable: Bool {
+    model.registry.environments.allSatisfy { $0.shell.snapshot == nil && !Self.isTrying($0.status) }
+  }
+
+  private static func isTrying(_ status: ConnectionStatus) -> Bool {
+    switch status {
+    case .connecting, .connected, .reconnecting: true
+    default: false
+    }
   }
 
   var body: some View {
+    let rows = rows
     NavigationStack {
-      List(threads) { thread in
-        ThreadRow(thread: thread, projectTitle: projectTitles[thread.projectId])
+      List(rows) { row in
+        ThreadRow(thread: row.thread, projectTitle: row.projectTitle, environmentLabel: row.environmentLabel)
           .listRowBackground(Palette.surface)
       }
       .listStyle(.insetGrouped)
@@ -24,32 +54,36 @@ struct ThreadListView: View {
       .background(Palette.canvas)
       .scrollEdgeEffectStyle(.soft, for: .top)
       .overlay {
-        if model.phase == .connected, model.shell.status != .empty, threads.isEmpty {
-          ContentUnavailableView("No threads yet", systemImage: "bubble.left.and.text.bubble.right")
+        if rows.isEmpty {
+          if isLoading {
+            ProgressView("Loading threads")
+          } else if allUnavailable {
+            ContentUnavailableView {
+              Label("Environment unavailable", systemImage: "bolt.horizontal.circle")
+            } description: {
+              Text("The saved environment is offline. Check the URL or start the environment, then retry.")
+            } actions: {
+              Button("Computers") { model.sheet = .computers }
+                .buttonStyle(.glass)
+            }
+          } else {
+            ContentUnavailableView("No threads yet", systemImage: "bubble.left.and.text.bubble.right")
+          }
         }
       }
-      .navigationTitle(model.environment?.label ?? String(localized: "Threads"))
+      .navigationTitle("Threads")
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
-          Menu {
-            Button("Reconnect", systemImage: "arrow.clockwise") {
-              Task { await model.connect() }
-            }
-            Button("Forget This Server", systemImage: "xmark.circle", role: .destructive) {
-              model.forget()
-            }
-          } label: {
-            Image(systemName: "ellipsis")
-          }
-          .accessibilityLabel("Connection")
+          Button("Computers", systemImage: "desktopcomputer") { model.sheet = .computers }
         }
       }
       .safeAreaInset(edge: .bottom) {
         GlassEffectContainer {
-          ConnectionStatusPill()
+          ConnectionIndicator()
         }
         .padding(.bottom, Spacing.sm)
       }
+      .refreshable { model.registry.wake(.retry) }
     }
   }
 }
@@ -57,6 +91,12 @@ struct ThreadListView: View {
 private struct ThreadRow: View {
   let thread: ThreadShell
   let projectTitle: String?
+  let environmentLabel: String?
+
+  private var subtitle: String? {
+    let parts = [projectTitle, environmentLabel].compactMap(\.self)
+    return parts.isEmpty ? nil : parts.joined(separator: " · ")
+  }
 
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
@@ -66,8 +106,8 @@ private struct ThreadRow: View {
           .font(Typography.body)
           .foregroundStyle(Palette.textPrimary)
           .lineLimit(2)
-        if let projectTitle {
-          Text(projectTitle)
+        if let subtitle {
+          Text(subtitle)
             .font(Typography.footnote)
             .foregroundStyle(Palette.textSecondary)
             .lineLimit(1)
@@ -94,36 +134,5 @@ private struct StatusDot: View {
       .fill(color)
       .frame(width: 8, height: 8)
       .accessibilityHidden(true)
-  }
-}
-
-/// Floating glass capsule for anything but a live connection.
-private struct ConnectionStatusPill: View {
-  @Environment(AppModel.self) private var model
-  @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-  var body: some View {
-    Group {
-      switch model.phase {
-      case .connecting:
-        StatusPill(text: "Connecting…", systemImage: "antenna.radiowaves.left.and.right")
-      case .disconnected(let message):
-        Button {
-          Task { await model.connect() }
-        } label: {
-          Label("Offline · Tap to retry", systemImage: "exclamationmark.triangle.fill")
-            .font(Typography.footnote.weight(.medium))
-        }
-        .buttonStyle(.glass)
-        .tint(Palette.attention)
-        .accessibilityHint(message)
-      case .connected where model.shell.status != .live:
-        StatusPill(text: "Syncing…", systemImage: "arrow.triangle.2.circlepath")
-      default:
-        EmptyView()
-      }
-    }
-    .transition(.opacity.combined(with: .scale(scale: 0.96)))
-    .animation(Motion.resolve(Motion.gentle, reduceMotion: reduceMotion), value: model.phase)
   }
 }
