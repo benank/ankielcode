@@ -108,6 +108,8 @@ public struct ThreadEvent: Sendable {
     case runtimeRequest(RuntimeRequest)
     case message(ConversationMessage)
     case turnItem(TurnItem)
+    case checkpoint(Checkpoint)
+    case checkpointScope(CheckpointScope)
     /// A known event that changes nothing this client holds.
     case ignored
     case unknown
@@ -135,8 +137,8 @@ public struct ThreadEvent: Sendable {
   static let ignoredEvents: Set<String> = [
     "thread.visit-recorded", "thread.pull-request-link-updated", "run.background-work-cancelled",
     "provider-session.attached", "provider-session.updated", "provider-session.detached",
-    "provider-thread.updated", "plan.updated", "checkpoint-scope.created", "checkpoint.captured",
-    "checkpoint.rollback-requested", "context-handoff.updated", "context-transfer.created",
+    "provider-thread.updated", "plan.updated", "checkpoint.rollback-requested", "context-handoff.updated",
+    "context-transfer.created",
     "context-transfer.updated",
   ]
 }
@@ -170,6 +172,8 @@ extension ThreadEvent: Decodable {
     case "runtime-request.updated": self.payload = .runtimeRequest(try payload(RuntimeRequest.self))
     case "message.updated": self.payload = .message(try payload(ConversationMessage.self))
     case "turn-item.updated": self.payload = .turnItem(try payload(TurnItem.self))
+    case "checkpoint.captured": self.payload = .checkpoint(try payload(Checkpoint.self))
+    case "checkpoint-scope.created": self.payload = .checkpointScope(try payload(CheckpointScope.self))
     case _ where Self.ignoredEvents.contains(type): self.payload = .ignored
     default: self.payload = .unknown
     }

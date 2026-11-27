@@ -42,6 +42,8 @@ public struct ThreadDetailState: Sendable, Equatable {
   public var outcomes: [String: RequestOutcome] = [:]
   /// Bumped on every publish that changed the timeline.
   public var revision = 0
+  /// The turns with changes to review, newest first.
+  public var turnChanges: [TurnChange] = []
 
   public init() {}
 
@@ -234,6 +236,7 @@ public actor ThreadDetailSync {
       state.pending = PendingRequestDerivation.derive(projection)
       state.outcomes = PendingRequestDerivation.outcomes(projection)
       state.threadSelection = projection.thread.modelSelection
+      state.turnChanges = TurnChange.derive(projection)
       var ids = Set(projection.messages.map(\.id))
       for row in projection.visibleTurnItems {
         if case .userMessage(let message) = row.item.body { ids.insert(message.messageId) }

@@ -18,6 +18,10 @@ public protocol LiveSession: AnyObject, Sendable, ThreadItemSource {
   func call<Response: Decodable & Sendable>(
     _ tag: String, payload: some Encodable & Sendable, as: Response.Type
   ) async throws -> Response
+  /// A streaming RPC on this session (git actions).
+  func stream<Item: Decodable & Sendable>(
+    _ tag: String, payload: some Encodable & Sendable, of: Item.Type
+  ) async throws -> RpcStream<Item>
   /// `GET /api/auth/session`: the scopes this device holds (`permissions`, else legacy `scopes`).
   /// nil when the server does not say.
   func grantedScopes() async throws -> Set<String>?
@@ -28,6 +32,12 @@ public protocol LiveSession: AnyObject, Sendable, ThreadItemSource {
 
 extension LiveSession {
   public var configUpdates: AsyncStream<ServerConfigEvent> { AsyncStream { $0.finish() } }
+
+  public func stream<Item: Decodable & Sendable>(
+    _ tag: String, payload: some Encodable & Sendable, of _: Item.Type
+  ) async throws -> RpcStream<Item> {
+    throw RpcError.connectionClosed("This session cannot stream.")
+  }
 }
 
 /// What the supervisor needs from the outside world for one environment. The live implementation

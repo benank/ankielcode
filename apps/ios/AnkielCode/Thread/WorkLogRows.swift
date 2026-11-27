@@ -71,6 +71,7 @@ struct WorkRowView: View, Equatable {
 
   @ScaledMetric(relativeTo: .footnote) private var indent: CGFloat = 28
   @Environment(\.filePresenter) private var files
+  @Environment(\.reviewPresenter) private var review
 
   private var activity: WorkActivity { row.activity }
 
@@ -123,6 +124,10 @@ struct WorkRowView: View, Equatable {
             // A tool's images (screenshots, image reads) are only in the full item.
             if activity.type == "dynamic_tool", load == nil { loadDetail() }
           }
+      }
+      if expanded, !activity.changedFiles.isEmpty, let review {
+        ReviewChangesLink(review: review, runId: activity.runId, files: activity.changedFiles)
+          .padding(.leading, indent)
       }
     }
     .padding(.leading, row.inGroup ? indent : 0)

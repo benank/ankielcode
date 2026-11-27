@@ -1,0 +1,8 @@
+{
+  "schema" : "gitAction",
+  "value" : {
+    "action" : "push",
+    "actionId" : "act-2",
+    "cwd" : "/Users/dev/tide-chart"
+  }
+}

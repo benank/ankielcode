@@ -53,6 +53,12 @@ public enum ThreadReducer {
     case .message(let message):
       projection.updatedAt = event.occurredAt
       upsert(message, into: &projection.messages)
+    case .checkpoint(let checkpoint):
+      projection.updatedAt = event.occurredAt
+      upsert(checkpoint, into: &projection.checkpoints)
+    case .checkpointScope(let scope):
+      projection.updatedAt = event.occurredAt
+      upsert(scope, into: &projection.checkpointScopes)
     case .turnItem(let incoming):
       return applyTurnItem(incoming, occurredAt: event.occurredAt, to: &projection, partial: partial)
     case .ignored:

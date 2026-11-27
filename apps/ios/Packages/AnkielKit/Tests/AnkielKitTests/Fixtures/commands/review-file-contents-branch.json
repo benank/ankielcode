@@ -1,0 +1,12 @@
+{
+  "schema" : "diffFileContents",
+  "value" : {
+    "baseRef" : "origin/main",
+    "changeType" : "rename-changed",
+    "cwd" : "/Users/dev/tide-chart",
+    "headRef" : "feature/tides",
+    "newPath" : "b.swift",
+    "oldPath" : "a.swift",
+    "sourceKind" : "branch-range"
+  }
+}

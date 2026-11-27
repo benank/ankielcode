@@ -1,0 +1,14 @@
+{
+  "schema" : "diffPreview",
+  "value" : {
+    "baseRef" : "origin/main",
+    "cwd" : "/Users/dev/tide-chart",
+    "file" : {
+      "changeType" : "change",
+      "path" : "Sources/Tide.swift",
+      "previousPath" : null,
+      "sourceKind" : "branch-range"
+    },
+    "mergeBase" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}

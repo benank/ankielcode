@@ -14,6 +14,14 @@ const S = await import(pathToFileURL(join(process.cwd(), "node_modules/effect/di
 );
 
 const schemas = {
+  turnDiff: m.OrchestrationGetTurnDiffInput,
+  diffPreview: m.ReviewDiffPreviewInput,
+  diffFileContents: m.ReviewDiffFileContentsInput,
+  vcsRefreshStatus: S.Struct({ ...m.VcsStatusInput.fields, localOnly: S.optional(S.Boolean) }),
+  vcsPull: m.VcsPullInput,
+  vcsListRefs: m.VcsListRefsInput,
+  vcsCreateRef: m.VcsCreateRefInput,
+  gitAction: m.GitRunStackedActionInput,
   command: m.OrchestrationV2Command,
   launch: m.OrchestrationV2ThreadLaunchInput,
   uploadUrl: m.AttachmentCreateUploadUrlInput,
@@ -26,6 +34,7 @@ const schemas = {
   readFile: m.ProjectReadFileInput,
   assetUrl: m.AssetCreateUrlInput,
   metadata: m.FilesystemGetMetadataInput,
+  pushRegister: m.PushRegisterInput,
 };
 
 let failures = 0;

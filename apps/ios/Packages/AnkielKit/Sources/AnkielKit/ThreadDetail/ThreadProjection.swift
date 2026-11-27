@@ -1,8 +1,8 @@
 import Foundation
 
 /// `OrchestrationV2ThreadProjection` (spec §6.3), keeping the records the thread screen reads.
-/// Provider sessions and threads, plans, checkpoints and context records are not rendered and
-/// not held; their events are accepted and ignored.
+/// Provider sessions and threads, plans and context records are not rendered and not held; their
+/// events are accepted and ignored. Checkpoints are held for review (turn diffs).
 public struct ThreadProjection: Sendable, Hashable {
   public var thread: AppThread
   public var runs: [Run]
@@ -14,6 +14,8 @@ public struct ThreadProjection: Sendable, Hashable {
   public var messages: [ConversationMessage]
   public var turnItems: [TurnItem]
   public var visibleTurnItems: [ProjectedTurnItem]
+  public var checkpoints: [Checkpoint] = []
+  public var checkpointScopes: [CheckpointScope] = []
   public var updatedAt: WireTimestamp
   /// The last revision stamped on an item (local bookkeeping, not on the wire).
   public internal(set) var revisionClock = 0
@@ -41,7 +43,7 @@ public struct ThreadProjection: Sendable, Hashable {
 extension ThreadProjection: Decodable {
   enum CodingKeys: String, CodingKey {
     case thread, runs, attempts, nodes, subagents, providerTurns, runtimeRequests, messages
-    case turnItems, visibleTurnItems, updatedAt
+    case turnItems, visibleTurnItems, updatedAt, checkpoints, checkpointScopes
   }
 
   public init(from decoder: any Decoder) throws {
@@ -59,6 +61,8 @@ extension ThreadProjection: Decodable {
     messages = list(.messages)
     turnItems = list(.turnItems)
     visibleTurnItems = list(.visibleTurnItems)
+    checkpoints = list(.checkpoints)
+    checkpointScopes = list(.checkpointScopes)
     updatedAt = try container.decode(WireTimestamp.self, forKey: .updatedAt)
   }
 }
@@ -268,4 +272,80 @@ public struct ConversationMessage: Sendable, Hashable, Decodable, Identifiable {
       c.loose(JSONValue.self, key).map { !$0.isNull } ?? false
     }
   }
+}
+
+/// `OrchestrationV2Checkpoint`: the files one turn (or subagent, or tool) changed, for review.
+public struct Checkpoint: Sendable, Hashable, Decodable, Identifiable {
+  public var id: String
+  public var scopeId: String
+  public var runId: String?
+  /// The app turn it closes (1-based), nil for checkpoints inside a turn.
+  public var appRunOrdinal: Int?
+  public var ordinalWithinScope: Int
+  /// `ready`, `missing`, `error` or `stale`.
+  public var status: String
+  public var files: [File]
+  public var filesTotal: Totals?
+  public var capturedAt: WireTimestamp?
+
+  public struct File: Sendable, Hashable, Decodable {
+    public var path: String
+    public var kind: String
+    public var additions: Int
+    public var deletions: Int
+
+    public init(path: String, kind: String = "modified", additions: Int, deletions: Int) {
+      self.path = path
+      self.kind = kind
+      self.additions = additions
+      self.deletions = deletions
+    }
+  }
+
+  public struct Totals: Sendable, Hashable, Decodable {
+    public var count: Int
+    public var additions: Int
+    public var deletions: Int
+
+    public init(count: Int, additions: Int, deletions: Int) {
+      self.count = count
+      self.additions = additions
+      self.deletions = deletions
+    }
+  }
+
+  public init(id: String, scopeId: String = "scope", runId: String?, appRunOrdinal: Int?, status: String = "ready", files: [File]) {
+    self.id = id
+    self.scopeId = scopeId
+    self.runId = runId
+    self.appRunOrdinal = appRunOrdinal
+    ordinalWithinScope = appRunOrdinal ?? 0
+    self.status = status
+    self.files = files
+  }
+
+  enum CodingKeys: String, CodingKey { case id, scopeId, runId, appRunOrdinal, ordinalWithinScope, status, files, filesTotal, capturedAt }
+
+  public init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    id = try c.decode(String.self, forKey: .id)
+    scopeId = c.loose(String.self, .scopeId) ?? ""
+    runId = c.loose(String.self, .runId)
+    appRunOrdinal = c.loose(Int.self, .appRunOrdinal)
+    ordinalWithinScope = c.loose(Int.self, .ordinalWithinScope) ?? 0
+    status = c.loose(String.self, .status) ?? "ready"
+    files = c.loose(LossyArray<File>.self, .files)?.elements ?? []
+    filesTotal = c.loose(Totals.self, .filesTotal)
+    capturedAt = c.loose(WireTimestamp.self, .capturedAt)
+  }
+}
+
+/// `OrchestrationV2CheckpointScope`: a scope with `repositoryPath` belongs to a tracked repository.
+public struct CheckpointScope: Sendable, Hashable, Decodable, Identifiable {
+  public var id: String
+  public var parentScopeId: String?
+  public var kind: String?
+  public var cwd: String?
+  public var label: String?
+  public var repositoryPath: String?
 }

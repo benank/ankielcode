@@ -1,0 +1,8 @@
+{
+  "schema" : "diffPreview",
+  "value" : {
+    "cwd" : "/Users/dev/tide-chart",
+    "sourceKind" : "working-tree",
+    "trackedOnly" : true
+  }
+}

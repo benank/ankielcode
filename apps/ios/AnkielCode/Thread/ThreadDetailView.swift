@@ -86,6 +86,7 @@ private struct ThreadScreen: View {
       .navigationSubtitle(subtitle)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar { toolbar }
+      .threadReview(threadRef, detail: detail)
       .threadFiles(threadRef, detail: detail)
       .safeAreaInset(edge: .bottom, spacing: 0) { composer }
       .onChange(of: childShells, initial: true) { _, threads in
@@ -294,6 +295,7 @@ private struct ThreadScreen: View {
     ToolbarItem(placement: .topBarTrailing) {
       Menu {
         FilesMenuButton()
+        ReviewMenuSection()
         if let row {
           ThreadActionsMenu(
             row: row, operable: model.home.canOperate(threadRef), rename: { renaming = row.title },

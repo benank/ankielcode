@@ -1,0 +1,11 @@
+{
+  "schema" : "diffPreview",
+  "value" : {
+    "cwd" : "/Users/dev/tide-chart",
+    "file" : {
+      "path" : "Sources/Moon.swift",
+      "previousPath" : "Sources/Luna.swift",
+      "sourceKind" : "working-tree"
+    }
+  }
+}

@@ -126,6 +126,12 @@ final class LiveSessionAdapter: LiveSession {
     try await session.rpc.call(tag, payload: payload, as: type)
   }
 
+  func stream<Item: Decodable & Sendable>(
+    _ tag: String, payload: some Encodable & Sendable, of type: Item.Type
+  ) async throws -> RpcStream<Item> {
+    try await session.rpc.stream(tag, payload: payload, of: type)
+  }
+
   func grantedScopes() async throws -> Set<String>? {
     try await connector.sessionState(endpoint: route.endpoint, vault: vault).grantedScopes
   }

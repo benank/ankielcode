@@ -197,3 +197,28 @@ Debug hook (with `ANKIEL_DEBUG_ROUTE=thread` or an `ANKIEL_OPEN_URL` thread link
 
 `MediaFilesUITests` (live, skips when the dev server is down) opens Files from the thread menu,
 lists a folder, searches and opens a file, and zooms, swipes, closes and drags the gallery closed.
+
+## Review and git (Debug builds)
+
+Review (`AnkielCode/Review`, logic in `AnkielKit/Review`) reads turn diffs (`orchestration.getTurnDiff`),
+the checkout's comparisons (`review.getDiffPreview`, tracked-only first, then the completion read;
+truncated comparisons read each file's patch on open) and file contents for unchanged lines
+(`review.getDiffFileContents`, git sections only, refused when the contents no longer reproduce the
+patch). Git state is `vcs.refreshStatus`; actions are `git.runStackedAction` (a progress stream) and
+`vcs.pull`. The diff is a lazy SwiftUI stack, one `Text` per line.
+
+| Variable                      | Values                                                                 | Shows |
+| ----------------------------- | ---------------------------------------------------------------------- | ----- |
+| `ANKIEL_DEBUG_REVIEW`         | `fixture`, `readonly`                                                  | Every thread gets canned turns (multi-hunk, added, deleted, renamed, binary, mode-only, a lock file, a 5,000-line file), both comparisons and a fake checkout on its default branch with uncommitted files. Nothing reaches a server; `readonly` is a session without `source-control:write`. |
+| `ANKIEL_DEBUG_REVIEW_OPEN`    | `review`, `review:<section id>`, `file:<path>[@<section id>]`, `git`, `commit`, `confirm` | Opens it once in the thread the launch shows (fixture or live). Section ids are RN's: `turn:3`, `git:working-tree`, `git:branch-range`. |
+| `ANKIEL_DEBUG_REVIEW_EXPAND`  | `1`                                                                    | A git section's file opens with every unchanged region shown. |
+
+`swift run ankiel-probe --state <file> --diff [threadId]` reads, without writing anything, each
+thread's turns with changes and their diffs (parsed and ordered), the checkout's status, both
+comparisons, one lazy file patch and the contents check. `--git-actions <cwd>` (commit one file, push,
+commit on a feature branch) and `--git-pull <cwd>` write: point them only at a throwaway repository
+with a local bare remote, never a real checkout. `ReviewUITests` cover open → switch file →
+expand context, the line comment hand-off to the composer, the default-branch confirmation and
+scrolling a 5,000-line diff. `Fixtures/review/make-review-golden.mjs` (run from
+`packages/client-runtime`) records the TypeScript review order and git action rules the Swift ports
+must match.

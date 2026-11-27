@@ -1,0 +1,12 @@
+{
+  "schema" : "diffFileContents",
+  "value" : {
+    "baseRef" : null,
+    "changeType" : "change",
+    "cwd" : "/Users/dev/tide-chart",
+    "headRef" : null,
+    "newPath" : "Sources/Tide.swift",
+    "oldPath" : "Sources/Tide.swift",
+    "sourceKind" : "working-tree"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "schema" : "vcsListRefs",
+  "value" : {
+    "cwd" : "/Users/dev/tide-chart",
+    "limit" : 100,
+    "refresh" : true
+  }
+}

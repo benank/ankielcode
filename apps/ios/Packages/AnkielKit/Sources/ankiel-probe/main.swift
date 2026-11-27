@@ -93,6 +93,25 @@ func run() async throws {
     await session.close()
     return
   }
+  if let cwd = argument("--git-pull") {
+    let status = try await ReviewCalls.status(cwd: cwd, via: session.rpc)
+    print("  before: behind=\(status.behindCount) quick=\(GitActionRules.quickAction(status, busy: false))")
+    let pulled = try await ReviewCalls.pull(cwd: cwd, via: session.rpc)
+    print("  pull: \(pulled.status) on \(pulled.refName)")
+    await session.close()
+    return
+  }
+  if let cwd = argument("--git-actions") {
+    try await probeGitActions(session, cwd: cwd)
+    await session.close()
+    return
+  }
+  if CommandLine.arguments.contains("--diff") {
+    let threadId = argument("--diff").flatMap { $0.hasPrefix("--") ? nil : $0 }
+    try await probeDiff(session, only: threadId)
+    await session.close()
+    return
+  }
   print("environment id:    \(config.environment.environmentId)")
   print("environment label: \(config.environment.label)")
   print("server version:    \(config.environment.serverVersion)")

@@ -1,0 +1,8 @@
+{
+  "schema" : "vcsCreateRef",
+  "value" : {
+    "cwd" : "/Users/dev/tide-chart",
+    "refName" : "feature/update",
+    "switchRef" : true
+  }
+}

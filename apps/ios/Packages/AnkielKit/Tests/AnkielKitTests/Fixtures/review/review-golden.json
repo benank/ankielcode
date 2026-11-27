@@ -1,0 +1,2215 @@
+{
+  "synthetic": true,
+  "order": [
+    {
+      "input": [
+        "src/app/main.ts",
+        "src/tide/tide.ts",
+        "src/tide/moon.ts",
+        "src/tide/tide.test.ts",
+        "src/tide/moon.logic.test.ts",
+        "pnpm-lock.yaml",
+        "README.md",
+        "dist/bundle.min.js",
+        "src/app/styles.css",
+        "Docs/Guide.md",
+        "docs/api.md",
+        "src/Tide/Upper.ts",
+        "src/__tests__/harbor.ts",
+        "src/harbor.ts"
+      ],
+      "lines": {
+        "src/app/main.ts": [
+          "import { tide } from \"../tide/tide\";",
+          "import \"./styles.css\";"
+        ],
+        "src/tide/tide.ts": [
+          "import { moon } from \"./moon.js\";"
+        ],
+        "src/tide/moon.ts": [
+          "export const moon = 1;"
+        ],
+        "src/tide/tide.test.ts": [
+          "import { tide } from \"./tide\";"
+        ],
+        "src/tide/moon.logic.test.ts": [],
+        "pnpm-lock.yaml": [],
+        "README.md": [],
+        "dist/bundle.min.js": [],
+        "src/app/styles.css": [],
+        "Docs/Guide.md": [],
+        "docs/api.md": [],
+        "src/Tide/Upper.ts": [],
+        "src/__tests__/harbor.ts": [],
+        "src/harbor.ts": [
+          "const x = require(\"./tide/moon\")"
+        ]
+      },
+      "output": [
+        "docs/api.md",
+        "Docs/Guide.md",
+        "README.md",
+        "src/app/styles.css",
+        "src/app/main.ts",
+        "src/tide/moon.ts",
+        "src/tide/tide.ts",
+        "src/tide/moon.logic.test.ts",
+        "src/tide/tide.test.ts",
+        "src/harbor.ts",
+        "src/Tide/Upper.ts",
+        "src/__tests__/harbor.ts",
+        "dist/bundle.min.js",
+        "pnpm-lock.yaml"
+      ]
+    },
+    {
+      "input": [
+        "b/z.swift",
+        "a/y.swift",
+        "a/b/c.swift",
+        "a/b/a.swift",
+        "z.swift",
+        "a_b.swift",
+        "a-b.swift",
+        "a.b.swift",
+        "A.swift",
+        "a10.swift",
+        "a2.swift"
+      ],
+      "lines": {
+        "b/z.swift": [],
+        "a/y.swift": [],
+        "a/b/c.swift": [],
+        "a/b/a.swift": [],
+        "z.swift": [],
+        "a_b.swift": [],
+        "a-b.swift": [],
+        "a.b.swift": [],
+        "A.swift": [],
+        "a10.swift": [],
+        "a2.swift": []
+      },
+      "output": [
+        "a_b.swift",
+        "a-b.swift",
+        "a.b.swift",
+        "A.swift",
+        "a/b/a.swift",
+        "a/b/c.swift",
+        "a/y.swift",
+        "a10.swift",
+        "a2.swift",
+        "b/z.swift",
+        "z.swift"
+      ]
+    }
+  ],
+  "git": {
+    "clean": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Branch is up to date. No action needed."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to push."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to include in a PR."
+        }
+      ],
+      "confirm": []
+    },
+    "clean:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "dirty": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": true,
+        "workingTree": {
+          "files": [
+            {
+              "path": "a.ts",
+              "insertions": 1,
+              "deletions": 0
+            }
+          ],
+          "insertions": 1,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Commit, push & PR",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "commit_push_pr"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Commit or stash local changes before pushing."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to include in a PR."
+        }
+      ],
+      "confirm": []
+    },
+    "dirty:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": true,
+        "workingTree": {
+          "files": [
+            {
+              "path": "a.ts",
+              "insertions": 1,
+              "deletions": 0
+            }
+          ],
+          "insertions": 1,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "dirtyBehind": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": true,
+        "workingTree": {
+          "files": [
+            {
+              "path": "a.ts",
+              "insertions": 1,
+              "deletions": 0
+            }
+          ],
+          "insertions": 1,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 2,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Commit",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "commit"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Commit or stash local changes before pushing."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to include in a PR."
+        }
+      ],
+      "confirm": []
+    },
+    "dirtyBehind:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": true,
+        "workingTree": {
+          "files": [
+            {
+              "path": "a.ts",
+              "insertions": 1,
+              "deletions": 0
+            }
+          ],
+          "insertions": 1,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 2,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "dirtyDefault": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": true,
+        "refName": "main",
+        "hasWorkingTreeChanges": true,
+        "workingTree": {
+          "files": [
+            {
+              "path": "a.ts",
+              "insertions": 1,
+              "deletions": 0
+            }
+          ],
+          "insertions": 1,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Commit & push",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "commit_push"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Commit or stash local changes before pushing."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to include in a PR."
+        }
+      ],
+      "confirm": [
+        "push",
+        "create_pr",
+        "commit_push",
+        "commit_push_pr"
+      ]
+    },
+    "dirtyDefault:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": true,
+        "refName": "main",
+        "hasWorkingTreeChanges": true,
+        "workingTree": {
+          "files": [
+            {
+              "path": "a.ts",
+              "insertions": 1,
+              "deletions": 0
+            }
+          ],
+          "insertions": 1,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": [
+        "push",
+        "create_pr",
+        "commit_push",
+        "commit_push_pr"
+      ]
+    },
+    "dirtyOpenPr": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": true,
+        "workingTree": {
+          "files": [
+            {
+              "path": "a.ts",
+              "insertions": 1,
+              "deletions": 0
+            }
+          ],
+          "insertions": 1,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": {
+          "number": 7,
+          "title": "Tides",
+          "url": "https://example.com/pr/7",
+          "baseRef": "main",
+          "headRef": "feature/tides",
+          "state": "open"
+        }
+      },
+      "busy": false,
+      "quick": {
+        "label": "Commit & push",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "commit_push"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Commit or stash local changes before pushing."
+        },
+        {
+          "id": "pr",
+          "kind": "open_pr",
+          "disabled": false,
+          "reason": null
+        }
+      ],
+      "confirm": []
+    },
+    "dirtyOpenPr:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": true,
+        "workingTree": {
+          "files": [
+            {
+              "path": "a.ts",
+              "insertions": 1,
+              "deletions": 0
+            }
+          ],
+          "insertions": 1,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": {
+          "number": 7,
+          "title": "Tides",
+          "url": "https://example.com/pr/7",
+          "baseRef": "main",
+          "headRef": "feature/tides",
+          "state": "open"
+        }
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_pr",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "dirtyNoRemote": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": false,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": true,
+        "workingTree": {
+          "files": [
+            {
+              "path": "a.ts",
+              "insertions": 1,
+              "deletions": 0
+            }
+          ],
+          "insertions": 1,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Commit",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "commit"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Commit or stash local changes before pushing."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Add an \"origin\" remote before creating a PR."
+        }
+      ],
+      "confirm": []
+    },
+    "dirtyNoRemote:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": false,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": true,
+        "workingTree": {
+          "files": [
+            {
+              "path": "a.ts",
+              "insertions": 1,
+              "deletions": 0
+            }
+          ],
+          "insertions": 1,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "ahead": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 3,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Push & create PR",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "create_pr"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        }
+      ],
+      "confirm": []
+    },
+    "ahead:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 3,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "aheadDefault": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": true,
+        "refName": "main",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 3,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Push",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "push"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        }
+      ],
+      "confirm": [
+        "push",
+        "create_pr",
+        "commit_push",
+        "commit_push_pr"
+      ]
+    },
+    "aheadDefault:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": true,
+        "refName": "main",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 3,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": [
+        "push",
+        "create_pr",
+        "commit_push",
+        "commit_push_pr"
+      ]
+    },
+    "aheadOpenPr": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 1,
+        "behindCount": 0,
+        "pr": {
+          "number": 7,
+          "title": "Tides",
+          "url": "https://example.com/pr/7",
+          "baseRef": "main",
+          "headRef": "feature/tides",
+          "state": "open"
+        }
+      },
+      "busy": false,
+      "quick": {
+        "label": "Push",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "push"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        },
+        {
+          "id": "pr",
+          "kind": "open_pr",
+          "disabled": false,
+          "reason": null
+        }
+      ],
+      "confirm": []
+    },
+    "aheadOpenPr:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 1,
+        "behindCount": 0,
+        "pr": {
+          "number": 7,
+          "title": "Tides",
+          "url": "https://example.com/pr/7",
+          "baseRef": "main",
+          "headRef": "feature/tides",
+          "state": "open"
+        }
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_pr",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "behind": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 2,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Pull",
+        "disabled": false,
+        "kind": "run_pull"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Branch is behind upstream. Pull/rebase before pushing."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to include in a PR."
+        }
+      ],
+      "confirm": []
+    },
+    "behind:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 2,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "diverged": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 1,
+        "behindCount": 1,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Sync branch",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Branch has diverged from upstream. Rebase/merge first."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Branch is behind upstream. Pull/rebase before pushing."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Branch is behind upstream. Pull/rebase before creating a PR."
+        }
+      ],
+      "confirm": []
+    },
+    "diverged:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 1,
+        "behindCount": 1,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "noUpstreamAhead": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 2,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Push & create PR",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "create_pr"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        }
+      ],
+      "confirm": []
+    },
+    "noUpstreamAhead:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 2,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "noUpstreamClean": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Push",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "No local commits to push."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to push."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to include in a PR."
+        }
+      ],
+      "confirm": []
+    },
+    "noUpstreamClean:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "noUpstreamOpenPr": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": {
+          "number": 7,
+          "title": "Tides",
+          "url": "https://example.com/pr/7",
+          "baseRef": "main",
+          "headRef": "feature/tides",
+          "state": "open"
+        }
+      },
+      "busy": false,
+      "quick": {
+        "label": "View PR",
+        "disabled": false,
+        "kind": "open_pr"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to push."
+        },
+        {
+          "id": "pr",
+          "kind": "open_pr",
+          "disabled": false,
+          "reason": null
+        }
+      ],
+      "confirm": []
+    },
+    "noUpstreamOpenPr:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": {
+          "number": 7,
+          "title": "Tides",
+          "url": "https://example.com/pr/7",
+          "baseRef": "main",
+          "headRef": "feature/tides",
+          "state": "open"
+        }
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_pr",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "noRemote": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": false,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 1,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Push",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Add an \"origin\" remote before pushing or creating a PR."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Add an \"origin\" remote before pushing."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Add an \"origin\" remote before creating a PR."
+        }
+      ],
+      "confirm": []
+    },
+    "noRemote:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": false,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 1,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "noRemotePr": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": false,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": {
+          "number": 7,
+          "title": "Tides",
+          "url": "https://example.com/pr/7",
+          "baseRef": "main",
+          "headRef": "feature/tides",
+          "state": "open"
+        }
+      },
+      "busy": false,
+      "quick": {
+        "label": "View PR",
+        "disabled": false,
+        "kind": "open_pr"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Add an \"origin\" remote before pushing."
+        },
+        {
+          "id": "pr",
+          "kind": "open_pr",
+          "disabled": false,
+          "reason": null
+        }
+      ],
+      "confirm": []
+    },
+    "noRemotePr:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": false,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": false,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": {
+          "number": 7,
+          "title": "Tides",
+          "url": "https://example.com/pr/7",
+          "baseRef": "main",
+          "headRef": "feature/tides",
+          "state": "open"
+        }
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_pr",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "detached": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": null,
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": false,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Create and checkout a branch before pushing or opening a PR."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Detached HEAD: checkout a branch before pushing."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Detached HEAD: checkout a branch before creating a PR."
+        }
+      ],
+      "confirm": []
+    },
+    "detached:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": null,
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "openPr": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": {
+          "number": 7,
+          "title": "Tides",
+          "url": "https://example.com/pr/7",
+          "baseRef": "main",
+          "headRef": "feature/tides",
+          "state": "open"
+        }
+      },
+      "busy": false,
+      "quick": {
+        "label": "View PR",
+        "disabled": false,
+        "kind": "open_pr"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to push."
+        },
+        {
+          "id": "pr",
+          "kind": "open_pr",
+          "disabled": false,
+          "reason": null
+        }
+      ],
+      "confirm": []
+    },
+    "openPr:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": {
+          "number": 7,
+          "title": "Tides",
+          "url": "https://example.com/pr/7",
+          "baseRef": "main",
+          "headRef": "feature/tides",
+          "state": "open"
+        }
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_pr",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "defaultDelta": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null,
+        "aheadOfDefaultCount": 4
+      },
+      "busy": false,
+      "quick": {
+        "label": "Create PR",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "create_pr"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to push."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        }
+      ],
+      "confirm": []
+    },
+    "defaultDelta:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null,
+        "aheadOfDefaultCount": 4
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "defaultDeltaOnDefault": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": true,
+        "refName": "main",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null,
+        "aheadOfDefaultCount": 4
+      },
+      "busy": false,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Branch is up to date. No action needed."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to push."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        }
+      ],
+      "confirm": [
+        "push",
+        "create_pr",
+        "commit_push",
+        "commit_push_pr"
+      ]
+    },
+    "defaultDeltaOnDefault:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": true,
+        "refName": "main",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 0,
+        "behindCount": 0,
+        "pr": null,
+        "aheadOfDefaultCount": 4
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": [
+        "push",
+        "create_pr",
+        "commit_push",
+        "commit_push_pr"
+      ]
+    },
+    "aheadZeroDefaultDelta": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 2,
+        "behindCount": 0,
+        "pr": null,
+        "aheadOfDefaultCount": 0
+      },
+      "busy": false,
+      "quick": {
+        "label": "Push & create PR",
+        "disabled": false,
+        "kind": "run_action",
+        "action": "create_pr"
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Worktree is clean. Make changes before committing."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": false,
+          "reason": null
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "No local commits to include in a PR."
+        }
+      ],
+      "confirm": []
+    },
+    "aheadZeroDefaultDelta:busy": {
+      "status": {
+        "isRepo": true,
+        "hasPrimaryRemote": true,
+        "isDefaultRef": false,
+        "refName": "feature/tides",
+        "hasWorkingTreeChanges": false,
+        "workingTree": {
+          "files": [],
+          "insertions": 0,
+          "deletions": 0
+        },
+        "hasUpstream": true,
+        "aheadCount": 2,
+        "behindCount": 0,
+        "pr": null,
+        "aheadOfDefaultCount": 0
+      },
+      "busy": true,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git action in progress."
+      },
+      "items": [
+        {
+          "id": "commit",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "push",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        },
+        {
+          "id": "pr",
+          "kind": "open_dialog",
+          "disabled": true,
+          "reason": "Git action in progress."
+        }
+      ],
+      "confirm": []
+    },
+    "nil": {
+      "status": null,
+      "busy": false,
+      "quick": {
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Git status is unavailable."
+      },
+      "items": [],
+      "confirm": []
+    }
+  }
+}
