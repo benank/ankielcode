@@ -1,7 +1,8 @@
 import type { ProviderDriverKind, ProviderInstanceId } from "@ankielcode/contracts";
+import { formatContextWindowTokens } from "@ankielcode/client-runtime/state/context-window";
 import { msg } from "gt-react";
 
-import { getActiveLocale, m, type MessageResolver } from "../../i18n/messages";
+import { m, type MessageResolver } from "../../i18n/messages";
 import {
   resolveSelectableProviderInstanceEntry,
   type ProviderInstanceEntry,
@@ -40,12 +41,11 @@ export function hasAvailableCompactionProvider(input: {
 export function formatContextWindowCompactionMessage(
   autoCompactThreshold?: number | null,
   resolve: MessageResolver = m,
-  locale: string = getActiveLocale(),
 ): string {
   if (typeof autoCompactThreshold === "number" && autoCompactThreshold > 0) {
     return resolve(
       msg("Compacts automatically at about {tokens} tokens.", {
-        tokens: autoCompactThreshold.toLocaleString(locale),
+        tokens: formatContextWindowTokens(autoCompactThreshold),
       }),
     );
   }

@@ -13,7 +13,7 @@ import {
 import { collectLimitNotices } from "@ankielcode/shared/usageLimitsCopy";
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
-import { T, useGT, useLocale, useMessages, Var } from "gt-react-native";
+import { T, useGT, useMessages, Var } from "gt-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -211,7 +211,6 @@ function CompactAccountCard({
 
 function ContextWindowCard({ target }: { readonly target: UsageLimitsRouteParams }) {
   const gt = useGT();
-  const locale = useLocale();
   const thread = useThreadProjection(target);
   const visibleTurnItems = useThreadVisibleTurnItems(target);
   const usage = thread ? deriveThreadContextWindow(thread.projection, visibleTurnItems) : null;
@@ -255,8 +254,8 @@ function ContextWindowCard({ target }: { readonly target: UsageLimitsRouteParams
           </View>
           <Text className="text-right text-xs tabular-nums text-foreground-tertiary">
             {gt("{used} of {max} tokens", {
-              used: usage.usedTokens.toLocaleString(locale),
-              max: maxTokens.toLocaleString(locale),
+              used: formatContextWindowTokens(usage.usedTokens),
+              max: formatContextWindowTokens(maxTokens),
             })}
           </Text>
         </View>
