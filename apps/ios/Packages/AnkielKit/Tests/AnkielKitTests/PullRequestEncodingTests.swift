@@ -60,6 +60,10 @@ struct PullRequestEncodingTests {
     ("pr-request-reviewers", "prReviewers", write(.requestReviewers(ref, reviewers: [.init(id: "U_synthetic_mira", kind: .user), .init(id: "T_synthetic_docs", kind: .team)], requested: true))),
     ("pr-update", "prUpdate", write(.update(ref, title: "Load tide tables offline", body: "Caches the last table.\n\n- [x] tests"))),
     ("pr-resolve", "prResolve", write(.resolveThread(ref, threadId: "PRRT_synthetic_1", resolved: true))),
+    (
+      "pr-asset-github-media", "assetUrl",
+      AssetURLRequest(resource: .sourceControlMedia(cwd: "/Users/dev/tide-chart", url: "https://github.com/user-attachments/assets/1a2b-3c4d", repository: "tidewater/tide-chart"))
+    ),
     ("pr-files-viewed", "prFilesViewed", write(.setFilesViewed(ref, files: [.init(path: "Sources/TideChart/Table.swift", viewed: true, revision: "a1b2c3")]))),
   ]
 

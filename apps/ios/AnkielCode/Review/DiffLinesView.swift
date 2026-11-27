@@ -30,6 +30,9 @@ struct DiffLinesView: View {
   let selected: Set<String>
   let onLine: (DiffRow, DiffLineGesture) -> Void
   let onExpand: (Gap) -> Void
+  /// Notes shown under a line (a pull request's review threads), by `DiffRow.id`.
+  var annotations: [String: [DiffAnnotation]] = [:]
+  var onAnnotation: (DiffAnnotation) -> Void = { _ in }
   @Environment(\.codeAppearance) private var code
   @State private var viewport: CGFloat = 0
 
@@ -49,6 +52,11 @@ struct DiffLinesView: View {
             selected: selected.contains(row.id), onLine: onLine, onExpand: onExpand
           )
           .equatable()
+          if let notes = annotations[row.id] {
+            ForEach(notes) { note in
+              DiffAnnotationView(note: note, width: viewport, action: { onAnnotation(note) })
+            }
+          }
         }
       }
       .padding(.vertical, Spacing.sm)
@@ -57,6 +65,47 @@ struct DiffLinesView: View {
     .scrollIndicators(.automatic)
     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { viewport = $0 }
     .accessibilityIdentifier("review.diff")
+  }
+}
+
+/// A note under a diff line: who wrote it, its first words and a count.
+struct DiffAnnotation: Identifiable, Hashable {
+  enum Tone: Hashable { case thread, resolved, pending }
+  let id: String
+  let title: String
+  let body: String
+  let footnote: String
+  let tone: Tone
+}
+
+private struct DiffAnnotationView: View {
+  let note: DiffAnnotation
+  let width: CGFloat
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      VStack(alignment: .leading, spacing: Spacing.xxs) {
+        HStack(spacing: Spacing.xs) {
+          Image(systemName: note.tone == .pending ? "pencil.circle.fill" : note.tone == .resolved ? "checkmark.circle" : "text.bubble.fill")
+            .foregroundStyle(note.tone == .pending ? Palette.attention : note.tone == .resolved ? Palette.success : Palette.working)
+          Text(verbatim: note.title).font(Typography.footnote.weight(.semibold)).foregroundStyle(Palette.textPrimary)
+        }
+        Text(verbatim: note.body).font(Typography.footnote).foregroundStyle(Palette.textPrimary).lineLimit(3)
+        Text(verbatim: note.footnote).font(Typography.caption).foregroundStyle(Palette.textTertiary)
+      }
+      .padding(Spacing.md)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(Palette.surface, in: .rect(cornerRadius: Radius.medium, style: .continuous))
+      .overlay(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous).strokeBorder(Palette.separator))
+      .contentShape(.rect)
+    }
+    .buttonStyle(.plain)
+    .padding(.horizontal, Spacing.md)
+    .padding(.vertical, Spacing.xs)
+    .frame(width: width > 0 ? width : nil, alignment: .leading)
+    .accessibilityElement(children: .combine)
+    .accessibilityIdentifier("review.annotation")
   }
 }
 

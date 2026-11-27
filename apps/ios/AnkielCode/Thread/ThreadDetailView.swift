@@ -297,6 +297,7 @@ private struct ThreadScreen: View {
   @ToolbarContentBuilder
   private var toolbar: some ToolbarContent {
     ToolbarItem(placement: .topBarTrailing) {
+    ToolbarItem(placement: .topBarTrailing) { ThreadPullRequestToolbarButton(threadRef: threadRef) }
       UsageToolbarButton(threadContext: .some(detail.state.contextWindow))
     }
     ToolbarItem(placement: .topBarTrailing) {

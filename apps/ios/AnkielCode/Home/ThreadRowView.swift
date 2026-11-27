@@ -6,6 +6,8 @@ import SwiftUI
 struct ThreadRowView: View, Equatable {
   let row: ThreadRow
   let selected: Bool
+  /// Opens the row's pull request chip.
+  var openPullRequest: (ThreadPullRequestBadge) -> Void = { _ in }
   @Environment(\.dynamicTypeSize) private var typeSize
 
   nonisolated static func == (lhs: Self, rhs: Self) -> Bool { lhs.row == rhs.row && lhs.selected == rhs.selected }
@@ -27,10 +29,18 @@ struct ThreadRowView: View, Equatable {
             .foregroundStyle(Palette.textTertiary)
             .lineLimit(row.searchHit == nil && !large ? 1 : 2)
         }
-        if large { ThreadMetaView(row: row) }
+        if large {
+          ThreadMetaView(row: row)
+          pullRequestChip
+        }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
-      if !large { ThreadMetaView(row: row) }
+      if !large {
+        VStack(alignment: .trailing, spacing: Spacing.xs) {
+          ThreadMetaView(row: row)
+          pullRequestChip
+        }
+      }
     }
     .padding(.vertical, Spacing.sm)
     .padding(.leading, CGFloat(row.depth) * Spacing.lg)
@@ -38,6 +48,15 @@ struct ThreadRowView: View, Equatable {
     .accessibilityElement(children: .combine)
     .accessibilityLabel(accessibilityLabel)
     .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
+  }
+
+  @ViewBuilder
+  private var pullRequestChip: some View {
+    if let badge = row.pullRequest {
+      Button { openPullRequest(badge) } label: { ThreadPullRequestChip(badge: badge, compact: true) }
+        .buttonStyle(.borderless)
+        .accessibilityIdentifier("thread.row.pullRequest")
+    }
   }
 
   /// The project when the row is not under its folder, and the computer when several are saved;
@@ -55,6 +74,7 @@ struct ThreadRowView: View, Equatable {
     if let subtitle { parts.append(subtitle) }
     if row.pinned { parts.append(String(localized: "Pinned")) }
     if row.regeneratingTitle { parts.append(String(localized: "regenerating title")) }
+    if let badge = row.pullRequest { parts.append(PullRequestCopy.accessibility(badge)) }
     return parts.joined(separator: ", ")
   }
 }

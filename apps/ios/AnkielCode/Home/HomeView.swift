@@ -47,9 +47,19 @@ struct HomeView: View {
       case .newThread: NewThreadView()
       }
     }
+    .fullScreenCover(isPresented: pullRequestsPresented) { PullRequestsRoot() }
+    #if DEBUG
+      .onAppear { model.pullRequests.applyDebugOpen(app: model) }
+    #endif
     .onChange(of: navigator.selection, initial: true) { _, ref in
       model.home.selectedKey = sizeClass == .regular ? ref?.key : nil
     }
+  }
+}
+
+extension HomeView {
+  private var pullRequestsPresented: Binding<Bool> {
+    Binding(get: { model.pullRequests.presented }, set: { model.pullRequests.presented = $0 })
   }
 }
 

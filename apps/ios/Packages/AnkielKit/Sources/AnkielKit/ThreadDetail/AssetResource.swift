@@ -12,8 +12,11 @@ public enum AssetResource: Sendable, Hashable, Encodable {
   case draftWorkspaceFile(cwd: String, path: String, download: Bool)
   /// The `index`th image a tool returned (`toolOutputImages` order).
   case toolOutputImage(threadId: String, itemId: String, index: Int)
+  /// A host's media (a GitHub attachment or repository file) fetched with the computer's source
+  /// control credential, read through the checkout at `cwd`.
+  case sourceControlMedia(cwd: String, url: String, repository: String?)
 
-  enum CodingKeys: String, CodingKey { case _tag, attachmentId, fileName, mimeType, disposition, threadId, path, cwd, itemId, index }
+  enum CodingKeys: String, CodingKey { case _tag, attachmentId, fileName, mimeType, disposition, threadId, path, cwd, itemId, index, url, repository }
 
   public func encode(to encoder: any Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
@@ -43,6 +46,11 @@ public enum AssetResource: Sendable, Hashable, Encodable {
       try container.encode(threadId, forKey: .threadId)
       try container.encode(itemId, forKey: .itemId)
       try container.encode(index, forKey: .index)
+    case .sourceControlMedia(let cwd, let url, let repository):
+      try container.encode("github-media", forKey: ._tag)
+      try container.encode(cwd, forKey: .cwd)
+      try container.encode(url, forKey: .url)
+      try container.encodeIfPresent(repository, forKey: .repository)
     }
   }
 }

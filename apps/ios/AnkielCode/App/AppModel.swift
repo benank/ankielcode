@@ -36,6 +36,7 @@ final class AppModel {
   let releaseLookup: ReleaseLookup
   /// Provider usage limits and the usage widget's snapshot.
   @ObservationIgnored private(set) lazy var usage = UsageCenter(registry: registry)
+  @ObservationIgnored private(set) lazy var pullRequests = PullRequestFeature(app: self)
   /// Settings shows canned computers (`ANKIEL_DEBUG_SETTINGS`): nothing reaches a server.
   private(set) var isSettingsFixture = false
   #if DEBUG

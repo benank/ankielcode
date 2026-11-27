@@ -101,6 +101,8 @@ public struct ThreadRow: Sendable, Hashable, Identifiable {
   public var regeneratingTitle: Bool
   public var searchHit: ThreadSearchHit?
   public var hasPendingApprovals: Bool
+  /// The thread's linked pull request chip.
+  public var pullRequest: ThreadPullRequestBadge? = nil
 }
 
 public struct ProjectFolder: Sendable, Hashable, Identifiable {
@@ -204,7 +206,7 @@ public struct ThreadListLayout: Sendable, Hashable {
       let timeAt =
         showsTime
         ? ((variant == .slim && !snoozed ? facts.settledSortAt : nil) ?? facts.activityAt ?? facts.createdAt) : nil
-      return ThreadRow(
+      var row = ThreadRow(
         ref: facts.ref, title: facts.title, projectId: facts.thread.projectId,
         projectTitle: projectTitles["\(facts.ref.environmentId):\(facts.thread.projectId)"],
         environmentLabel: multipleEnvironments ? environmentLabels[facts.ref.environmentId] : nil,
@@ -217,6 +219,8 @@ public struct ThreadListLayout: Sendable, Hashable {
         readToggle: ThreadRules.readToggle(facts, wokeAt: wokeAt), canArchive: facts.canArchive,
         isTopLevel: topLevel, regeneratingTitle: facts.thread.titleRegeneration != nil, searchHit: hit,
         hasPendingApprovals: facts.hasPendingApprovals)
+      row.pullRequest = ThreadPullRequests.badge(facts.thread.pullRequests)
+      return row
     }
 
     var pinned: [ThreadFacts] = []

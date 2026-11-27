@@ -148,8 +148,10 @@ struct ThreadListScreen: View {
     Button {
       model.navigator.open(row.ref)
     } label: {
-      ThreadRowView(row: row, selected: selected)
-        .equatable()
+      ThreadRowView(row: row, selected: selected) { badge in
+        if let thread = home.thread(row.ref) { model.pullRequests.open(badge, thread: thread, environmentId: row.ref.environmentId) }
+      }
+      .equatable()
     }
     .buttonStyle(.plain)
     .modifier(ZoomSource(id: row.id, namespace: zoom))
@@ -225,6 +227,8 @@ struct ThreadListScreen: View {
     }
     ToolbarItemGroup(placement: .topBarTrailing) {
       UsageToolbarButton()
+      Button("Pull requests", systemImage: "arrow.triangle.pull") { model.pullRequests.openList() }
+        .accessibilityIdentifier("home.pullRequests")
       Button("Settings", systemImage: "gearshape") { model.openSettings() }
         .accessibilityIdentifier("home.settings")
     }
