@@ -247,6 +247,7 @@ private struct WorkDetailView: View {
           }
           .buttonStyle(.plain)
           .foregroundStyle(Palette.working)
+          .accessibilityIdentifier("work.openFile")
         }
         if case .loaded(let item)? = load, case .dynamicTool(let tool) = item.body {
           let count = ToolOutputImages.count(tool.output)

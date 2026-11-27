@@ -52,8 +52,7 @@ struct FeedCollection: UIViewControllerRepresentable {
   func updateUIViewController(_ controller: FeedViewController, context: Context) {
     controller.images = images
     controller.openThread = openThread
-    controller.environment = context.environment
-    controller.app = app
+    controller.setRowEnvironment(FeedRowEnvironment(context.environment, app: app))
     controller.reduceMotion = context.environment.accessibilityReduceMotion
     // Inset changes ride SwiftUI's animation (the keyboard's, the composer's).
     context.animate { controller.setInsets(top: insets.top, bottom: insets.bottom + Spacing.xl + trailingSpace) }
@@ -66,8 +65,7 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
   let status: FeedStatus
   var images: ThreadImages = .none
   var openThread: (String) -> Void = { _ in }
-  var environment = EnvironmentValues()
-  var app: AppModel?
+  private var rowEnvironment = FeedRowEnvironment()
   var reduceMotion = false
 
   private(set) var scroll: FeedScroll
@@ -136,24 +134,23 @@ final class FeedViewController: UIViewController, UICollectionViewDelegate {
       case .pending(let row, let spacing):
         AnyView(PendingRowView(row: row).padding(.top, spacing).column())
       }
-    let environment = environment
-    let app = app
-    // Cells live outside SwiftUI's tree, so they get what the rows read from the environment.
-    // (Copying all of `EnvironmentValues` hid the rows from accessibility.)
-    return UIHostingConfiguration {
-      content
-        .environment(app)
-        .environment(\.filePresenter, environment.filePresenter)
-        .environment(\.mediaOwner, environment.mediaOwner)
-        .environment(\.reviewPresenter, environment.reviewPresenter)
-        .environment(\.runGitQuickAction, environment.runGitQuickAction)
-        .environment(\.codeAppearance, environment.codeAppearance)
-        .environment(\.openURL, environment.openURL)
-    }
-    .margins(.all, 0)
+    let environment = rowEnvironment
+    return UIHostingConfiguration { content.feedRowEnvironment(environment) }
+      .margins(.all, 0)
   }
 
   // MARK: Updates
+
+  /// Built cells keep the environment they were configured with, so a presenter that appears or
+  /// changes after the first rows (the thread's hosts settle a render later) rebuilds them.
+  func setRowEnvironment(_ next: FeedRowEnvironment) {
+    let stale = next.needsReconfigure(from: rowEnvironment)
+    rowEnvironment = next
+    guard stale, dataSource != nil, !order.isEmpty else { return }
+    var snapshot = dataSource.snapshot()
+    snapshot.reconfigureItems(snapshot.itemIdentifiers)
+    dataSource.apply(snapshot, animatingDifferences: false)
+  }
 
   func setInsets(top: CGFloat, bottom: CGFloat) {
     let insets = UIEdgeInsets(top: top, left: 0, bottom: bottom, right: 0)

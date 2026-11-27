@@ -106,6 +106,8 @@ final class MediaFilesUITests: HomeUITestCase {
     shot("tool-thumbnail")
     thumbnail.tap()
     let image = app.images["media.viewer.image"]
+    // A tap that lands while the feed still decelerates only stops it.
+    if !app.buttons["media.viewer.close"].waitForExistence(timeout: 3), thumbnail.isHittable { thumbnail.tap() }
     XCTAssertTrue(image.waitForExistence(timeout: 20))
     shot("tool-viewer")
     app.buttons["media.viewer.close"].tap()
