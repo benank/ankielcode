@@ -37,9 +37,7 @@ struct UsageWindowRow: View {
         .foregroundStyle(Palette.textTertiary)
       }
     }
-    .accessibilityElement(children: .ignore)
-    .accessibilityLabel(label)
-    .accessibilityValue([String(localized: "\(remaining)% left"), pace.map(UsageCopy.pace), footer].compactMap { $0 }.joined(separator: ", "))
+    .accessibilityElement(children: .combine)
   }
 }
 
@@ -80,6 +78,8 @@ struct UsageAccountHeader: View {
           .font(Typography.caption)
           .foregroundStyle(Palette.textTertiary)
           .lineLimit(1)
+          .frame(minHeight: 44)
+          .contentShape(.rect)
           .buttonStyle(.plain)
           .accessibilityLabel(revealed ? String(localized: "Hide account email") : String(localized: "Reveal account email"))
       }
@@ -128,9 +128,6 @@ struct ContextWindowCard: View {
       }
       if let maxTokens = window.maxTokens, maxTokens > 0 {
         CapsuleMeter(value: window.usedPercentage ?? 0, tint: window.tint, height: 8)
-          .accessibilityElement()
-          .accessibilityLabel(Text("Context window"))
-          .accessibilityValue(Text("\(window.shownPercent ?? 0)% used"))
         HStack {
           TechLabel(String(localized: "\(window.usedTokens.formatted()) of \(maxTokens.formatted()) tokens"), small: true)
           Spacer(minLength: Spacing.sm)
@@ -161,6 +158,7 @@ struct ContextWindowCard: View {
       }
     }
     .padding(.vertical, Spacing.xs)
+    .accessibilityElement(children: .combine)
   }
 
   private var breakdown: [(String, Int)] {
@@ -316,6 +314,8 @@ struct UsageLimitsList: View {
       }
     }
     .listSectionSpacing(.compact)
+    // A sheet's inline bar needs no extra room above the first card.
+    .contentMargins(.top, compact ? Spacing.sm : nil, for: .scrollContent)
     .refreshable { await model.usage.refresh() }
     .accessibilityIdentifier("usage.list")
   }

@@ -27,12 +27,29 @@ final class UsageUITests: HomeUITestCase {
     shot("usage-thread-sheet")
   }
 
-  func testSettingsAccountPage() {
+  func testSettingsAccountPage() throws {
     launch(["ANKIEL_DEBUG_ROUTE": "settings-usage", "ANKIEL_DEBUG_USAGE": "fresh"])
     let account = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'usage.account.'")).firstMatch
     XCTAssertTrue(account.waitForExistence(timeout: 10))
     account.tap()
     XCTAssertTrue(app.staticTexts["Signed in"].waitForExistence(timeout: 5))
     shot("usage-account")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    XCTAssertTrue(account.waitForExistence(timeout: 5))
+    try audit()
+  }
+
+  /// As `AccessibilityAuditUITests`: contrast and clipping report false positives over glass.
+  private func audit() throws {
+    try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType)) { issue in
+      let label = issue.element?.label ?? ""
+      switch issue.auditType {
+      case .contrast, .textClipped: return true
+      case .sufficientElementDescription where !label.isEmpty && !label.contains(" "): return true
+      default:
+        print("AUDIT \(issue.compactDescription) — \(issue.element?.debugDescription.prefix(160) ?? "no element")")
+        return false
+      }
+    }
   }
 }

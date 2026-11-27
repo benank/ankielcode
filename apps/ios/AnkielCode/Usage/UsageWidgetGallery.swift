@@ -17,10 +17,13 @@
       NavigationStack {
         ScrollView {
           VStack(alignment: .leading, spacing: 20) {
-            tile(snapshot, date, .small, CGSize(width: 170, height: 170))
-            tile(snapshot, date, .medium, CGSize(width: 364, height: 170))
-            tile(snapshot, date, .medium, CGSize(width: 364, height: 170), monochrome: true)
-            tile(nil, date, .medium, CGSize(width: 364, height: 170))
+            // `ANKIEL_DEBUG_WIDGET_PAGE=2` puts the Lock Screen and large tiles on screen first.
+            if UsageDebug.environment["ANKIEL_DEBUG_WIDGET_PAGE"] != "2" {
+              tile(snapshot, date, .small, CGSize(width: 170, height: 170))
+              tile(snapshot, date, .medium, CGSize(width: 364, height: 170))
+              tile(snapshot, date, .medium, CGSize(width: 364, height: 170), monochrome: true)
+              tile(nil, date, .medium, CGSize(width: 364, height: 170))
+            }
             HStack(spacing: 16) {
               tile(snapshot, date, .accessoryRectangular, CGSize(width: 172, height: 76), monochrome: true)
               tile(snapshot, date, .accessoryCircular, CGSize(width: 76, height: 76), monochrome: true)

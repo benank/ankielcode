@@ -60,7 +60,7 @@ struct UsageWidgetView: View {
         Text(WidgetCopy.detail(column.detail))
           .font(.caption2)
           .foregroundStyle(.secondary)
-          .lineLimit(1)
+          .lineLimit(family == .small ? 2 : 1)
       }
       ForEach(column.windows) { window in
         windowRow(window, provider: column.provider)
