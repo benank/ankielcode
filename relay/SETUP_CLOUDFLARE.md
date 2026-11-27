@@ -68,13 +68,7 @@ npx wrangler secret put APNS_TOPICS      # e.g. com.example.ankiel,com.example.a
 
 An APNs key only reaches apps signed by the same Apple team. To get notifications from your relay, build and sign the iOS app with your own team. The App Store and TestFlight builds are signed by a different team, so your key can't reach them.
 
-**Android (FCM).** In the Firebase console, open **Project settings → Service accounts → Generate new private key**, then run:
-
-```bash
-npx wrangler secret put FCM_SERVICE_ACCOUNT_JSON < service-account.json
-```
-
-The Android app must be built with the same Firebase project's `google-services.json`.
+**Android.** The Android app doesn't support push notifications yet.
 
 If your relay was deployed before push support, run `npm run deploy` first. `npm run setup` offers to upload these secrets from the files. When a host connects, the relay tells it which platforms are configured. Pushes for a platform without its secrets fail with `push_not_configured`. Each host can send up to 120 notifications per minute.
 

@@ -161,11 +161,6 @@ async function offerPushSecrets(rl) {
     putWranglerSecret("APNS_KEY_ID", keyId);
     putWranglerSecret("APNS_TEAM_ID", teamId);
   }
-  if (await askYes(rl, "Set up Android push notifications (Firebase service account)? [y/N] ")) {
-    const json = readSecretFile(await rl.question("Path to the service account JSON: "));
-    JSON.parse(json);
-    putWranglerSecret("FCM_SERVICE_ACCOUNT_JSON", json);
-  }
 }
 
 function extractWorkerHost(output) {
