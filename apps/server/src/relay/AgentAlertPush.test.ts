@@ -177,13 +177,32 @@ const makeHarness = Effect.gen(function* () {
       Effect.andThen(Queue.take(pulls)),
       Effect.andThen(service.drain),
     );
+  // Completions wait out their confirmation window before they push.
+  const confirm = TestClock.adjust("5 seconds").pipe(Effect.andThen(service.drain));
+  const pushedThread = (message: RelayPushMessage | undefined) => {
+    const delivery = message?.deliveries[0];
+    return delivery?.platform === "apns" ? delivery.payload.body : delivery?.data;
+  };
   const kindsSent = () =>
     sent.flatMap((message) =>
       message.deliveries.map((delivery) =>
-        delivery.platform === "apns" ? delivery.payload.kind : delivery.data.kind,
+        delivery.platform === "apns"
+          ? (delivery.payload.body as { readonly kind: string }).kind
+          : delivery.data.kind,
       ),
     );
-  return { set, emit, relay, registrations, forgotten, sent, kindsSent, reads: () => reads };
+  return {
+    set,
+    emit,
+    confirm,
+    relay,
+    registrations,
+    forgotten,
+    sent,
+    kindsSent,
+    pushedThread,
+    reads: () => reads,
+  };
 });
 
 describe("AgentAlertPush", () => {
@@ -197,7 +216,16 @@ describe("AgentAlertPush", () => {
 
       harness.set(completed("thread-1", "run-1"));
       yield* harness.emit(runEnded("thread-1"));
+      // A queued follow-up starts inside the window, so "finished" waits for the last run.
+      harness.set(thread("thread-1", { latestRunId: RunId.make("run-2") }));
+      yield* harness.confirm;
+      expect(harness.sent).toEqual([]);
+
+      harness.set(completed("thread-1", "run-2"));
       yield* harness.emit(runEnded("thread-1"));
+      yield* harness.confirm;
+      yield* harness.emit(runEnded("thread-1"));
+      yield* harness.confirm;
       expect(harness.sent).toHaveLength(1);
       expect(harness.sent[0]?.deliveries).toEqual([
         {
@@ -209,12 +237,10 @@ describe("AgentAlertPush", () => {
             aps: {
               alert: { title: "Fix the login flow", "loc-key": "ANKIEL_PUSH_COMPLETED" },
               sound: "default",
-              "thread-id": "thread-1",
+              "thread-id": `${environmentId}/thread-1`,
               "interruption-level": "active",
             },
-            environmentId,
-            threadId: "thread-1",
-            kind: "completed",
+            body: { environmentId, threadId: "thread-1", kind: "completed" },
           },
           pushType: "alert",
           priority: 10,
@@ -241,7 +267,7 @@ describe("AgentAlertPush", () => {
         thread("thread-1", { pendingRuntimeRequest: request("question-1", "user_input") }),
       );
       yield* harness.emit(requestOpened("thread-1"));
-      harness.set({ ...completed("thread-1", "run-2", 3_000), status: "failed" });
+      harness.set({ ...completed("thread-1", "run-3", 3_000), status: "failed" });
       yield* harness.emit(runEnded("thread-1", "failed"));
 
       // A child's approval alerts on its top-level thread, which is what a tap opens.
@@ -262,8 +288,7 @@ describe("AgentAlertPush", () => {
         "approval",
         "approval",
       ]);
-      const childPush = harness.sent.at(-1)?.deliveries[0];
-      expect(childPush?.platform === "apns" && childPush.payload.threadId).toBe("thread-2");
+      expect(harness.pushedThread(harness.sent.at(-1))).toMatchObject({ threadId: "thread-2" });
     }),
   );
 
@@ -349,6 +374,7 @@ describe("AgentAlertPush", () => {
 
       harness.set(completed("thread-1", "run-1"));
       yield* harness.emit(runEnded("thread-1"));
+      yield* harness.confirm;
 
       expect(harness.sent.map((message) => message.deliveries.length)).toEqual([32, 32, 6]);
       expect(new Set(harness.sent.map((message) => message.pushId)).size).toBe(3);
@@ -362,7 +388,33 @@ describe("AgentAlertPush", () => {
       });
       harness.set(completed("thread-1", "run-2"));
       yield* harness.emit(runEnded("thread-1"));
+      yield* harness.confirm;
       expect(harness.sent).toHaveLength(4);
+    }),
+  );
+
+  it.effect("pushes a held completion when its background work ends, reading nothing before", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness;
+      harness.registrations.push(iosPhone("d".repeat(64), ["completed"]));
+
+      // Provider thread updates on a thread that holds no completion are never read.
+      harness.set(completed("idle", "run-1"));
+      yield* harness.emit(event("provider-thread.updated", "idle", {}));
+      expect(harness.reads()).toBe(0);
+
+      harness.set({
+        ...completed("thread-1", "run-1"),
+        pendingBackgroundTasks: [{ taskId: "task-1", kind: "subagent" }],
+      });
+      yield* harness.emit(runEnded("thread-1"));
+      yield* harness.confirm;
+      expect(harness.sent).toEqual([]);
+
+      harness.set(completed("thread-1", "run-1"));
+      yield* harness.emit(event("provider-thread.updated", "thread-1", {}));
+      yield* harness.confirm;
+      expect(harness.kindsSent()).toEqual(["completed"]);
     }),
   );
 });

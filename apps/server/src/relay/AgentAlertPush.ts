@@ -20,6 +20,7 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import type * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
@@ -42,6 +43,8 @@ const RELAY_PUSH_BATCH_SIZE = 32;
 const TITLE_MAX_CODE_POINTS = 80;
 const MAX_LINEAGE_DEPTH = 16;
 const COLLAPSE_PATTERN = /^[\x21-\x7e]{1,64}$/;
+/** A run can end moments before a queued follow-up or wake starts, so a completion waits this long. */
+const COMPLETION_CONFIRM_DELAY = "5 seconds";
 
 /** Pushes attention transitions (finished, failed, approval, input) to registered phones. */
 export class AgentAlertPush extends Context.Service<
@@ -61,25 +64,39 @@ interface Alert {
   readonly target: AgentAwarenessThread;
 }
 
-/** Events that can move a thread into an alerting state; everything else is skipped unread. */
-function canStartAlert(event: OrchestrationV2DomainEvent): boolean {
+/** One timer per thread; a newer completion replaces it. */
+interface PendingConfirmation {
+  readonly key: string;
+  due: boolean;
+  timer: Fiber.Fiber<void> | undefined;
+}
+
+/**
+ * Whether an event can move a thread into an alerting state: "raise" always can, "release" only
+ * ends background work that holds a completion. Everything else is skipped unread.
+ */
+function alertTrigger(event: OrchestrationV2DomainEvent): "raise" | "release" | null {
   switch (event.type) {
     case "run.updated":
-      return event.payload.status === "completed" || event.payload.status === "failed";
+      return event.payload.status === "completed" || event.payload.status === "failed"
+        ? "raise"
+        : null;
     case "runtime-request.updated":
-      return event.payload.status === "pending";
+      return event.payload.status === "pending" ? "raise" : null;
     case "turn-item.updated":
-      return (
-        turnItemCanChangeUserWait(event.payload) ||
-        turnItemUpdateCanEndBackgroundWork(event.payload)
-      );
-    // Background work ending, or a pull request watch settling, releases a held completion.
+      return turnItemCanChangeUserWait(event.payload)
+        ? "raise"
+        : turnItemUpdateCanEndBackgroundWork(event.payload)
+          ? "release"
+          : null;
     case "provider-thread.updated":
-      return !backgroundWorkHoldsCompletion(event.payload.pendingBackgroundTasks ?? []);
+      return backgroundWorkHoldsCompletion(event.payload.pendingBackgroundTasks ?? [])
+        ? null
+        : "release";
     case "thread.pull-request-synced":
-      return true;
+      return "release";
     default:
-      return false;
+      return null;
   }
 }
 
@@ -124,10 +141,9 @@ function truncateTitle(title: string): string {
 }
 
 /**
- * The phone renders the body from the kind, so no text is localized here. APNs alerts carry
- * these `loc-key`s, which the app's Localizable.strings must define:
- * ANKIEL_PUSH_COMPLETED, ANKIEL_PUSH_FAILED, ANKIEL_PUSH_APPROVAL, ANKIEL_PUSH_INPUT.
- * Both platforms carry `environmentId` and `threadId`, which the tap handler opens.
+ * The phone localizes the body; the app must define these APNs `loc-key`s: ANKIEL_PUSH_COMPLETED,
+ * ANKIEL_PUSH_FAILED, ANKIEL_PUSH_APPROVAL, ANKIEL_PUSH_INPUT. The tap handler's ids sit under
+ * `body` on iOS, the only part of a remote push expo-notifications exposes as `data`.
  */
 function buildPushDelivery(input: {
   readonly registration: PushRegistry.PushRegistration;
@@ -150,13 +166,11 @@ function buildPushDelivery(input: {
         aps: {
           alert: { title, "loc-key": `ANKIEL_PUSH_${kind.toUpperCase()}` },
           sound: "default",
-          "thread-id": threadId,
+          "thread-id": `${environmentId}/${threadId}`,
           // The app has no time-sensitive entitlement, so every alert is "active".
           "interruption-level": "active",
         },
-        environmentId,
-        threadId,
-        kind,
+        body: { environmentId, threadId, kind },
       },
       pushType: "alert",
       priority: 10,
@@ -193,8 +207,12 @@ const make = Effect.gen(function* () {
   const registry = yield* PushRegistry.PushRegistry;
   const relay = yield* RelayTunnelService.RelayTunnelService;
   const environmentId = yield* (yield* ServerEnvironment.ServerEnvironment).getEnvironmentId;
+  const scope = yield* Effect.scope;
   const startedAt = yield* Clock.currentTimeMillis;
   const lastAlertKey = new Map<ThreadId, string>();
+  // Listed threads whose latest run completed while background work still holds it.
+  const heldCompletions = new Set<ThreadId>();
+  const confirming = new Map<ThreadId, PendingConfirmation>();
   const queued = new Set<ThreadId>();
   let pushSequence = 0;
 
@@ -242,6 +260,8 @@ const make = Effect.gen(function* () {
       project: { title: "" },
       thread,
     })?.phase;
+    if (phase === "running" && thread.activityRunStatus == null) heldCompletions.add(thread.id);
+    else heldCompletions.delete(thread.id);
     const kind = phase === undefined ? undefined : KIND_BY_PHASE[phase];
     if (kind === undefined) return null;
     const request = kind === "approval" || kind === "input" ? thread.pendingRuntimeRequest : null;
@@ -304,6 +324,37 @@ const make = Effect.gen(function* () {
     }
   });
 
+  // Annotated: the worker below calls back into this, which inference cannot follow.
+  const enqueue = (threadId: ThreadId): Effect.Effect<void> =>
+    Effect.suspend(() => {
+      // Coalesce: one check reads the newest state for every event queued behind it.
+      if (queued.has(threadId)) return Effect.void;
+      queued.add(threadId);
+      return worker.enqueue(threadId);
+    });
+
+  const cancelConfirmation = Effect.fnUntraced(function* (threadId: ThreadId) {
+    const pending = confirming.get(threadId);
+    confirming.delete(threadId);
+    if (pending?.timer !== undefined) yield* Fiber.interrupt(pending.timer);
+  });
+
+  const confirmLater = Effect.fnUntraced(function* (threadId: ThreadId, key: string) {
+    const pending: PendingConfirmation = { key, due: false, timer: undefined };
+    confirming.set(threadId, pending);
+    pending.timer = yield* Effect.sleep(COMPLETION_CONFIRM_DELAY).pipe(
+      Effect.andThen(
+        Effect.suspend(() => {
+          if (confirming.get(threadId) !== pending) return Effect.void;
+          pending.due = true;
+          pending.timer = undefined;
+          return enqueue(threadId);
+        }),
+      ),
+      Effect.forkIn(scope),
+    );
+  });
+
   // Untraced: runs per candidate event; dispatch opens the span once a push is due.
   const evaluate = Effect.fnUntraced(function* (threadId: ThreadId) {
     const push = yield* usablePushState;
@@ -311,10 +362,19 @@ const make = Effect.gen(function* () {
     const thread = yield* readThread(threadId);
     if (thread === null) {
       lastAlertKey.delete(threadId);
+      heldCompletions.delete(threadId);
+      yield* cancelConfirmation(threadId);
       return;
     }
     const alert = yield* resolveAlert(thread, Math.max(startedAt, push.readyAt));
+    const pending = confirming.get(threadId);
+    if (pending !== undefined && pending.key !== alert?.key) yield* cancelConfirmation(threadId);
     if (alert === null || lastAlertKey.get(threadId) === alert.key) return;
+    if (alert.kind === "completed" && !(pending?.key === alert.key && pending.due)) {
+      if (pending?.key !== alert.key) yield* confirmLater(threadId, alert.key);
+      return;
+    }
+    confirming.delete(threadId);
     lastAlertKey.set(threadId, alert.key);
     yield* dispatch(alert, push.availability);
   });
@@ -331,16 +391,15 @@ const make = Effect.gen(function* () {
   const handleEvent = (event: OrchestrationV2DomainEvent) => {
     if (event.type === "thread.archived" || event.type === "thread.deleted") {
       lastAlertKey.delete(event.threadId);
+      heldCompletions.delete(event.threadId);
       return Effect.void;
     }
-    if (!canStartAlert(event)) return Effect.void;
+    const trigger = alertTrigger(event);
+    if (trigger === null || (trigger === "release" && !heldCompletions.has(event.threadId))) {
+      return Effect.void;
+    }
     return usablePushState.pipe(
-      Effect.flatMap((push) => {
-        // Coalesce: one check reads the newest state for every event queued behind it.
-        if (push === null || queued.has(event.threadId)) return Effect.void;
-        queued.add(event.threadId);
-        return worker.enqueue(event.threadId);
-      }),
+      Effect.flatMap((push) => (push === null ? Effect.void : enqueue(event.threadId))),
     );
   };
 
