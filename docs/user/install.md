@@ -59,8 +59,8 @@ longer updates. Run `npm uninstall -g @ankielcode/cli`, then the install command
 
 ### Intel Macs
 
-There is no `ankiel` executable for Intel Macs (the desktop app is available). To
-run a server there, build it from source with `vp`, which provides the Node version it needs
+There is no `ankiel` executable or desktop app for Intel Macs. To run a server
+there, build it from source with `vp`, which provides the Node version it needs
 ([Install vp](../operations/00_development.md#first-checkout)):
 
 ```bash
@@ -75,27 +75,10 @@ update it with `git pull` and a rebuild.
 ## Desktop app
 
 Download a release from [GitHub Releases](https://github.com/benank/ankielcode/releases)
-or [code.ankiel.com/download](https://code.ankiel.com/download). On Debian and Ubuntu,
-install the `.deb` with `sudo apt install ./Ankiel-Code-*.deb`.
-
-### Linux
-
-AppImage and `.deb` downloads are available for x86_64 and ARM64. Check your
-architecture with `uname -m`: for `x86_64`, choose a file ending in
-`x86_64.AppImage` or `amd64.deb`; for `aarch64`, choose `arm64.AppImage` or
-`arm64.deb`.
-
-To launch an AppImage, open a terminal in its download folder. Replace
-`Ankiel-Code.AppImage` below with the exact filename you downloaded:
-
-```bash
-chmod +x ./Ankiel-Code.AppImage
-./Ankiel-Code.AppImage
-```
-
-The `.deb` updates itself like the other desktop builds. It asks for your
-password to install each update. If your desktop has no password prompt, the
-update fails. Download the new `.deb` and install it the same way.
+or [code.ankiel.com/download](https://code.ankiel.com/download). Desktop builds exist
+for macOS on Apple silicon and Windows x64. On Linux, install the
+[command line](#command-line) server and connect to it from the desktop or mobile app
+on another device ([details](./remote-access.md)).
 
 ### The `ankiel` command
 
@@ -104,19 +87,19 @@ The desktop app does not need the `ankiel` command. For commands such as
 [command line](#command-line) installer.
 
 Earlier desktop releases installed their own `ankiel`: a launcher in
-`~/.ankiel/bin`, linked from `~/.local/bin` or `~/bin` on macOS and Linux, or added
-to your `PATH` on Windows. The app no longer updates it, so it stops working once
-the app moves or an AppImage update changes its file name. On macOS and Linux the
-installer replaces the link in `~/.local/bin`. On Windows, remove
-`%USERPROFILE%\.ankiel\bin` from your `PATH` if the installer says another `ankiel`
-runs first.
+`~/.ankiel/bin`, linked from `~/.local/bin` or `~/bin` on macOS, or added to your
+`PATH` on Windows. The app no longer updates it, so it stops working once the app
+moves. On macOS the installer replaces the link in `~/.local/bin`. On Windows,
+remove `%USERPROFILE%\.ankiel\bin` from your `PATH` if the installer says another
+`ankiel` runs first.
 
 ### Windows Subsystem for Linux
 
-Choose a WSL distro in **Settings → Sharing & access** to run agents and projects
-there. Install the provider CLIs inside that distro. Ankiel Code installs its own
-server runtime there automatically; the first launch after an app update can
-take longer.
+The Windows app does not include a server for WSL. To run agents and projects in
+a WSL distro, install the `ankiel` command inside that distro with the
+[command line](#command-line) installer, along with the provider CLIs you use.
+Start it there with `ankiel serve` or `ankiel service install`, run `ankiel pair`,
+and paste the pairing URL into **Add environment** in the desktop app.
 
 ### Drop a folder on the sidebar
 
