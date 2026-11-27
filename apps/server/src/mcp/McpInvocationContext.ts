@@ -102,6 +102,18 @@ export const hiddenWithoutBackgroundWait = (): boolean => {
   );
 };
 
+const hiddenWithoutThreadCapability = (capability: McpCapability) => (): boolean => {
+  const fiber = Fiber.getCurrent();
+  const scope = fiber && Context.getOrUndefined(fiber.context, McpInvocationContext);
+  return scope === undefined || (scope.thread !== undefined && scope.capabilities.has(capability));
+};
+
+/** `hiddenFromOutsideClients`, and hidden from a thread whose browser access is off. */
+export const hiddenWithoutPreview = hiddenWithoutThreadCapability("preview");
+
+/** `hiddenFromOutsideClients`, and hidden from a thread whose device access is off. */
+export const hiddenWithoutDevice = hiddenWithoutThreadCapability("device");
+
 /** `McpSchema.EnabledWhen` for tools only a client outside a thread drives, such as the CLI. */
 export const hiddenFromThreads = (): boolean => {
   const fiber = Fiber.getCurrent();
