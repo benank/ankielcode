@@ -17,7 +17,10 @@
       "version": "1.0.0",
       "status": "ready",
       "auth": {
-        "status": "authenticated"
+        "status": "authenticated",
+        "label": "Claude Max Subscription",
+        "email": "tide@example.com",
+        "workspaceId": "ws-tide"
       },
       "checkedAt": "2026-11-27T09:00:00.000Z",
       "models": [
@@ -127,7 +130,36 @@
         }
       ],
       "slashCommands": [],
-      "skills": []
+      "skills": [],
+      "usageLimits": {
+        "checkedAt": "2026-11-27T09:00:00.000Z",
+        "windows": [
+          {
+            "id": "five_hour",
+            "kind": "session",
+            "label": "Session",
+            "usedPercent": 35,
+            "resetsAt": "2026-11-27T11:00:00.000Z",
+            "windowDurationMins": 300
+          },
+          {
+            "id": "seven_day",
+            "kind": "weekly",
+            "label": "Weekly",
+            "usedPercent": 52.5,
+            "resetsAt": "2026-12-01T00:00:00.000Z",
+            "windowDurationMins": 10080
+          }
+        ],
+        "resetCredits": {
+          "availableCount": 2,
+          "nextExpiresAt": "2026-12-03T00:00:00.000Z"
+        },
+        "externalUsage": {
+          "label": "Claude usage and resets",
+          "url": "https://claude.ai/settings/usage"
+        }
+      }
     },
     {
       "instanceId": "devReplay",

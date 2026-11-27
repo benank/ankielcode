@@ -54,3 +54,12 @@ The String Catalog is the source of truth and ships the RN app's 10 locales. `xc
 new keys but never writes them to the catalog (only the Xcode editor does), so after adding strings
 run `node apps/ios/scripts/import-translations.mjs --sync <derived-data>`. `vp run i18n:check` fails
 on a missing locale, a placeholder mismatch or a stale key.
+
+## The widget shares the app's catalog
+
+An app extension's bundle has no String Catalog of its own, and the translation scripts manage one
+catalog. The widget's views live in `AnkielWidgets/` but are also members of the app target, so
+the app build extracts their strings into `Localizable.xcstrings`; at run time the widget reads that
+catalog from its containing app bundle (`WidgetCopy.bundle`). Only App Intent metadata (the widget's
+configuration titles) cannot do this and stays English. The widget reads one JSON snapshot from the
+App Group the app writes; it must never open a connection.

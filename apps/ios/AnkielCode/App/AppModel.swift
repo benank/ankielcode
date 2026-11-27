@@ -34,6 +34,8 @@ final class AppModel {
   let settingsWriter: SettingsWriter
   /// Finds newer Ankiel Code releases for the update check.
   let releaseLookup: ReleaseLookup
+  /// Provider usage limits and the usage widget's snapshot.
+  @ObservationIgnored private(set) lazy var usage = UsageCenter(registry: registry)
   /// Settings shows canned computers (`ANKIEL_DEBUG_SETTINGS`): nothing reaches a server.
   private(set) var isSettingsFixture = false
   #if DEBUG
@@ -118,6 +120,7 @@ final class AppModel {
     await registry.load()
     await composer.load()
     home.start()
+    usage.start()
     #if DEBUG
       applyDebugLaunch()
     #endif
@@ -177,6 +180,10 @@ final class AppModel {
   /// form's `…://connections/new?pairingUrl=…&autoConnect=1`. Links from outside the app always
   /// ask before pairing; only debug builds honor `autoConnect`.
   func open(_ url: URL) {
+    if UsageLink.matches(url) {
+      openSettings(.usage)
+      return
+    }
     if let ref = ThreadLink.parse(url) {
       sheet = nil
       if registry.isLoaded { navigator.open(ref) } else { pendingThread = ref }

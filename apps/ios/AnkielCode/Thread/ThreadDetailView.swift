@@ -297,6 +297,9 @@ private struct ThreadScreen: View {
   @ToolbarContentBuilder
   private var toolbar: some ToolbarContent {
     ToolbarItem(placement: .topBarTrailing) {
+      UsageToolbarButton(threadContext: .some(detail.state.contextWindow))
+    }
+    ToolbarItem(placement: .topBarTrailing) {
       Menu {
         FilesMenuButton()
         ReviewMenuSection()

@@ -46,6 +46,8 @@ public struct ThreadDetailState: Sendable, Equatable {
   public var revision = 0
   /// The turns with changes to review, newest first.
   public var turnChanges: [TurnChange] = []
+  /// The active conversation's context window, nil until a provider reports it.
+  public var contextWindow: ContextWindowSnapshot?
 
   public init() {}
 
@@ -240,6 +242,7 @@ public actor ThreadDetailSync {
       state.outcomes = PendingRequestDerivation.outcomes(projection)
       state.threadSelection = projection.thread.modelSelection
       state.turnChanges = TurnChange.derive(projection)
+      state.contextWindow = ContextWindow.derive(projection)
       var ids = Set(projection.messages.map(\.id))
       for row in projection.visibleTurnItems {
         if case .userMessage(let message) = row.item.body { ids.insert(message.messageId) }

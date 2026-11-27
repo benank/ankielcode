@@ -36,6 +36,8 @@ const schemas = {
   metadata: m.FilesystemGetMetadataInput,
   pushRegister: m.PushRegisterInput,
   archivedSnapshot: S.Struct({}),
+  refreshProviders: m.WsServerRefreshProvidersRpc.payloadSchema,
+  consumeResetCredit: m.ProviderConsumeResetCreditInput,
 };
 
 let failures = 0;
@@ -112,7 +114,21 @@ const sample = {
       { slug: "claude-sonnet-5-5", name: "Claude Sonnet 5.5", shortName: "Sonnet 5.5", isCustom: false, capabilities: { optionDescriptors: [effort] } },
       { slug: "claude-haiku-5-5", name: "Claude Haiku 5.5", shortName: "Haiku 5.5", isCustom: false, capabilities: null },
       { slug: "claude-legacy", name: "Claude Legacy", isCustom: false, isLegacy: true, capabilities: null },
-    ], { continuation: { groupKey: "claude" }, supportedRuntimeModes: ["approval-required", "auto", "full-access"] }),
+    ], {
+      continuation: { groupKey: "claude" },
+      supportedRuntimeModes: ["approval-required", "auto", "full-access"],
+      // Limits as the usage screens read them (synthetic account).
+      auth: { status: "authenticated", label: "Claude Max Subscription", email: "tide@example.com", workspaceId: "ws-tide" },
+      usageLimits: {
+        checkedAt: "2026-11-27T09:00:00.000Z",
+        windows: [
+          { id: "five_hour", kind: "session", label: "Session", usedPercent: 35, resetsAt: "2026-11-27T11:00:00.000Z", windowDurationMins: 300 },
+          { id: "seven_day", kind: "weekly", label: "Weekly", usedPercent: 52.5, resetsAt: "2026-12-01T00:00:00.000Z", windowDurationMins: 10080 },
+        ],
+        resetCredits: { availableCount: 2, nextExpiresAt: "2026-12-03T00:00:00.000Z" },
+        externalUsage: { label: "Claude usage and resets", url: "https://claude.ai/settings/usage" },
+      },
+    }),
     provider("devReplay", "devReplay", "Replay (dev)", [
       { slug: "replay", name: "Replay", isCustom: false, capabilities: null },
     ]),

@@ -47,6 +47,12 @@ public enum ThreadReducer {
       projection.updatedAt = event.occurredAt
       if turn.tokenUsage == nil { turn.tokenUsage = projection.providerTurns.first { $0.id == turn.id }?.tokenUsage }
       upsert(turn, into: &projection.providerTurns)
+    case .providerThread(let providerThread):
+      projection.updatedAt = event.occurredAt
+      if providerThread.appThreadId == projection.thread.id, !providerThread.isQueuedPlaceholder {
+        projection.thread.activeProviderThreadId = providerThread.id
+      }
+      upsert(providerThread, into: &projection.providerThreads)
     case .runtimeRequest(let request):
       projection.updatedAt = event.occurredAt
       upsert(request, into: &projection.runtimeRequests)

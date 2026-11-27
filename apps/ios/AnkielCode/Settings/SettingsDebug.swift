@@ -119,6 +119,7 @@
         case "diagnostics": .diagnostics
         case "voice": .voice
         case "archive": .archive
+        case "usage": .usage
         default: nil
         }
       model.openSettings(route)

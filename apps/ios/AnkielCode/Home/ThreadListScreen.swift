@@ -216,6 +216,7 @@ struct ThreadListScreen: View {
       FilterMenu()
     }
     ToolbarItemGroup(placement: .topBarTrailing) {
+      UsageToolbarButton()
       Button("Settings", systemImage: "gearshape") { model.openSettings() }
         .accessibilityIdentifier("home.settings")
     }

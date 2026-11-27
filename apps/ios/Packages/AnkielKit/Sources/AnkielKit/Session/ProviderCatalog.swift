@@ -29,6 +29,9 @@ public struct ServerProvider: Sendable, Hashable, Decodable, Identifiable {
   public var latestVersion: String?
   /// `versionAdvisory.status == "behind_latest"`.
   public var isBehindLatest = false
+  /// Subscription windows the computer last read for this account; nil when it reports none.
+  public var usageLimits: ProviderUsageLimits?
+  public var authWorkspaceId: String?
 
   public var id: String { instanceId }
 
@@ -48,7 +51,7 @@ public struct ServerProvider: Sendable, Hashable, Decodable, Identifiable {
   enum CodingKeys: String, CodingKey {
     case instanceId, driver, displayName, accentColor, badgeLabel, continuation, showInteractionModeToggle
     case supportedRuntimeModes, enabled, installed, auth, availability, models, updateRequiredModels
-    case version, status, message, unavailableReason, versionAdvisory
+    case version, status, message, unavailableReason, versionAdvisory, usageLimits
   }
 
   struct Continuation: Decodable { var groupKey: String? }
@@ -56,6 +59,7 @@ public struct ServerProvider: Sendable, Hashable, Decodable, Identifiable {
     var status: String?
     var label: String?
     var email: String?
+    var workspaceId: String?
   }
   struct VersionAdvisory: Decodable {
     var status: String?
@@ -79,6 +83,8 @@ public struct ServerProvider: Sendable, Hashable, Decodable, Identifiable {
     authStatus = auth?.status
     authLabel = auth?.label
     authEmail = auth?.email
+    authWorkspaceId = auth?.workspaceId
+    usageLimits = c.loose(ProviderUsageLimits.self, .usageLimits)
     version = c.loose(String.self, .version)
     state = c.loose(String.self, .status)
     message = c.loose(String.self, .message)

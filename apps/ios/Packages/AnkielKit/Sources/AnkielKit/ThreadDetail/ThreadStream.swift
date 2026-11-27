@@ -105,6 +105,7 @@ public struct ThreadEvent: Sendable {
     case node(ExecutionNode)
     case subagent(Subagent)
     case providerTurn(ProviderTurn)
+    case providerThread(ProviderThread)
     case runtimeRequest(RuntimeRequest)
     case message(ConversationMessage)
     case turnItem(TurnItem)
@@ -137,7 +138,7 @@ public struct ThreadEvent: Sendable {
   static let ignoredEvents: Set<String> = [
     "thread.visit-recorded", "thread.pull-request-link-updated", "run.background-work-cancelled",
     "provider-session.attached", "provider-session.updated", "provider-session.detached",
-    "provider-thread.updated", "plan.updated", "checkpoint.rollback-requested", "context-handoff.updated",
+    "plan.updated", "checkpoint.rollback-requested", "context-handoff.updated",
     "context-transfer.created",
     "context-transfer.updated",
   ]
@@ -169,6 +170,7 @@ extension ThreadEvent: Decodable {
     case "node.updated": self.payload = .node(try payload(ExecutionNode.self))
     case "subagent.updated": self.payload = .subagent(try payload(Subagent.self))
     case "provider-turn.updated": self.payload = .providerTurn(try payload(ProviderTurn.self))
+    case "provider-thread.updated": self.payload = .providerThread(try payload(ProviderThread.self))
     case "runtime-request.updated": self.payload = .runtimeRequest(try payload(RuntimeRequest.self))
     case "message.updated": self.payload = .message(try payload(ConversationMessage.self))
     case "turn-item.updated": self.payload = .turnItem(try payload(TurnItem.self))

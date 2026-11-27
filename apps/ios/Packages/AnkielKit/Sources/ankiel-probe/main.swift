@@ -106,6 +106,11 @@ func run() async throws {
     await session.close()
     return
   }
+  if CommandLine.arguments.contains("--usage") {
+    try await probeUsage(session, label: environment.label)
+    await session.close()
+    return
+  }
   if CommandLine.arguments.contains("--diff") {
     let threadId = argument("--diff").flatMap { $0.hasPrefix("--") ? nil : $0 }
     try await probeDiff(session, only: threadId)

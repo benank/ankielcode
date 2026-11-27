@@ -14,6 +14,7 @@ public struct TurnItem: Sendable, Hashable, Identifiable {
   public var runId: String?
   public var nodeId: String?
   public var providerTurnId: String?
+  public var providerThreadId: String?
   public var parentItemId: String?
   public var ordinal: Int
   public var status: WireEnum<TurnItemStatus>
@@ -469,7 +470,7 @@ extension LossyArray: Hashable where Element: Hashable {
 
 extension TurnItem: Decodable {
   enum CodingKeys: String, CodingKey {
-    case id, threadId, runId, nodeId, providerTurnId, parentItemId, ordinal, status, title
+    case id, threadId, runId, nodeId, providerTurnId, providerThreadId, parentItemId, ordinal, status, title
     case startedAt, completedAt, updatedAt, type, deferredWork, toolSurface
   }
 
@@ -484,6 +485,7 @@ extension TurnItem: Decodable {
     runId = container.loose(String.self, .runId)
     nodeId = container.loose(String.self, .nodeId)
     providerTurnId = container.loose(String.self, .providerTurnId)
+    providerThreadId = container.loose(String.self, .providerThreadId)
     parentItemId = container.loose(String.self, .parentItemId)
     title = container.loose(String.self, .title)
     startedAt = container.loose(WireTimestamp.self, .startedAt)

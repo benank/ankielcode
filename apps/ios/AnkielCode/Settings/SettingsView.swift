@@ -9,6 +9,9 @@ enum SettingsRoute: Hashable {
   case providers, threads
   case about, storage, diagnostics
   case voice, archive
+  /// Provider usage limits, and one account's page.
+  case usage
+  case usageAccount(String)
   /// An archived thread, read from the Archive page.
   case archivedThread(ThreadRef)
 }
@@ -86,6 +89,7 @@ struct SettingsView: View {
 
     Section("Agents") {
       SettingsLink(.providers)
+      SettingsLink(.usage)
       SettingsLink(.threads)
     }
 
@@ -142,6 +146,8 @@ struct SettingsView: View {
     case .diagnostics: DiagnosticsPage()
     case .voice: VoiceSettingsPage()
     case .archive: ArchivedThreadsScreen(registry: model.registry)
+    case .usage: UsageLimitsPage()
+    case .usageAccount(let key): UsageAccountPage(key: key)
     case .archivedThread(let ref): ThreadDetailView(threadRef: ref)
     }
   }
@@ -226,6 +232,8 @@ enum SettingsCopy {
     case .diagnostics: String(localized: "Diagnostics")
     case .voice: String(localized: "Voice")
     case .archive: String(localized: "Archive", comment: "noun, settings page of archived threads")
+    case .usage: String(localized: "Usage", comment: "screen title")
+    case .usageAccount: String(localized: "Account", comment: "screen title")
     case .archivedThread: String(localized: "Thread", comment: "fallback name for an untitled thread")
     }
   }
@@ -244,6 +252,7 @@ enum SettingsCopy {
     case .diagnostics: "stethoscope"
     case .voice: "mic"
     case .archive, .archivedThread: "archivebox"
+    case .usage, .usageAccount: "gauge.with.dots.needle.33percent"
     }
   }
 
@@ -251,7 +260,7 @@ enum SettingsCopy {
     switch route {
     case .notifications, .voice: Palette.settingsRed
     case .appearance, .threads: Palette.settingsBlue
-    case .chat, .providers: Palette.settingsGreen
+    case .chat, .providers, .usage: Palette.settingsGreen
     default: Palette.settingsGray
     }
   }
@@ -272,6 +281,8 @@ enum SettingsCopy {
     case .voice: "voice"
     case .archive: "archive"
     case .archivedThread(let ref): "archivedThread.\(ref.threadId)"
+    case .usage: "usage"
+    case .usageAccount(let key): "usageAccount.\(key)"
     }
   }
 }
@@ -304,6 +315,7 @@ enum SettingsSearch {
       (.diagnostics, [String(localized: "Copy diagnostics")]),
       (.voice, [String(localized: "Dictation"), String(localized: "Microphone access"), String(localized: "Language")]),
       (.archive, [String(localized: "Archived threads"), String(localized: "Unarchive", comment: "verb, swipe action")]),
+      (.usage, [String(localized: "Provider usage limits"), String(localized: "Reset credits"), String(localized: "Context window")]),
     ]
   }
 

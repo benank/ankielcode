@@ -272,3 +272,66 @@ pushed ~45 s after the test starts.
 | `ANKIEL_DEBUG_PUSH` | `on`, `on-more` | Notifications with push on and canned per-computer rows (On, Relay not set up, Relay has no push key; or Relay offline, Not connected, a refused read). Combine with `ANKIEL_DEBUG_SETTINGS=fixture` for three computers. |
 | | `denied`, `unavailable` | iOS notifications off for the app; push on without a token. |
 | | `offer` | The one-time offer over home. |
+
+## Voice, archive and system entry points
+
+**Voice** (`AnkielCode/Voice`, logic in `AnkielKit/Voice`): the composer's microphone dictates on
+the device with iOS 26's `SpeechAnalyzer`/`SpeechTranscriber` in the app's language, downloading
+the language's model first when it is missing. Live text shows after the draft while the field is
+frozen; Done commits it once, Cancel leaves the draft. A call, a lost headset or backgrounding ends
+the session and keeps what was heard. Settings → Voice shows the language, the model and microphone
+access. Transcribing on a computer or with a cloud provider (RN's other options) is not here yet.
+
+**Archive** (Settings → Archive): each computer's `orchestration.getArchivedShellSnapshot`, searched,
+filtered and paged on the device (the RPC takes no arguments). Archived threads open read-only.
+`ankiel-probe --live archive` proves archive → list → open → unarchive → delete; `--seed <n>` archives
+n "probe archive" threads for the screen, `--seed-clean` deletes them.
+
+**Entry points** (`AnkielCode/Shortcuts`): App Intents (New thread with an optional prompt and
+project, Open thread over the recent threads, Search threads) with App Shortcuts phrases; Home
+Screen quick actions (New thread, Search, the latest thread); Spotlight items for recent threads
+(one domain per computer, removed with it); and the keyboard and iPad menu bar commands. All of
+them go through `AppModel.open(AppEntry)`, which never waits on a connection. Recent threads and
+projects are saved in `UserDefaults` so intents answer from a cold launch. Links:
+`ankielcode-native://new?prompt=…&environment=…&project=…` and `…://search?q=…`.
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_VOICE` | `listen`, `download`, `unsupported`, `unavailable`, `fail`, `interrupt`, `denied` | A scripted speech engine (the simulator has no microphone to drive and no on-device transcriber): it "hears" a fixed sentence; `download` first fakes a model download; `denied` refuses the microphone. |
+| `ANKIEL_DEBUG_INTENT` | `new`, `new:<prompt>`, `open`, `search:<query>` | Runs that intent's own `perform()` at launch, before the computers load, as Siri does at a cold launch. |
+| `ANKIEL_DEBUG_RECENTS` | `1` | Prints the saved recent threads. |
+| `ANKIEL_DEBUG_ROUTE` | `settings-voice`, `settings-archive` | Those Settings pages. |
+
+`VoiceUITests` (fake engine), `ArchiveUITests` (live; seed first) and `ShortcutUITests` (live;
+quick actions through Springboard, intents through `ANKIEL_DEBUG_INTENT`) cover these.
+
+## Usage limits and the widget
+
+The thread's top bar shows its context window as a capsule meter (the active provider thread's
+newest `tokenUsage`, its `contextUsage`, or a later compaction: `ContextWindow` in `AnkielKit/Usage`);
+home shows a ring of the highest provider spend. Both open the usage sheet; Settings → Usage pools
+accounts per provider with a page per account (banked resets, `provider.consumeResetCredit`). Limits
+come from `ServerProvider.usageLimits` on the config stream; pull to refresh and opening the sheet
+call `server.refreshProviders {}` (one in flight per computer, automatic ones at most every five
+minutes, `UsageRefresher`). Links: `ankielcode-native://settings/usage` and `…://usage`.
+
+`AnkielWidgets` is a WidgetKit extension (`com.ankiel.code.native.widgets`) sharing the App Group
+`group.com.ankiel.code.native`. The app writes `subscription-usage.json` there whenever the limits
+change (`UsageWidgetSnapshot`, Codex and Claude, no emails) and reloads the widget; the widget never
+connects and greys a provider out at its expiry (15 minutes after the read, or its first reset).
+Its views (`AnkielWidgets/UsageWidgetViews.swift`) are compiled into the app too and read the app's
+String Catalog from the containing bundle; `AnkielWidgetsBundle.swift` (the widget, timeline and
+the period intent) is widget-only. App Groups need provisioning to work on a device.
+
+`swift run ankiel-probe --state <file> --usage` prints each provider's raw limits, forces a refresh,
+says whether `providerStatuses` followed, and prints accounts, pools, the widget snapshot and every
+listed thread's context window.
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_USAGE` | `fresh`, `near`, `stale`, `unavailable`, `pooled`, `empty` | Canned computers' limits instead of the live ones (synthetic; refreshes only wait). Also written to the widget's snapshot. |
+| `ANKIEL_DEBUG_CONTEXT` | `low`, `high`, `over`, `compacting`, `compacted`, `unknown` | Every thread's context window. |
+| `ANKIEL_DEBUG_USAGE_OPEN` | `home`, `thread`, `widgets` | Opens the usage sheet from home or the open thread, or (home) the widget's views at each size, full color and monochrome. `ANKIEL_DEBUG_WIDGET_STALE=1` renders them an hour later. |
+
+Settings → Usage directly: `ANKIEL_DEBUG_ROUTE=settings-usage`. `UsageUITests` open usage from home,
+a thread and Settings on fixtures.

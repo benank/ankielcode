@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		7FD296700135351A634F52DB /* AnkielKit in Frameworks */ = {isa = PBXBuildFile; productRef = 32C2B39AE046CF8EC00979B4 /* AnkielKit */; };
+		C5A0000000000000000000AA /* AnkielWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C5A0000000000000000000A1 /* AnkielWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C5A0000000000000000000AC /* AnkielKit in Frameworks */ = {isa = PBXBuildFile; productRef = C5A0000000000000000000AB /* AnkielKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -18,12 +20,44 @@
 			remoteGlobalIDString = 49575FBD1B0B0DCF72AAE95D;
 			remoteInfo = AnkielCode;
 		};
+		C5A0000000000000000000A7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E0E6811DF8BB9A256EAF630C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C5A0000000000000000000A4;
+			remoteInfo = AnkielWidgets;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C5A0000000000000000000A9 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C5A0000000000000000000AA /* AnkielWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		B1A0000000000000000000A1 /* AnkielCodeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnkielCodeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		82F66858C198B6CEFCEBC3CA /* AnkielCode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AnkielCode.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C5A0000000000000000000A1 /* AnkielWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AnkielWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C5A0000000000000000000AD /* Exceptions for "AnkielWidgets" folder in "AnkielCode" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AnkielWidgetsBundle.swift,
+			);
+			target = 49575FBD1B0B0DCF72AAE95D /* AnkielCode */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B1A0000000000000000000A2 /* AnkielCodeUITests */ = {
@@ -34,6 +68,14 @@
 		F14F1FA7DF801B10F57E285E /* AnkielCode */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = AnkielCode;
+			sourceTree = "<group>";
+		};
+		C5A0000000000000000000A2 /* AnkielWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C5A0000000000000000000AD /* Exceptions for "AnkielWidgets" folder in "AnkielCode" target */,
+			);
+			path = AnkielWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -54,6 +96,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C5A0000000000000000000A3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5A0000000000000000000AC /* AnkielKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -62,6 +112,7 @@
 			children = (
 				F14F1FA7DF801B10F57E285E /* AnkielCode */,
 				B1A0000000000000000000A2 /* AnkielCodeUITests */,
+				C5A0000000000000000000A2 /* AnkielWidgets */,
 				1CB0C5D775C7FF82949B9193 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -71,6 +122,7 @@
 			children = (
 				82F66858C198B6CEFCEBC3CA /* AnkielCode.app */,
 				B1A0000000000000000000A1 /* AnkielCodeUITests.xctest */,
+				C5A0000000000000000000A1 /* AnkielWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -106,13 +158,16 @@
 				3138A31511B204D68E57EB83 /* Sources */,
 				E2F2EEEB005FBD7BB720C543 /* Frameworks */,
 				CEAA64C81065A826D947D4EA /* Resources */,
+				C5A0000000000000000000A9 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C5A0000000000000000000A8 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F14F1FA7DF801B10F57E285E /* AnkielCode */,
+				C5A0000000000000000000A2 /* AnkielWidgets */,
 			);
 			name = AnkielCode;
 			packageProductDependencies = (
@@ -121,6 +176,29 @@
 			productName = AnkielCode;
 			productReference = 82F66858C198B6CEFCEBC3CA /* AnkielCode.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C5A0000000000000000000A4 /* AnkielWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C5A0000000000000000000B0 /* Build configuration list for PBXNativeTarget "AnkielWidgets" */;
+			buildPhases = (
+				C5A0000000000000000000A5 /* Sources */,
+				C5A0000000000000000000A3 /* Frameworks */,
+				C5A0000000000000000000A6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C5A0000000000000000000A2 /* AnkielWidgets */,
+			);
+			name = AnkielWidgets;
+			packageProductDependencies = (
+				C5A0000000000000000000AB /* AnkielKit */,
+			);
+			productName = AnkielWidgets;
+			productReference = C5A0000000000000000000A1 /* AnkielWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -138,6 +216,9 @@
 					B1A0000000000000000000A4 = {
 						CreatedOnToolsVersion = 27.2;
 						TestTargetID = 49575FBD1B0B0DCF72AAE95D;
+					};
+					C5A0000000000000000000A4 = {
+						CreatedOnToolsVersion = 27.2;
 					};
 				};
 			};
@@ -169,6 +250,7 @@
 			targets = (
 				49575FBD1B0B0DCF72AAE95D /* AnkielCode */,
 				B1A0000000000000000000A4 /* AnkielCodeUITests */,
+				C5A0000000000000000000A4 /* AnkielWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -182,6 +264,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		CEAA64C81065A826D947D4EA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5A0000000000000000000A6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -205,6 +294,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C5A0000000000000000000A5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -212,6 +308,11 @@
 			isa = PBXTargetDependency;
 			target = 49575FBD1B0B0DCF72AAE95D /* AnkielCode */;
 			targetProxy = B1A0000000000000000000A7 /* PBXContainerItemProxy */;
+		};
+		C5A0000000000000000000A8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C5A0000000000000000000A4 /* AnkielWidgets */;
+			targetProxy = C5A0000000000000000000A7 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -448,6 +549,62 @@
 			};
 			name = Release;
 		};
+		C5A0000000000000000000B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Config/AnkielWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/AnkielWidgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Ankiel Code";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ankiel.code.native.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C5A0000000000000000000B2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Config/AnkielWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/AnkielWidgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Ankiel Code";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ankiel.code.native.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -478,6 +635,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		C5A0000000000000000000B0 /* Build configuration list for PBXNativeTarget "AnkielWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C5A0000000000000000000B1 /* Debug */,
+				C5A0000000000000000000B2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -489,6 +655,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		32C2B39AE046CF8EC00979B4 /* AnkielKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AnkielKit;
+		};
+		C5A0000000000000000000AB /* AnkielKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AnkielKit;
 		};

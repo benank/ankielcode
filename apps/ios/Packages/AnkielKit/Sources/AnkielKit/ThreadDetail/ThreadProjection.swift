@@ -10,6 +10,8 @@ public struct ThreadProjection: Sendable, Hashable {
   public var nodes: [ExecutionNode]
   public var subagents: [Subagent]
   public var providerTurns: [ProviderTurn]
+  /// The provider conversations behind the thread, for context usage.
+  public var providerThreads: [ProviderThread] = []
   public var runtimeRequests: [RuntimeRequest]
   public var messages: [ConversationMessage]
   public var turnItems: [TurnItem]
@@ -43,7 +45,7 @@ public struct ThreadProjection: Sendable, Hashable {
 extension ThreadProjection: Decodable {
   enum CodingKeys: String, CodingKey {
     case thread, runs, attempts, nodes, subagents, providerTurns, runtimeRequests, messages
-    case turnItems, visibleTurnItems, updatedAt, checkpoints, checkpointScopes
+    case turnItems, visibleTurnItems, updatedAt, checkpoints, checkpointScopes, providerThreads
   }
 
   public init(from decoder: any Decoder) throws {
@@ -57,6 +59,7 @@ extension ThreadProjection: Decodable {
     nodes = list(.nodes)
     subagents = list(.subagents)
     providerTurns = list(.providerTurns)
+    providerThreads = list(.providerThreads)
     runtimeRequests = list(.runtimeRequests)
     messages = list(.messages)
     turnItems = list(.turnItems)
@@ -105,6 +108,8 @@ public struct AppThread: Sendable, Hashable, Decodable {
   public var archivedAt: WireTimestamp?
   public var deletedAt: WireTimestamp?
   public var updatedAt: WireTimestamp?
+  /// The provider conversation the thread continues in.
+  public var activeProviderThreadId: String?
 
   public struct Lineage: Sendable, Hashable, Decodable {
     public var rootThreadId: String?
@@ -120,6 +125,7 @@ public struct AppThread: Sendable, Hashable, Decodable {
 
   enum CodingKeys: String, CodingKey {
     case id, projectId, title, modelSelection, branch, worktreePath, lineage, archivedAt, deletedAt, updatedAt
+    case activeProviderThreadId
   }
 
   public init(from decoder: any Decoder) throws {
@@ -134,6 +140,7 @@ public struct AppThread: Sendable, Hashable, Decodable {
     archivedAt = container.loose(WireTimestamp.self, .archivedAt)
     deletedAt = container.loose(WireTimestamp.self, .deletedAt)
     updatedAt = container.loose(WireTimestamp.self, .updatedAt)
+    activeProviderThreadId = container.loose(String.self, .activeProviderThreadId)
   }
 }
 
@@ -208,13 +215,98 @@ public struct Subagent: Sendable, Hashable, Decodable, Identifiable {
 /// `OrchestrationV2ProviderTurn`, for context usage.
 public struct ProviderTurn: Sendable, Hashable, Decodable, Identifiable {
   public var id: String
+  public var providerThreadId: String?
   public var status: String?
   public var model: String?
   @Tolerant public var tokenUsage: TokenUsage?
 
+  /// `OrchestrationV2ProviderTurnTokenUsage`: the context window after this turn.
   public struct TokenUsage: Sendable, Hashable, Codable {
     public var usedTokens: Int
     public var maxTokens: Int?
+    public var inputTokens: Int?
+    public var cachedInputTokens: Int?
+    public var outputTokens: Int?
+    public var reasoningOutputTokens: Int?
+    public var promptCacheTtlMs: Int?
+    public var autoCompactThreshold: Int?
+    public var updatedAt: WireTimestamp?
+
+    public init(usedTokens: Int, maxTokens: Int? = nil, updatedAt: WireTimestamp? = nil) {
+      self.usedTokens = usedTokens
+      self.maxTokens = maxTokens
+      self.updatedAt = updatedAt
+    }
+  }
+
+  public init(
+    id: String, providerThreadId: String? = nil, status: String? = nil, model: String? = nil, tokenUsage: TokenUsage? = nil
+  ) {
+    self.id = id
+    self.providerThreadId = providerThreadId
+    self.status = status
+    self.model = model
+    self.tokenUsage = tokenUsage
+  }
+}
+
+/// `OrchestrationV2ProviderThread`, for context usage.
+public struct ProviderThread: Sendable, Hashable, Decodable, Identifiable {
+  public var id: String
+  public var appThreadId: String?
+  public var status: String?
+  public var firstRunOrdinal: Int?
+  public var providerSessionId: String?
+  public var hasNativeThreadRef = false
+  @Tolerant public var contextUsage: ContextUsage?
+  public var updatedAt: WireTimestamp?
+
+  /// `ThreadTokenUsageSnapshot`.
+  public struct ContextUsage: Sendable, Hashable, Codable {
+    public var usedTokens: Int
+    public var totalProcessedTokens: Int?
+    public var maxTokens: Int?
+    public var inputTokens: Int?
+    public var cachedInputTokens: Int?
+    public var outputTokens: Int?
+    public var reasoningOutputTokens: Int?
+    public var toolUses: Int?
+    public var durationMs: Int?
+    public var compactsAutomatically: Bool?
+    public var autoCompactThreshold: Int?
+
+    public init(usedTokens: Int, maxTokens: Int? = nil) {
+      self.usedTokens = usedTokens
+      self.maxTokens = maxTokens
+    }
+  }
+
+  public init(id: String, appThreadId: String? = nil, contextUsage: ContextUsage? = nil, updatedAt: WireTimestamp? = nil) {
+    self.id = id
+    self.appThreadId = appThreadId
+    self.contextUsage = contextUsage
+    self.updatedAt = updatedAt
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case id, appThreadId, status, firstRunOrdinal, providerSessionId, nativeThreadRef, contextUsage, updatedAt
+  }
+
+  public init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    id = try c.decode(String.self, forKey: .id)
+    appThreadId = c.loose(String.self, .appThreadId)
+    status = c.loose(String.self, .status)
+    firstRunOrdinal = c.loose(Int.self, .firstRunOrdinal)
+    providerSessionId = c.loose(String.self, .providerSessionId)
+    hasNativeThreadRef = c.loose(JSONValue.self, .nativeThreadRef).map { $0 != .null } ?? false
+    contextUsage = c.loose(ContextUsage.self, .contextUsage)
+    updatedAt = c.loose(WireTimestamp.self, .updatedAt)
+  }
+
+  /// A provider thread queued for a run that has not started (`isQueuedProviderThreadPlaceholder`).
+  public var isQueuedPlaceholder: Bool {
+    status == "not_loaded" && firstRunOrdinal == nil && !hasNativeThreadRef && providerSessionId == nil
   }
 }
 
