@@ -1,4 +1,4 @@
-// @effect-diagnostics nodeBuiltinImport:off globalRandom:off globalTimers:off - Local HTTP/WS reverse-proxy and reconnect loop use Node timers and node:http directly.
+// @effect-diagnostics nodeBuiltinImport:off globalRandom:off globalTimers:off globalDate:off - Local HTTP/WS reverse-proxy and reconnect loop use Node timers, clocks and node:http directly.
 import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodeFSP from "node:fs/promises";
@@ -22,10 +22,15 @@ import {
   deriveHostId,
   encodeBase64Url,
   encodeBinaryFrame,
+  parseRelayPushAvailability,
+  parseRelayPushResult,
   publicRelayForwardedPrefix,
   publicRelayHostHeader,
   signRelaySecret,
   type HeaderEntries,
+  type RelayPushAvailability,
+  type RelayPushMessage,
+  type RelayPushResultMessage,
   type RelaySetupConfig,
   type RelayToHostMessage,
 } from "./relayProtocol.ts";
@@ -134,6 +139,14 @@ const HTTP_RESPONSE_CHUNK_BYTES = 64 * 1024;
 const KEEPALIVE_INTERVAL_MS = 25_000;
 const INITIAL_RECONNECT_MS = 1_000;
 const MAX_RECONNECT_MS = 30_000;
+const PUSH_RESULT_TIMEOUT_MS = 30_000;
+
+/** What the relay said it can deliver when this connection became ready. */
+export interface RelayPushState {
+  readonly availability: RelayPushAvailability;
+  /** Epoch milliseconds of the `ready` this state came from. */
+  readonly readyAt: number;
+}
 
 export interface RelayTunnelClientOptions {
   readonly setup: RelaySetupConfig;
@@ -149,6 +162,10 @@ export interface RelayTunnelHandle {
   readonly hostId: string;
   readonly publicBaseUrl: string;
   readonly isConnected: () => boolean;
+  /** Null while the tunnel is not ready. */
+  readonly pushState: () => RelayPushState | null;
+  /** The relay's answer, or null when the tunnel is down, drops, or the relay never answers. */
+  readonly sendPush: (message: RelayPushMessage) => Promise<RelayPushResultMessage | null>;
   readonly waitUntilReady: (timeoutMs?: number) => Promise<void>;
   readonly stop: () => Promise<void>;
 }
@@ -168,11 +185,16 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
   let pingTimer: ReturnType<typeof setInterval> | null = null;
   let reconnectAttempt = 0;
   let isReady = false;
+  let pushState: RelayPushState | null = null;
 
   const readyWaiters: Array<() => void> = [];
   const localHttpRequests = new Map<string, NodeHttp.ClientRequest>();
   const localWebSockets = new Map<string, WebSocketInstance>();
   const pendingLocalWsMessages = new Map<string, Array<string | Uint8Array>>();
+  const pendingPushes = new Map<string, (result: RelayPushResultMessage | null) => void>();
+  const settlePendingPushes = () => {
+    for (const settle of pendingPushes.values()) settle(null);
+  };
 
   const sendJson = (payload: unknown) => {
     if (socket?.readyState === WebSocket.OPEN) {
@@ -403,6 +425,7 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
       case "ready": {
         reconnectAttempt = 0;
         isReady = true;
+        pushState = { availability: parseRelayPushAvailability(msg.push), readyAt: Date.now() };
         activeRelay = { publicBaseUrl, forwardedPrefix, internalToken };
         for (const resolve of readyWaiters.splice(0)) {
           resolve();
@@ -442,6 +465,11 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
       case "error":
         options.onError?.(`Relay error (${msg.code}): ${msg.message}`);
         return;
+      case "push_result": {
+        const result = parseRelayPushResult(msg);
+        if (result) pendingPushes.get(result.pushId)?.(result);
+        return;
+      }
       case "pong":
         return;
     }
@@ -484,6 +512,8 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
       }
       const wasReady = isReady;
       isReady = false;
+      pushState = null;
+      settlePendingPushes();
       if (activeRelay?.internalToken === internalToken) {
         activeRelay = null;
       }
@@ -505,6 +535,21 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
     hostId: identity.hostId,
     publicBaseUrl,
     isConnected: () => isReady,
+    pushState: () => pushState,
+    sendPush: (message) => {
+      const open = socket;
+      if (!isReady || open?.readyState !== WebSocket.OPEN) return Promise.resolve(null);
+      return new Promise((resolve) => {
+        const settle = (result: RelayPushResultMessage | null) => {
+          clearTimeout(timer);
+          pendingPushes.delete(message.pushId);
+          resolve(result);
+        };
+        const timer = setTimeout(() => settle(null), PUSH_RESULT_TIMEOUT_MS);
+        pendingPushes.set(message.pushId, settle);
+        open.send(JSON.stringify(message));
+      });
+    },
     waitUntilReady: (timeoutMs = 10_000) => {
       if (isReady) return Promise.resolve();
       return new Promise<void>((resolve, reject) => {
@@ -520,6 +565,8 @@ export function startRelayTunnelClient(options: RelayTunnelClientOptions): Relay
     stop: async () => {
       stopped = true;
       isReady = false;
+      pushState = null;
+      settlePendingPushes();
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
         reconnectTimer = null;

@@ -144,6 +144,8 @@ import * as ServerEnvironment from "./environment/ServerEnvironment.ts";
 import * as DirectEndpoints from "./environment/DirectEndpoints.ts";
 import * as RemoteOpenTargets from "./environment/RemoteOpenTargets.ts";
 import { makeRelayTunnelServiceLayer } from "./relay/RelayTunnelService.ts";
+import * as AgentAlertPush from "./relay/AgentAlertPush.ts";
+import * as PushRegistry from "./relay/PushRegistry.ts";
 import * as AuthHttp from "./auth/http.ts";
 import * as ReplayMarkers from "./auth/replayMarkers.ts";
 import * as RemovedLinearTokens from "./issue/removedLinearTokens.ts";
@@ -1018,8 +1020,13 @@ const layerMakeServer = Layer.unwrap(
     }).pipe(Layer.provideMerge(layerRuntimeDependencies), Layer.provide(layerLauncher));
 
     const layerRelayTunnel = makeRelayTunnelServiceLayer(awaitActivation);
+    // Pushes go through this server's own tunnel, however the phone that registered connects.
+    const layerRelay = AgentAlertPush.layer.pipe(
+      Layer.provideMerge(PushRegistry.layer),
+      Layer.provideMerge(layerRelayTunnel),
+    );
     const layerRoutes = HttpRouter.serve(
-      layerMakeRoutes.pipe(Layer.provide(layerLauncher), Layer.provide(layerRelayTunnel)),
+      layerMakeRoutes.pipe(Layer.provide(layerLauncher), Layer.provide(layerRelay)),
       {
         disableLogger: !config.logWebSocketEvents,
         routerConfig: HTTP_ROUTER_CONFIG,

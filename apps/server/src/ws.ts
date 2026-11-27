@@ -77,6 +77,7 @@ import {
   ProjectMutationError,
   ProviderUploadFeedbackError,
   ProviderSetupError,
+  PushRegistrationError,
   RelayTunnelError,
   type ServerConfig as ClientServerConfig,
   type ServerConfigStreamEvent,
@@ -231,6 +232,7 @@ import * as WorktreeSetupTracker from "./project/WorktreeSetupTracker.ts";
 import * as ServerEnvironment from "./environment/ServerEnvironment.ts";
 import * as DirectEndpoints from "./environment/DirectEndpoints.ts";
 import * as RelayTunnelService from "./relay/RelayTunnelService.ts";
+import * as PushRegistry from "./relay/PushRegistry.ts";
 import * as RemoteOpenTargets from "./environment/RemoteOpenTargets.ts";
 import * as DefectReporter from "./observability/DefectReporter.ts";
 import * as EventLoopMonitor from "./observability/EventLoopMonitor.ts";
@@ -1429,6 +1431,7 @@ export const layerWsRpc = (
       const remoteOpenTargets = yield* RemoteOpenTargets.RemoteOpenTargets;
       const directEndpoints = yield* DirectEndpoints.DirectEndpoints;
       const relayTunnel = yield* Effect.serviceOption(RelayTunnelService.RelayTunnelService);
+      const pushRegistry = yield* Effect.serviceOption(PushRegistry.PushRegistry);
       const gitWorkflow = yield* GitWorkflowService.GitWorkflowService;
       const review = yield* ReviewService.ReviewService;
       const vcsProvisioning = yield* VcsProvisioningService.VcsProvisioningService;
@@ -2607,6 +2610,21 @@ export const layerWsRpc = (
               ),
             onSome: (service) => service.disconnect,
           }),
+        [WS_METHODS.serverGetPushStatus]: () =>
+          Option.match(pushRegistry, {
+            onNone: () => Effect.fail(new PushRegistrationError({ operation: "status" })),
+            onSome: (registry) => registry.status(currentSessionId),
+          }),
+        [WS_METHODS.serverRegisterPush]: (input) =>
+          Option.match(pushRegistry, {
+            onNone: () => Effect.fail(new PushRegistrationError({ operation: "register" })),
+            onSome: (registry) => registry.register(currentSessionId, input),
+          }),
+        [WS_METHODS.serverUnregisterPush]: () =>
+          Option.match(pushRegistry, {
+            onNone: () => Effect.fail(new PushRegistrationError({ operation: "unregister" })),
+            onSome: (registry) => registry.unregister(currentSessionId),
+          }),
         [WS_METHODS.serverGetSettings]: (_input) =>
           Effect.map(serverSettings.getSettings, (settings) =>
             ServerSettings.redactServerSettingsForClient(settings, settingsClient),
@@ -3516,6 +3534,7 @@ export const layer = Layer.unwrap(
     const threadIssues = yield* ThreadIssueService.ThreadIssueService;
     const reviewGuides = yield* PullRequestReviewGuideService.PullRequestReviewGuideService;
     const relayTunnel = yield* Effect.serviceOption(RelayTunnelService.RelayTunnelService);
+    const pushRegistry = yield* Effect.serviceOption(PushRegistry.PushRegistry);
     const sql = yield* SqlClient.SqlClient;
     return HttpRouter.add(
       "GET",
@@ -3596,6 +3615,12 @@ export const layer = Layer.unwrap(
                   onNone: () => Layer.empty,
                   onSome: (service) =>
                     Layer.succeed(RelayTunnelService.RelayTunnelService, service),
+                }),
+              ),
+              Layer.provide(
+                Option.match(pushRegistry, {
+                  onNone: () => Layer.empty,
+                  onSome: (service) => Layer.succeed(PushRegistry.PushRegistry, service),
                 }),
               ),
               Layer.provide(

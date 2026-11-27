@@ -1,0 +1,363 @@
+import {
+  isListedThreadLineage,
+  isProviderNativeSubagentThread,
+  type EnvironmentId,
+  type OrchestrationV2DomainEvent,
+  type PushAlertKind,
+  type ThreadId,
+} from "@ankielcode/contracts";
+import {
+  type AgentAwarenessPhase,
+  projectThreadAwarenessV2,
+  turnItemCanChangeUserWait,
+} from "@ankielcode/shared/agentAwareness";
+import { makeDrainableWorker } from "@ankielcode/shared/DrainableWorker";
+import {
+  backgroundWorkHoldsCompletion,
+  turnItemUpdateCanEndBackgroundWork,
+} from "@ankielcode/shared/orchestrationV2PendingBackgroundWork";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import type * as Scope from "effect/Scope";
+import * as Stream from "effect/Stream";
+
+import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
+import type { AgentAwarenessThread } from "../orchestration-v2/ProjectionStore.ts";
+import * as ThreadManagement from "../orchestration-v2/ThreadManagementService.ts";
+import { isSnoozed } from "../orchestration-v2/ThreadSettlementService.ts";
+import { forkParked } from "../serverActivation.ts";
+import * as PushRegistry from "./PushRegistry.ts";
+import type {
+  RelayPushAvailability,
+  RelayPushDelivery,
+  RelayPushResultMessage,
+} from "./relayProtocol.ts";
+import * as RelayTunnelService from "./RelayTunnelService.ts";
+
+/** The relay takes at most this many deliveries per `push` message. */
+const RELAY_PUSH_BATCH_SIZE = 32;
+const TITLE_MAX_CODE_POINTS = 80;
+const MAX_LINEAGE_DEPTH = 16;
+const COLLAPSE_PATTERN = /^[\x21-\x7e]{1,64}$/;
+
+/** Pushes attention transitions (finished, failed, approval, input) to registered phones. */
+export class AgentAlertPush extends Context.Service<
+  AgentAlertPush,
+  {
+    readonly start: () => Effect.Effect<void, never, Scope.Scope>;
+    /** Waits until every thread queued so far has been checked and its pushes answered. */
+    readonly drain: Effect.Effect<void>;
+  }
+>()("@ankielcode/server/relay/AgentAlertPush") {}
+
+interface Alert {
+  /** One transition, so a repeat of the same state never pushes twice. */
+  readonly key: string;
+  readonly kind: PushAlertKind;
+  /** The listed thread a tap opens; a child's wait shows on its top-level thread. */
+  readonly target: AgentAwarenessThread;
+}
+
+/** Events that can move a thread into an alerting state; everything else is skipped unread. */
+function canStartAlert(event: OrchestrationV2DomainEvent): boolean {
+  switch (event.type) {
+    case "run.updated":
+      return event.payload.status === "completed" || event.payload.status === "failed";
+    case "runtime-request.updated":
+      return event.payload.status === "pending";
+    case "turn-item.updated":
+      return (
+        turnItemCanChangeUserWait(event.payload) ||
+        turnItemUpdateCanEndBackgroundWork(event.payload)
+      );
+    // Background work ending, or a pull request watch settling, releases a held completion.
+    case "provider-thread.updated":
+      return !backgroundWorkHoldsCompletion(event.payload.pendingBackgroundTasks ?? []);
+    case "thread.pull-request-synced":
+      return true;
+    default:
+      return false;
+  }
+}
+
+/** Matches the client's roll-up: approvals, and only cards that just the user can answer. */
+function requestAwaitingUser(thread: AgentAwarenessThread) {
+  const request = thread.pendingRuntimeRequest;
+  return request !== null &&
+    request.kind !== "auth_refresh" &&
+    (request.kind !== "user_input" || request.userOnly === true) &&
+    !isProviderNativeSubagentThread(thread) &&
+    thread.activityRunStatus != null
+    ? request
+    : null;
+}
+
+const KIND_BY_PHASE: Partial<Record<AgentAwarenessPhase, PushAlertKind>> = {
+  completed: "completed",
+  failed: "failed",
+  waiting_for_approval: "approval",
+  waiting_for_input: "input",
+};
+
+const toMillis = (value: DateTime.Utc | null | undefined) =>
+  value == null ? null : DateTime.toEpochMillis(value);
+
+/** A completion that landed during a snooze stays silent when it is read after the wake. */
+function silencedBySnooze(thread: AgentAwarenessThread, kind: PushAlertKind, nowMs: number) {
+  if (isSnoozed(thread, nowMs)) return true;
+  if (kind !== "completed" && kind !== "failed") return false;
+  const completedAt = toMillis(thread.latestRunCompletedAt);
+  if (completedAt === null) return false;
+  const snoozedAt = toMillis(thread.snoozedAt);
+  if (snoozedAt !== null && completedAt < snoozedAt) return false;
+  return isSnoozed(thread, completedAt);
+}
+
+function truncateTitle(title: string): string {
+  const codePoints = Array.from(title.trim());
+  return codePoints.length <= TITLE_MAX_CODE_POINTS
+    ? codePoints.join("")
+    : `${codePoints.slice(0, TITLE_MAX_CODE_POINTS - 1).join("")}…`;
+}
+
+/**
+ * The phone renders the body from the kind, so no text is localized here. APNs alerts carry
+ * these `loc-key`s, which the app's Localizable.strings must define:
+ * ANKIEL_PUSH_COMPLETED, ANKIEL_PUSH_FAILED, ANKIEL_PUSH_APPROVAL, ANKIEL_PUSH_INPUT.
+ * Both platforms carry `environmentId` and `threadId`, which the tap handler opens.
+ */
+function buildPushDelivery(input: {
+  readonly registration: PushRegistry.PushRegistration;
+  readonly environmentId: EnvironmentId;
+  readonly threadId: ThreadId;
+  readonly title: string;
+  readonly kind: PushAlertKind;
+}): RelayPushDelivery {
+  const { registration, environmentId, threadId, kind } = input;
+  const title = truncateTitle(input.title);
+  const collapse = COLLAPSE_PATTERN.test(threadId) ? threadId : undefined;
+  const urgent = kind === "approval" || kind === "input";
+  if (registration.platform === "ios") {
+    return {
+      platform: "apns",
+      token: registration.token,
+      topic: registration.appId,
+      environment: registration.apnsEnvironment ?? "production",
+      payload: {
+        aps: {
+          alert: { title, "loc-key": `ANKIEL_PUSH_${kind.toUpperCase()}` },
+          sound: "default",
+          "thread-id": threadId,
+          // The app has no time-sensitive entitlement, so every alert is "active".
+          "interruption-level": "active",
+        },
+        environmentId,
+        threadId,
+        kind,
+      },
+      pushType: "alert",
+      priority: 10,
+      ...(collapse ? { collapseId: collapse } : {}),
+    };
+  }
+  return {
+    platform: "fcm",
+    token: registration.token,
+    data: { kind, title, environmentId, threadId },
+    priority: urgent ? "high" : "normal",
+    ...(collapse ? { collapseKey: collapse } : {}),
+  };
+}
+
+function summarizeResult(result: RelayPushResultMessage) {
+  const reasons = new Set<string>();
+  let delivered = 0;
+  for (const entry of result.results) {
+    if (entry.ok) delivered++;
+    else reasons.add(entry.reason ?? String(entry.status ?? "unknown"));
+  }
+  return {
+    pushId: result.pushId,
+    delivered,
+    failed: result.results.length - delivered,
+    reasons: [...reasons],
+    ...(result.error ? { error: result.error } : {}),
+  };
+}
+
+const make = Effect.gen(function* () {
+  const threads = yield* ThreadManagement.ThreadManagementService;
+  const registry = yield* PushRegistry.PushRegistry;
+  const relay = yield* RelayTunnelService.RelayTunnelService;
+  const environmentId = yield* (yield* ServerEnvironment.ServerEnvironment).getEnvironmentId;
+  const startedAt = yield* Clock.currentTimeMillis;
+  const lastAlertKey = new Map<ThreadId, string>();
+  const queued = new Set<ThreadId>();
+  let pushSequence = 0;
+
+  const usablePushState = relay.pushState.pipe(
+    Effect.map((state) =>
+      state !== null && (state.availability.apns || state.availability.fcm) ? state : null,
+    ),
+  );
+
+  // Per-event reads below share the evaluation's span instead of opening one each.
+  const readThread = Effect.fnUntraced(function* (threadId: ThreadId) {
+    const snapshot = yield* threads.getAgentAwarenessSnapshot(threadId);
+    return snapshot.threads[0] ?? null;
+  });
+
+  const findListedAncestor = Effect.fnUntraced(function* (child: AgentAwarenessThread) {
+    let current = child;
+    for (let depth = 0; depth < MAX_LINEAGE_DEPTH; depth++) {
+      const parentId = current.lineage.parentThreadId;
+      if (parentId === null || parentId === current.id) return null;
+      const parent = yield* readThread(parentId);
+      if (parent === null) return null;
+      if (isListedThreadLineage(parent.lineage)) return parent;
+      current = parent;
+    }
+    return null;
+  });
+
+  const resolveAlert = Effect.fnUntraced(function* (thread: AgentAwarenessThread, armedAt: number) {
+    if (thread.archivedAt !== null) return null;
+    const nowMs = yield* Clock.currentTimeMillis;
+    if (!isListedThreadLineage(thread.lineage)) {
+      const request = requestAwaitingUser(thread);
+      if (request === null) return null;
+      if (DateTime.toEpochMillis(request.createdAt) < armedAt) return null;
+      const target = yield* findListedAncestor(thread);
+      if (target === null || target.archivedAt !== null) return null;
+      const kind: PushAlertKind = request.kind === "user_input" ? "input" : "approval";
+      // The parent's snooze judges the child's request as if the parent had asked it.
+      if (isSnoozed({ ...target, pendingRuntimeRequest: request }, nowMs)) return null;
+      return { key: `request:${request.id}`, kind, target } satisfies Alert;
+    }
+    const phase = projectThreadAwarenessV2({
+      environmentId,
+      project: { title: "" },
+      thread,
+    })?.phase;
+    const kind = phase === undefined ? undefined : KIND_BY_PHASE[phase];
+    if (kind === undefined) return null;
+    const request = kind === "approval" || kind === "input" ? thread.pendingRuntimeRequest : null;
+    const at =
+      request !== null
+        ? DateTime.toEpochMillis(request.createdAt)
+        : (toMillis(thread.latestRunCompletedAt) ?? DateTime.toEpochMillis(thread.updatedAt));
+    // A transition from before the tunnel last connected was missed, not new.
+    if (at < armedAt) return null;
+    if (silencedBySnooze(thread, kind, nowMs)) return null;
+    const key = request !== null ? `request:${request.id}` : `${kind}:${thread.latestRunId ?? ""}`;
+    return { key, kind, target: thread } satisfies Alert;
+  });
+
+  const dispatch = Effect.fn("AgentAlertPush.dispatch")(function* (
+    alert: Alert,
+    availability: RelayPushAvailability,
+  ) {
+    yield* Effect.annotateCurrentSpan({ kind: alert.kind, threadId: alert.target.id });
+    const seenTokens = new Set<string>();
+    const deliveries: RelayPushDelivery[] = [];
+    for (const registration of yield* registry.listActive) {
+      const available = registration.platform === "ios" ? availability.apns : availability.fcm;
+      if (!available || !registration.kinds.includes(alert.kind)) continue;
+      // A phone paired twice holds one token under two sessions.
+      if (seenTokens.has(registration.token)) continue;
+      seenTokens.add(registration.token);
+      deliveries.push(
+        buildPushDelivery({
+          registration,
+          environmentId,
+          threadId: alert.target.id,
+          title: alert.target.title,
+          kind: alert.kind,
+        }),
+      );
+    }
+    for (let offset = 0; offset < deliveries.length; offset += RELAY_PUSH_BATCH_SIZE) {
+      const pushId = `alert-${startedAt}-${++pushSequence}`;
+      const result = yield* relay.sendPush({
+        type: "push",
+        pushId,
+        deliveries: deliveries.slice(offset, offset + RELAY_PUSH_BATCH_SIZE),
+      });
+      if (result === null) {
+        yield* Effect.logInfo("agent alert push dropped; relay tunnel unavailable", { pushId });
+        return;
+      }
+      const unregistered = result.results.flatMap((entry) =>
+        entry.unregistered === true ? [entry.token] : [],
+      );
+      yield* registry.forgetTokens(unregistered);
+      yield* Effect.logInfo("agent alert push answered", {
+        kind: alert.kind,
+        unregistered: unregistered.length,
+        ...summarizeResult(result),
+      });
+      // Later batches would meet the same refusal.
+      if (result.error !== undefined) return;
+    }
+  });
+
+  // Untraced: runs per candidate event; dispatch opens the span once a push is due.
+  const evaluate = Effect.fnUntraced(function* (threadId: ThreadId) {
+    const push = yield* usablePushState;
+    if (push === null) return;
+    const thread = yield* readThread(threadId);
+    if (thread === null) {
+      lastAlertKey.delete(threadId);
+      return;
+    }
+    const alert = yield* resolveAlert(thread, Math.max(startedAt, push.readyAt));
+    if (alert === null || lastAlertKey.get(threadId) === alert.key) return;
+    lastAlertKey.set(threadId, alert.key);
+    yield* dispatch(alert, push.availability);
+  });
+
+  const worker = yield* makeDrainableWorker((threadId: ThreadId) =>
+    Effect.sync(() => queued.delete(threadId)).pipe(
+      Effect.andThen(evaluate(threadId)),
+      Effect.catch((error) =>
+        Effect.logWarning("agent alert push check failed", { threadId, error: error._tag }),
+      ),
+    ),
+  );
+
+  const handleEvent = (event: OrchestrationV2DomainEvent) => {
+    if (event.type === "thread.archived" || event.type === "thread.deleted") {
+      lastAlertKey.delete(event.threadId);
+      return Effect.void;
+    }
+    if (!canStartAlert(event)) return Effect.void;
+    return usablePushState.pipe(
+      Effect.flatMap((push) => {
+        // Coalesce: one check reads the newest state for every event queued behind it.
+        if (push === null || queued.has(event.threadId)) return Effect.void;
+        queued.add(event.threadId);
+        return worker.enqueue(event.threadId);
+      }),
+    );
+  };
+
+  const start = Effect.fn("AgentAlertPush.start")(function* () {
+    yield* forkParked(
+      Stream.runForEach(threads.streamDomainEvents, handleEvent).pipe(
+        Effect.catchCause((cause) =>
+          Effect.logWarning("agent alert push event stream failed", { cause }),
+        ),
+      ),
+    );
+  });
+
+  return AgentAlertPush.of({ start, drain: worker.drain });
+});
+
+export const layer = Layer.effect(
+  AgentAlertPush,
+  make.pipe(Effect.tap((service) => service.start())),
+);

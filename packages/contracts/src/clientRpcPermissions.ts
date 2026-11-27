@@ -88,6 +88,9 @@ export const CLIENT_GUARDED_RPC_SCOPES = {
   [ORCHESTRATION_V2_WS_METHODS.forceStopThread]: AuthOrchestrationOperateScope,
   [WS_METHODS.serverConfigureRelay]: AuthAccessWriteScope,
   [WS_METHODS.serverDisconnectRelay]: AuthAccessWriteScope,
+  // A device manages only its own session's registration, and the alerts carry thread titles.
+  [WS_METHODS.serverRegisterPush]: AuthOrchestrationReadScope,
+  [WS_METHODS.serverUnregisterPush]: AuthOrchestrationReadScope,
 } as const;
 export type ClientGuardedRpcTag = keyof typeof CLIENT_GUARDED_RPC_SCOPES;
 

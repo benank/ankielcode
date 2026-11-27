@@ -252,6 +252,9 @@ const RPC_AGGREGATES = {
   [WS_METHODS.serverGetRelayStatus]: "server",
   [WS_METHODS.serverConfigureRelay]: "server",
   [WS_METHODS.serverDisconnectRelay]: "server",
+  [WS_METHODS.serverGetPushStatus]: "server",
+  [WS_METHODS.serverRegisterPush]: "server",
+  [WS_METHODS.serverUnregisterPush]: "server",
   [WS_METHODS.subscribeAuthAccess]: "auth",
 } as const satisfies Readonly<Record<WsRpcMethod, string>>;
 

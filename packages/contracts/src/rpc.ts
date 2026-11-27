@@ -29,6 +29,7 @@ import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 import { IsoDateTime, NonNegativeInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
 import { RelayTunnelConfigureInput, RelayTunnelError, RelayTunnelStatus } from "./relayTunnel.ts";
+import { PushRegisterInput, PushRegistrationError, PushStatus } from "./push.ts";
 import {
   ProviderAuthCancelInput,
   ProviderAuthCompleteInput,
@@ -558,6 +559,9 @@ export const WS_METHODS = {
   serverGetRelayStatus: "server.getRelayStatus",
   serverConfigureRelay: "server.configureRelay",
   serverDisconnectRelay: "server.disconnectRelay",
+  serverGetPushStatus: "server.getPushStatus",
+  serverRegisterPush: "server.registerPush",
+  serverUnregisterPush: "server.unregisterPush",
   serverGetSettings: "server.getSettings",
   serverUpdateSettings: "server.updateSettings",
   serverDiscoverSourceControl: "server.discoverSourceControl",
@@ -725,6 +729,24 @@ const WsServerDisconnectRelayRpc = Rpc.make(WS_METHODS.serverDisconnectRelay, {
   payload: Schema.Struct({}),
   success: RelayTunnelStatus,
   error: Schema.Union([RelayTunnelError, EnvironmentAuthorizationError]),
+});
+
+const WsServerGetPushStatusRpc = Rpc.make(WS_METHODS.serverGetPushStatus, {
+  payload: Schema.Struct({}),
+  success: PushStatus,
+  error: Schema.Union([PushRegistrationError, EnvironmentAuthorizationError]),
+});
+
+const WsServerRegisterPushRpc = Rpc.make(WS_METHODS.serverRegisterPush, {
+  payload: PushRegisterInput,
+  success: PushStatus,
+  error: Schema.Union([PushRegistrationError, EnvironmentAuthorizationError]),
+});
+
+const WsServerUnregisterPushRpc = Rpc.make(WS_METHODS.serverUnregisterPush, {
+  payload: Schema.Struct({}),
+  success: PushStatus,
+  error: Schema.Union([PushRegistrationError, EnvironmentAuthorizationError]),
 });
 
 export const WsServerRefreshProvidersRpc = Rpc.make(WS_METHODS.serverRefreshProviders, {
@@ -2507,6 +2529,9 @@ export const WsRpcGroup = RpcGroup.make(
   WsServerGetRelayStatusRpc,
   WsServerConfigureRelayRpc,
   WsServerDisconnectRelayRpc,
+  WsServerGetPushStatusRpc,
+  WsServerRegisterPushRpc,
+  WsServerUnregisterPushRpc,
   WsSubscribeServerLifecycleRpc,
   WsSubscribeAuthAccessRpc,
   WsSubscribeResourceTelemetryRpc,

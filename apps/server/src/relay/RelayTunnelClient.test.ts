@@ -171,7 +171,7 @@ describe("relayProtocol", () => {
     ).toBeNull();
   });
 
-  it("forwards HTTP and WebSocket traffic cleanly against a mock relay socket", async () => {
+  it("forwards HTTP, WebSocket and push traffic cleanly against a mock relay socket", async () => {
     const dir = makeTempDir();
     const identity = await loadOrCreateRelayHostIdentity(
       NodePath.join(dir, "relay-host-identity.json"),
@@ -237,9 +237,36 @@ describe("relayProtocol", () => {
       );
       ws.on("message", (data, isBinary) => {
         if (!isBinary) {
-          const parsed = JSON.parse(data.toString("utf8")) as { type: string };
+          const parsed = JSON.parse(data.toString("utf8")) as {
+            type: string;
+            pushId?: string;
+            deliveries?: Array<{ token: string; platform: string }>;
+          };
           if (parsed.type === "auth") {
-            ws.send(JSON.stringify({ type: "ready", hostId: identity.hostId }));
+            ws.send(
+              JSON.stringify({
+                type: "ready",
+                hostId: identity.hostId,
+                push: { apns: true, fcm: false },
+              }),
+            );
+            return;
+          }
+          if (parsed.type === "push") {
+            ws.send(
+              JSON.stringify({
+                type: "push_result",
+                pushId: parsed.pushId,
+                results: (parsed.deliveries ?? []).map((delivery) => ({
+                  token: delivery.token,
+                  platform: delivery.platform,
+                  ok: false,
+                  status: 410,
+                  reason: "Unregistered",
+                  unregistered: true,
+                })),
+              }),
+            );
             return;
           }
           hostMessages.push(data.toString("utf8"));
@@ -326,6 +353,37 @@ describe("relayProtocol", () => {
         .map((m) => JSON.parse(m) as { type: string; connId?: string; data?: string })
         .find((m) => m.type === "frame" && m.connId === connId);
       expect(wsReply?.data).toBe("echo:/ws?ticket=abc:ping-local");
+
+      expect(handle.pushState()?.availability).toEqual({ apns: true, fcm: false });
+      const token = "ab".repeat(32);
+      await expect(
+        handle.sendPush({
+          type: "push",
+          pushId: "push-1",
+          deliveries: [
+            {
+              platform: "apns",
+              token,
+              topic: "com.example.app",
+              environment: "sandbox",
+              payload: { aps: {} },
+            },
+          ],
+        }),
+      ).resolves.toEqual({
+        type: "push_result",
+        pushId: "push-1",
+        results: [
+          {
+            token,
+            platform: "apns",
+            ok: false,
+            status: 410,
+            reason: "Unregistered",
+            unregistered: true,
+          },
+        ],
+      });
     } finally {
       await handle.stop();
       localWss.close();

@@ -738,3 +738,65 @@ it.effect("requires provider management to send /logout through chat", () =>
     ]);
   }).pipe(Effect.scoped),
 );
+
+it.effect("lets a device manage its own push registration with only thread read access", () =>
+  Effect.gen(function* () {
+    const tested = [
+      WS_METHODS.serverGetPushStatus,
+      WS_METHODS.serverRegisterPush,
+      WS_METHODS.serverUnregisterPush,
+    ] as const;
+    const group = WsRpcGroup.omit(
+      ...[...WsRpcGroup.requests.keys()].filter(
+        (tag): tag is Exclude<keyof typeof RPC_REQUIRED_SCOPES, (typeof tested)[number]> =>
+          !(tested as ReadonlyArray<string>).includes(tag),
+      ),
+    );
+    const status = {
+      relayConfigured: true,
+      relayConnected: true,
+      available: { ios: true, android: false },
+      registration: null,
+    };
+    const handlers = Layer.mergeAll(
+      group.toLayerHandler(WS_METHODS.serverGetPushStatus, () => Effect.succeed(status)),
+      group.toLayerHandler(WS_METHODS.serverRegisterPush, () => Effect.succeed(status)),
+      group.toLayerHandler(WS_METHODS.serverUnregisterPush, () => Effect.succeed(status)),
+    );
+    const registerInput = {
+      platform: "android",
+      token: "fcm-token",
+      appId: "com.example.app",
+      kinds: ["completed"],
+      locale: "en",
+    } as const;
+    const withScopes = (
+      scopes: ReadonlyArray<typeof AuthOrchestrationReadScope | typeof AuthTerminalReadScope>,
+    ) =>
+      RpcTest.makeClient(group).pipe(
+        Effect.provide(Layer.merge(handlers, RpcAuthorization.layer(scopes))),
+      );
+
+    const denied = yield* withScopes([AuthTerminalReadScope]);
+    const errors = yield* Effect.all([
+      denied[WS_METHODS.serverGetPushStatus]({}).pipe(Effect.flip),
+      denied[WS_METHODS.serverRegisterPush](registerInput).pipe(Effect.flip),
+      denied[WS_METHODS.serverUnregisterPush]({}).pipe(Effect.flip),
+    ]);
+    for (const error of errors) {
+      expect(error).toMatchObject({
+        _tag: "EnvironmentAuthorizationError",
+        requiredPermission: AuthOrchestrationReadScope,
+      });
+    }
+
+    const reader = yield* withScopes([AuthOrchestrationReadScope]);
+    expect(
+      yield* Effect.all([
+        reader[WS_METHODS.serverGetPushStatus]({}),
+        reader[WS_METHODS.serverRegisterPush](registerInput),
+        reader[WS_METHODS.serverUnregisterPush]({}),
+      ]),
+    ).toEqual([status, status, status]);
+  }),
+);

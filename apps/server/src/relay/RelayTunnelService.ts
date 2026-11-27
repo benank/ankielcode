@@ -21,11 +21,14 @@ import {
   removeRelaySetupFromStateDir,
   resolveRelaySetupSourceFromEnvOrFile,
   saveRelaySetupToStateDir,
+  type RelayPushMessage,
+  type RelayPushResultMessage,
   type RelaySetupConfig,
 } from "./relayProtocol.ts";
 import {
   loadOrCreateRelayHostIdentity,
   startRelayTunnelClient,
+  type RelayPushState,
   type RelayTunnelHandle,
 } from "./RelayTunnelClient.ts";
 
@@ -36,6 +39,10 @@ export interface RelayTunnelServiceShape {
     input: RelayTunnelConfigureInput,
   ) => Effect.Effect<RelayTunnelStatus, RelayTunnelError>;
   readonly disconnect: Effect.Effect<RelayTunnelStatus, RelayTunnelError>;
+  /** Null while the tunnel is not connected. */
+  readonly pushState: Effect.Effect<RelayPushState | null>;
+  /** Null when the tunnel is down or drops before the relay answers; nothing retries. */
+  readonly sendPush: (message: RelayPushMessage) => Effect.Effect<RelayPushResultMessage | null>;
 }
 
 export class RelayTunnelService extends Context.Service<
@@ -255,6 +262,10 @@ export const makeRelayTunnelServiceLayer = (awaitActivation: Effect.Effect<void>
         statusChanges: SubscriptionRef.changes(statusRef),
         configure,
         disconnect: disconnect(),
+        pushState: Effect.sync(() => state.handle?.pushState() ?? null),
+        sendPush: Effect.fn("RelayTunnelService.sendPush")((message: RelayPushMessage) =>
+          Effect.promise(() => state.handle?.sendPush(message) ?? Promise.resolve(null)),
+        ),
       });
     }),
   );
