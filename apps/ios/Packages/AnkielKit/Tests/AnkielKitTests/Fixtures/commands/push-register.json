@@ -1,0 +1,15 @@
+{
+  "schema" : "pushRegister",
+  "value" : {
+    "apnsEnvironment" : "sandbox",
+    "appId" : "com.ankiel.code.native",
+    "kinds" : [
+      "completed",
+      "approval",
+      "input"
+    ],
+    "locale" : "pt-BR",
+    "platform" : "ios",
+    "token" : "abababababababababababababababababababababababababababababababab"
+  }
+}

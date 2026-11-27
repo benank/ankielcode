@@ -131,6 +131,7 @@ struct RouteBadge: View {
 /// device's permissions there, its Ankiel Code version and updates, and removal.
 struct ComputerDetailView: View {
   @Environment(AppModel.self) private var model
+  @Environment(PushCoordinator.self) private var push
   @Environment(\.dismiss) private var dismiss
   let environment: EnvironmentModel
   @State private var name = ""
@@ -275,7 +276,10 @@ struct ComputerDetailView: View {
       Button("Remove", role: .destructive) {
         let id = environment.id
         dismiss()
-        Task { await model.registry.remove(id) }
+        Task {
+          await push.unregisterBeforeRemoval(id)
+          await model.registry.remove(id)
+        }
       }
     } message: {
       Text("You'll need a new pairing link to add it again.")

@@ -30,6 +30,7 @@ struct RootView: View {
       case .scanner: EmptyView()
       }
     }
+    .modifier(PushOfferModifier())
     .fullScreenCover(isPresented: scanner) {
       QRScannerView()
     }

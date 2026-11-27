@@ -6,6 +6,7 @@ import UIKit
 /// `SettingsAboutRouteScreen`, `SettingsLegalRouteScreen`).
 struct AboutSettingsPage: View {
   @Environment(AppModel.self) private var model
+  @Environment(PushCoordinator.self) private var push
   @State private var confirmingRemoveAll = false
 
   static let website = URL(string: "https://code.ankiel.com/")!
@@ -48,6 +49,7 @@ struct AboutSettingsPage: View {
     .confirmationDialog("Remove all computers?", isPresented: $confirmingRemoveAll, titleVisibility: .visible) {
       Button("Remove all", role: .destructive) {
         Task {
+          for environment in model.registry.environments { await push.unregisterBeforeRemoval(environment.id) }
           await model.registry.removeAll()
           model.sheet = nil
         }

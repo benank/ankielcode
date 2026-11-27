@@ -177,29 +177,6 @@ struct ChatSettingsPage: View {
   }
 }
 
-/// Push is not in this build (RN shows the same notice where push is unavailable).
-struct NotificationsSettingsPage: View {
-  var body: some View {
-    List {
-      Section {
-        Toggle(isOn: .constant(false)) {
-          VStack(alignment: .leading, spacing: Spacing.xxs) {
-            Text("Push notifications")
-            Text("Get an alert when an agent finishes, fails or needs you.")
-              .font(Typography.footnote)
-              .foregroundStyle(Palette.textSecondary)
-          }
-        }
-        .disabled(true)
-      } footer: {
-        Text("Push notifications aren't available in this build.")
-      }
-    }
-    .navigationTitle("Notifications")
-    .navigationBarTitleDisplayMode(.inline)
-  }
-}
-
 /// Mutually exclusive choices with a description each, a checkmark on the chosen one.
 struct ChoiceRows<Value: Hashable>: View {
   @Binding var selection: Value

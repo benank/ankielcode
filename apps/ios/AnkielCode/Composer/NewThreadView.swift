@@ -8,6 +8,7 @@ import SwiftUI
 /// yet; threads start in the project folder.
 struct NewThreadView: View {
   @Environment(AppModel.self) private var model
+  @Environment(PushCoordinator.self) private var push
   @Environment(\.dismiss) private var dismiss
   @State private var preparing = false
   @State private var failure: String?
@@ -197,6 +198,7 @@ struct NewThreadView: View {
       creation: .init(projectId: projectId, title: title))
     guard sent != nil else { return }
     model.navigator.open(ref)
+    push.newThreadStarted()
   }
 
   // MARK: Projects

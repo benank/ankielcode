@@ -493,8 +493,7 @@ final class HomeModel {
     return nil
   }
 
-  /// Listed threads waiting on the user: the seam for the app icon badge and, later, push
-  /// notifications (nothing sets the badge yet).
+  /// Listed threads waiting on the user (the app icon badge counts the same, in `PushCoordinator`).
   var waitingCount: Int {
     AttentionCount.waiting(sources.flatMap { source in
       source.threads.lazy.filter(\.isListed).map { ThreadFacts(environmentId: source.environmentId, thread: $0) }

@@ -1,0 +1,20 @@
+{
+  "Simulator Target Bundle": "com.ankiel.code.native",
+  "aps": {
+    "alert": {
+      "loc-key": "ANKIEL_PUSH_INPUT",
+      "title": "Add a harbor readings test"
+    },
+    "category": "ANKIEL_INPUT_REPLY",
+    "interruption-level": "active",
+    "sound": "default",
+    "thread-id": "00000000-0000-4000-8000-0000000000e1/00000000-0000-4000-8000-0000000000b2"
+  },
+  "body": {
+    "environmentId": "00000000-0000-4000-8000-0000000000e1",
+    "kind": "input",
+    "requestId": "runtime-request:sample:2",
+    "requestThreadId": "00000000-0000-4000-8000-0000000000b2",
+    "threadId": "00000000-0000-4000-8000-0000000000b2"
+  }
+}

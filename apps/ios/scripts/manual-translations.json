@@ -3674,5 +3674,60 @@
     "ru": "Просмотрен",
     "sv": "Granskad",
     "zh-Hans": "已查看"
+  },
+  "Alerts are delivered through each computer's own Cloudflare relay, so a computer without a relay can't send them. They stay quiet for the thread you have open.": {
+    "de": "Benachrichtigungen kommen über das eigene Cloudflare-Relay jedes Computers, daher kann ein Computer ohne Relay keine senden. Für den Thread, den du gerade offen hast, bleiben sie still.",
+    "es": "Las alertas llegan a través del relay de Cloudflare de cada computadora, así que una computadora sin relay no puede enviarlas. No suenan para el hilo que tienes abierto.",
+    "fr": "Les alertes passent par le relais Cloudflare de chaque ordinateur ; un ordinateur sans relais ne peut donc pas en envoyer. Elles restent silencieuses pour le fil que vous avez ouvert.",
+    "ja": "通知は各コンピュータの Cloudflare リレーを通じて届くため、リレーのないコンピュータからは送信できません。開いているスレッドの通知は表示されません。",
+    "ko": "알림은 각 컴퓨터의 Cloudflare 릴레이를 통해 전달되므로 릴레이가 없는 컴퓨터는 알림을 보낼 수 없습니다. 열려 있는 스레드의 알림은 표시되지 않습니다.",
+    "pt-BR": "Os alertas chegam pelo relay do Cloudflare de cada computador, então um computador sem relay não consegue enviá-los. Eles ficam em silêncio para o thread que você está vendo.",
+    "ru": "Уведомления приходят через Cloudflare Relay каждого компьютера, поэтому компьютер без релея не может их отправлять. Для открытого треда они не показываются.",
+    "sv": "Aviseringar levereras via varje dators egen Cloudflare-relay, så en dator utan relay kan inte skicka dem. De är tysta för tråden du har öppen.",
+    "zh-Hans": "提醒通过每台电脑自己的 Cloudflare 中继发送，因此没有中继的电脑无法发送提醒。你正在查看的线程不会弹出提醒。"
+  },
+  "Ankiel Code can tell you when an agent finishes, fails or needs you. You can change this in Settings → Notifications.": {
+    "de": "Ankiel Code kann dich benachrichtigen, wenn ein Agent fertig ist, fehlschlägt oder dich braucht. Du kannst das unter Einstellungen → Benachrichtigungen ändern.",
+    "es": "Ankiel Code puede avisarte cuando un agente termina, falla o te necesita. Puedes cambiarlo en Ajustes → Notificaciones.",
+    "fr": "Ankiel Code peut vous prévenir quand un agent termine, échoue ou a besoin de vous. Vous pouvez modifier ce choix dans Réglages → Notifications.",
+    "ja": "エージェントの完了、失敗、対応が必要なときに Ankiel Code が通知できます。設定 → 通知 でいつでも変更できます。",
+    "ko": "에이전트가 완료되거나 실패하거나 도움이 필요할 때 Ankiel Code가 알려 드릴 수 있습니다. 설정 → 알림에서 변경할 수 있습니다.",
+    "pt-BR": "O Ankiel Code pode avisar quando um agente terminar, falhar ou precisar de você. Você pode mudar isso em Ajustes → Notificações.",
+    "ru": "Ankiel Code может сообщать, когда агент закончил, столкнулся с ошибкой или ждёт вас. Это можно изменить в Настройки → Уведомления.",
+    "sv": "Ankiel Code kan meddela dig när en agent är klar, misslyckas eller behöver dig. Du kan ändra detta under Inställningar → Aviseringar.",
+    "zh-Hans": "当代理完成、失败或需要你时，Ankiel Code 可以提醒你。你可以在“设置 → 通知”中更改。"
+  },
+  "Couldn't read this computer's alert status.": {
+    "de": "Der Benachrichtigungsstatus dieses Computers konnte nicht gelesen werden.",
+    "es": "No se pudo leer el estado de alertas de esta computadora.",
+    "fr": "Impossible de lire l’état des alertes de cet ordinateur.",
+    "ja": "このコンピュータの通知状態を読み取れませんでした。",
+    "ko": "이 컴퓨터의 알림 상태를 읽을 수 없습니다.",
+    "pt-BR": "Não foi possível ler o status de alertas deste computador.",
+    "ru": "Не удалось получить статус уведомлений этого компьютера.",
+    "sv": "Det gick inte att läsa den här datorns aviseringsstatus.",
+    "zh-Hans": "无法读取这台电脑的提醒状态。"
+  },
+  "Get alerts from your agents?": {
+    "de": "Benachrichtigungen von deinen Agents erhalten?",
+    "es": "¿Recibir alertas de tus agentes?",
+    "fr": "Recevoir les alertes de vos agents ?",
+    "ja": "エージェントからの通知を受け取りますか？",
+    "ko": "에이전트 알림을 받으시겠습니까?",
+    "pt-BR": "Receber alertas dos seus agentes?",
+    "ru": "Получать уведомления от агентов?",
+    "sv": "Få aviseringar från dina agenter?",
+    "zh-Hans": "接收来自代理的提醒？"
+  },
+  "Turn on": {
+    "de": "Einschalten",
+    "es": "Activar",
+    "fr": "Activer",
+    "ja": "オンにする",
+    "ko": "켜기",
+    "pt-BR": "Ativar",
+    "ru": "Включить",
+    "sv": "Slå på",
+    "zh-Hans": "开启"
   }
 }

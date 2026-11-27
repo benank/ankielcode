@@ -1,0 +1,17 @@
+{
+  "Simulator Target Bundle": "com.ankiel.code.native",
+  "aps": {
+    "alert": {
+      "loc-key": "ANKIEL_PUSH_FAILED",
+      "title": "Add a harbor readings test"
+    },
+    "interruption-level": "active",
+    "sound": "default",
+    "thread-id": "00000000-0000-4000-8000-0000000000e1/00000000-0000-4000-8000-0000000000b2"
+  },
+  "body": {
+    "environmentId": "00000000-0000-4000-8000-0000000000e1",
+    "kind": "failed",
+    "threadId": "00000000-0000-4000-8000-0000000000b2"
+  }
+}

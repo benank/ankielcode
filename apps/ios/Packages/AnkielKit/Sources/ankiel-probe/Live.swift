@@ -115,6 +115,15 @@ func live(_ mode: String, environment: SavedEnvironment, connector: EnvironmentC
       }
       break
     }
+  case "push-stage":
+    let session = try await connector.connect(environment)
+    defer { Task { await session.close() } }
+    try await livePushStage(
+      session, scenario: argument("--scenario") ?? "approval", out: argument("--out"), wait: Double(argument("--wait") ?? "") ?? 180)
+  case "push":
+    let session = try await connector.connect(environment)
+    defer { Task { await session.close() } }
+    try await livePush(session, token: argument("--token"))
   default:
     throw ProbeFailure(description: "Unknown --live mode \(mode).")
   }

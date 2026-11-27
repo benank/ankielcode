@@ -222,3 +222,53 @@ expand context, the line comment hand-off to the composer, the default-branch co
 scrolling a 5,000-line diff. `Fixtures/review/make-review-golden.mjs` (run from
 `packages/client-runtime`) records the TypeScript review order and git action rules the Swift ports
 must match.
+
+## Push notifications
+
+Settings → Notifications turns alerts on (iOS asks for permission only then, or after the one-time
+offer that follows the first new thread), picks the kinds and shows each computer's relay status.
+The app registers its APNs token with every connected computer (`server.registerPush`: token,
+bundle id, `sandbox`/`production` from the embedded provisioning profile, sandbox on the simulator,
+kinds and locale), again on each reconnect and whenever the token, kinds or language change, and
+unregisters when push is turned off or before a connected computer is removed. Delivery goes
+through the computer's own Cloudflare relay, which needs an APNs key from the team that signs the
+app; nothing here can be checked without one (`docs/user/mobile-notifications.md`).
+
+- The alert body is the APNs `loc-key` `ANKIEL_PUSH_{COMPLETED,FAILED,APPROVAL,INPUT}`, kept in the
+  catalog as manual entries; ids sit under the payload's top-level `body` key.
+- Alerts for the thread on screen stay quiet; others show. A tap opens the thread (cold or warm);
+  opening a thread clears its alerts, and an approval or question answered elsewhere clears its
+  alert once that computer's list is live.
+- `ANKIEL_APPROVAL` (Approve, Deny) and `ANKIEL_INPUT_REPLY` (Reply) need the phone unlocked and
+  answer without opening the app: it connects, waits until the thread's live projection shows the
+  request, and sends with the fixed command id `notification:<button>:<requestId>`, within iOS's
+  ~30 s. If that fails while the request still waits, a local alert says the answer was not sent.
+- The app icon badge counts threads waiting on the user. The server's payload carries no badge, so
+  it only changes while the app runs.
+
+Simulator testing without APNs: `apps/ios/scripts/push-samples/*.apns` are shaped exactly like
+`AgentAlertPush.apnsPayload`, with synthetic titles and placeholder ids: put a real
+`environmentId` and `threadId` (in `body` and `aps.thread-id`) in a copy to test tap-to-open.
+
+```sh
+SIM=<udid>
+xcrun simctl push $SIM com.ankiel.code.native apps/ios/scripts/push-samples/completed.apns
+# A real pending request and its alert: stages a Replay approval, writes the payload, waits for an
+# answer, prints how it ended and deletes the thread.
+(cd apps/ios/Packages/AnkielKit && swift run ankiel-probe --state /tmp/probe.json --live push-stage \
+  --scenario approval --out /tmp/staged.apns --wait 200) &
+xcrun simctl push $SIM com.ankiel.code.native /tmp/staged.apns
+# Register, read back and unregister with a made-up token (leaves the session unregistered).
+(cd apps/ios/Packages/AnkielKit && swift run ankiel-probe --state /tmp/probe.json --live push)
+```
+
+`PushNotificationUITests` press SpringBoard's Allow, banners and buttons. They wait for a banner the
+host sends, so they skip unless run with `TEST_RUNNER_PUSH_UI_TESTS=1` (and
+`TEST_RUNNER_PUSH_THREAD_URL=<thread link>` for `testQuietForOpenThread`) while the alert above is
+pushed ~45 s after the test starts.
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_PUSH` | `on`, `on-more` | Notifications with push on and canned per-computer rows (On, Relay not set up, Relay has no push key; or Relay offline, Not connected, a refused read). Combine with `ANKIEL_DEBUG_SETTINGS=fixture` for three computers. |
+| | `denied`, `unavailable` | iOS notifications off for the app; push on without a token. |
+| | `offer` | The one-time offer over home. |
