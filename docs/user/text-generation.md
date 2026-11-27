@@ -1,7 +1,7 @@
 # Text generation models
 
-Ankiel Code writes some text for you: thread titles, commit messages, pull request titles and
-descriptions, branch names, and voice transcript cleanup. Pick the model for this in
+Ankiel Code writes some text for you: thread titles, commit messages, branch names, and voice
+transcript cleanup. Pick the model for this in
 **Settings → Threads → Text generation model**. **Settings → Source control & issues** and
 **Settings → Voice** can each pick a different one.
 

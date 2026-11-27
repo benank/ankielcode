@@ -1,6 +1,6 @@
 # Workflows
 
-A workflow is a TypeScript script that chains agents, plain code, schedules, webhooks, issue and pull request events, and questions to you into one durable run that survives server restarts. Each step's result is saved when it succeeds, so restarts pick up where the run left off and failures do not lose earlier work. Workflows are an early feature: start runs from the `ankiel` CLI or a trigger, and follow them in the app.
+A workflow is a TypeScript script that chains agents, plain code, schedules, webhooks, issue events, and questions to you into one durable run that survives server restarts. Each step's result is saved when it succeeds, so restarts pick up where the run left off and failures do not lose earlier work. Workflows are an early feature: start runs from the `ankiel` CLI or a trigger, and follow them in the app.
 
 For one prompt on a timer or webhook, use a scheduled task. Use a workflow when work has stages — such as triage, a fix, your approval, and a release.
 
@@ -64,11 +64,11 @@ Every start needs a `--key`: starting twice with the same key returns the same r
 
 - **Schedules:** `every` runs on an interval, starting one interval after the workflow loads; `daily` runs at a local time of day (a time missed by more than 10 minutes while the server is down is skipped).
 - **Webhooks:** `ankiel workflow hooks` prints each hook's path; prepend your server's address. The path contains the hook's secret, so share it only with the sender. A sender's retry that repeats its delivery header (such as GitHub's `X-GitHub-Delivery`) starts no second run, and bodies over 1 MiB are refused. A hook starts at most 60 runs a minute; requests past that get `429` and can be sent again a minute later. Organization policies blocking webhook tasks block workflow webhooks too.
-- **Issues and pull requests:** workflows can start on new issues or pull requests and read, comment on, or update them via **Settings → Source control & issues** — no webhook needed. Ankiel Code checks roughly once a minute, and only items opened after the workflow was first loaded start runs.
+- **Issues:** workflows can start on new issues and read, comment on, or update them via **Settings → Source control & issues** — no webhook needed. Ankiel Code checks roughly once a minute, and only issues opened after the workflow was first loaded start runs. Workflows cannot use pull requests: calls on the `pullRequests` API fail with an error, and a workflow still waiting on a pull request ends that wait as expired.
 
 ## Follow runs in the app
 
-Open the Workflows page with **Open workflows** in the command palette of the desktop app; the entry shows once a connected server has workflows on. Filter by **Needs you**, **Running**, or **All** (skipped runs stay hidden unless toggled on), open child runs from their parent, and answer questions, resume paused runs, or cancel active runs (requires permission to operate threads). The issues and pull requests a run touched show as chips under its title and on the steps that touched them; a chip opens the item beside the run, in a tab next to any agent transcripts you opened.
+Open the Workflows page with **Open workflows** in the command palette of the desktop app; the entry shows once a connected server has workflows on. Filter by **Needs you**, **Running**, or **All** (skipped runs stay hidden unless toggled on), open child runs from their parent, and answer questions, resume paused runs, or cancel active runs (requires permission to operate threads). The issues a run touched show as chips under its title and on the steps that touched them; a chip opens the item beside the run, in a tab next to any agent transcripts you opened.
 
 ### Agent threads
 

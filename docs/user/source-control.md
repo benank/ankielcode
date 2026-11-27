@@ -1,7 +1,7 @@
 # Source control
 
 Ankiel Code integrates with GitHub, GitLab, Forgejo, Gitea, Bitbucket, Azure DevOps, GitCafe, and Cursor
-Origin to clone and publish repositories, create pull requests, and review changes.
+Origin to clone and publish repositories, work with issues, and review changes.
 
 ## Review turn changes
 
@@ -17,9 +17,8 @@ stays apart. This works when the project folder itself is not a Git repository; 
 comparison and uncommitted changes read one repository at a time, chosen from the same picker.
 
 The thread details panel lists each repository the thread has changed, most recent first, with its
-branch and uncommitted changes. Expand one to commit, push, or open a pull request in that
-repository; a pull request opened there, or already open for its branch when a turn ends, is linked
-to the thread. **Other repositories...** adds any other repository of the project to the list until you
+branch and uncommitted changes. Expand one to commit or push in that repository.
+**Other repositories...** adds any other repository of the project to the list until you
 reload. In a worktree thread of a project with several repositories it adds a worktree of that
 repository to the thread instead; see [Worktree threads](multi-repo-projects.md#worktree-threads). A
 worktree thread of a single repository does not offer it.
@@ -29,10 +28,9 @@ commit at a time. The list shows the newest 100 commits in the branch comparison
 shows its changes against its first parent.
 
 A commit link from a supported code host opens in the Diff pane when the thread's repository has
-that commit locally, on any branch. Otherwise a pull request commit link opens the pull request. Other
-commit links follow your **Open links in** setting; on web, when that opens a new tab, Ankiel Code first
-shows an **Open link** button. Command/Ctrl+Click always opens the link in your browser. Commit links follow the **Open pull requests in Ankiel Code**
-setting in **Settings → Diffs**.
+that commit locally, on any branch. Other commit links follow your **Open links in** setting; on
+web, when that opens a new tab, Ankiel Code first shows an **Open link** button. Command/Ctrl+Click
+always opens the link in your browser.
 
 ## Connect an account
 
@@ -42,9 +40,9 @@ and choose **Rescan**.
 
 ### GitHub
 
-GitHub integration is off by default. To enable issue and pull request features, turn on
+GitHub integration is off by default. To work with GitHub issues, turn on
 **GitHub integration** in **Settings → Source control & issues** for the environment you want to
-connect. Turning it off pauses automatic pull request discovery and watches.
+connect.
 
 Ankiel Code talks to GitHub's API directly and only needs a token. Any of these works, in this
 order of precedence:
@@ -144,9 +142,6 @@ kept in the server's secret store, applies right away, and is used before `CAFE_
 sent to `git.cafe`; `CAFE_TOKEN` follows `CAFE_HOST` if you set it. Repositories on
 `staging.git.cafe` need their own login with `--host https://staging.git.cafe/api`.
 
-Line comments are not available for GitCafe pull requests yet.
-Merging a stack lands it through GitCafe, and updating a branch restacks the layers above it.
-
 ### TanStack Source
 
 TanStack Source is in private beta, so the server shows it only when its environment turns the flag
@@ -177,8 +172,7 @@ origin auth login
 ```
 
 If cloning or pushing asks for a username, run `origin auth setup-git` to point Git at the CLI's
-credentials again. Origin repositories use HTTPS and are published privately. Repositories mirrored
-from GitHub keep their pull requests on GitHub; open those from the GitHub remote.
+credentials again. Origin repositories use HTTPS and are published privately.
 
 ## Start, clone, or publish a project
 
@@ -212,20 +206,15 @@ For a local Git repository without a remote, **Publish Repository** creates a ho
 adds it as `origin`, and pushes your commits. If there are no commits yet, it creates the remote;
 make your first commit before pushing.
 
-## Create a pull request
+## Commit and push
 
-Use a thread's Git actions to commit, push, and create a pull request. Ankiel Code can generate commit
-messages, review titles, and descriptions from your changes. Descriptions also draw on the work in
-the thread, including the checks it ran.
+Use a thread's Git actions to commit and push. Ankiel Code does not create or track pull requests;
+open them on your code host or with its CLI. Ankiel Code can generate commit messages from your
+changes.
 
-An existing fork PR can appear beside the branch even if you pushed without setting an upstream.
-If its badge is missing because several remotes hold that branch, set the branch's upstream to
-the intended remote with `git branch --set-upstream-to=<remote>/<branch>`.
-
-Choose how commit messages and pull request titles and descriptions are written in
-**Settings → Source control & issues → Commits & pull requests**. **Repository conventions** uses the
-project's instructions and recent commit subjects. **Custom instructions** applies your own
-instructions to commits and pull requests.
+Choose how commit messages are written in **Settings → Source control & issues → Commits**.
+**Repository conventions** uses the project's instructions and recent commit subjects. **Custom
+instructions** applies your own instructions to commits.
 
 ## Troubleshooting
 

@@ -128,7 +128,7 @@ Text generation**, under Advanced, such as a length limit or an identifier to pu
 regenerated titles. Select a project to give it its own instructions.
 
 Agents connected through Ankiel Code can use the same server-owned metadata workflow to
-rename a thread, regenerate its title, or link and unlink a pull request. These changes
+rename a thread, regenerate its title, or link and unlink an issue. These changes
 appear on desktop and mobile without requiring the originating app to remain
 open.
 
@@ -180,16 +180,11 @@ settle every thread in that section between it and the one you release on.
 The **Un-settle** and **Wake** buttons work the same way in their sections.
 Press `Escape` while dragging to cancel.
 
-By default, environments settle inactive threads after seven days and settle
-threads whose pull request merged. A closed pull request can also settle an idle
-thread. An empty thread's inactivity counts from when it was created.
-Work in progress, pending questions or approvals, and background work the agent
-is waiting on prevent automatic settlement. An open pull request does not prevent inactivity
-settlement unless you turn on **Keep threads with a PR** in **Settings → Threads**,
-but an old closed or merged pull request does not settle work you
-resumed after it closed. Your own messages count as resuming, and so does a
-message an agent sends with `ankiel_thread_send` or `ankiel thread send`. A turn that finished
-background work or a pull request watch starts on its own does not.
+By default, environments settle inactive threads after seven days. An empty thread's
+inactivity counts from when it was created. Work in progress, pending questions or approvals,
+and background work the agent is waiting on prevent automatic settlement. Your own messages
+count as new activity, and so does a message an agent sends with `ankiel_thread_send` or
+`ankiel thread send`. A turn that finished background work starts on its own does not.
 
 To keep one thread out of the settled shelf no matter how long it sits idle, open its menu,
 choose **Auto-settle behavior**, and pick **Never**. The current option is checked. Pick

@@ -7,7 +7,7 @@ introduce a different execution model.
 ## Identity is independent of the route
 
 - An environment keeps its ID across restarts and endpoint changes. Repository identity can
-  correlate clones across environments (preferring `upstream` for PR features, grouping forks by
+  correlate clones across environments (preferring `upstream` for issues, grouping forks by
   `origin`), but work never silently crosses environments.
 - [Environment ID initialization](../../apps/server/src/environment/ServerEnvironment.ts) publishes
   atomically and retains repair state so concurrent initializers choose the same winner; do not

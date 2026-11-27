@@ -45,7 +45,7 @@ can start with `~` for the home directory of the machine running Ankiel Code. An
 other relative path is read from the thread's project folder, or its worktree.
 
 Claude Code's verbose mode can stay enabled when you use Claude for text generation, including
-thread titles, branch names, commit messages, and pull request descriptions. On a remote connection,
+thread titles, branch names, and commit messages. On a remote connection,
 Ankiel Code uses the Claude configuration on the connected server.
 
 ## Compact long conversations
