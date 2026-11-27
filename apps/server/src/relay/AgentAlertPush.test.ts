@@ -1,7 +1,11 @@
 import {
   EnvironmentId,
+  NodeId,
   type OrchestrationV2DomainEvent,
+  type OrchestrationV2RuntimeRequest,
+  type OrchestrationV2TurnItem,
   ProjectId,
+  ProviderSessionId,
   ProviderInstanceId,
   RunId,
   RuntimeRequestId,
@@ -17,6 +21,7 @@ import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 
 import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
+import * as Orchestrator from "../orchestration-v2/Orchestrator.ts";
 import type { AgentAwarenessThread } from "../orchestration-v2/ProjectionStore.ts";
 import * as ThreadManagement from "../orchestration-v2/ThreadManagementService.ts";
 import * as AgentAlertPush from "./AgentAlertPush.ts";
@@ -87,6 +92,49 @@ const runEnded = (id: string, status: "completed" | "failed" = "completed") =>
   event("run.updated", id, { status });
 const requestOpened = (id: string) => event("runtime-request.updated", id, { status: "pending" });
 
+type RuntimeRequest = OrchestrationV2RuntimeRequest;
+const liveCapability = {
+  type: "live",
+  providerSessionId: ProviderSessionId.make("session-1"),
+} as const;
+const runtimeRequest = (
+  id: string,
+  kind: RuntimeRequest["kind"],
+  overrides: Partial<RuntimeRequest> = {},
+): RuntimeRequest => ({
+  id: RuntimeRequestId.make(id),
+  nodeId: NodeId.make("node-1"),
+  providerTurnId: null,
+  nativeRequestRef: null,
+  kind,
+  status: "pending",
+  responseCapability: liveCapability,
+  createdAt: at(2_000),
+  resolvedAt: null,
+  ...overrides,
+});
+// The category reads only the card's type, request id, questions and options.
+const approvalCard = (requestId: string, options?: ReadonlyArray<Record<string, unknown>>) =>
+  ({
+    type: "approval_request",
+    requestId: RuntimeRequestId.make(requestId),
+    requestKind: "command",
+    ...(options === undefined ? {} : { options }),
+  }) as unknown as OrchestrationV2TurnItem;
+const question = (id: string, overrides: Record<string, unknown> = {}) => ({
+  id,
+  header: "Question",
+  question: "What should the release be called?",
+  options: [],
+  ...overrides,
+});
+const questionCard = (requestId: string, questions: ReadonlyArray<Record<string, unknown>>) =>
+  ({
+    type: "user_input_request",
+    requestId: RuntimeRequestId.make(requestId),
+    questions,
+  }) as unknown as OrchestrationV2TurnItem;
+
 const iosPhone = (token: string, kinds: PushRegistry.PushRegistration["kinds"]) => ({
   platform: "ios" as const,
   token,
@@ -116,6 +164,12 @@ const okResult = (message: RelayPushMessage): RelayPushResultMessage => ({
 
 const makeHarness = Effect.gen(function* () {
   const threads = new Map<string, AgentAwarenessThread>();
+  // Pending requests and their cards, by the thread that holds them.
+  const records = new Map<
+    string,
+    { runtimeRequests: Array<RuntimeRequest>; turnItems: Array<OrchestrationV2TurnItem> }
+  >();
+  const recordReads = { fail: false };
   const registrations: Array<PushRegistry.PushRegistration> = [];
   const forgotten: Array<ReadonlyArray<string>> = [];
   const sent: Array<RelayPushMessage> = [];
@@ -141,6 +195,19 @@ const makeHarness = Effect.gen(function* () {
               const found = threadId === undefined ? undefined : threads.get(threadId);
               return { snapshotSequence: 0, threads: found ? [found] : [] };
             }),
+          getThreadRecords: (threadId, _fields, filter) =>
+            recordReads.fail
+              ? Effect.fail(new Orchestrator.OrchestratorProjectionError({ threadId }))
+              : Effect.sync(() => {
+                  const found = records.get(threadId);
+                  const requestIds = new Set<string>(filter?.turnItemRequestIds ?? []);
+                  return {
+                    runtimeRequests: found?.runtimeRequests ?? [],
+                    turnItems: (found?.turnItems ?? []).filter(
+                      (item) => "requestId" in item && requestIds.has(item.requestId),
+                    ),
+                  } as never;
+                }),
         }),
       ),
       Layer.provide(
@@ -202,7 +269,100 @@ const makeHarness = Effect.gen(function* () {
     kindsSent,
     pushedThread,
     reads: () => reads,
+    records,
+    recordReads,
   };
+});
+
+describe("alertCategory", () => {
+  it("offers buttons only when they answer the request the way its card would", () => {
+    const decline = { decision: "decline", label: "Deny" };
+    const accept = { decision: "accept", label: "Allow once" };
+    const notResumable = { type: "not_resumable", reason: "Provider exited." } as const;
+    const cases: ReadonlyArray<
+      readonly [
+        string,
+        RuntimeRequest,
+        OrchestrationV2TurnItem | undefined,
+        AgentAlertPush.AlertCategory | null,
+      ]
+    > = [
+      ["default options", runtimeRequest("r", "command"), approvalCard("r"), "ANKIEL_APPROVAL"],
+      [
+        "provider options with accept and decline",
+        runtimeRequest("r", "file-change"),
+        approvalCard("r", [accept, { decision: "acceptForSession", label: "Allow" }, decline]),
+        "ANKIEL_APPROVAL",
+      ],
+      [
+        "no decline to send",
+        runtimeRequest("r", "command"),
+        approvalCard("r", [accept, { decision: "cancel", label: "Cancel" }]),
+        null,
+      ],
+      [
+        "a warning the card shows",
+        runtimeRequest("r", "command"),
+        approvalCard("r", [accept, { ...decline, warning: "Runs outside the sandbox." }]),
+        null,
+      ],
+      ["app access", runtimeRequest("r", "mcp-elicitation"), approvalCard("r"), null],
+      [
+        "approval the provider can no longer take",
+        runtimeRequest("r", "command", { responseCapability: notResumable }),
+        approvalCard("r"),
+        null,
+      ],
+      ["approval without its card", runtimeRequest("r", "command"), undefined, null],
+      [
+        "answered already",
+        runtimeRequest("r", "command", { status: "resolved" }),
+        approvalCard("r"),
+        null,
+      ],
+      [
+        "one free-text question",
+        runtimeRequest("r", "user_input"),
+        questionCard("r", [question("name")]),
+        "ANKIEL_INPUT_REPLY",
+      ],
+      [
+        "a question answered by message",
+        runtimeRequest("r", "user_input", { responseCapability: { type: "message" } }),
+        questionCard("r", [question("name")]),
+        "ANKIEL_INPUT_REPLY",
+      ],
+      [
+        "a question with choices",
+        runtimeRequest("r", "user_input"),
+        questionCard("r", [
+          question("name", { options: [{ label: "Alpha", description: "First" }] }),
+        ]),
+        null,
+      ],
+      [
+        "several questions",
+        runtimeRequest("r", "user_input"),
+        questionCard("r", [question("name"), question("date")]),
+        null,
+      ],
+      [
+        "a question without free text",
+        runtimeRequest("r", "user_input"),
+        questionCard("r", [question("name", { allowCustomAnswer: false })]),
+        null,
+      ],
+      [
+        "a question the provider can no longer take",
+        runtimeRequest("r", "user_input", { responseCapability: notResumable }),
+        questionCard("r", [question("name")]),
+        null,
+      ],
+    ];
+    for (const [name, pending, card, expected] of cases) {
+      expect([name, AgentAlertPush.alertCategory(pending, card)]).toEqual([name, expected]);
+    }
+  });
 });
 
 describe("AgentAlertPush", () => {
@@ -415,6 +575,89 @@ describe("AgentAlertPush", () => {
       yield* harness.emit(event("provider-thread.updated", "thread-1", {}));
       yield* harness.confirm;
       expect(harness.kindsSent()).toEqual(["completed"]);
+    }),
+  );
+  it.effect("puts the buttons and the request on iOS alerts that can be answered from them", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness;
+      harness.registrations.push(
+        iosPhone("e".repeat(64), [...ALL_KINDS]),
+        androidPhone("fcm-token", [...ALL_KINDS]),
+      );
+      const apns = (index: number) => {
+        const delivery = harness.sent[index]?.deliveries[0];
+        return delivery?.platform === "apns" ? delivery.payload : undefined;
+      };
+      const opened = (threadId: string, requestId: string, kind: "command" | "user_input") => {
+        harness.set(thread(threadId, { pendingRuntimeRequest: request(requestId, kind) }));
+        return harness.emit(requestOpened(threadId));
+      };
+
+      harness.records.set("thread-1", {
+        runtimeRequests: [runtimeRequest("approval-1", "command")],
+        turnItems: [approvalCard("approval-1")],
+      });
+      yield* opened("thread-1", "approval-1", "command");
+      expect(apns(0)).toMatchObject({
+        aps: { category: "ANKIEL_APPROVAL" },
+        body: {
+          environmentId,
+          threadId: "thread-1",
+          kind: "approval",
+          requestId: "approval-1",
+          requestThreadId: "thread-1",
+        },
+      });
+      // Android has no buttons, so its data stays as it was.
+      expect(harness.sent[0]?.deliveries[1]).toMatchObject({
+        data: { kind: "approval", environmentId, threadId: "thread-1" },
+      });
+      expect(harness.sent[0]?.deliveries[1]).not.toHaveProperty("data.requestId");
+
+      // A child's request is answered on the child, from an alert that opens its parent.
+      harness.set(
+        thread("parent", { title: "Parent" }),
+        child("child-1", "parent", { pendingRuntimeRequest: request("approval-2", "command") }),
+      );
+      harness.records.set("child-1", {
+        runtimeRequests: [runtimeRequest("approval-2", "command")],
+        turnItems: [approvalCard("approval-2")],
+      });
+      yield* harness.emit(requestOpened("child-1"));
+      expect(apns(1)?.body).toEqual({
+        environmentId,
+        threadId: "parent",
+        kind: "approval",
+        requestId: "approval-2",
+        requestThreadId: "child-1",
+      });
+
+      harness.records.set("thread-3", {
+        runtimeRequests: [runtimeRequest("question-1", "user_input")],
+        turnItems: [questionCard("question-1", [question("name")])],
+      });
+      yield* opened("thread-3", "question-1", "user_input");
+      expect(apns(2)?.aps).toMatchObject({ category: "ANKIEL_INPUT_REPLY" });
+
+      // A failed read or an id too long for APNs costs the buttons, never the alert.
+      harness.recordReads.fail = true;
+      harness.records.set("thread-4", {
+        runtimeRequests: [runtimeRequest("approval-4", "command")],
+        turnItems: [approvalCard("approval-4")],
+      });
+      yield* opened("thread-4", "approval-4", "command");
+      harness.recordReads.fail = false;
+      const longId = "r".repeat(4_000);
+      harness.records.set("thread-5", {
+        runtimeRequests: [runtimeRequest(longId, "command")],
+        turnItems: [approvalCard(longId)],
+      });
+      yield* opened("thread-5", longId, "command");
+      for (const index of [3, 4]) {
+        expect(apns(index)?.aps).not.toHaveProperty("category");
+        expect(apns(index)?.body).not.toHaveProperty("requestId");
+      }
+      expect(harness.kindsSent()).toHaveLength(10);
     }),
   );
 });

@@ -31,6 +31,10 @@ The app signs up with every computer you've paired as soon as it connects to it.
 
 If you turned notifications off for Ankiel Code in iOS Settings, the page shows a shortcut to turn them back on.
 
+## Answer from the alert
+
+Touch and hold an approval alert to **Approve** or **Deny** it, or a question alert to **Reply** with a short answer. Your iPhone must be unlocked, so nobody can approve from your lock screen. The app opens on the thread and sends your answer there; if another device already answered, nothing more happens. Requests with more choices, such as several questions, a list of options or app access requests, have no buttons: tap the alert to answer in the thread.
+
 ## Good to know
 
 - Alerts stay quiet while the app is open, since the app already shows what changed.

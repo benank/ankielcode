@@ -3,7 +3,10 @@ import {
   isProviderNativeSubagentThread,
   type EnvironmentId,
   type OrchestrationV2DomainEvent,
+  type OrchestrationV2RuntimeRequest,
+  type OrchestrationV2TurnItem,
   type PushAlertKind,
+  type RuntimeRequestId,
   type ThreadId,
 } from "@ankielcode/contracts";
 import {
@@ -43,6 +46,8 @@ const RELAY_PUSH_BATCH_SIZE = 32;
 const TITLE_MAX_CODE_POINTS = 80;
 const MAX_LINEAGE_DEPTH = 16;
 const COLLAPSE_PATTERN = /^[\x21-\x7e]{1,64}$/;
+/** APNs refuses a larger payload, and so does the relay. */
+const APNS_MAX_PAYLOAD_BYTES = 4096;
 /** A run can end moments before a queued follow-up or wake starts, so a completion waits this long. */
 const COMPLETION_CONFIRM_DELAY = "5 seconds";
 
@@ -62,6 +67,17 @@ interface Alert {
   readonly kind: PushAlertKind;
   /** The listed thread a tap opens; a child's wait shows on its top-level thread. */
   readonly target: AgentAwarenessThread;
+  /** The waiting request and the thread that holds it, which is the child for a child's wait. */
+  readonly request: { readonly id: RuntimeRequestId; readonly threadId: ThreadId } | null;
+}
+
+/** The iOS notification categories the app registers; each names the buttons on the alert. */
+export type AlertCategory = "ANKIEL_APPROVAL" | "ANKIEL_INPUT_REPLY";
+
+interface AlertAction {
+  readonly category: AlertCategory;
+  readonly requestId: RuntimeRequestId;
+  readonly requestThreadId: ThreadId;
 }
 
 /** One timer per thread; a newer completion replaces it. */
@@ -119,6 +135,49 @@ const KIND_BY_PHASE: Partial<Record<AgentAwarenessPhase, PushAlertKind>> = {
   waiting_for_input: "input",
 };
 
+/**
+ * Which buttons a waiting request can carry, or null when only opening the thread answers it
+ * correctly. Approve and Deny send `accept` and `decline`, as the in-app card's "Allow once" and
+ * "Decline" do. App access requests stay tap-only: their decline is saved as a lasting denial and
+ * a link request turns accept into cancel, which two blind buttons would hide.
+ */
+export function alertCategory(
+  request: OrchestrationV2RuntimeRequest,
+  item: OrchestrationV2TurnItem | undefined,
+): AlertCategory | null {
+  if (request.status !== "pending") return null;
+  if (request.kind === "user_input") {
+    if (request.responseCapability.type === "not_resumable") return null;
+    if (item?.type !== "user_input_request" || item.questions.length !== 1) return null;
+    const question = item.questions[0]!;
+    return question.options.length === 0 &&
+      question.allowCustomAnswer !== false &&
+      question.multiSelect !== true
+      ? "ANKIEL_INPUT_REPLY"
+      : null;
+  }
+  if (
+    request.kind === "auth_refresh" ||
+    request.kind === "dynamic_tool_call" ||
+    request.kind === "mcp-elicitation" ||
+    request.responseCapability.type !== "live" ||
+    item?.type !== "approval_request"
+  ) {
+    return null;
+  }
+  // Without options the card offers accept, accept for the session, and decline.
+  const options = item.options;
+  if (options === undefined) return "ANKIEL_APPROVAL";
+  return options.some((option) => option.decision === "accept") &&
+    options.some((option) => option.decision === "decline") &&
+    // A warning the card shows must not be skipped by a button that never shows it.
+    options.every((option) => option.warning === undefined)
+    ? "ANKIEL_APPROVAL"
+    : null;
+}
+
+const utf8Length = (value: string) => new TextEncoder().encode(value).byteLength;
+
 const toMillis = (value: DateTime.Utc | null | undefined) =>
   value == null ? null : DateTime.toEpochMillis(value);
 
@@ -140,6 +199,32 @@ function truncateTitle(title: string): string {
     : `${codePoints.slice(0, TITLE_MAX_CODE_POINTS - 1).join("")}…`;
 }
 
+function apnsPayload(input: {
+  readonly environmentId: EnvironmentId;
+  readonly threadId: ThreadId;
+  readonly title: string;
+  readonly kind: PushAlertKind;
+  readonly action: AlertAction | null;
+}) {
+  const { environmentId, threadId, title, kind, action } = input;
+  return {
+    aps: {
+      alert: { title, "loc-key": `ANKIEL_PUSH_${kind.toUpperCase()}` },
+      sound: "default",
+      "thread-id": `${environmentId}/${threadId}`,
+      // The app has no time-sensitive entitlement, so every alert is "active".
+      "interruption-level": "active",
+      ...(action ? { category: action.category } : {}),
+    },
+    body: {
+      environmentId,
+      threadId,
+      kind,
+      ...(action ? { requestId: action.requestId, requestThreadId: action.requestThreadId } : {}),
+    },
+  };
+}
+
 /**
  * The phone localizes the body; the app must define these APNs `loc-key`s: ANKIEL_PUSH_COMPLETED,
  * ANKIEL_PUSH_FAILED, ANKIEL_PUSH_APPROVAL, ANKIEL_PUSH_INPUT. The tap handler's ids sit under
@@ -151,27 +236,25 @@ function buildPushDelivery(input: {
   readonly threadId: ThreadId;
   readonly title: string;
   readonly kind: PushAlertKind;
+  readonly action: AlertAction | null;
 }): RelayPushDelivery {
   const { registration, environmentId, threadId, kind } = input;
   const title = truncateTitle(input.title);
   const collapse = COLLAPSE_PATTERN.test(threadId) ? threadId : undefined;
   const urgent = kind === "approval" || kind === "input";
   if (registration.platform === "ios") {
+    const actionable = input.action ? apnsPayload({ ...input, title }) : null;
+    // Long ids could push the buttons past the size limit; a plain alert still opens the thread.
+    const actionablePayload =
+      actionable && utf8Length(JSON.stringify(actionable)) <= APNS_MAX_PAYLOAD_BYTES
+        ? actionable
+        : null;
     return {
       platform: "apns",
       token: registration.token,
       topic: registration.appId,
       environment: registration.apnsEnvironment ?? "production",
-      payload: {
-        aps: {
-          alert: { title, "loc-key": `ANKIEL_PUSH_${kind.toUpperCase()}` },
-          sound: "default",
-          "thread-id": `${environmentId}/${threadId}`,
-          // The app has no time-sensitive entitlement, so every alert is "active".
-          "interruption-level": "active",
-        },
-        body: { environmentId, threadId, kind },
-      },
+      payload: actionablePayload ?? apnsPayload({ ...input, title, action: null }),
       pushType: "alert",
       priority: 10,
       ...(collapse ? { collapseId: collapse } : {}),
@@ -253,7 +336,12 @@ const make = Effect.gen(function* () {
       const kind: PushAlertKind = request.kind === "user_input" ? "input" : "approval";
       // The parent's snooze judges the child's request as if the parent had asked it.
       if (isSnoozed({ ...target, pendingRuntimeRequest: request }, nowMs)) return null;
-      return { key: `request:${request.id}`, kind, target } satisfies Alert;
+      return {
+        key: `request:${request.id}`,
+        kind,
+        target,
+        request: { id: request.id, threadId: thread.id },
+      } satisfies Alert;
     }
     const phase = projectThreadAwarenessV2({
       environmentId,
@@ -273,8 +361,43 @@ const make = Effect.gen(function* () {
     if (at < armedAt) return null;
     if (silencedBySnooze(thread, kind, nowMs)) return null;
     const key = request !== null ? `request:${request.id}` : `${kind}:${thread.latestRunId ?? ""}`;
-    return { key, kind, target: thread } satisfies Alert;
+    return {
+      key,
+      kind,
+      target: thread,
+      request: request === null ? null : { id: request.id, threadId: thread.id },
+    } satisfies Alert;
   });
+
+  // A failed read costs the buttons, never the alert, which is marked sent before dispatch.
+  const readAlertAction = Effect.fnUntraced(
+    function* (request: NonNullable<Alert["request"]>) {
+      const records = yield* threads.getThreadRecords(
+        request.threadId,
+        ["runtimeRequests", "turnItems"],
+        {
+          runtimeRequestStatuses: ["pending"],
+          turnItemRequestIds: [request.id],
+          turnItemTypes: ["approval_request", "user_input_request"],
+        },
+      );
+      const pending = records.runtimeRequests.find((entry) => entry.id === request.id);
+      const item = records.turnItems.findLast(
+        (entry) =>
+          (entry.type === "approval_request" || entry.type === "user_input_request") &&
+          entry.requestId === request.id,
+      );
+      const category = pending === undefined ? null : alertCategory(pending, item);
+      return category === null
+        ? null
+        : ({
+            category,
+            requestId: request.id,
+            requestThreadId: request.threadId,
+          } satisfies AlertAction);
+    },
+    Effect.orElseSucceed(() => null),
+  );
 
   const dispatch = Effect.fn("AgentAlertPush.dispatch")(function* (
     alert: Alert,
@@ -282,23 +405,30 @@ const make = Effect.gen(function* () {
   ) {
     yield* Effect.annotateCurrentSpan({ kind: alert.kind, threadId: alert.target.id });
     const seenTokens = new Set<string>();
-    const deliveries: RelayPushDelivery[] = [];
+    const recipients: PushRegistry.PushRegistration[] = [];
     for (const registration of yield* registry.listActive) {
       const available = registration.platform === "ios" ? availability.apns : availability.fcm;
       if (!available || !registration.kinds.includes(alert.kind)) continue;
       // A phone paired twice holds one token under two sessions.
       if (seenTokens.has(registration.token)) continue;
       seenTokens.add(registration.token);
-      deliveries.push(
-        buildPushDelivery({
-          registration,
-          environmentId,
-          threadId: alert.target.id,
-          title: alert.target.title,
-          kind: alert.kind,
-        }),
-      );
+      recipients.push(registration);
     }
+    // Only iOS shows the buttons.
+    const action =
+      alert.request !== null && recipients.some((registration) => registration.platform === "ios")
+        ? yield* readAlertAction(alert.request)
+        : null;
+    const deliveries = recipients.map((registration) =>
+      buildPushDelivery({
+        registration,
+        environmentId,
+        threadId: alert.target.id,
+        title: alert.target.title,
+        kind: alert.kind,
+        action,
+      }),
+    );
     for (let offset = 0; offset < deliveries.length; offset += RELAY_PUSH_BATCH_SIZE) {
       const pushId = `alert-${startedAt}-${++pushSequence}`;
       const result = yield* relay.sendPush({

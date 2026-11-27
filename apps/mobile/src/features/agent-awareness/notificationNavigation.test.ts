@@ -1,7 +1,15 @@
 import type { NotificationResponse } from "expo-notifications";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
+import type { PendingThreadRequests } from "@ankielcode/client-runtime/state/thread-requests";
+import { RuntimeRequestId } from "@ankielcode/contracts";
+
 import { foregroundNotificationBehavior } from "./foregroundNotificationBehavior";
+import {
+  type AgentNotificationAction,
+  extractAgentNotificationAction,
+  planAgentNotificationAction,
+} from "./notificationActions";
 import { consumeLastAgentNotificationResponse } from "./notificationResponseConsumer";
 
 import {
@@ -9,8 +17,13 @@ import {
   routeAgentNotificationResponseOnce,
 } from "./notificationPayload";
 
-function responseWithData(data: Record<string, unknown>, identifier = "notification-1") {
+function responseWithData(
+  data: Record<string, unknown>,
+  identifier = "notification-1",
+  action: { readonly actionIdentifier?: string; readonly userText?: string } = {},
+) {
   return {
+    ...action,
     notification: {
       request: {
         identifier,
@@ -197,5 +210,176 @@ describe("routeAgentNotificationResponseOnce", () => {
     });
 
     expect(navigations).toEqual(["/threads/env/thread"]);
+  });
+});
+
+// A relay alert with buttons: its APNs `body` as `content.data`, and the button pressed.
+const actionResponse = (actionIdentifier: string, extra: Record<string, unknown> = {}) =>
+  responseWithData(
+    {
+      environmentId: "env",
+      threadId: "parent",
+      kind: "approval",
+      requestId: "request-1",
+      requestThreadId: "child",
+      ...extra,
+    },
+    `notification-${actionIdentifier}`,
+    {
+      actionIdentifier,
+      ...(typeof extra.userText === "string" ? { userText: extra.userText } : {}),
+    },
+  );
+
+describe("extractAgentNotificationAction", () => {
+  it("reads the button, the request and the thread that holds it", () => {
+    expect(extractAgentNotificationAction(actionResponse("ANKIEL_APPROVE"))).toEqual({
+      type: "approve",
+      environmentId: "env",
+      threadId: "child",
+      requestId: "request-1",
+      text: "",
+    });
+    expect(
+      extractAgentNotificationAction(
+        actionResponse("ANKIEL_REPLY", { requestThreadId: undefined, userText: "  Ship it \n" }),
+      ),
+    ).toMatchObject({ type: "reply", threadId: "parent", text: "Ship it" });
+  });
+
+  it("leaves taps, empty replies and alerts without a request to plain navigation", () => {
+    expect(
+      extractAgentNotificationAction(actionResponse("expo.modules.notifications.actions.DEFAULT")),
+    ).toBeNull();
+    expect(extractAgentNotificationAction(actionResponse("ANKIEL_REPLY"))).toBeNull();
+    expect(
+      extractAgentNotificationAction(actionResponse("ANKIEL_DENY", { requestId: undefined })),
+    ).toBeNull();
+    expect(extractAgentNotificationAction({ actionIdentifier: "ANKIEL_DENY" })).toBeNull();
+  });
+});
+
+describe("planAgentNotificationAction", () => {
+  const requestId = RuntimeRequestId.make("request-1");
+  const action = (type: AgentNotificationAction["type"], text = ""): AgentNotificationAction => ({
+    ...extractAgentNotificationAction(actionResponse("ANKIEL_APPROVE"))!,
+    type,
+    text,
+  });
+  const approval = (
+    overrides: Partial<PendingThreadRequests["approvals"][number]> = {},
+  ): PendingThreadRequests => ({
+    approvals: [
+      {
+        requestId,
+        requestKind: "command",
+        createdAt: "2026-11-26T00:00:00.000Z",
+        responseCapability: "live",
+        ...overrides,
+      },
+    ],
+    userInputs: [],
+  });
+  const question = (id: string) => ({
+    id,
+    header: "Name",
+    question: "What should the release be called?",
+    options: [],
+    multiSelect: false,
+  });
+  const userInput = (questions: ReadonlyArray<ReturnType<typeof question>>) =>
+    ({
+      approvals: [],
+      userInputs: [
+        {
+          requestId,
+          createdAt: "2026-11-26T00:00:00.000Z",
+          questions,
+          responseCapability: "live",
+          dismissible: false,
+        },
+      ],
+    }) satisfies PendingThreadRequests;
+  const plan = (
+    next: AgentNotificationAction,
+    pending: PendingThreadRequests | null,
+    canOperate = true,
+  ) => planAgentNotificationAction({ action: next, pending, canOperate });
+
+  it("sends what the card's Allow once, Decline and single answer send, once per button", () => {
+    expect(plan(action("approve"), approval())).toEqual({
+      type: "approval",
+      input: {
+        threadId: "child",
+        requestId,
+        decision: "accept",
+        commandId: "notification:approve:request-1",
+      },
+    });
+    expect(plan(action("deny"), approval())).toMatchObject({
+      type: "approval",
+      input: { decision: "decline", commandId: "notification:deny:request-1" },
+    });
+    expect(plan(action("reply", "Atlas"), userInput([question("name")]))).toEqual({
+      type: "user-input",
+      input: {
+        threadId: "child",
+        requestId,
+        answers: { name: "Atlas" },
+        commandId: "notification:reply:request-1",
+      },
+    });
+  });
+
+  it("skips requests answered elsewhere or that the button cannot answer", () => {
+    const answeredElsewhere: PendingThreadRequests = { approvals: [], userInputs: [] };
+    expect(plan(action("approve"), answeredElsewhere).type).toBe("skip");
+    expect(plan(action("reply", "Atlas"), answeredElsewhere).type).toBe("skip");
+    expect(plan(action("approve"), null).type).toBe("skip");
+    expect(plan(action("approve"), approval(), false).type).toBe("skip");
+    expect(plan(action("approve"), approval({ responseCapability: "not_resumable" })).type).toBe(
+      "skip",
+    );
+    expect(
+      plan(action("deny"), approval({ options: [{ decision: "accept", label: "Allow once" }] }))
+        .type,
+    ).toBe("skip");
+    // The phone's view may be newer than the alert: a second question needs the thread.
+    expect(
+      plan(action("reply", "Atlas"), userInput([question("name"), question("date")])).type,
+    ).toBe("skip");
+  });
+});
+
+describe("routeAgentNotificationResponseOnce with buttons", () => {
+  it("answers once, after the thread opens, however often the response arrives", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const response = actionResponse("ANKIEL_APPROVE") as unknown as NotificationResponse;
+    const handledResponseIds = new Set<string>();
+    const navigate = vi.fn().mockImplementationOnce(() => {
+      throw new Error("navigation not ready");
+    });
+    const perform = vi.fn();
+    const consume = () =>
+      consumeLastAgentNotificationResponse({
+        getLastResponse: () => Promise.resolve(response),
+        clearLastResponse: () => Promise.resolve(),
+        handleResponse: (next) =>
+          routeAgentNotificationResponseOnce({
+            handledResponseIds,
+            response: next,
+            navigate,
+            perform,
+          }),
+      });
+
+    await consume();
+    expect(perform).not.toHaveBeenCalled();
+    await consume();
+    routeAgentNotificationResponseOnce({ handledResponseIds, response, navigate, perform });
+
+    expect(navigate).toHaveBeenLastCalledWith("/threads/env/parent");
+    expect(perform).toHaveBeenCalledOnce();
+    expect(perform).toHaveBeenCalledWith(expect.objectContaining({ type: "approve" }));
   });
 });

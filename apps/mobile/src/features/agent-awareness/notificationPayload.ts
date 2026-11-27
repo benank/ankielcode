@@ -1,3 +1,8 @@
+import {
+  type AgentNotificationAction,
+  extractAgentNotificationAction,
+} from "./notificationActions";
+
 function dataFromNotificationResponse(response: unknown): Record<string, unknown> | null {
   if (typeof response !== "object" || response === null) {
     return null;
@@ -99,10 +104,16 @@ export function extractAgentNotificationDeepLink(response: unknown): string | nu
   return null;
 }
 
+/**
+ * Opens the response's thread once per notification. A button's answer is handed to `perform`
+ * only after the thread opened and the response is marked handled, so a retried route never
+ * answers twice.
+ */
 export function routeAgentNotificationResponseOnce(input: {
   readonly handledResponseIds: Set<string>;
   readonly response: unknown;
   readonly navigate: (deepLink: string) => void;
+  readonly perform?: (action: AgentNotificationAction) => void;
 }): void {
   const responseId = identifierFromNotificationResponse(input.response);
   if (responseId && input.handledResponseIds.has(responseId)) {
@@ -115,4 +126,6 @@ export function routeAgentNotificationResponseOnce(input: {
   if (responseId) {
     input.handledResponseIds.add(responseId);
   }
+  const action = deepLink ? extractAgentNotificationAction(input.response) : null;
+  if (action) input.perform?.(action);
 }
