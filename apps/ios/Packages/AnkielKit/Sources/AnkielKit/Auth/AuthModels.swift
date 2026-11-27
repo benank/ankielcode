@@ -113,3 +113,23 @@ public struct ClientIdentity: Sendable, Hashable {
     self.deviceModel = deviceModel
   }
 }
+
+/// `GET /api/auth/session` (`AuthSessionState`), the parts the client reads.
+public struct AuthSessionState: Sendable, Hashable, Decodable {
+  public var authenticated: Bool
+  public var scopes: [String]?
+  public var permissions: [String]?
+
+  /// `sessionGrantsScope`: `permissions` when present, else the legacy `scopes`.
+  public var grantedScopes: Set<String>? {
+    guard authenticated else { return [] }
+    if let permissions { return Set(permissions) }
+    return scopes.map(Set.init)
+  }
+}
+
+/// Scope names the client checks before showing an action (§2.8).
+public enum AuthScope {
+  public static let orchestrationRead = "orchestration:read"
+  public static let orchestrationOperate = "orchestration:operate"
+}

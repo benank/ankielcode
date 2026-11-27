@@ -8,6 +8,8 @@ public struct ServerConfig: Sendable, Hashable, Decodable {
   public var shellOlderSettled: Bool?
   public var shellResumeCompletionMarker: Bool?
   public var directEndpoints: [DirectEndpoint]
+  /// The folder of "No project" threads.
+  public var scratchWorkspaceRoot: String?
 
   public struct DirectEndpoint: Sendable, Hashable, Decodable {
     public var kind: WireEnum<Kind>
@@ -18,7 +20,7 @@ public struct ServerConfig: Sendable, Hashable, Decodable {
 
   enum CodingKeys: String, CodingKey {
     case environment, cwd, hostname, serverTime, shellThreadFamilies, shellOlderSettled,
-      shellResumeCompletionMarker, directEndpoints
+      shellResumeCompletionMarker, directEndpoints, scratchWorkspaceRoot
   }
 
   public init(from decoder: any Decoder) throws {
@@ -30,6 +32,7 @@ public struct ServerConfig: Sendable, Hashable, Decodable {
     shellThreadFamilies = try? c.decodeIfPresent(Bool.self, forKey: .shellThreadFamilies)
     shellOlderSettled = try? c.decodeIfPresent(Bool.self, forKey: .shellOlderSettled)
     shellResumeCompletionMarker = try? c.decodeIfPresent(Bool.self, forKey: .shellResumeCompletionMarker)
+    scratchWorkspaceRoot = try? c.decodeIfPresent(String.self, forKey: .scratchWorkspaceRoot)
     directEndpoints =
       ((try? c.decodeIfPresent(LossyArray<DirectEndpoint>.self, forKey: .directEndpoints)) ?? nil)?.elements ?? []
   }

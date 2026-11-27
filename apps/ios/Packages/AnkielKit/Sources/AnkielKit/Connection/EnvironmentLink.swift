@@ -14,6 +14,13 @@ public protocol LiveSession: AnyObject, Sendable {
   func subscribeShell(_ subscription: ShellSubscription) async throws -> RpcStream<ShellStreamItem>
   /// `GET /api/orchestration/shell`, the gzip HTTP fallback after `snapshot-required`.
   func loadShellSnapshot(_ subscription: ShellSubscription) async throws -> ShellHTTPSnapshot
+  /// A unary RPC on this session (commands, searches, page reads).
+  func call<Response: Decodable & Sendable>(
+    _ tag: String, payload: some Encodable & Sendable, as: Response.Type
+  ) async throws -> Response
+  /// `GET /api/auth/session`: the scopes this device holds (`permissions`, else legacy `scopes`).
+  /// nil when the server does not say.
+  func grantedScopes() async throws -> Set<String>?
   func close() async
 }
 

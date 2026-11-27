@@ -14,7 +14,7 @@ struct RootView: View {
         WelcomeView()
           .transition(.opacity)
       case .home:
-        ThreadListView()
+        HomeView()
           .transition(.opacity)
       }
     }

@@ -74,6 +74,16 @@ func run() async throws {
 
   let session = try await connector.connect(environment)
   let config = session.initialConfig
+  if let rawPath = argument("--raw-shell") {
+    try await dumpRawShell(session, to: rawPath)
+    await session.close()
+    return
+  }
+  if CommandLine.arguments.contains("--rows") {
+    try await printRows(session)
+    await session.close()
+    return
+  }
   print("environment id:    \(config.environment.environmentId)")
   print("environment label: \(config.environment.label)")
   print("server version:    \(config.environment.serverVersion)")

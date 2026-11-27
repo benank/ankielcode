@@ -1,168 +1,829 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "%@ closed the connection while pairing. Try again in a moment.": {},
-    "%@ did not answer.": {},
-    "%@ did not respond in time.": {},
-    "%@ is already saved with a different address. Remove it from Computers first if it really moved.": {},
-    "%@ is unavailable": {},
-    "%@ needs pairing": {},
-    "%@ refused the connection": {},
-    "%@ runs an older Ankiel Code": {},
-    "%@ runs an older Ankiel Code.": {},
-    "%@ · Failed": {
-      "comment": "connection hop status"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "“%@” will be permanently deleted, including its terminal history." : {
+
     },
-    "%@ · Not checked": {},
-    "%lld computers unavailable": {},
-    "%lld.": {},
-    "A different computer answered": {},
-    "A different machine answered at this address.": {},
-    "A different machine answered for %@": {},
-    "A pairing link works once and expires after a few minutes. Make a new one if it stops working.": {},
-    "Add a computer": {},
-    "Add an environment to load projects and start coding sessions.": {},
-    "Address": {},
-    "Addresses": {},
-    "Addresses the computer reports, such as its local network address, are tried first and checked before any credential is sent.": {},
-    "Ankiel Code": {},
-    "Ankiel Code connection to %@: %@": {},
-    "Ankiel Code keeps every saved computer connected and reconnects on its own.": {},
-    "Ankiel Code on %@": {},
-    "Ankiel Code on %@ did not accept this device": {},
-    "Ankiel Code on %@ did not answer": {},
-    "App version": {},
-    "Attempts": {
-      "comment": "diagnostics field label"
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
     },
-    "Camera access needed": {},
-    "Camera access was denied for this app. Open Settings to enable it, or paste the link instead.": {},
-    "Cancel": {},
-    "Cause": {
-      "comment": "diagnostics field label"
+    "%@ · Failed" : {
+      "comment" : "connection hop status"
     },
-    "Checking the computer": {},
-    "Close": {},
-    "Code": {},
-    "Computers": {},
-    "Connect": {},
-    "Connect this device to the internet. Ankiel Code reconnects on its own.": {},
-    "Connected": {
-      "comment": "connection status"
+    "%@ · Not checked" : {
+
     },
-    "Connecting": {},
-    "Connecting…": {},
-    "Continue": {},
-    "Copied": {},
-    "Copy diagnostics": {},
-    "Copy the pairing link on your computer, then paste it here.": {},
-    "Copy the whole link, including the part after #token=, or enter the code.": {},
-    "Couldn't reach %@": {},
-    "Direct": {
-      "comment": "a direct internet connection route"
+    "%@ closed the connection while pairing. Try again in a moment." : {
+
     },
-    "Done": {},
-    "Environment unavailable": {},
-    "Error": {
-      "comment": "diagnostics field label"
+    "%@ did not answer." : {
+
     },
-    "Exchanging the pairing code": {},
-    "Failed to connect. Reconnecting… Reason: %@": {},
-    "Follow and steer the coding agents on your own computers, from anywhere.": {},
-    "For machines on your local network or tailnet, or anywhere through your own relay. The machine keeps its own provider credentials.": {},
-    "For machines on your local network or tailnet. The machine keeps its own provider credentials.": {},
-    "Host version": {},
-    "How do I get a pairing link?": {},
-    "HTTP status": {},
-    "In progress": {},
-    "In the desktop app, open Settings, then Connections. Or run `ankiel pair` in a terminal.": {},
-    "In use": {},
-    "Keep the app open for a moment.": {},
-    "Last connected": {},
-    "Loading threads": {},
-    "Local network": {},
-    "Make sure Ankiel Code is running on %@.": {},
-    "Make sure Ankiel Code is running on that computer and this device can reach it: the same Wi-Fi, your tailnet, or the relay.": {},
-    "Name": {},
-    "Needs pairing again": {},
-    "New thread": {},
-    "Next retry": {},
-    "No camera here": {},
-    "No computers": {},
-    "No threads yet": {},
-    "Offline": {
-      "comment": "connection status"
+    "%@ did not respond in time." : {
+
     },
-    "Only pair with computers you own. It will be able to show this device its threads.": {},
-    "Open Ankiel Code on your computer": {},
-    "Open Settings": {},
-    "Or copy the pairing link and paste it here.": {},
-    "Or enter it": {},
-    "Pair": {},
-    "Pair again": {},
-    "Pair with this computer?": {},
-    "Paired": {},
-    "Paired with %@": {},
-    "Pairing a computer": {},
-    "Pairing code": {},
-    "Pairing links look like https://your-computer/pair#token=…": {},
-    "Pairing links work once and expire after a few minutes. Create a new one on your computer and scan it again.": {},
-    "Pairing with %@": {},
-    "Paste a pairing link": {},
-    "Paste link": {},
-    "Reconnecting to %@…": {},
-    "Reconnecting…": {},
-    "Relay": {},
-    "Remove": {},
-    "Remove %@": {},
-    "Remove %@?": {},
-    "Removing forgets this computer's sign-in and cached threads on this device. Nothing changes on the computer.": {},
-    "Retry": {},
-    "Retry now": {},
-    "Retry. If it keeps failing, copy the diagnostics.": {},
-    "Retrying · attempt %lld": {},
-    "Scan a new code": {},
-    "Scan QR code": {},
-    "Scan the code from `ankiel pair` or desktop Connections settings": {},
-    "Scan the code it shows": {},
-    "Shows your computers and what to try": {},
-    "Tailnet": {},
-    "That address claims to be %@": {},
-    "That code isn't a pairing link.": {},
-    "That isn't a pairing link": {},
-    "The address reached another Ankiel Code computer than the link was made for.": {},
-    "the computer": {},
-    "The connection dropped": {},
-    "The connection dropped.": {},
-    "The pairing code is missing": {},
-    "The saved address now reaches another computer. Remove %@ and pair it again.": {},
-    "The saved environment is offline. Check the URL or start the environment, then retry.": {},
-    "The server answered with HTTP %lld. Try again in a moment.": {},
-    "The server refused the connection (HTTP %lld).": {},
-    "The server sent something this app couldn't read.": {},
-    "This app is too old for %@": {},
-    "This app is too old for %@.": {},
-    "This device": {},
-    "This device can't scan codes. Paste the pairing link instead.": {},
-    "This device is offline": {},
-    "This device's clock is off": {},
-    "This device's clock is off.": {},
-    "This device's sign-in to %@ expired or was revoked.": {},
-    "This device's sign-in to %@ expired or was revoked. Pair it again with a new pairing link from %@.": {},
-    "This pairing link has expired or was already used": {},
-    "Threads": {},
-    "Try again": {},
-    "Turn on automatic date and time in Settings, then try again.": {},
-    "Turn on automatic date and time on this device and on %@, then retry.": {},
-    "Update Ankiel Code on %@.": {},
-    "Update Ankiel Code on that computer, then pair again.": {},
-    "Update Ankiel Code on this device, then pair again.": {},
-    "Update Ankiel Code on this device.": {},
-    "Use it right away": {},
-    "Version": {},
-    "Waiting": {},
-    "What to try": {},
-    "You'll need a new pairing link to add it again.": {}
+    "%@ is already saved with a different address. Remove it from Computers first if it really moved." : {
+
+    },
+    "%@ is unavailable" : {
+
+    },
+    "%@ needs pairing" : {
+
+    },
+    "%@ refused the connection" : {
+
+    },
+    "%@ runs an older Ankiel Code" : {
+
+    },
+    "%@ runs an older Ankiel Code." : {
+
+    },
+    "%@, done" : {
+
+    },
+    "%@, failed" : {
+
+    },
+    "%@, needs you" : {
+
+    },
+    "%@, working" : {
+
+    },
+    "%lld." : {
+
+    },
+    "%lldd" : {
+      "comment" : "compact elapsed days"
+    },
+    "%lldh" : {
+      "comment" : "compact elapsed hours"
+    },
+    "%lldm" : {
+      "comment" : "compact elapsed minutes"
+    },
+    "^[%lld settled thread](inflect: true)" : {
+
+    },
+    "^[%lld snoozed thread](inflect: true)" : {
+
+    },
+    "<1m" : {
+      "comment" : "compact elapsed time, under one minute"
+    },
+    "A different computer answered" : {
+
+    },
+    "A different machine answered at this address." : {
+
+    },
+    "A different machine answered for %@" : {
+
+    },
+    "A pairing link works once and expires after a few minutes. Make a new one if it stops working." : {
+
+    },
+    "Add a computer" : {
+
+    },
+    "Add an environment to load projects and start coding sessions." : {
+
+    },
+    "Address" : {
+
+    },
+    "Addresses" : {
+
+    },
+    "Addresses the computer reports, such as its local network address, are tried first and checked before any credential is sent." : {
+
+    },
+    "All computers" : {
+
+    },
+    "All projects" : {
+
+    },
+    "All threads" : {
+
+    },
+    "Ankiel Code" : {
+
+    },
+    "Ankiel Code connection to %@: %@" : {
+
+    },
+    "Ankiel Code keeps every saved computer connected and reconnects on its own." : {
+
+    },
+    "Ankiel Code on %@" : {
+
+    },
+    "Ankiel Code on %@ did not accept this device" : {
+
+    },
+    "Ankiel Code on %@ did not answer" : {
+
+    },
+    "App version" : {
+
+    },
+    "Approval" : {
+      "comment" : "thread status, waiting for approval"
+    },
+    "Archive" : {
+
+    },
+    "Archived thread" : {
+
+    },
+    "Attempts" : {
+      "comment" : "diagnostics field label"
+    },
+    "Camera access needed" : {
+
+    },
+    "Camera access was denied for this app. Open Settings to enable it, or paste the link instead." : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Cause" : {
+      "comment" : "diagnostics field label"
+    },
+    "Checking the computer" : {
+
+    },
+    "Choose a thread from the list, or start a new one." : {
+
+    },
+    "Choose another computer or create a new task." : {
+
+    },
+    "Choose another project or create a new task." : {
+
+    },
+    "Close" : {
+
+    },
+    "Code" : {
+
+    },
+    "Collapsed" : {
+
+    },
+    "Collapses the settled threads." : {
+
+    },
+    "Collapses the snoozed threads." : {
+
+    },
+    "Computer" : {
+      "comment" : "filter menu heading"
+    },
+    "Computers" : {
+
+    },
+    "Connect" : {
+
+    },
+    "Connect this device to the internet. Ankiel Code reconnects on its own." : {
+
+    },
+    "Connected" : {
+      "comment" : "connection status"
+    },
+    "Connecting" : {
+
+    },
+    "Connecting to environment" : {
+
+    },
+    "Connecting…" : {
+
+    },
+    "Continue" : {
+
+    },
+    "Conversation arrives in the next phase" : {
+
+    },
+    "Copied" : {
+
+    },
+    "Copy diagnostics" : {
+
+    },
+    "Copy the pairing link on your computer, then paste it here." : {
+
+    },
+    "Copy the whole link, including the part after #token=, or enter the code." : {
+
+    },
+    "Copy thread ID" : {
+
+    },
+    "Copy thread link" : {
+
+    },
+    "Could not archive thread" : {
+
+    },
+    "Could not delete thread" : {
+
+    },
+    "Could not load older threads. Retry" : {
+
+    },
+    "Could not pin thread" : {
+
+    },
+    "Could not rename thread" : {
+
+    },
+    "Could not settle thread" : {
+
+    },
+    "Could not snooze thread" : {
+
+    },
+    "Could not un-settle thread" : {
+
+    },
+    "Could not unarchive thread" : {
+
+    },
+    "Could not undo thread action" : {
+
+    },
+    "Could not unpin thread" : {
+
+    },
+    "Could not update thread" : {
+
+    },
+    "Could not wake thread" : {
+
+    },
+    "Couldn't reach %@" : {
+
+    },
+    "Couldn't search messages for “%@”. Change the search to try again." : {
+
+    },
+    "Create a task to start a new coding runtime in one of your connected projects." : {
+
+    },
+    "Create a task to start a new coding session." : {
+
+    },
+    "Delete" : {
+
+    },
+    "Delete thread?" : {
+
+    },
+    "Direct" : {
+      "comment" : "a direct internet connection route"
+    },
+    "Done" : {
+      "comment" : "thread status, turn finished"
+    },
+    "Environment unavailable" : {
+
+    },
+    "Error" : {
+      "comment" : "diagnostics field label"
+    },
+    "Exchanging the pairing code" : {
+
+    },
+    "Expanded" : {
+
+    },
+    "Expands the settled threads." : {
+
+    },
+    "Expands the snoozed threads." : {
+
+    },
+    "Failed" : {
+      "comment" : "thread status"
+    },
+    "Failed to connect. Reconnecting… Reason: %@" : {
+
+    },
+    "Filter" : {
+
+    },
+    "Filtered" : {
+
+    },
+    "Follow and steer the coding agents on your own computers, from anywhere." : {
+
+    },
+    "For machines on your local network or tailnet, or anywhere through your own relay. The machine keeps its own provider credentials." : {
+
+    },
+    "For machines on your local network or tailnet. The machine keeps its own provider credentials." : {
+
+    },
+    "Goal" : {
+      "comment" : "thread status, working toward a goal"
+    },
+    "Host version" : {
+
+    },
+    "How do I get a pairing link?" : {
+
+    },
+    "HTTP status" : {
+
+    },
+    "In %lld days" : {
+
+    },
+    "In %lld hours" : {
+
+    },
+    "In %lld minutes" : {
+
+    },
+    "In 1 day" : {
+
+    },
+    "In 1 hour" : {
+
+    },
+    "In progress" : {
+
+    },
+    "In the desktop app, open Settings, then Connections. Or run `ankiel pair` in a terminal." : {
+
+    },
+    "In use" : {
+
+    },
+    "Input" : {
+      "comment" : "thread status, waiting for user input"
+    },
+    "Keep the app open for a moment." : {
+
+    },
+    "Last connected" : {
+
+    },
+    "Limited" : {
+      "comment" : "thread status, usage limit reached"
+    },
+    "Loading" : {
+      "comment" : "older threads are loading"
+    },
+    "Loading projects and threads from the saved environment." : {
+
+    },
+    "Loading threads…" : {
+
+    },
+    "Local network" : {
+
+    },
+    "Looking for “%@” in messages." : {
+
+    },
+    "Make sure Ankiel Code is running on %@." : {
+
+    },
+    "Make sure Ankiel Code is running on that computer and this device can reach it: the same Wi-Fi, your tailnet, or the relay." : {
+
+    },
+    "Mark read" : {
+
+    },
+    "Mark unread" : {
+
+    },
+    "More" : {
+
+    },
+    "Name" : {
+
+    },
+    "Needs pairing again" : {
+
+    },
+    "New thread" : {
+
+    },
+    "Next %@" : {
+
+    },
+    "Next retry" : {
+
+    },
+    "Next week" : {
+
+    },
+    "No camera here" : {
+
+    },
+    "No computers" : {
+
+    },
+    "No project" : {
+
+    },
+    "No projects found" : {
+
+    },
+    "No thread selected" : {
+
+    },
+    "No threads in %@" : {
+
+    },
+    "No threads yet" : {
+
+    },
+    "Not connected" : {
+
+    },
+    "now" : {
+      "comment" : "a snoozed thread wakes now"
+    },
+    "Offline" : {
+      "comment" : "connection status"
+    },
+    "Only pair with computers you own. It will be able to show this device its threads." : {
+
+    },
+    "Open Ankiel Code on your computer" : {
+
+    },
+    "Open Settings" : {
+
+    },
+    "Or copy the pairing link and paste it here." : {
+
+    },
+    "Or enter it" : {
+
+    },
+    "Pair" : {
+
+    },
+    "Pair again" : {
+
+    },
+    "Pair with this computer?" : {
+
+    },
+    "Paired" : {
+
+    },
+    "Paired with %@" : {
+
+    },
+    "Pairing a computer" : {
+
+    },
+    "Pairing code" : {
+
+    },
+    "Pairing links look like https://your-computer/pair#token=…" : {
+
+    },
+    "Pairing links work once and expire after a few minutes. Create a new one on your computer and scan it again." : {
+
+    },
+    "Pairing with %@" : {
+
+    },
+    "Paste a pairing link" : {
+
+    },
+    "Paste link" : {
+
+    },
+    "Pin" : {
+
+    },
+    "Pinned" : {
+
+    },
+    "Project" : {
+      "comment" : "filter menu heading"
+    },
+    "Read" : {
+
+    },
+    "Reconnecting %lld computers" : {
+
+    },
+    "Reconnecting to %@" : {
+
+    },
+    "Reconnecting to %@…" : {
+
+    },
+    "Reconnecting…" : {
+
+    },
+    "regenerating title" : {
+
+    },
+    "Relay" : {
+
+    },
+    "Remove" : {
+
+    },
+    "Remove %@" : {
+
+    },
+    "Remove %@?" : {
+
+    },
+    "Removing forgets this computer's sign-in and cached threads on this device. Nothing changes on the computer." : {
+
+    },
+    "Rename" : {
+
+    },
+    "Rename thread" : {
+
+    },
+    "Retry" : {
+
+    },
+    "Retry now" : {
+
+    },
+    "Retry. If it keeps failing, copy the diagnostics." : {
+
+    },
+    "Retrying · attempt %lld" : {
+
+    },
+    "Save" : {
+
+    },
+    "Scan a new code" : {
+
+    },
+    "Scan QR code" : {
+
+    },
+    "Scan the code from `ankiel pair` or desktop Connections settings" : {
+
+    },
+    "Scan the code it shows" : {
+
+    },
+    "Search" : {
+      "comment" : "search field placeholder"
+    },
+    "Search failed" : {
+
+    },
+    "Searching thread messages…" : {
+
+    },
+    "Settings" : {
+
+    },
+    "Settings arrive in a later phase." : {
+
+    },
+    "Settle" : {
+
+    },
+    "Settled" : {
+
+    },
+    "Settled thread" : {
+
+    },
+    "Show all threads" : {
+
+    },
+    "Show more (%lld settled hidden)" : {
+
+    },
+    "Snooze" : {
+
+    },
+    "Snooze until" : {
+
+    },
+    "Snoozed" : {
+
+    },
+    "Snoozed thread" : {
+
+    },
+    "Syncing threads…" : {
+
+    },
+    "Tailnet" : {
+
+    },
+    "That address claims to be %@" : {
+
+    },
+    "That code isn't a pairing link." : {
+
+    },
+    "That isn't a pairing link" : {
+
+    },
+    "That snooze time has passed. Choose another time." : {
+
+    },
+    "The address reached another Ankiel Code computer than the link was made for." : {
+
+    },
+    "The composer arrives in a later phase." : {
+
+    },
+    "the computer" : {
+
+    },
+    "The connected environment did not report any projects." : {
+
+    },
+    "The connection dropped" : {
+
+    },
+    "The connection dropped." : {
+
+    },
+    "The pairing code is missing" : {
+
+    },
+    "The saved address now reaches another computer. Remove %@ and pair it again." : {
+
+    },
+    "The saved environment is offline. Check the URL or start the environment, then retry." : {
+
+    },
+    "The server answered with HTTP %lld. Try again in a moment." : {
+
+    },
+    "The server refused the connection (HTTP %lld)." : {
+
+    },
+    "The server sent something this app couldn't read." : {
+
+    },
+    "This afternoon" : {
+
+    },
+    "This app is too old for %@" : {
+
+    },
+    "This app is too old for %@." : {
+
+    },
+    "This computer is not connected. Try again when it reconnects." : {
+
+    },
+    "This connection cannot change threads." : {
+
+    },
+    "This device" : {
+
+    },
+    "This device can't scan codes. Paste the pairing link instead." : {
+
+    },
+    "This device is offline" : {
+
+    },
+    "This device's clock is off" : {
+
+    },
+    "This device's clock is off." : {
+
+    },
+    "This device's sign-in to %@ expired or was revoked." : {
+
+    },
+    "This device's sign-in to %@ expired or was revoked. Pair it again with a new pairing link from %@." : {
+
+    },
+    "This evening" : {
+
+    },
+    "This morning" : {
+
+    },
+    "This pairing link has expired or was already used" : {
+
+    },
+    "This thread is not loaded yet." : {
+
+    },
+    "This thread is working. Interrupt it first, then try again." : {
+
+    },
+    "This thread's computer is not saved on this device." : {
+
+    },
+    "Thread" : {
+
+    },
+    "Threads" : {
+
+    },
+    "Title" : {
+
+    },
+    "Tomorrow" : {
+
+    },
+    "Try again" : {
+
+    },
+    "Try again." : {
+
+    },
+    "Turn on automatic date and time in Settings, then try again." : {
+
+    },
+    "Turn on automatic date and time on this device and on %@, then retry." : {
+
+    },
+    "Un-settle" : {
+
+    },
+    "Undo" : {
+
+    },
+    "Unpin" : {
+
+    },
+    "Unpinned thread" : {
+
+    },
+    "Unread" : {
+
+    },
+    "Update Ankiel Code on %@." : {
+
+    },
+    "Update Ankiel Code on that computer, then pair again." : {
+
+    },
+    "Update Ankiel Code on this device, then pair again." : {
+
+    },
+    "Update Ankiel Code on this device." : {
+
+    },
+    "Use it right away" : {
+
+    },
+    "Version" : {
+
+    },
+    "Waiting" : {
+      "comment" : "thread status"
+    },
+    "Wake" : {
+
+    },
+    "Wake thread" : {
+
+    },
+    "Wakes %@" : {
+
+    },
+    "What to try" : {
+
+    },
+    "Woke" : {
+      "comment" : "thread came back from snooze"
+    },
+    "Working" : {
+      "comment" : "thread status"
+    },
+    "You are offline" : {
+
+    },
+    "You'll need a new pairing link to add it again." : {
+
+    }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

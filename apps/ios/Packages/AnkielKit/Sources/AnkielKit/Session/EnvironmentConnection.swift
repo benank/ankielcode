@@ -245,6 +245,27 @@ public struct EnvironmentConnector: Sendable {
     }
   }
 
+  // MARK: Session state
+
+  /// `GET /api/auth/session` with this device's credential.
+  public func sessionState(
+    endpoint: EnvironmentEndpoint, vault: CredentialVault
+  ) async throws(ConnectionError) -> AuthSessionState {
+    var request = URLRequest(url: endpoint.httpURL("/api/auth/session"))
+    request.timeoutInterval = 15
+    let credential = try await vault.current(at: endpoint)
+    do {
+      let key: DPoPKey? = if case .dpop = credential { try dpopKey() } else { nil }
+      return try await http.authorizedSend(request, credential: credential, key: key, as: AuthSessionState.self)
+    } catch let error as EnvironmentHTTPError {
+      throw Self.mapHTTP(error)
+    } catch let error as ConnectionError {
+      throw error
+    } catch {
+      throw .unreachable(Self.describe(error))
+    }
+  }
+
   // MARK: Storage
 
   public func loadCredential(_ environmentId: String) throws(ConnectionError) -> AccessCredential? {

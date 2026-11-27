@@ -26,8 +26,13 @@ public final class EnvironmentModel: Identifiable {
   public internal(set) var shell = ShellState()
   /// The route of the live session, nil while not connected.
   public internal(set) var activeRoute: EnvironmentRoute?
+  /// The scopes this device holds there; nil until the server answers (or when it does not say).
+  public internal(set) var grantedScopes: Set<String>?
+  /// The server's scratch folder ("No project"), from the last session's config.
+  public internal(set) var scratchWorkspaceRoot: String?
 
   @ObservationIgnored var runtime: EnvironmentRuntime?
+  @ObservationIgnored var session: (any LiveSession)?
 
   init(record: EnvironmentRecord) {
     id = record.environmentId
@@ -41,6 +46,29 @@ public final class EnvironmentModel: Identifiable {
 
   /// Rows are live only while the transport is up and the shell caught up.
   public var isShellLive: Bool { status.isConnected && shell.status == .live }
+
+  /// Whether the session holds `scope`. Unknown scopes allow the action; the server still decides.
+  public func allows(_ scope: String) -> Bool {
+    grantedScopes?.contains(scope) ?? true
+  }
+}
+
+/// Why a command, search or page read did not reach a result.
+public enum EnvironmentRequestError: Error, Sendable, Hashable {
+  /// The computer is not connected right now.
+  case notConnected
+  /// The server refused it; `message` is the server's own words when it sent any.
+  case rejected(message: String?)
+  case failed(String)
+
+  public init(_ error: any Error) {
+    switch error {
+    case RpcError.failed(let failure): self = .rejected(message: failure.message)
+    case RpcError.connectionClosed: self = .notConnected
+    case let error as EnvironmentRequestError: self = error
+    default: self = .failed(String(describing: error))
+    }
+  }
 }
 
 /// The supervisor, shell sync and the tasks that bridge them to the model.
@@ -157,6 +185,42 @@ public final class EnvironmentRegistry {
     await lastSave?.value
   }
 
+  // MARK: Requests
+
+  /// Sends one thread command; returns the event sequence that carries it.
+  public func dispatch(_ command: ThreadCommand, in environmentId: String) async throws(EnvironmentRequestError) -> Int {
+    try await request(environmentId) { session in
+      try await session.call(ThreadCommand.rpcTag, payload: command, as: DispatchResult.self).sequence
+    }
+  }
+
+  public func searchThreads(
+    _ search: ThreadSearchRequest, in environmentId: String
+  ) async throws(EnvironmentRequestError) -> ThreadSearchResult {
+    try await request(environmentId) { session in
+      try await session.call(ThreadSearchRequest.rpcTag, payload: search, as: ThreadSearchResult.self)
+    }
+  }
+
+  public func olderSettledPage(
+    _ page: OlderSettledRequest, in environmentId: String
+  ) async throws(EnvironmentRequestError) -> OlderSettledPage {
+    try await request(environmentId) { session in
+      try await session.call(OlderSettledRequest.rpcTag, payload: page, as: OlderSettledPage.self)
+    }
+  }
+
+  private func request<Result: Sendable>(
+    _ environmentId: String, _ body: (any LiveSession) async throws -> Result
+  ) async throws(EnvironmentRequestError) -> Result {
+    guard let session = environment(environmentId)?.session else { throw .notConnected }
+    do {
+      return try await body(session)
+    } catch {
+      throw EnvironmentRequestError(error)
+    }
+  }
+
   public func retry(_ id: String) {
     guard let supervisor = environment(id)?.runtime?.supervisor else { return }
     Task { await supervisor.wake(.retry) }
@@ -220,10 +284,17 @@ public final class EnvironmentRegistry {
             model.status = status
           case .session(let session):
             model.activeRoute = session.route
+            model.session = session
+            model.scratchWorkspaceRoot = session.initialConfig.scratchWorkspaceRoot
+            Task { [weak model] in
+              let scopes = try? await session.grantedScopes()
+              if let model, model.session === session, let scopes { model.grantedScopes = scopes }
+            }
             self.sessionStarted(model, session: session, routes: routes)
             await shell.attach(session)
           case .sessionLost:
             model.activeRoute = nil
+            model.session = nil
             await shell.detach()
           }
         }

@@ -112,6 +112,16 @@ final class LiveSessionAdapter: LiveSession {
     try await connector.shellSnapshot(subscription, endpoint: route.endpoint, vault: vault)
   }
 
+  func call<Response: Decodable & Sendable>(
+    _ tag: String, payload: some Encodable & Sendable, as type: Response.Type
+  ) async throws -> Response {
+    try await session.rpc.call(tag, payload: payload, as: type)
+  }
+
+  func grantedScopes() async throws -> Set<String>? {
+    try await connector.sessionState(endpoint: route.endpoint, vault: vault).grantedScopes
+  }
+
   func close() async {
     await session.close()
   }

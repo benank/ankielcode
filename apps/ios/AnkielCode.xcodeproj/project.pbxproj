@@ -10,11 +10,27 @@
 		7FD296700135351A634F52DB /* AnkielKit in Frameworks */ = {isa = PBXBuildFile; productRef = 32C2B39AE046CF8EC00979B4 /* AnkielKit */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B1A0000000000000000000A7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E0E6811DF8BB9A256EAF630C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 49575FBD1B0B0DCF72AAE95D;
+			remoteInfo = AnkielCode;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		B1A0000000000000000000A1 /* AnkielCodeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnkielCodeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		82F66858C198B6CEFCEBC3CA /* AnkielCode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AnkielCode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		B1A0000000000000000000A2 /* AnkielCodeUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AnkielCodeUITests;
+			sourceTree = "<group>";
+		};
 		F14F1FA7DF801B10F57E285E /* AnkielCode */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = AnkielCode;
@@ -23,6 +39,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B1A0000000000000000000A3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E2F2EEEB005FBD7BB720C543 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -38,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				F14F1FA7DF801B10F57E285E /* AnkielCode */,
+				B1A0000000000000000000A2 /* AnkielCodeUITests */,
 				1CB0C5D775C7FF82949B9193 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -46,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				82F66858C198B6CEFCEBC3CA /* AnkielCode.app */,
+				B1A0000000000000000000A1 /* AnkielCodeUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -53,6 +78,27 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		B1A0000000000000000000A4 /* AnkielCodeUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1A0000000000000000000B0 /* Build configuration list for PBXNativeTarget "AnkielCodeUITests" */;
+			buildPhases = (
+				B1A0000000000000000000A5 /* Sources */,
+				B1A0000000000000000000A3 /* Frameworks */,
+				B1A0000000000000000000A6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B1A0000000000000000000A8 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B1A0000000000000000000A2 /* AnkielCodeUITests */,
+			);
+			name = AnkielCodeUITests;
+			productName = AnkielCodeUITests;
+			productReference = B1A0000000000000000000A1 /* AnkielCodeUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		49575FBD1B0B0DCF72AAE95D /* AnkielCode */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 431B805B04D9B82293318C8E /* Build configuration list for PBXNativeTarget "AnkielCode" */;
@@ -89,6 +135,10 @@
 					49575FBD1B0B0DCF72AAE95D = {
 						CreatedOnToolsVersion = 27.2;
 					};
+					B1A0000000000000000000A4 = {
+						CreatedOnToolsVersion = 27.2;
+						TestTargetID = 49575FBD1B0B0DCF72AAE95D;
+					};
 				};
 			};
 			buildConfigurationList = C913EA77CC7D7AEBBB4D8C9C /* Build configuration list for PBXProject "AnkielCode" */;
@@ -109,11 +159,19 @@
 			projectRoot = "";
 			targets = (
 				49575FBD1B0B0DCF72AAE95D /* AnkielCode */,
+				B1A0000000000000000000A4 /* AnkielCodeUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		B1A0000000000000000000A6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CEAA64C81065A826D947D4EA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,6 +182,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B1A0000000000000000000A5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3138A31511B204D68E57EB83 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -133,7 +198,49 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		B1A0000000000000000000A8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 49575FBD1B0B0DCF72AAE95D /* AnkielCode */;
+			targetProxy = B1A0000000000000000000A7 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		B1A0000000000000000000B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ankiel.code.native.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AnkielCode;
+			};
+			name = Debug;
+		};
+		B1A0000000000000000000B2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ankiel.code.native.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AnkielCode;
+			};
+			name = Release;
+		};
 		C1305CB8DE63F3BB12FF022F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -332,6 +439,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		B1A0000000000000000000B0 /* Build configuration list for PBXNativeTarget "AnkielCodeUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1A0000000000000000000B1 /* Debug */,
+				B1A0000000000000000000B2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C913EA77CC7D7AEBBB4D8C9C /* Build configuration list for PBXProject "AnkielCode" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

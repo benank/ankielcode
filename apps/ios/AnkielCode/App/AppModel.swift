@@ -17,6 +17,8 @@ final class AppModel {
 
   let registry: EnvironmentRegistry
   let pairing: PairingFlow
+  let navigator = Navigator()
+  let home: HomeModel
   /// A sheet over home or onboarding.
   var sheet: Sheet?
   /// The Computers sheet's navigation path (environment ids).
@@ -35,6 +37,7 @@ final class AppModel {
     let connector = EnvironmentConnector(store: store, client: .current)
     registry = EnvironmentRegistry(connector: connector, directory: Self.supportDirectory)
     pairing = PairingFlow(registry: registry)
+    home = HomeModel(registry: registry)
   }
 
   var route: Route {
@@ -49,10 +52,18 @@ final class AppModel {
 
   func launch() async {
     await registry.load(adopting: Self.takeLegacyEnvironment())
+    home.start()
     #if DEBUG
       applyDebugLaunch()
     #endif
+    if let pendingThread {
+      self.pendingThread = nil
+      navigator.open(pendingThread)
+    }
   }
+
+  /// A thread link opened before the saved computers loaded; opened once they have.
+  @ObservationIgnored private var pendingThread: ThreadRef?
 
   // MARK: Links
 
@@ -60,6 +71,11 @@ final class AppModel {
   /// form's `…://connections/new?pairingUrl=…&autoConnect=1`. Links from outside the app always
   /// ask before pairing; only debug builds honor `autoConnect`.
   func open(_ url: URL) {
+    if let ref = ThreadLink.parse(url) {
+      sheet = nil
+      if registry.isLoaded { navigator.open(ref) } else { pendingThread = ref }
+      return
+    }
     guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
       let scheme = components.scheme?.lowercased(), scheme.wholeMatch(of: /ankielcode(?:-[a-z]+)?/) != nil
     else { return }
@@ -150,12 +166,26 @@ final class AppModel {
       case "computer":
         sheet = .computers
         computersPath = registry.environments.first.map { [$0.id] } ?? []
+      case "settings":
+        navigator.sheet = .settings
+      case "new-thread":
+        navigator.sheet = .newThread
+      case "thread":
+        if let first = registry.environments.first, let thread = first.shell.threads.first(where: \.isListed) {
+          navigator.open(ThreadRef(environmentId: first.id, threadId: thread.id))
+        }
       case let value? where value.hasPrefix("pairing-"):
         debugForcesOnboarding = true
         onboardingPairing = true
         pairing.debugPreset(String(value.dropFirst("pairing-".count)))
       default:
         break
+      }
+      if let preset = environment["ANKIEL_DEBUG_HOME"] {
+        home.debugPreset(preset)
+      }
+      if let query = environment["ANKIEL_DEBUG_SEARCH"] {
+        home.searchQuery = query
       }
       if let status = environment["ANKIEL_DEBUG_STATUS"] {
         registry.debugPresent(status: Self.debugStatus(status))

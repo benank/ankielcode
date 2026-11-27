@@ -65,11 +65,23 @@ None of them forget saved environments or credentials.
 | | `pairing-link` | The paste or enter-address form. |
 | | `scanner` | The QR scanner (on the simulator: its no-camera state). |
 | | `computers` | Home with the Computers sheet open. |
+| | `settings`, `new-thread` | Home with the Settings or New thread placeholder sheet open. |
+| | `thread` | The first listed thread of the first computer, opened. |
 | | `computer` | The first computer's detail page. |
 | | `pairing-confirm`, `pairing-checking`, `pairing-exchanging`, `pairing-connecting`, `pairing-success` | The pairing sheet in that state (fake host). |
 | | `pairing-expired`, `pairing-unreachable`, `pairing-incompatible`, `pairing-claims`, `pairing-clock`, `pairing-invalid` | The pairing sheet with that failure. |
 | `ANKIEL_DEBUG_STATUS` | `reconnecting`, `offline`, `connecting`, `needs-pairing`, `incompatible`, `mismatch` | Every computer shows that connection status (display only; it stops following the real connection for that launch). Combine with `computers`, `computer` or no route (home, for the status indicator). |
 
+| `ANKIEL_DEBUG_HOME` | `sample` | The thread list with canned rows across two fake computers (every status, a pin, a subagent, snoozed and settled shelves). Actions show; their commands fail as not connected. |
+| | `empty` | The list's "No threads yet" state. |
+| `ANKIEL_DEBUG_SEARCH` | a query | Home with that search typed. |
+
+UI tests (`AnkielCodeUITests`) run with `xcodebuild test … -only-testing:AnkielCodeUITests`.
+`SampleListUITests` need no server; `LiveListUITests` change real threads on the dev server at
+`127.0.0.1:14527` and put each one back, and skip when it is not running. Set
+`TEST_RUNNER_SHOTS_DIR=<dir>` to also save their screenshots there.
+
 Deep links the app accepts (any `ankielcode[-channel]` scheme): `ankielcode-native://pair?pairingUrl=<urlencoded>`
-and the RN dev form's `…://connections/new?pairingUrl=<urlencoded>&autoConnect=1`. Release builds always ask
+and the RN dev form's `…://connections/new?pairingUrl=<urlencoded>&autoConnect=1`; and thread links
+`ankielcode-native://thread/<environmentId>/<threadId>` (also the RN shape `…://threads/<environmentId>/<threadId>`). Release builds always ask
 before pairing with a host from a link; Debug builds pair at once with `autoConnect=1`.

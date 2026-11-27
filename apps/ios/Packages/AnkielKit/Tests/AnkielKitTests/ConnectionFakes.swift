@@ -74,6 +74,9 @@ final class FakeSession: LiveSession {
   let route: EnvironmentRoute
   private let state = Mutex<(ended: String?, waiters: [CheckedContinuation<String, Never>], probes: [Probe], probeCount: Int, closed: Bool)>((nil, [], [], 0, false))
   let shell = Mutex<(streams: [[ShellStreamItem]], subscriptions: [ShellSubscription], http: ShellHTTPSnapshot?, httpLoads: Int)>(([], [], nil, 0))
+  /// Unary calls: scripted replies by tag, and what was sent.
+  let calls = Mutex<(replies: [String: String], sent: [(tag: String, payload: String)])>(([:], []))
+  let scopesValue = Mutex<Set<String>?>(nil)
 
   init(environmentId: String = "env-1", serverVersion: String = "1.0.0") throws {
     initialConfig = try decode(
@@ -132,6 +135,22 @@ final class FakeSession: LiveSession {
     if items == nil { continuation.finish(throwing: RpcError.interrupted) }
     return RpcStream(base: stream, stop: { continuation.finish() })
   }
+
+  func call<Response: Decodable & Sendable>(
+    _ tag: String, payload: some Encodable & Sendable, as _: Response.Type
+  ) async throws -> Response {
+    let sent = String(decoding: try JSONEncoder().encode(payload), as: UTF8.self)
+    let reply = calls.withLock { calls -> String? in
+      calls.sent.append((tag, sent))
+      return calls.replies[tag]
+    }
+    guard let reply else {
+      throw RpcError.failed(RpcFailure(error: .object(["_tag": .string("Unscripted"), "message": .string("no reply")])))
+    }
+    return try JSONDecoder().decode(Response.self, from: Data(reply.utf8))
+  }
+
+  func grantedScopes() async throws -> Set<String>? { scopesValue.withLock { $0 } }
 
   func loadShellSnapshot(_: ShellSubscription) async throws -> ShellHTTPSnapshot {
     let http = shell.withLock { shell in
