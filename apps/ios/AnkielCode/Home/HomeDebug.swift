@@ -83,6 +83,19 @@
               ],
             ]
           ]
+          // Synthetic linked issues, for the issue chip.
+          $0["issues"] = [
+            [
+              "tracker": "github", "host": "github.com", "scope": "tidewater/tide-chart", "key": "42", "projectId": "p1",
+              "url": "https://github.com/tidewater/tide-chart/issues/42", "source": "agent", "linkedAt": earlier(80),
+              "displayKey": "#42", "title": "Tide table skips Feb 29",
+            ],
+            [
+              "tracker": "github", "host": "github.com", "scope": "tidewater/tide-chart", "key": "40", "projectId": "p1",
+              "url": "https://github.com/tidewater/tide-chart/issues/40", "source": "manual", "linkedAt": earlier(95),
+              "displayKey": "#40", "title": "Offline tables",
+            ],
+          ]
         },
         debugThread("input", "Pick a name for the new command", project: "p2", minutesAgo: 8) {
           $0["pendingRuntimeRequest"] = ["id": "r2", "kind": "user_input", "createdAt": earlier(8)]

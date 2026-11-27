@@ -9,6 +9,7 @@ struct ThreadRowView: View, Equatable {
   /// Opens the row's pull request chip.
   var openPullRequest: (ThreadPullRequestBadge) -> Void = { _ in }
   @Environment(\.dynamicTypeSize) private var typeSize
+  @Environment(\.openURL) private var openURL
 
   nonisolated static func == (lhs: Self, rhs: Self) -> Bool { lhs.row == rhs.row && lhs.selected == rhs.selected }
 
@@ -31,14 +32,14 @@ struct ThreadRowView: View, Equatable {
         }
         if large {
           ThreadMetaView(row: row)
-          pullRequestChip
+          chips
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       if !large {
         VStack(alignment: .trailing, spacing: Spacing.xs) {
           ThreadMetaView(row: row)
-          pullRequestChip
+          chips
         }
       }
     }
@@ -50,12 +51,26 @@ struct ThreadRowView: View, Equatable {
     .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
   }
 
+  /// The row's links: its pull request and its issues. Each opens on its own tap.
   @ViewBuilder
-  private var pullRequestChip: some View {
-    if let badge = row.pullRequest {
-      Button { openPullRequest(badge) } label: { ThreadPullRequestChip(badge: badge, compact: true) }
-        .buttonStyle(.borderless)
-        .accessibilityIdentifier("thread.row.pullRequest")
+  private var chips: some View {
+    if row.pullRequest != nil || row.issue != nil {
+      HStack(spacing: Spacing.xs) {
+        if let issue = row.issue {
+          ThreadRowChipButton(identifier: "thread.row.issue", hint: "Opens the issue") {
+            if let url = URL(string: issue.url) { openURL(url) }
+          } label: {
+            ThreadIssueChip(badge: issue)
+          }
+        }
+        if let badge = row.pullRequest {
+          ThreadRowChipButton(identifier: "thread.row.pullRequest", hint: "Opens the pull request") {
+            openPullRequest(badge)
+          } label: {
+            ThreadPullRequestChip(badge: badge, compact: true)
+          }
+        }
+      }
     }
   }
 
@@ -75,7 +90,52 @@ struct ThreadRowView: View, Equatable {
     if row.pinned { parts.append(String(localized: "Pinned")) }
     if row.regeneratingTitle { parts.append(String(localized: "regenerating title")) }
     if let badge = row.pullRequest { parts.append(PullRequestCopy.accessibility(badge)) }
+    if let issue = row.issue { parts.append(ThreadIssueChip.accessibility(issue)) }
     return parts.joined(separator: ", ")
+  }
+}
+
+/// A chip on a thread row: small to look at, 44 pt to tap, and a button of its own inside the
+/// row's button.
+private struct ThreadRowChipButton<Label: View>: View {
+  let identifier: String
+  let hint: LocalizedStringKey
+  let action: () -> Void
+  @ViewBuilder let label: Label
+
+  var body: some View {
+    Button(action: action) { label }
+      .buttonStyle(.borderless)
+      // The chip is ~18 pt tall; its hit area reaches 44 pt without growing the row.
+      .contentShape(.rect.inset(by: -13))
+      .accessibilityHint(Text(hint))
+      .accessibilityIdentifier(identifier)
+  }
+}
+
+/// A thread's linked issues: the newest one's key, and how many more.
+struct ThreadIssueChip: View {
+  let badge: ThreadIssueBadge
+
+  var body: some View {
+    HStack(spacing: 3) {
+      Image(systemName: "smallcircle.filled.circle")
+        .font(.system(size: 10, weight: .semibold))
+      Text(verbatim: badge.label)
+        .font(Typography.caption2.monospacedDigit().weight(.semibold))
+    }
+    .foregroundStyle(Palette.textSecondary)
+    .padding(.horizontal, 6)
+    .padding(.vertical, 2)
+    .background(Palette.fill, in: .capsule)
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(Text(Self.accessibility(badge)))
+  }
+
+  static func accessibility(_ badge: ThreadIssueBadge) -> String {
+    badge.count > 1
+      ? String(localized: "Issue \(badge.displayKey) and \(badge.count - 1) more")
+      : String(localized: "Issue \(badge.displayKey)")
   }
 }
 

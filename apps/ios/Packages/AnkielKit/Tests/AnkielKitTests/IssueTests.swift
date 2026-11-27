@@ -87,3 +87,28 @@ struct IssueTests {
     #expect(try !decode(IssueState.self, json: #"{"category":"closed","name":"Closed","closeReason":"completed"}"#).isOpen)
   }
 }
+
+@Suite struct ThreadIssueBadgeTests {
+  func link(_ key: String, at time: String) throws -> ThreadShell.IssueLink {
+    let json = """
+      {"tracker":"github","host":"github.com","scope":"tide-co/tide-chart","key":"\(key)","projectId":"proj-tide",
+      "url":"https://github.com/tide-co/tide-chart/issues/\(key)","source":"agent","linkedAt":"\(time)",
+      "displayKey":"#\(key)","title":"Issue \(key)"}
+      """
+    return try JSONDecoder().decode(ThreadShell.IssueLink.self, from: Data(json.utf8))
+  }
+
+  @Test func showsTheNewestLinkAndHowManyMore() throws {
+    #expect(ThreadIssueBadge(nil) == nil)
+    #expect(ThreadIssueBadge([]) == nil)
+    let one = try #require(ThreadIssueBadge([link("7", at: "2026-11-01T10:00:00.000Z")]))
+    #expect(one.label == "#7")
+    let three = try #require(
+      ThreadIssueBadge([
+        link("7", at: "2026-11-01T10:00:00.000Z"), link("42", at: "2026-11-03T10:00:00.000Z"),
+        link("9", at: "2026-11-02T10:00:00.000Z"),
+      ]))
+    #expect(three.label == "#42 +2")
+    #expect(three.url.hasSuffix("/issues/42"))
+  }
+}

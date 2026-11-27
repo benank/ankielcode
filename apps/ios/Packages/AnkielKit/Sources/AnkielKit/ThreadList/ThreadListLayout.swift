@@ -103,6 +103,27 @@ public struct ThreadRow: Sendable, Hashable, Identifiable {
   public var hasPendingApprovals: Bool
   /// The thread's linked pull request chip.
   public var pullRequest: ThreadPullRequestBadge? = nil
+  /// The thread's linked issues chip.
+  public var issue: ThreadIssueBadge? = nil
+}
+
+/// A thread's linked issues as a row chip: the newest link, and how many there are.
+public struct ThreadIssueBadge: Sendable, Hashable {
+  public var displayKey: String
+  public var title: String
+  public var url: String
+  public var count: Int
+
+  public init?(_ links: [ThreadShell.IssueLink]?) {
+    guard let links, let newest = links.max(by: { $0.linkedAt < $1.linkedAt }) else { return nil }
+    displayKey = newest.displayKey
+    title = newest.title
+    url = newest.url
+    count = links.count
+  }
+
+  /// `#42`, or `#42 +2` when more are linked.
+  public var label: String { count > 1 ? "\(displayKey) +\(count - 1)" : displayKey }
 }
 
 public struct ProjectFolder: Sendable, Hashable, Identifiable {
@@ -220,6 +241,7 @@ public struct ThreadListLayout: Sendable, Hashable {
         isTopLevel: topLevel, regeneratingTitle: facts.thread.titleRegeneration != nil, searchHit: hit,
         hasPendingApprovals: facts.hasPendingApprovals)
       row.pullRequest = ThreadPullRequests.badge(facts.thread.pullRequests)
+      row.issue = ThreadIssueBadge(facts.thread.issues)
       return row
     }
 
