@@ -1,0 +1,8 @@
+{
+  "schema" : "workflowAnswer",
+  "value" : {
+    "choice" : "Ship",
+    "name" : "ship",
+    "runId" : "run-1"
+  }
+}

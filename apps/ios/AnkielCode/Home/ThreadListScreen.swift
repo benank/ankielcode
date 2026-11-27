@@ -17,6 +17,7 @@ struct ThreadListScreen: View {
   @State private var snoozing: ThreadRow?
   @State private var actionCount = 0
   @State private var issuesShown = IssuesDebug.opensAtLaunch
+  @State private var workflowsShown = WorkflowsDebug.opensAtLaunch
   @FocusState private var searchFocused: Bool
 
   private struct RenameRequest: Identifiable {
@@ -43,6 +44,7 @@ struct ThreadListScreen: View {
         }
         .overlay { emptyState }
         .fullScreenCover(isPresented: $issuesShown) { IssuesRoot() }
+        .fullScreenCover(isPresented: $workflowsShown) { WorkflowsRoot() }
         .navigationTitle("Threads")
         .navigationSubtitle(statusText ?? "")
         .toolbar { toolbar }
@@ -233,6 +235,8 @@ struct ThreadListScreen: View {
         .accessibilityIdentifier("home.pullRequests")
       Button("Issues", systemImage: "smallcircle.filled.circle") { issuesShown = true }
         .accessibilityIdentifier("home.issues")
+      Button("Workflows", systemImage: "point.3.connected.trianglepath.dotted") { workflowsShown = true }
+        .accessibilityIdentifier("home.workflows")
       Button("Settings", systemImage: "gearshape") { model.openSettings() }
         .accessibilityIdentifier("home.settings")
     }

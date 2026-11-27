@@ -520,3 +520,28 @@ Needs update badges. Signing in or out, switching accounts and adding Claude acc
 here: they act on the computer's real provider accounts and run multi-step sign-in flows, so the
 page sends users to web or desktop Settings as RN does. `ANKIEL_DEBUG_ROUTE=settings-provider`
 opens the fixture's Codex page; `SettingsMoreUITests` covers the list and a provider page.
+
+## Workflows
+
+Home's toolbar has **Workflows** (RN's Workflows tab): every computer's runs from
+`workflows.subscribe`, in Needs you, Running and All (skipped runs on request), each opening to
+its question, pause, steps (quick bookkeeping folded, overlapping steps together, an invoked run
+in place of its steps), agent summaries and result. A session with `orchestration:operate`
+answers questions, resumes paused runs and cancels running ones (`workflows.answer`, `.resume`,
+`.cancel`); no client RPC starts a run (triggers, the CLI and agents do). Agent threads open from
+their step and "Ask the agent first". Definitions, the run store, reference chips that open issues
+or pull requests, and the counts badge are not built. Logic is in `AnkielKit/Workflows`
+(result fields list in key order: Foundation does not keep the server's).
+
+`swift run ankiel-probe --state <file> --workflows [--run <id>]` reads the list and one run's
+feed. `--workflow-setup <file.ts>` turns the Labs switch on and saves a definition on a dev server;
+`--workflow-teardown <file name>` deletes it and turns the switch off. Start runs with
+`node apps/server/src/bin.ts workflow start <name> --base-dir <worktree>/.ankiel --input '<json>' --key <key>`.
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_WORKFLOWS` | `fixture`, `readonly` | Synthetic runs (a question, a pause, an agent step, a finished run) with a recording sink; `readonly` without `orchestration:operate`. |
+| `ANKIEL_DEBUG_WORKFLOWS_OPEN` | `list`, `run:<runId>` | Opens Workflows, or one run (live runs also need `ANKIEL_DEBUG_WORKFLOWS_ENVIRONMENT=<environmentId>`). |
+
+`WorkflowUITests` (live, with `ANKIEL_TEST_WORKFLOWS=1`) answers "Ship tide chart v1.4?" and
+cancels the paused "Tide chart v1.5", runs of a throwaway `ios-check` definition started as above.

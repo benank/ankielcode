@@ -1,0 +1,6 @@
+{
+  "schema" : "workflowCancel",
+  "value" : {
+    "runId" : "run-1"
+  }
+}

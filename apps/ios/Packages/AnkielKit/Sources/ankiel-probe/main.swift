@@ -102,6 +102,16 @@ func run() async throws {
     await session.close()
     return
   }
+  if argument("--workflow-setup") != nil || argument("--workflow-teardown") != nil {
+    try await probeWorkflowSetup(session, file: argument("--workflow-setup"), teardown: argument("--workflow-teardown"))
+    await session.close()
+    return
+  }
+  if CommandLine.arguments.contains("--workflows") {
+    try await probeWorkflows(session)
+    await session.close()
+    return
+  }
   if let url = argument("--preview-seed") {
     try await probePreviewSeed(session, url: url)
     await session.close()
