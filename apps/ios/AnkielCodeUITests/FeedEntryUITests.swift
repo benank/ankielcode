@@ -52,4 +52,17 @@ final class FeedEntryUITests: HomeUITestCase {
     shot("feed-review-opened")
     XCTAssertTrue(opened, "review opens")
   }
+
+  /// The thread menu has one item per name: git's sheet is "Git actions", the thread's is "More".
+  func testThreadMenuHasNoDuplicateLabels() {
+    launch(["ANKIEL_DEBUG_THREAD": "short", "ANKIEL_DEBUG_REVIEW": "fixture", "ANKIEL_DEBUG_HOME": "sample"])
+    let menu = app.buttons["thread.menu"]
+    XCTAssertTrue(menu.waitForExistence(timeout: 15))
+    menu.tap()
+    // Menu items keep their labels, not their identifiers.
+    XCTAssertTrue(app.buttons["Review changes"].waitForExistence(timeout: 5))
+    shot("thread-menu")
+    XCTAssertTrue(app.buttons["Git actions"].exists, "git's sheet has its own name")
+    XCTAssertLessThanOrEqual(app.buttons.matching(NSPredicate(format: "label == 'More'")).count, 1)
+  }
 }
