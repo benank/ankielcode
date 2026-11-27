@@ -21,6 +21,7 @@ const isRemovedFeatureSecret = (fileName: string) =>
   // Linear: issue-tracker-<kind>-token and issue-tracker-<kind>-account-<id>-token.
   /^issue-tracker-[A-Za-z0-9_-]+?(-account-[a-z0-9][a-z0-9-]*)?-token\.bin$/.test(fileName) ||
   /^bitbucket-(access|api)-token\.bin$/.test(fileName) ||
+  fileName.startsWith("usage-limit-source-") ||
   (fileName.startsWith("source-control-") &&
     !keptSourceControlPrefixes.some((prefix) => fileName.startsWith(prefix)));
 

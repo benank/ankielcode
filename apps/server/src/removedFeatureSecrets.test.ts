@@ -12,7 +12,6 @@ import { removeRemovedFeatureSecrets } from "./removedFeatureSecrets.ts";
 const KEPT = [
   "server-signing-key",
   "provider-env-Y29kZXg-T1BFTkFJX0FQSV9LRVk",
-  "usage-limit-source-aHVi",
   "source-control-Z2l0aHVi-dG9rZW5z-Z2l0aHViLmNvbQ",
   "github-token-Z2l0aHViLmNvbQ",
 ];
@@ -27,6 +26,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("removedFeatureSe
         "issue-tracker-bGluZWFy-token",
         "issue-tracker-bGluZWFy-account-work-2-token",
         "bitbucket-access-token",
+        "usage-limit-source-aHVi",
+        "usage-limit-source-aHVi-YXBpS2V5",
         "bitbucket-api-token",
         "source-control-Yml0YnVja2V0-YXBpVG9rZW4",
         "source-control-Z2l0bGFi-dG9rZW5z-Z2l0bGFiLmNvbQ",
@@ -42,7 +43,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("removedFeatureSe
       Effect.provide(
         ServerSecretStore.layer.pipe(
           Layer.provideMerge(
-            ServerConfig.layerTest(process.cwd(), { prefix: "ankiel-removed-feature-secrets-test-" }),
+            ServerConfig.layerTest(process.cwd(), {
+              prefix: "ankiel-removed-feature-secrets-test-",
+            }),
           ),
         ),
       ),
