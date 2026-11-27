@@ -421,17 +421,6 @@
     "sv": "Ankiel Code följer textstorleken du väljer för enheten under Skärm och ljusstyrka, inklusive de större hjälpmedelsstorlekarna.",
     "zh-Hans": "Ankiel Code 会遵循你在“显示与亮度”中为设备选择的文字大小，包括更大的辅助功能字号。"
   },
-  "Ankiel Code is open source under the MIT license. This app includes no third-party code.": {
-    "de": "Ankiel Code ist Open Source unter der MIT-Lizenz. Diese App enthält keinen Code von Drittanbietern.",
-    "es": "Ankiel Code es de código abierto con licencia MIT. Esta app no incluye código de terceros.",
-    "fr": "Ankiel Code est open source sous licence MIT. Cette app n’inclut aucun code tiers.",
-    "ja": "Ankiel Code は MIT ライセンスのオープンソースです。このアプリにはサードパーティのコードは含まれていません。",
-    "ko": "Ankiel Code는 MIT 라이선스의 오픈 소스입니다. 이 앱에는 서드파티 코드가 포함되어 있지 않습니다.",
-    "pt-BR": "O Ankiel Code é de código aberto sob a licença MIT. Este app não inclui código de terceiros.",
-    "ru": "Ankiel Code — проект с открытым исходным кодом под лицензией MIT. Приложение не содержит стороннего кода.",
-    "sv": "Ankiel Code är öppen källkod under MIT-licensen. Appen innehåller ingen kod från tredje part.",
-    "zh-Hans": "Ankiel Code 是基于 MIT 许可证的开源软件。本应用不包含任何第三方代码。"
-  },
   "Ankiel Code keeps every saved computer connected and reconnects on its own.": {
     "de": "Ankiel Code hält jeden gespeicherten Computer verbunden und verbindet sich selbstständig neu.",
     "es": "Ankiel Code mantiene conectados todos los equipos guardados y se reconecta por sí solo.",
@@ -4345,5 +4334,115 @@
     "ru": "Тред разархивирован",
     "sv": "Tråden avarkiverades",
     "zh-Hans": "已取消归档线程"
+  },
+  "Ankiel Code is open source under the MIT license. Its terminal uses Ghostty (MIT, © Mitchell Hashimoto and Ghostty contributors).": {
+    "de": "Ankiel Code ist Open Source unter der MIT-Lizenz. Das Terminal verwendet Ghostty (MIT, © Mitchell Hashimoto und Ghostty-Mitwirkende).",
+    "es": "Ankiel Code es de código abierto con licencia MIT. Su terminal usa Ghostty (MIT, © Mitchell Hashimoto y colaboradores de Ghostty).",
+    "fr": "Ankiel Code est open source sous licence MIT. Son terminal utilise Ghostty (MIT, © Mitchell Hashimoto et les contributeurs de Ghostty).",
+    "ja": "Ankiel Code は MIT ライセンスのオープンソースです。ターミナルには Ghostty（MIT、© Mitchell Hashimoto および Ghostty コントリビューター）を使用しています。",
+    "ko": "Ankiel Code는 MIT 라이선스의 오픈 소스입니다. 터미널은 Ghostty(MIT, © Mitchell Hashimoto 및 Ghostty 기여자)를 사용합니다.",
+    "pt-BR": "O Ankiel Code é open source sob a licença MIT. O terminal usa o Ghostty (MIT, © Mitchell Hashimoto e colaboradores do Ghostty).",
+    "ru": "Ankiel Code — проект с открытым исходным кодом под лицензией MIT. Терминал использует Ghostty (MIT, © Mitchell Hashimoto и участники Ghostty).",
+    "sv": "Ankiel Code är öppen källkod under MIT-licensen. Terminalen använder Ghostty (MIT, © Mitchell Hashimoto och Ghostty-bidragsgivare).",
+    "zh-Hans": "Ankiel Code 是基于 MIT 许可证的开源软件。其终端使用 Ghostty（MIT，© Mitchell Hashimoto 及 Ghostty 贡献者）。"
+  },
+  "Copy all": {
+    "de": "Alles kopieren",
+    "es": "Copiar todo",
+    "fr": "Tout copier",
+    "ja": "すべてコピー",
+    "ko": "모두 복사",
+    "pt-BR": "Copiar tudo",
+    "ru": "Скопировать всё",
+    "sv": "Kopiera allt",
+    "zh-Hans": "全部复制"
+  },
+  "Up arrow": {
+    "de": "Pfeil nach oben",
+    "es": "Flecha arriba",
+    "fr": "Flèche haut",
+    "ja": "上矢印",
+    "ko": "위쪽 화살표",
+    "pt-BR": "Seta para cima",
+    "ru": "Стрелка вверх",
+    "sv": "Uppåtpil",
+    "zh-Hans": "上箭头"
+  },
+  "Down arrow": {
+    "de": "Pfeil nach unten",
+    "es": "Flecha abajo",
+    "fr": "Flèche bas",
+    "ja": "下矢印",
+    "ko": "아래쪽 화살표",
+    "pt-BR": "Seta para baixo",
+    "ru": "Стрелка вниз",
+    "sv": "Nedåtpil",
+    "zh-Hans": "下箭头"
+  },
+  "Left arrow": {
+    "de": "Pfeil nach links",
+    "es": "Flecha izquierda",
+    "fr": "Flèche gauche",
+    "ja": "左矢印",
+    "ko": "왼쪽 화살표",
+    "pt-BR": "Seta para a esquerda",
+    "ru": "Стрелка влево",
+    "sv": "Vänsterpil",
+    "zh-Hans": "左箭头"
+  },
+  "Right arrow": {
+    "de": "Pfeil nach rechts",
+    "es": "Flecha derecha",
+    "fr": "Flèche droite",
+    "ja": "右矢印",
+    "ko": "오른쪽 화살표",
+    "pt-BR": "Seta para a direita",
+    "ru": "Стрелка вправо",
+    "sv": "Högerpil",
+    "zh-Hans": "右箭头"
+  },
+  "Escape": {
+    "de": "Escape",
+    "es": "Escape",
+    "fr": "Échap",
+    "ja": "Esc",
+    "ko": "Esc",
+    "pt-BR": "Esc",
+    "ru": "Escape",
+    "sv": "Escape",
+    "zh-Hans": "Esc"
+  },
+  "Tab": {
+    "de": "Tab",
+    "es": "Tab",
+    "fr": "Tab",
+    "ja": "Tab",
+    "ko": "Tab",
+    "pt-BR": "Tab",
+    "ru": "Tab",
+    "sv": "Tab",
+    "zh-Hans": "Tab"
+  },
+  "Terminal text": {
+    "de": "Terminaltext",
+    "es": "Texto del terminal",
+    "fr": "Texte du terminal",
+    "ja": "ターミナルのテキスト",
+    "ko": "터미널 텍스트",
+    "pt-BR": "Texto do terminal",
+    "ru": "Текст терминала",
+    "sv": "Terminaltext",
+    "zh-Hans": "终端文本"
+  },
+  "The terminal opens when this computer reconnects.": {
+    "de": "Das Terminal öffnet sich, sobald dieser Computer wieder verbunden ist.",
+    "es": "El terminal se abrirá cuando este ordenador se vuelva a conectar.",
+    "fr": "Le terminal s'ouvrira quand cet ordinateur se reconnectera.",
+    "ja": "このコンピューターが再接続されるとターミナルが開きます。",
+    "ko": "이 컴퓨터가 다시 연결되면 터미널이 열립니다.",
+    "pt-BR": "O terminal abre quando este computador se reconectar.",
+    "ru": "Терминал откроется, когда этот компьютер снова подключится.",
+    "sv": "Terminalen öppnas när datorn ansluter igen.",
+    "zh-Hans": "此电脑重新连接后将打开终端。"
   }
 }

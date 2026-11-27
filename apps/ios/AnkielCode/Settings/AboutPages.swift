@@ -33,7 +33,7 @@ struct AboutSettingsPage: View {
         Link(destination: Self.legal) { Label("Legal", systemImage: "doc.text") }
         Link(destination: Self.license) { Label("License (MIT)", systemImage: "checkmark.seal") }
       } footer: {
-        Text("Ankiel Code is open source under the MIT license. This app includes no third-party code.")
+        Text("Ankiel Code is open source under the MIT license. Its terminal uses Ghostty (MIT, © Mitchell Hashimoto and Ghostty contributors).")
       }
 
       Section {

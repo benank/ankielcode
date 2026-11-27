@@ -88,6 +88,7 @@ private struct ThreadScreen: View {
       .toolbar { toolbar }
       .threadReview(threadRef, detail: detail)
       .threadFiles(threadRef, detail: detail)
+      .threadTerminal(threadRef, projectId: detail.state.projectId)
       .safeAreaInset(edge: .bottom, spacing: 0) { composer }
       .onChange(of: childShells, initial: true) { _, threads in
         childApprovals.update(parent: threadRef, threads: threads, model: model)
@@ -304,6 +305,7 @@ private struct ThreadScreen: View {
       Menu {
         FilesMenuButton()
         ReviewMenuSection()
+        TerminalMenuSection()
         if let row {
           ThreadActionsMenu(
             row: row, operable: model.home.canOperate(threadRef), rename: { renaming = row.title },

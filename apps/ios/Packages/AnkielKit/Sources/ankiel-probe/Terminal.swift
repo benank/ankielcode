@@ -73,3 +73,26 @@ private func wait(_ what: String, seconds: Double, _ condition: () -> Bool) asyn
     try await Task.sleep(for: .milliseconds(50))
   }
 }
+
+/// `--terminal-list <threadId> [--close <id,id>]`: a thread's terminals from
+/// `subscribeTerminalMetadata`, and closes (with history) the ones named.
+@MainActor
+func probeTerminalList(_ session: EnvironmentSession, threadId: String) async throws {
+  let directory = TerminalDirectory(host: FixedTerminalHost(channel: session.rpc))
+  directory.start()
+  defer { directory.stop() }
+  try await wait("terminal list", seconds: 10) { directory.terminals != nil }
+  for terminal in directory.terminals ?? [] where terminal.threadId == threadId {
+    print("  \(terminal.terminalId) \(terminal.status) running=\(terminal.hasRunningSubprocess) label=\(terminal.label) cwd=\(terminal.cwd)")
+  }
+  for id in (argument("--close") ?? "").split(separator: ",").map(String.init) {
+    let model = TerminalSessionModel(
+      target: TerminalTarget(environmentId: session.environmentId, threadId: threadId, terminalId: id),
+      location: TerminalLocation(cwd: "/tmp", worktreePath: nil), host: FixedTerminalHost(channel: session.rpc))
+    model.start()
+    try await wait("attach \(id)", seconds: 10) { model.version > 0 }
+    try await model.close()
+    model.stop()
+    print("closed \(id)")
+  }
+}

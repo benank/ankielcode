@@ -31,6 +31,11 @@ public final class EnvironmentTerminalHost: TerminalHost {
 
   public var canOperate: Bool { registry.environment(environmentId)?.holds(TerminalScope.operate) ?? false }
 
+  /// The computer's OS from the live session's config, for its paste chord and modifier keys.
+  public var platform: TerminalHostPlatform {
+    TerminalHostPlatform(os: registry.environment(environmentId)?.session?.initialConfig.environment.platform?.os.rawValue)
+  }
+
   public func channel(after previous: ObjectIdentifier?) async -> (id: ObjectIdentifier, channel: any TerminalChannel)? {
     let registry = registry
     let environmentId = environmentId

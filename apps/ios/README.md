@@ -337,3 +337,41 @@ listed thread's context window.
 
 Settings → Usage directly: `ANKIEL_DEBUG_ROUTE=settings-usage`. `UsageUITests` open usage from home,
 a thread and Settings on fixtures.
+
+## Terminal
+
+A thread's menu has **Terminal** (only with a confirmed `terminal:operate`): the thread's live shells
+and "Open new terminal", pushed over the thread. The screen follows one terminal with
+`terminal.attach` (`resume` after the first reply, `maxHistoryBytes`, the measured grid resent with
+`terminal.resize` on every new attachment), lists the computer's shells with
+`subscribeTerminalMetadata`, and closes a shell that exits while shown, moving to the nearest live
+one (RN `ThreadTerminalRouteScreen`). Logic is in `AnkielKit/Terminal` (`TerminalSessionModel`);
+the screen is in `AnkielCode/Terminal`.
+
+Rendering is Ghostty: `Packages/Ghostty` wraps the same prebuilt `GhosttyKit.xcframework` the RN
+module vendors (libghostty with its Metal renderer, arm64 device and simulator slices) as a binary
+target that only the app links. `TerminalSurfaceView` is the RN module's `AnkielTerminalView` without
+Expo: output is fed in, keys come out of a hidden text field (hardware key commands, IME-safe field
+diffs), pastes go through `ghostty_surface_text` so bracketed paste follows the program, the bell
+is a haptic, links open on tap and "Select text" opens the visible text in a selectable sheet. The
+theme follows the app's appearance (`TerminalPalette`), the size follows the code font setting
+(2.5 pt smaller, 6–14 pt), and the cursor stops blinking under Reduce Motion. A read-only observer
+for sessions with only `terminal:read`, project scripts and "Attach output" to the composer are
+not built.
+
+`swift run ankiel-probe --state <file> --terminal <cwd>` runs a real shell through the same model
+(echo, a 300 KB flood past the ack window, a resize read back with `stty size`, reattach with
+scrollback, close). `--terminal-list <threadId> [--close term-2,term-3]` lists a thread's shells and
+closes the named ones with their history. Use a throwaway folder under `/tmp`.
+
+| Variable | Values | Shows |
+| --- | --- | --- |
+| `ANKIEL_DEBUG_TERMINAL` | `open`, `open:<terminalId>`, `new` | Opens the terminal of the thread a launch shows (an `ANKIEL_OPEN_URL` thread link). |
+| `ANKIEL_DEBUG_TERMINAL_SEND` | text (`\r` is Enter) | Typed once the shell is live. The shell is real: harmless commands only. |
+| `ANKIEL_DEBUG_TERMINAL_KEYBOARD` | `1` | Focuses the terminal (keyboard and accessory bar). |
+| `ANKIEL_DEBUG_TERMINAL_SELECT` | `1` | Opens "Select text" a moment after the send. |
+| `ANKIEL_DEBUG_TERMINAL_HISTORY` | a folder | A new shell's `HISTFILE` goes there and `LESSHISTFILE` is off. |
+| `ANKIEL_DEBUG_TERMINAL_INPUT` | `1` | Puts the hidden input field in the accessibility tree so UI tests can type. |
+
+`TerminalUITests` (live; skips when the dev server is down) opens a new terminal from the thread
+menu in the `ankiel-probe live` project, types `echo`, rotates and closes it.

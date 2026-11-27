@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7FD296700135351A634F52DB /* AnkielKit in Frameworks */ = {isa = PBXBuildFile; productRef = 32C2B39AE046CF8EC00979B4 /* AnkielKit */; };
+		D7E1000000000000000000B1 /* AnkielGhostty in Frameworks */ = {isa = PBXBuildFile; productRef = D7E1000000000000000000B2 /* AnkielGhostty */; };
 		C5A0000000000000000000AA /* AnkielWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C5A0000000000000000000A1 /* AnkielWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C5A0000000000000000000AC /* AnkielKit in Frameworks */ = {isa = PBXBuildFile; productRef = C5A0000000000000000000AB /* AnkielKit */; };
 /* End PBXBuildFile section */
@@ -93,6 +94,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7FD296700135351A634F52DB /* AnkielKit in Frameworks */,
+				D7E1000000000000000000B1 /* AnkielGhostty in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -172,6 +174,7 @@
 			name = AnkielCode;
 			packageProductDependencies = (
 				32C2B39AE046CF8EC00979B4 /* AnkielKit */,
+				D7E1000000000000000000B2 /* AnkielGhostty */,
 			);
 			productName = AnkielCode;
 			productReference = 82F66858C198B6CEFCEBC3CA /* AnkielCode.app */;
@@ -242,6 +245,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				AA36FDAE3EB04BBC13FD9347 /* XCLocalSwiftPackageReference "Packages/AnkielKit" */,
+				D7E1000000000000000000B3 /* XCLocalSwiftPackageReference "Packages/Ghostty" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1CB0C5D775C7FF82949B9193 /* Products */;
@@ -651,6 +655,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/AnkielKit;
 		};
+		D7E1000000000000000000B3 /* XCLocalSwiftPackageReference "Packages/Ghostty" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Ghostty;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -661,6 +669,11 @@
 		C5A0000000000000000000AB /* AnkielKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AnkielKit;
+		};
+		D7E1000000000000000000B2 /* AnkielGhostty */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D7E1000000000000000000B3 /* XCLocalSwiftPackageReference "Packages/Ghostty" */;
+			productName = AnkielGhostty;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
