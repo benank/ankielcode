@@ -75,10 +75,7 @@ function normalizedFileUriPath(uri: string): string | null {
 }
 
 /** Delete only inside app-owned roots; iOS shares may reference the sender's original. */
-export function isShareFileUriUnderOwnedRoots(
-  uri: string,
-  ownedRootUris: ReadonlyArray<string>,
-): boolean {
+function isShareFileUriUnderOwnedRoots(uri: string, ownedRootUris: ReadonlyArray<string>): boolean {
   const path = normalizedFileUriPath(uri);
   if (path === null) {
     return false;
@@ -128,7 +125,7 @@ export interface IncomingShareFileReader {
   readonly readSize?: (uri: string) => Promise<number | null>;
 }
 
-export function selectIncomingShareAttachments(input: {
+function selectIncomingShareAttachments(input: {
   readonly attachments: ReadonlyArray<DraftComposerAttachment>;
   readonly maxFileAttachmentBytes: number | null;
 }): {

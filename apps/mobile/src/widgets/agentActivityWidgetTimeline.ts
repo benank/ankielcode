@@ -6,7 +6,7 @@ import type { AgentActivityProps, AgentActivityText } from "./AgentActivity";
 
 // The widget only refreshes while the app is open, so after this long it stops
 // claiming an agent is still working. Matches the Live Activity's stale date.
-export const AGENT_ACTIVITY_WIDGET_STALE_AFTER_MS = 10 * 60_000;
+const AGENT_ACTIVITY_WIDGET_STALE_AFTER_MS = 10 * 60_000;
 
 export type AgentActivityAggregate = Omit<AgentActivityProps, "text">;
 

@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
  * Whether the launch splash still waits for Home's list. A list holds the splash while it
  * has cached rows to lay out, so the first frame after the splash shows them.
  */
-export function createLaunchSplashHomeRows() {
+function createLaunchSplashHomeRows() {
   let holds = 0;
   let settled = false;
   const listeners = new Set<() => void>();

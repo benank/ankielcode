@@ -77,7 +77,7 @@ function composerSelectionAtEnd(draftMessage: string): ComposerEditorSelection {
  * still has the text it was placed in. Otherwise the composer's own caret is
  * clamped to the draft, and a caret from another owner starts at the end.
  */
-export function resolveComposerMenuSelection(input: {
+function resolveComposerMenuSelection(input: {
   readonly draftMessage: string;
   readonly ownerKey: string | null;
   readonly inserted: ComposerEditorSelection | null;
@@ -99,7 +99,7 @@ const PULL_REQUEST_STATE_LABELS = {
   merged: msg("merged", { $context: "pull request state" }),
 } as const;
 
-export function buildComposerSlashCommandItems(
+function buildComposerSlashCommandItems(
   input: {
     readonly query: string;
     readonly atMessageStart: boolean;
@@ -178,7 +178,7 @@ export function buildComposerSlashCommandItems(
   return items;
 }
 
-export function buildComposerModelItems(
+function buildComposerModelItems(
   modelOptions: ReadonlyArray<ModelOption>,
   query: string,
   providers: ReadonlyArray<ServerProvider>,
@@ -221,7 +221,7 @@ export function buildComposerModelItems(
   }));
 }
 
-export function resolveComposerCommandSelection(input: {
+function resolveComposerCommandSelection(input: {
   readonly draftMessage: string;
   readonly trigger: Pick<ComposerTrigger, "rangeStart" | "rangeEnd">;
   readonly item: ComposerCommandItem;

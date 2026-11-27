@@ -44,7 +44,7 @@ export type UploadedMobileAttachment =
   | ChatImageAttachment
   | ChatFileAttachment;
 
-export function withUploadedMobileAttachmentReferences(input: {
+function withUploadedMobileAttachmentReferences(input: {
   readonly environmentId: EnvironmentId;
   readonly attachments: ReadonlyArray<DraftComposerAttachment>;
   readonly uploadedAttachments: ReadonlyArray<UploadedMobileAttachment>;

@@ -69,7 +69,7 @@ export type ScheduleDraft = {
   readonly savedFilters: ReadonlyArray<WebhookFilterDraft>;
 };
 
-export const DEFAULT_SCHEDULE: ScheduleDraft = {
+const DEFAULT_SCHEDULE: ScheduleDraft = {
   mode: "fixed_time",
   timeOfDay: "09:00",
   runAt: "",
@@ -84,7 +84,7 @@ export const DEFAULT_SCHEDULE: ScheduleDraft = {
   savedFilters: [],
 };
 
-export function scheduleDraftForTask(task: Pick<ScheduledTask, "schedule">): ScheduleDraft {
+function scheduleDraftForTask(task: Pick<ScheduledTask, "schedule">): ScheduleDraft {
   switch (task.schedule.type) {
     case "fixed_time":
       return {

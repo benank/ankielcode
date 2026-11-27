@@ -187,7 +187,7 @@ export function markdownHtmlTags(content: string): RegExpExecArray[] {
  * Called only for parsed HTML nodes, so Markdown code examples keep their literal tags.
  * `anchors` is shared across sibling inline HTML nodes because each of those carries a single tag.
  */
-export function markdownHtmlContent(
+function markdownHtmlContent(
   content: string,
   options: { readonly anchors?: AnchorState; readonly inTableCell?: boolean } = {},
 ): string {
@@ -242,7 +242,7 @@ function htmlTagMarkdown(
   return "";
 }
 
-export function markdownWithHtml(markdown: string): string {
+function markdownWithHtml(markdown: string): string {
   if (!/<(?:!--|\/?[a-z])/i.test(markdown)) return markdown;
   const edits: Array<{ start: number; end: number; content: string }> = [];
   const visit = (node: MarkdownNode, inTableCell: boolean, inLink: boolean) => {

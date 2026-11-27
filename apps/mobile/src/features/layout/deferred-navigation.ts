@@ -1,5 +1,5 @@
 /** Hold in-place route changes while a workspace mutation is still running. */
-export function createDeferredNavigation() {
+function createDeferredNavigation() {
   let pending = 0;
   let latest: (() => void) | null = null;
   return {

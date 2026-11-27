@@ -9,7 +9,7 @@ import type { ComposerDraftWorkspaceSelection } from "../../state/use-composer-d
 
 type WorkspaceMode = "local" | "worktree";
 
-export function resolveNewTaskWorkspaceSelection(input: {
+function resolveNewTaskWorkspaceSelection(input: {
   readonly selection: ComposerDraftWorkspaceSelection | undefined;
   readonly fallback: ComposerDraftWorkspaceSelection;
   readonly isGitRepo: boolean;

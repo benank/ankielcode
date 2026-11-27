@@ -9,7 +9,7 @@ import { environmentThreadShells, olderSettledThreads } from "./threads";
  * A per-project boolean, so readers re-render when it flips, not on every
  * thread-shell change (which is frequent while agents work).
  */
-export function makeProjectHasThreadsAtom(sources: {
+function makeProjectHasThreadsAtom(sources: {
   readonly threadRefsByProject: (
     environmentId: EnvironmentId,
   ) => Atom.Atom<ReadonlyMap<ProjectId, ReadonlyArray<unknown>>>;

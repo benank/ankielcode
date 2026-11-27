@@ -43,7 +43,7 @@ export interface RecentThreadPresence {
  * entries, and a failed load never persists its empty fallback over valid
  * history until a real thread open makes the in-memory list the new truth.
  */
-export function createRecentThreadShortcuts(dependencies: RecentThreadShortcutsDependencies) {
+function createRecentThreadShortcuts(dependencies: RecentThreadShortcutsDependencies) {
   let recents: ReadonlyArray<RecentThreadShortcut> | null = null;
   let persistable = false;
   let active: RecentThreadShortcut | null = null;
@@ -183,7 +183,7 @@ interface ShellThreadsState {
   readonly snapshot: Option.Option<{ readonly threads: ReadonlyArray<{ readonly id: string }> }>;
 }
 
-export function createRecentThreadPresenceAtom(input: {
+function createRecentThreadPresenceAtom(input: {
   readonly threadsAtom: Atom.Atom<ReadonlyArray<RecentThreadShortcut>>;
   readonly quietThreadShellAtom: (ref: ScopedThreadRef) => Atom.Atom<object | null>;
   readonly shellStateAtom: (environmentId: EnvironmentId) => Atom.Atom<ShellThreadsState>;

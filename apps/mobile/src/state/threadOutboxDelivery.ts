@@ -783,7 +783,7 @@ type ThreadDeliveryStep =
  * failure, and otherwise waits until an input changes (outbox, locks, shells, projects,
  * configs, connections, scopes).
  */
-export function createThreadOutboxDelivery(): {
+function createThreadOutboxDelivery(): {
   readonly drain: () => void;
   readonly dispose: () => void;
 } {

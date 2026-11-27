@@ -19,7 +19,7 @@ type PreferencesUpdate =
     };
 
 /** Keep optimistic patches separate so hydration cannot overwrite pending writes. */
-export function createMobilePreferencesState(
+function createMobilePreferencesState(
   runtime: Atom.AtomRuntime<MobilePreferences.MobilePreferencesStore>,
 ) {
   const storedPreferencesAtom = runtime

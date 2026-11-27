@@ -77,7 +77,7 @@ type ComposerAttachmentUploadRequest = {
   readonly attachment: DraftComposerAttachment;
 };
 
-export function composerAttachmentUploadRequests(input: {
+function composerAttachmentUploadRequests(input: {
   readonly drafts: Readonly<Record<string, Pick<ComposerDraft, "attachments" | "project">>>;
   readonly queuedMessagesByThreadKey: Parameters<typeof flattenQueuedThreadMessages>[0];
   /** An edited message's attachments upload through its editor draft. */
@@ -295,7 +295,7 @@ export const uploadComposerAttachmentShared = Effect.fn("ComposerAttachments.upl
  * Uploads draft and queued attachments to their environment as soon as it is connected and
  * operable. The queue follows the requests atom for its whole lifetime.
  */
-export function createComposerAttachmentUploadWorker(
+function createComposerAttachmentUploadWorker(
   requestsAtom: Atom.Atom<
     ReadonlyArray<ComposerAttachmentUploadRequest>
   > = composerAttachmentUploadRequestsAtom,

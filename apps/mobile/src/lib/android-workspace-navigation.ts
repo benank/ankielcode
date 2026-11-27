@@ -22,7 +22,7 @@ export function resetAndroidWorkspace(navigation: RootStackNavigation) {
   resetRootStack(navigation, androidWorkspaceNavigationState);
 }
 
-export function parentThreadIsBelow(
+function parentThreadIsBelow(
   state: NavigationState,
   parent: ReactNavigation.RootParamList["Thread"],
 ) {

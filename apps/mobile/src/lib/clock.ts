@@ -26,7 +26,7 @@ export function useNowAfter(deadlineMs: number | null): number {
  * `minuteTick`'s UTC `YYYY-MM-DDTHH:mm` as epoch ms. The snapshot carries no
  * offset, and `Date.parse` reads offset-less date-times as local time.
  */
-export function minuteTickToEpochMs(minute: string): number {
+function minuteTickToEpochMs(minute: string): number {
   return Date.parse(`${minute}:00Z`);
 }
 

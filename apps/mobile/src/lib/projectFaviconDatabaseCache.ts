@@ -26,10 +26,7 @@ const runDatabase = <A, E>(
     : Promise.reject(new Error("Project icon storage is not attached."));
 
 /** expo-image encodes only through disk cache; remove the temporary frame after reading bytes. */
-export async function downscaleProjectFavicon(
-  image: { readonly url: string },
-  signal: AbortSignal,
-) {
+async function downscaleProjectFavicon(image: { readonly url: string }, signal: AbortSignal) {
   const [{ Image }, { File }] = await Promise.all([
     import("expo-image"),
     import("expo-file-system"),

@@ -55,7 +55,7 @@ export function modelMatchesCatalogQuery(input: {
   ].some((value) => value.toLocaleLowerCase().includes(query));
 }
 
-export function visibleCatalogModels(input: {
+function visibleCatalogModels(input: {
   readonly models: ReadonlyArray<ModelOption>;
   readonly providerLabel: string;
   readonly query: string;
