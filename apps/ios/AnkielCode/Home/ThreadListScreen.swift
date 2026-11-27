@@ -231,14 +231,25 @@ struct ThreadListScreen: View {
     }
     ToolbarItemGroup(placement: .topBarTrailing) {
       UsageToolbarButton()
-      Button("Pull requests", systemImage: "arrow.triangle.pull") { model.pullRequests.openList() }
-        .accessibilityIdentifier("home.pullRequests")
-      Button("Issues", systemImage: "smallcircle.filled.circle") { issuesShown = true }
-        .accessibilityIdentifier("home.issues")
-      Button("Workflows", systemImage: "point.3.connected.trianglepath.dotted") { workflowsShown = true }
-        .accessibilityIdentifier("home.workflows")
-      Button("Settings", systemImage: "gearshape") { model.openSettings() }
-        .accessibilityIdentifier("home.settings")
+      // The screens beside the thread list share one menu, so the bar stays the same on iPhone and
+      // iPad however many there are.
+      Menu {
+        if showsGitHub {
+          Button("Pull requests", systemImage: "arrow.triangle.pull") { model.pullRequests.openList() }
+            .accessibilityIdentifier("home.pullRequests")
+          Button("Issues", systemImage: "smallcircle.filled.circle") { issuesShown = true }
+            .accessibilityIdentifier("home.issues")
+        }
+        Button("Workflows", systemImage: "point.3.connected.trianglepath.dotted") { workflowsShown = true }
+          .accessibilityIdentifier("home.workflows")
+        Section {
+          Button("Settings", systemImage: "gearshape") { model.openSettings() }
+            .accessibilityIdentifier("home.settings")
+        }
+      } label: {
+        Label("More", systemImage: "ellipsis")
+      }
+      .accessibilityIdentifier("home.more")
     }
     if zoom == nil {
       // The sidebar keeps search at its top, so compose joins the top bar (iPad Mail).
@@ -249,6 +260,11 @@ struct ThreadListScreen: View {
       ToolbarSpacer(.fixed, placement: .bottomBar)
       ToolbarItem(placement: .bottomBar) { newThreadButton }
     }
+  }
+
+  /// Pull requests and issues need a computer with GitHub integration on (RN hides both tabs).
+  private var showsGitHub: Bool {
+    !model.pullRequests.targets.isEmpty || IssuesDebug.source != nil
   }
 
   private var newThreadButton: some View {

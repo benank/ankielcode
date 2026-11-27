@@ -29,7 +29,14 @@ private struct ThreadFilesHost: ViewModifier {
   @Namespace private var zoom
 
   private var context: FileContext? {
-    threadFileContext(ref, projectId: detail.state.projectId, registry: model.registry)
+    #if DEBUG
+      // Fixture threads have no computer: their synthetic workspace lets row entry points open
+      // the viewer (which then reports it cannot read the file).
+      if ThreadDebug.isFixture(ref) {
+        return FileContext(environmentId: ref.environmentId, cwd: "/srv/dev/tidewise", threadId: ref.threadId, title: "tidewise")
+      }
+    #endif
+    return threadFileContext(ref, projectId: detail.state.projectId, registry: model.registry)
   }
 
   func body(content: Content) -> some View {
@@ -134,10 +141,8 @@ struct FilesMenuButton: View {
 
   var body: some View {
     if let presenter, presenter.canBrowse {
-      Section {
-        Button("Files", systemImage: "folder") { presenter.openBrowser() }
-          .accessibilityIdentifier("thread.files")
-      }
+      Button("Files", systemImage: "folder") { presenter.openBrowser() }
+        .accessibilityIdentifier("thread.files")
     }
   }
 }

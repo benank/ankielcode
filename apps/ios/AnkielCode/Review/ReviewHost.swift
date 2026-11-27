@@ -167,8 +167,30 @@ extension EnvironmentValues {
   @Entry var runGitQuickAction: GitQuickActionRunner?
 }
 
+/// "Review changes" in the thread menu's tools group (RN puts it in the git section; here it sits
+/// with Files and Terminal, the screens a thread opens most).
+struct ReviewMenuButton: View {
+  @Environment(\.reviewPresenter) private var presenter
+
+  var body: some View {
+    if let presenter {
+      Button {
+        presenter.openReview()
+      } label: {
+        Label {
+          Text("Review changes")
+          if presenter.git.status?.isRepo ?? true { Text("Turn diffs and worktree changes") } else { Text("Turn diffs") }
+        } icon: {
+          Image(systemName: "text.bubble")
+        }
+      }
+      .accessibilityIdentifier("thread.review")
+    }
+  }
+}
+
 /// The thread menu's git section (RN `useThreadGitMenuDefinition`): the branch and its status,
-/// the one-tap action, Review changes, and More (the Git sheet).
+/// the one-tap action, and Git actions (the Git sheet).
 struct ReviewMenuSection: View {
   @Environment(\.reviewPresenter) private var presenter
   @Environment(\.runGitQuickAction) private var runQuick
@@ -194,24 +216,13 @@ struct ReviewMenuSection: View {
           quickAction(git, term: term)
         }
         Button {
-          presenter.openReview()
-        } label: {
-          Label {
-            Text("Review changes")
-            Text(isRepo ? "Turn diffs and worktree changes" : "Turn diffs")
-          } icon: {
-            Image(systemName: "text.bubble")
-          }
-        }
-        .accessibilityIdentifier("thread.review")
-        Button {
           presenter.openGit()
         } label: {
           Label {
-            Text("More", comment: "menu item that opens more git actions")
+            Text("Git actions")
             Text("Commit, files, branches")
           } icon: {
-            Image(systemName: "ellipsis")
+            Image(systemName: "arrow.triangle.branch")
           }
         }
         .accessibilityIdentifier("thread.git")

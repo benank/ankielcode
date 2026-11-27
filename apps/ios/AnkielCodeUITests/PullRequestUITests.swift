@@ -23,8 +23,11 @@ final class PullRequestUITests: HomeUITestCase {
   /// Home → Pull requests → a pull request → Files → a file's diff with its review thread.
   func testListToDetailToFilesToDiff() {
     launch(["ANKIEL_DEBUG_HOME": "sample", "ANKIEL_DEBUG_PULL_REQUESTS": "fixture"])
+    let more = app.buttons["home.more"]
+    XCTAssertTrue(more.waitForExistence(timeout: 15))
+    more.tap()
     let entry = app.buttons["home.pullRequests"]
-    XCTAssertTrue(entry.waitForExistence(timeout: 15))
+    XCTAssertTrue(entry.waitForExistence(timeout: 5))
     entry.tap()
     let row = app.buttons["pr.row.128"]
     XCTAssertTrue(row.waitForExistence(timeout: 10))
@@ -54,7 +57,7 @@ final class PullRequestUITests: HomeUITestCase {
     let close = app.buttons["pr.close"]
     XCTAssertTrue(close.waitForExistence(timeout: 5))
     close.tap()
-    XCTAssertTrue(app.buttons["home.pullRequests"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["home.more"].waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["thread.menu"].exists, "the row's thread did not open underneath")
 
     // The thread's header carries the same chip.

@@ -307,25 +307,23 @@ private struct ThreadScreen: View {
       UsageToolbarButton(threadContext: .some(detail.state.contextWindow))
     }
     ToolbarItem(placement: .topBarTrailing) {
+      // Most used first: the screens a thread opens, then git, then what happens to the thread.
       Menu {
-        FilesMenuButton()
-        ReviewMenuSection()
-        TerminalMenuSection()
+        Section {
+          ReviewMenuButton()
+          FilesMenuButton()
+          TerminalMenuSection()
+        }
         PreviewMenuSection()
+        ReviewMenuSection()
         if let row {
-          ThreadActionsMenu(
-            row: row, operable: model.home.canOperate(threadRef), rename: { renaming = row.title },
-            delete: { deleting = true }, commit: commit)
-        } else {
-          Button("Copy thread link", systemImage: "link") {
-            UIPasteboard.general.string = ThreadLink.reference(threadRef)
-            Haptics.success()
-          }
-          Button("Copy thread ID", systemImage: "doc.on.doc") {
-            UIPasteboard.general.string = threadRef.threadId
-            Haptics.success()
+          Section {
+            ThreadActionsMenu(
+              row: row, operable: model.home.canOperate(threadRef), rename: { renaming = row.title },
+              delete: { deleting = true }, commit: commit, copyFirst: false)
           }
         }
+        Section { ThreadCopyActions(ref: threadRef) }
       } label: {
         Label("Thread actions", systemImage: "ellipsis")
       }

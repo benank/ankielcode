@@ -12,20 +12,17 @@ struct ThreadActionsMenu: View {
   let delete: () -> Void
   /// A committed action: the caller plays its haptic, then runs it.
   let commit: (() -> Void) -> Void
+  /// The list leads with the copy actions (RN); the thread's header puts them last.
+  var copyFirst = true
   @Environment(AppModel.self) private var model
 
   var body: some View {
     let home = model.home
-    Button("Copy thread link", systemImage: "link") {
-      UIPasteboard.general.string = ThreadLink.reference(row.ref)
-      Haptics.success()
-    }
-    Button("Copy thread ID", systemImage: "doc.on.doc") {
-      UIPasteboard.general.string = row.ref.threadId
-      Haptics.success()
+    if copyFirst {
+      ThreadCopyActions(ref: row.ref)
     }
     if operable {
-      Divider()
+      if copyFirst { Divider() }
       switch row.swipe.primary {
       case .settle: Button("Settle", systemImage: "checkmark") { commit { home.settle(row) } }
       case .unsettle:
@@ -64,6 +61,23 @@ struct ThreadActionsMenu: View {
         }
         Button("Delete", systemImage: "trash", role: .destructive, action: delete)
       }
+      .accessibilityIdentifier("thread.more")
+    }
+  }
+}
+
+/// Copy thread link and Copy thread ID.
+struct ThreadCopyActions: View {
+  let ref: ThreadRef
+
+  var body: some View {
+    Button("Copy thread link", systemImage: "link") {
+      UIPasteboard.general.string = ThreadLink.reference(ref)
+      Haptics.success()
+    }
+    Button("Copy thread ID", systemImage: "doc.on.doc") {
+      UIPasteboard.general.string = ref.threadId
+      Haptics.success()
     }
   }
 }

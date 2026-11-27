@@ -12,8 +12,11 @@ final class WorkflowUITests: HomeUITestCase {
 
   func testAnswerAndCancel() {
     launch()
+    let more = app.buttons["home.more"]
+    XCTAssertTrue(more.waitForExistence(timeout: 20))
+    more.tap()
     let open = app.buttons["home.workflows"]
-    XCTAssertTrue(open.waitForExistence(timeout: 20))
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
     open.tap()
     let asking = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Tide chart v1.4'")).firstMatch
     XCTAssertTrue(asking.waitForExistence(timeout: 20), "the asking run is under Needs you")

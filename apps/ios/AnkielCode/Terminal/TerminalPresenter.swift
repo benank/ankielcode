@@ -125,7 +125,7 @@ struct TerminalMenuSection: View {
   var body: some View {
     if let presenter, presenter.canOpen {
       let entries = presenter.entries
-      Section {
+      Group {
         if entries.isEmpty {
           Button("Terminal", systemImage: "apple.terminal") { presenter.open() }
             .accessibilityIdentifier("thread.terminal")
