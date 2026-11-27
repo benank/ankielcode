@@ -37,7 +37,7 @@ struct PendingMessageView: View {
               .lineLimit(1)
           }
           if !message.text.isEmpty {
-            Text(message.text)
+            Text(ComposerInlineTokens.plainText(message.text))
               .font(Typography.body)
               .foregroundStyle(Palette.textPrimary)
               .lineSpacing(2)
@@ -178,7 +178,7 @@ struct QueuedMessagesBar: View {
             .foregroundStyle(Palette.textPrimary)
             .contentTransition(.numericText())
           if !expanded, let first = queued.first {
-            Text(first.text.isEmpty ? String(localized: "Attachments") : first.text)
+            Text(first.text.isEmpty ? String(localized: "Attachments") : ComposerInlineTokens.plainText(first.text))
               .font(Typography.footnote)
               .foregroundStyle(Palette.textSecondary)
               .lineLimit(1)
@@ -220,7 +220,7 @@ struct QueuedMessagesBar: View {
         .foregroundStyle(Palette.textTertiary)
         .frame(width: 16)
       VStack(alignment: .leading, spacing: 2) {
-        Text(message.text.isEmpty ? String(localized: "Queued message") : message.text)
+        Text(message.text.isEmpty ? String(localized: "Queued message") : ComposerInlineTokens.plainText(message.text))
           .font(Typography.subheadline)
           .foregroundStyle(Palette.textPrimary)
           .lineLimit(2)

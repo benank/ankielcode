@@ -24,6 +24,10 @@ struct ComposerTarget {
   /// The project's default pick and the sticky pick, for a new thread.
   var projectDefault: ModelSelection?
   var canSend = true
+  /// Where `@` searches: the thread's worktree, else its project's root.
+  var fileContext: FileContext?
+  /// `filesystem:read`: the session may search the computer's files.
+  var canReadFiles = true
 
   static let newThreadKey = "new-thread"
 
@@ -68,6 +72,8 @@ extension ComposerTarget {
     target.connected = model.composerSink?.canSend(to: ref.environmentId) ?? false
     target.supportsThreadStop = environment?.capabilities["threadStop"]?.boolValue == true
     target.canSend = environment?.allows("orchestration:operate") ?? true
+    target.fileContext = threadFileContext(ref, projectId: detail?.state.projectId, registry: model.registry)
+    target.canReadFiles = environment?.allows("filesystem:read") ?? true
     #if DEBUG
       if ThreadDebug.isFixture(ref) {
         target.environmentLabel = DebugCatalog.environmentLabel
@@ -76,6 +82,7 @@ extension ComposerTarget {
         target.threadRuntimeMode = .auto
         target.lockedInstance = "claudeAgent"
         target.supportsThreadStop = true
+        target.fileContext = FileContext(environmentId: ref.environmentId, cwd: "/srv/dev/tidewise", threadId: ref.threadId, title: "tidewise")
         // Without the fake sink a fixture message would wait forever in the real outbox.
         target.canSend = model.isComposerFake
         target.connected = model.isComposerFake && (model.composerSink?.canSend(to: ref.environmentId) ?? false)

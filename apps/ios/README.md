@@ -607,3 +607,20 @@ thumbprint, so each computer records its key in `dpop-key-kind.<environmentId>`:
 software key (`dpop-proof-key`), which computers paired earlier keep using. Where the enclave is
 missing or fails (the simulator), new pairings use the software key. Removing a computer forgets
 its record. The probe prints "Secure Enclave key" after pairing when it got one.
+
+## Composer mentions
+
+The composer's field is a `UITextView` (`ComposerTextEditor`), not a `TextField`, so mentions can
+be chips: the draft stays plain text, and every `[name](path)` link or `@path` followed by
+whitespace is drawn as one attachment character that stands for its source (it deletes as one,
+copies as its source). The parsing is RN's (`AnkielKit/Composer`: `ComposerTrigger`,
+`ComposerFileLink`, `ComposerInlineTokens`); offsets are UTF-16. Typing `@` searches the thread's
+worktree (else its project root) with `projects.searchEntries` (20 results, 200 ms pause; a bare
+`@` sends an empty query) and lists results above the composer. Arrows move, Return or Tab picks
+and Escape closes it with a hardware keyboard. Sent, pending and queued messages show a mention by
+its file name.
+
+With `ANKIEL_DEBUG_COMPOSER`, `@` searches a made-up workspace (`MentionDebug`) instead of a
+computer. `ComposerMentionUITests` picks, deletes and sends a mention and walks the list with the
+keyboard. `swift run ankiel-probe --state <file> --files <cwd> --search <q>` also runs the `@`
+search (bare and with the query) and checks each result's link reads back as its path.

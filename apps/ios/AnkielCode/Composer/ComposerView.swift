@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 /// `composerSendPresentation`). Return adds a line; Command-Return sends.
 struct ComposerView: View {
   let target: ComposerTarget
-  var placeholder: LocalizedStringKey = "Message"
+  var placeholder: LocalizedStringResource = "Message"
   /// Sends the draft with this delivery; the caller moves it to the outbox.
   let send: (MessageDelivery) -> Void
   var focusOnAppear = false
@@ -19,7 +19,11 @@ struct ComposerView: View {
   @Environment(\.dynamicTypeSize) private var typeSize
   @Environment(\.filePresenter) private var filePresenter
   @Environment(\.reviewPresenter) private var reviewPresenter
-  @FocusState private var focused: Bool
+  @State private var focused = false
+  /// The caret in source offsets (location = start), for the suggestion list.
+  @State private var caretRange = NSRange(location: 0, length: 0)
+  @State private var caretRequest: ComposerCaretRequest?
+  @State private var suggestions = ComposerSuggestions()
   @State private var picker: Picker?
   @State private var photoItems: [PhotosPickerItem] = []
   @State private var notice: String?
@@ -80,6 +84,26 @@ struct ComposerView: View {
     }
     .padding(.horizontal, Spacing.md)
     .padding(.bottom, Spacing.xs)
+    // A zero-height anchor on the composer's top edge: the list grows upward over the feed
+    // without moving the composer or reflowing the feed.
+    .overlay(alignment: .top) {
+      Color.clear
+        .frame(height: 0)
+        .overlay(alignment: .bottom) {
+          if suggestions.isOpen, !dictating {
+            ComposerSuggestionList(suggestions: suggestions, pick: pick)
+              .padding(.horizontal, Spacing.md)
+              .padding(.bottom, Spacing.xs)
+              .transition(.opacity)
+          }
+        }
+    }
+    .motion(Motion.micro, value: suggestions.isOpen)
+    .onChange(of: draft.text) { _, _ in refreshSuggestions() }
+    .onChange(of: caretRange) { _, _ in refreshSuggestions() }
+    .onChange(of: focused) { _, isFocused in
+      if !isFocused { suggestions.close(keepDismissal: false) } else { refreshSuggestions() }
+    }
     .motion(Motion.micro, value: notice ?? blockNotice)
     .motion(Motion.micro, value: dictation.failure(target.draftKey))
     .modifier(DictationLifecycle(draftKey: target.draftKey))
@@ -141,20 +165,17 @@ struct ComposerView: View {
           .padding(.top, Spacing.sm + 2)
           .motionTransition(.opacity.combined(with: .move(edge: .bottom)))
       }
-      TextField(placeholder, text: text, axis: .vertical)
-        .font(Typography.body)
-        .lineLimit(1...(typeSize.isAccessibilitySize ? 4 : 8))
-        .focused($focused)
+      ComposerTextEditor(
+        text: text.wrappedValue, placeholder: String(localized: placeholder), editable: !dictating,
+        maxLines: typeSize.isAccessibilitySize ? 4 : 8, focused: $focused, caretRequest: caretRequest,
+        suggestionKeys: suggestions.isOpen ? suggestionKeys : nil,
+        onChange: { text.wrappedValue = $0 },
+        onSelection: { start, end in caretRange = NSRange(location: start, length: end - start) },
+        onSubmit: sendFromKeyboard)
         .padding(.horizontal, Spacing.xs + 2)
         .padding(.top, Spacing.md)
         .padding(.bottom, Spacing.xs)
-        .accessibilityIdentifier("composer.field")
         .allowsHitTesting(!dictating)
-        .onKeyPress(.return, phases: .down) { press in
-          guard press.modifiers.contains(.command) else { return .ignored }
-          sendFromKeyboard()
-          return .handled
-        }
       Group {
         if dictating {
           DictationBar(dictation: dictation)
@@ -184,6 +205,42 @@ struct ComposerView: View {
     Binding(
       get: { dictation.display(target.draftKey, draft: draft.text) },
       set: { if !dictating { store.setText($0, for: target.draftKey) } })
+  }
+
+  // MARK: Suggestions
+
+  private var suggestionKeys: ComposerSuggestionKeys {
+    ComposerSuggestionKeys(
+      move: { suggestions.move($0) },
+      accept: { if let item = suggestions.current { pick(item) } },
+      dismiss: { suggestions.dismiss() })
+  }
+
+  private func refreshSuggestions() {
+    suggestions.update(
+      text: draft.text, selection: (caretRange.location, NSMaxRange(caretRange)), enabled: focused && !dictating && target.canSend,
+      source: suggestionSource)
+  }
+
+  private var suggestionSource: ComposerSuggestions.Source {
+    let registry = model.registry
+    var search: @MainActor (String, FileContext) async throws -> [WorkspaceEntry] = { query, context in
+      try await registry.mentionSearch(query, in: context).entries
+    }
+    #if DEBUG
+      if model.isComposerFake { search = { query, _ in MentionDebug.entries(query) } }
+    #endif
+    return ComposerSuggestions.Source(context: target.fileContext, canRead: target.canReadFiles, search: search)
+  }
+
+  /// Writes a pick over the word at the caret and puts the caret after it.
+  private func pick(_ item: ComposerMenuItem) {
+    guard let trigger = suggestions.trigger else { return }
+    let result = ComposerMenu.apply(item, to: draft.text, trigger: trigger)
+    suggestions.close(keepDismissal: false)
+    store.setText(result.text, for: target.draftKey)
+    caretRequest = ComposerCaretRequest(offset: result.cursor)
+    caretRange = NSRange(location: result.cursor, length: 0)
   }
 
   /// The open thread's keyboard commands (`AppCommands`); none for the new-thread sheet.

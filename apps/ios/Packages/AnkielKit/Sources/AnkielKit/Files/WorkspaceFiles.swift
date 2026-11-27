@@ -172,6 +172,15 @@ public enum WorkspaceFileCalls {
       as: WorkspaceEntries.self)
   }
 
+  /// The composer's `@` search (RN `useComposerPathSearch`): 20 results, and a bare `@` sends an
+  /// empty query, which the server answers with the workspace's top entries.
+  public static func mentionSearch(_ query: String, cwd: String, via caller: some UnaryCaller) async throws -> WorkspaceEntries {
+    var trimmed = String(query.trimmingCharacters(in: .whitespacesAndNewlines).utf16.prefix(256)) ?? ""
+    if let last = trimmed.utf16.last, UTF16.isLeadSurrogate(last) { trimmed = String(trimmed.utf16.dropLast()) ?? "" }
+    return try await caller.call(
+      SearchEntriesRequest.rpcTag, payload: SearchEntriesRequest(cwd: cwd, query: trimmed, limit: 20), as: WorkspaceEntries.self)
+  }
+
   /// A binary or non-file target answers as a value, not an error (`ProjectReadFileError.failure`).
   public static func read(_ path: String, cwd: String, via caller: some UnaryCaller) async throws -> FileRead {
     do {
@@ -206,6 +215,10 @@ extension EnvironmentRegistry {
 
   public func searchEntries(_ query: String, in context: FileContext) async throws(EnvironmentRequestError) -> WorkspaceEntries {
     try await request(context.environmentId) { try await WorkspaceFileCalls.search(query, cwd: context.cwd, via: SessionCaller(session: $0)) }
+  }
+
+  public func mentionSearch(_ query: String, in context: FileContext) async throws(EnvironmentRequestError) -> WorkspaceEntries {
+    try await request(context.environmentId) { try await WorkspaceFileCalls.mentionSearch(query, cwd: context.cwd, via: SessionCaller(session: $0)) }
   }
 
   /// Size and kind of a workspace path (relative or absolute).

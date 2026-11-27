@@ -16,6 +16,16 @@ func probeFiles(_ session: EnvironmentSession, base: URL, cwd: String) async thr
   let query = argument("--search") ?? "readme"
   let found = try await WorkspaceFileCalls.search(query, cwd: cwd, via: rpc)
   print("search \"\(query)\":   \(found.entries.count) matches, truncated=\(found.truncated): \(found.entries.prefix(3).map(\.path))")
+  // The composer's `@` list: a bare `@` (empty query) and the query, 20 at most, each written
+  // as the link the composer inserts and read back as a mention.
+  for mention in ["", query] {
+    let entries = try await WorkspaceFileCalls.mentionSearch(mention, cwd: cwd, via: rpc).entries
+    let roundTrips = entries.allSatisfy { entry in
+      let link = ComposerFileLink.serialize(entry.path)
+      return ComposerInlineTokens.collect(link + " ").first?.value == entry.path
+    }
+    print("mention \"@\(mention)\":  \(entries.count) entries, links read back=\(roundTrips): \(entries.prefix(3).map { ComposerFileLink.serialize($0.path) })")
+  }
 
   for (index, argument) in CommandLine.arguments.enumerated() where argument == "--read" {
     guard CommandLine.arguments.indices.contains(index + 1) else { continue }

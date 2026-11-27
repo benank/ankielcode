@@ -20,6 +20,20 @@ struct UserMessageView: View, Equatable {
     row.text.count > 900 || row.text.reduce(0) { $1 == "\n" ? $0 + 1 : $0 } > 14
   }
 
+  /// Mentions the composer wrote (`[name](path)`, `@path`) read as file links by name.
+  static func withFileLinks(_ text: String) -> AttributedString {
+    var result = AttributedString()
+    for run in ComposerInlineTokens.runs(text) {
+      var part = AttributedString(run.text)
+      if let path = run.path, let url = URL(string: ComposerFileLink.encodeDestination(path)) {
+        part.link = url
+        part.underlineStyle = .single
+      }
+      result += part
+    }
+    return result
+  }
+
   private var imageAttachments: [ChatAttachment] { row.attachments.filter(\.isImage) }
   private var fileAttachments: [ChatAttachment] { row.attachments.filter { !$0.isImage } }
 
@@ -55,7 +69,7 @@ struct UserMessageView: View, Equatable {
               .accessibilityHint(Text("Opens the file"))
           }
           if !row.text.isEmpty {
-            Text(row.text)
+            Text(Self.withFileLinks(row.text))
               .font(Typography.body)
               .foregroundStyle(Palette.textPrimary)
               .lineSpacing(2)

@@ -60,6 +60,10 @@ struct NewThreadView: View {
     target.projectDefault = project?.defaultModelSelection
     target.connected = computer?.connected ?? false
     target.canSend = computer != nil && !preparing
+    if let computer, let project {
+      target.fileContext = FileContext(environmentId: computer.id, cwd: project.workspaceRoot, threadId: nil, title: project.title)
+      target.canReadFiles = model.registry.environment(computer.id)?.allows("filesystem:read") ?? true
+    }
     return target
   }
 
