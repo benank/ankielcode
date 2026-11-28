@@ -37,6 +37,7 @@ struct CommandEncodingTests {
       "dispatch-text-only", "command",
       MessageDispatch(commandId: command, threadId: thread, messageId: "m-1", text: "Hello", delivery: .start)
     ),
+    ("thread-regenerate-title", "command", thread(.regenerateTitle)),
     (
       "dispatch-fresh-session", "command",
       MessageDispatch(commandId: command, threadId: thread, messageId: "m-2", text: "Start over from the spec", delivery: .start, freshContext: true)

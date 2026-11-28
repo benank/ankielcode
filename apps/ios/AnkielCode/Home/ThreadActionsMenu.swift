@@ -56,6 +56,12 @@ struct ThreadActionsMenu: View {
       }
       Menu("More", systemImage: "ellipsis.circle") {
         Button("Rename", systemImage: "square.and.pencil", action: rename)
+        // RN `buildThreadTitleRegenerationMenuItems`: disabled while the computer is naming it.
+        Button(row.regeneratingTitle ? "Regenerating…" : "Regenerate title", systemImage: "arrow.clockwise") {
+          Haptics.selection()
+          home.perform(.regenerateTitle, on: row.ref)
+        }
+        .disabled(row.regeneratingTitle)
         switch row.readToggle {
         case .markRead?: Button("Mark read", systemImage: "envelope.open") { home.toggleRead(row) }
         case .markUnread?: Button("Mark unread", systemImage: "envelope.badge") { home.toggleRead(row) }

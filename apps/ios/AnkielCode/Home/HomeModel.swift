@@ -631,6 +631,7 @@ final class HomeModel {
     case .unpin: String(localized: "Could not unpin thread")
     case .markRead, .markUnread: String(localized: "Could not update thread")
     case .rename: String(localized: "Could not rename thread")
+    case .regenerateTitle: String(localized: "Could not regenerate title")
     default: String(localized: "Could not update thread")
     }
   }

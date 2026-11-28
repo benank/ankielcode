@@ -36,6 +36,8 @@ public enum ThreadAction: Sendable, Hashable {
   case markRead(visitedAt: WireTimestamp)
   case markUnread
   case rename(String)
+  /// Asks the computer to name the thread again (RN `armTitleRegeneration`).
+  case regenerateTitle
   // Composer settings and turn control (§7.4, §7.5).
   case setRuntimeMode(RuntimeMode)
   case setInteractionMode(InteractionMode)
@@ -63,7 +65,7 @@ public enum ThreadAction: Sendable, Hashable {
     case .reorderActive: "thread.active.reorder"
     case .markRead: "thread.visit"
     case .markUnread: "thread.mark-unread"
-    case .rename: "thread.metadata.update"
+    case .rename, .regenerateTitle: "thread.metadata.update"
     case .setRuntimeMode: "thread.runtime-mode.set"
     case .setInteractionMode: "thread.interaction-mode.set"
     case .setModelSelection: "thread.model-selection.set"
@@ -90,7 +92,7 @@ public struct ThreadCommand: Sendable, Hashable, Encodable {
   }
 
   enum CodingKeys: String, CodingKey {
-    case type, commandId, threadId, reason, restoreUnsettledAt, snoozedUntil, orderKey, visitedAt, title
+    case regenerateTitle, type, commandId, threadId, reason, restoreUnsettledAt, snoozedUntil, orderKey, visitedAt, title
     case runtimeMode, interactionMode, modelSelection, runId, holdQueue, queuedRunId, targetRunId, text
   }
 
@@ -120,6 +122,8 @@ public struct ThreadCommand: Sendable, Hashable, Encodable {
       try c.encode(visitedAt, forKey: .visitedAt)
     case .rename(let title):
       try c.encode(title, forKey: .title)
+    case .regenerateTitle:
+      try c.encode(true, forKey: .regenerateTitle)
     case .setRuntimeMode(let mode):
       try c.encode(mode.rawValue, forKey: .runtimeMode)
     case .setInteractionMode(let mode):
