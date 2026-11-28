@@ -37,9 +37,9 @@ final class NewThreadRefs {
       refs = list.refs
       isGitRepo = list.isRepo ?? !list.refs.isEmpty
     } catch {
+      // Unknown, not "not Git": the chips stay so a worktree choice is never dropped silently.
       guard loadedKey == key else { return }
       failed = true
-      isGitRepo = false
     }
   }
 

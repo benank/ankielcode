@@ -621,8 +621,9 @@ whitespace is drawn as one attachment character that stands for its source (it d
 copies as its source). The parsing is RN's (`AnkielKit/Composer`: `ComposerTrigger`,
 `ComposerFileLink`, `ComposerInlineTokens`); offsets are UTF-16. Typing `@` searches the thread's
 worktree (else its project root) with `projects.searchEntries` (20 results, 200 ms pause; a bare
-`@` sends an empty query) and lists results above the composer. Arrows move, Return or Tab picks
-and Escape closes it with a hardware keyboard. Sent, pending and queued messages show a mention by
+`@` sends an empty query) and lists results above the composer. While it shows rows, arrows move through them and Return
+or Tab picks (Escape closes it); on the simulator only arrows and a typed Return were verified, not
+hardware Return, Tab or Escape key events. Sent, pending and queued messages show a mention by
 its file name. From two letters on, the list also offers the computer's ready models (RN's ranking,
 at most 8); a pick writes `model:<instance>/<slug>`, drawn as a chip while the computer lists that
 model. Thread mentions are not built (they need the draft context records RN attaches).

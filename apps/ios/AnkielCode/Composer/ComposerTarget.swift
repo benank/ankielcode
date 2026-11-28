@@ -78,7 +78,9 @@ extension ComposerTarget {
     target.canSend = environment?.allows("orchestration:operate") ?? true
     target.fileContext = threadFileContext(ref, projectId: detail?.state.projectId, registry: model.registry)
     target.canReadFiles = environment?.allows("filesystem:read") ?? true
+    // RN `freshSessionAvailable`: while an approval waits, the message answers it, so `/clear` is text.
     target.offersFreshSession = environment?.capabilities["freshContext"]?.boolValue == true && shell?.latestRunId != nil
+      && detail?.state.pending.approvals.isEmpty != false
     target.hasConversation = detail?.state.timeline.rows.isEmpty == false
     #if DEBUG
       if ThreadDebug.isFixture(ref) {
@@ -88,7 +90,7 @@ extension ComposerTarget {
         target.threadRuntimeMode = .auto
         target.lockedInstance = "claudeAgent"
         target.supportsThreadStop = true
-        target.offersFreshSession = true
+        target.offersFreshSession = detail?.state.pending.approvals.isEmpty != false
         target.fileContext = FileContext(environmentId: ref.environmentId, cwd: "/srv/dev/tidewise", threadId: ref.threadId, title: "tidewise")
         // Without the fake sink a fixture message would wait forever in the real outbox.
         target.canSend = model.isComposerFake

@@ -78,7 +78,7 @@ struct NewThreadView: View {
           .foregroundStyle(Palette.textPrimary)
           .multilineTextAlignment(.center)
         contextChips
-        if let workspace, refs.isGitRepo == true {
+        if let workspace, refs.isGitRepo == true || refs.failed {
           NewThreadWorkspaceChips(resolved: workspace, refs: refs, setMode: setWorkspaceMode) { showingBranches = true }
             .transition(.opacity)
         }
@@ -147,6 +147,7 @@ struct NewThreadView: View {
                 $0.environmentId = option.id
                 $0.projectId = nil
                 $0.modelSelection = nil
+                $0.workspace = nil
               }
             } label: {
               Label(option.label, systemImage: option.id == computer.id ? "checkmark" : (option.connected ? "desktopcomputer" : "wifi.slash"))
@@ -194,9 +195,12 @@ struct NewThreadView: View {
 
   // MARK: Workspace
 
-  /// The project's workspace choice, once its branches say whether it is a Git checkout.
+  /// The project's workspace choice. Until the branches answer (or when they could not be read)
+  /// the project counts as a Git checkout, so a worktree choice waits for its base instead of
+  /// quietly starting in the checkout.
   private var workspace: NewThreadWorkspace.Resolved? {
-    guard let computer, let project, let isGit = refs.isGitRepo else { return nil }
+    guard let computer, let project else { return nil }
+    let isGit = refs.isGitRepo ?? true
     return NewThreadWorkspace.resolve(
       draft: draft.workspace, remembered: store.rememberedWorkspace(environmentId: computer.id, projectId: project.id),
       defaultMode: NewThreadWorkspace.defaultMode(project: project.defaultThreadEnvMode?.known, settings: computer.settings.defaultThreadEnvMode),

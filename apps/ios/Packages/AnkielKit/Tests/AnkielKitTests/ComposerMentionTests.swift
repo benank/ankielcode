@@ -173,8 +173,8 @@ struct ComposerInlineTokenTests {
     let text = "fix \(ComposerFileLink.serialize("src/app/Chat.tsx"))"
     #expect(ComposerInlineTokens.plainText(text) == "fix Chat.tsx")
     #expect(ComposerInlineTokens.plainText("no links") == "no links")
-    let runs = ComposerInlineTokens.runs("see \(ComposerFileLink.serialize("src/a b.ts")) and @README.md")
-    #expect(runs.map(\.text) == ["see ", "a b.ts", " and ", "README.md"])
-    #expect(runs.map(\.path) == [nil, "src/a b.ts", nil, "README.md"])
+    let runs = ComposerInlineTokens.runs("see \(ComposerFileLink.serialize("src/a b.ts")) and @MainActor")
+    #expect(runs.map(\.text) == ["see ", "a b.ts", " and @MainActor"])
+    #expect(runs.map(\.path) == [nil, "src/a b.ts", nil])
   }
 }

@@ -174,7 +174,7 @@ struct ComposerView: View {
       ComposerTextEditor(
         text: text.wrappedValue, placeholder: String(localized: placeholder), modelLabels: modelLabels, editable: !dictating,
         maxLines: typeSize.isAccessibilitySize ? 4 : 8, focused: $focused, caretRequest: caretRequest,
-        suggestionKeys: suggestions.isOpen ? suggestionKeys : nil,
+        suggestionKeys: suggestions.isOpen && !suggestions.items.isEmpty ? suggestionKeys : nil,
         onChange: { text.wrappedValue = $0 },
         onSelection: { start, end in caretRange = NSRange(location: start, length: end - start) },
         onSubmit: sendFromKeyboard)

@@ -75,13 +75,13 @@ public enum ComposerInlineTokens {
     return result + ns.substring(from: cursor)
   }
 
-  /// Text split into plain runs and file mentions (by file name, with the path), for a sent
-  /// message that shows its mentions as file links (RN renders user messages as Markdown).
+  /// Text split into plain runs and the composer's file links (by file name, with the path), for a
+  /// sent message (RN renders user messages as Markdown, where a bare `@word` stays text).
   public static func runs(_ text: String) -> [(text: String, path: String?)] {
     let ns = text as NSString
     var result: [(text: String, path: String?)] = []
     var cursor = 0
-    for token in mentions(text + " ").sorted(by: { $0.start < $1.start }) where token.start >= cursor {
+    for token in mentions(text + " ").sorted(by: { $0.start < $1.start }) where token.start >= cursor && token.source.hasPrefix("[") {
       if token.start > cursor { result.append((ns.substring(with: NSRange(location: cursor, length: token.start - cursor)), nil)) }
       result.append((displayName(token.value), token.value))
       cursor = token.end

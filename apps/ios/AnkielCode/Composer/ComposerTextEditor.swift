@@ -243,7 +243,8 @@ final class ComposerUITextView: UITextView {
     send.wantsPriorityOverSystemBehavior = true
     commands.append(send)
     // Plain Return and Tab never reach `pressesBegan` from a hardware keyboard, and key commands
-    // are cached, so these are always present and type the character when no list shows.
+    // are cached, so these are always listed; `canPerformAction` claims them only while the list
+    // shows and nothing is being composed, otherwise the key types as usual.
     for (input, action) in [("\r", #selector(returnKey)), ("\t", #selector(tabKey)), (UIKeyCommand.inputEscape, #selector(escapeKey))] {
       let command = UIKeyCommand(input: input, modifierFlags: [], action: action)
       command.wantsPriorityOverSystemBehavior = true
@@ -254,21 +255,20 @@ final class ComposerUITextView: UITextView {
 
   @objc private func submit() { onSubmit?() }
 
-  @objc private func returnKey() {
-    if let keys = suggestionKeys { keys.accept() } else { insertText("\n") }
-  }
+  @objc private func returnKey() { suggestionKeys?.accept() }
 
   @objc private func escapeKey() { suggestionKeys?.dismiss() }
 
-  /// Escape stays with the rest of the app (closing a sheet) unless the list shows.
+  /// Return, Tab and Escape belong to the list only while it shows rows; otherwise they type, move
+  /// focus or close a sheet as usual.
   override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-    if action == #selector(escapeKey) { return suggestionKeys != nil }
+    if action == #selector(escapeKey) || action == #selector(returnKey) || action == #selector(tabKey) {
+      return suggestionKeys != nil && markedTextRange == nil
+    }
     return super.canPerformAction(action, withSender: sender)
   }
 
-  @objc private func tabKey() {
-    if let keys = suggestionKeys { keys.accept() } else { insertText("\t") }
-  }
+  @objc private func tabKey() { suggestionKeys?.accept() }
 
   /// While suggestions show, arrows move through them, Return and Tab pick, Escape closes. Key
   /// commands are cached per responder, so these are read from the presses instead.
