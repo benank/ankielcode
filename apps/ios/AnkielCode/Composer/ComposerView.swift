@@ -341,7 +341,7 @@ struct ComposerView: View {
     }
     .glassEffect(.regular.interactive(), in: .circle)
     // Bar buttons keep their size; the large content viewer shows them big instead.
-    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    .chromeTextSize()
     .accessibilityShowsLargeContentViewer()
     .accessibilityLabel(Text("Add attachment"))
     .accessibilityIdentifier("composer.attach")
@@ -356,32 +356,30 @@ struct ComposerView: View {
       Button {
         picker = .model
       } label: {
-        // At accessibility sizes the effort goes under the model instead of truncating both.
-        let layout = typeSize.isAccessibilitySize
-          ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: Spacing.xs))
+        // Chrome text stops growing past xxxLarge, so one line always fits; the large content
+        // viewer shows it big.
         HStack(spacing: Spacing.xs) {
-          layout {
-            Text(label.model)
-              .foregroundStyle(Palette.textPrimary)
-            if let effort = label.effort {
-              Text(effort)
-                .foregroundStyle(Palette.textSecondary)
-            }
+          Text(label.model)
+            .foregroundStyle(Palette.textPrimary)
+          if let effort = label.effort {
+            Text(effort)
+              .foregroundStyle(Palette.textSecondary)
           }
           Image(systemName: "chevron.down")
             .font(Typography.caption2.weight(.semibold))
             .foregroundStyle(Palette.textTertiary)
         }
         .font(Typography.footnote.weight(.medium))
-        .lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
-        .padding(.vertical, typeSize.isAccessibilitySize ? Spacing.xs : 0)
+        .lineLimit(1)
         .padding(.horizontal, Spacing.md - 2)
         .frame(minHeight: 32)
-        .background(Palette.fill, in: .rect(cornerRadius: typeSize.isAccessibilitySize ? Radius.field : 16, style: .continuous))
+        .background(Palette.fill, in: .rect(cornerRadius: 16, style: .continuous))
         .contentShape(.rect(cornerRadius: Radius.field, style: .continuous))
         .frame(minHeight: 44)
       }
       .buttonStyle(.plain)
+      .chromeTextSize()
+      .accessibilityShowsLargeContentViewer()
       .accessibilityLabel(Text("Model"))
       .accessibilityValue(Text([label.model, label.effort].compactMap { $0 }.joined(separator: ", ")))
       .accessibilityIdentifier("composer.model")
@@ -429,7 +427,7 @@ struct ComposerView: View {
       .accessibilityLabel(Text(label))
       .accessibilityIdentifier("composer.send")
     }
-    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    .chromeTextSize()
     .accessibilityShowsLargeContentViewer()
     .motion(Motion.snappy, value: primary)
   }

@@ -17,7 +17,7 @@ struct WelcomeView: View {
 
         VStack(spacing: Spacing.md) {
           Text("Ankiel Code")
-            .font(Typography.largeTitle)
+            .typeStyle(.largeTitle)
             .foregroundStyle(Palette.textPrimary)
           Text("Follow and steer the coding agents on your own computers, from anywhere.")
             .font(Typography.body)

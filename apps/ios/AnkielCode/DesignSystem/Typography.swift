@@ -12,7 +12,7 @@ nonisolated enum Typography {
   static let largeTitle = sans(30, .largeTitle)
   static let title = sans(21, .title2)
   /// Emphasized labels: buttons, card and section titles.
-  static let headline = sans(17, .headline).weight(.medium)
+  static let headline = sans(18, .headline).weight(.medium)
   static let body = sans(16, .body)
   static let callout = sans(15, .callout)
   static let subheadline = sans(14, .subheadline)
@@ -69,7 +69,7 @@ nonisolated enum Typography {
     static let body = UIStep(size: 16, style: .body)
     static let subheadline = UIStep(size: 14, style: .subheadline)
     static let footnote = UIStep(size: 13, style: .footnote)
-    static let headline = UIStep(size: 17, style: .headline)
+    static let headline = UIStep(size: 18, style: .headline)
     static let title = UIStep(size: 21, style: .title2)
     static let largeTitle = UIStep(size: 30, style: .largeTitle)
     static let monoSmall = UIStep(size: 12, style: .footnote)

@@ -161,6 +161,7 @@ struct AssistantMessageView: View, Equatable {
           }
         }
         .padding(.leading, -Spacing.sm)
+        .chromeTextSize()
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)

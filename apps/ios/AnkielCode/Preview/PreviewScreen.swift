@@ -321,7 +321,7 @@ private struct PreviewStartPage: View {
       VStack(alignment: .leading, spacing: Spacing.lg) {
         VStack(alignment: .leading, spacing: Spacing.xs) {
           Text("Open a local server")
-            .font(Typography.title)
+            .typeStyle(.title)
           Text("Type an address like localhost:5173 below. Pages load from the computer through its connection.")
             .font(Typography.subheadline)
             .foregroundStyle(Palette.textSecondary)

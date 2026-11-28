@@ -114,6 +114,7 @@ struct ThreadIssueChip: View {
     .padding(.horizontal, 6)
     .padding(.vertical, 2)
     .background(Palette.fill, in: .capsule)
+    .chromeTextSize()
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(Text(Self.accessibility(badge)))
   }

@@ -65,7 +65,7 @@ struct DictationBar: View {
       .accessibilityLabel(Text("Finish dictation"))
       .accessibilityIdentifier("dictation.done")
     }
-    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    .chromeTextSize()
   }
 
   private var canFinish: Bool { dictation.phase == .listening }

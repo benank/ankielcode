@@ -74,7 +74,7 @@ struct NewThreadView: View {
       VStack(spacing: Spacing.lg) {
         Spacer(minLength: 0)
         Text("What should we work on?")
-          .font(Typography.title)
+          .typeStyle(.title)
           .foregroundStyle(Palette.textPrimary)
           .multilineTextAlignment(.center)
         contextChips
@@ -330,6 +330,7 @@ private struct ContextChip: View {
     .padding(.horizontal, Spacing.md)
     .frame(minHeight: 44)
     .glassEffect(.regular.interactive(), in: .capsule)
+    .chromeTextSize()
   }
 }
 

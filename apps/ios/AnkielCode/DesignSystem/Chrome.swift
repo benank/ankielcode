@@ -25,6 +25,7 @@ struct StatusPill: View {
     .padding(.horizontal, Spacing.md)
     .padding(.vertical, Spacing.sm)
     .chromeGlass()
+    .chromeTextSize()
   }
 }
 

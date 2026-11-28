@@ -133,7 +133,7 @@ private struct ScannerMessage: View {
         .foregroundStyle(.white.opacity(0.8))
         .accessibilityHidden(true)
       Text(title)
-        .font(Typography.title)
+        .typeStyle(.title)
         .foregroundStyle(.white)
       Text(message)
         .font(Typography.subheadline)

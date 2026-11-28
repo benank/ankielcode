@@ -43,5 +43,6 @@ struct TechLabel: View {
       .typeStyle(small ? .techSmall : .tech)
       .textCase(.uppercase)
       .monospacedDigit()
+      .chromeTextSize()
   }
 }

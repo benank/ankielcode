@@ -85,7 +85,7 @@ struct IssueDetailScreen: View {
   private var header: some View {
     VStack(alignment: .leading, spacing: Spacing.sm) {
       Text(verbatim: entry.title)
-        .font(Typography.title)
+        .typeStyle(.title)
         .foregroundStyle(Palette.textPrimary)
         .textSelection(.enabled)
       HStack(spacing: Spacing.sm) {

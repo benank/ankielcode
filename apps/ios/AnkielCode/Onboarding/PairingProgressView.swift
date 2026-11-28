@@ -70,7 +70,7 @@ private struct ConfirmCard: View {
       BrandMark(size: 56)
       VStack(spacing: Spacing.sm) {
         Text("Pair with this computer?")
-          .font(Typography.title)
+          .typeStyle(.title)
           .foregroundStyle(Palette.textPrimary)
         Text(PairingLinkView.displayAddress(target.endpoint))
           .font(Typography.mono)
@@ -109,7 +109,7 @@ private struct PairingSteps: View {
       BrandMark(size: 56)
       VStack(spacing: Spacing.xs) {
         Text("Pairing with \(host)")
-          .font(Typography.title)
+          .typeStyle(.title)
           .foregroundStyle(Palette.textPrimary)
           .multilineTextAlignment(.center)
         Text("Keep the app open for a moment.")
@@ -181,7 +181,7 @@ private struct FailureCard: View {
         .accessibilityHidden(true)
       VStack(spacing: Spacing.sm) {
         Text(problem.title)
-          .font(Typography.title)
+          .typeStyle(.title)
           .foregroundStyle(Palette.textPrimary)
           .multilineTextAlignment(.center)
         Text(problem.message)
@@ -223,7 +223,7 @@ private struct SuccessCard: View {
         .frame(height: 56)
         .accessibilityHidden(true)
       Text("Paired with \(host)")
-        .font(Typography.title)
+        .typeStyle(.title)
         .foregroundStyle(Palette.textPrimary)
         .multilineTextAlignment(.center)
       ActionButtons(primary: ("Continue", { model.finishPairing() }), secondary: nil)

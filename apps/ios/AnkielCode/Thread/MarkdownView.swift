@@ -12,6 +12,8 @@ extension MarkdownStyle {
     }
     var inlineCode = AttributeContainer()
     inlineCode.swiftUI.backgroundColor = Palette.inlineCode
+    // A step under body text, so inline code sits on the line instead of towering over it.
+    inlineCode.swiftUI.font = Typography.monoFont(14, .body)
     var link = AttributeContainer()
     link.swiftUI.foregroundColor = Palette.working
     link.swiftUI.underlineStyle = .init(pattern: .solid, color: Palette.working.opacity(0.35))

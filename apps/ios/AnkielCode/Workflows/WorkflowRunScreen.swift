@@ -98,7 +98,7 @@ struct WorkflowRunScreen: View {
     VStack(alignment: .leading, spacing: Spacing.xs) {
       HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
         Text(node.run.title)
-          .font(Typography.title)
+          .typeStyle(.title)
           .frame(maxWidth: .infinity, alignment: .leading)
         WorkflowStateWord(state: Workflows.state(node), large: true)
       }
