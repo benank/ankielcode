@@ -35,10 +35,14 @@ Mint a pairing link on a dev server with `node apps/server/src/bin.ts auth pairi
 whose confirmation prompt nobody can tap. `-configuration Release` leaves out every `#if DEBUG` hook
 and the bundled fixtures. The project sets no `DEVELOPMENT_TEAM`; see "Needs signing".
 
-On a paired iPhone, `apps/ios/scripts/run-on-device.sh [Release|Debug]` (default Release) signs
-with `TEAM` (default `268225YYS4`), registers the device, builds, installs and launches. A new team
-needs the App Group `group.com.ankiel.ankielcode.native` assigned to both App IDs once, from Xcode's
-Signing & Capabilities or the developer portal; `xcodebuild` cannot create it.
+On a paired iPhone, `apps/ios/scripts/run-on-device.sh [Release|Debug]` (default Release) builds,
+installs and launches, signed like the RN personal-team build (`TEAM`, `BUNDLE_ID`, `RN_BUNDLE_ID`
+override it). Capabilities the team refuses are dropped for that build: personal teams have no push,
+and `xcodebuild` cannot register the App Group (assign it once in Xcode's Signing & Capabilities).
+
+The first launch with no computers imports the RN app's pairings (`RNAppImport`): the app shares
+the Keychain group of `ANKIEL_RN_BUNDLE_ID`, readable only when both apps are signed by one team.
+The RN app's DPoP key comes along, so both apps use the same sessions.
 
 ## Test
 

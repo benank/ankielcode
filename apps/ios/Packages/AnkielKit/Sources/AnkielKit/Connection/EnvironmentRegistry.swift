@@ -59,6 +59,15 @@ public final class EnvironmentRegistry: SettingsSink {
     monitorNetwork()
   }
 
+  /// Saves and connects records whose credentials are already in the store (an import); ids
+  /// already saved are left alone.
+  public func adopt(_ records: [EnvironmentRecord]) {
+    let new = records.filter { environment($0.environmentId) == nil }
+    guard !new.isEmpty else { return }
+    for record in new { start(EnvironmentModel(record: record)) }
+    persist()
+  }
+
   // MARK: Pairing
 
   /// Pairs from anything a user can paste or scan.

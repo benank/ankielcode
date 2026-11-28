@@ -127,9 +127,31 @@ final class AppModel {
     return .home
   }
 
+  /// Once, on an install with no computers: adopts the React Native app's pairings when it is
+  /// signed by the same team (`AnkielRNKeychainGroup`), so moving over needs no new pairing.
+  private func importFromRNApp() {
+    let doneKey = "ankiel.rn-import.v1"
+    guard !isSettingsFixture, registry.environments.isEmpty, !UserDefaults.standard.bool(forKey: doneKey),
+      let group = Bundle.main.object(forInfoDictionaryKey: "AnkielRNKeychainGroup") as? String,
+      let imported = RNAppImport.read(accessGroup: group), !imported.environments.isEmpty
+    else { return }
+    let store = registry.connector.store
+    do {
+      if let key = imported.dpopKey { try store.set(key, for: CredentialKeys.dpopKey) }
+      for environment in imported.environments {
+        try store.set(environment.credential, for: CredentialKeys.credential(environment.record.environmentId))
+      }
+    } catch {
+      return
+    }
+    registry.adopt(imported.environments.map(\.record))
+    UserDefaults.standard.set(true, forKey: doneKey)
+  }
+
   func launch() async {
     LaunchSignposts.mark("launchTask")
     await registry.load()
+    importFromRNApp()
     LaunchSignposts.mark("registryLoaded")
     await composer.load()
     LaunchSignposts.mark("composerLoaded")
