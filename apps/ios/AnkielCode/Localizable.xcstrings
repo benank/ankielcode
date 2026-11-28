@@ -361,6 +361,64 @@
         }
       }
     },
+    "%@ dark theme" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dunkles Design %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema oscuro %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thème sombre %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ のダークテーマ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 어두운 테마"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema escuro %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тёмная тема %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mörkt tema %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 深色主题"
+          }
+        }
+      }
+    },
     "%@ did not answer." : {
       "localizations" : {
         "de" : {
@@ -821,6 +879,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 正在运行"
+          }
+        }
+      }
+    },
+    "%@ light theme" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helles Design %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema claro %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thème clair %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ のライトテーマ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 밝은 테마"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema claro %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Светлая тема %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ljust tema %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 浅色主题"
           }
         }
       }
@@ -9555,60 +9671,60 @@
         }
       }
     },
-    "Ankiel Code is open source under the MIT license. Its terminal uses Ghostty (MIT, © Mitchell Hashimoto and Ghostty contributors)." : {
+    "Ankiel Code is open source under the MIT license. Its terminal uses Ghostty (MIT, © Mitchell Hashimoto and Ghostty contributors). Its type is Geist and Geist Mono (SIL Open Font License 1.1, © The Geist Project Authors)." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ankiel Code ist Open Source unter der MIT-Lizenz. Das Terminal verwendet Ghostty (MIT, © Mitchell Hashimoto und Ghostty-Mitwirkende)."
+            "value" : "Ankiel Code ist Open Source unter der MIT-Lizenz. Das Terminal verwendet Ghostty (MIT, © Mitchell Hashimoto und Ghostty-Mitwirkende). Die Schrift ist Geist und Geist Mono (SIL Open Font License 1.1, © The Geist Project Authors)."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ankiel Code es de código abierto con licencia MIT. Su terminal usa Ghostty (MIT, © Mitchell Hashimoto y colaboradores de Ghostty)."
+            "value" : "Ankiel Code es de código abierto con licencia MIT. Su terminal usa Ghostty (MIT, © Mitchell Hashimoto y colaboradores de Ghostty). Su tipografía es Geist y Geist Mono (SIL Open Font License 1.1, © The Geist Project Authors)."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ankiel Code est open source sous licence MIT. Son terminal utilise Ghostty (MIT, © Mitchell Hashimoto et les contributeurs de Ghostty)."
+            "value" : "Ankiel Code est open source sous licence MIT. Son terminal utilise Ghostty (MIT, © Mitchell Hashimoto et les contributeurs de Ghostty). Sa typographie est Geist et Geist Mono (SIL Open Font License 1.1, © The Geist Project Authors)."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ankiel Code は MIT ライセンスのオープンソースです。ターミナルには Ghostty（MIT、© Mitchell Hashimoto および Ghostty コントリビューター）を使用しています。"
+            "value" : "Ankiel Code は MIT ライセンスのオープンソースです。ターミナルには Ghostty（MIT、© Mitchell Hashimoto および Ghostty コントリビューター）を使用しています。書体は Geist と Geist Mono（SIL Open Font License 1.1、© The Geist Project Authors）です。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ankiel Code는 MIT 라이선스의 오픈 소스입니다. 터미널은 Ghostty(MIT, © Mitchell Hashimoto 및 Ghostty 기여자)를 사용합니다."
+            "value" : "Ankiel Code는 MIT 라이선스의 오픈 소스입니다. 터미널은 Ghostty(MIT, © Mitchell Hashimoto 및 Ghostty 기여자)를 사용합니다. 서체는 Geist와 Geist Mono(SIL Open Font License 1.1, © The Geist Project Authors)입니다."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "O Ankiel Code é open source sob a licença MIT. O terminal usa o Ghostty (MIT, © Mitchell Hashimoto e colaboradores do Ghostty)."
+            "value" : "O Ankiel Code é open source sob a licença MIT. O terminal usa o Ghostty (MIT, © Mitchell Hashimoto e colaboradores do Ghostty). A tipografia é Geist e Geist Mono (SIL Open Font License 1.1, © The Geist Project Authors)."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ankiel Code — проект с открытым исходным кодом под лицензией MIT. Терминал использует Ghostty (MIT, © Mitchell Hashimoto и участники Ghostty)."
+            "value" : "Ankiel Code — проект с открытым исходным кодом под лицензией MIT. Терминал использует Ghostty (MIT, © Mitchell Hashimoto и участники Ghostty). Шрифты — Geist и Geist Mono (SIL Open Font License 1.1, © The Geist Project Authors)."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ankiel Code är öppen källkod under MIT-licensen. Terminalen använder Ghostty (MIT, © Mitchell Hashimoto och Ghostty-bidragsgivare)."
+            "value" : "Ankiel Code är öppen källkod under MIT-licensen. Terminalen använder Ghostty (MIT, © Mitchell Hashimoto och Ghostty-bidragsgivare). Typsnitten är Geist och Geist Mono (SIL Open Font License 1.1, © The Geist Project Authors)."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ankiel Code 是基于 MIT 许可证的开源软件。其终端使用 Ghostty（MIT，© Mitchell Hashimoto 及 Ghostty 贡献者）。"
+            "value" : "Ankiel Code 是基于 MIT 许可证的开源软件。其终端使用 Ghostty（MIT，© Mitchell Hashimoto 及 Ghostty 贡献者）。其字体为 Geist 和 Geist Mono（SIL Open Font License 1.1，© The Geist Project Authors）。"
           }
         }
       }
@@ -17512,6 +17628,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "折叠已暂缓的会话。"
+          }
+        }
+      }
+    },
+    "Color scheme" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbschema"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquema de colores"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeu de couleurs"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配色"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "색 구성표"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquema de cores"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цветовая схема"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Färgschema"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配色模式"
           }
         }
       }
@@ -28738,6 +28912,65 @@
         }
       }
     },
+    "Ember" : {
+      "comment" : "color theme name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glut"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brasa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braise"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ember"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "불씨"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brasa"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Угли"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glöd"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "余烬"
+          }
+        }
+      }
+    },
     "Empty line" : {
       "localizations" : {
         "de" : {
@@ -31981,6 +32214,122 @@
         }
       }
     },
+    "Font license" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Schriftlizenz"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Licencia de la fuente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Licence de la police"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "フォントのライセンス"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "글꼴 라이선스"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Licença da fonte"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Лицензия шрифта"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Typsnittslicens"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "字体许可证"
+          }
+        }
+      }
+    },
+    "Font license (OFL)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Schriftlizenz (OFL)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Licencia de la fuente (OFL)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Licence de la police (OFL)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "フォントのライセンス（OFL）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "글꼴 라이선스 (OFL)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Licença da fonte (OFL)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Лицензия шрифта (OFL)"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Typsnittslicens (OFL)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "字体许可证（OFL）"
+          }
+        }
+      }
+    },
     "Font size" : {
       "localizations" : {
         "de" : {
@@ -33486,6 +33835,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "按仓库路径分组"
+          }
+        }
+      }
+    },
+    "Grove" : {
+      "comment" : "color theme name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hain"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arboleda"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bosquet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grove"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "숲"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bosque"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Роща"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lund"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "林地"
           }
         }
       }
@@ -35877,6 +36285,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "间隔"
+          }
+        }
+      }
+    },
+    "Iris" : {
+      "comment" : "color theme name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iris"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iris"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iris"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iris"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아이리스"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Íris"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ирис"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iris"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鸢尾"
           }
         }
       }
@@ -46850,6 +47317,65 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "确定"
+          }
+        }
+      }
+    },
+    "Ocean" : {
+      "comment" : "color theme name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ozean"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Océano"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Océan"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocean"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "바다"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oceano"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Океан"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hav"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "海洋"
           }
         }
       }
@@ -63313,6 +63839,180 @@
         }
       }
     },
+    "Sets both light and dark appearances" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legt helle und dunkle Darstellung fest"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define las apariencias clara y oscura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Définit les apparences claire et sombre"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライトとダークの両方の外観を設定します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "밝은 모양과 어두운 모양 모두에 적용"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define as aparências clara e escura"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задаёт и светлое, и тёмное оформление"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anger både ljust och mörkt utseende"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同时设置浅色和深色外观"
+          }
+        }
+      }
+    },
+    "Sets the dark appearance only" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legt nur die dunkle Darstellung fest"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define solo la apariencia oscura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Définit uniquement l’apparence sombre"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダークの外観のみを設定します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "어두운 모양에만 적용"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define só a aparência escura"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задаёт только тёмное оформление"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anger bara det mörka utseendet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅设置深色外观"
+          }
+        }
+      }
+    },
+    "Sets the light appearance only" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legt nur die helle Darstellung fest"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define solo la apariencia clara"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Définit uniquement l’apparence claire"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライトの外観のみを設定します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "밝은 모양에만 적용"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define só a aparência clara"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задаёт только светлое оформление"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anger bara det ljusa utseendet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅设置浅色外观"
+          }
+        }
+      }
+    },
     "Settings" : {
       "localizations" : {
         "de" : {
@@ -71390,6 +72090,64 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
+            "value" : "主题"
+          }
+        }
+      }
+    },
+    "Themes" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Designs"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thèmes"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テーマ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테마"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Темы"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teman"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "主题"
           }
         }
