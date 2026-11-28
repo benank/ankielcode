@@ -14,7 +14,6 @@ struct PreferenceTests {
   nonisolated static var reference: ServerSettings {
     var settings = ServerSettings()
     settings.autoSettleAfterDays = 21
-    settings.autoSettleOnMerge = false
     return settings
   }
 
@@ -40,7 +39,7 @@ struct PreferenceTests {
     #expect(try decode(ServerSettings.self, json: #"{"responseStreamingMode":"word"}"#).responseStreaming == .paragraph)
     #expect(ServerSettings().applying(.responseStreaming(.turn)).responseStreaming == .turn)
     let matched = ServerSettings().applying(.autoSettle(matching: Self.reference))
-    #expect(matched.autoSettleAfterDays == 21 && !matched.autoSettleOnMerge)
+    #expect(matched.autoSettleAfterDays == 21)
   }
 
   @Test("new device preferences default on and survive older saved values")

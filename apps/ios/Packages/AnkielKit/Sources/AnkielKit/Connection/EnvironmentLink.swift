@@ -25,7 +25,7 @@ public protocol LiveSession: AnyObject, Sendable, ThreadItemSource {
   /// `GET /api/auth/session`: the scopes this device holds (`permissions`, else legacy `scopes`).
   /// nil when the server does not say.
   func grantedScopes() async throws -> Set<String>?
-  /// An authorized JSON `POST` to an HTTP route of this computer (the pull request diff).
+  /// An authorized JSON `POST` to an HTTP route of this computer (pairing links, revocation).
   func postJSON<Response: Decodable & Sendable>(
     _ path: String, body: some Encodable & Sendable, as: Response.Type
   ) async throws -> Response

@@ -38,8 +38,6 @@ import Testing
     #expect(try decode("{}").autoSettleAfterDays == 7)
     #expect(try decode(#"{"sidebarAutoSettleAfterDays":null}"#).autoSettleAfterDays == nil)
     #expect(try decode(#"{"sidebarAutoSettleAfterDays":30}"#).autoSettleAfterDays == 30)
-    #expect(try decode("{}").autoSettleOnMerge)
-    #expect(try decode(#"{"sidebarAutoSettleOnMerge":"yes"}"#).autoSettleOnMerge)
   }
 
   @Test func `snooze presets decode the wire shape and skip bad entries`() throws {
@@ -112,9 +110,9 @@ import Testing
     sink.holds = true
     let target = model("a")
     let writer = SettingsWriter(sink: sink)
-    let task = Task { await writer.write(.autoSettleOnMerge(false), to: [target]) }
+    let task = Task { await writer.write(.autoResumeLimitedThreads(true), to: [target]) }
     await eventually { sink.gate != nil }
-    #expect(!target.effectiveSettings.autoSettleOnMerge)
+    #expect(target.effectiveSettings.autoResumeLimitedThreads)
     // Another device changed a different setting while the write was in flight.
     var fromServer = ServerSettings()
     fromServer.snoozeLimitedThreads = true
@@ -123,7 +121,7 @@ import Testing
     let failures = await task.value
     #expect(failures.map(\.environmentId) == ["a"])
     #expect(failures.first?.error == .rejected(message: "No."))
-    #expect(target.effectiveSettings.autoSettleOnMerge)
+    #expect(!target.effectiveSettings.autoResumeLimitedThreads)
     #expect(target.effectiveSettings.snoozeLimitedThreads)
   }
 

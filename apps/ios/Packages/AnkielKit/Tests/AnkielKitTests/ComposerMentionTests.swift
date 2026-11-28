@@ -30,10 +30,8 @@ struct ComposerTriggerTests {
     #expect(ComposerTrigger.detect(text, cursor: utf16(text)) == nil)
   }
 
-  @Test func pullRequestsKeepBracketsOutside() {
-    #expect(ComposerTrigger.detect("Compare (#)", cursor: 10) == ComposerTrigger(kind: .pullRequest, query: "", rangeStart: 9, rangeEnd: 10))
-    #expect(ComposerTrigger.detect("【#修正】", cursor: 4) == ComposerTrigger(kind: .pullRequest, query: "修正", rangeStart: 1, rangeEnd: 4))
-    for text in ["# Heading", "issue#123", "(#123)", "]#123"] {
+  @Test func `a hash is plain text`() {
+    for text in ["#", "#123", "Compare (#)", "# Heading", "issue#123", "(#123)"] {
       #expect(ComposerTrigger.detect(text, cursor: utf16(text)) == nil, "\(text)")
     }
   }

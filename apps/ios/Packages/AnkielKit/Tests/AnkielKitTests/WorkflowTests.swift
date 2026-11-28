@@ -254,11 +254,11 @@ struct WorkflowTests {
     let issue = { (key: String) in
       WorkflowRunReference(kind: "issue", key: key, address: ["projectId": "p1", "key": .string(key)], steps: ["triage"])
     }
-    let pullRequest = WorkflowRunReference(kind: "pullRequest", key: "pr", address: ["number": 418], steps: ["fix", "checks"])
+    let retired = WorkflowRunReference(kind: "retired", key: "r", address: ["number": 418], title: "Fix leap years", steps: ["fix", "checks"])
     let machine = WorkflowRunReference(kind: "machine", key: "m", address: ["id": 1], title: "box-1")
-    #expect([issue("412"), issue("ENG-12"), pullRequest, machine].map(Workflows.referenceLabel) == ["#412", "ENG-12", "#418", "box-1"])
+    #expect([issue("412"), issue("ENG-12"), retired, machine].map(Workflows.referenceLabel) == ["#412", "ENG-12", "Fix leap years", "box-1"])
     #expect(Workflows.referenceLabel(WorkflowRunReference(kind: "machine", key: "m", address: nil)) == "machine")
-    #expect(Workflows.stepReferences([issue("412"), pullRequest, machine], step: "checks").map(\.key) == ["pr"])
+    #expect(Workflows.stepReferences([issue("412"), retired, machine], step: "checks").map(\.key) == ["r"])
   }
 
   @Test("step times keep one shape, and a reply's first sentence reads plainly")

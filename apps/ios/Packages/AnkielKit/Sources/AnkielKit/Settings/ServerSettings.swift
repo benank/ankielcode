@@ -9,8 +9,6 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
   /// Hidden models per instance (`providerModelPreferences[instanceId].hiddenModels`).
   public var hiddenModels: [String: Set<String>]
   public var modelOrder: [String: [String]]
-  /// `sidebarAutoSettleOnMerge` (default on).
-  public var autoSettleOnMerge = true
   /// `sidebarAutoSettleAfterDays`: nil turns inactivity settling off (the server default is 7).
   public var autoSettleAfterDays: Int? = ServerSettings.defaultAutoSettleDays
   public var autoResumeLimitedThreads = false
@@ -36,7 +34,7 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
 
   enum CodingKeys: String, CodingKey {
     case defaultModelSelection, fallbackModelSelection, defaultRuntimeMode, providerModelPreferences
-    case sidebarAutoSettleOnMerge, sidebarAutoSettleAfterDays, autoResumeLimitedThreads, snoozeLimitedThreads, snoozePresets
+    case sidebarAutoSettleAfterDays, autoResumeLimitedThreads, snoozeLimitedThreads, snoozePresets
     case responseStreamingMode
     case enablePreviewTunnel
     case defaultThreadEnvMode, newWorktreesStartFromOrigin
@@ -55,7 +53,6 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
     let preferences = c.loose([String: Preferences].self, .providerModelPreferences) ?? [:]
     hiddenModels = preferences.mapValues { Set($0.hiddenModels ?? []) }
     modelOrder = preferences.compactMapValues(\.modelOrder)
-    autoSettleOnMerge = c.loose(Bool.self, .sidebarAutoSettleOnMerge) ?? true
     // Absent is the server default; an explicit null is "off".
     if c.contains(.sidebarAutoSettleAfterDays), (try? c.decodeNil(forKey: .sidebarAutoSettleAfterDays)) == true {
       autoSettleAfterDays = nil
@@ -98,7 +95,6 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
     var next = self
     for (key, value) in patch.fields {
       switch key {
-      case "sidebarAutoSettleOnMerge": if let value = value.boolValue { next.autoSettleOnMerge = value }
       case "sidebarAutoSettleAfterDays": next.autoSettleAfterDays = value.intValue
       case "autoResumeLimitedThreads": if let value = value.boolValue { next.autoResumeLimitedThreads = value }
       case "snoozeLimitedThreads": if let value = value.boolValue { next.snoozeLimitedThreads = value }
@@ -122,25 +118,23 @@ public struct ServerSettingsPatch: Sendable, Hashable, Encodable {
     self.fields = fields
   }
 
-  public static func autoSettleOnMerge(_ on: Bool) -> Self { Self(["sidebarAutoSettleOnMerge": .bool(on)]) }
-
   /// nil turns inactivity settling off.
   public static func autoSettleAfterDays(_ days: Int?) -> Self {
     let range = ServerSettings.autoSettleDays
     return Self(["sidebarAutoSettleAfterDays": days.map { .number(Double(min(max($0, range.lowerBound), range.upperBound))) } ?? .null])
   }
 
+  /// `githubIntegrationEnabled`: whether the computer reads GitHub at all.
+  public static func githubIntegration(_ on: Bool) -> Self { Self(["githubIntegrationEnabled": .bool(on)]) }
   public static func autoResumeLimitedThreads(_ on: Bool) -> Self { Self(["autoResumeLimitedThreads": .bool(on)]) }
   public static func snoozeLimitedThreads(_ on: Bool) -> Self { Self(["snoozeLimitedThreads": .bool(on)]) }
   public static func defaultRuntimeMode(_ mode: RuntimeMode) -> Self { Self(["defaultRuntimeMode": .string(mode.rawValue)]) }
   public static func responseStreaming(_ mode: ResponseStreamingMode) -> Self { Self(["responseStreamingMode": .string(mode.rawValue)]) }
 
-  /// The auto-settle and usage-limit values of `settings` as one patch, to make other computers
-  /// match it (RN "Apply auto-settle defaults").
+  /// The auto-settle value of `settings` as a patch, to make other computers match it (RN "Apply
+  /// auto-settle defaults").
   public static func autoSettle(matching settings: ServerSettings) -> Self {
-    var fields = autoSettleAfterDays(settings.autoSettleAfterDays).fields
-    fields["sidebarAutoSettleOnMerge"] = .bool(settings.autoSettleOnMerge)
-    return Self(fields)
+    autoSettleAfterDays(settings.autoSettleAfterDays)
   }
 
   public var keys: Set<String> { Set(fields.keys) }

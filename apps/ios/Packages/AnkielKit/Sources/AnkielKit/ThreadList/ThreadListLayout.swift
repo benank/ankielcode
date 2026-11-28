@@ -101,8 +101,6 @@ public struct ThreadRow: Sendable, Hashable, Identifiable {
   public var regeneratingTitle: Bool
   public var searchHit: ThreadSearchHit?
   public var hasPendingApprovals: Bool
-  /// The thread's linked pull request chip.
-  public var pullRequest: ThreadPullRequestBadge? = nil
   /// The thread's linked issues chip.
   public var issue: ThreadIssueBadge? = nil
 }
@@ -240,7 +238,6 @@ public struct ThreadListLayout: Sendable, Hashable {
         readToggle: ThreadRules.readToggle(facts, wokeAt: wokeAt), canArchive: facts.canArchive,
         isTopLevel: topLevel, regeneratingTitle: facts.thread.titleRegeneration != nil, searchHit: hit,
         hasPendingApprovals: facts.hasPendingApprovals)
-      row.pullRequest = ThreadPullRequests.badge(facts.thread.pullRequests)
       row.issue = ThreadIssueBadge(facts.thread.issues)
       return row
     }

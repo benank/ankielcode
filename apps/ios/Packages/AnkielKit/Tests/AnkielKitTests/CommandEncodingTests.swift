@@ -98,7 +98,6 @@ struct CommandEncodingTests {
     ("secret-decline", "secretAnswer", SecretAnswer(threadId: thread, turnItemId: "turn-item:secret:1", reply: .decline)),
     ("settings-auto-settle-off", "updateSettings", UpdateSettingsRequest(patch: .autoSettleAfterDays(nil))),
     ("settings-auto-settle-days", "updateSettings", UpdateSettingsRequest(patch: .autoSettleAfterDays(14))),
-    ("settings-auto-settle-merge", "updateSettings", UpdateSettingsRequest(patch: .autoSettleOnMerge(false))),
     ("settings-auto-resume", "updateSettings", UpdateSettingsRequest(patch: .autoResumeLimitedThreads(true))),
     ("settings-snooze-limited", "updateSettings", UpdateSettingsRequest(patch: .snoozeLimitedThreads(true))),
     ("settings-runtime-mode", "updateSettings", UpdateSettingsRequest(patch: .defaultRuntimeMode(.autoAcceptEdits))),

@@ -6,8 +6,6 @@ import SwiftUI
 struct ThreadRowView: View, Equatable {
   let row: ThreadRow
   let selected: Bool
-  /// Opens the row's pull request chip.
-  var openPullRequest: (ThreadPullRequestBadge) -> Void = { _ in }
   @Environment(\.dynamicTypeSize) private var typeSize
   @Environment(\.openURL) private var openURL
 
@@ -51,25 +49,14 @@ struct ThreadRowView: View, Equatable {
     .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
   }
 
-  /// The row's links: its pull request and its issues. Each opens on its own tap.
+  /// The row's linked issues, which open on their own tap.
   @ViewBuilder
   private var chips: some View {
-    if row.pullRequest != nil || row.issue != nil {
-      HStack(spacing: Spacing.xs) {
-        if let issue = row.issue {
-          ThreadRowChipButton(identifier: "thread.row.issue", hint: "Opens the issue") {
-            if let url = URL(string: issue.url) { openURL(url) }
-          } label: {
-            ThreadIssueChip(badge: issue)
-          }
-        }
-        if let badge = row.pullRequest {
-          ThreadRowChipButton(identifier: "thread.row.pullRequest", hint: "Opens the pull request") {
-            openPullRequest(badge)
-          } label: {
-            ThreadPullRequestChip(badge: badge, compact: true)
-          }
-        }
+    if let issue = row.issue {
+      ThreadRowChipButton(identifier: "thread.row.issue", hint: "Opens the issue") {
+        if let url = URL(string: issue.url) { openURL(url) }
+      } label: {
+        ThreadIssueChip(badge: issue)
       }
     }
   }
@@ -89,7 +76,6 @@ struct ThreadRowView: View, Equatable {
     if let subtitle { parts.append(subtitle) }
     if row.pinned { parts.append(String(localized: "Pinned")) }
     if row.regeneratingTitle { parts.append(String(localized: "regenerating title")) }
-    if let badge = row.pullRequest { parts.append(PullRequestCopy.accessibility(badge)) }
     if let issue = row.issue { parts.append(ThreadIssueChip.accessibility(issue)) }
     return parts.joined(separator: ", ")
   }

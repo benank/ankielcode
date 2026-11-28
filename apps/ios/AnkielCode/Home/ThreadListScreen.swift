@@ -154,10 +154,8 @@ struct ThreadListScreen: View {
     Button {
       model.navigator.open(row.ref)
     } label: {
-      ThreadRowView(row: row, selected: selected) { badge in
-        if let thread = home.thread(row.ref) { model.pullRequests.open(badge, thread: thread, environmentId: row.ref.environmentId) }
-      }
-      .equatable()
+      ThreadRowView(row: row, selected: selected)
+        .equatable()
     }
     .buttonStyle(.plain)
     .modifier(ZoomSource(id: row.id, namespace: zoom))
@@ -236,9 +234,7 @@ struct ThreadListScreen: View {
       // The screens beside the thread list share one menu, so the bar stays the same on iPhone and
       // iPad however many there are.
       Menu {
-        if showsGitHub {
-          Button("Pull requests", systemImage: "arrow.triangle.pull") { model.pullRequests.openList() }
-            .accessibilityIdentifier("home.pullRequests")
+        if showsIssues {
           Button("Issues", systemImage: "smallcircle.filled.circle") { model.navigator.cover = .issues }
             .accessibilityIdentifier("home.issues")
         }
@@ -265,9 +261,9 @@ struct ThreadListScreen: View {
     }
   }
 
-  /// Pull requests and issues need a computer with GitHub integration on (RN hides both tabs).
-  private var showsGitHub: Bool {
-    !model.pullRequests.targets.isEmpty || IssuesDebug.source != nil
+  /// Issues need a computer that can read them (RN hides the tab otherwise).
+  private var showsIssues: Bool {
+    !IssueComputers.choices(model.registry).isEmpty || IssuesDebug.source != nil
   }
 
   private var newThreadButton: some View {

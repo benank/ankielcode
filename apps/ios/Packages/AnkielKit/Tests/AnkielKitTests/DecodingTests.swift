@@ -48,11 +48,11 @@ import Testing
 
   @Test func `an unreadable forward-compatible field drops the field, not the row`() throws {
     let row = try Fixture.json("thread-shell")
-      .setting("pullRequests", [["host": "github.com"]])
+      .setting("issues", [["tracker": "github"]])
       .setting("goal", "not an object")
       .setting("pendingRuntimeRequest", ["id": "r1", "kind": "brand-new-kind", "createdAt": "2026-11-26T12:00:00.000Z"])
     let thread = try decode(ThreadShell.self, from: encode(row))
-    #expect(thread.pullRequests == nil)
+    #expect(thread.issues == nil)
     #expect(thread.goal == nil)
     #expect(thread.pendingRuntimeRequest?.kind == .unknown("brand-new-kind"))
   }

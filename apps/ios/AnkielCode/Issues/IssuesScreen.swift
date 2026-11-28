@@ -49,12 +49,11 @@ struct IssuesRoot: View {
   }
 }
 
-/// Computers whose issues can be read: GitHub integration on (RN hides Issues otherwise, with
-/// pull requests), connected ones first.
+/// Computers whose issues can be read (`capabilities.issues`), connected ones first.
 enum IssueComputers {
   @MainActor
   static func choices(_ registry: EnvironmentRegistry) -> [EnvironmentModel] {
-    let capable = registry.environments.filter { $0.isEnabled && $0.capabilities["pullRequests"]?.boolValue == true }
+    let capable = registry.environments.filter { $0.isEnabled && $0.capabilities["issues"]?.boolValue == true }
     return capable.filter(\.status.isConnected) + capable.filter { !$0.status.isConnected }
   }
 }

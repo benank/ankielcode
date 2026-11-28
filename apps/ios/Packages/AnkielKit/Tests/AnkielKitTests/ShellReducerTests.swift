@@ -185,22 +185,6 @@ import Testing
     #expect(ShellReducer.apply([remove(3, "a"), update(4, b)], to: seed) == seed)
   }
 
-  @Test func `deferred pull request links are kept until they fill in`() throws {
-    var linked = try Fixture.thread
-    linked.pullRequests = try decode(
-      [ThreadShell.PullRequestLink].self,
-      json: #"[{"host":"github.com","repository":"benank/ankielcode","number":3,"url":"https://github.com/benank/ankielcode/pull/3","source":"agent","linkedAt":"2026-06-20T00:00:00.000Z","snapshot":null,"stack":null}]"#)
-    var running = try Fixture.thread
-    running.status = .known(.running)
-    let next = ShellReducer.reuseDeferredLinks(snapshot(threads: [linked]), in: snapshot(sequence: 5, threads: [running]))
-    #expect(next.threads[0].status == .running)
-    #expect(next.threads[0].pullRequests == linked.pullRequests)
-
-    var removed = linked
-    removed.pullRequests = []
-    let explicit = ShellReducer.reuseDeferredLinks(snapshot(threads: [linked]), in: snapshot(threads: [removed]))
-    #expect(explicit.threads[0].pullRequests == [])
-  }
 }
 
 @Suite struct ShellStateTests {

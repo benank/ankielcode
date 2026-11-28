@@ -12,9 +12,6 @@ public struct ThreadShell: Sendable, Hashable, Codable, Identifiable {
   public var interactionMode: WireEnum<InteractionMode>
   public var branch: String?
   public var worktreePath: String?
-  @Tolerant public var linkedPullRequest: LinkedPullRequest?
-  @Tolerant public var pullRequests: [PullRequestLink]?
-  @Tolerant public var branchPullRequest: LinkedPullRequest?
   @Tolerant public var issues: [IssueLink]?
   public var lineage: Lineage
   @Tolerant public var forkedFrom: ForkedFrom?

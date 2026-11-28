@@ -257,7 +257,7 @@ public enum Workflows {
     case .number(let number): number.rounded() == number && abs(number) < 1e15 ? String(Int(number)) : String(number)
     case .string(let text): text
     default:
-      (try? JSONEncoder.sortedWire.encode(value)).map { String(decoding: $0, as: UTF8.self) } ?? ""
+      (try? JSONEncoder.wire.encode(value)).map { String(decoding: $0, as: UTF8.self) } ?? ""
     }
   }
 
@@ -441,10 +441,9 @@ public enum Workflows {
     return String(plain[..<plain.index(after: end.range.lowerBound)])
   }
 
-  /// What a reference is called: `#412` for an issue or pull request, a tracker key, else its
-  /// title (or kind).
+  /// What a reference is called: `#412` for a numbered issue, a tracker key, else its title (or
+  /// kind), which is how an older run's references of a retired kind show.
   public static func referenceLabel(_ reference: WorkflowRunReference) -> String {
-    if reference.kind == "pullRequest", let number = reference.address?["number"]?.intValue { return "#\(number)" }
     if reference.kind == "issue", let key = reference.address?["key"]?.stringValue {
       return key.allSatisfy(\.isNumber) && !key.isEmpty ? "#\(key)" : key
     }

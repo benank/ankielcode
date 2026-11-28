@@ -60,10 +60,10 @@ final class SettingsUITests: HomeUITestCase {
     XCTAssertTrue(hit.waitForExistence(timeout: 3))
     shot("settings-search")
     hit.tap()
-    let merged = app.switches["Auto-settle merged threads"]
+    let inactive = app.switches["Auto-settle inactive threads"]
     XCTAssertTrue(app.staticTexts["Default permissions"].waitForExistence(timeout: 3))
-    for _ in 0..<3 where !merged.exists { app.swipeUp() }
-    XCTAssertTrue(merged.exists)
+    for _ in 0..<3 where !inactive.exists { app.swipeUp() }
+    XCTAssertTrue(inactive.exists)
   }
 
   func testThemeSwitchAppliesToTheOpenSheetAndBack() throws {
@@ -101,19 +101,19 @@ final class SettingsUITests: HomeUITestCase {
 
   func testAServerSettingWritesAndARefusalRollsBack() {
     open("settings-threads")
-    let merged = app.switches["Auto-settle merged threads"]
-    for _ in 0..<3 where !merged.isHittable { app.swipeUp() }
-    XCTAssertEqual(merged.value as? String, "1")
-    merged.switches.firstMatch.tap()
-    XCTAssertTrue(waitFor { merged.value as? String == "0" })
+    let inactive = app.switches["Auto-settle inactive threads"]
+    for _ in 0..<3 where !inactive.isHittable { app.swipeUp() }
+    XCTAssertEqual(inactive.value as? String, "1")
+    inactive.switches.firstMatch.tap()
+    XCTAssertTrue(waitFor { inactive.value as? String == "0" })
 
     open("settings-threads", mode: "fail")
-    for _ in 0..<3 where !merged.isHittable { app.swipeUp() }
-    merged.switches.firstMatch.tap()
+    for _ in 0..<3 where !inactive.isHittable { app.swipeUp() }
+    inactive.switches.firstMatch.tap()
     XCTAssertTrue(app.alerts["Could not save settings"].waitForExistence(timeout: 3))
     shot("settings-write-failed")
     app.alerts.buttons["OK"].tap()
-    XCTAssertEqual(merged.value as? String, "1", "the refused change rolls back")
+    XCTAssertEqual(inactive.value as? String, "1", "the refused change rolls back")
   }
 
   func testPairingFromSettingsStaysInSettings() {

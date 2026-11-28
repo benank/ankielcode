@@ -263,7 +263,6 @@ struct ComposerView: View {
           ComposerModelMentions.items(
             ModelCatalog.groups(providers: target.providers, settings: target.settings, current: selection), providers: target.providers,
             query: trigger.query)
-        case .pullRequest: []
         }
       })
   }

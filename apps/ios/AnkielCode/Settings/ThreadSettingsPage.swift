@@ -151,7 +151,6 @@ struct ThreadSettingsPage: View {
 
   private var autoSettleSection: some View {
     Section {
-      Toggle("Auto-settle merged threads", isOn: write(\.autoSettleOnMerge) { .autoSettleOnMerge($0) })
       Toggle(
         "Auto-settle inactive threads",
         isOn: Binding(
@@ -233,7 +232,7 @@ struct ThreadSettingsPage: View {
     return targets.dropFirst().filter { target in
       let other = target.effectiveSettings
       return other.defaultRuntimeMode != shown.defaultRuntimeMode || other.autoSettleAfterDays != shown.autoSettleAfterDays
-        || other.autoSettleOnMerge != shown.autoSettleOnMerge || other.autoResumeLimitedThreads != shown.autoResumeLimitedThreads
+        || other.autoResumeLimitedThreads != shown.autoResumeLimitedThreads
         || other.snoozeLimitedThreads != shown.snoozeLimitedThreads || other.responseStreaming != shown.responseStreaming
     }
   }

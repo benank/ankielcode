@@ -90,7 +90,6 @@ private struct ThreadScreen: View {
       .threadPreview(threadRef)
       .threadReview(threadRef, detail: detail)
       .threadFiles(threadRef, detail: detail)
-      .task(id: shell?.branchPullRequest?.number) { model.pullRequests.loadSummary(for: shell, environmentId: threadRef.environmentId) }
       .threadTerminal(threadRef, projectId: detail.state.projectId)
       .safeAreaInset(edge: .bottom, spacing: 0) { composer }
       .onChange(of: childShells, initial: true) { _, threads in
@@ -300,9 +299,6 @@ private struct ThreadScreen: View {
 
   @ToolbarContentBuilder
   private var toolbar: some ToolbarContent {
-    if model.pullRequests.badge(for: shell, environmentId: threadRef.environmentId) != nil {
-      ToolbarItem(placement: .topBarTrailing) { ThreadPullRequestToolbarButton(threadRef: threadRef) }
-    }
     ToolbarItem(placement: .topBarTrailing) {
       UsageToolbarButton(threadContext: .some(detail.state.contextWindow))
     }

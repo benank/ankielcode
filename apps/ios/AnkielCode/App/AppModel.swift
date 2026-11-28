@@ -36,7 +36,6 @@ final class AppModel {
   let releaseLookup: ReleaseLookup
   /// Provider usage limits and the usage widget's snapshot.
   @ObservationIgnored private(set) lazy var usage = UsageCenter(registry: registry)
-  @ObservationIgnored private(set) lazy var pullRequests = PullRequestFeature(app: self)
   /// Settings shows canned computers (`ANKIEL_DEBUG_SETTINGS`): nothing reaches a server.
   private(set) var isSettingsFixture = false
   #if DEBUG
@@ -66,6 +65,7 @@ final class AppModel {
         releaseLookup = SettingsDebug.releaseLookup
       }
     #endif
+    Self.removeRetiredPullRequestState()
     let connector = EnvironmentConnector(store: store, client: .current)
     registry = EnvironmentRegistry(connector: connector, directory: directory)
     registry.markdownStyle = .thread
@@ -89,6 +89,15 @@ final class AppModel {
     #if DEBUG
       if fake, ProcessInfo.processInfo.environment["ANKIEL_DEBUG_COMPOSER_RESET"] == "1" { composer.reset() }
     #endif
+  }
+
+  /// Earlier builds kept a pull request list cache and per-device pull request choices; pull
+  /// requests are gone, so drop them. Safe to repeat: each removal is a no-op once done.
+  private static func removeRetiredPullRequestState() {
+    try? FileManager.default.removeItem(at: URL.cachesDirectory.appending(path: "AnkielCode/pull-requests"))
+    for key in ["ankiel.pullRequestList.v1", "ankiel.pullRequestRouting.v1", "ankiel.pullRequestMergeMethod"] {
+      UserDefaults.standard.removeObject(forKey: key)
+    }
   }
 
   /// The composer's folder and sink. `ANKIEL_DEBUG_COMPOSER` (debug builds) picks a fake sink and
@@ -155,10 +164,9 @@ final class AppModel {
     guard route == .home else { return }
     // Whatever covers home goes first, so the entry never lands under it. UIKit cannot present
     // while a dismissal runs, so the entry follows once it has finished.
-    if sheet != nil || navigator.cover != nil || pullRequests.presented {
+    if sheet != nil || navigator.cover != nil {
       sheet = nil
       navigator.cover = nil
-      pullRequests.presented = false
       Task {
         try? await Task.sleep(for: .milliseconds(450))
         open(entry)

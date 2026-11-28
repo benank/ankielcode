@@ -56,11 +56,11 @@ func liveSettings(_ environment: SavedEnvironment, connector: EnvironmentConnect
     }
     return [:]
   }
-  let keys = ["sidebarAutoSettleOnMerge", "sidebarAutoSettleAfterDays", "autoResumeLimitedThreads", "snoozeLimitedThreads", "defaultRuntimeMode", "snoozePresets"]
+  let keys = ["sidebarAutoSettleAfterDays", "autoResumeLimitedThreads", "snoozeLimitedThreads", "defaultRuntimeMode", "snoozePresets"]
   let raw = try await serverSettings()
   print("server: \(keys.map { "\($0)=\(raw[$0].map { "\($0)" } ?? "absent")" }.joined(separator: " "))")
   let s = model.settings
-  print("client: autoSettleOnMerge=\(s.autoSettleOnMerge) autoSettleAfterDays=\(s.autoSettleAfterDays.map(String.init) ?? "off") autoResume=\(s.autoResumeLimitedThreads) snoozeLimited=\(s.snoozeLimitedThreads) defaultRuntimeMode=\(s.defaultRuntimeMode?.rawValue ?? "nil") presets=\(s.snoozePresets.count)")
+  print("client: autoSettleAfterDays=\(s.autoSettleAfterDays.map(String.init) ?? "off") autoResume=\(s.autoResumeLimitedThreads) snoozeLimited=\(s.snoozeLimitedThreads) defaultRuntimeMode=\(s.defaultRuntimeMode?.rawValue ?? "nil") presets=\(s.snoozePresets.count)")
   var failures: [String] = []
   let original = s
   let writer = SettingsWriter(sink: registry)
@@ -73,7 +73,6 @@ func liveSettings(_ environment: SavedEnvironment, connector: EnvironmentConnect
     print("  \(failed.isEmpty && confirmed ? "✓" : "✗") \(name): server \(key)=\(raw[key].map { "\($0)" } ?? "absent")\(failed.isEmpty ? "" : " refused \(failed.map(\.error))")")
     if !failed.isEmpty || !confirmed { failures.append(name) }
   }
-  try await check("auto-settle on merge", .autoSettleOnMerge(!original.autoSettleOnMerge)) { $0.autoSettleOnMerge == !original.autoSettleOnMerge }
   try await check("auto-settle after 14 days", .autoSettleAfterDays(14)) { $0.autoSettleAfterDays == 14 }
   try await check("auto-settle off", .autoSettleAfterDays(nil)) { $0.autoSettleAfterDays == nil }
   try await check("auto-resume limited", .autoResumeLimitedThreads(!original.autoResumeLimitedThreads)) { $0.autoResumeLimitedThreads == !original.autoResumeLimitedThreads }
@@ -82,7 +81,6 @@ func liveSettings(_ environment: SavedEnvironment, connector: EnvironmentConnect
   try await check("default permissions", .defaultRuntimeMode(otherMode)) { $0.defaultRuntimeMode == otherMode }
 
   // Restore.
-  _ = await writer.write(.autoSettleOnMerge(original.autoSettleOnMerge), to: [model])
   _ = await writer.write(.autoSettleAfterDays(original.autoSettleAfterDays), to: [model])
   _ = await writer.write(.autoResumeLimitedThreads(original.autoResumeLimitedThreads), to: [model])
   _ = await writer.write(.snoozeLimitedThreads(original.snoozeLimitedThreads), to: [model])

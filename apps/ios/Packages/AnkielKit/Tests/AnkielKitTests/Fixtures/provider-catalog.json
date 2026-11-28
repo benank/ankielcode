@@ -301,8 +301,6 @@
     "hideTaggedThreads": false,
     "workflowsEnabled": false,
     "promptSuggestionsEnabled": false,
-    "sidebarAutoSettleKeepPullRequests": false,
-    "sidebarAutoSettleOnMerge": true,
     "backgroundActivity": {
       "schemaVersion": 1,
       "profile": "balanced",
@@ -334,17 +332,11 @@
     "branchNamingMode": "static",
     "branchNamePrefix": "ankiel",
     "branchNameInstructions": "",
-    "removeAgentCreditsOnMerge": false,
     "sourceControlWritingStyle": {
       "mode": "repo_conventions",
-      "customInstructions": "",
-      "followChangeRequestTemplates": true
+      "customInstructions": ""
     },
     "sourceControlWriterModelSelection": null,
-    "reviewGuidesEnabled": false,
-    "reviewGuideModelSelection": null,
-    "reviewGuideInstructions": "",
-    "pullRequestMergeMethod": null,
     "providerInstances": {},
     "sourceControlHosts": {},
     "offeredSourceControlProviders": {},

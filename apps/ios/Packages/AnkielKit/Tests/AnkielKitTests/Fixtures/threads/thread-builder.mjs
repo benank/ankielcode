@@ -297,7 +297,6 @@ export class ThreadBuilder {
       interactionMode: "default",
       branch: "main",
       worktreePath: "/srv/dev/tidewise",
-      pullRequests: [],
       activeProviderThreadId: this.providerThreadId,
       lineage: { parentThreadId: null, relationshipToParent: null, rootThreadId: this.threadId },
       forkedFrom: null,

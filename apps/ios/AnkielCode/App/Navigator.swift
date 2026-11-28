@@ -23,7 +23,7 @@ final class Navigator {
   var stack: [ThreadRef] = []
   /// A sheet over home.
   var sheet: HomeSheet?
-  /// A full-screen screen over home (Issues, Workflows). Pull requests keep their own flag.
+  /// A full-screen screen over home (Issues, Workflows).
   var cover: HomeCover? = HomeCover.atLaunch
   /// Set to focus home's search field (the Search quick action and keyboard command); the list
   /// clears it once focused, so a request made before the list appears still lands.

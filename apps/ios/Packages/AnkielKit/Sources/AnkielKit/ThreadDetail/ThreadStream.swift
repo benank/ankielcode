@@ -129,14 +129,14 @@ public struct ThreadEvent: Sendable {
     "thread.created", "thread.archived", "thread.unarchived", "thread.deleted", "thread.settled",
     "thread.unsettled", "thread.snoozed", "thread.unsnoozed", "thread.auto-settle-set", "thread.pinned",
     "thread.unpinned", "thread.pin-reordered", "thread.active-reordered", "thread.metadata-updated",
-    "thread.pull-request-synced", "thread.issue-synced", "thread.runtime-mode-updated",
+    "thread.issue-synced", "thread.runtime-mode-updated",
     "thread.interaction-mode-updated", "thread.model-selection-updated", "thread.provider-switched",
     "thread.visited", "thread.tags-updated", "thread.marked-unread",
   ]
 
   /// Known events whose records this client does not hold.
   static let ignoredEvents: Set<String> = [
-    "thread.visit-recorded", "thread.pull-request-link-updated", "run.background-work-cancelled",
+    "thread.visit-recorded", "run.background-work-cancelled",
     "provider-session.attached", "provider-session.updated", "provider-session.detached",
     "plan.updated", "checkpoint.rollback-requested", "context-handoff.updated",
     "context-transfer.created",

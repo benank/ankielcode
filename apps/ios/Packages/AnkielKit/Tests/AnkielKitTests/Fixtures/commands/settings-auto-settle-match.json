@@ -2,8 +2,7 @@
   "schema" : "updateSettings",
   "value" : {
     "patch" : {
-      "sidebarAutoSettleAfterDays" : 21,
-      "sidebarAutoSettleOnMerge" : false
+      "sidebarAutoSettleAfterDays" : 21
     }
   }
 }

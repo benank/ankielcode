@@ -31,20 +31,6 @@ public enum ShellReducer {
     return enriched
   }
 
-  /// For an HTTP snapshot whose rows arrive without their deferred pull request links: a row
-  /// with `pullRequests` absent keeps the links it had.
-  public static func reuseDeferredLinks(_ previous: ShellSnapshot?, in next: ShellSnapshot) -> ShellSnapshot {
-    guard let previous, !previous.threads.isEmpty else { return next }
-    let previousById = Dictionary(previous.threads.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
-    var result = next
-    for index in result.threads.indices where result.threads[index].pullRequests == nil {
-      if let links = previousById[result.threads[index].id]?.pullRequests {
-        result.threads[index].pullRequests = links
-      }
-    }
-    return result
-  }
-
   /// Applies sequenced deltas in order. Deltas at or below the cursor are ignored; sequences may
   /// skip. New rows append; the UI decides order.
   public static func apply(_ deltas: some Sequence<ShellDelta>, to snapshot: ShellSnapshot) -> ShellSnapshot {
@@ -178,14 +164,12 @@ public struct ShellState: Sendable, Hashable {
   }
 
   /// Applies an authoritative HTTP snapshot (§5.5). Ignored when it is older than the held rows,
-  /// so a slow download never overwrites newer live data. Rows without their deferred pull
-  /// request links keep the ones they had. Returns whether it was applied.
+  /// so a slow download never overwrites newer live data. Returns whether it was applied.
   @discardableResult
   public mutating func replace(with next: ShellSnapshot) -> Bool {
     needsSnapshotReload = false
     if let held = snapshot, next.snapshotSequence < held.snapshotSequence { return false }
-    snapshot = ShellReducer.merge(
-      snapshot, with: ShellReducer.reuseDeferredLinks(snapshot, in: next), resolvedRepositoryIdentityRoots: nil)
+    snapshot = ShellReducer.merge(snapshot, with: next, resolvedRepositoryIdentityRoots: nil)
     status = awaitingCompletion ? .synchronizing : .live
     return true
   }

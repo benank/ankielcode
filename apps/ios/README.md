@@ -384,51 +384,19 @@ gets `ZDOTDIR` and its history there.
 menu in the `ankiel-probe live` project, types `echo`, rotates and closes it; a second test scrolls
 back through 200 lines and leaves on `exit`.
 
-## Pull requests
-
-Home's toolbar opens **Pull requests** (a full-screen stack; the list beside the open pull request
-on iPad), and a thread's pull request chip (rows and the thread header) opens its pull request.
-Logic lives in `AnkielKit/PullRequests`, views in `AnkielCode/PullRequests`. The list reads
-`pullRequests.list` from every computer whose config says `pullRequests`, filters on the device
-like RN (`PullRequestQuery`, `PullRequestList`), fills line counts with `pullRequests.listStats`
-and keeps the last first page per request plus the stats in `Caches/AnkielCode/pull-requests` so
-it shows at once. Pull to refresh sends `pullRequests.invalidate` first. The diff is the HTTP route
-`POST /api/pull-requests/diff` (`EnvironmentConnector.postJSON`), parsed by the Review parser and
-drawn by `DiffLinesView` with review threads and pending inline comments under their lines.
-Every write is a `PullRequestWrite` sent through a `PullRequestSink`. Reads and writes go through
-`PullRequestRouter`: another computer answers only when both are trusted in **Pull request
-routing** (the list's menu; per device, keyed by the saved addresses) and it verifies the same host
-account; a write never moves to another computer once the server may have run it. "Start work"
-fills the new-thread (or a linked thread's) draft with the pull request's link and the task's
-prompt; nothing runs until it is sent.
-
-`swift run ankiel-probe --state <file> --pull-requests [number] [--pr-state open|closed|merged|all]
-[--pr-ref <projectId>:<owner/repo>:<number>] [--enable-github]` lists pull requests, reads one's
-detail, conversation, checks, viewed files, linked threads and every diff page, and prints counts
-only. It never writes to the host. `--enable-github` turns the computer's GitHub integration on
-for that read and off again (it changes the server's settings).
-
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_PULL_REQUESTS` | `fixture`, `empty`, `signed-out`, `failing`, `readonly` | Synthetic pull requests on an invented repository (`PullRequestFixtures`), no server. `readonly` hides write controls. |
-| `ANKIEL_DEBUG_PR_WRITES` | `fake`, `fail`, `slow`, `refuse` | Where writes go: a recording fake (the default with fixtures; its last write shows in a debug pill), one that refuses or never answers, or `refuse` for live reads with every write stopped on the device. |
-| `ANKIEL_DEBUG_PR_OPEN` | `list`, `routing`, `link:<url>`, `pr:<n>`, `activity:<n>`, `files:<n>`, `file:<n>:<path>`, `review:<n>`, `merge:<n>`, `comment:<n>`, `edit:<n>`, `reviewers:<n>`, `thread:<n>`, `confirm-close:<n>` | Opens that screen or sheet at launch. |
-
-`PullRequestUITests` run on fixtures: list → detail → files → a diff, search, the thread row chip,
-and each write (comment, inline comment and review, merge with its confirmation, close, edit,
-reviewers, thread reply and resolve, reaction) against the recording sink.
-
 ## Issues
 
-Home's toolbar has **Issues** (RN's Issues tab): one computer's issues across its projects' trackers
-(`issues.list`: open, closed or all, one project or every one, a search the trackers run, more
-pages per scope as the list scrolls), each opening read-only (`issues.detail`, older pages with
-`issues.comments`) with its description and comments as markdown. Rows and the detail offer Start a
-thread (the new-thread sheet in the issue's project with its title and link), Copy link and Open on
-the tracker. Writes (comment, close or reopen, edit, labels, assignees, reactions, new issues),
-linked threads, saved views and the involvement filters are not built. Logic is in
-`AnkielKit/Issues`; `swift run ankiel-probe --state <file> --issues [--project <id>] [--query <q>]
-[--closed]` lists and opens the newest issue without writing anything.
+Home's menu has **Issues** (RN's Issues tab) when a computer says `capabilities.issues`: one
+computer's issues across its projects' trackers (`issues.list`: open, closed or all, one project or
+every one, a search the trackers run, more pages per scope as the list scrolls), each opening
+read-only (`issues.detail`, older pages with `issues.comments`) with its description and comments as
+markdown. Rows and the detail offer Start a thread (the new-thread sheet in the issue's project with
+its title and link), Copy link and Open on the tracker. Writes (comment, close or reopen, edit,
+labels, assignees, reactions, new issues), linked threads, saved views and the involvement filters
+are not built. Logic is in `AnkielKit/Issues`; `swift run ankiel-probe --state <file> --issues
+[--project <id>] [--query <q>] [--closed] [--enable-github]` lists and opens the newest issue
+without writing to the tracker. `--enable-github` turns the computer's GitHub integration on for
+that read and off again (it changes the server's settings).
 
 | Variable | Values | Shows |
 | --- | --- | --- |
@@ -534,8 +502,8 @@ its question, pause, steps (quick bookkeeping folded, overlapping steps together
 in place of its steps), agent summaries and result. A session with `orchestration:operate`
 answers questions, resumes paused runs and cancels running ones (`workflows.answer`, `.resume`,
 `.cancel`); no client RPC starts a run (triggers, the CLI and agents do). Agent threads open from
-their step and "Ask the agent first". Definitions, the run store, reference chips that open issues
-or pull requests, and the counts badge are not built. Logic is in `AnkielKit/Workflows`
+their step and "Ask the agent first". Definitions, the run store, reference chips that open issues,
+and the counts badge are not built. Logic is in `AnkielKit/Workflows`
 (result fields list in key order: Foundation does not keep the server's).
 
 `swift run ankiel-probe --state <file> --workflows [--run <id>]` reads the list and one run's

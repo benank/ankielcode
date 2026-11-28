@@ -36,7 +36,8 @@ const schemas = {
   metadata: m.FilesystemGetMetadataInput,
   pushRegister: m.PushRegisterInput,
   archivedSnapshot: S.Struct({}),
-  refreshProviders: m.WsServerRefreshProvidersRpc.payloadSchema,
+  // Not exported on its own; read it from the RPC group.
+  refreshProviders: m.WsRpcGroup.requests.get(m.WS_METHODS.serverRefreshProviders)?.payloadSchema,
   consumeResetCredit: m.ProviderConsumeResetCreditInput,
   terminalAttach: m.TerminalAttachInput,
   terminalOpen: m.TerminalOpenInput,
@@ -55,22 +56,6 @@ const schemas = {
   scheduledTaskUpsert: m.ScheduledTaskUpsertInput,
   scheduledTaskSetEnabled: m.ScheduledTaskSetEnabledInput,
   scheduledTaskRef: m.ScheduledTaskRunNowInput,
-  prList: m.PullRequestListInput,
-  prListStats: m.PullRequestListStatsInput,
-  prRef: m.PullRequestRef,
-  prInvalidate: m.PullRequestInvalidateInput,
-  prDiff: m.PullRequestDiffInput,
-  prReviewerCandidates: m.PullRequestReviewerCandidatesInput,
-  prRoutingIdentity: m.PullRequestRoutingIdentityInput,
-  prComment: m.PullRequestCommentInput,
-  prReply: m.PullRequestThreadReplyInput,
-  prReaction: m.PullRequestReactionInput,
-  prReview: m.PullRequestSubmitReviewInput,
-  prAction: m.PullRequestActionInput,
-  prReviewers: m.PullRequestReviewerRequestInput,
-  prUpdate: m.PullRequestUpdateInput,
-  prResolve: m.PullRequestThreadResolutionInput,
-  prFilesViewed: m.PullRequestSetFilesViewedInput,
   accessCreateLink: m.AuthCreatePairingCredentialInput,
   accessRevokeLink: m.AuthRevokePairingLinkInput,
   accessRevokeClient: m.AuthRevokeClientSessionInput,
@@ -78,8 +63,20 @@ const schemas = {
 };
 
 let failures = 0;
+// A schema the contracts stopped exporting is undefined here; say so rather than pass or throw.
+for (const [name, schema] of Object.entries(schemas)) {
+  if (schema === undefined) {
+    failures += 1;
+    console.log(`FAIL schema ${name}: the contracts no longer export it`);
+  }
+}
 for (const name of readdirSync(here).filter((file) => file.endsWith(".json")).sort()) {
   const { schema, value } = JSON.parse(readFileSync(join(here, name), "utf8"));
+  if (!schemas[schema]) {
+    failures += 1;
+    console.log(`FAIL ${name}: no schema named ${schema}`);
+    continue;
+  }
   // Strict: an unknown key must fail, or a misspelled setting would decode as an empty no-op patch.
   const exit = S.decodeUnknownExit(schemas[schema])(value, { onExcessProperty: "error" });
   if (exit._tag === "Success" && schema === "updateSettings") {

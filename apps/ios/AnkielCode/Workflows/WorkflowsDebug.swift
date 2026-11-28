@@ -64,7 +64,7 @@ enum WorkflowsDebug {
         startedAt: ago(4), updatedAt: ago(1)),
       WorkflowRun(
         runId: "run-done", workflow: "issue-triage", title: "Triage #412 leap-day tides", status: .completed,
-        result: ["verdict": "bug", "pullRequest": "#418"], startedAt: ago(180), updatedAt: ago(150), endedAt: ago(150)),
+        result: ["verdict": "bug", "fix": "#418"], startedAt: ago(180), updatedAt: ago(150), endedAt: ago(150)),
     ]
 
     static let questions = [

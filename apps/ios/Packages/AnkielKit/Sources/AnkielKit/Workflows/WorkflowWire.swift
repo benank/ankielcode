@@ -219,7 +219,7 @@ public struct WorkflowRunsSnapshot: Sendable, Hashable, Decodable {
   }
 }
 
-/// `WorkflowRunReference`: something a run touched (an issue, a pull request, a later kind).
+/// `WorkflowRunReference`: something a run touched (an issue, or a kind this client does not know).
 public struct WorkflowRunReference: Sendable, Hashable, Decodable {
   public var kind: String
   public var key: String

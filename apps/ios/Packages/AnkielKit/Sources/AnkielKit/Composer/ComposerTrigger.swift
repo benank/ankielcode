@@ -4,7 +4,7 @@ import Foundation
 /// Offsets are UTF-16, like the JS ranges RN sends and `NSRange` in UIKit.
 public struct ComposerTrigger: Sendable, Hashable {
   public enum Kind: String, Sendable {
-    case path, pullRequest, slashCommand, skill
+    case path, slashCommand, skill
   }
 
   public var kind: Kind
@@ -31,7 +31,6 @@ public struct ComposerTrigger: Sendable, Hashable {
       if isPathWord(source, wordStart: tokenStart, cursor: cursor) { return nil }
       return ComposerTrigger(kind: .slashCommand, query: String(token.dropFirst()), rangeStart: tokenStart, rangeEnd: cursor)
     }
-    if let pullRequest = pullRequestTrigger(token, cursor: cursor) { return pullRequest }
     if let prefix = token.unicodeScalars.first, prefix.properties.generalCategory == .currencySymbol {
       let query = String(token.unicodeScalars.dropFirst())
       if isCurrencyAmount(query) { return nil }
@@ -66,18 +65,6 @@ public struct ComposerTrigger: Sendable, Hashable {
   /// `$5`, `€9.99` and `$10k` are money, not skills.
   static func isCurrencyAmount(_ query: String) -> Bool {
     query.range(of: #"^\.?[0-9][0-9,._]*(?:[kKmMbBtT]|[eE][0-9]+)?[.,;:!?)]*$"#, options: .regularExpression) != nil
-  }
-
-  static func pullRequestTrigger(_ token: String, cursor: Int) -> ComposerTrigger? {
-    if token.hasPrefix("@") { return nil }
-    if let first = token.unicodeScalars.first, first.properties.generalCategory == .currencySymbol { return nil }
-    let regex = try! NSRegularExpression(pattern: #"(?:^|\p{Ps})#([\p{L}\p{N}][\p{L}\p{N}_-]*)?$"#)
-    let ns = token as NSString
-    guard let match = regex.firstMatch(in: token, range: NSRange(location: 0, length: ns.length)) else { return nil }
-    let group = match.range(at: 1)
-    let query = group.location == NSNotFound ? "" : ns.substring(with: group)
-    return ComposerTrigger(
-      kind: .pullRequest, query: query, rangeStart: cursor - (query as NSString).length - 1, rangeEnd: cursor)
   }
 }
 
