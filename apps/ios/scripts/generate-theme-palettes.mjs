@@ -1,15 +1,14 @@
 #!/usr/bin/env node
-// Writes AnkielKit's Theme/ThemePalettes.generated.swift from the RN app's theme variables
-// (apps/mobile/src/lib/mobileTheme.ts, which reads packages/shared/src/themePalettes.ts), so the
-// native palettes are RN's exact sRGB values: OKLCH converted, muted text contrast-corrected.
-//
-//   node apps/ios/scripts/generate-theme-palettes.mjs          # regenerate
-//   node apps/ios/scripts/generate-theme-palettes.mjs --check  # fail if the file is stale
-import { readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+// Writes AnkielKit's Theme/ThemePalettes.generated.swift from RN's theme variables
+// (apps/mobile/src/lib/mobileTheme.ts), so native palettes are RN's exact sRGB values.
+//   node apps/ios/scripts/generate-theme-palettes.mjs [--check]
+import * as NodeFS from "node:fs";
+import * as NodePath from "node:path";
+import * as NodeURL from "node:url";
 
-const here = dirname(fileURLToPath(import.meta.url));
+const { readFileSync, writeFileSync } = NodeFS;
+const { dirname, join } = NodePath;
+const here = dirname(NodeURL.fileURLToPath(import.meta.url));
 const repo = join(here, "../../..");
 const output = join(
   here,
