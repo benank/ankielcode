@@ -171,11 +171,11 @@ struct ThreadLightView: View {
 
   static func tint(_ light: ThreadLight) -> Color {
     switch light {
-    case .working: Palette.working
-    case .waiting: Palette.textTertiary
-    case .done: Palette.success
-    case .failed: Palette.danger
-    case .attention: Palette.attention
+    case .working: StatusTone.active.color
+    case .waiting: StatusTone.done.color
+    case .done: StatusTone.success.color
+    case .failed: StatusTone.failed.color
+    case .attention: StatusTone.attention.color
     }
   }
 }
@@ -205,10 +205,11 @@ private struct ThreadMetaView: View {
 
   private func tint(_ label: ThreadStatusLabel) -> Color {
     switch label {
-    case .approval, .input, .limited, .woke: Palette.attention
-    case .failed: Palette.danger
-    case .done, .goal: Palette.working
-    case .working, .waiting: Palette.textTertiary
+    case .approval, .input, .limited, .woke: StatusTone.attention.color
+    case .failed: StatusTone.failed.color
+    case .done: StatusTone.success.color
+    case .goal: StatusTone.active.color
+    case .working, .waiting: StatusTone.done.color
     }
   }
 }

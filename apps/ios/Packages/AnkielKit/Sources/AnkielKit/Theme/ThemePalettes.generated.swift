@@ -2,52 +2,54 @@
 // and packages/shared/src/themePalettes.ts. Do not edit; rerun the script.
 
 /// A theme's colors for one appearance, as 0xRRGGBBAA sRGB.
-nonisolated struct ThemeColors: Sendable {
-  let canvas: UInt32
-  let sheet: UInt32
-  let surface: UInt32
-  let surfaceRaised: UInt32
-  let groupedRow: UInt32
-  let fill: UInt32
-  let fillStrong: UInt32
-  let border: UInt32
-  let separator: UInt32
-  let inputBorder: UInt32
-  let sidebar: UInt32
-  let textPrimary: UInt32
-  let textSecondary: UInt32
-  let textTertiary: UInt32
-  let placeholder: UInt32
-  let accent: UInt32
-  let onAccent: UInt32
-  let accentText: UInt32
-  let link: UInt32
-  let focus: UInt32
-  let primaryButton: UInt32
-  let onPrimaryButton: UInt32
-  let signalActive: UInt32
-  let signalSuccess: UInt32
-  let warning: UInt32
-  let warningSurface: UInt32
-  let danger: UInt32
-  let dangerSurface: UInt32
-  let userBubble: UInt32
-  let userBubbleText: UInt32
-  let codeBackground: UInt32
-  let codeText: UInt32
-  let quoteBar: UInt32
-  let switchTrack: UInt32
-  let terminalBackground: UInt32
-  let terminalForeground: UInt32
-  let terminalCursor: UInt32
-  let terminalSelection: UInt32
+public struct ThemeColors: Sendable, Equatable {
+  public let canvas: UInt32
+  public let sheet: UInt32
+  public let surface: UInt32
+  public let surfaceRaised: UInt32
+  public let groupedRow: UInt32
+  public let fill: UInt32
+  public let fillStrong: UInt32
+  public let border: UInt32
+  public let separator: UInt32
+  public let inputBorder: UInt32
+  public let sidebar: UInt32
+  public let textPrimary: UInt32
+  public let textSecondary: UInt32
+  public let textTertiary: UInt32
+  public let placeholder: UInt32
+  public let accent: UInt32
+  public let onAccent: UInt32
+  public let accentText: UInt32
+  public let link: UInt32
+  public let focus: UInt32
+  public let primaryButton: UInt32
+  public let onPrimaryButton: UInt32
+  public let signalActive: UInt32
+  public let signalSuccess: UInt32
+  public let warning: UInt32
+  public let warningSurface: UInt32
+  public let danger: UInt32
+  public let dangerSurface: UInt32
+  public let userBubble: UInt32
+  public let userBubbleText: UInt32
+  public let codeBackground: UInt32
+  public let codeText: UInt32
+  public let quoteBar: UInt32
+  public let switchTrack: UInt32
+  public let terminalBackground: UInt32
+  public let terminalForeground: UInt32
+  public let terminalCursor: UInt32
+  public let terminalSelection: UInt32
   /// The Appearance settings swatch (RN `getMobileThemePreviewColors`).
-  let previewAccent: UInt32
-  let previewAction: UInt32
+  public let previewAccent: UInt32
+  public let previewAction: UInt32
+  /// The swatch's base: the canvas mixed toward white or near-black (`mixThemePreviewBase`).
+  public let previewBase: UInt32
 }
 
 /// The color themes RN mobile offers on iOS (Material You is Android-only).
-nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
+public enum ThemeID: String, Sendable, CaseIterable, Codable {
   case ankielCode = "ankiel-code"
   case orchid = "orchid"
   case grove = "grove"
@@ -56,7 +58,7 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
   case iris = "iris"
 
   /// The English name (localized at the call site).
-  var label: String {
+  public var label: String {
     switch self {
     case .ankielCode: "Ankiel Code"
     case .orchid: "Orchid"
@@ -67,7 +69,7 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
     }
   }
 
-  func colors(dark: Bool) -> ThemeColors {
+  public func colors(dark: Bool) -> ThemeColors {
     switch (self, dark) {
     case (.ankielCode, false): Self.ankielCodeLight
     case (.ankielCode, true): Self.ankielCodeDark
@@ -124,7 +126,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0x161615FF,
       terminalSelection: 0xDCDAD3FF,
       previewAccent: 0xF1F0EDFF,
-      previewAction: 0x161615FF)
+      previewAction: 0x161615FF,
+      previewBase: 0xFCFCFBFF)
 
   private static let ankielCodeDark = ThemeColors(
       canvas: 0x121211FF,
@@ -166,7 +169,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0xECEBE7FF,
       terminalSelection: 0x34332FFF,
       previewAccent: 0x222220FF,
-      previewAction: 0xECEBE7FF)
+      previewAction: 0xECEBE7FF,
+      previewBase: 0x101010FF)
 
   private static let orchidLight = ThemeColors(
       canvas: 0xFDF7FDFF,
@@ -208,7 +212,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0xDB2777FF,
       terminalSelection: 0xF1C4E6FF,
       previewAccent: 0xDB2777FF,
-      previewAction: 0xDB2777FF)
+      previewAction: 0xDB2777FF,
+      previewBase: 0xFDF9FDFF)
 
   private static let orchidDark = ThemeColors(
       canvas: 0x1F1A24FF,
@@ -250,7 +255,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0xDB2777FF,
       terminalSelection: 0x362D3DFF,
       previewAccent: 0xA3004CFF,
-      previewAction: 0xA3004CFF)
+      previewAction: 0xA3004CFF,
+      previewBase: 0x1A161FFF)
 
   private static let groveLight = ThemeColors(
       canvas: 0xF3F7F4FF,
@@ -292,7 +298,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0x1B7D50FF,
       terminalSelection: 0xCCE1D7FF,
       previewAccent: 0x1B7D50FF,
-      previewAction: 0x1B7D50FF)
+      previewAction: 0x1B7D50FF,
+      previewBase: 0xF5F9F6FF)
 
   private static let groveDark = ThemeColors(
       canvas: 0x1B2821FF,
@@ -334,7 +341,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0x69D69AFF,
       terminalSelection: 0x36654CFF,
       previewAccent: 0x69D69AFF,
-      previewAction: 0x69D69AFF)
+      previewAction: 0x69D69AFF,
+      previewBase: 0x17211CFF)
 
   private static let oceanLight = ThemeColors(
       canvas: 0xF5F7F8FF,
@@ -376,7 +384,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0x2672AFFF,
       terminalSelection: 0xD0DFEBFF,
       previewAccent: 0x2672AFFF,
-      previewAction: 0x0A6F75FF)
+      previewAction: 0x0A6F75FF,
+      previewBase: 0xF7F9F9FF)
 
   private static let oceanDark = ThemeColors(
       canvas: 0x17212BFF,
@@ -418,7 +427,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0x70B9EEFF,
       terminalSelection: 0x36566FFF,
       previewAccent: 0x70B9EEFF,
-      previewAction: 0x5BD0D6FF)
+      previewAction: 0x5BD0D6FF,
+      previewBase: 0x141C24FF)
 
   private static let emberLight = ThemeColors(
       canvas: 0xF9F7F5FF,
@@ -460,7 +470,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0xAE552AFF,
       terminalSelection: 0xEBDAD1FF,
       previewAccent: 0xAE552AFF,
-      previewAction: 0xAE552AFF)
+      previewAction: 0xAE552AFF,
+      previewBase: 0xFAF9F7FF)
 
   private static let emberDark = ThemeColors(
       canvas: 0x291E1AFF,
@@ -502,7 +513,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0xF09A64FF,
       terminalSelection: 0x6E4934FF,
       previewAccent: 0xF09A64FF,
-      previewAction: 0xF09A64FF)
+      previewAction: 0xF09A64FF,
+      previewBase: 0x221A17FF)
 
   private static let irisLight = ThemeColors(
       canvas: 0xF8F7F9FF,
@@ -544,7 +556,8 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0x7253B9FF,
       terminalSelection: 0xE0D9EEFF,
       previewAccent: 0x7253B9FF,
-      previewAction: 0xA82C87FF)
+      previewAction: 0xA82C87FF,
+      previewBase: 0xF9F9FAFF)
 
   private static let irisDark = ThemeColors(
       canvas: 0x1D1929FF,
@@ -586,5 +599,6 @@ nonisolated enum ThemeID: String, Sendable, CaseIterable, Codable {
       terminalCursor: 0x9D7DF2FF,
       terminalSelection: 0x4A3C70FF,
       previewAccent: 0x9D7DF2FF,
-      previewAction: 0xF099D8FF)
+      previewAction: 0xF099D8FF,
+      previewBase: 0x191623FF)
 }

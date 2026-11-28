@@ -1,3 +1,4 @@
+import AnkielKit
 import SwiftUI
 import UIKit
 
@@ -37,12 +38,12 @@ enum Palette {
   static let primaryButton = Color(\.primaryButton)
   static let onPrimaryButton = Color(\.onPrimaryButton)
 
-  /// Status (`StatusColors`): RN's fixed signal hues and the theme's warning and error.
-  static let working = Color(\.signalActive)
-  static let success = Color(\.signalSuccess)
-  static let attention = Color(\.warning)
+  /// Status: the tones of `StatusTone`, named for their use.
+  static let working = StatusTone.active.color
+  static let success = StatusTone.success.color
+  static let attention = StatusTone.attention.color
   static let attentionSurface = Color(\.warningSurface)
-  static let danger = Color(\.danger)
+  static let danger = StatusTone.failed.color
   static let dangerSurface = Color(\.dangerSurface)
 
   /// Conversation surfaces: the user's bubble, code and table blocks, inline code.
@@ -94,5 +95,22 @@ extension UIColor {
       green: CGFloat((rgb >> 8) & 0xFF) / 255,
       blue: CGFloat(rgb & 0xFF) / 255,
       alpha: 1)
+  }
+}
+
+/// The shared status vocabulary (`packages/shared/src/pixelStatus.ts`, RN `STATUS_TONE_VARIABLE`):
+/// live work glows the fixed signal cyan, a finished thread the fixed signal green, attention and
+/// failure take the theme's warning and error, and plain "done" dots stay muted.
+enum StatusTone {
+  case active, attention, failed, success, done
+
+  var color: Color {
+    switch self {
+    case .active: Color(\.signalActive)
+    case .attention: Color(\.warning)
+    case .failed: Color(\.danger)
+    case .success: Color(\.signalSuccess)
+    case .done: Color(\.textTertiary)
+    }
   }
 }
