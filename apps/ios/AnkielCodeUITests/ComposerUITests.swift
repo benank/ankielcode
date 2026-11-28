@@ -144,8 +144,12 @@ final class LiveComposerUITests: HomeUITestCase {
     XCTAssertTrue(app.descendants(matching: .any)["pending.sending"].waitForNonExistence(timeout: 20), "the launch is acknowledged")
     shot("live-composer")
     app.buttons["thread.menu"].tap()
-    app.buttons["More"].tap()
+    let more = app.buttons["More"].firstMatch
+    XCTAssertTrue(more.waitForExistence(timeout: 5))
+    more.tap()
     let delete = app.buttons["Delete"].firstMatch
+    // A tap while the long menu is still settling can be dropped.
+    if !delete.waitForExistence(timeout: 3), more.isHittable { more.tap() }
     XCTAssertTrue(delete.waitForExistence(timeout: 5))
     delete.tap()
     app.alerts.buttons["Delete"].tap()

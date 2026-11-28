@@ -6633,5 +6633,16 @@
     "ru": "Задача %@ и ещё %lld",
     "sv": "Ärende %@ och %lld till",
     "zh-Hans": "议题 %@ 及另外 %lld 个"
+  },
+  "Menu": {
+    "de": "Menü",
+    "es": "Menú",
+    "fr": "Menu",
+    "ja": "メニュー",
+    "ko": "메뉴",
+    "pt-BR": "Menu",
+    "ru": "Меню",
+    "sv": "Meny",
+    "zh-Hans": "菜单"
   }
 }

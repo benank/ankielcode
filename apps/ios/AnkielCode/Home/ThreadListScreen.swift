@@ -249,7 +249,8 @@ struct ThreadListScreen: View {
             .accessibilityIdentifier("home.settings")
         }
       } label: {
-        Label("More", systemImage: "ellipsis")
+        // Not "More": thread and row menus have a More of their own.
+        Label("Menu", systemImage: "ellipsis")
       }
       .accessibilityIdentifier("home.more")
     }
