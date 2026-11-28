@@ -1,7 +1,7 @@
 import AnkielKit
 import Foundation
 
-/// Debug launch hooks for scheduled tasks (README, "Scheduled tasks"). `ANKIEL_DEBUG_SCHEDULED=fixture`
+/// Debug launch hooks for scheduled tasks (README, "Debug hooks"). `ANKIEL_DEBUG_SCHEDULED=fixture`
 /// shows synthetic tasks on a "Fixture Mac" with a recording sink instead of a computer
 /// (`readonly` withholds `orchestration:operate`). `ANKIEL_DEBUG_SCHEDULED_OPEN=new` or
 /// `edit:<taskId>` opens the editor once the page shows (with `ANKIEL_DEBUG_ROUTE=settings-scheduled`).

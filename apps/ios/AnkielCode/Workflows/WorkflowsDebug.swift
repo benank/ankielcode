@@ -1,7 +1,7 @@
 import AnkielKit
 import Foundation
 
-/// Debug launch hooks for workflows (README, "Workflows"). `ANKIEL_DEBUG_WORKFLOWS=fixture` shows
+/// Debug launch hooks for workflows (README, "Debug hooks"). `ANKIEL_DEBUG_WORKFLOWS=fixture` shows
 /// synthetic runs (a question, a pause, a finished run with an agent step) with a fake sink that
 /// records actions instead of a computer; `readonly` also withholds `orchestration:operate`.
 /// `ANKIEL_DEBUG_WORKFLOWS_OPEN=list` opens Workflows over home, `run:<runId>` one run (live too).

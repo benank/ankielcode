@@ -1,7 +1,7 @@
 import AnkielKit
 import Foundation
 
-/// Debug launch hooks for the viewers (README, "Files and media"). In the thread a launch opens
+/// Debug launch hooks for the viewers (README, "Debug hooks"). In the thread a launch opens
 /// (`ANKIEL_DEBUG_ROUTE=thread` or an `ANKIEL_OPEN_URL` thread link), `ANKIEL_DEBUG_FILES` opens,
 /// once per launch: `browser`, `search:<query>`, `file:<path>[:line]`, `gallery` (the thread's
 /// first image), `images:<path>,<path>` (a gallery of workspace images, loaded live), or

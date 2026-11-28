@@ -1,6 +1,6 @@
 import XCTest
 
-/// Git actions against a live server, on a throwaway checkout (README, "Review and git"). Skipped
+/// Git actions against a live server, on a throwaway checkout (README, "The full UI suite"). Skipped
 /// unless `TEST_RUNNER_LIVE_GIT_THREAD` names the thread's deep link; each test is one step, and
 /// the checkout is set up between runs.
 final class ReviewLiveGitUITests: HomeUITestCase {

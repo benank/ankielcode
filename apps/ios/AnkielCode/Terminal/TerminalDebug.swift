@@ -1,7 +1,7 @@
 import AnkielKit
 import Foundation
 
-/// Debug launch hooks for the terminal (README, "Terminal"). In the thread a launch opens (an
+/// Debug launch hooks for the terminal (README, "Debug hooks"). In the thread a launch opens (an
 /// `ANKIEL_OPEN_URL` thread link), once per launch: `ANKIEL_DEBUG_TERMINAL` opens the terminal
 /// (`open`, `open:<terminalId>`, `new`); `ANKIEL_DEBUG_TERMINAL_SEND` types its text once the
 /// shell is live (`\r` is Enter); `ANKIEL_DEBUG_TERMINAL_KEYBOARD=1` shows the keyboard and its

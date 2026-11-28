@@ -1,7 +1,7 @@
 import AnkielKit
 import Foundation
 
-/// Debug launch hooks for issues (README, "Issues"). `ANKIEL_DEBUG_ISSUES=fixture` reads canned,
+/// Debug launch hooks for issues (README, "Debug hooks"). `ANKIEL_DEBUG_ISSUES=fixture` reads canned,
 /// synthetic issues about a made-up project instead of a computer (`fail` refuses, `empty` has
 /// none); `ANKIEL_DEBUG_ISSUES_OPEN=list` opens Issues over home, `detail` its first issue.
 /// Issues are read-only, so there is no write sink to fake.

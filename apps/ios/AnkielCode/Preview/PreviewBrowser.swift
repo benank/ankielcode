@@ -127,7 +127,7 @@ final class PreviewBrowser: NSObject {
   }
 
   #if DEBUG
-    /// Renders a failure without a server (README, "Previews").
+    /// Renders a failure without a server (README, "Debug hooks").
     func debugShow(_ failure: PreviewFailure, address: URL?) {
       self.failure = failure
       self.address = address ?? self.address

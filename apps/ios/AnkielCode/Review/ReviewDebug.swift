@@ -1,7 +1,7 @@
 import AnkielKit
 import Foundation
 
-/// Debug-only review and git state (README, "Review"). `ANKIEL_DEBUG_REVIEW=fixture` (or
+/// Debug-only review and git state (README, "Debug hooks"). `ANKIEL_DEBUG_REVIEW=fixture` (or
 /// `readonly`, a session that may not write) gives every thread canned turns, comparisons and a
 /// fake checkout about a made-up tide-chart app; nothing reaches a server. `ANKIEL_DEBUG_REVIEW_OPEN`
 /// opens, once per launch, in the thread the launch shows: `review`, `review:<section id>`,

@@ -1,7 +1,7 @@
 import AnkielKit
 import Foundation
 
-/// Debug launch hooks for device previews (README, "Previews"), in the thread a launch opens (an
+/// Debug launch hooks for device previews (README, "Debug hooks"), in the thread a launch opens (an
 /// `ANKIEL_OPEN_URL` thread link or `ANKIEL_DEBUG_THREAD` fixture), once per launch:
 /// `ANKIEL_DEBUG_PREVIEW=start` opens the empty browser, `open:<url>` opens that address (a
 /// `localhost` URL goes through the tunnel), `host` only installs the link handling. `ANKIEL_DEBUG_PREVIEW_STATE=<state>` shows a state

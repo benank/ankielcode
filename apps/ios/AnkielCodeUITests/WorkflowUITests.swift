@@ -1,6 +1,6 @@
 import XCTest
 
-/// Workflows against the dev server, on runs the test owner started (README, "Workflows"): a run
+/// Workflows against the dev server, on runs the test owner started (README, "The full UI suite"): a run
 /// asking "Ship tide chart v1.4?" and a paused "Tide chart v1.5". Skipped unless
 /// `ANKIEL_TEST_WORKFLOWS=1`. Answers the question with Ship, then cancels the paused run.
 final class WorkflowUITests: HomeUITestCase {
