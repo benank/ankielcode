@@ -22,6 +22,8 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
   public var defaultThreadEnvMode: ProjectShell.ThreadEnvMode?
   /// `newWorktreesStartFromOrigin` (default on): new worktrees start from the remote branch.
   public var newWorktreesStartFromOrigin = true
+  /// `githubIntegrationEnabled` (default off): the computer reads GitHub, which gates Issues.
+  public var githubIntegrationEnabled = false
 
   public static let defaultAutoSettleDays = 7
   /// `MIN_`/`MAX_SIDEBAR_AUTO_SETTLE_AFTER_DAYS`; the server refuses a patch outside them.
@@ -38,6 +40,7 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
     case responseStreamingMode
     case enablePreviewTunnel
     case defaultThreadEnvMode, newWorktreesStartFromOrigin
+    case githubIntegrationEnabled
   }
 
   struct Preferences: Decodable {
@@ -65,6 +68,7 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
     enablePreviewTunnel = c.loose(Bool.self, .enablePreviewTunnel) ?? true
     defaultThreadEnvMode = c.loose(String.self, .defaultThreadEnvMode).flatMap(ProjectShell.ThreadEnvMode.init(rawValue:))
     newWorktreesStartFromOrigin = c.loose(Bool.self, .newWorktreesStartFromOrigin) ?? true
+    githubIntegrationEnabled = c.loose(Bool.self, .githubIntegrationEnabled) ?? false
     let presets = c.loose(LossyArray<WirePreset>.self, .snoozePresets)?.elements.compactMap(\.setting)
     snoozePresets = presets.map { $0.isEmpty ? SnoozePresetSetting.defaults : $0 } ?? SnoozePresetSetting.defaults
   }
@@ -98,6 +102,7 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
       case "sidebarAutoSettleAfterDays": next.autoSettleAfterDays = value.intValue
       case "autoResumeLimitedThreads": if let value = value.boolValue { next.autoResumeLimitedThreads = value }
       case "snoozeLimitedThreads": if let value = value.boolValue { next.snoozeLimitedThreads = value }
+      case "githubIntegrationEnabled": if let value = value.boolValue { next.githubIntegrationEnabled = value }
       case "defaultRuntimeMode": if let mode = value.stringValue.flatMap(RuntimeMode.init(rawValue:)) { next.defaultRuntimeMode = mode }
       case "responseStreamingMode":
         if let mode = value.stringValue.flatMap(ResponseStreamingMode.init(rawValue:)) { next.responseStreaming = mode }

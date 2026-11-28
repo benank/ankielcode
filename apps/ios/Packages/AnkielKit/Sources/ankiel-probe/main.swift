@@ -109,8 +109,11 @@ func run() async throws {
     return
   }
   if CommandLine.arguments.contains("--issues") {
-    // `--enable-github` turns the computer's GitHub integration on for this read and back off.
-    let toggle = CommandLine.arguments.contains("--enable-github")
+    // `--enable-github` turns the computer's GitHub integration on for this read, then restores it.
+    let before = session.initialConfig.settings.githubIntegrationEnabled
+    let capable = session.initialConfig.environment.capabilities["issues"]?.boolValue == true
+    print("github integration: \(before ? "on" : "off"), capabilities.issues: \(capable) -> Issues \(before && capable ? "shown" : "hidden")")
+    let toggle = CommandLine.arguments.contains("--enable-github") && !before
     if toggle {
       _ = try await session.rpc.call(UpdateSettingsRequest.rpcTag, payload: UpdateSettingsRequest(patch: .githubIntegration(true)), as: ServerSettings.self)
       print("github integration: on for this read")
@@ -122,7 +125,7 @@ func run() async throws {
     }
     if toggle {
       _ = try await session.rpc.call(UpdateSettingsRequest.rpcTag, payload: UpdateSettingsRequest(patch: .githubIntegration(false)), as: ServerSettings.self)
-      print("github integration: back off")
+      print("github integration: restored to off")
     }
     await session.close()
     return

@@ -386,7 +386,8 @@ back through 200 lines and leaves on `exit`.
 
 ## Issues
 
-Home's menu has **Issues** (RN's Issues tab) when a computer says `capabilities.issues`: one
+Home's menu has **Issues** (RN's Issues tab) when a computer says `capabilities.issues` and has
+GitHub integration on (`githubIntegrationEnabled`, RN `issuesSupportedAtom`): one
 computer's issues across its projects' trackers (`issues.list`: open, closed or all, one project or
 every one, a search the trackers run, more pages per scope as the list scrolls), each opening
 read-only (`issues.detail`, older pages with `issues.comments`) with its description and comments as
@@ -395,8 +396,8 @@ its title and link), Copy link and Open on the tracker. Writes (comment, close o
 labels, assignees, reactions, new issues), linked threads, saved views and the involvement filters
 are not built. Logic is in `AnkielKit/Issues`; `swift run ankiel-probe --state <file> --issues
 [--project <id>] [--query <q>] [--closed] [--enable-github]` lists and opens the newest issue
-without writing to the tracker. `--enable-github` turns the computer's GitHub integration on for
-that read and off again (it changes the server's settings).
+without writing to the tracker. It prints the gate; `--enable-github` turns the computer's GitHub
+integration on for that read and back off if it was off (it changes the server's settings).
 
 | Variable                   | Values                     | Shows                                                                                        |
 | -------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |

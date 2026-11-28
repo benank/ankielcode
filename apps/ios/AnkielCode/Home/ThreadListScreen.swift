@@ -261,9 +261,8 @@ struct ThreadListScreen: View {
     }
   }
 
-  /// Issues need a computer that can read them (RN hides the tab otherwise).
   private var showsIssues: Bool {
-    !IssueComputers.choices(model.registry).isEmpty || IssuesDebug.source != nil
+    IssueComputers.available(model.registry.environments) || IssuesDebug.source != nil
   }
 
   private var newThreadButton: some View {

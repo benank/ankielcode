@@ -34,7 +34,7 @@ struct IssuesRoot: View {
     .onAppear {
       guard issues == nil else { return }
       let fixture = IssuesDebug.source
-      let environmentId = fixture == nil ? IssueComputers.choices(model.registry).first?.id : IssuesDebug.environmentId
+      let environmentId = fixture == nil ? IssueComputers.choices(model.registry.environments).first?.id : IssuesDebug.environmentId
       let created = IssuesModel(source: fixture ?? model.registry, environmentId: environmentId)
       issues = created
       if let entry = IssuesDebug.openedEntry(created) { path = [entry] }
@@ -46,15 +46,6 @@ struct IssuesRoot: View {
     guard let environmentId = issues?.environmentId else { return }
     // Opening an entry closes this cover first, then shows the new-thread sheet.
     model.open(.newThread(prompt: IssueCalls.threadPrompt(entry), environmentId: environmentId, projectId: entry.projectId))
-  }
-}
-
-/// Computers whose issues can be read (`capabilities.issues`), connected ones first.
-enum IssueComputers {
-  @MainActor
-  static func choices(_ registry: EnvironmentRegistry) -> [EnvironmentModel] {
-    let capable = registry.environments.filter { $0.isEnabled && $0.capabilities["issues"]?.boolValue == true }
-    return capable.filter(\.status.isConnected) + capable.filter { !$0.status.isConnected }
   }
 }
 
@@ -161,7 +152,7 @@ private struct IssuesList: View {
     environment?.shell.snapshot?.projects.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending } ?? []
   }
 
-  private var computers: [EnvironmentModel] { IssueComputers.choices(model.registry) }
+  private var computers: [EnvironmentModel] { IssueComputers.choices(model.registry.environments) }
 
   private var filterMenu: some View {
     Menu {

@@ -112,3 +112,48 @@ struct IssueTests {
     #expect(three.url.hasSuffix("/issues/42"))
   }
 }
+
+/// RN `issuesSupportedAtom`: Issues shows only where GitHub integration is on and the computer
+/// says `capabilities.issues`; the list still takes any capable computer.
+@MainActor @Suite("Issue computers")
+struct IssueComputerTests {
+  func computer(_ id: String, issues: Bool?, github: Bool, connected: Bool = true, enabled: Bool = true) -> EnvironmentModel {
+    let endpoint = EnvironmentEndpoint(httpBaseURL: URL(string: "http://127.0.0.1:9/")!)!
+    var record = EnvironmentRecord(SavedEnvironment(environmentId: id, label: id, endpoint: endpoint, serverVersion: "1"))
+    record.enabled = enabled
+    let model = EnvironmentModel(record: record)
+    model.status = connected ? .connected : .offline
+    if let issues { model.capabilities = ["issues": .bool(issues)] }
+    model.settings.githubIntegrationEnabled = github
+    return model
+  }
+
+  @Test func `the setting decodes, defaulting to off`() throws {
+    #expect(try JSONDecoder().decode(ServerSettings.self, from: Data(#"{"githubIntegrationEnabled":true}"#.utf8)).githubIntegrationEnabled)
+    #expect(try JSONDecoder().decode(ServerSettings.self, from: Data("{}".utf8)).githubIntegrationEnabled == false)
+    #expect(try JSONDecoder().decode(ServerSettings.self, from: Data(#"{"githubIntegrationEnabled":"yes"}"#.utf8)).githubIntegrationEnabled == false)
+  }
+
+  @Test func `issues show only with the capability and GitHub integration`() {
+    #expect(IssueComputers.available([computer("a", issues: true, github: true)]))
+    #expect(!IssueComputers.available([computer("a", issues: true, github: false)]))
+    #expect(!IssueComputers.available([computer("a", issues: nil, github: true)]))
+    #expect(!IssueComputers.available([computer("a", issues: false, github: true)]))
+    #expect(!IssueComputers.available([computer("a", issues: true, github: true, enabled: false)]))
+    #expect(!IssueComputers.available([]))
+  }
+
+  @Test func `a pending integration write shows Issues at once`() {
+    let target = computer("a", issues: true, github: false)
+    target.pendingSettings = [PendingSettingsWrite(id: UUID(), patch: .githubIntegration(true))]
+    #expect(IssueComputers.available([target]))
+  }
+
+  @Test func `the list takes capable computers, integration on and connected first`() {
+    let off = computer("off", issues: true, github: false)
+    let offline = computer("offline", issues: true, github: true, connected: false)
+    let on = computer("on", issues: true, github: true)
+    let none = computer("none", issues: nil, github: true)
+    #expect(IssueComputers.choices([off, offline, none, on]).map(\.id) == ["on", "offline", "off"])
+  }
+}
