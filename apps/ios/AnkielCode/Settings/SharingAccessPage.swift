@@ -32,6 +32,16 @@ struct SharingAccessPage: View {
             .foregroundStyle(Palette.textSecondary)
         }
       }
+      if canWrite, environment.supportsPairingInvites {
+        Section {
+          NavigationLink(value: SettingsRoute.pairDevice(environment.id)) {
+            Label("Pair a Mac or device", systemImage: "laptopcomputer")
+          }
+          .accessibilityIdentifier("access.pairDevice")
+        } footer: {
+          Text("Connect your Mac or another device with Handoff, AirDrop, or a link, without typing codes.")
+        }
+      }
       if case .denied = directory.state {
       } else {
         linksSection

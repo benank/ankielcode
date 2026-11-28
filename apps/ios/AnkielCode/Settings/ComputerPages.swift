@@ -230,6 +230,10 @@ struct ComputerDetailView: View {
         }
       }
 
+      if environment.status.isConnected, environment.holds(AuthScope.accessWrite), environment.hasConfig {
+        PairAnotherDeviceSection(environment: environment)
+      }
+
       ServerVersionSection(environment: environment)
 
       Section {
@@ -270,6 +274,38 @@ struct ComputerDetailView: View {
       Text("You'll need a new pairing link to add it again.")
     }
   }
+}
+
+/// RN's "Pair another device" section: a row to the invite page, or the update hint on a server
+/// without invites.
+struct PairAnotherDeviceSection: View {
+  let environment: EnvironmentModel
+
+  var body: some View {
+    Section {
+      if environment.supportsPairingInvites {
+        NavigationLink(value: SettingsRoute.pairDevice(environment.id)) {
+          Label("Pair a Mac or device", systemImage: "laptopcomputer")
+        }
+        .accessibilityIdentifier("computer.pairDevice")
+      } else {
+        Text("Update this server to pair other devices with Handoff, AirDrop, or a link.")
+          .font(Typography.footnote)
+          .foregroundStyle(Palette.textSecondary)
+      }
+    } header: {
+      Text("Pair another device")
+    } footer: {
+      if environment.supportsPairingInvites {
+        Text("Connect your Mac or another device with Handoff, AirDrop, or a link, without typing codes.")
+      }
+    }
+  }
+}
+
+extension EnvironmentModel {
+  /// `capabilities.devicePairingInvites`.
+  var supportsPairingInvites: Bool { capabilities["devicePairingInvites"]?.boolValue == true }
 }
 
 /// What this device may do on the computer (RN `EnvironmentRoutesSection` "Your permissions").

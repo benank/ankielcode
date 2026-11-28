@@ -5621,5 +5621,16 @@
     "ru": "Лицензия шрифта (OFL)",
     "sv": "Typsnittslicens (OFL)",
     "zh-Hans": "字体许可证（OFL）"
+  },
+  "Pair a device": {
+    "de": "Gerät koppeln",
+    "es": "Emparejar un dispositivo",
+    "fr": "Appairer un appareil",
+    "ja": "デバイスをペアリング",
+    "ko": "기기 페어링",
+    "pt-BR": "Parear um dispositivo",
+    "ru": "Сопряжение устройства",
+    "sv": "Parkoppla en enhet",
+    "zh-Hans": "配对设备"
   }
 }

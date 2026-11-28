@@ -24,6 +24,10 @@
 	<string>Ankiel Code saves images you choose to your photo library.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Ankiel Code transcribes your dictation on this device.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.ankiel.ankielcode.pair-environment</string>
+	</array>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Geist_400Regular.ttf</string>
@@ -35,6 +39,31 @@
 		<string>GeistMono_500Medium.ttf</string>
 		<string>GeistMono_600SemiBold.ttf</string>
 		<string>GeistMono_700Bold.ttf</string>
+	</array>
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.json</string>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Ankiel Code Pairing Invite</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.ankiel.ankielcode.pairing-invite</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>ankielpair</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.ankielcode.pairing-invite+json</string>
+				</array>
+			</dict>
+		</dict>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>

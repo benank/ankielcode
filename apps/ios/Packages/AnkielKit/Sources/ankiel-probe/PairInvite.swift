@@ -22,6 +22,7 @@ import Foundation
 }
 
 func probeClaimInvite(_ file: String) async throws {
+  setvbuf(stdout, nil, _IOLBF, 0)
   let deadline = Date.now.addingTimeInterval(Double(argument("--approve-wait") ?? "") ?? 90)
   var raw: String?
   while raw == nil, Date.now < deadline {
@@ -43,8 +44,8 @@ func probeClaimInvite(_ file: String) async throws {
       if let credential = status.credential {
         let token = try await claimant.exchange(credential)
         let state = try await claimant.session(token)
-        print("new session:       \(state["sessionId"]?.stringValue ?? "?") scopes=\(state["permissions"]?.arrayValue?.count ?? 0)")
-        print("revoke it with:    --access --revoke-session \(state["sessionId"]?.stringValue ?? "?")")
+        print("new session:       authenticated=\(state["authenticated"]?.boolValue == true) permissions=\(state["permissions"]?.arrayValue?.count ?? 0)")
+        print("revoke it:         --access lists it as \"ankiel-probe claimant\"; --access --revoke-session <id>")
       }
       return
     }

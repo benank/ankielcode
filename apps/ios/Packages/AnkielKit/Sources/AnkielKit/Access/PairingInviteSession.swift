@@ -31,8 +31,9 @@ public final class PairingInviteSession {
   public private(set) var phase = Phase.creating
   /// An approve or deny in flight; polling waits while it runs.
   public private(set) var decision: Decision?
-  /// Why the last approve or deny failed; the claim stays on screen.
+  /// Why the last approve or deny failed, and which it was; the claim stays on screen.
   public private(set) var actionError: PairingInviteError?
+  public private(set) var failedDecision: Decision?
   /// Bumped once per claimed invite and once per approval (haptic triggers).
   public private(set) var claims = 0
   public private(set) var approvals = 0
@@ -101,6 +102,7 @@ public final class PairingInviteSession {
       approvals += 1
     } catch {
       actionError = error
+      failedDecision = .approve
     }
     decision = nil
   }
@@ -114,6 +116,7 @@ public final class PairingInviteSession {
       finish(.ended(.denied))
     } catch {
       actionError = error
+      failedDecision = .deny
     }
     decision = nil
   }
@@ -299,6 +302,7 @@ public final class EnvironmentPairingInviteService: PairingInviteService {
       }
       let now = Date.now
       created = now
+      state = .pending
       return PairingInviteCreated(
         inviteId: "invite-fake-1", expiresAt: WireTimestamp(now.addingTimeInterval(lifetime)), scopes: request.scopes ?? AuthScope.grants)
     }

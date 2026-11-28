@@ -6,7 +6,7 @@
   /// folder, credential store and defaults, a fake settings sink and a fake release lookup, so
   /// removing, clearing and writing never touch a real computer or the real saved state.
   /// `ANKIEL_DEBUG_ROUTE=settings-<page>` opens a page (`computer`, `computer-pairing`,
-  /// `computer-off`, `appearance`, `general`, `chat`, `notifications`, `providers`, `threads`,
+  /// `computer-off`, `computer-access`, `computer-pair`, `appearance`, `general`, `chat`, `notifications`, `providers`, `threads`,
   /// `about`, `storage`, `diagnostics`, `computers`).
   enum SettingsDebug {
     enum Mode: String {
@@ -91,7 +91,8 @@
               EnvironmentRoute(endpoint: endpoint("https://ankiel-relay.example.workers.dev/h/abcdefghijklmnopqrstuvwxyz/"), kind: .relay, learned: true),
             ], version: "0.1.11"),
           status: .connected, settings: settings, providers: [claude, codex, cursor, replay],
-          scopes: Set(AuthScope.grants.filter { $0 != "terminal:operate" }), capabilities: ["serverSelfUpdate": "respawn"]),
+          scopes: Set(AuthScope.grants.filter { $0 != "terminal:operate" && (PairDeviceDebug.mode != "noaccess" || $0 != "access:write") }),
+          capabilities: ["serverSelfUpdate": "respawn", "devicePairingInvites": .bool(PairDeviceDebug.mode != "unsupported")]),
         .init(
           record: record(
             buildBox, "Build Box", routes: [EnvironmentRoute(endpoint: endpoint("https://buildbox.tail1234.ts.net/"), kind: .tailnet)],
@@ -110,6 +111,7 @@
         case "computer-off": .computer(laptop)
         case "provider": .provider(studio, "codex")
         case "computer-access": .access(model.isSettingsFixture ? studio : model.registry.environments.first?.id ?? studio)
+        case "computer-pair": .pairDevice(model.isSettingsFixture ? studio : model.registry.environments.first?.id ?? studio)
         case "general": .general
         case "appearance": .appearance
         case "chat": .chat
@@ -133,6 +135,11 @@
       if case .access(let id)? = route {
         model.openSettings(.computer(id))
         model.settingsPath.append(.access(id))
+        return
+      }
+      if case .pairDevice(let id)? = route {
+        model.openSettings(.computer(id))
+        model.settingsPath.append(.pairDevice(id))
         return
       }
       model.openSettings(route)
