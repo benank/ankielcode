@@ -127,6 +127,8 @@ final class AppModel {
     home.start()
     usage.start()
     LaunchSignposts.mark("homeStarted")
+    // Threads and sheets opened now go to home's navigation, which must be mounted to take them.
+    if route == .home { await navigator.homeIsMounted() }
     #if DEBUG
       applyDebugLaunch()
     #endif

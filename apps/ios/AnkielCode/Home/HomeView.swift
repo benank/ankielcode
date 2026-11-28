@@ -48,6 +48,8 @@ struct HomeView: View {
       }
     }
     .fullScreenCover(isPresented: pullRequestsPresented) { PullRequestsRoot() }
+    // A turn later, once the stack's controller is in the window.
+    .task { navigator.markHomeMounted() }
     #if DEBUG
       .onAppear { model.pullRequests.applyDebugOpen(app: model) }
     #endif

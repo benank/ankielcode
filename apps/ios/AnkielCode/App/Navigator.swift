@@ -46,6 +46,28 @@ final class Navigator {
     }
   }
 
+  /// Whether home's navigation is on screen. A path set while home is still being inserted (the
+  /// launch's route change) could be dropped, leaving a cold-launch link on the list.
+  @ObservationIgnored private var homeMounted = false
+  @ObservationIgnored private var mountWaiters: [CheckedContinuation<Void, Never>] = []
+
+  func markHomeMounted() {
+    homeMounted = true
+    for waiter in mountWaiters { waiter.resume() }
+    mountWaiters = []
+  }
+
+  /// Returns once home's navigation can take a path (or after two seconds, so a launch never
+  /// waits on a home that does not come).
+  func homeIsMounted() async {
+    guard !homeMounted else { return }
+    Task { [weak self] in
+      try? await Task.sleep(for: .seconds(2))
+      self?.markHomeMounted()
+    }
+    await withCheckedContinuation { mountWaiters.append($0) }
+  }
+
   /// The split view's columns (the keyboard's Toggle sidebar).
   var sidebarVisibility = NavigationSplitViewVisibility.automatic
 
