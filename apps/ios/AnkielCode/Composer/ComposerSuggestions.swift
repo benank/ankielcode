@@ -48,7 +48,7 @@ final class ComposerSuggestions {
     if next.kind == .path {
       if !source.canRead || source.context == nil {
         pathRows = []
-        notice = source.context == nil ? nil : String(localized: "This device cannot read this computer's files.")
+        notice = source.context == nil ? nil : String(localized: "This connection cannot read host files.")
       } else {
         notice = nil
         searchPaths(next.query.trimmingCharacters(in: .whitespacesAndNewlines), source: source)
