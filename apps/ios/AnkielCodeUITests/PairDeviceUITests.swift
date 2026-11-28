@@ -55,7 +55,7 @@ final class PairDeviceUITests: HomeUITestCase {
 
   func testClaimShowsTheCodeAndApproves() {
     open("claimed")
-    XCTAssertTrue(app.buttons["pairDevice.approve"].waitForExistence(timeout: 8))
+    XCTAssertTrue(app.buttons["pairDevice.approve"].waitForExistence(timeout: 12))
     XCTAssertTrue(app.staticTexts["4 8 2 - 9 1 3"].exists)
     XCTAssertTrue(app.descendants(matching: .any).containing(NSPredicate(format: "label CONTAINS 'Harbor MacBook Pro'")).firstMatch.exists)
     XCTAssertTrue(app.staticTexts["Grants full client access to Studio Mac."].exists)
@@ -69,7 +69,7 @@ final class PairDeviceUITests: HomeUITestCase {
 
   func testDenyEndsAndTryAgainStartsOver() {
     open("claimed")
-    XCTAssertTrue(app.buttons["pairDevice.deny"].waitForExistence(timeout: 8))
+    XCTAssertTrue(app.buttons["pairDevice.deny"].waitForExistence(timeout: 12))
     app.buttons["pairDevice.deny"].tap()
     XCTAssertTrue(element("pairDevice.denied").waitForExistence(timeout: 5))
     shot("pair-denied")
@@ -82,6 +82,35 @@ final class PairDeviceUITests: HomeUITestCase {
     XCTAssertTrue(element("pairDevice.ready").waitForExistence(timeout: 5))
     XCTAssertTrue(element("pairDevice.expired").waitForExistence(timeout: 12))
     shot("pair-expired")
+  }
+
+  /// Both share buttons open the system sheet, and the sheet does not end the invite.
+  func testShareSheetsOpen() {
+    open("ready")
+    XCTAssertTrue(element("pairDevice.ready").waitForExistence(timeout: 5))
+    for id in ["pairDevice.shareFile", "pairDevice.shareLink"] {
+      app.buttons[id].tap()
+      let copy = app.cells.matching(NSPredicate(format: "identifier == 'actionGroupCell' AND label == 'Copy'")).firstMatch
+      XCTAssertTrue(copy.waitForExistence(timeout: 8), "\(id) opens the share sheet")
+      if id == "pairDevice.shareFile" { XCTAssertTrue(app.cells["Save to Files"].exists, "the invite is a file") }
+      shot("pair-\(id)")
+      XCUIApplication(bundleIdentifier: "com.apple.springboard").swipeDown()
+      XCTAssertTrue(waitForAbsence(copy), "the sheet closes")
+      XCTAssertTrue(element("pairDevice.ready").exists, "closing the sheet keeps the invite")
+    }
+  }
+
+  /// A claim that arrives while the share sheet is up still shows: opening the sheet does not stop
+  /// the session (which would deny the invite).
+  func testClaimArrivesUnderTheShareSheet() {
+    open("claimed")
+    XCTAssertTrue(element("pairDevice.ready").waitForExistence(timeout: 5))
+    app.buttons["pairDevice.shareLink"].tap()
+    XCTAssertTrue(app.buttons["pairDevice.approve"].waitForExistence(timeout: 15), "polling went on under the sheet")
+  }
+
+  private func waitForAbsence(_ element: XCUIElement) -> Bool {
+    element.waitForNonExistence(timeout: 5)
   }
 
   func testRefusalsSayWhy() {

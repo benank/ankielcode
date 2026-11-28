@@ -172,6 +172,8 @@ public enum PairingInviteError: Error, Sendable, Hashable {
     case RpcError.failed(let failure):
       self = .rejected(tag: failure.tag, reason: failure.error["reason"]?.stringValue, message: failure.message)
     case RpcError.connectionClosed: self = .notConnected
+    // A 401 never reaches here as a tagged body: the connector renews once, then gives up.
+    case ConnectionError.credentialRejected: self = .rejected(tag: "EnvironmentAuthInvalidError", reason: nil, message: nil)
     default: self = .failed(String(describing: error))
     }
   }

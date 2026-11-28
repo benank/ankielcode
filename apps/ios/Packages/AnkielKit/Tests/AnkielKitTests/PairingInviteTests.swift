@@ -187,6 +187,9 @@ struct PairingInviteTests {
     let server = PairingInviteError(
       RpcError.failed(RpcFailure(error: ["_tag": "EnvironmentOperationForbiddenError", "reason": "pairing_invite_limit_reached"])))
     #expect(server.reason == "pairing_invite_limit_reached")
+    // A credential refused after renewal ends the flow like RN's EnvironmentAuthInvalidError.
+    #expect(PairingInviteError(ConnectionError.credentialRejected).pollOutcome == .permanent)
+    #expect(PairingInviteError(ConnectionError.unreachable("offline")).pollOutcome == .transient)
   }
 }
 

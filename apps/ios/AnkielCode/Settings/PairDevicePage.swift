@@ -229,15 +229,15 @@ private struct PairDeviceFlow: View {
                 .font(Typography.footnote)
                 .foregroundStyle(Palette.textSecondary)
             }
+            Text("Needs approval")
+              .font(Typography.caption.weight(.medium))
+              .foregroundStyle(Palette.textSecondary)
+              .padding(.horizontal, Spacing.sm)
+              .padding(.vertical, Spacing.xxs)
+              .background(Palette.fillStrong, in: .capsule)
+              .padding(.top, Spacing.xxs)
           }
           .frame(maxWidth: .infinity, alignment: .leading)
-          Text("Needs approval")
-            .font(Typography.caption.weight(.medium))
-            .foregroundStyle(Palette.textSecondary)
-            .padding(.horizontal, Spacing.sm)
-            .padding(.vertical, Spacing.xxs)
-            .background(Palette.fillStrong, in: .capsule)
-            .fixedSize()
         }
         .accessibilityElement(children: .combine)
 
@@ -593,7 +593,7 @@ struct PairingInviteFile: Transferable {
     static var baseURL: String? { ProcessInfo.processInfo.environment["ANKIEL_DEBUG_PAIR_BASE_URL"] }
 
     @MainActor static func service() -> FakePairingInviteService {
-      FakePairingInviteService(mode: mode.flatMap(FakePairingInviteService.Mode.init(rawValue:)) ?? .ready)
+      FakePairingInviteService(mode: mode.flatMap(FakePairingInviteService.Mode.init(rawValue:)) ?? .ready, claimAfter: 4)
     }
 
     static func write(_ invite: PairingInvitePayload) {
