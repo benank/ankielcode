@@ -1,6 +1,7 @@
 included:
   - ios/AnkielCode
   - modules/ankiel-composer-editor/ios
+  - modules/ankiel-handoff/ios
   - modules/ankiel-native-controls/ios
   - modules/ankiel-terminal/ios
   - modules/ankiel-review-diff/ios
