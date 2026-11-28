@@ -44,7 +44,11 @@ struct ReviewScreen: View {
     .onAppear { review.load() }
     // Turns arrive with the thread's stream, possibly after review opened.
     .onChange(of: review.selectedId) { _, _ in review.load() }
-    .onChange(of: files.map(\.id)) { _, ids in openPending(ids) }
+    .onChange(of: files.map(\.id), initial: true) { _, ids in
+      openPending(ids)
+      // The split's detail shows the first file rather than an empty pane.
+      if sizeClass == .regular, splitSelection.map(ids.contains) != true { splitSelection = ids.first }
+    }
   }
 
   /// A feed row asked for one file: open it once the section's files are in.

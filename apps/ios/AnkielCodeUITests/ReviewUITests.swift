@@ -29,7 +29,8 @@ final class ReviewUITests: HomeUITestCase {
     XCTAssertTrue(uncommitted.waitForExistence(timeout: 5))
     uncommitted.tap()
 
-    let file = app.buttons["review.file"].firstMatch
+    // A button on iPhone, a selectable list cell in the iPad split.
+    let file = app.descendants(matching: .any).matching(identifier: "review.file").firstMatch
     XCTAssertTrue(file.waitForExistence(timeout: 10))
     shot("review-uncommitted")
     file.tap()
