@@ -36,11 +36,28 @@ struct CanvasBackground: View {
 }
 
 extension View {
-  /// A grouped list or form on the theme (RN's screen and grouped cards) instead of the system
-  /// grouped colors, which no theme reaches. Rows that set their own background keep it.
-  func themedList() -> some View {
-    scrollContentBackground(.hidden)
-      .listRowBackground(Palette.groupedRow)
-      .background(Palette.canvas)
+  /// A list's background on the theme instead of the system grouped colors, which no theme reaches.
+  /// Rows need `ThemedList` (or `themedRows()` on their sections) for their own background.
+  func themedList(_ background: Color = Palette.canvas) -> some View {
+    scrollContentBackground(.hidden).background(background)
+  }
+
+  /// Grouped rows on the theme's grouped card color (RN's grouped card). Put it on a section or a
+  /// group of sections: on a `List` it never reaches the rows. Rows that set their own keep it.
+  func themedRows() -> some View {
+    listRowBackground(Palette.groupedRow)
+  }
+}
+
+/// A grouped list on the theme: canvas behind, the grouped card color on every row.
+struct ThemedList<Content: View>: View {
+  var background = Palette.canvas
+  @ViewBuilder var content: Content
+
+  var body: some View {
+    List {
+      Group { content }.themedRows()
+    }
+    .themedList(background)
   }
 }

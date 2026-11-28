@@ -66,8 +66,8 @@ struct AppearanceSettingsPage: View {
 
   var body: some View {
     @Bindable var preferences = model.preferences
-    List {
-      Section("Theme") {
+    ThemedList {
+      Section("Color scheme") {
         Picker(selection: $preferences.values.themeMode) {
           Text("System", comment: "appearance follows the system").tag(ThemeMode.system)
           Text("Light", comment: "light appearance").tag(ThemeMode.light)
@@ -79,6 +79,12 @@ struct AppearanceSettingsPage: View {
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets())
         .accessibilityIdentifier("appearance.theme")
+      }
+
+      Section("Themes") {
+        ThemeGrid(light: $preferences.values.lightThemeId, dark: $preferences.values.darkThemeId)
+          .listRowBackground(Color.clear)
+          .listRowInsets(EdgeInsets())
       }
 
       Section {
@@ -112,6 +118,7 @@ struct AppearanceSettingsPage: View {
     .navigationTitle("Appearance")
     .navigationBarTitleDisplayMode(.inline)
     .sensoryFeedback(.selection, trigger: preferences.values.themeMode)
+    .sensoryFeedback(.selection, trigger: [preferences.values.lightThemeId, preferences.values.darkThemeId])
   }
 
   private var customCodeSize: Binding<Bool> {
@@ -122,6 +129,97 @@ struct AppearanceSettingsPage: View {
 
   private func codeSize(default size: Double) -> Binding<Double> {
     Binding(get: { model.preferences.values.codeFontSize ?? size }, set: { model.preferences.values.codeFontSize = $0 })
+  }
+}
+
+/// The color themes (RN `ThemeAppearanceSection`): a card per theme with its light and dark
+/// swatches. The card sets both appearances; a swatch sets only its own.
+private struct ThemeGrid: View {
+  @Binding var light: String?
+  @Binding var dark: String?
+
+  var body: some View {
+    let selection = ThemeSelection(lightId: light, darkId: dark)
+    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: Spacing.md)], spacing: Spacing.md) {
+      ForEach(ThemeID.allCases, id: \.self) { theme in
+        ThemeCard(
+          theme: theme, lightSelected: selection.light == theme, darkSelected: selection.dark == theme,
+          select: { appearance in
+            if appearance != true { light = theme.rawValue }
+            if appearance != false { dark = theme.rawValue }
+          })
+      }
+    }
+    .motion(Motion.micro, value: selection)
+  }
+}
+
+private struct ThemeCard: View {
+  let theme: ThemeID
+  let lightSelected: Bool
+  let darkSelected: Bool
+  /// Whether it sets the dark appearance (false: light); nil sets both.
+  let select: (_ dark: Bool?) -> Void
+
+  var body: some View {
+    VStack(spacing: Spacing.md) {
+      HStack(spacing: Spacing.sm) {
+        swatch(dark: false, selected: lightSelected)
+        swatch(dark: true, selected: darkSelected)
+      }
+      Text(Self.name(theme))
+        .font(Typography.callout.weight(.medium))
+        .foregroundStyle(Palette.textPrimary)
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+    }
+    .padding(.vertical, Spacing.lg)
+    .padding(.horizontal, Spacing.sm)
+    .frame(maxWidth: .infinity)
+    .background(Palette.groupedRow, in: .rect(cornerRadius: Radius.large, style: .continuous))
+    .contentShape(.rect(cornerRadius: Radius.large, style: .continuous))
+    .onTapGesture { select(nil) }
+    .accessibilityElement(children: .contain)
+    .accessibilityIdentifier("appearance.theme.\(theme.rawValue)")
+    .accessibilityAction(named: Text("Sets both light and dark appearances")) { select(nil) }
+  }
+
+  private func swatch(dark: Bool, selected: Bool) -> some View {
+    Button {
+      select(dark)
+    } label: {
+      ThemeSwatch(theme: theme, dark: dark, size: 52)
+        .padding(3)
+        .overlay { Circle().strokeBorder(selected ? Palette.accent : .clear, lineWidth: 2.5) }
+        .overlay(alignment: .bottomTrailing) {
+          if selected {
+            Image(systemName: dark ? "moon" : "sun.max")
+              .font(Typography.caption2.weight(.medium))
+              .foregroundStyle(Palette.textSecondary)
+              .frame(width: 20, height: 20)
+              .background(Palette.surface, in: .circle)
+              .overlay { Circle().strokeBorder(Palette.border) }
+              .transition(.scale.combined(with: .opacity))
+          }
+        }
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(
+      dark ? Text("\(Self.name(theme)) dark theme") : Text("\(Self.name(theme)) light theme"))
+    .accessibilityHint(dark ? Text("Sets the dark appearance only") : Text("Sets the light appearance only"))
+    .accessibilityAddTraits(selected ? .isSelected : [])
+    .accessibilityIdentifier("appearance.theme.\(theme.rawValue).\(dark ? "dark" : "light")")
+  }
+
+  /// RN translates the newer theme names; "Ankiel Code" and "Orchid" are names, not words.
+  static func name(_ theme: ThemeID) -> String {
+    switch theme {
+    case .grove: String(localized: "Grove", comment: "color theme name")
+    case .ocean: String(localized: "Ocean", comment: "color theme name")
+    case .ember: String(localized: "Ember", comment: "color theme name")
+    case .iris: String(localized: "Iris", comment: "color theme name")
+    case .ankielCode, .orchid: theme.label
+    }
   }
 }
 
