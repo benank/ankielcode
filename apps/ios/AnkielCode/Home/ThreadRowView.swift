@@ -173,7 +173,7 @@ struct ThreadLightView: View {
     switch light {
     case .working: Palette.working
     case .waiting: Palette.textTertiary
-    case .done: Palette.working
+    case .done: Palette.success
     case .failed: Palette.danger
     case .attention: Palette.attention
     }
