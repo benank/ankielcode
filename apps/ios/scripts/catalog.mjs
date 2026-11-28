@@ -90,7 +90,8 @@ const literals = (source) => {
             // A literal inside the interpolation, such as a default value.
             const nested = source.startsWith('"""', index);
             index += nested ? 3 : 1;
-            readLiteral(nested);
+            const inner = readLiteral(nested);
+            if (inner !== null) found.add(inner);
             continue;
           }
           if (source[index] === "(") depth += 1;
