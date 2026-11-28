@@ -1,3 +1,4 @@
+import ObjectiveC
 import XCTest
 
 /// System entry points. Quick actions go through Springboard (long-press the icon); intents run
@@ -15,6 +16,8 @@ final class ShortcutUITests: HomeUITestCase {
   }
 
   private func quickAction(_ title: String) throws {
+    let restore = SpringboardIdle.skip()
+    defer { restore() }
     XCUIDevice.shared.press(.home)
     // The React Native app shares the name "Ankiel Code" when both are installed, and Springboard
     // gives icons no bundle id, so use the icon whose menu offers this app's quick action.
@@ -117,5 +120,24 @@ final class ShortcutUITests: HomeUITestCase {
     XCTAssertTrue(field.waitForExistence(timeout: 15))
     let focused = expectation(for: NSPredicate(format: "hasKeyboardFocus == true"), evaluatedWith: field)
     wait(for: [focused], timeout: 10)
+  }
+}
+
+/// SpringBoard's quick-action menu never reports its animations idle, so every tap in it waited
+/// 60 s for quiescence (about 285 s per test). This skips XCTest's private quiescence wait while a
+/// quick action is pressed and puts it back after; the actions themselves still wait for elements.
+private enum SpringboardIdle {
+  static func skip() -> () -> Void {
+    guard let process = NSClassFromString("XCUIApplicationProcess") else { return {} }
+    for name in ["waitForQuiescenceIncludingAnimationsIdle:isPreEvent:", "waitForQuiescenceIncludingAnimationsIdle:"] {
+      guard let method = class_getInstanceMethod(process, NSSelectorFromString(name)) else { continue }
+      let noWait: IMP =
+        name.hasSuffix("isPreEvent:")
+        ? imp_implementationWithBlock({ (_: AnyObject, _: Bool, _: Bool) in } as @convention(block) (AnyObject, Bool, Bool) -> Void)
+        : imp_implementationWithBlock({ (_: AnyObject, _: Bool) in } as @convention(block) (AnyObject, Bool) -> Void)
+      let original = method_setImplementation(method, noWait)
+      return { method_setImplementation(method, original) }
+    }
+    return {}
   }
 }
