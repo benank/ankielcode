@@ -1,6 +1,8 @@
 import Foundation
 import Synchronization
 
+#if DEBUG
+
 /// A scripted engine: it "hears" `words` one at a time, revising each as volatile text first,
 /// with a stepped level. For tests, and for debug builds (`ANKIEL_DEBUG_VOICE`) since the
 /// simulator has no microphone to drive.
@@ -107,3 +109,4 @@ public final class FakeDictationEngine: DictationEngine {
     }
   }
 }
+#endif
