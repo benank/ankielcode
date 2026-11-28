@@ -32,6 +32,12 @@ final class AccessibilityAuditUITests: HomeUITestCase {
     try audit()
   }
 
+  func testAppearance() throws {
+    launch(["ANKIEL_DEBUG_SETTINGS": "fixture", "ANKIEL_DEBUG_ROUTE": "settings-appearance"])
+    XCTAssertTrue(app.buttons["appearance.theme.ember.dark"].waitForExistence(timeout: 5))
+    try audit()
+  }
+
   func testWelcome() throws {
     launch(["ANKIEL_DEBUG_ROUTE": "onboarding"])
     sleep(2)
@@ -40,7 +46,7 @@ final class AccessibilityAuditUITests: HomeUITestCase {
 
   /// Audits the screen and fails on anything but these, which were each looked at:
   /// - Contrast: the audit samples behind Liquid Glass and the system bar's own subtitle; text
-  ///   colors are checked against WCAG AA in `Palette` instead (4.5:1 on the canvas).
+  ///   colors are checked against WCAG AA in every theme by `ThemeContrastTests` instead.
   /// - Clipped text and Dynamic Type: titles truncate on purpose; accessibility sizes were checked
   ///   by hand.
   /// - "Not human-readable" on a single token (`north.json`, `ankiel.com`): file and project names.

@@ -162,26 +162,35 @@ private struct ThemeCard: View {
   let select: (_ dark: Bool?) -> Void
 
   var body: some View {
-    VStack(spacing: Spacing.md) {
+    VStack(spacing: Spacing.xs) {
       HStack(spacing: Spacing.sm) {
         swatch(dark: false, selected: lightSelected)
         swatch(dark: true, selected: darkSelected)
       }
-      Text(Self.name(theme))
-        .font(Typography.callout.weight(.medium))
-        .foregroundStyle(Palette.textPrimary)
-        .lineLimit(1)
-        .minimumScaleFactor(0.8)
+      Button {
+        select(nil)
+      } label: {
+        Text(Self.name(theme))
+          .font(Typography.callout.weight(.medium))
+          .foregroundStyle(Palette.textPrimary)
+          .lineLimit(1)
+          .minimumScaleFactor(0.8)
+          .frame(maxWidth: .infinity, minHeight: 44)
+          .contentShape(.rect)
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel(Text("\(Self.name(theme)) theme"))
+      .accessibilityHint(Text("Sets both light and dark appearances"))
+      .accessibilityAddTraits(lightSelected && darkSelected ? .isSelected : [])
+      .accessibilityIdentifier("appearance.theme.\(theme.rawValue)")
     }
-    .padding(.vertical, Spacing.lg)
+    .padding(.top, Spacing.lg)
+    .padding(.bottom, Spacing.xs)
     .padding(.horizontal, Spacing.sm)
     .frame(maxWidth: .infinity)
     .background(Palette.groupedRow, in: .rect(cornerRadius: Radius.large, style: .continuous))
     .contentShape(.rect(cornerRadius: Radius.large, style: .continuous))
     .onTapGesture { select(nil) }
-    .accessibilityElement(children: .contain)
-    .accessibilityIdentifier("appearance.theme.\(theme.rawValue)")
-    .accessibilityAction(named: Text("Sets both light and dark appearances")) { select(nil) }
   }
 
   private func swatch(dark: Bool, selected: Bool) -> some View {
