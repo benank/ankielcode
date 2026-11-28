@@ -415,10 +415,13 @@ struct ContextWindowTests {
 
   @Test("formats token counts compactly")
   func format() {
-    #expect(ContextWindow.formatTokens(158_000) == "158k")
-    #expect(ContextWindow.formatTokens(1_000_000) == "1m")
-    #expect(ContextWindow.formatTokens(1_250) == "1.3k")
-    #expect(ContextWindow.formatTokens(2_000) == "2k")
+    #expect(ContextWindow.formatTokens(158_000) == "158K")
+    #expect(ContextWindow.formatTokens(1_000_000) == "1M")
+    #expect(ContextWindow.formatTokens(1_250) == "1.3K")
+    #expect(ContextWindow.formatTokens(2_000) == "2K")
+    #expect(ContextWindow.formatTokens(400_000) == "400K")
+    #expect(ContextWindow.formatTokens(999_499) == "999K")
+    #expect(ContextWindow.formatTokens(999_500) == "1M")
     #expect(ContextWindow.formatTokens(950) == "950")
     #expect(ContextWindow.formatTokens(nil) == "0")
   }

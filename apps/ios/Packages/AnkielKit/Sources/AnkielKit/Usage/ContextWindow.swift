@@ -143,7 +143,7 @@ public enum ContextWindow {
     return nil
   }
 
-  /// RN `formatContextWindowTokens`: 950, 1.2k, 45k, 1.2m.
+  /// RN `formatContextWindowTokens`: 950, 1.2K, 45K, 1.2M.
   public static func formatTokens(_ value: Int?) -> String {
     guard let value else { return "0" }
     let number = Double(value)
@@ -153,8 +153,8 @@ public enum ContextWindow {
       return tenths % 10 == 0 ? "\(tenths / 10)" : "\(tenths / 10).\(tenths % 10)"
     }
     if number < 1_000 { return "\(value)" }
-    if number < 10_000 { return "\(trimmed(number / 1_000))k" }
-    if number < 999_500 { return "\(Int((number / 1_000).rounded()))k" }
-    return "\(trimmed(number / 1_000_000))m"
+    if number < 10_000 { return "\(trimmed(number / 1_000))K" }
+    if number < 999_500 { return "\(Int((number / 1_000).rounded()))K" }
+    return "\(trimmed(number / 1_000_000))M"
   }
 }
