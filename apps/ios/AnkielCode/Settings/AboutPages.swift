@@ -15,7 +15,7 @@ struct AboutSettingsPage: View {
   static let license = URL(string: "https://github.com/benank/ankielcode/blob/main/LICENSE")!
 
   var body: some View {
-    List {
+    ThemedList {
       Section {
         LabeledContent("Version", value: AppInfo.versionLabel)
           .accessibilityIdentifier("about.version")
@@ -87,7 +87,7 @@ struct ClientStoragePage: View {
   }
 
   var body: some View {
-    List {
+    ThemedList {
       Section {
         ForEach(model.registry.environments) { environment in
           LabeledContent(environment.label) {
@@ -190,7 +190,7 @@ struct DiagnosticsPage: View {
   @State private var copied = false
 
   var body: some View {
-    List {
+    ThemedList {
       Section {
         Text(report)
           .font(Typography.monoSmall)

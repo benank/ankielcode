@@ -20,7 +20,7 @@ struct FileBrowserView: View {
   private var searching: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty }
 
   var body: some View {
-    List {
+    ThemedList(rows: Palette.canvas) {
       if searching {
         searchRows
       } else {

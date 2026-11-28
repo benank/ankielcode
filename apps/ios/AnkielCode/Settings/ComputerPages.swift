@@ -27,7 +27,7 @@ struct ComputersPage: View {
   @Environment(AppModel.self) private var model
 
   var body: some View {
-    List {
+    ThemedList {
       Section {
         ComputerRows()
       } footer: {
@@ -154,7 +154,7 @@ struct ComputerDetailView: View {
   }
 
   var body: some View {
-    List {
+    ThemedList {
       Section {
         HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
           ConnectionDot(status: environment.status)

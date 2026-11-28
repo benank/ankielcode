@@ -246,7 +246,7 @@ struct UsageLimitsList: View {
     let accounts = UsageLimits.accounts(sources)
     let notices = UsageLimits.notices(sources)
     let links = UsageLimits.externalLinks(sources)
-    List {
+    ThemedList {
       if let context {
         Section { ContextWindowCard(window: context) }
           .accessibilityIdentifier("usage.context")
@@ -411,7 +411,7 @@ struct UsageAccountPage: View {
     TimelineView(.everyMinute) { timeline in
       let now = timeline.date
       if let account = UsageLimits.accounts(model.usage.sources).first(where: { $0.key == key }) {
-        List {
+        ThemedList {
           Section { UsageAccountHeader(account: account) }
           Section("Limits") {
             ForEach(account.limits.windows) { UsageWindowRow($0, driver: account.driver, now: now) }

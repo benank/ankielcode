@@ -12,7 +12,7 @@ struct VoiceSettingsPage: View {
   @State private var downloadFailed = false
 
   var body: some View {
-    List {
+    ThemedList {
       Section {
         Label {
           VStack(alignment: .leading, spacing: Spacing.xxs) {

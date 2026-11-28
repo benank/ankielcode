@@ -18,7 +18,7 @@ struct NotificationsSettingsPage: View {
   ]
 
   var body: some View {
-    List {
+    ThemedList {
       Section {
         Toggle(isOn: enabled) {
           VStack(alignment: .leading, spacing: Spacing.xxs) {

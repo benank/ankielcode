@@ -15,7 +15,7 @@ struct GeneralSettingsPage: View {
 
   var body: some View {
     @Bindable var preferences = model.preferences
-    List {
+    ThemedList {
       Section {
         // iOS keeps the per-app language in the app's page in Settings; it relaunches the app.
         Button {
@@ -261,7 +261,7 @@ struct ChatSettingsPage: View {
 
   var body: some View {
     @Bindable var preferences = model.preferences
-    List {
+    ThemedList {
       Section {
         ChoiceRows(selection: $preferences.values.followUpBehavior, options: Self.options)
       } header: {

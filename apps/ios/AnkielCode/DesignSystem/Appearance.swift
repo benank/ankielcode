@@ -6,14 +6,12 @@ import UIKit
 /// `preferredColorScheme`, which does not reach sheets that are already up and does not always
 /// return them to the system appearance.
 enum Appearance {
-  /// Navigation bar titles in Geist (large titles regular and tightly tracked). Set on the
+  /// Navigation bar titles in Geist, regular (large) and medium (inline), tightly tracked. Set on the
   /// appearance proxy, not a `UINavigationBarAppearance`, so the bars keep their system glass.
   static func configureChrome() {
     let bar = UINavigationBar.appearance()
-    bar.titleTextAttributes = [.font: Typography.uiFont(.headline, weight: .semibold)]
-    bar.largeTitleTextAttributes = [
-      .font: Typography.uiFont(.largeTitle, weight: .medium), .kern: -0.9,
-    ]
+    bar.titleTextAttributes = [.font: Typography.uiFont(.headline, weight: .medium), .kern: -0.15]
+    bar.largeTitleTextAttributes = [.font: Typography.uiFont(.largeTitle), .kern: -0.9]
   }
 
   static func apply(_ mode: ThemeMode, theme: ThemeSelection) {

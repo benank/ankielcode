@@ -21,7 +21,7 @@ struct ModelPickerSheet: View {
 
   var body: some View {
     NavigationStack {
-      List {
+      ThemedList(background: Palette.sheet) {
         if let current, let selection {
           let descriptors = current.optionDescriptors
           if let reasoning = ModelCatalog.reasoning(descriptors) {

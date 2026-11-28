@@ -24,7 +24,7 @@ struct SharingAccessPage: View {
   private var canWrite: Bool { environment.status.isConnected && environment.holds(AuthScope.accessWrite) }
 
   var body: some View {
-    List {
+    ThemedList {
       if let notice {
         Section {
           Text(notice)
@@ -319,7 +319,7 @@ private struct AccessSessionSheet: View {
 
   var body: some View {
     NavigationStack {
-      List {
+      ThemedList(background: Palette.sheet) {
         Section {
           LabeledContent("Device", value: AccessCopy.deviceName(session.client.deviceType))
           if let os = session.client.os { LabeledContent("System", value: os) }
@@ -412,7 +412,7 @@ struct CreatePairingLinkSheet: View {
 
   var body: some View {
     NavigationStack {
-      Form {
+      ThemedList(background: Palette.sheet) {
         Section {
           TextField("Name", text: $name, prompt: Text("e.g. Living room iPad"))
             .submitLabel(.done)
@@ -520,7 +520,7 @@ struct PairingShareSheet: View {
 
   var body: some View {
     NavigationStack {
-      List {
+      ThemedList(background: Palette.sheet) {
         Section {
           VStack(spacing: Spacing.md) {
             if let url = pairingURL, let appLink = PairingShare.appLink(url), let image = QRCode.image(appLink.absoluteString) {

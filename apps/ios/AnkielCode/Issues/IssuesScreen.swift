@@ -59,7 +59,7 @@ private struct IssuesList: View {
   private var environment: EnvironmentModel? { issues.environmentId.flatMap { model.registry.environment($0) } }
 
   var body: some View {
-    List {
+    ThemedList(rows: Palette.canvas) {
       if !issues.unavailableTrackers.isEmpty {
         Section {
           ForEach(issues.unavailableTrackers, id: \.host) { tracker in

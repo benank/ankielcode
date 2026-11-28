@@ -41,7 +41,7 @@ struct UsageSummaryList: View {
   ]
 
   var body: some View {
-    List {
+    ThemedList {
       Section {
         Picker("Window", selection: $days) {
           ForEach(Self.windows, id: \.days) { window in

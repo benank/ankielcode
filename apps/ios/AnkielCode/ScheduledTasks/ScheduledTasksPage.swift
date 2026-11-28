@@ -64,7 +64,7 @@ struct ScheduledTasksPage: View {
   }
 
   private func list(_ tasks: ScheduledTasksModel) -> some View {
-    List {
+    ThemedList {
       if tasks.computers.isEmpty {
         ContentUnavailableView(
           "No computers", systemImage: "desktopcomputer",

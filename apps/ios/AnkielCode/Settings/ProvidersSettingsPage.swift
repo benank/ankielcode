@@ -9,7 +9,7 @@ struct ProvidersSettingsPage: View {
   private var computers: [EnvironmentModel] { model.registry.environments.filter(\.isEnabled) }
 
   var body: some View {
-    List {
+    ThemedList {
       if computers.isEmpty {
         ContentUnavailableView("Select a connected environment.", systemImage: "desktopcomputer")
           .listRowBackground(Color.clear)

@@ -87,7 +87,7 @@ private struct WorkflowsList: View {
     // Opens on the most pressing list any computer has.
     let opening = WorkflowListTab.allCases.first { candidate in sections.contains { Workflows.defaultTab($0.groups) == candidate } } ?? .all
     let shown = tab ?? opening
-    List {
+    ThemedList {
       ForEach(workflows.computers.filter { $0.snapshot == nil && $0.error != nil }) { computer in
         Label {
           Text(workflows.computers.count > 1 ? "\(computer.label): \(computer.error ?? "")" : computer.error ?? "")

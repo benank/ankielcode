@@ -164,6 +164,7 @@ struct ReviewScreen: View {
   @ViewBuilder
   private func fileList(_ diff: ReviewDiff, selection: Binding<String?>?) -> some View {
     let list = List(selection: selection) {
+      Group {
       if diff.truncated || review.selected?.turn?.repositories.contains(where: \.baselineMissing) == true {
         Section {
           notices(diff)
@@ -178,8 +179,11 @@ struct ReviewScreen: View {
           Text(verbatim: subtitle).textCase(nil)
         }
       }
+      }
+      .themedRows()
     }
     .listStyle(.insetGrouped)
+    .themedList()
     .accessibilityIdentifier("review.files")
     list
   }
@@ -395,11 +399,12 @@ struct FileJumpSheet: View {
         } label: {
           ReviewFileRow(file: file, viewed: review.isViewed(file))
         }
-        .listRowBackground(file.id == current ? Palette.diffSelected : nil)
+        .listRowBackground(file.id == current ? Palette.diffSelected : Palette.sheet)
         .accessibilityAddTraits(file.id == current ? .isSelected : [])
         .accessibilityIdentifier("review.jump.file")
       }
       .listStyle(.plain)
+      .themedList(Palette.sheet)
       .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Find a file"))
       .navigationTitle("Changed files")
       .navigationSubtitle(String(localized: "\(files.count) files"))

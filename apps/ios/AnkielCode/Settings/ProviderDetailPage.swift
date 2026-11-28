@@ -13,7 +13,7 @@ struct ProviderDetailPage: View {
   private var provider: ServerProvider? { environment.providers.first { $0.instanceId == instanceId } }
 
   var body: some View {
-    List {
+    ThemedList {
       if let provider {
         Section {
           LabeledContent("Status") {

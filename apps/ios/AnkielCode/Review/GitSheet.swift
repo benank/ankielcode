@@ -14,7 +14,7 @@ struct GitSheet: View {
 
   var body: some View {
     NavigationStack {
-      List {
+      ThemedList(background: Palette.sheet) {
         if status?.isRepo ?? true {
           actions
         }
@@ -180,7 +180,7 @@ struct CommitSheet: View {
 
   var body: some View {
     let selected = selected
-    List {
+    ThemedList(background: Palette.sheet) {
       if git.status?.isDefaultRef == true {
         Section {
           Text("You’re on the default branch. You can create a new branch when committing.")

@@ -49,14 +49,16 @@ extension View {
   }
 }
 
-/// A grouped list on the theme: canvas behind, the grouped card color on every row.
+/// A list on the theme: canvas (or the sheet color in sheets) behind, the grouped card color on
+/// every row; plain lists pass the canvas as `rows`.
 struct ThemedList<Content: View>: View {
   var background = Palette.canvas
+  var rows = Palette.groupedRow
   @ViewBuilder var content: Content
 
   var body: some View {
     List {
-      Group { content }.themedRows()
+      Group { content }.listRowBackground(rows)
     }
     .themedList(background)
   }

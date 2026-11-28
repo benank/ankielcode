@@ -58,7 +58,7 @@ struct ThreadListScreen: View {
   }
 
   private var list: some View {
-    List {
+    ThemedList(rows: Palette.canvas) {
       listRows
     }
     .listStyle(.plain)

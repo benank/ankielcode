@@ -42,6 +42,7 @@ struct RootView: View {
       PairingProgressView()
     }
     .font(Typography.body)
+    .tint(Palette.accent)
     .environment(\.codeAppearance, CodeAppearance(fontSize: model.preferences.values.codeFontSize, wraps: model.preferences.values.codeWordBreak))
     .onChange(of: appearance, initial: true) { _, next in
       Appearance.apply(next.mode, theme: next.theme)

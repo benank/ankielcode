@@ -42,7 +42,7 @@ struct ThreadSettingsPage: View {
 
   var body: some View {
     @Bindable var preferences = model.preferences
-    List {
+    ThemedList {
       Section {
         Toggle(isOn: $preferences.values.useLastProjectForNewThreads) {
           SettingText("Use last project", "Start new threads in the last project you used on this device.")

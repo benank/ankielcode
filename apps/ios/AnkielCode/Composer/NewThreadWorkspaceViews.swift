@@ -132,7 +132,7 @@ struct NewThreadBranchSheet: View {
 
   var body: some View {
     NavigationStack {
-      List {
+      ThemedList(background: Palette.sheet) {
         Section {
           Toggle("Start from remote", isOn: Binding(get: { startFromOrigin }, set: { setStartFromOrigin($0) }))
             .accessibilityIdentifier("newThread.startFromOrigin")
