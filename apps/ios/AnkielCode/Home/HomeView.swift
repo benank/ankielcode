@@ -53,6 +53,9 @@ struct HomeView: View {
     #endif
     .onChange(of: navigator.selection, initial: true) { _, ref in
       model.home.selectedKey = sizeClass == .regular ? ref?.key : nil
+      // With no thread chosen the detail is a placeholder: the list must show (portrait collapses
+      // the sidebar by default, which left only "No thread selected" and no way in but a button).
+      if sizeClass == .regular, ref == nil { navigator.sidebarVisibility = .all }
     }
   }
 }
