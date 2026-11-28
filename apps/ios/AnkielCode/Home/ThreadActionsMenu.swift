@@ -40,6 +40,11 @@ struct ThreadActionsMenu: View {
               Text(ThreadCopy.snoozeWhen(preset, now: .now))
             }
           }
+          Button {
+            home.customSnoozeRow = row
+          } label: {
+            Text("Custom…", comment: "custom snooze time")
+          }
         }
       }
       if row.isTopLevel, !row.snoozed {

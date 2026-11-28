@@ -101,3 +101,33 @@ public struct SnoozePreset: Sendable, Hashable, Identifiable {
     }
   }
 }
+
+/// A snooze the user sets by hand (RN `resolveCustomSnooze`): a local date and time, or an amount
+/// of minutes, hours or days from now. Nil when it would not end in the future.
+public enum CustomSnooze: Sendable, Hashable {
+  public enum Unit: String, Sendable, Hashable, CaseIterable { case minutes, hours, days }
+
+  case date(Date)
+  case duration(Int, Unit)
+
+  public func wake(now: Date, calendar: Calendar = .current) -> Date? {
+    let wake: Date
+    switch self {
+    case .duration(let amount, let unit):
+      guard amount > 0 else { return nil }
+      let seconds: TimeInterval = switch unit {
+      case .minutes: 60
+      case .hours: 3600
+      case .days: 86_400
+      }
+      wake = now.addingTimeInterval(Double(amount) * seconds)
+    case .date(let date):
+      // The picker's minute, in local time: seconds dropped like RN's `HH:MM` round trip.
+      var parts = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+      parts.second = 0
+      guard let minute = calendar.date(from: parts) else { return nil }
+      wake = minute
+    }
+    return wake > now ? wake : nil
+  }
+}

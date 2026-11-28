@@ -658,3 +658,10 @@ With `ANKIEL_DEBUG_COMPOSER`, projects list made-up branches (`NewThreadWorkspac
 `swift run ankiel-probe --state <file> --live worktree --repo /tmp/<throwaway checkout>` adds the
 checkout as a project, launches a Replay thread into a new worktree through the composer store,
 checks the worktree exists, then deletes the thread and the project.
+
+## Custom snooze
+
+A row's Snooze menu (list and thread header) ends with "Custom…" (RN `CustomSnoozeSheet`): a date
+and time, or 1–99 minutes, hours or days (`CustomSnooze`, RN `resolveCustomSnooze`), sent like the
+presets. The presets themselves come from the computer's `snoozePresets` setting.
+`CustomSnoozeUITests` walks it over `ANKIEL_DEBUG_HOME=sample`.

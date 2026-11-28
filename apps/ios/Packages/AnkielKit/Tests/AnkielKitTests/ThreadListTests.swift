@@ -669,3 +669,30 @@ import Testing
     #expect(ThreadLink.reference(ThreadRef(environmentId: "e", threadId: "t")) == "<ankiel-thread://v2/e/t>")
   }
 }
+
+/// RN `resolveCustomSnooze`.
+struct CustomSnoozeTests {
+  let now = Date(timeIntervalSince1970: 1_800_000_030)
+
+  @Test func durationsCountFromNow() {
+    #expect(CustomSnooze.duration(90, .minutes).wake(now: now) == now.addingTimeInterval(5400))
+    #expect(CustomSnooze.duration(2, .hours).wake(now: now) == now.addingTimeInterval(7200))
+    #expect(CustomSnooze.duration(3, .days).wake(now: now) == now.addingTimeInterval(259_200))
+    #expect(CustomSnooze.duration(0, .hours).wake(now: now) == nil)
+  }
+
+  @Test func aDateKeepsItsMinuteAndMustBeInTheFuture() {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "America/Los_Angeles")!
+    let later = now.addingTimeInterval(3600 + 45)
+    let wake = CustomSnooze.date(later).wake(now: now, calendar: calendar)
+    #expect(wake == later.addingTimeInterval(-calendar.component(.second, from: later).double))
+    #expect(CustomSnooze.date(now.addingTimeInterval(-60)).wake(now: now, calendar: calendar) == nil)
+    // The current minute has already begun, so it is not in the future.
+    #expect(CustomSnooze.date(now).wake(now: now, calendar: calendar) == nil)
+  }
+}
+
+private extension Int {
+  var double: TimeInterval { TimeInterval(self) }
+}

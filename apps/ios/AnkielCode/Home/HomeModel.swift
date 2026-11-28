@@ -32,6 +32,8 @@ final class HomeModel {
   private(set) var environmentFilter: String?
   private(set) var projectFilterKey: String?
   private(set) var snoozedExpanded = false
+  /// The row whose "Custom…" snooze sheet is open (`CustomSnoozeHost`).
+  var customSnoozeRow: ThreadRow?
   private(set) var settledExpanded = false
   private(set) var collapsedFolders: Set<String> = []
   private(set) var settledLimit = ThreadListLayout.settledInitialCount

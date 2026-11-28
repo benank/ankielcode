@@ -33,6 +33,7 @@ struct RootView: View {
       }
     }
     .modifier(PushOfferModifier())
+    .modifier(CustomSnoozeHost())
     .modifier(ShortcutSync())
     .fullScreenCover(isPresented: scanner) {
       QRScannerView()
