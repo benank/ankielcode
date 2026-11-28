@@ -195,7 +195,8 @@ final class LiveListUITests: HomeUITestCase {
 
 extension XCUIElement {
   func clearAndType(_ text: String) {
-    tap()
+    // A plain tap puts the cursor where it lands, so deleting from there left the title's tail.
+    coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.5)).tap()
     if let value = value as? String, !value.isEmpty {
       typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count))
     }
