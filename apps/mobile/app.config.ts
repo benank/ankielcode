@@ -234,7 +234,7 @@ const config: ExpoConfig = {
   slug: "ankiel-code",
   platforms: ["ios", "android"],
   scheme: variant.scheme,
-  version: repoEnv.ANKIEL_MOBILE_VERSION ?? "2.3.0",
+  version: repoEnv.ANKIEL_MOBILE_VERSION ?? "0.2.0",
   runtimeVersion: {
     // Skip costly fingerprinting on dev launches; preview and production OTAs require matching native projects.
     policy: runtimeVersionPolicy,
