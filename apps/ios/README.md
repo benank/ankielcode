@@ -224,7 +224,11 @@ The diff is a lazy SwiftUI stack, one `Text` per line.
 thread's turns with changes and their parsed diffs, the checkout's status, both
 comparisons, one lazy file patch and the contents check. `--git-actions <cwd>` (commit one file, push,
 commit on a feature branch) and `--git-pull <cwd>` write: point them only at a throwaway repository
-with a local bare remote, never a real checkout. `ReviewUITests` cover open → switch file →
+with a local bare remote, never a real checkout. `--git-thread <checkout under /tmp>` adds that
+checkout as a project with a Replay thread and prints `<projectId>:<threadId>`, which
+`--git-thread-cleanup` deletes. `ReviewLiveGitUITests` then drive the thread menu's quick action and
+the Git sheet against it (`TEST_RUNNER_LIVE_GIT_THREAD=<thread deep link>`, with
+`TEST_RUNNER_LIVE_GIT_EXPECT`/`_DONE`/`_CONFIRM` per step); they skip without it. `ReviewUITests` cover open → switch file →
 expand context, the line comment hand-off to the composer, the default-branch confirmation and
 scrolling a 5,000-line diff. `Fixtures/review/make-review-golden.mjs` (run from
 `packages/client-runtime`) records which paths "Hide test files" hides and the TypeScript git action
