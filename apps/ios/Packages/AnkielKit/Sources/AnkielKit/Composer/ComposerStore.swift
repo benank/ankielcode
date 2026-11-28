@@ -43,9 +43,9 @@ public final class ComposerStore {
   @ObservationIgnored public var sink: (any ComposerSink)?
   /// The folder holding `composer.json` and `files/`; nil keeps everything in memory.
   @ObservationIgnored public let directory: URL?
-  /// Delay before retry `attempt` (1, 2, 4, 8, 16 s).
+  /// Delay before retry `attempt` from 1: 1, 2, 4, 8, then 16 s (RN `threadOutboxRetryDelayMs`).
   @ObservationIgnored public var retryDelay: @Sendable (Int) -> Duration = { attempt in
-    .seconds(min(16, 1 << min(attempt, 4)))
+    .seconds(1 << min(max(attempt - 1, 0), 4))
   }
   /// Copy for title seeds (the app passes localized labels).
   @ObservationIgnored public var titleLabels = ThreadTitleSeed.Labels()
