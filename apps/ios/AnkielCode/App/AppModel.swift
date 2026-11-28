@@ -48,7 +48,7 @@ final class AppModel {
   /// the new environment lands in the registry.
   private var onboardingPairing = false
 
-  init(store: any CredentialStore = KeychainCredentialStore(service: "com.ankiel.code.native")) {
+  init(store: any CredentialStore = KeychainCredentialStore(service: "com.ankiel.ankielcode.native")) {
     var store = store
     var directory = Self.supportDirectory
     var defaults = UserDefaults.standard

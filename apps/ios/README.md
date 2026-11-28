@@ -2,13 +2,13 @@
 
 A SwiftUI client for Ankiel Code servers: iOS 26+, Swift 6, no third-party Swift packages (the
 terminal links the prebuilt `GhosttyKit.xcframework` that RN vendors). Bundle id
-`com.ankiel.code.native` and URL scheme `ankielcode-native`, so it installs next to the RN app.
+`com.ankiel.ankielcode.native` and URL scheme `ankielcode-native`, so it installs next to the RN app.
 Architecture notes and traps: [docs/internals/18_ios-native.md](../../docs/internals/18_ios-native.md).
 
 | Folder                | What                                                                                                                                                                    |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AnkielCode/`         | The app: SwiftUI views, `DesignSystem/` (Geist type scale, generated theme palettes, motion), platform glue. A synchronized group: files on disk join the target.       |
-| `AnkielWidgets/`      | The usage widget extension (App Group `group.com.ankiel.code.native`; reads a JSON snapshot the app writes, never connects).                                            |
+| `AnkielWidgets/`      | The usage widget extension (App Group `group.com.ankiel.ankielcode.native`; reads a JSON snapshot the app writes, never connects).                                      |
 | `AnkielCodeUITests/`  | XCUITests, on fixtures unless listed under "The full UI suite".                                                                                                         |
 | `Packages/AnkielKit/` | Everything without UI: wire types, pairing and DPoP, the RPC client, the connection supervisor and registry, reducers, stores. `swift test` on the Mac; `ankiel-probe`. |
 | `Packages/Ghostty/`   | The terminal renderer as a binary target (only the app links it).                                                                                                       |
@@ -27,13 +27,18 @@ xcodebuild -project apps/ios/AnkielCode.xcodeproj -scheme AnkielCode \
   -destination "platform=iOS Simulator,id=$SIM" -derivedDataPath apps/ios/build build
 xcrun simctl install $SIM apps/ios/build/Build/Products/Debug-iphonesimulator/AnkielCode.app
 SIMCTL_CHILD_ANKIEL_OPEN_URL='ankielcode-native://pair?pairingUrl=<urlencoded>' \
-  xcrun simctl launch --terminate-running-process $SIM com.ankiel.code.native
+  xcrun simctl launch --terminate-running-process $SIM com.ankiel.ankielcode.native
 ```
 
 Mint a pairing link on a dev server with `node apps/server/src/bin.ts auth pairing create --base-dir
 <worktree>/.ankiel --base-url http://127.0.0.1:<port>`. Use `ANKIEL_OPEN_URL`, not `simctl openurl`,
 whose confirmation prompt nobody can tap. `-configuration Release` leaves out every `#if DEBUG` hook
 and the bundled fixtures. The project sets no `DEVELOPMENT_TEAM`; see "Needs signing".
+
+On a paired iPhone, `apps/ios/scripts/run-on-device.sh [Release|Debug]` (default Release) signs
+with `TEAM` (default `268225YYS4`), registers the device, builds, installs and launches. A new team
+needs the App Group `group.com.ankiel.ankielcode.native` assigned to both App IDs once, from Xcode's
+Signing & Capabilities or the developer portal; `xcodebuild` cannot create it.
 
 ## Test
 

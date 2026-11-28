@@ -8,7 +8,7 @@ import Testing
 /// `AgentAlertPush` builds, and the button answers (RN `notificationNavigation.test.ts`).
 @Suite("Push")
 struct PushTests {
-  static let device = PushDevice(token: String(repeating: "ab", count: 32), appId: "com.ankiel.code.native", apnsEnvironment: .sandbox)
+  static let device = PushDevice(token: String(repeating: "ab", count: 32), appId: "com.ankiel.ankielcode.native", apnsEnvironment: .sandbox)
   static let registration = PushRegistration(
     token: device.token, appId: device.appId, apnsEnvironment: .sandbox, kinds: [.completed, .approval, .input], locale: "pt-BR")
 

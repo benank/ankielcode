@@ -187,7 +187,7 @@ public enum UsageWidgetLayout {
 
 /// The snapshot file in the App Group container the app and the widget share.
 public struct UsageWidgetStore: Sendable {
-  public static let appGroup = "group.com.ankiel.code.native"
+  public static let appGroup = "group.com.ankiel.ankielcode.native"
   public static let widgetKind = "SubscriptionUsage"
   /// The app's link to its usage page (Settings → Usage).
   public static let deepLink = URL(string: "ankielcode-native://settings/usage")!

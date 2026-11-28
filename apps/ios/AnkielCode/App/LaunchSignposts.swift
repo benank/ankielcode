@@ -5,7 +5,7 @@ import os
 /// Launch milestones as signposts (Instruments' Points of Interest), with the time since the
 /// process started. Debug builds also print them, so a launch's cost can be read from the console.
 nonisolated enum LaunchSignposts {
-  private static let signposter = OSSignposter(subsystem: "com.ankiel.code.native", category: .pointsOfInterest)
+  private static let signposter = OSSignposter(subsystem: "com.ankiel.ankielcode.native", category: .pointsOfInterest)
 
   /// When the kernel started this process.
   fileprivate static let processStart: Date = {

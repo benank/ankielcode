@@ -2,7 +2,7 @@
   "schema" : "pushRegister",
   "value" : {
     "apnsEnvironment" : "sandbox",
-    "appId" : "com.ankiel.code.native",
+    "appId" : "com.ankiel.ankielcode.native",
     "kinds" : [
       "completed",
       "approval",

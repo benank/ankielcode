@@ -1,5 +1,5 @@
 {
-  "Simulator Target Bundle": "com.ankiel.code.native",
+  "Simulator Target Bundle": "com.ankiel.ankielcode.native",
   "aps": {
     "alert": {
       "loc-key": "ANKIEL_PUSH_INPUT",

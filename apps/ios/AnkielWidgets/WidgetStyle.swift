@@ -40,7 +40,7 @@ struct WidgetTheme: Codable, Equatable {
   var dark: Colors
 
   static let key = "widget-theme.v1"
-  private static var defaults: UserDefaults? { UserDefaults(suiteName: "group.com.ankiel.code.native") }
+  private static var defaults: UserDefaults? { UserDefaults(suiteName: "group.com.ankiel.ankielcode.native") }
 
   static func load() -> WidgetTheme? {
     defaults?.data(forKey: key).flatMap { try? JSONDecoder().decode(WidgetTheme.self, from: $0) }

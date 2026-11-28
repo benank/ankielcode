@@ -20,7 +20,7 @@ func livePush(_ session: EnvironmentSession, token: String?) async throws {
   print("status (raw):      \(String(decoding: try JSONEncoder.sorted.encode(raw), as: UTF8.self).replacingOccurrences(of: "\n", with: " "))")
   show("status:", try await status())
   let registration = PushRegistration(
-    token: token ?? String(repeating: "0f", count: 32), appId: "com.ankiel.code.native", apnsEnvironment: .sandbox,
+    token: token ?? String(repeating: "0f", count: 32), appId: "com.ankiel.ankielcode.native", apnsEnvironment: .sandbox,
     kinds: [.completed, .failed, .approval, .input], locale: Locale.preferredLanguages.first ?? "en")
   show("registered:", try await register(registration))
   show("status again:", try await status())
@@ -51,7 +51,7 @@ func livePushStage(_ session: EnvironmentSession, scenario: String, out: String?
     guard let requestId = approval?.requestId ?? question?.requestId else { throw ProbeFailure(description: "No request.") }
     let isApproval = approval != nil
     let payload: JSONValue = [
-      "Simulator Target Bundle": "com.ankiel.code.native",
+      "Simulator Target Bundle": "com.ankiel.ankielcode.native",
       "aps": [
         "alert": ["title": .string(state.title ?? "Replay thread"), "loc-key": .string(isApproval ? "ANKIEL_PUSH_APPROVAL" : "ANKIEL_PUSH_INPUT")],
         "sound": "default", "thread-id": .string("\(session.environmentId)/\(threadId)"), "interruption-level": "active",

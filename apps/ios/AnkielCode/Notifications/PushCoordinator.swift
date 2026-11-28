@@ -36,7 +36,7 @@ final class PushCoordinator {
   #endif
 
   static let storageKey = "ankiel.push.v1"
-  private static let log = Logger(subsystem: "com.ankiel.code.native", category: "push")
+  private static let log = Logger(subsystem: "com.ankiel.ankielcode.native", category: "push")
 
   init(model: AppModel) {
     self.model = model
@@ -175,7 +175,7 @@ final class PushCoordinator {
   }
 
   func didRegister(token: Data) {
-    let appId = Bundle.main.bundleIdentifier ?? "com.ankiel.code.native"
+    let appId = Bundle.main.bundleIdentifier ?? "com.ankiel.ankielcode.native"
     let environment = ProvisioningProfile.resolve(
       Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision").flatMap { try? Data(contentsOf: $0) },
       isSimulator: Self.isSimulator)

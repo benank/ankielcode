@@ -29,7 +29,7 @@
     }()
 
     static let defaults: UserDefaults = {
-      let suite = "com.ankiel.code.native.settings-fixture"
+      let suite = "com.ankiel.ankielcode.native.settings-fixture"
       let defaults = UserDefaults(suiteName: suite)!
       // `ANKIEL_DEBUG_SETTINGS_KEEP=1` keeps the last launch's preferences (theme at cold launch).
       if ProcessInfo.processInfo.environment["ANKIEL_DEBUG_SETTINGS_KEEP"] != "1" { defaults.removePersistentDomain(forName: suite) }

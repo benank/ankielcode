@@ -21,7 +21,7 @@
 
     static let defaults = UserDefaults(suiteName: "ankiel.debug.push") ?? .standard
 
-    static let device = PushDevice(token: String(repeating: "0f", count: 32), appId: "com.ankiel.code.native", apnsEnvironment: .sandbox)
+    static let device = PushDevice(token: String(repeating: "0f", count: 32), appId: "com.ankiel.ankielcode.native", apnsEnvironment: .sandbox)
 
     @MainActor static func apply(_ mode: Mode, to push: PushCoordinator) {
       switch mode {

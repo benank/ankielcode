@@ -27,7 +27,7 @@ xcodebuild -project apps/ios/AnkielCode.xcodeproj -scheme AnkielCode \
   -destination "platform=iOS Simulator,id=$SIM" -derivedDataPath $DD build 2>&1 | grep -E "error|warning: |BUILD"
 xcrun simctl install $SIM $DD/Build/Products/Debug-iphonesimulator/AnkielCode.app
 SIMCTL_CHILD_ANKIEL_DEBUG_SETTINGS=fixture SIMCTL_CHILD_ANKIEL_DEBUG_HOME=sample \
-  xcrun simctl launch --terminate-running-process $SIM com.ankiel.code.native
+  xcrun simctl launch --terminate-running-process $SIM com.ankiel.ankielcode.native
 xcrun simctl io $SIM screenshot /tmp/<task>/home.png
 ```
 

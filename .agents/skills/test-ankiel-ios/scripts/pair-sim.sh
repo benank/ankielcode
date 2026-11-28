@@ -38,5 +38,5 @@ deep_link="$(PAIRING_URL="$pairing_url" node -e \
   'process.stdout.write(`ankielcode-native://pair?${new URLSearchParams({ pairingUrl: process.env.PAIRING_URL })}`)')"
 
 SIMCTL_CHILD_ANKIEL_OPEN_URL="$deep_link" \
-  xcrun simctl launch --terminate-running-process "$udid" com.ankiel.code.native >/dev/null
-echo "Launched com.ankiel.code.native on $udid with a fresh pairing link for port $server_port."
+  xcrun simctl launch --terminate-running-process "$udid" com.ankiel.ankielcode.native >/dev/null
+echo "Launched com.ankiel.ankielcode.native on $udid with a fresh pairing link for port $server_port."

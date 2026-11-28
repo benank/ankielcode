@@ -16,9 +16,9 @@ final class ShortcutPublisher {
   private var indexing: Task<Void, Never>?
 
   enum QuickAction: String {
-    case newThread = "com.ankiel.code.native.new-thread"
-    case search = "com.ankiel.code.native.search"
-    case thread = "com.ankiel.code.native.thread"
+    case newThread = "com.ankiel.ankielcode.native.new-thread"
+    case search = "com.ankiel.ankielcode.native.search"
+    case thread = "com.ankiel.ankielcode.native.thread"
   }
 
   /// A thread was opened.
