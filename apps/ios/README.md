@@ -18,6 +18,26 @@ Device preferences (theme, code text, follow-up default, project grouping, threa
 are one JSON value in `UserDefaults` under `ankiel.preferences.v1` (`ClientPreferences`). Server defaults are written to the computer
 they belong to with `server.updateSettings` (`SettingsWriter`, optimistic with rollback).
 
+## Type and color
+
+The app draws in Geist and Geist Mono, the same OFL files RN mobile bundles, registered through
+`UIAppFonts` (`AnkielCode/DesignSystem/Fonts`, license shown under Settings → About). The widget
+extension registers the containing app's copies at startup. System chrome iOS draws itself (alerts,
+menus, the keyboard, search fields) stays SF.
+
+The color themes are RN's (`packages/shared/src/themePalettes.ts` through
+`apps/mobile/src/lib/mobileTheme.ts`), generated into AnkielKit's
+`Theme/ThemePalettes.generated.swift`. After changing either TypeScript file:
+
+```sh
+node apps/ios/scripts/generate-theme-palettes.mjs          # regenerate
+node apps/ios/scripts/generate-theme-palettes.mjs --check  # fails when the Swift table is stale
+```
+
+`check:changed` does not run the check; run it yourself when a theme changes. `ThemeContrastTests`
+checks WCAG AA for text in every theme and appearance. `ANKIEL_DEBUG_THEME=<id>`, `<light>/<dark>`
+or `<id>@<seconds>` (a live switch after launch) sets the theme in Debug builds.
+
 ## Build
 
 ```sh

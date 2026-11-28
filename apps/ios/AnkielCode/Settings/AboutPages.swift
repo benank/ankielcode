@@ -32,8 +32,14 @@ struct AboutSettingsPage: View {
         Link(destination: Self.source) { Label("Source code", systemImage: "chevron.left.forwardslash.chevron.right") }
         Link(destination: Self.legal) { Label("Legal", systemImage: "doc.text") }
         Link(destination: Self.license) { Label("License (MIT)", systemImage: "checkmark.seal") }
+        NavigationLink {
+          FontLicensePage()
+        } label: {
+          Label("Font license (OFL)", systemImage: "textformat")
+        }
+        .accessibilityIdentifier("about.fontLicense")
       } footer: {
-        Text("Ankiel Code is open source under the MIT license. Its terminal uses Ghostty (MIT, © Mitchell Hashimoto and Ghostty contributors).")
+        Text("Ankiel Code is open source under the MIT license. Its terminal uses Ghostty (MIT, © Mitchell Hashimoto and Ghostty contributors). Its type is Geist and Geist Mono (SIL Open Font License 1.1, © The Geist Project Authors).")
       }
 
       Section {
@@ -238,5 +244,25 @@ struct DiagnosticsPage: View {
       }
     }
     return lines.joined(separator: "\n")
+  }
+}
+
+/// The bundled fonts' license, shown in full as the OFL asks of anyone redistributing them.
+private struct FontLicensePage: View {
+  private static let text = Bundle.main.url(forResource: "OFL", withExtension: "txt")
+    .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
+
+  var body: some View {
+    ScrollView {
+      Text(verbatim: Self.text)
+        .font(Typography.monoSmall)
+        .foregroundStyle(Palette.textSecondary)
+        .textSelection(.enabled)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.lg)
+    }
+    .background(Palette.canvas)
+    .navigationTitle("Font license")
+    .navigationBarTitleDisplayMode(.inline)
   }
 }
