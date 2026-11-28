@@ -155,7 +155,9 @@ const asLiteral = (key) =>
 export const swiftUses = () => {
   const sources = new Set();
   // The widget's views are compiled into the app too and read its catalog.
-  for (const file of ["AnkielCode", "AnkielWidgets"].flatMap((dir) => swiftFiles(NodePath.join(iosRoot, dir)))) {
+  for (const file of ["AnkielCode", "AnkielWidgets"].flatMap((dir) =>
+    swiftFiles(NodePath.join(iosRoot, dir)),
+  )) {
     for (const text of literals(NodeFS.readFileSync(file, "utf8"))) sources.add(text);
   }
   return { has: (key) => key === "" || sources.has(asLiteral(key)) };

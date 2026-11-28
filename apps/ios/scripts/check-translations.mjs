@@ -73,7 +73,9 @@ for (const [key, entry] of Object.entries(catalog.strings)) {
 // `Text(verbatim:)` skips the catalog, so a verbatim literal must not be copy: only names,
 // addresses and paths (debug-only files are exempt).
 const verbatimAllowed = new Set(["Ankiel Code", "Cloudflare Relay"]);
-for (const file of ["AnkielCode", "AnkielWidgets"].flatMap((dir) => swiftFiles(NodePath.join(iosRoot, dir)))) {
+for (const file of ["AnkielCode", "AnkielWidgets"].flatMap((dir) =>
+  swiftFiles(NodePath.join(iosRoot, dir)),
+)) {
   const source = NodeFS.readFileSync(file, "utf8");
   if (/Debug\.swift$/.test(file) || source.trimStart().startsWith("#if DEBUG")) continue;
   for (const match of source.matchAll(/verbatim:\s*"((?:[^"\\]|\\.)*)"/g)) {
@@ -83,7 +85,9 @@ for (const file of ["AnkielCode", "AnkielWidgets"].flatMap((dir) => swiftFiles(N
     const words = text.replace(/\\\((?:[^()]|\([^()]*\))*\)/g, " ");
     if (!/\p{L}{2,}/u.test(words) || /[/:]/.test(words) || verbatimAllowed.has(text)) continue;
     const line = source.slice(0, match.index).split("\n").length;
-    problems.push(`copy in Text(verbatim:), not in the catalog: ${NodePath.relative(iosRoot, file)}:${line} ${JSON.stringify(text)}`);
+    problems.push(
+      `copy in Text(verbatim:), not in the catalog: ${NodePath.relative(iosRoot, file)}:${line} ${JSON.stringify(text)}`,
+    );
   }
 }
 

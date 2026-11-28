@@ -84,15 +84,15 @@ writer the app uses. Modes that write create their own threads in an `ankiel-pro
 (a folder under `/tmp/ankiel-live`) and delete them; `--live cleanup` removes the project. Each run
 exits after `--limit <seconds>` (default 240).
 
-| Mode | Proves |
-| --- | --- |
-| `threads` | Every shell thread's snapshot, raw versus decoded (item kinds, unknown kinds, timeline rows, frame parts). |
-| `list --title <seeded title>` | Each list action and its undo, read back from the shell, then search and an older-settled page. |
-| `turn`, `undo`, `interrupt` | A launched Replay turn streamed and compared with a cold snapshot (approval, acks, launch retry); settle undo restoring a manual position; stop, and the server's reply to a client `Interrupt`. |
-| `requests` | A question answered, an approval declined through the composer path, one answered from another session. |
-| `composer` | Uploads and launch, a dropped reply resent with the same command id, settings before a message, steer and queue, queued edit and removal, an offline send. |
-| `detail` | Scopes, the reopen cache, subagent threads, a 401 at the upgrade, command output on expand, a socket drop mid-stream. |
-| `settings`, `repair --link-a <url> --link-b <url>`, `release` | Server settings writes and a refused write; re-pairing at the saved and a new address; the update check. |
+| Mode                                                          | Proves                                                                                                                                                                                           |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `threads`                                                     | Every shell thread's snapshot, raw versus decoded (item kinds, unknown kinds, timeline rows, frame parts).                                                                                       |
+| `list --title <seeded title>`                                 | Each list action and its undo, read back from the shell, then search and an older-settled page.                                                                                                  |
+| `turn`, `undo`, `interrupt`                                   | A launched Replay turn streamed and compared with a cold snapshot (approval, acks, launch retry); settle undo restoring a manual position; stop, and the server's reply to a client `Interrupt`. |
+| `requests`                                                    | A question answered, an approval declined through the composer path, one answered from another session.                                                                                          |
+| `composer`                                                    | Uploads and launch, a dropped reply resent with the same command id, settings before a message, steer and queue, queued edit and removal, an offline send.                                       |
+| `detail`                                                      | Scopes, the reopen cache, subagent threads, a 401 at the upgrade, command output on expand, a socket drop mid-stream.                                                                            |
+| `settings`, `repair --link-a <url> --link-b <url>`, `release` | Server settings writes and a refused write; re-pairing at the saved and a new address; the update check.                                                                                         |
 
 ## Debug hooks (Debug builds only)
 
@@ -192,13 +192,13 @@ swift run ankiel-probe --state /tmp/probe.json --files /path/to/checkout --read 
 
 Debug hook (with `ANKIEL_DEBUG_ROUTE=thread` or an `ANKIEL_OPEN_URL` thread link):
 
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_FILES` | `browser` | The file browser. |
-| | `search:<query>` | The browser with that search typed. |
-| | `file:<path>[:line]` | A file in the viewer (relative to the workspace, or absolute), scrolled to the line. |
-| | `gallery` | The gallery at the thread's first image. |
-| | `images:<path>,<path>` | A gallery of workspace images, loaded live. |
+| Variable             | Values                 | Shows                                                                                |
+| -------------------- | ---------------------- | ------------------------------------------------------------------------------------ |
+| `ANKIEL_DEBUG_FILES` | `browser`              | The file browser.                                                                    |
+|                      | `search:<query>`       | The browser with that search typed.                                                  |
+|                      | `file:<path>[:line]`   | A file in the viewer (relative to the workspace, or absolute), scrolled to the line. |
+|                      | `gallery`              | The gallery at the thread's first image.                                             |
+|                      | `images:<path>,<path>` | A gallery of workspace images, loaded live.                                          |
 
 `MediaFilesUITests` (live, skips when the dev server is down) opens Files from the thread menu,
 lists a folder, searches and opens a file, and zooms, swipes, closes and drags the gallery closed.
@@ -212,11 +212,11 @@ truncated comparisons read each file's patch on open) and file contents for unch
 patch). Git state is `vcs.refreshStatus`; actions are `git.runStackedAction` (a progress stream) and
 `vcs.pull`. The diff is a lazy SwiftUI stack, one `Text` per line.
 
-| Variable                      | Values                                                                 | Shows |
-| ----------------------------- | ---------------------------------------------------------------------- | ----- |
-| `ANKIEL_DEBUG_REVIEW`         | `fixture`, `readonly`                                                  | Every thread gets canned turns (multi-hunk, added, deleted, renamed, binary, mode-only, a lock file, a 5,000-line file), both comparisons and a fake checkout on its default branch with uncommitted files. Nothing reaches a server; `readonly` is a session without `source-control:write`. |
-| `ANKIEL_DEBUG_REVIEW_OPEN`    | `review`, `review:<section id>`, `file:<path>[@<section id>]`, `git`, `commit`, `confirm` | Opens it once in the thread the launch shows (fixture or live). Section ids are RN's: `turn:3`, `git:working-tree`, `git:branch-range`. |
-| `ANKIEL_DEBUG_REVIEW_EXPAND`  | `1`                                                                    | A git section's file opens with every unchanged region shown. |
+| Variable                     | Values                                                                                    | Shows                                                                                                                                                                                                                                                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ANKIEL_DEBUG_REVIEW`        | `fixture`, `readonly`                                                                     | Every thread gets canned turns (multi-hunk, added, deleted, renamed, binary, mode-only, a lock file, a 5,000-line file), both comparisons and a fake checkout on its default branch with uncommitted files. Nothing reaches a server; `readonly` is a session without `source-control:write`. |
+| `ANKIEL_DEBUG_REVIEW_OPEN`   | `review`, `review:<section id>`, `file:<path>[@<section id>]`, `git`, `commit`, `confirm` | Opens it once in the thread the launch shows (fixture or live). Section ids are RN's: `turn:3`, `git:working-tree`, `git:branch-range`.                                                                                                                                                       |
+| `ANKIEL_DEBUG_REVIEW_EXPAND` | `1`                                                                                       | A git section's file opens with every unchanged region shown.                                                                                                                                                                                                                                 |
 
 `swift run ankiel-probe --state <file> --diff [threadId]` reads, without writing anything, each
 thread's turns with changes and their diffs (parsed and ordered), the checkout's status, both
@@ -272,11 +272,11 @@ host sends, so they skip unless run with `TEST_RUNNER_PUSH_UI_TESTS=1` (and
 `TEST_RUNNER_PUSH_THREAD_URL=<thread link>` for `testQuietForOpenThread`) while the alert above is
 pushed ~45 s after the test starts.
 
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_PUSH` | `on`, `on-more` | Notifications with push on and canned per-computer rows (On, Relay not set up, Relay has no push key; or Relay offline, Not connected, a refused read). Combine with `ANKIEL_DEBUG_SETTINGS=fixture` for three computers. |
-| | `denied`, `unavailable` | iOS notifications off for the app; push on without a token. |
-| | `offer` | The one-time offer over home. |
+| Variable            | Values                  | Shows                                                                                                                                                                                                                     |
+| ------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ANKIEL_DEBUG_PUSH` | `on`, `on-more`         | Notifications with push on and canned per-computer rows (On, Relay not set up, Relay has no push key; or Relay offline, Not connected, a refused read). Combine with `ANKIEL_DEBUG_SETTINGS=fixture` for three computers. |
+|                     | `denied`, `unavailable` | iOS notifications off for the app; push on without a token.                                                                                                                                                               |
+|                     | `offer`                 | The one-time offer over home.                                                                                                                                                                                             |
 
 ## Voice, archive and system entry points
 
@@ -301,13 +301,13 @@ them go through `AppModel.open(AppEntry)`, which never waits on a connection. Re
 projects are saved in `UserDefaults` so intents answer from a cold launch. Links:
 `ankielcode-native://new?prompt=…&environment=…&project=…` and `…://search?q=…`.
 
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_VOICE` | `listen`, `download`, `unsupported`, `unavailable`, `fail`, `interrupt`, `denied` | A scripted speech engine (the simulator has no microphone to drive and no on-device transcriber): it "hears" a fixed sentence; `download` first fakes a model download; `denied` refuses the microphone. |
-| `ANKIEL_DEBUG_INTENT` | `new`, `new:<prompt>`, `open`, `search:<query>` | Runs that intent's own `perform()` at launch, before the computers load, as Siri does at a cold launch. |
-| `ANKIEL_DEBUG_RECENTS` | `1` | Prints the saved recent threads. |
-| `ANKIEL_DEBUG_AUDIO_SESSION` | `1` | Tries the dictation engine's audio session setup at launch and prints the result. |
-| `ANKIEL_DEBUG_ROUTE` | `settings-voice`, `settings-archive` | Those Settings pages. |
+| Variable                     | Values                                                                            | Shows                                                                                                                                                                                                    |
+| ---------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ANKIEL_DEBUG_VOICE`         | `listen`, `download`, `unsupported`, `unavailable`, `fail`, `interrupt`, `denied` | A scripted speech engine (the simulator has no microphone to drive and no on-device transcriber): it "hears" a fixed sentence; `download` first fakes a model download; `denied` refuses the microphone. |
+| `ANKIEL_DEBUG_INTENT`        | `new`, `new:<prompt>`, `open`, `search:<query>`                                   | Runs that intent's own `perform()` at launch, before the computers load, as Siri does at a cold launch.                                                                                                  |
+| `ANKIEL_DEBUG_RECENTS`       | `1`                                                                               | Prints the saved recent threads.                                                                                                                                                                         |
+| `ANKIEL_DEBUG_AUDIO_SESSION` | `1`                                                                               | Tries the dictation engine's audio session setup at launch and prints the result.                                                                                                                        |
+| `ANKIEL_DEBUG_ROUTE`         | `settings-voice`, `settings-archive`                                              | Those Settings pages.                                                                                                                                                                                    |
 
 `VoiceUITests` (fake engine), `ArchiveUITests` (live; seed first) and `ShortcutUITests` (live;
 quick actions through Springboard, intents through `ANKIEL_DEBUG_INTENT`) cover these.
@@ -334,11 +334,11 @@ the period intent) is widget-only. App Groups need provisioning to work on a dev
 says whether `providerStatuses` followed, and prints accounts, pools, the widget snapshot and every
 listed thread's context window.
 
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_USAGE` | `fresh`, `near`, `stale`, `unavailable`, `pooled`, `empty` | Canned computers' limits instead of the live ones (synthetic; refreshes only wait). Also written to the widget's snapshot. |
-| `ANKIEL_DEBUG_CONTEXT` | `low`, `high`, `over`, `compacting`, `compacted`, `unknown` | Every thread's context window. |
-| `ANKIEL_DEBUG_USAGE_OPEN` | `home`, `thread`, `widgets` | Opens the usage sheet from home or the open thread, or (home) the widget's views at each size, full color and monochrome. `ANKIEL_DEBUG_WIDGET_STALE=1` renders them an hour later. |
+| Variable                  | Values                                                      | Shows                                                                                                                                                                               |
+| ------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ANKIEL_DEBUG_USAGE`      | `fresh`, `near`, `stale`, `unavailable`, `pooled`, `empty`  | Canned computers' limits instead of the live ones (synthetic; refreshes only wait). Also written to the widget's snapshot.                                                          |
+| `ANKIEL_DEBUG_CONTEXT`    | `low`, `high`, `over`, `compacting`, `compacted`, `unknown` | Every thread's context window.                                                                                                                                                      |
+| `ANKIEL_DEBUG_USAGE_OPEN` | `home`, `thread`, `widgets`                                 | Opens the usage sheet from home or the open thread, or (home) the widget's views at each size, full color and monochrome. `ANKIEL_DEBUG_WIDGET_STALE=1` renders them an hour later. |
 
 Settings → Usage directly: `ANKIEL_DEBUG_ROUTE=settings-usage`. `UsageUITests` open usage from home,
 a thread and Settings on fixtures.
@@ -370,15 +370,15 @@ scrollback, close). `--terminal-list <threadId> [--close term-2,term-3]` lists a
 closes the named ones with their history. Use a throwaway folder under `/tmp`: the probe's shell
 gets `ZDOTDIR` and its history there.
 
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_TERMINAL` | `open`, `open:<terminalId>`, `new` | Opens the terminal of the thread a launch shows (an `ANKIEL_OPEN_URL` thread link). |
-| `ANKIEL_DEBUG_TERMINAL_SEND` | text (`\r` is Enter) | Typed once the shell is live. The shell is real: harmless commands only. |
-| `ANKIEL_DEBUG_TERMINAL_KEYBOARD` | `1` | Focuses the terminal (keyboard and accessory bar). |
-| `ANKIEL_DEBUG_TERMINAL_SELECT` | `1` | Opens "Select text" a moment after the send. |
-| `ANKIEL_DEBUG_TERMINAL_PASTE` | text (`\n` is a newline) | Pasted through the surface (Ghostty's bracketed paste) once the shell is live. |
-| `ANKIEL_DEBUG_TERMINAL_HISTORY` | a folder | New shells start with `ZDOTDIR`, `HISTFILE` there and `LESSHISTFILE` off, so zsh skips the user's rc files and history (an rc file can reset `HISTFILE`). |
-| `ANKIEL_DEBUG_TERMINAL_INPUT` | `1` | Puts the hidden input field in the accessibility tree so UI tests can type. |
+| Variable                         | Values                             | Shows                                                                                                                                                     |
+| -------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ANKIEL_DEBUG_TERMINAL`          | `open`, `open:<terminalId>`, `new` | Opens the terminal of the thread a launch shows (an `ANKIEL_OPEN_URL` thread link).                                                                       |
+| `ANKIEL_DEBUG_TERMINAL_SEND`     | text (`\r` is Enter)               | Typed once the shell is live. The shell is real: harmless commands only.                                                                                  |
+| `ANKIEL_DEBUG_TERMINAL_KEYBOARD` | `1`                                | Focuses the terminal (keyboard and accessory bar).                                                                                                        |
+| `ANKIEL_DEBUG_TERMINAL_SELECT`   | `1`                                | Opens "Select text" a moment after the send.                                                                                                              |
+| `ANKIEL_DEBUG_TERMINAL_PASTE`    | text (`\n` is a newline)           | Pasted through the surface (Ghostty's bracketed paste) once the shell is live.                                                                            |
+| `ANKIEL_DEBUG_TERMINAL_HISTORY`  | a folder                           | New shells start with `ZDOTDIR`, `HISTFILE` there and `LESSHISTFILE` off, so zsh skips the user's rc files and history (an rc file can reset `HISTFILE`). |
+| `ANKIEL_DEBUG_TERMINAL_INPUT`    | `1`                                | Puts the hidden input field in the accessibility tree so UI tests can type.                                                                               |
 
 `TerminalUITests` (live; skips when the dev server is down) opens a new terminal from the thread
 menu in the `ankiel-probe live` project, types `echo`, rotates and closes it; a second test scrolls
@@ -398,10 +398,10 @@ are not built. Logic is in `AnkielKit/Issues`; `swift run ankiel-probe --state <
 without writing to the tracker. `--enable-github` turns the computer's GitHub integration on for
 that read and off again (it changes the server's settings).
 
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_ISSUES` | `fixture`, `empty`, `fail` | Canned synthetic issues (about a made-up project) instead of a computer, none, or a refusal. |
-| `ANKIEL_DEBUG_ISSUES_OPEN` | `list`, `detail` | Opens Issues over home, or (with `fixture`) its first issue. |
+| Variable                   | Values                     | Shows                                                                                        |
+| -------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
+| `ANKIEL_DEBUG_ISSUES`      | `fixture`, `empty`, `fail` | Canned synthetic issues (about a made-up project) instead of a computer, none, or a refusal. |
+| `ANKIEL_DEBUG_ISSUES_OPEN` | `list`, `detail`           | Opens Issues over home, or (with `fixture`) its first issue.                                 |
 
 ## Sharing & access
 
@@ -421,11 +421,11 @@ and revokes a read-only link labelled "ankiel-probe access", checks that the ses
 itself and, with `--revoke-session`, revokes that one other session. Pair a throwaway session from
 its own `--state` file for that (sessions sharing a DPoP key are revoked together).
 
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_ROUTE` | `settings-computer-access` | The page for the fixture's Studio Mac (with `ANKIEL_DEBUG_SETTINGS`) or the first saved computer (live). |
-| `ANKIEL_DEBUG_ACCESS` | `fail`, `denied` | With `ANKIEL_DEBUG_SETTINGS`: the fake access service refuses writes, or the session may not read access. |
-| `ANKIEL_DEBUG_ACCESS_OPEN` | `create`, `share` | Opens the create sheet, or creates a link on the fake and shows its QR. |
+| Variable                   | Values                     | Shows                                                                                                     |
+| -------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `ANKIEL_DEBUG_ROUTE`       | `settings-computer-access` | The page for the fixture's Studio Mac (with `ANKIEL_DEBUG_SETTINGS`) or the first saved computer (live).  |
+| `ANKIEL_DEBUG_ACCESS`      | `fail`, `denied`           | With `ANKIEL_DEBUG_SETTINGS`: the fake access service refuses writes, or the session may not read access. |
+| `ANKIEL_DEBUG_ACCESS_OPEN` | `create`, `share`          | Opens the create sheet, or creates a link on the fake and shows its QR.                                   |
 
 `SharingAccessUITests` (fixtures) revoke a device, create, share and revoke a link, and check the
 denied state.
@@ -450,11 +450,11 @@ in `AnkielKit/Preview`, views in `AnkielCode/Preview`.
 port and a bogus ticket. `--preview-seed <url>` makes a Replay thread whose message links `url`;
 `--preview-delete <id>` removes it.
 
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_PREVIEW` | `start`, `open:<url>` | Opens the browser (empty, or at that address) in the thread a launch shows. |
-| `ANKIEL_DEBUG_PREVIEW_STATE` | `port`, `environment`, `outdated`, `disabled`, `permission`, `setup`, `page`, `tunnel-off` | That state, with no server. |
-| `ANKIEL_DEBUG_PREVIEW_TABS` | `fixture` | Two synthetic browser tabs in the menu and start page. |
+| Variable                     | Values                                                                                     | Shows                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `ANKIEL_DEBUG_PREVIEW`       | `start`, `open:<url>`                                                                      | Opens the browser (empty, or at that address) in the thread a launch shows. |
+| `ANKIEL_DEBUG_PREVIEW_STATE` | `port`, `environment`, `outdated`, `disabled`, `permission`, `setup`, `page`, `tunnel-off` | That state, with no server.                                                 |
+| `ANKIEL_DEBUG_PREVIEW_TABS`  | `fixture`                                                                                  | Two synthetic browser tabs in the menu and start page.                      |
 
 `PreviewUITests` (live; skips without `ANKIEL_TEST_PREVIEW_THREAD_LINK` and
 `ANKIEL_TEST_PREVIEW_PORT`, a page on the Mac whose index links `/second.html`) opens Browser from
@@ -511,10 +511,10 @@ feed. `--workflow-setup <file.ts>` turns the Labs switch on and saves a definiti
 `--workflow-teardown <file name>` deletes it and turns the switch off. Start runs with
 `node apps/server/src/bin.ts workflow start <name> --base-dir <worktree>/.ankiel --input '<json>' --key <key>`.
 
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_WORKFLOWS` | `fixture`, `readonly` | Synthetic runs (a question, a pause, an agent step, a finished run) with a recording sink; `readonly` without `orchestration:operate`. |
-| `ANKIEL_DEBUG_WORKFLOWS_OPEN` | `list`, `run:<runId>` | Opens Workflows, or one run (live runs also need `ANKIEL_DEBUG_WORKFLOWS_ENVIRONMENT=<environmentId>`). |
+| Variable                      | Values                | Shows                                                                                                                                  |
+| ----------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `ANKIEL_DEBUG_WORKFLOWS`      | `fixture`, `readonly` | Synthetic runs (a question, a pause, an agent step, a finished run) with a recording sink; `readonly` without `orchestration:operate`. |
+| `ANKIEL_DEBUG_WORKFLOWS_OPEN` | `list`, `run:<runId>` | Opens Workflows, or one run (live runs also need `ANKIEL_DEBUG_WORKFLOWS_ENVIRONMENT=<environmentId>`).                                |
 
 `WorkflowUITests` (live, with `ANKIEL_TEST_WORKFLOWS=1`) answers "Ship tide chart v1.4?" and
 cancels the paused "Tide chart v1.5", runs of a throwaway `ios-check` definition started as above.
@@ -549,11 +549,11 @@ thread are not built. Logic is in `AnkielKit/ScheduledTasks`.
 
 `swift run ankiel-probe --state <file> --scheduled-tasks` lists them read-only.
 
-| Variable | Values | Shows |
-| --- | --- | --- |
-| `ANKIEL_DEBUG_SCHEDULED` | `fixture`, `readonly` | Synthetic tasks on a "Fixture Mac" with a recording sink (use with `ANKIEL_DEBUG_ROUTE=settings-scheduled`). |
-| `ANKIEL_DEBUG_SCHEDULED_OPEN` | `new`, `edit:<taskId>` | Opens the editor once the page shows. |
-| `ANKIEL_DEBUG_SCHEDULED_PRESET` | `project=<title>;model=<instance>/<model>;workspace=root` | A new task's defaults (live tests use the Replay model). |
+| Variable                        | Values                                                    | Shows                                                                                                        |
+| ------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `ANKIEL_DEBUG_SCHEDULED`        | `fixture`, `readonly`                                     | Synthetic tasks on a "Fixture Mac" with a recording sink (use with `ANKIEL_DEBUG_ROUTE=settings-scheduled`). |
+| `ANKIEL_DEBUG_SCHEDULED_OPEN`   | `new`, `edit:<taskId>`                                    | Opens the editor once the page shows.                                                                        |
+| `ANKIEL_DEBUG_SCHEDULED_PRESET` | `project=<title>;model=<instance>/<model>;workspace=root` | A new task's defaults (live tests use the Replay model).                                                     |
 
 `ScheduledTaskUITests` (live, with `ANKIEL_TEST_SCHEDULED=1`) creates a Replay task in the
 `ankiel-probe live` project, runs it now, pauses and deletes it; delete the thread its run made.
