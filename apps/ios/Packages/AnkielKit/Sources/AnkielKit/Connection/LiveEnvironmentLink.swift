@@ -159,6 +159,10 @@ final class LiveSessionAdapter: LiveSession {
     try await connector.postJSON(path, body: body, endpoint: route.endpoint, vault: vault, as: type)
   }
 
+  func getJSON<Response: Decodable & Sendable>(_ path: String, as type: Response.Type) async throws -> Response {
+    try await connector.getJSON(path, endpoint: route.endpoint, vault: vault, as: type)
+  }
+
   func grantedScopes() async throws -> Set<String>? {
     try await connector.sessionState(endpoint: route.endpoint, vault: vault).grantedScopes
   }

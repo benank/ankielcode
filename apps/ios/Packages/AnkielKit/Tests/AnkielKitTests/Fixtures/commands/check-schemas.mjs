@@ -60,6 +60,11 @@ const schemas = {
   accessRevokeLink: m.AuthRevokePairingLinkInput,
   accessRevokeClient: m.AuthRevokeClientSessionInput,
   usageSummary: m.UsageSummaryInput,
+  pairingInviteCreate: m.AuthCreatePairingInviteInput,
+  pairingInviteApprove: m.AuthApprovePairingInviteInput,
+  // The deny route declares no payload; the app sends `{}`.
+  pairingInviteDeny: S.Struct({}),
+  pairingInviteClaim: m.AuthClaimPairingInviteInput,
 };
 
 let failures = 0;
@@ -234,6 +239,85 @@ if (process.argv.includes("--check")) {
   } else {
     writeFileSync(accessPath, access);
     console.log("wrote access-stream.json");
+  }
+}
+// Pairing invites: owner and claimant answers as the server encodes them, plus what
+// `packages/shared/src/remote.ts` makes of sample payloads (app link, file, Handoff userInfo,
+// accept or refuse), for the Swift ports to match byte for byte. Synthetic ids and hosts.
+{
+  const remote = await import(pathToFileURL(join(process.cwd(), "../shared/src/remote.ts")).href);
+  const scopes = ["orchestration:read", "orchestration:operate", "access:read"];
+  const claim = {
+    clientLabel: "Harbor MacBook Pro", clientDeviceType: "desktop", clientOs: "macOS", verificationCode: "482-913",
+    claimedAt: "2026-11-27T09:00:05.000Z",
+  };
+  const encode = (schema, value) => S.encodeSync(S.toCodecJson(schema))(S.decodeUnknownSync(S.toCodecJson(schema))(value));
+  const base = { inviteId: "invite-tide-1", expiresAt: "2026-11-27T09:02:00.000Z", scopes };
+  const responses = {
+    created: encode(m.AuthCreatePairingInviteResult, base),
+    pending: encode(m.AuthPairingInviteStatus, { ...base, status: "pending" }),
+    claimed: encode(m.AuthPairingInviteStatus, { ...base, status: "claimed", claim }),
+    claimedBare: encode(m.AuthPairingInviteStatus, {
+      ...base, status: "claimed", claim: { clientDeviceType: "unknown", clientOs: "unknown", verificationCode: "120-004", claimedAt: claim.claimedAt },
+    }),
+    approved: encode(m.AuthApprovePairingInviteResult, { status: "approved", grantExpiresAt: "2026-11-27T09:04:00.000Z" }),
+    denied: encode(m.AuthDenyPairingInviteResult, { status: "denied" }),
+    claimClaimed: encode(m.AuthClaimPairingInviteResult, { status: "claimed", verificationCode: "482-913", expiresAt: base.expiresAt }),
+    claimApproved: encode(m.AuthPairingInviteClaimStatus, {
+      status: "approved", grantExpiresAt: "2026-11-27T09:04:00.000Z", credential: "TIDE7K3MQ2PX",
+    }),
+    claimExpired: encode(m.AuthPairingInviteClaimStatus, { status: "expired" }),
+  };
+  const invite = { version: 1, inviteId: "invite-tide_1", environmentId: "env-tide-studio", baseUrl: "http://192.168.1.20:3773/" };
+  const accepted = [
+    invite,
+    { ...invite, label: "Studio Mac", expiresAt: "2026-11-27T09:02:00.000Z" },
+    { ...invite, baseUrl: "https://Relay.Example.WORKERS.dev:443/h/ABCDEFGHIJKLMNOPQRSTUVWXYZ/pair" },
+    { ...invite, baseUrl: "https://tide.example.com/some/deep/path", label: "Tide & Moon / 潮汐 ✓ \"quoted\" + 100%" },
+    { ...invite, label: "é".repeat(128) },
+  ];
+  const refused = [
+    { ...invite, inviteId: "bad id" },
+    { ...invite, inviteId: "x".repeat(129) },
+    { ...invite, environmentId: " env" },
+    { ...invite, environmentId: "" },
+    { ...invite, baseUrl: "ftp://tide.example.com/" },
+    { ...invite, baseUrl: "http://user:pw@tide.example.com/" },
+    { ...invite, baseUrl: "http://tide.example.com/?q=1" },
+    { ...invite, baseUrl: "http://tide.example.com/#x" },
+    { ...invite, baseUrl: "http://tide.example.com\\x/" },
+    { ...invite, label: "" },
+    { ...invite, label: " Studio" },
+    { ...invite, label: "Studio\u0007" },
+    { ...invite, label: "é".repeat(129) },
+    { ...invite, expiresAt: "tomorrow" },
+    { ...invite, expiresAt: "2026-11-27 09:02:00Z" },
+  ];
+  const golden = {
+    responses,
+    accepted: accepted.map((input) => {
+      const file = remote.encodePairingInviteFile(input);
+      return { input, normalized: remote.decodePairingInviteFile(file), file, appLink: remote.buildPairingInviteAppLink(input),
+        userInfo: remote.toPairingInviteUserInfo(input) };
+    }),
+    refused: refused.map((input) => ({ input, accepted: remote.decodePairingInviteFile(JSON.stringify(input)) !== null })),
+  };
+  const goldenPath = join(here, "..", "pairing-invite-golden.json");
+  const text = JSON.stringify(golden, null, 2) + "\n";
+  if (golden.refused.some((entry) => entry.accepted)) {
+    failures += 1;
+    console.log("FAIL pairing-invite-golden.json: a refused sample is accepted by readPairingInvite");
+  }
+  if (process.argv.includes("--check")) {
+    if (readFileSync(goldenPath, "utf8") === text) {
+      console.log("ok   pairing-invite-golden.json matches the schemas and remote.ts");
+    } else {
+      failures += 1;
+      console.log("FAIL pairing-invite-golden.json is stale: run this script without --check, then swift test");
+    }
+  } else {
+    writeFileSync(goldenPath, text);
+    console.log("wrote pairing-invite-golden.json");
   }
 }
 process.exit(failures === 0 ? 0 : 1);

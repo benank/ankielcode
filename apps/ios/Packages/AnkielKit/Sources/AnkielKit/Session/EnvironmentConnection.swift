@@ -272,6 +272,21 @@ public struct EnvironmentConnector: Sendable {
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.httpBody = try JSONEncoder().encode(body)
     request.timeoutInterval = timeout
+    return try await sendJSON(request, endpoint: endpoint, vault: vault, as: type)
+  }
+
+  /// An authorized JSON `GET`, with `postJSON`'s renewal and error mapping.
+  public func getJSON<Response: Decodable>(
+    _ path: String, endpoint: EnvironmentEndpoint, vault: CredentialVault, as type: Response.Type, timeout: TimeInterval = 20
+  ) async throws -> Response {
+    var request = URLRequest(url: endpoint.httpURL(path))
+    request.timeoutInterval = timeout
+    return try await sendJSON(request, endpoint: endpoint, vault: vault, as: type)
+  }
+
+  private func sendJSON<Response: Decodable>(
+    _ request: URLRequest, endpoint: EnvironmentEndpoint, vault: CredentialVault, as type: Response.Type
+  ) async throws -> Response {
     var credential = try await vault.current(at: endpoint)
     var renewed = false
     while true {

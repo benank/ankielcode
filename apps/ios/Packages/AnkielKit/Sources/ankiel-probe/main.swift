@@ -28,6 +28,10 @@ func describe(_ item: ShellStreamItem) -> String {
 }
 
 func run() async throws {
+  if let file = argument("--claim-invite") {
+    try await probeClaimInvite(file)
+    return
+  }
   let pairURL = argument("--pair-url")
   let statePath = argument("--state")
   guard pairURL != nil || statePath != nil else {
@@ -74,6 +78,10 @@ func run() async throws {
   }
   if CommandLine.arguments.contains("--stale-resume") {
     try await staleResume(environment, connector: connector)
+    return
+  }
+  if CommandLine.arguments.contains("--pair-invite") {
+    try await probePairInvite(environment, connector: connector)
     return
   }
   if let mode = argument("--live") {

@@ -1,0 +1,8 @@
+{
+  "schema" : "pairingInviteClaim",
+  "value" : {
+    "clientDeviceType" : "desktop",
+    "clientLabel" : "ankiel-probe claimant",
+    "clientOs" : "macOS"
+  }
+}

@@ -29,6 +29,8 @@ public protocol LiveSession: AnyObject, Sendable, ThreadItemSource {
   func postJSON<Response: Decodable & Sendable>(
     _ path: String, body: some Encodable & Sendable, as: Response.Type
   ) async throws -> Response
+  /// An authorized JSON `GET` to an HTTP route of this computer (pairing invite status).
+  func getJSON<Response: Decodable & Sendable>(_ path: String, as: Response.Type) async throws -> Response
   /// Config events after the first snapshot (provider and settings changes), for this session.
   var configUpdates: AsyncStream<ServerConfigEvent> { get }
   func close() async
@@ -40,6 +42,10 @@ extension LiveSession {
   public func postJSON<Response: Decodable & Sendable>(
     _ path: String, body: some Encodable & Sendable, as _: Response.Type
   ) async throws -> Response {
+    throw RpcError.connectionClosed("This session has no HTTP route.")
+  }
+
+  public func getJSON<Response: Decodable & Sendable>(_ path: String, as _: Response.Type) async throws -> Response {
     throw RpcError.connectionClosed("This session has no HTTP route.")
   }
 

@@ -1,0 +1,10 @@
+{
+  "schema" : "pairingInviteCreate",
+  "value" : {
+    "scopes" : [
+      "orchestration:read",
+      "orchestration:operate",
+      "access:read"
+    ]
+  }
+}

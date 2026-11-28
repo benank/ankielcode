@@ -1,0 +1,343 @@
+{
+  "responses": {
+    "created": {
+      "inviteId": "invite-tide-1",
+      "expiresAt": "2026-11-27T09:02:00.000Z",
+      "scopes": [
+        "orchestration:read",
+        "orchestration:operate",
+        "access:read"
+      ]
+    },
+    "pending": {
+      "inviteId": "invite-tide-1",
+      "expiresAt": "2026-11-27T09:02:00.000Z",
+      "scopes": [
+        "orchestration:read",
+        "orchestration:operate",
+        "access:read"
+      ],
+      "status": "pending"
+    },
+    "claimed": {
+      "inviteId": "invite-tide-1",
+      "expiresAt": "2026-11-27T09:02:00.000Z",
+      "scopes": [
+        "orchestration:read",
+        "orchestration:operate",
+        "access:read"
+      ],
+      "status": "claimed",
+      "claim": {
+        "clientLabel": "Harbor MacBook Pro",
+        "clientDeviceType": "desktop",
+        "clientOs": "macOS",
+        "verificationCode": "482-913",
+        "claimedAt": "2026-11-27T09:00:05.000Z"
+      }
+    },
+    "claimedBare": {
+      "inviteId": "invite-tide-1",
+      "expiresAt": "2026-11-27T09:02:00.000Z",
+      "scopes": [
+        "orchestration:read",
+        "orchestration:operate",
+        "access:read"
+      ],
+      "status": "claimed",
+      "claim": {
+        "clientDeviceType": "unknown",
+        "clientOs": "unknown",
+        "verificationCode": "120-004",
+        "claimedAt": "2026-11-27T09:00:05.000Z"
+      }
+    },
+    "approved": {
+      "status": "approved",
+      "grantExpiresAt": "2026-11-27T09:04:00.000Z"
+    },
+    "denied": {
+      "status": "denied"
+    },
+    "claimClaimed": {
+      "status": "claimed",
+      "verificationCode": "482-913",
+      "expiresAt": "2026-11-27T09:02:00.000Z"
+    },
+    "claimApproved": {
+      "status": "approved",
+      "grantExpiresAt": "2026-11-27T09:04:00.000Z",
+      "credential": "TIDE7K3MQ2PX"
+    },
+    "claimExpired": {
+      "status": "expired"
+    }
+  },
+  "accepted": [
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/"
+      },
+      "normalized": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/"
+      },
+      "file": "{\"version\":1,\"inviteId\":\"invite-tide_1\",\"environmentId\":\"env-tide-studio\",\"baseUrl\":\"http://192.168.1.20:3773/\"}",
+      "appLink": "ankielcode://pair-invite?v=1&inviteId=invite-tide_1&environmentId=env-tide-studio&baseUrl=http%3A%2F%2F192.168.1.20%3A3773%2F",
+      "userInfo": {
+        "version": "1",
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/"
+      }
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "label": "Studio Mac",
+        "expiresAt": "2026-11-27T09:02:00.000Z"
+      },
+      "normalized": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "label": "Studio Mac",
+        "expiresAt": "2026-11-27T09:02:00.000Z"
+      },
+      "file": "{\"version\":1,\"inviteId\":\"invite-tide_1\",\"environmentId\":\"env-tide-studio\",\"baseUrl\":\"http://192.168.1.20:3773/\",\"label\":\"Studio Mac\",\"expiresAt\":\"2026-11-27T09:02:00.000Z\"}",
+      "appLink": "ankielcode://pair-invite?v=1&inviteId=invite-tide_1&environmentId=env-tide-studio&baseUrl=http%3A%2F%2F192.168.1.20%3A3773%2F&label=Studio+Mac&expiresAt=2026-11-27T09%3A02%3A00.000Z",
+      "userInfo": {
+        "version": "1",
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "label": "Studio Mac",
+        "expiresAt": "2026-11-27T09:02:00.000Z"
+      }
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "https://Relay.Example.WORKERS.dev:443/h/ABCDEFGHIJKLMNOPQRSTUVWXYZ/pair"
+      },
+      "normalized": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "https://relay.example.workers.dev/h/abcdefghijklmnopqrstuvwxyz/"
+      },
+      "file": "{\"version\":1,\"inviteId\":\"invite-tide_1\",\"environmentId\":\"env-tide-studio\",\"baseUrl\":\"https://relay.example.workers.dev/h/abcdefghijklmnopqrstuvwxyz/\"}",
+      "appLink": "ankielcode://pair-invite?v=1&inviteId=invite-tide_1&environmentId=env-tide-studio&baseUrl=https%3A%2F%2Frelay.example.workers.dev%2Fh%2Fabcdefghijklmnopqrstuvwxyz%2F",
+      "userInfo": {
+        "version": "1",
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "https://relay.example.workers.dev/h/abcdefghijklmnopqrstuvwxyz/"
+      }
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "https://tide.example.com/some/deep/path",
+        "label": "Tide & Moon / 潮汐 ✓ \"quoted\" + 100%"
+      },
+      "normalized": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "https://tide.example.com/",
+        "label": "Tide & Moon / 潮汐 ✓ \"quoted\" + 100%"
+      },
+      "file": "{\"version\":1,\"inviteId\":\"invite-tide_1\",\"environmentId\":\"env-tide-studio\",\"baseUrl\":\"https://tide.example.com/\",\"label\":\"Tide & Moon / 潮汐 ✓ \\\"quoted\\\" + 100%\"}",
+      "appLink": "ankielcode://pair-invite?v=1&inviteId=invite-tide_1&environmentId=env-tide-studio&baseUrl=https%3A%2F%2Ftide.example.com%2F&label=Tide+%26+Moon+%2F+%E6%BD%AE%E6%B1%90+%E2%9C%93+%22quoted%22+%2B+100%25",
+      "userInfo": {
+        "version": "1",
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "https://tide.example.com/",
+        "label": "Tide & Moon / 潮汐 ✓ \"quoted\" + 100%"
+      }
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "label": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      "normalized": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "label": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      "file": "{\"version\":1,\"inviteId\":\"invite-tide_1\",\"environmentId\":\"env-tide-studio\",\"baseUrl\":\"http://192.168.1.20:3773/\",\"label\":\"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé\"}",
+      "appLink": "ankielcode://pair-invite?v=1&inviteId=invite-tide_1&environmentId=env-tide-studio&baseUrl=http%3A%2F%2F192.168.1.20%3A3773%2F&label=%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9",
+      "userInfo": {
+        "version": "1",
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "label": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      }
+    }
+  ],
+  "refused": [
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "bad id",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": " env",
+        "baseUrl": "http://192.168.1.20:3773/"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "",
+        "baseUrl": "http://192.168.1.20:3773/"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "ftp://tide.example.com/"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://user:pw@tide.example.com/"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://tide.example.com/?q=1"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://tide.example.com/#x"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://tide.example.com\\x/"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "label": ""
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "label": " Studio"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "label": "Studio\u0007"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "label": "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "expiresAt": "tomorrow"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "inviteId": "invite-tide_1",
+        "environmentId": "env-tide-studio",
+        "baseUrl": "http://192.168.1.20:3773/",
+        "expiresAt": "2026-11-27 09:02:00Z"
+      },
+      "accepted": false
+    }
+  ]
+}
