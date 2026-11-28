@@ -31,7 +31,7 @@ struct ComposerView: View {
   @Namespace private var glass
 
   enum Picker: String, Identifiable {
-    case photos, files, camera, model
+    case photos, files, camera, model, usage
     var id: String { rawValue }
   }
 
@@ -65,6 +65,9 @@ struct ComposerView: View {
           dictation.dismissFailure(target.draftKey)
         }
         .transition(.opacity)
+      } else if draft.freshContext == true, notice == nil, blockNotice == nil {
+        FreshSessionNotice { store.updateDraft(target.draftKey) { $0.freshContext = nil } }
+          .transition(.opacity)
       } else if let notice = notice ?? blockNotice {
         Text(notice)
           .font(Typography.footnote)
@@ -121,6 +124,9 @@ struct ComposerView: View {
     }
     .sheet(isPresented: isPresented(.model)) {
       ModelPickerSheet(target: target, actions: actions)
+    }
+    .sheet(isPresented: isPresented(.usage)) {
+      UsageSheet(context: nil)
     }
     .onChange(of: photoItems) { _, items in
       guard !items.isEmpty else { return }
@@ -230,14 +236,47 @@ struct ComposerView: View {
     #if DEBUG
       if model.isComposerFake { search = { query, _ in MentionDebug.entries(query) } }
     #endif
-    return ComposerSuggestions.Source(context: target.fileContext, canRead: target.canReadFiles, search: search)
+    let provider = target.providers.first { $0.instanceId == selection?.instanceId }
+    let cwd = target.fileContext?.cwd
+    let context = ComposerSlashMenu.Context(
+      hasThread: !target.isNewThread, hasCompactableConversation: target.hasConversation, offersUsageLimits: true,
+      offersFreshSession: target.offersFreshSession)
+    return ComposerSuggestions.Source(
+      context: target.fileContext, canRead: target.canReadFiles, search: search,
+      otherItems: { trigger in
+        switch trigger.kind {
+        case .slashCommand:
+          ComposerSlashMenu.slashItems(
+            query: trigger.query, atMessageStart: trigger.rangeStart == 0, context: context, provider: provider, cwd: cwd,
+            labels: .localized)
+        case .skill: ComposerSlashMenu.skillItems(query: trigger.query, provider: provider, cwd: cwd)
+        case .path, .pullRequest: []
+        }
+      })
   }
 
   /// Writes a pick over the word at the caret and puts the caret after it.
   private func pick(_ item: ComposerMenuItem) {
     guard let trigger = suggestions.trigger else { return }
-    let result = ComposerMenu.apply(item, to: draft.text, trigger: trigger)
+    // Commands that act instead of inserting: clear the typed word, then run them.
+    let action: (() -> Void)? =
+      switch item.action {
+      case .command("model"): { picker = .model }
+      case .command("clear"): { store.updateDraft(target.draftKey) { $0.freshContext = true } }
+      case .providerCommand(ComposerSlashMenu.usageLimitsCommand): { picker = .usage }
+      default: nil
+      }
+    let result = action == nil
+      ? ComposerMenu.apply(item, to: draft.text, trigger: trigger)
+      : ComposerTrigger.replace(draft.text, start: trigger.rangeStart, end: trigger.rangeEnd, with: "")
     suggestions.close(keepDismissal: false)
+    if let action {
+      store.setText(result.text, for: target.draftKey)
+      caretRequest = ComposerCaretRequest(offset: result.cursor)
+      Haptics.selection()
+      action()
+      return
+    }
     store.setText(result.text, for: target.draftKey)
     caretRequest = ComposerCaretRequest(offset: result.cursor)
     caretRange = NSRange(location: result.cursor, length: 0)
@@ -417,6 +456,20 @@ struct ComposerView: View {
 
   private func submit(_ delivery: MessageDelivery) {
     guard draft.hasContent, !dictating else { return }
+    // `/clear` as the whole message arms a fresh session instead of sending (RN).
+    if target.offersFreshSession, draft.attachments.isEmpty, ComposerCommandText.isClear(draft.text) {
+      store.updateDraft(target.draftKey) {
+        $0.text = ""
+        $0.freshContext = true
+      }
+      return
+    }
+    // `/usage-limits` opens the usage sheet instead of reaching the agent.
+    if draft.attachments.isEmpty, draft.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "/\(ComposerSlashMenu.usageLimitsCommand)" {
+      store.setText("", for: target.draftKey)
+      picker = .usage
+      return
+    }
     if case .send(false) = primary { return }
     sends += 1
     withMotion(Motion.snappy, reduceMotion: reduceMotion) { send(delivery) }

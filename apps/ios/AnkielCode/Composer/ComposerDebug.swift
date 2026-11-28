@@ -162,6 +162,13 @@
       haiku.shortName = "Haiku 5.5"
       var claude = ServerProvider(instanceId: "claudeAgent", driver: "claudeAgent", displayName: "Claude", models: [opus, sonnet, haiku])
       claude.supportedRuntimeModes = [.approvalRequired, .autoAcceptEdits, .auto, .fullAccess]
+      claude.slashCommands = [
+        ProviderSlashCommand(name: "review", description: "Review the current changes"),
+        ProviderSlashCommand(name: "compact", description: "Summarize the conversation"),
+        ProviderSlashCommand(name: "clear", description: "Clear conversation history"),
+        ProviderSlashCommand(name: "usage-limits", description: "Show this provider's usage limits"),
+      ]
+      claude.skills = [ProviderSkill(name: "tide-tables", shortDescription: "Regenerate the harmonic tide tables")]
       let codex = ServerProvider(
         instanceId: "codex", driver: "codex", displayName: "Codex",
         models: [

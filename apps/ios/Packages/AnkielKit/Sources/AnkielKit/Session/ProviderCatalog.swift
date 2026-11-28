@@ -32,6 +32,10 @@ public struct ServerProvider: Sendable, Hashable, Decodable, Identifiable {
   /// Subscription windows the computer last read for this account; nil when it reports none.
   public var usageLimits: ProviderUsageLimits?
   public var authWorkspaceId: String?
+  /// The provider's own commands and skills, and per-folder catalogs that replace them there.
+  public var slashCommands: [ProviderSlashCommand] = []
+  public var skills: [ProviderSkill] = []
+  public var workspaceSnapshots: [ProviderWorkspaceSnapshot] = []
 
   public var id: String { instanceId }
 
@@ -52,6 +56,7 @@ public struct ServerProvider: Sendable, Hashable, Decodable, Identifiable {
     case instanceId, driver, displayName, accentColor, badgeLabel, continuation, showInteractionModeToggle
     case supportedRuntimeModes, enabled, installed, auth, availability, models, updateRequiredModels
     case version, status, message, unavailableReason, versionAdvisory, usageLimits
+    case slashCommands, skills, workspaceSnapshots
   }
 
   struct Continuation: Decodable { var groupKey: String? }
@@ -95,6 +100,19 @@ public struct ServerProvider: Sendable, Hashable, Decodable, Identifiable {
     availability = c.loose(String.self, .availability)
     models = c.loose(LossyArray<ServerProviderModel>.self, .models)?.elements ?? []
     updateRequiredModelSlugs = c.loose(LossyArray<Slug>.self, .updateRequiredModels)?.elements.map(\.slug) ?? []
+    slashCommands = c.loose(LossyArray<ProviderSlashCommand>.self, .slashCommands)?.elements ?? []
+    skills = c.loose(LossyArray<ProviderSkill>.self, .skills)?.elements ?? []
+    workspaceSnapshots = c.loose(LossyArray<ProviderWorkspaceSnapshot>.self, .workspaceSnapshots)?.elements ?? []
+  }
+
+  /// RN `resolveProviderSlashCommandsForCwd` / `resolveProviderSkillsForCwd`: a folder's own
+  /// catalog when the server scanned it, else the provider's.
+  public func slashCommands(forCwd cwd: String?) -> [ProviderSlashCommand] {
+    workspaceSnapshots.first { $0.cwd == cwd && cwd != nil }?.slashCommands ?? slashCommands
+  }
+
+  public func skills(forCwd cwd: String?) -> [ProviderSkill] {
+    workspaceSnapshots.first { $0.cwd == cwd && cwd != nil }?.skills ?? skills
   }
 
   /// The label RN shows for the instance.
@@ -226,4 +244,65 @@ public struct OptionDescriptor: Sendable, Hashable, Decodable, Identifiable {
   }
 
   static let reasoningIds: Set<String> = ["effort", "reasoningEffort", "reasoning", "thinking"]
+}
+
+/// `ServerProviderSlashCommand`.
+public struct ProviderSlashCommand: Sendable, Hashable, Decodable {
+  public var name: String
+  public var description: String?
+
+  public init(name: String, description: String? = nil) {
+    self.name = name
+    self.description = description
+  }
+}
+
+/// `ServerProviderSkill`, the fields the composer reads.
+public struct ProviderSkill: Sendable, Hashable, Decodable {
+  public var name: String
+  public var displayName: String?
+  public var description: String?
+  public var shortDescription: String?
+  public var enabled: Bool
+  public var userInvocable: Bool?
+
+  public init(name: String, displayName: String? = nil, description: String? = nil, shortDescription: String? = nil, enabled: Bool = true, userInvocable: Bool? = nil) {
+    self.name = name
+    self.displayName = displayName
+    self.description = description
+    self.shortDescription = shortDescription
+    self.enabled = enabled
+    self.userInvocable = userInvocable
+  }
+
+  enum CodingKeys: String, CodingKey { case name, displayName, description, shortDescription, enabled, userInvocable }
+
+  public init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    name = try c.decode(String.self, forKey: .name)
+    displayName = c.loose(String.self, .displayName)
+    description = c.loose(String.self, .description)
+    shortDescription = c.loose(String.self, .shortDescription)
+    enabled = c.loose(Bool.self, .enabled) ?? false
+    userInvocable = c.loose(Bool.self, .userInvocable)
+  }
+
+  /// Disabled and agent-only skills (`user-invocable: false`) are left out of menus.
+  public var isUserInvocable: Bool { enabled && userInvocable != false }
+}
+
+/// `ServerProviderWorkspaceSnapshot`: one folder's commands and skills.
+public struct ProviderWorkspaceSnapshot: Sendable, Hashable, Decodable {
+  public var cwd: String
+  public var slashCommands: [ProviderSlashCommand]
+  public var skills: [ProviderSkill]
+
+  enum CodingKeys: String, CodingKey { case cwd, slashCommands, skills }
+
+  public init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    cwd = try c.decode(String.self, forKey: .cwd)
+    slashCommands = c.loose(LossyArray<ProviderSlashCommand>.self, .slashCommands)?.elements ?? []
+    skills = c.loose(LossyArray<ProviderSkill>.self, .skills)?.elements ?? []
+  }
 }

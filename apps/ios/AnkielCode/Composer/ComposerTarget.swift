@@ -28,6 +28,10 @@ struct ComposerTarget {
   var fileContext: FileContext?
   /// `filesystem:read`: the session may search the computer's files.
   var canReadFiles = true
+  /// `/clear` can arm a fresh session (`capabilities.freshContext` and a thread that has run).
+  var offersFreshSession = false
+  /// The thread has messages, so a provider's `/compact` has something to compact.
+  var hasConversation = false
 
   static let newThreadKey = "new-thread"
 
@@ -74,6 +78,8 @@ extension ComposerTarget {
     target.canSend = environment?.allows("orchestration:operate") ?? true
     target.fileContext = threadFileContext(ref, projectId: detail?.state.projectId, registry: model.registry)
     target.canReadFiles = environment?.allows("filesystem:read") ?? true
+    target.offersFreshSession = environment?.capabilities["freshContext"]?.boolValue == true && shell?.latestRunId != nil
+    target.hasConversation = detail?.state.timeline.rows.isEmpty == false
     #if DEBUG
       if ThreadDebug.isFixture(ref) {
         target.environmentLabel = DebugCatalog.environmentLabel
@@ -82,6 +88,7 @@ extension ComposerTarget {
         target.threadRuntimeMode = .auto
         target.lockedInstance = "claudeAgent"
         target.supportsThreadStop = true
+        target.offersFreshSession = true
         target.fileContext = FileContext(environmentId: ref.environmentId, cwd: "/srv/dev/tidewise", threadId: ref.threadId, title: "tidewise")
         // Without the fake sink a fixture message would wait forever in the real outbox.
         target.canSend = model.isComposerFake

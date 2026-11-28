@@ -55,6 +55,8 @@ public struct ComposerDraft: Sendable, Hashable, Codable {
   public var projectId: String?
   /// The new-thread flow chose "No project".
   public var noProject: Bool?
+  /// `/clear` armed: the next message starts a fresh provider session.
+  public var freshContext: Bool?
 
   public init() {}
 
@@ -64,6 +66,7 @@ public struct ComposerDraft: Sendable, Hashable, Codable {
 
   public var isEmpty: Bool {
     !hasContent && modelSelection == nil && runtimeMode == nil && projectId == nil && environmentId == nil && noProject == nil
+      && freshContext == nil
   }
 }
 
@@ -83,6 +86,8 @@ public struct OutboxMessage: Sendable, Hashable, Codable, Identifiable {
   /// A change to apply before the message (RN always sends mobile turns in the default mode).
   public var interactionMode: InteractionMode?
   public var delivery: MessageDelivery
+  /// Starts a new provider session without the thread's earlier context (`/clear`).
+  public var freshContext: Bool?
   /// Set for the first message of a new thread (`orchestration.launchThread`).
   public var creation: Creation?
   public var createdAt: Date

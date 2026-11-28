@@ -95,4 +95,12 @@ public struct ServerConfigSubscription: Sendable, Hashable, Encodable {
   public init() {}
 
   public static let rpcTag = "subscribeServerConfig"
+
+  /// What the app asks for: providers list `/usage-limits`, which the composer opens as the
+  /// usage sheet (RN sends the same).
+  public static var app: ServerConfigSubscription {
+    var subscription = ServerConfigSubscription()
+    subscription.usageLimitsCommand = true
+    return subscription
+  }
 }

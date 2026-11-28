@@ -1,0 +1,19 @@
+{
+  "schema" : "command",
+  "value" : {
+    "attachments" : [
+
+    ],
+    "commandId" : "9d2e6a1f-3b4c-4d5e-8f70-1a2b3c4d5e6f",
+    "createdBy" : "user",
+    "creationSource" : "mobile",
+    "dispatchMode" : {
+      "type" : "start_immediately"
+    },
+    "freshContext" : true,
+    "messageId" : "m-2",
+    "text" : "Start over from the spec",
+    "threadId" : "0b7e4f2a-9c1d-4e8b-a6f3-5d2c1b0a9e87",
+    "type" : "message.dispatch"
+  }
+}

@@ -37,11 +37,14 @@ public struct MessageDispatch: Sendable, Hashable, Encodable {
   public var modelSelection: ModelSelection?
   public var titleSeed: String?
   public var delivery: MessageDelivery
+  /// `/clear`: a new provider session without the thread's earlier context.
+  public var freshContext = false
 
   public init(
     commandId: CommandID, threadId: String, messageId: String, text: String, attachments: [ChatAttachment] = [],
-    modelSelection: ModelSelection? = nil, titleSeed: String? = nil, delivery: MessageDelivery = .start
+    modelSelection: ModelSelection? = nil, titleSeed: String? = nil, delivery: MessageDelivery = .start, freshContext: Bool = false
   ) {
+    self.freshContext = freshContext
     self.commandId = commandId
     self.threadId = threadId
     self.messageId = messageId
@@ -54,7 +57,7 @@ public struct MessageDispatch: Sendable, Hashable, Encodable {
 
   enum CodingKeys: String, CodingKey {
     case type, commandId, createdBy, creationSource, threadId, messageId, text, attachments, titleSeed
-    case modelSelection, deliveryIntent, dispatchMode
+    case modelSelection, deliveryIntent, dispatchMode, freshContext
   }
 
   struct DispatchMode: Encodable { var type: String }
@@ -72,6 +75,7 @@ public struct MessageDispatch: Sendable, Hashable, Encodable {
     // RN's "start" branch leaves the title seed out; the other branches send it.
     if delivery != .start { try c.encodeIfPresent(titleSeed, forKey: .titleSeed) }
     try c.encodeIfPresent(modelSelection, forKey: .modelSelection)
+    if freshContext { try c.encode(true, forKey: .freshContext) }
     switch delivery {
     case .start:
       try c.encode(DispatchMode(type: "start_immediately"), forKey: .dispatchMode)

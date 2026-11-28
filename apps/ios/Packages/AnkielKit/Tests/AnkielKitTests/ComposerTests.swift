@@ -102,6 +102,20 @@ struct ComposerStoreTests {
     #expect(store.outbox.isEmpty)
   }
 
+  @Test("an armed /clear starts the next message's fresh session, once")
+  func freshSessionGoesWithTheNextMessage() async throws {
+    let sink = FakeComposerSink()
+    let store = await makeStore(sink)
+    store.updateDraft(ref.key) { $0.freshContext = true }
+    store.setText("Start over", for: ref.key)
+    store.send(ref.key, to: ref, delivery: .start, thread: settings)
+    #expect(store.draft(ref.key).freshContext == nil, "sending disarms it")
+    store.setText("And then", for: ref.key)
+    store.send(ref.key, to: ref, delivery: .start, thread: settings)
+    await store.idle()
+    #expect(sink.messages.map(\.freshContext) == [true, false])
+  }
+
   @Test("a dropped reply resends with the same command id")
   func transportRetryKeepsCommandId() async throws {
     let sink = FakeComposerSink()

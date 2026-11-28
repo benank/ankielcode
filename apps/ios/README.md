@@ -624,3 +624,20 @@ With `ANKIEL_DEBUG_COMPOSER`, `@` searches a made-up workspace (`MentionDebug`) 
 computer. `ComposerMentionUITests` picks, deletes and sends a mention and walks the list with the
 keyboard. `swift run ankiel-probe --state <file> --files <cwd> --search <q>` also runs the `@`
 search (bare and with the query) and checks each result's link reads back as its path.
+
+## Composer commands
+
+`/` lists RN mobile's set (`ComposerSlashMenu`): `/model` anywhere; at the start of a message
+`/clear` (with the computer's `freshContext` capability, once the thread has run), the provider's
+own commands for the composer's folder (a workspace snapshot replaces the provider list there;
+`/compact` only with a conversation) and its invocable skills. `$` completes skills, ranked like RN.
+`/model` opens the model sheet; `/clear`, picked or typed as the whole message, arms a fresh session
+that the next `message.dispatch` carries as `freshContext: true` (a notice offers "Keep the current
+session"); `/usage-limits`, which the server adds because the app subscribes with
+`usageLimitsCommand`, opens the usage sheet. Other commands are sent as text. `/side` and `/btw`
+are not offered: the app cannot start side chats yet.
+
+The fixture Claude (`DebugCatalog`) lists `/review`, `/compact`, `/clear`, `/usage-limits` and a skill
+for `ComposerSlashCommandUITests`. `swift run ankiel-probe --state <file> --live slash` prints every
+provider's commands, then on Replay arms `/clear` through the composer store and checks the next
+message reaches the server as a fresh session (deletes its thread).

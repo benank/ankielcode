@@ -154,7 +154,7 @@ public struct EnvironmentConnector: Sendable {
     await rpc.start()
     do {
       let events = try await rpc.stream(
-        ServerConfigSubscription.rpcTag, payload: ServerConfigSubscription(), of: ServerConfigEvent.self)
+        ServerConfigSubscription.rpcTag, payload: ServerConfigSubscription.app, of: ServerConfigEvent.self)
       let feed = ServerConfigFeed(events.makeAsyncIterator())
       guard case .snapshot(let config)? = try await feed.next() else {
         await rpc.close()

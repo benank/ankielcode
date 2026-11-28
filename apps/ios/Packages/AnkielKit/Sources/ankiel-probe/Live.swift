@@ -55,6 +55,8 @@ func live(_ mode: String, environment: SavedEnvironment, connector: EnvironmentC
     try await liveRequests(session, other: other)
   case "composer":
     try await liveComposer(environment, connector: connector)
+  case "slash":
+    try await liveSlash(environment, connector: connector)
   case "detail":
     try await liveDetail(environment, connector: connector)
   case "settings":

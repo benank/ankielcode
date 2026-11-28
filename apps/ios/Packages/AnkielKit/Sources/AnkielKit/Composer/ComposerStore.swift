@@ -397,7 +397,9 @@ public final class ComposerStore {
       text: draft.text.trimmingCharacters(in: .whitespacesAndNewlines), attachments: draft.attachments,
       modelSelection: model, runtimeMode: runtimeMode, interactionMode: interactionMode,
       delivery: creation == nil ? delivery : .start, creation: creation)
-    outbox.append(message)
+    var queued = message
+    if creation == nil, draft.freshContext == true { queued.freshContext = true }
+    outbox.append(queued)
     if creation != nil {
       drafts[key] = nil
       rememberNewThread(model: model, runtimeMode: runtimeMode)
@@ -406,11 +408,12 @@ public final class ComposerStore {
         draft.text = ""
         draft.attachments = []
         draft.runtimeMode = nil
+        draft.freshContext = nil
       }
     }
     save()
-    deliver(message.threadKey)
-    return message
+    deliver(queued.threadKey)
+    return queued
   }
 
   /// Messages to show in a thread's feed: everything not yet in the server's projection.
@@ -637,7 +640,8 @@ public final class ComposerStore {
       let dispatch = MessageDispatch(
         commandId: CommandID(message.commandId), threadId: message.threadId, messageId: message.messageId, text: message.text,
         attachments: attachments, modelSelection: message.modelSelection,
-        titleSeed: ThreadTitleSeed.make(text: message.text, attachments: attachments, labels: titleLabels), delivery: message.delivery)
+        titleSeed: ThreadTitleSeed.make(text: message.text, attachments: attachments, labels: titleLabels), delivery: message.delivery,
+        freshContext: message.freshContext == true)
       return .accepted(try await sink.send(dispatch, in: environmentId))
     } catch {
       return outcome(error)

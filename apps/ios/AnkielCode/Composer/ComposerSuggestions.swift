@@ -151,7 +151,14 @@ struct ComposerSuggestionList: View {
       }
     }
     .fixedSize(horizontal: false, vertical: true)
-    .glassEffect(.regular, in: .rect(cornerRadius: Radius.field + 4, style: .continuous))
+    // A material, not glass: glass drawn from this overlay takes the touches of the composer
+    // card under it (its Send button stopped responding while the list showed).
+    .background(.regularMaterial, in: .rect(cornerRadius: Radius.field + 4, style: .continuous))
+    .overlay {
+      RoundedRectangle(cornerRadius: Radius.field + 4, style: .continuous)
+        .strokeBorder(Palette.separator, lineWidth: 0.5)
+    }
+    .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier("composer.suggestions")
   }

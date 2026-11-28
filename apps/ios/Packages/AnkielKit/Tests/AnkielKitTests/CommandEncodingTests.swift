@@ -38,6 +38,10 @@ struct CommandEncodingTests {
       MessageDispatch(commandId: command, threadId: thread, messageId: "m-1", text: "Hello", delivery: .start)
     ),
     (
+      "dispatch-fresh-session", "command",
+      MessageDispatch(commandId: command, threadId: thread, messageId: "m-2", text: "Start over from the spec", delivery: .start, freshContext: true)
+    ),
+    (
       "launch-thread", "launch",
       ThreadLaunch(
         commandId: command, threadId: thread, projectId: "1895f07d-b00d-4d5a-9710-94981773dffb",
