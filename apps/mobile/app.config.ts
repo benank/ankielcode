@@ -234,7 +234,7 @@ const config: ExpoConfig = {
   slug: "ankiel-code",
   platforms: ["ios", "android"],
   scheme: variant.scheme,
-  version: repoEnv.ANKIEL_MOBILE_VERSION ?? "2.3.0",
+  version: repoEnv.ANKIEL_MOBILE_VERSION ?? "0.2.0",
   runtimeVersion: {
     // Skip costly fingerprinting on dev launches; preview and production OTAs require matching native projects.
     policy: runtimeVersionPolicy,
@@ -275,6 +275,18 @@ const config: ExpoConfig = {
       // System picture in picture needs background audio to start and survive outside the app.
       UIBackgroundModes: ["audio"],
       ITSAppUsesNonExemptEncryption: false,
+      NSUserActivityTypes: ["com.ankiel.ankielcode.pair-environment"],
+      UTExportedTypeDeclarations: [
+        {
+          UTTypeIdentifier: "com.ankiel.ankielcode.pairing-invite",
+          UTTypeDescription: "Ankiel Code Pairing Invite",
+          UTTypeConformsTo: ["public.json", "public.data"],
+          UTTypeTagSpecification: {
+            "public.filename-extension": ["ankielpair"],
+            "public.mime-type": ["application/vnd.ankielcode.pairing-invite+json"],
+          },
+        },
+      ],
       // Capture builds disable multitasking because iPadOS otherwise ignores orientation requests.
       ...(process.env.ANKIEL_SHOWCASE_CAPTURE_BUILD === "1"
         ? {

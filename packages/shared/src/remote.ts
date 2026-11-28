@@ -237,6 +237,174 @@ export const readThreadAppLink = (value: string): ThreadAppLink | null => {
   return buildThreadAppLink(link, url.protocol.slice(0, -1)) === value ? link : null;
 };
 
+/** @public */
+export const PAIRING_HANDOFF_ACTIVITY_TYPE = "com.ankiel.ankielcode.pair-environment";
+export const PAIRING_INVITE_FILE_EXTENSION = ".ankielpair";
+/** @public */
+export const PAIRING_INVITE_UTTYPE = "com.ankiel.ankielcode.pairing-invite";
+/** @public */
+export const PAIRING_INVITE_MIME_TYPE = "application/vnd.ankielcode.pairing-invite+json";
+export const PAIRING_INVITE_MAX_FILE_BYTES = 16_384;
+
+export interface PairingInvitePayload {
+  readonly version: 1;
+  readonly inviteId: string;
+  readonly environmentId: string;
+  readonly baseUrl: string;
+  readonly label?: string;
+  readonly expiresAt?: string;
+}
+
+const PAIRING_INVITE_FIELDS = new Set([
+  "inviteId",
+  "environmentId",
+  "baseUrl",
+  "label",
+  "expiresAt",
+]);
+const INVITE_CONTROL_CHARACTERS = /[\p{Cc}]/u;
+const INVITE_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
+const inviteEncoder = new TextEncoder();
+
+const readPairingInvite = (value: unknown): PairingInvitePayload | null => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    Object.keys(value).some((key) => key !== "version" && !PAIRING_INVITE_FIELDS.has(key))
+  ) {
+    return null;
+  }
+  const { version, inviteId, environmentId, baseUrl, label, expiresAt } = value as Record<
+    string,
+    unknown
+  >;
+  if (
+    version !== 1 ||
+    typeof inviteId !== "string" ||
+    !/^[A-Za-z0-9_-]{1,128}$/.test(inviteId) ||
+    typeof environmentId !== "string" ||
+    environmentId.length === 0 ||
+    environmentId.length > 256 ||
+    environmentId !== environmentId.trim() ||
+    INVITE_CONTROL_CHARACTERS.test(environmentId) ||
+    typeof baseUrl !== "string" ||
+    baseUrl.length > 1_024 ||
+    !/^https?:\/\/[^/?#@\\\s]+(?:\/|$)/i.test(baseUrl) ||
+    /[?#\\\s]/.test(baseUrl) ||
+    INVITE_CONTROL_CHARACTERS.test(baseUrl) ||
+    (label !== undefined &&
+      (typeof label !== "string" ||
+        label.length === 0 ||
+        label !== label.trim() ||
+        INVITE_CONTROL_CHARACTERS.test(label) ||
+        inviteEncoder.encode(label).byteLength > 256)) ||
+    (expiresAt !== undefined &&
+      (typeof expiresAt !== "string" ||
+        !INVITE_DATE.test(expiresAt) ||
+        !Number.isFinite(Date.parse(expiresAt))))
+  ) {
+    return null;
+  }
+  const url = parseUrl(baseUrl);
+  if (!url || url.username || url.password) return null;
+  url.pathname = extractRelayBasePath(url.pathname);
+  if (url.href.length > 1_024) return null;
+
+  return {
+    version: 1,
+    inviteId,
+    environmentId,
+    baseUrl: url.href,
+    ...(label === undefined ? {} : { label }),
+    ...(expiresAt === undefined ? {} : { expiresAt }),
+  };
+};
+
+const requirePairingInvite = (invite: PairingInvitePayload): PairingInvitePayload => {
+  const validated = readPairingInvite(invite);
+  if (!validated) throw new TypeError("Invalid pairing invite.");
+  return validated;
+};
+
+/** @public */
+export const isPairingInviteFilePath = (path: string): boolean =>
+  path.toLowerCase().endsWith(PAIRING_INVITE_FILE_EXTENSION);
+
+/** @public */
+export const buildPairingInviteAppLink = (
+  invite: PairingInvitePayload,
+  scheme = "ankielcode",
+): string => {
+  if (!APP_LINK_PROTOCOL.test(`${scheme}:`)) throw new TypeError("Invalid pairing invite scheme.");
+  const { version, ...fields } = toPairingInviteUserInfo(invite);
+  return `${scheme}://pair-invite?${new URLSearchParams({ v: version!, ...fields })}`;
+};
+
+/** @public */
+export const readPairingInviteAppLink = (value: string): PairingInvitePayload | null => {
+  if (
+    value.length > PAIRING_INVITE_MAX_FILE_BYTES ||
+    value !== value.trim() ||
+    INVITE_CONTROL_CHARACTERS.test(value) ||
+    !/^[a-z-]+:\/\/pair-invite\?/.test(value) ||
+    value.includes("#")
+  ) {
+    return null;
+  }
+  const url = parseUrl(value);
+  if (!url || !APP_LINK_PROTOCOL.test(url.protocol) || url.host !== "pair-invite") return null;
+
+  const fields: Record<string, string> = {};
+  for (const [key, field] of url.searchParams) {
+    if ((key !== "v" && !PAIRING_INVITE_FIELDS.has(key)) || Object.hasOwn(fields, key)) {
+      return null;
+    }
+    fields[key] = field;
+  }
+  const { v, ...invite } = fields;
+  return parsePairingInviteUserInfo({ version: v, ...invite });
+};
+
+/** @public */
+export const encodePairingInviteFile = (invite: PairingInvitePayload): string =>
+  JSON.stringify(requirePairingInvite(invite));
+
+/** @public */
+export const decodePairingInviteFile = (raw: string): PairingInvitePayload | null => {
+  if (
+    raw.length > PAIRING_INVITE_MAX_FILE_BYTES ||
+    inviteEncoder.encode(raw).byteLength > PAIRING_INVITE_MAX_FILE_BYTES
+  ) {
+    return null;
+  }
+  try {
+    return readPairingInvite(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+};
+
+/** @public */
+export const toPairingInviteUserInfo = (invite: PairingInvitePayload): Record<string, string> => {
+  const { version, ...fields } = requirePairingInvite(invite);
+  return { version: String(version), ...fields };
+};
+
+/** @public */
+export const parsePairingInviteUserInfo = (userInfo: unknown): PairingInvitePayload | null => {
+  if (
+    typeof userInfo !== "object" ||
+    userInfo === null ||
+    Array.isArray(userInfo) ||
+    Object.values(userInfo).some((value) => typeof value !== "string")
+  ) {
+    return null;
+  }
+  const { version, ...fields } = userInfo as Record<string, string>;
+  return version === "1" ? readPairingInvite({ version: 1, ...fields }) : null;
+};
+
 export const resolveRemotePairingTarget = (input: {
   readonly pairingUrl?: string;
   readonly host?: string;

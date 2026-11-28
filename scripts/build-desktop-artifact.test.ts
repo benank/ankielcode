@@ -70,6 +70,11 @@ import {
   releasePackageFiles,
 } from "./update-release-package-versions.ts";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
+import {
+  PAIRING_HANDOFF_ACTIVITY_TYPE,
+  PAIRING_INVITE_MIME_TYPE,
+  PAIRING_INVITE_UTTYPE,
+} from "@ankielcode/shared/remote";
 import { symlinksSupported } from "@ankielcode/shared/testing/symlinks";
 
 const encodeModuleUrl = Schema.encodeEffect(Schema.fromJsonString(Schema.String));
@@ -617,6 +622,34 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
             assert.isString(mac.extendInfo[key], `${version}, signed=${signed}: ${key}`);
             assert.isNotEmpty(mac.extendInfo[key]);
           }
+          assert.deepStrictEqual(mac.extendInfo.NSUserActivityTypes, [
+            PAIRING_HANDOFF_ACTIVITY_TYPE,
+          ]);
+          assert.deepStrictEqual(mac.extendInfo.UTExportedTypeDeclarations, [
+            {
+              UTTypeIdentifier: PAIRING_INVITE_UTTYPE,
+              UTTypeDescription: "Ankiel Code Pairing Invite",
+              UTTypeConformsTo: ["public.json", "public.data"],
+              UTTypeTagSpecification: {
+                "public.filename-extension": ["ankielpair"],
+                "public.mime-type": [PAIRING_INVITE_MIME_TYPE],
+              },
+            },
+          ]);
+          assert.deepStrictEqual(mac.extendInfo.CFBundleDocumentTypes, [
+            {
+              CFBundleTypeName: "Web page",
+              CFBundleTypeRole: "Viewer",
+              LSHandlerRank: "Alternate",
+              LSItemContentTypes: ["public.html", "public.xhtml"],
+            },
+            {
+              CFBundleTypeName: "Ankiel Code Pairing Invite",
+              CFBundleTypeRole: "Viewer",
+              LSHandlerRank: "Owner",
+              LSItemContentTypes: [PAIRING_INVITE_UTTYPE],
+            },
+          ]);
         }
       }
     }),

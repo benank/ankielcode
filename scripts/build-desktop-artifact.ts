@@ -17,6 +17,12 @@ import {
 
 import { fromYaml } from "@ankielcode/shared/schemaYaml";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
+import {
+  PAIRING_HANDOFF_ACTIVITY_TYPE,
+  PAIRING_INVITE_FILE_EXTENSION,
+  PAIRING_INVITE_MIME_TYPE,
+  PAIRING_INVITE_UTTYPE,
+} from "@ankielcode/shared/remote";
 import { resolveSpawnCommand } from "@ankielcode/shared/shell";
 import rootPackageJson from "../package.json" with { type: "json" };
 import desktopPackageJson from "../apps/desktop/package.json" with { type: "json" };
@@ -2696,6 +2702,18 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
           "Ankiel Code lets commands run by terminals and coding agents control other apps.",
         NSSpeechRecognitionUsageDescription:
           "Ankiel Code transcribes your dictation on this Mac when you choose Apple Speech.",
+        NSUserActivityTypes: [PAIRING_HANDOFF_ACTIVITY_TYPE],
+        UTExportedTypeDeclarations: [
+          {
+            UTTypeIdentifier: PAIRING_INVITE_UTTYPE,
+            UTTypeDescription: "Ankiel Code Pairing Invite",
+            UTTypeConformsTo: ["public.json", "public.data"],
+            UTTypeTagSpecification: {
+              "public.filename-extension": [PAIRING_INVITE_FILE_EXTENSION.slice(1)],
+              "public.mime-type": [PAIRING_INVITE_MIME_TYPE],
+            },
+          },
+        ],
         // macOS lists an app under Default web browser only when it opens web
         // pages as documents as well as http and https links (see protocols).
         CFBundleDocumentTypes: [
@@ -2704,6 +2722,12 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
             CFBundleTypeRole: "Viewer",
             LSHandlerRank: "Alternate",
             LSItemContentTypes: ["public.html", "public.xhtml"],
+          },
+          {
+            CFBundleTypeName: "Ankiel Code Pairing Invite",
+            CFBundleTypeRole: "Viewer",
+            LSHandlerRank: "Owner",
+            LSItemContentTypes: [PAIRING_INVITE_UTTYPE],
           },
         ],
       },

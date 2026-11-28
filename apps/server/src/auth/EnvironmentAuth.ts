@@ -1,35 +1,52 @@
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- Effect SecureRandom has no randomInt helper.
+import * as NodeCrypto from "node:crypto";
+
 import {
   AuthAccessTokenType,
   AuthAccessWriteScope,
+  AuthGrantScope,
   AuthOrchestrationOperateScope,
   AuthOrchestrationReadScope,
   AuthSettingsWriteScope,
   AuthSourceControlWriteScope,
   AuthStandardClientScopes,
   type AuthAccessTokenResult,
+  type AuthApprovePairingInviteInput,
+  type AuthApprovePairingInviteResult,
   type AuthBrowserSessionResult,
+  type AuthClaimPairingInviteInput,
+  type AuthClaimPairingInviteResult,
   type AuthClientMetadata,
   type AuthClientSession,
   type AuthCreatePairingCredentialInput,
+  type AuthCreatePairingInviteInput,
+  type AuthCreatePairingInviteResult,
+  type AuthDenyPairingInviteResult,
   type AuthEnvironmentScope,
   type AuthPairingLink,
+  type AuthPairingInviteClaimStatus,
+  type AuthPairingInviteStatus,
   type AuthPairingCredentialResult,
   type AuthSessionId,
   type AuthSessionState,
   authScopeResponse,
   type ServerAuthDescriptor,
   type ServerAuthSessionMethod,
+  type EnvironmentSessionPrincipalShape,
   type AuthWebSocketTicketResult,
   type AuthWebSocketTicketUse,
   DpopFailureReason,
   type DpopFailureReason as DpopFailureReasonType,
 } from "@ankielcode/contracts";
 import { encodeOAuthScope } from "@ankielcode/shared/oauthScope";
+import { extractRelayBasePath } from "@ankielcode/shared/remote";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Base64Url from "effect/encoding/Base64Url";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -45,7 +62,8 @@ import * as PairingGrantStore from "./PairingGrantStore.ts";
 import * as ServerSecretStore from "./ServerSecretStore.ts";
 import * as SessionStore from "./SessionStore.ts";
 import { REUSABLE_DEV_SESSION_EXPIRES_AT, resolveReusableDevAuth } from "./ReusableDevAuth.ts";
-import { verifyRequestDpopProof } from "./dpop.ts";
+import { checkRequestDpopProof, verifyRequestDpopProof } from "./dpop.ts";
+import { deriveAuthClientMetadata } from "./utils.ts";
 import { DESKTOP_RENDERER_ORIGINS } from "../httpCors.ts";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import { MCP_APPROVAL_SUBJECT_PREFIX } from "../persistence/AuthPairingLinks.ts";
@@ -96,6 +114,29 @@ const CLI_MCP_CLIENT_SCOPES = [
 const RENEWABLE_ACCESS_TOKEN_TTL = Duration.hours(1);
 const RENEWABLE_SESSION_WINDOW = Duration.days(30);
 const PAIRING_LINK_SUBJECT = "one-time-token";
+const PAIRING_INVITE_TTL_MS = 120_000;
+const MAX_PAIRING_INVITES = 16;
+
+type PairingInviteClaim = NonNullable<AuthPairingInviteStatus["claim"]> & {
+  readonly proofKeyThumbprint: string;
+};
+
+interface PairingInvite {
+  readonly inviteId: string;
+  readonly creatorSessionId: AuthSessionId;
+  readonly creatorProofKeyThumbprint?: string;
+  readonly expiresAt: DateTime.Utc;
+  readonly scopes: ReadonlyArray<AuthEnvironmentScope>;
+  readonly label?: string;
+  readonly status: AuthPairingInviteStatus["status"];
+  readonly claim?: PairingInviteClaim;
+  readonly grantExpiresAt?: DateTime.Utc;
+  readonly grant?: {
+    readonly id: string;
+    readonly expiresAt: DateTime.Utc;
+    readonly credential: Redacted.Redacted<string>;
+  };
+}
 
 export interface CliMcpClientSession {
   readonly sessionId: AuthSessionId;
@@ -364,6 +405,49 @@ export class ServerAuthForbiddenOperationError extends Schema.TaggedError<Server
   }
 }
 
+export class PairingInviteNotFoundError extends Schema.TaggedError<PairingInviteNotFoundError>()(
+  "PairingInviteNotFoundError",
+  {},
+) {
+  override get message(): string {
+    return "Pairing invite was not found.";
+  }
+}
+
+export class PairingInviteScopeRequiredError extends Schema.TaggedError<PairingInviteScopeRequiredError>()(
+  "PairingInviteScopeRequiredError",
+  { scope: AuthGrantScope },
+) {
+  override get message(): string {
+    return `Pairing invite requires the ${this.scope} scope.`;
+  }
+}
+
+export class PairingInviteInvalidRequestError extends Schema.TaggedError<PairingInviteInvalidRequestError>()(
+  "PairingInviteInvalidRequestError",
+  { reason: Schema.Literals(["invalid_scope", "pairing_invite_verification_code_mismatch"]) },
+) {
+  override get message(): string {
+    return `Pairing invite request was rejected (${this.reason}).`;
+  }
+}
+
+export class PairingInviteForbiddenError extends Schema.TaggedError<PairingInviteForbiddenError>()(
+  "PairingInviteForbiddenError",
+  { reason: Schema.Literals(["pairing_invite_limit_reached", "pairing_invite_invalid_state"]) },
+) {
+  override get message(): string {
+    return `Pairing invite operation was refused (${this.reason}).`;
+  }
+}
+
+type PairingInviteOwnerError = PairingInviteNotFoundError | PairingInviteScopeRequiredError;
+type PairingInviteClaimError =
+  | PairingInviteNotFoundError
+  | PairingInviteForbiddenError
+  | ServerAuthInvalidCredentialError
+  | ServerAuthInternalError;
+
 export class EnvironmentAuth extends Context.Service<
   EnvironmentAuth,
   {
@@ -414,6 +498,47 @@ export class EnvironmentAuth extends Context.Service<
     readonly issuePairingCredential: (
       input?: AuthCreatePairingCredentialInput,
     ) => Effect.Effect<AuthPairingCredentialResult, ServerAuthInternalError>;
+    readonly createPairingInvite: (
+      session: EnvironmentSessionPrincipalShape,
+      input: AuthCreatePairingInviteInput,
+    ) => Effect.Effect<
+      AuthCreatePairingInviteResult,
+      | PairingInviteScopeRequiredError
+      | PairingInviteInvalidRequestError
+      | PairingInviteForbiddenError
+      | ServerAuthInternalError
+    >;
+    readonly getPairingInvite: (
+      session: EnvironmentSessionPrincipalShape,
+      inviteId: string,
+    ) => Effect.Effect<AuthPairingInviteStatus, PairingInviteOwnerError>;
+    readonly approvePairingInvite: (
+      session: EnvironmentSessionPrincipalShape,
+      inviteId: string,
+      input: AuthApprovePairingInviteInput,
+    ) => Effect.Effect<
+      AuthApprovePairingInviteResult,
+      | PairingInviteOwnerError
+      | PairingInviteInvalidRequestError
+      | PairingInviteForbiddenError
+      | ServerAuthInternalError
+    >;
+    readonly denyPairingInvite: (
+      session: EnvironmentSessionPrincipalShape,
+      inviteId: string,
+    ) => Effect.Effect<
+      AuthDenyPairingInviteResult,
+      PairingInviteOwnerError | PairingInviteForbiddenError | ServerAuthInternalError
+    >;
+    readonly claimPairingInvite: (
+      request: HttpServerRequest.HttpServerRequest,
+      inviteId: string,
+      input: AuthClaimPairingInviteInput,
+    ) => Effect.Effect<AuthClaimPairingInviteResult, PairingInviteClaimError>;
+    readonly getPairingInviteClaim: (
+      request: HttpServerRequest.HttpServerRequest,
+      inviteId: string,
+    ) => Effect.Effect<AuthPairingInviteClaimStatus, PairingInviteClaimError>;
     readonly issueStartupPairingCredential: () => Effect.Effect<
       AuthPairingCredentialResult,
       ServerAuthInternalError
@@ -514,6 +639,9 @@ function toBootstrapExchangeError(
   }
 
   return new ServerAuthInvalidCredentialError({
+    ...(cause._tag === "BootstrapCredentialProofKeyMismatchError"
+      ? { dpopFailureReason: "key_mismatch" as const }
+      : {}),
     cause,
   });
 }
@@ -617,6 +745,7 @@ export const make = Effect.gen(function* () {
   const sessions = yield* SessionStore.SessionStore;
   const secretStore = yield* ServerSecretStore.ServerSecretStore;
   const digest = yield* Digest.Digest;
+  const random = yield* SecureRandom.SecureRandom;
   const descriptor = yield* policy.getDescriptor();
   const config = yield* ServerConfig.ServerConfig;
   const devAuth = resolveReusableDevAuth(config);
@@ -746,9 +875,9 @@ export const make = Effect.gen(function* () {
   const sessionIssueLock = yield* Semaphore.make(1);
 
   // Counts "revoke all others" runs. An exchange or sign-in approval that began before a run
-  // issues its session here, under the lock the run holds, so it cannot leave a session behind.
+  // issues its credential here, under the lock the run holds, so it cannot leave one behind.
   const otherSessionRevocations = yield* Ref.make(0);
-  const issueUnlessOthersRevokedSince = <A, E>(since: number, issue: Effect.Effect<A, E>) =>
+  const ensureOthersNotRevokedSince = <A, E>(since: number, issue: Effect.Effect<A, E>) =>
     Ref.get(otherSessionRevocations).pipe(
       Effect.flatMap((count): Effect.Effect<A, E | ServerAuthInvalidCredentialError> =>
         count === since
@@ -759,8 +888,9 @@ export const make = Effect.gen(function* () {
               }),
             ),
       ),
-      sessionIssueLock.withPermits(1),
     );
+  const issueUnlessOthersRevokedSince = <A, E>(since: number, issue: Effect.Effect<A, E>) =>
+    ensureOthersNotRevokedSince(since, issue).pipe(sessionIssueLock.withPermits(1));
 
   const createBrowserSession: EnvironmentAuth["Service"]["createBrowserSession"] = Effect.fn(
     "EnvironmentAuth.createBrowserSession",
@@ -1069,12 +1199,6 @@ export const make = Effect.gen(function* () {
       Effect.withSpan("EnvironmentAuth.listSessions"),
     );
 
-  const revokeSession: EnvironmentAuth["Service"]["revokeSession"] = (sessionId) =>
-    sessions.revoke(sessionId).pipe(
-      Effect.mapError((cause) => new ServerAuthSessionRevocationError({ cause })),
-      Effect.withSpan("EnvironmentAuth.revokeSession"),
-    );
-
   const revokeOtherSessionsExcept = (sessionId: AuthSessionId) =>
     sessions.revokeAllExcept(sessionId).pipe(
       Effect.mapError((cause) => new ServerAuthOtherSessionsRevocationError({ cause })),
@@ -1090,6 +1214,514 @@ export const make = Effect.gen(function* () {
       Effect.map(toPairingCredential),
       Effect.withSpan("EnvironmentAuth.issuePairingCredential"),
     );
+
+  const pairingInvitesRef = yield* Ref.make(new Map<string, PairingInvite>());
+  // Lock ordering: always acquire `sessionIssueLock` before `pairingInviteLock` to prevent deadlocks.
+  const pairingInviteLock = yield* Semaphore.make(1);
+  const isAuthGrantScope = Schema.is(AuthGrantScope);
+
+  // Untraced: called directly inside createPairingInvite and approvePairingInvite spans.
+  const requirePairingInviteOwnerScopes = Effect.fnUntraced(function* (
+    session: EnvironmentSessionPrincipalShape,
+    scopes: ReadonlyArray<AuthEnvironmentScope>,
+  ): Effect.fn.Return<
+    ReadonlyArray<AuthGrantScope>,
+    PairingInviteScopeRequiredError | PairingInviteInvalidRequestError
+  > {
+    if (!session.scopes.has(AuthAccessWriteScope)) {
+      return yield* new PairingInviteScopeRequiredError({ scope: AuthAccessWriteScope });
+    }
+    if (scopes.length === 0 || new Set(scopes).size !== scopes.length) {
+      return yield* new PairingInviteInvalidRequestError({ reason: "invalid_scope" });
+    }
+    const validated: Array<AuthGrantScope> = [];
+    for (const scope of scopes) {
+      if (!isAuthGrantScope(scope)) {
+        return yield* new PairingInviteInvalidRequestError({ reason: "invalid_scope" });
+      }
+      if (!session.scopes.has(scope)) {
+        return yield* new PairingInviteScopeRequiredError({ scope });
+      }
+      validated.push(scope);
+    }
+    return validated;
+  });
+
+  const effectivePairingInviteStatus = (
+    invite: PairingInvite,
+    now: DateTime.Utc,
+  ): AuthPairingInviteStatus["status"] =>
+    (invite.status === "pending" || invite.status === "claimed") &&
+    DateTime.isGreaterThanOrEqualTo(now, invite.expiresAt)
+      ? "expired"
+      : invite.status;
+
+  const isPairingInviteActive = (invite: PairingInvite, now: DateTime.Utc): boolean => {
+    const status = effectivePairingInviteStatus(invite, now);
+    if (status === "pending" || status === "claimed") return true;
+    if (status === "approved") {
+      return invite.grant !== undefined && DateTime.isLessThan(now, invite.grant.expiresAt);
+    }
+    return false;
+  };
+
+  const toPairingInviteStatus = (
+    invite: PairingInvite,
+    now: DateTime.Utc,
+  ): AuthPairingInviteStatus => ({
+    inviteId: invite.inviteId,
+    status: effectivePairingInviteStatus(invite, now),
+    expiresAt: DateTime.formatIso(invite.expiresAt),
+    scopes: invite.scopes,
+    ...(invite.claim
+      ? {
+          claim: {
+            ...(invite.claim.clientLabel ? { clientLabel: invite.claim.clientLabel } : {}),
+            clientDeviceType: invite.claim.clientDeviceType,
+            clientOs: invite.claim.clientOs,
+            verificationCode: invite.claim.verificationCode,
+            claimedAt: invite.claim.claimedAt,
+          },
+        }
+      : {}),
+  });
+
+  const pairingInviteRetainUntil = (invite: PairingInvite): DateTime.Utc =>
+    invite.grantExpiresAt && DateTime.isGreaterThan(invite.grantExpiresAt, invite.expiresAt)
+      ? invite.grantExpiresAt
+      : invite.expiresAt;
+
+  // Untraced: called directly inside createPairingInvite's span.
+  const prunePairingInvites = Effect.fnUntraced(function* (now: DateTime.Utc) {
+    const current = yield* Ref.get(pairingInvitesRef);
+    const next = new Map<string, PairingInvite>();
+    let activeCount = 0;
+    for (const [inviteId, invite] of current) {
+      let entry = invite;
+      if (entry.grant) {
+        const unspent = DateTime.isLessThan(now, entry.grant.expiresAt)
+          ? yield* bootstrapCredentials
+              .isUnspent(entry.grant.id)
+              .pipe(Effect.orElseSucceed(() => false))
+          : false;
+        if (!unspent) {
+          const { grant: _wiped, ...withoutGrant } = entry;
+          entry = withoutGrant;
+        }
+      }
+      if (isPairingInviteActive(entry, now)) {
+        activeCount += 1;
+        next.set(inviteId, entry);
+      } else if (DateTime.isLessThan(now, pairingInviteRetainUntil(entry))) {
+        // Keep terminal invites until max(expiresAt, grantExpiresAt) so polling claimants observe denied/cancelled.
+        next.set(inviteId, entry);
+      }
+    }
+    while (next.size > MAX_PAIRING_INVITES * 4) {
+      let evicted = false;
+      for (const [inviteId, entry] of next) {
+        if (!isPairingInviteActive(entry, now)) {
+          next.delete(inviteId);
+          evicted = true;
+          break;
+        }
+      }
+      if (!evicted) break;
+    }
+    yield* Ref.set(pairingInvitesRef, next);
+    return activeCount;
+  });
+
+  // Untraced: called directly inside session revocation spans.
+  const evictPairingInvites = Effect.fnUntraced(function* (
+    shouldEvict: (invite: PairingInvite) => boolean,
+  ) {
+    return yield* pairingInviteLock.withPermits(1)(
+      Effect.gen(function* () {
+        const current = yield* Ref.get(pairingInvitesRef);
+        const grantIdsToRevoke: Array<string> = [];
+        const next = new Map<string, PairingInvite>();
+        for (const [inviteId, invite] of current) {
+          if (shouldEvict(invite)) {
+            if (invite.grant) {
+              grantIdsToRevoke.push(invite.grant.id);
+            }
+          } else {
+            next.set(inviteId, invite);
+          }
+        }
+        if (grantIdsToRevoke.length > 0) {
+          yield* Effect.forEach(grantIdsToRevoke, (id) => bootstrapCredentials.revoke(id), {
+            discard: true,
+          });
+        }
+        if (next.size !== current.size) {
+          yield* Ref.set(pairingInvitesRef, next);
+        }
+      }),
+    );
+  });
+
+  const createPairingInvite: EnvironmentAuth["Service"]["createPairingInvite"] = Effect.fn(
+    "EnvironmentAuth.createPairingInvite",
+  )(function* (session, input) {
+    if (!session.scopes.has(AuthAccessWriteScope)) {
+      return yield* new PairingInviteScopeRequiredError({ scope: AuthAccessWriteScope });
+    }
+    if (input.access !== undefined || input.purpose !== undefined) {
+      return yield* new PairingInviteInvalidRequestError({ reason: "invalid_scope" });
+    }
+    const delegatedScopes = yield* requirePairingInviteOwnerScopes(
+      session,
+      input.scopes ?? AuthStandardClientScopes,
+    );
+    return yield* pairingInviteLock.withPermits(1)(
+      Effect.gen(function* () {
+        const now = DateTime.toUtc(yield* DateTime.now);
+        const activeCount = yield* prunePairingInvites(now);
+        if (activeCount >= MAX_PAIRING_INVITES) {
+          return yield* new PairingInviteForbiddenError({
+            reason: "pairing_invite_limit_reached",
+          });
+        }
+        const inviteIdBytes = yield* random
+          .randomBytes(24)
+          .pipe(Effect.mapError((cause) => new ServerAuthPairingLinkCreationError({ cause })));
+        const inviteId = Base64Url.encode(inviteIdBytes);
+        const expiresAt = DateTime.toUtc(
+          DateTime.add(now, { milliseconds: PAIRING_INVITE_TTL_MS }),
+        );
+        const invite: PairingInvite = {
+          inviteId,
+          creatorSessionId: session.sessionId,
+          ...(session.proofKeyThumbprint
+            ? { creatorProofKeyThumbprint: session.proofKeyThumbprint }
+            : {}),
+          expiresAt,
+          scopes: delegatedScopes,
+          ...(input.label ? { label: input.label } : {}),
+          status: "pending",
+        };
+        yield* Ref.update(pairingInvitesRef, (current) => {
+          const next = new Map(current);
+          next.set(inviteId, invite);
+          return next;
+        });
+        return {
+          inviteId,
+          expiresAt: DateTime.formatIso(expiresAt),
+          scopes: delegatedScopes,
+        } satisfies AuthCreatePairingInviteResult;
+      }),
+    );
+  });
+
+  const getPairingInvite: EnvironmentAuth["Service"]["getPairingInvite"] = Effect.fn(
+    "EnvironmentAuth.getPairingInvite",
+  )(function* (session, inviteId) {
+    if (!session.scopes.has(AuthAccessWriteScope)) {
+      return yield* new PairingInviteScopeRequiredError({ scope: AuthAccessWriteScope });
+    }
+    const now = DateTime.toUtc(yield* DateTime.now);
+    const invite = (yield* Ref.get(pairingInvitesRef)).get(inviteId);
+    if (!invite || invite.creatorSessionId !== session.sessionId) {
+      return yield* new PairingInviteNotFoundError({});
+    }
+    if (invite.grant && DateTime.isGreaterThanOrEqualTo(now, invite.grant.expiresAt)) {
+      yield* Ref.update(pairingInvitesRef, (current) => {
+        const existing = current.get(inviteId);
+        if (!existing?.grant) return current;
+        const { grant: _wiped, ...withoutGrant } = existing;
+        const next = new Map(current);
+        next.set(inviteId, withoutGrant);
+        return next;
+      });
+    }
+    return toPairingInviteStatus(invite, now);
+  });
+
+  const approvePairingInvite: EnvironmentAuth["Service"]["approvePairingInvite"] = Effect.fn(
+    "EnvironmentAuth.approvePairingInvite",
+  )(function* (session, inviteId, input) {
+    if (!session.scopes.has(AuthAccessWriteScope)) {
+      return yield* new PairingInviteScopeRequiredError({ scope: AuthAccessWriteScope });
+    }
+    const revocationsAtStart = yield* Ref.get(otherSessionRevocations);
+    return yield* sessionIssueLock.withPermits(1)(
+      pairingInviteLock.withPermits(1)(
+        Effect.gen(function* () {
+          const now = DateTime.toUtc(yield* DateTime.now);
+          const invites = yield* Ref.get(pairingInvitesRef);
+          const invite = invites.get(inviteId);
+          if (!invite || invite.creatorSessionId !== session.sessionId) {
+            return yield* new PairingInviteNotFoundError({});
+          }
+          const status = effectivePairingInviteStatus(invite, now);
+          if (status === "expired" && invite.status !== "expired") {
+            yield* Ref.update(pairingInvitesRef, (current) => {
+              const next = new Map(current);
+              const { grant: _wiped, ...withoutGrant } = invite;
+              next.set(inviteId, { ...withoutGrant, status: "expired" });
+              return next;
+            });
+          }
+          if (status !== "claimed" || !invite.claim) {
+            return yield* new PairingInviteForbiddenError({
+              reason: "pairing_invite_invalid_state",
+            });
+          }
+          const approvedScopes = yield* requirePairingInviteOwnerScopes(session, invite.scopes);
+          if (input.verificationCode !== invite.claim.verificationCode) {
+            return yield* new PairingInviteInvalidRequestError({
+              reason: "pairing_invite_verification_code_mismatch",
+            });
+          }
+          const label = invite.label ?? invite.claim.clientLabel;
+          const issued = yield* ensureOthersNotRevokedSince(
+            revocationsAtStart,
+            bootstrapCredentials
+              .issueOneTimeToken({
+                ttl: Duration.millis(PAIRING_INVITE_TTL_MS),
+                scopes: approvedScopes,
+                subject: PAIRING_LINK_SUBJECT,
+                ...(label ? { label } : {}),
+                proofKeyThumbprint: invite.claim.proofKeyThumbprint,
+              })
+              .pipe(Effect.mapError((cause) => new ServerAuthPairingLinkCreationError({ cause }))),
+          ).pipe(
+            Effect.catchTags({
+              ServerAuthInvalidCredentialError: () =>
+                Effect.fail(
+                  new PairingInviteForbiddenError({ reason: "pairing_invite_invalid_state" }),
+                ),
+            }),
+          );
+          const grantExpiresAt = DateTime.toUtc(issued.expiresAt);
+          yield* Ref.update(pairingInvitesRef, (current) => {
+            const next = new Map(current);
+            next.set(inviteId, {
+              ...invite,
+              status: "approved",
+              grantExpiresAt,
+              grant: {
+                id: issued.id,
+                expiresAt: grantExpiresAt,
+                credential: Redacted.make(issued.credential),
+              },
+            });
+            return next;
+          });
+          return {
+            status: "approved",
+            grantExpiresAt: DateTime.formatIso(grantExpiresAt),
+          } satisfies AuthApprovePairingInviteResult;
+        }),
+      ),
+    );
+  });
+
+  const denyPairingInvite: EnvironmentAuth["Service"]["denyPairingInvite"] = Effect.fn(
+    "EnvironmentAuth.denyPairingInvite",
+  )(function* (session, inviteId) {
+    if (!session.scopes.has(AuthAccessWriteScope)) {
+      return yield* new PairingInviteScopeRequiredError({ scope: AuthAccessWriteScope });
+    }
+    return yield* pairingInviteLock.withPermits(1)(
+      Effect.gen(function* () {
+        const now = DateTime.toUtc(yield* DateTime.now);
+        const invite = (yield* Ref.get(pairingInvitesRef)).get(inviteId);
+        if (!invite || invite.creatorSessionId !== session.sessionId) {
+          return yield* new PairingInviteNotFoundError({});
+        }
+        const status = effectivePairingInviteStatus(invite, now);
+        if (status === "pending") {
+          yield* Ref.update(pairingInvitesRef, (current) => {
+            const next = new Map(current);
+            const { grant: _wiped, ...withoutGrant } = invite;
+            next.set(inviteId, { ...withoutGrant, status: "cancelled" });
+            return next;
+          });
+          return { status: "cancelled" } satisfies AuthDenyPairingInviteResult;
+        }
+        if (status === "claimed" || status === "approved") {
+          if (invite.grant) {
+            yield* bootstrapCredentials
+              .revoke(invite.grant.id)
+              .pipe(
+                Effect.mapError((cause) => new ServerAuthPairingLinkRevocationError({ cause })),
+              );
+          }
+          yield* Ref.update(pairingInvitesRef, (current) => {
+            const next = new Map(current);
+            const { grant: _wiped, ...withoutGrant } = invite;
+            next.set(inviteId, { ...withoutGrant, status: "denied" });
+            return next;
+          });
+          return { status: "denied" } satisfies AuthDenyPairingInviteResult;
+        }
+        return yield* new PairingInviteForbiddenError({
+          reason: "pairing_invite_invalid_state",
+        });
+      }),
+    );
+  });
+
+  const claimPairingInvite: EnvironmentAuth["Service"]["claimPairingInvite"] = Effect.fn(
+    "EnvironmentAuth.claimPairingInvite",
+  )(function* (request, inviteId, input) {
+    const proof = yield* checkRequestDpopProof({ request }).pipe(
+      Effect.provideService(ServerSecretStore.ServerSecretStore, secretStore),
+      Effect.provideService(Digest.Digest, digest),
+    );
+    return yield* pairingInviteLock.withPermits(1)(
+      Effect.gen(function* () {
+        const now = DateTime.toUtc(yield* DateTime.now);
+        const invite = (yield* Ref.get(pairingInvitesRef)).get(inviteId);
+        if (!invite) {
+          return yield* new PairingInviteNotFoundError({});
+        }
+        const status = effectivePairingInviteStatus(invite, now);
+        if (status === "expired" && invite.status !== "expired") {
+          yield* Ref.update(pairingInvitesRef, (current) => {
+            const next = new Map(current);
+            const { grant: _wiped, ...withoutGrant } = invite;
+            next.set(inviteId, { ...withoutGrant, status: "expired" });
+            return next;
+          });
+        }
+        if (status === "claimed" && invite.claim) {
+          if (invite.claim.proofKeyThumbprint === proof.thumbprint) {
+            return {
+              status: "claimed",
+              verificationCode: invite.claim.verificationCode,
+              expiresAt: DateTime.formatIso(invite.expiresAt),
+            } satisfies AuthClaimPairingInviteResult;
+          }
+          return yield* new PairingInviteForbiddenError({
+            reason: "pairing_invite_invalid_state",
+          });
+        }
+        if (status !== "pending") {
+          return yield* new PairingInviteForbiddenError({
+            reason: "pairing_invite_invalid_state",
+          });
+        }
+        const clientMetadata = deriveAuthClientMetadata({
+          request,
+          presented: {
+            ...(input.clientLabel ? { label: input.clientLabel } : {}),
+            ...(input.clientDeviceType ? { deviceType: input.clientDeviceType } : {}),
+            ...(input.clientOs ? { os: input.clientOs } : {}),
+          },
+        });
+        const digits = String(NodeCrypto.randomInt(0, 1_000_000)).padStart(6, "0");
+        const verificationCode = `${digits.slice(0, 3)}-${digits.slice(3)}`;
+        const claim: PairingInviteClaim = {
+          ...(clientMetadata.label ? { clientLabel: clientMetadata.label } : {}),
+          clientDeviceType: clientMetadata.deviceType,
+          clientOs: clientMetadata.os ?? "Unknown",
+          verificationCode,
+          claimedAt: DateTime.formatIso(now),
+          proofKeyThumbprint: proof.thumbprint,
+        };
+        yield* Ref.update(pairingInvitesRef, (current) => {
+          const next = new Map(current);
+          next.set(inviteId, {
+            ...invite,
+            status: "claimed",
+            claim,
+          });
+          return next;
+        });
+        return {
+          status: "claimed",
+          verificationCode,
+          expiresAt: DateTime.formatIso(invite.expiresAt),
+        } satisfies AuthClaimPairingInviteResult;
+      }),
+    );
+  });
+
+  const getPairingInviteClaim: EnvironmentAuth["Service"]["getPairingInviteClaim"] = Effect.fn(
+    "EnvironmentAuth.getPairingInviteClaim",
+  )(function* (request, inviteId) {
+    const proof = yield* checkRequestDpopProof({ request }).pipe(
+      Effect.provideService(ServerSecretStore.ServerSecretStore, secretStore),
+      Effect.provideService(Digest.Digest, digest),
+    );
+    return yield* pairingInviteLock.withPermits(1)(
+      Effect.gen(function* () {
+        const now = DateTime.toUtc(yield* DateTime.now);
+        const invite = (yield* Ref.get(pairingInvitesRef)).get(inviteId);
+        if (!invite) {
+          return yield* new PairingInviteNotFoundError({});
+        }
+        if (!invite.claim) {
+          return yield* new PairingInviteForbiddenError({
+            reason: "pairing_invite_invalid_state",
+          });
+        }
+        if (invite.claim.proofKeyThumbprint !== proof.thumbprint) {
+          return yield* new ServerAuthInvalidCredentialError({
+            diagnostic: "DPoP key thumbprint mismatch.",
+            dpopFailureReason: "key_mismatch",
+          });
+        }
+        const status = effectivePairingInviteStatus(invite, now);
+        if (status === "claimed") {
+          return {
+            status: "claimed",
+            expiresAt: DateTime.formatIso(invite.expiresAt),
+          } satisfies AuthPairingInviteClaimStatus;
+        }
+        if (status === "approved") {
+          if (invite.grant) {
+            const unspent = yield* bootstrapCredentials
+              .isUnspent(invite.grant.id)
+              .pipe(
+                Effect.mapError(
+                  (cause) => new ServerAuthBootstrapCredentialValidationError({ cause }),
+                ),
+              );
+            if (unspent) {
+              return {
+                status: "approved",
+                credential: Redacted.value(invite.grant.credential),
+                grantExpiresAt: DateTime.formatIso(invite.grant.expiresAt),
+              } satisfies AuthPairingInviteClaimStatus;
+            }
+            yield* Ref.update(pairingInvitesRef, (current) => {
+              const existing = current.get(inviteId);
+              if (!existing?.grant) return current;
+              const { grant: _wiped, ...withoutGrant } = existing;
+              const next = new Map(current);
+              next.set(inviteId, withoutGrant);
+              return next;
+            });
+          }
+          return { status: "expired" } satisfies AuthPairingInviteClaimStatus;
+        }
+        if (status === "denied") {
+          return { status: "denied" } satisfies AuthPairingInviteClaimStatus;
+        }
+        if (status === "cancelled") {
+          return { status: "cancelled" } satisfies AuthPairingInviteClaimStatus;
+        }
+        if (status === "expired" && invite.status !== "expired") {
+          yield* Ref.update(pairingInvitesRef, (current) => {
+            const next = new Map(current);
+            const { grant: _wiped, ...withoutGrant } = invite;
+            next.set(inviteId, { ...withoutGrant, status: "expired" });
+            return next;
+          });
+        }
+        return {
+          status: "expired",
+          expiresAt: DateTime.formatIso(invite.expiresAt),
+        } satisfies AuthPairingInviteClaimStatus;
+      }),
+    );
+  });
 
   const issueStartupPairingCredential: EnvironmentAuth["Service"]["issueStartupPairingCredential"] =
     () => {
@@ -1137,19 +1769,39 @@ export const make = Effect.gen(function* () {
       .proofKeyThumbprintOf(sessionId)
       .pipe(Effect.mapError((cause) => new ServerAuthSessionRevocationError({ cause })));
 
+  const revokeSession: EnvironmentAuth["Service"]["revokeSession"] = Effect.fn(
+    "EnvironmentAuth.revokeSession",
+  )(
+    function* (sessionId) {
+      const revoked = yield* sessions.revoke(sessionId);
+      yield* evictPairingInvites((invite) => invite.creatorSessionId === sessionId);
+      return revoked;
+    },
+    Effect.mapError((cause) => new ServerAuthSessionRevocationError({ cause })),
+  );
+
   const revokeClient: EnvironmentAuth["Service"]["revokeClient"] = Effect.fn(
     "EnvironmentAuth.revokeClient",
   )(function* (sessionId) {
     // A DPoP device would otherwise mint itself a new session right away.
-    return yield* Option.match(yield* proofKeyOf(sessionId), {
-      onNone: () => revokeSession(sessionId),
-      onSome: (proofKeyThumbprint) =>
-        sessions.revokeByProofKey(proofKeyThumbprint).pipe(
-          Effect.mapError((cause) => new ServerAuthSessionRevocationError({ cause })),
-          Effect.map((revoked) => revoked > 0),
-          sessionIssueLock.withPermits(1),
-        ),
-    });
+    const proofKey = yield* proofKeyOf(sessionId);
+    if (Option.isNone(proofKey)) {
+      return yield* revokeSession(sessionId);
+    }
+    const proofKeyThumbprint = proofKey.value;
+    return yield* Effect.gen(function* () {
+      const revokedSessionIds = yield* sessions.revokeByProofKey(proofKeyThumbprint);
+      const revokedSet = new Set<AuthSessionId>([sessionId, ...revokedSessionIds]);
+      yield* evictPairingInvites(
+        (invite) =>
+          revokedSet.has(invite.creatorSessionId) ||
+          invite.creatorProofKeyThumbprint === proofKeyThumbprint,
+      );
+      return revokedSessionIds.length > 0;
+    }).pipe(
+      Effect.mapError((cause) => new ServerAuthSessionRevocationError({ cause })),
+      sessionIssueLock.withPermits(1),
+    );
   });
 
   const revokeClientSession: EnvironmentAuth["Service"]["revokeClientSession"] = Effect.fn(
@@ -1178,10 +1830,14 @@ export const make = Effect.gen(function* () {
         yield* bootstrapCredentials
           .revokeUnspentLinksExcept(Option.getOrNull(currentProofKey))
           .pipe(Effect.mapError((cause) => new ServerAuthOtherSessionsRevocationError({ cause })));
-        return yield* revokeOtherSessionsExcept(currentSessionId);
+        const revokedCount = yield* revokeOtherSessionsExcept(currentSessionId);
+        yield* evictPairingInvites((invite) => invite.creatorSessionId !== currentSessionId).pipe(
+          Effect.mapError((cause) => new ServerAuthOtherSessionsRevocationError({ cause })),
+        );
+        return revokedCount;
       }).pipe(
-        // Counted last, after unspent links and session rows are gone, so whatever reads the
-        // new count can no longer use either.
+        // Counted last, after unspent links, session rows, and other invites are gone, so whatever
+        // reads the new count can no longer use any of them.
         Effect.ensuring(Ref.update(otherSessionRevocations, (count) => count + 1)),
         sessionIssueLock.withPermits(1),
       );
@@ -1191,7 +1847,7 @@ export const make = Effect.gen(function* () {
     issueStartupPairingCredential().pipe(
       Effect.map((issued) => {
         const url = new URL(baseUrl);
-        url.pathname = "/pair";
+        url.pathname = `${extractRelayBasePath(url.pathname)}pair`;
         url.searchParams.delete("token");
         url.hash = new URLSearchParams([["token", issued.credential]]).toString();
         return url.toString();
@@ -1341,6 +1997,12 @@ export const make = Effect.gen(function* () {
     renewAccessToken,
     createPairingLink,
     issuePairingCredential,
+    createPairingInvite,
+    getPairingInvite,
+    approvePairingInvite,
+    denyPairingInvite,
+    claimPairingInvite,
+    getPairingInviteClaim,
     issueStartupPairingCredential,
     listPairingLinks,
     revokePairingLink,

@@ -60,6 +60,8 @@ In **Settings → Sharing & access**, choose the **Cloudflare Relay** endpoint a
 
 Scan the QR code on your phone or paste the pairing URL into **Add environment** in **Settings → Environments** on desktop or mobile. On a computer with the desktop app, you can also open the `ankielcode://pair` app link.
 
+To add a Mac or another device without copying codes, use a phone that is already paired. In the mobile app, open the machine under **Settings → Environments** and choose **Pair a Mac or device**. On a Mac signed in to the same Apple Account with Handoff turned on, the Ankiel Code icon shows up in the Dock; click it to continue there. You can also AirDrop the invite file or share the link. Once the other device opens the invite, both screens show a 6-digit code. Approve on your phone only if the codes match. Invites expire after two minutes and work once.
+
 Pairing authorizes that device for future connections. Use a fresh one-time link for each new device; you do not need the original token to reconnect. A device stays signed in while you keep using it, until you revoke it in **Settings → Sharing & access** on the host. One unused for 30 days, or paired with a host older than this release, has to pair again. Links created in Settings can only be copied from the client that created them while its Sharing & access page stays open. If you leave or reload that page, create another link to share.
 
 A phone paired with a computer that uses a relay can also get [alerts when an agent finishes or needs you](./mobile-notifications.md).

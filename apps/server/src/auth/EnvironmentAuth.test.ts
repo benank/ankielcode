@@ -4,7 +4,10 @@ import { authScopeResponse, AuthStandardClientScopes } from "@ankielcode/contrac
 import { expect, it } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as TestClock from "effect/testing/TestClock";
@@ -986,6 +989,372 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodePlatformCrypto.layer))(
       }).pipe(
         Effect.provide(layerEnvironmentAuth({ desktopBootstrapToken: "desktop-bootstrap-token" })),
       ),
+    );
+
+    it.effect("re-checks approver scopes when approving a claimed pairing invite", () =>
+      Effect.gen(function* () {
+        const serverAuth = yield* EnvironmentAuth.EnvironmentAuth;
+        const sessions = yield* SessionStore.SessionStore;
+        const exchanged = yield* serverAuth.exchangeBootstrapCredentialForAccessToken(
+          "desktop-bootstrap-token",
+          ["access:write", "orchestration:read", "orchestration:operate"],
+          requestMetadata,
+        );
+        const session = yield* sessions.verify(exchanged.access_token);
+        const fullPrincipal = {
+          sessionId: session.sessionId,
+          subject: session.subject,
+          method: session.method,
+          scopes: new Set(session.scopes),
+        };
+        const created = yield* serverAuth.createPairingInvite(fullPrincipal, {
+          scopes: ["orchestration:read", "orchestration:operate"],
+        });
+
+        const key = makeDpopKey();
+        const url = `http://127.0.0.1/api/auth/pairing-invites/${created.inviteId}/claim`;
+        const claimRequest = {
+          method: "POST",
+          url: `/api/auth/pairing-invites/${created.inviteId}/claim`,
+          originalUrl: `/api/auth/pairing-invites/${created.inviteId}/claim`,
+          protocol: "http",
+          cookies: {},
+          headers: {
+            host: "127.0.0.1",
+            dpop: key.sign({
+              method: "POST",
+              url,
+              token: "",
+              iat: Math.floor((yield* DateTime.now).epochMilliseconds / 1_000),
+            }),
+          },
+        } as never;
+        const claimed = yield* serverAuth.claimPairingInvite(claimRequest, created.inviteId, {
+          clientLabel: "Test iPhone",
+          clientDeviceType: "mobile",
+          clientOs: "iOS",
+        });
+
+        const narrowedPrincipal = {
+          ...fullPrincipal,
+          scopes: new Set(["access:write", "orchestration:read"] as const),
+        };
+        const denied = yield* Effect.flip(
+          serverAuth.approvePairingInvite(narrowedPrincipal, created.inviteId, {
+            verificationCode: claimed.verificationCode,
+          }),
+        );
+        expect(denied._tag).toBe("PairingInviteScopeRequiredError");
+        if (denied._tag === "PairingInviteScopeRequiredError") {
+          expect(denied.scope).toBe("orchestration:operate");
+        }
+
+        const approved = yield* serverAuth.approvePairingInvite(fullPrincipal, created.inviteId, {
+          verificationCode: claimed.verificationCode,
+        });
+        expect(approved.status).toBe("approved");
+      }).pipe(
+        Effect.provide(layerEnvironmentAuth({ desktopBootstrapToken: "desktop-bootstrap-token" })),
+      ),
+    );
+
+    it.effect(
+      "evicts pairing invites and revokes approved grants when revoking client sessions",
+      () =>
+        Effect.gen(function* () {
+          const serverAuth = yield* EnvironmentAuth.EnvironmentAuth;
+          const sessions = yield* SessionStore.SessionStore;
+          const makePrincipal = (token: string) =>
+            sessions.verify(token).pipe(
+              Effect.map((session) => ({
+                sessionId: session.sessionId,
+                subject: session.subject,
+                method: session.method,
+                scopes: new Set(session.scopes),
+                ...(session.proofKeyThumbprint
+                  ? { proofKeyThumbprint: session.proofKeyThumbprint }
+                  : {}),
+              })),
+            );
+          const makeClaimRequest = (
+            method: "POST" | "GET",
+            inviteId: string,
+            key: ReturnType<typeof makeDpopKey>,
+          ) =>
+            DateTime.now.pipe(
+              Effect.map(
+                (now) =>
+                  ({
+                    method,
+                    url: `/api/auth/pairing-invites/${inviteId}/claim`,
+                    originalUrl: `/api/auth/pairing-invites/${inviteId}/claim`,
+                    protocol: "http",
+                    cookies: {},
+                    headers: {
+                      host: "127.0.0.1",
+                      dpop: key.sign({
+                        method,
+                        url: `http://127.0.0.1/api/auth/pairing-invites/${inviteId}/claim`,
+                        token: "",
+                        iat: Math.floor(now.epochMilliseconds / 1_000),
+                      }),
+                    },
+                  }) as never,
+              ),
+            );
+
+          const admin = yield* makePrincipal((yield* serverAuth.issueSession()).token);
+          const dpopOwnerKey = makeDpopKey();
+          const dpopOwnerToken = yield* serverAuth.exchangeBootstrapCredentialForAccessToken(
+            "desktop-bootstrap-token",
+            undefined,
+            requestMetadata,
+            { proofKeyThumbprint: dpopOwnerKey.thumbprint },
+          );
+          const dpopOwner = yield* makePrincipal(dpopOwnerToken.access_token);
+          const claimantKey = makeDpopKey();
+
+          // 1. revokeClientSession evicts pending, claimed, and approved invites owned by the revoked session.
+          const pendingInvite = yield* serverAuth.createPairingInvite(dpopOwner, {});
+          const claimedInvite = yield* serverAuth.createPairingInvite(dpopOwner, {});
+          const claimed = yield* serverAuth.claimPairingInvite(
+            yield* makeClaimRequest("POST", claimedInvite.inviteId, claimantKey),
+            claimedInvite.inviteId,
+            {},
+          );
+          const approvedInvite = yield* serverAuth.createPairingInvite(dpopOwner, {});
+          const approvedClaim = yield* serverAuth.claimPairingInvite(
+            yield* makeClaimRequest("POST", approvedInvite.inviteId, claimantKey),
+            approvedInvite.inviteId,
+            {},
+          );
+          yield* serverAuth.approvePairingInvite(dpopOwner, approvedInvite.inviteId, {
+            verificationCode: approvedClaim.verificationCode,
+          });
+          const approvedStatus = yield* serverAuth.getPairingInviteClaim(
+            yield* makeClaimRequest("GET", approvedInvite.inviteId, claimantKey),
+            approvedInvite.inviteId,
+          );
+          expect(approvedStatus.status).toBe("approved");
+          if (approvedStatus.status !== "approved") throw new Error("Expected approved invite");
+
+          expect(yield* serverAuth.revokeClientSession(admin.sessionId, dpopOwner.sessionId)).toBe(
+            true,
+          );
+
+          expect(
+            (yield* Effect.flip(serverAuth.getPairingInvite(dpopOwner, pendingInvite.inviteId)))
+              ._tag,
+          ).toBe("PairingInviteNotFoundError");
+          expect(
+            (yield* Effect.flip(
+              serverAuth.approvePairingInvite(dpopOwner, claimedInvite.inviteId, {
+                verificationCode: claimed.verificationCode,
+              }),
+            ))._tag,
+          ).toBe("PairingInviteNotFoundError");
+          expect(
+            (yield* Effect.flip(
+              serverAuth.getPairingInviteClaim(
+                yield* makeClaimRequest("GET", approvedInvite.inviteId, claimantKey),
+                approvedInvite.inviteId,
+              ),
+            ))._tag,
+          ).toBe("PairingInviteNotFoundError");
+          expect(
+            (yield* Effect.flip(
+              serverAuth.exchangeBootstrapCredentialForAccessToken(
+                approvedStatus.credential,
+                undefined,
+                requestMetadata,
+                { proofKeyThumbprint: claimantKey.thumbprint },
+              ),
+            ))._tag,
+          ).toBe("ServerAuthInvalidCredentialError");
+          expect(yield* serverAuth.listPairingLinks()).toEqual([]);
+
+          // 2. revokeOtherClientSessions evicts other sessions' invites and keeps the caller's own.
+          const other = yield* makePrincipal((yield* serverAuth.issueSession()).token);
+          const otherInvite = yield* serverAuth.createPairingInvite(other, {});
+          const otherClaim = yield* serverAuth.claimPairingInvite(
+            yield* makeClaimRequest("POST", otherInvite.inviteId, claimantKey),
+            otherInvite.inviteId,
+            {},
+          );
+          const adminInvite = yield* serverAuth.createPairingInvite(admin, {});
+
+          expect(yield* serverAuth.revokeOtherClientSessions(admin.sessionId)).toBe(1);
+          expect(
+            (yield* Effect.flip(
+              serverAuth.approvePairingInvite(other, otherInvite.inviteId, {
+                verificationCode: otherClaim.verificationCode,
+              }),
+            ))._tag,
+          ).toBe("PairingInviteNotFoundError");
+          expect((yield* serverAuth.getPairingInvite(admin, adminInvite.inviteId)).status).toBe(
+            "pending",
+          );
+          expect(yield* serverAuth.listPairingLinks()).toEqual([]);
+        }).pipe(
+          Effect.provide(
+            layerEnvironmentAuth({ desktopBootstrapToken: "desktop-bootstrap-token" }),
+          ),
+        ),
+    );
+
+    it.effect(
+      "prevents approvePairingInvite overtaken by revokeOtherClientSessions from minting a grant",
+      () =>
+        Effect.gen(function* () {
+          const pairingLinks = yield* PairingGrantStore.PairingGrantStore;
+          const sessions = yield* SessionStore.SessionStore;
+          const revokeEntered = yield* Deferred.make<void>();
+          const releaseRevoke = yield* Deferred.make<void>();
+          let gateRevoke = false;
+          const serverAuth = yield* EnvironmentAuth.make.pipe(
+            Effect.provideService(PairingGrantStore.PairingGrantStore, {
+              ...pairingLinks,
+              revokeUnspentLinksExcept: (keepProofKeyThumbprint) =>
+                Effect.gen(function* () {
+                  if (gateRevoke) {
+                    yield* Deferred.succeed(revokeEntered, undefined);
+                    yield* Deferred.await(releaseRevoke);
+                  }
+                  return yield* pairingLinks.revokeUnspentLinksExcept(keepProofKeyThumbprint);
+                }),
+            }),
+            Effect.provide(ServerSecretStore.layer.pipe(Layer.provideMerge(layerServerConfig()))),
+          );
+
+          const ownerIssued = yield* serverAuth.issueSession();
+          const ownerSession = yield* sessions.verify(ownerIssued.token);
+          const owner = {
+            sessionId: ownerSession.sessionId,
+            subject: ownerSession.subject,
+            method: ownerSession.method,
+            scopes: new Set(ownerSession.scopes),
+          };
+          const invite = yield* serverAuth.createPairingInvite(owner, {});
+          const claimantKey = makeDpopKey();
+          const claimed = yield* serverAuth.claimPairingInvite(
+            {
+              method: "POST",
+              url: `/api/auth/pairing-invites/${invite.inviteId}/claim`,
+              originalUrl: `/api/auth/pairing-invites/${invite.inviteId}/claim`,
+              protocol: "http",
+              cookies: {},
+              headers: {
+                host: "127.0.0.1",
+                dpop: claimantKey.sign({
+                  method: "POST",
+                  url: `http://127.0.0.1/api/auth/pairing-invites/${invite.inviteId}/claim`,
+                  token: "",
+                  iat: Math.floor((yield* DateTime.now).epochMilliseconds / 1_000),
+                }),
+              },
+            } as never,
+            invite.inviteId,
+            {},
+          );
+
+          gateRevoke = true;
+          const revokeFiber = yield* Effect.forkScoped(
+            serverAuth.revokeOtherClientSessions(owner.sessionId),
+          );
+          yield* Deferred.await(revokeEntered);
+
+          // Starts before revokeOtherClientSessions increments otherSessionRevocations, then waits on sessionIssueLock.
+          const approveFiber = yield* Effect.forkScoped(
+            serverAuth.approvePairingInvite(owner, invite.inviteId, {
+              verificationCode: claimed.verificationCode,
+            }),
+          );
+          yield* Effect.yieldNow;
+          yield* Deferred.succeed(releaseRevoke, undefined);
+
+          yield* Fiber.join(revokeFiber);
+          const approveError = yield* Effect.flip(Fiber.join(approveFiber));
+          expect(approveError._tag).toBe("PairingInviteForbiddenError");
+          if (approveError._tag === "PairingInviteForbiddenError") {
+            expect(approveError.reason).toBe("pairing_invite_invalid_state");
+          }
+          expect(yield* serverAuth.listPairingLinks()).toEqual([]);
+        }).pipe(Effect.scoped, Effect.provide(layerEnvironmentAuth())),
+    );
+
+    it.effect(
+      "retains denied pairing invites until grantExpiresAt so late denials return denied instead of 404",
+      () =>
+        Effect.gen(function* () {
+          const serverAuth = yield* EnvironmentAuth.EnvironmentAuth;
+          const sessions = yield* SessionStore.SessionStore;
+          const ownerIssued = yield* serverAuth.issueSession();
+          const ownerSession = yield* sessions.verify(ownerIssued.token);
+          const owner = {
+            sessionId: ownerSession.sessionId,
+            subject: ownerSession.subject,
+            method: ownerSession.method,
+            scopes: new Set(ownerSession.scopes),
+          };
+          const claimantKey = makeDpopKey();
+          const makeClaimRequest = (method: "POST" | "GET", inviteId: string) =>
+            DateTime.now.pipe(
+              Effect.map(
+                (now) =>
+                  ({
+                    method,
+                    url: `/api/auth/pairing-invites/${inviteId}/claim`,
+                    originalUrl: `/api/auth/pairing-invites/${inviteId}/claim`,
+                    protocol: "http",
+                    cookies: {},
+                    headers: {
+                      host: "127.0.0.1",
+                      dpop: claimantKey.sign({
+                        method,
+                        url: `http://127.0.0.1/api/auth/pairing-invites/${inviteId}/claim`,
+                        token: "",
+                        iat: Math.floor(now.epochMilliseconds / 1_000),
+                      }),
+                    },
+                  }) as never,
+              ),
+            );
+
+          const invite = yield* serverAuth.createPairingInvite(owner, {});
+          // Claim and approve near the end of the invite TTL so grantExpiresAt extends past invite.expiresAt.
+          yield* TestClock.adjust(Duration.seconds(100));
+          const claimed = yield* serverAuth.claimPairingInvite(
+            yield* makeClaimRequest("POST", invite.inviteId),
+            invite.inviteId,
+            {},
+          );
+          yield* serverAuth.approvePairingInvite(owner, invite.inviteId, {
+            verificationCode: claimed.verificationCode,
+          });
+
+          // Move past invite.expiresAt (120s) while still inside grantExpiresAt (220s), deny, and trigger prune.
+          yield* TestClock.adjust(Duration.seconds(30));
+          const denied = yield* serverAuth.denyPairingInvite(owner, invite.inviteId);
+          expect(denied).toEqual({ status: "denied" });
+          yield* serverAuth.createPairingInvite(owner, {});
+
+          const poll = yield* serverAuth.getPairingInviteClaim(
+            yield* makeClaimRequest("GET", invite.inviteId),
+            invite.inviteId,
+          );
+          expect(poll).toEqual({ status: "denied" });
+
+          // Once grantExpiresAt (220s) has elapsed, pruning removes the terminal invite.
+          yield* TestClock.adjust(Duration.seconds(95));
+          yield* serverAuth.createPairingInvite(owner, {});
+          const pruned = yield* Effect.flip(
+            serverAuth.getPairingInviteClaim(
+              yield* makeClaimRequest("GET", invite.inviteId),
+              invite.inviteId,
+            ),
+          );
+          expect(pruned._tag).toBe("PairingInviteNotFoundError");
+        }).pipe(Effect.provide(layerEnvironmentAuth())),
     );
   },
 );

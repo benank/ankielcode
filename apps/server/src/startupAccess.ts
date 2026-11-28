@@ -11,7 +11,7 @@ import {
 } from "@ankielcode/shared/hostClassification";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 import { QrCode } from "@ankielcode/shared/qrCode";
-import { buildPairingAppLink } from "@ankielcode/shared/remote";
+import { buildPairingAppLink, extractRelayBasePath } from "@ankielcode/shared/remote";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { HttpServer } from "effect/http";
@@ -221,7 +221,7 @@ const resolveListeningPort = (address: unknown, fallbackPort: number): number =>
 
 export const buildPairingUrl = (connectionString: string, token: string): string => {
   const url = new URL(connectionString);
-  url.pathname = "/pair";
+  url.pathname = `${extractRelayBasePath(url.pathname)}pair`;
   url.searchParams.delete("token");
   url.hash = new URLSearchParams([["token", token]]).toString();
   return url.toString();

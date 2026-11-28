@@ -460,7 +460,7 @@ export class SessionStore extends Context.Service<
     /** Revokes every session bound to this DPoP key, so a device it belongs to is cut off now. */
     readonly revokeByProofKey: (
       proofKeyThumbprint: string,
-    ) => Effect.Effect<number, SessionCredentialInternalError>;
+    ) => Effect.Effect<ReadonlyArray<AuthSessionId>, SessionCredentialInternalError>;
     readonly markConnected: (sessionId: AuthSessionId) => Effect.Effect<void, never>;
     readonly markDisconnected: (sessionId: AuthSessionId) => Effect.Effect<void, never>;
   }
@@ -1145,7 +1145,7 @@ const make = Effect.gen(function* () {
       return next;
     });
     yield* Effect.forEach(revokedSessionIds, emitRemoved, { discard: true });
-    return revokedSessionIds.length;
+    return revokedSessionIds;
   });
 
   const revokeAllExcept: SessionStore["Service"]["revokeAllExcept"] = Effect.fn(

@@ -3,6 +3,7 @@ import type {
   AuthAccessStreamEvent,
   AuthAccessStreamSnapshotEvent,
   AuthCreatePairingCredentialInput,
+  AuthCreatePairingInviteInput,
   AuthRevokeClientSessionInput,
   AuthRevokePairingLinkInput,
 } from "@ankielcode/contracts";
@@ -97,6 +98,61 @@ export function createAuthEnvironmentAtoms<R, E>(
           url: (urls) => urls.pairingCredential(),
           timeoutMs: ACCESS_REQUEST_TIMEOUT_MS,
           request: ({ client, headers }) => client.pairingCredential({ headers, payload: input }),
+        }),
+    }),
+    createPairingInvite: createEnvironmentCommand(runtime, {
+      label: "environment-data:server:auth-create-pairing-invite",
+      execute: (input: AuthCreatePairingInviteInput) =>
+        executeConnectedEnvironmentHttpRequest({
+          group: "auth",
+          method: "POST",
+          url: (urls) => urls.createPairingInvite(),
+          timeoutMs: ACCESS_REQUEST_TIMEOUT_MS,
+          requestInit: { redirect: "error" },
+          request: ({ client, headers }) => client.createPairingInvite({ headers, payload: input }),
+        }),
+    }),
+    getPairingInvite: createEnvironmentCommand(runtime, {
+      label: "environment-data:server:auth-get-pairing-invite",
+      execute: (input: { readonly inviteId: string }) =>
+        executeConnectedEnvironmentHttpRequest({
+          group: "auth",
+          method: "GET",
+          url: (urls) => urls.getPairingInvite({ params: { inviteId: input.inviteId } }),
+          timeoutMs: ACCESS_REQUEST_TIMEOUT_MS,
+          requestInit: { redirect: "error" },
+          request: ({ client, headers }) =>
+            client.getPairingInvite({ headers, params: { inviteId: input.inviteId } }),
+        }),
+    }),
+    approvePairingInvite: createEnvironmentCommand(runtime, {
+      label: "environment-data:server:auth-approve-pairing-invite",
+      execute: (input: { readonly inviteId: string; readonly verificationCode: string }) =>
+        executeConnectedEnvironmentHttpRequest({
+          group: "auth",
+          method: "POST",
+          url: (urls) => urls.approvePairingInvite({ params: { inviteId: input.inviteId } }),
+          timeoutMs: ACCESS_REQUEST_TIMEOUT_MS,
+          requestInit: { redirect: "error" },
+          request: ({ client, headers }) =>
+            client.approvePairingInvite({
+              headers,
+              params: { inviteId: input.inviteId },
+              payload: { verificationCode: input.verificationCode },
+            }),
+        }),
+    }),
+    denyPairingInvite: createEnvironmentCommand(runtime, {
+      label: "environment-data:server:auth-deny-pairing-invite",
+      execute: (input: { readonly inviteId: string }) =>
+        executeConnectedEnvironmentHttpRequest({
+          group: "auth",
+          method: "POST",
+          url: (urls) => urls.denyPairingInvite({ params: { inviteId: input.inviteId } }),
+          timeoutMs: ACCESS_REQUEST_TIMEOUT_MS,
+          requestInit: { redirect: "error" },
+          request: ({ client, headers }) =>
+            client.denyPairingInvite({ headers, params: { inviteId: input.inviteId } }),
         }),
     }),
     revokePairingLink: createEnvironmentCommand(runtime, {

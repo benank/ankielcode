@@ -23,6 +23,48 @@ export const connectPairing = createRuntimeCommand(connectionAtomRuntime, {
     ),
 });
 
+export const claimPairingInvite = createRuntimeCommand(connectionAtomRuntime, {
+  label: "web:connection:claim-pairing-invite",
+  scheduler: onboardingScheduler,
+  concurrency: {
+    mode: "singleFlight",
+    key: (input: ConnectionOnboarding.PairingInviteClaimInput) =>
+      `${input.invite.baseUrl}:${input.invite.inviteId}:${input.expectedEnvironmentId ?? ""}`,
+  },
+  execute: (input: ConnectionOnboarding.PairingInviteClaimInput) =>
+    ConnectionOnboarding.ConnectionOnboarding.pipe(
+      Effect.flatMap((onboarding) => onboarding.claimPairingInvite(input)),
+    ),
+});
+
+export const pollPairingInviteClaim = createRuntimeCommand(connectionAtomRuntime, {
+  label: "web:connection:poll-pairing-invite-claim",
+  scheduler: onboardingScheduler,
+  concurrency: {
+    mode: "singleFlight",
+    key: (input: ConnectionOnboarding.PairingInvitePollInput) =>
+      `${input.httpBaseUrl}:${input.inviteId}`,
+  },
+  execute: (input: ConnectionOnboarding.PairingInvitePollInput) =>
+    ConnectionOnboarding.ConnectionOnboarding.pipe(
+      Effect.flatMap((onboarding) => onboarding.pollPairingInviteClaim(input)),
+    ),
+});
+
+export const completePairingInvite = createRuntimeCommand(connectionAtomRuntime, {
+  label: "web:connection:complete-pairing-invite",
+  scheduler: onboardingScheduler,
+  concurrency: {
+    mode: "singleFlight",
+    key: (input: ConnectionOnboarding.PairingInviteCompleteInput) =>
+      `${input.httpBaseUrl}:${input.environmentId}:${input.expectedEnvironmentId ?? ""}`,
+  },
+  execute: (input: ConnectionOnboarding.PairingInviteCompleteInput) =>
+    ConnectionOnboarding.ConnectionOnboarding.pipe(
+      Effect.flatMap((onboarding) => onboarding.completePairingInvite(input)),
+    ),
+});
+
 export const connectSshEnvironment = createRuntimeCommand(connectionAtomRuntime, {
   label: "web:connection:connect-ssh",
   scheduler: onboardingScheduler,

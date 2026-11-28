@@ -1,14 +1,30 @@
 import { thrownErrorMessage } from "@ankielcode/client-runtime/errors";
 import { m } from "~/i18n/messages";
 import { pipe } from "effect/Function";
-import { ChevronsLeftRightEllipsisIcon, PlusIcon, TerminalIcon } from "lucide-react";
+import { ChevronsLeftRightEllipsisIcon, PlusIcon, TerminalIcon, UploadIcon } from "lucide-react";
 import { useAtomValue } from "@effect/atom-react";
-import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { T, useGT, useMessages, Var } from "gt-react";
 import {
   type DesktopDiscoveredSshHost,
   type DesktopSshEnvironmentTarget,
+  type EnvironmentId,
 } from "@ankielcode/contracts";
+import {
+  decodePairingInviteFile,
+  PAIRING_INVITE_FILE_EXTENSION,
+  PAIRING_INVITE_MAX_FILE_BYTES,
+  PAIRING_INVITE_MIME_TYPE,
+  readPairingInviteAppLink,
+  type PairingInvitePayload,
+} from "@ankielcode/shared/remote";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
@@ -63,6 +79,7 @@ import {
   parseRemotePairingFields,
   formatDesktopSshConnectionError,
 } from "./ConnectionsSettings.logic";
+import { PairingInviteDialog } from "./PairingInviteDialog";
 
 const SSH_PROTOCOL_NAME = "SSH";
 const EMPTY_DISCOVERED_SSH_HOSTS: ReadonlyArray<DesktopDiscoveredSshHost> = [];
@@ -119,6 +136,11 @@ export function AddEnvironmentDialog({
   const [sshHostSuggestionsOpen, setSshHostSuggestionsOpen] = useState(false);
   const highlightedSshHostRef = useRef<DesktopDiscoveredSshHost | undefined>(undefined);
   const [isAddingSavedBackend, setIsAddingSavedBackend] = useState(false);
+  const [pendingInvite, setPendingInvite] = useState<{
+    readonly invite: PairingInvitePayload;
+    readonly expectedEnvironmentId?: EnvironmentId;
+  } | null>(null);
+  const inviteFileInputRef = useRef<HTMLInputElement>(null);
   const savedBackendSessionRef = useRef(0);
   const isSshDiscoveryActive = desktopBridge !== undefined && open && savedBackendMode === "ssh";
   const desktopSshHosts = useEnvironmentQuery(
@@ -192,6 +214,42 @@ export function AddEnvironmentDialog({
     setIsAddingSavedBackend(false);
   };
 
+  const openPairingInvite = (invite: PairingInvitePayload) => {
+    onErrorChange(null);
+    setPendingInvite({
+      invite,
+      ...(routeTarget ? { expectedEnvironmentId: routeTarget.environmentId } : {}),
+    });
+    handleOpenChange(false);
+  };
+
+  const handleImportInviteFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.size > PAIRING_INVITE_MAX_FILE_BYTES) {
+      onErrorChange(gt("That pairing invite file is too large."));
+      return;
+    }
+
+    let raw: string;
+    try {
+      raw = await file.text();
+    } catch {
+      onErrorChange(gt("Could not read that pairing invite file."));
+      return;
+    }
+
+    const invite = decodePairingInviteFile(raw);
+    if (invite === null) {
+      onErrorChange(gt("That file is not a valid pairing invite."));
+      return;
+    }
+
+    openPairingInvite(invite);
+  };
+
   const handleAddSavedBackend = async () => {
     if (savedBackendMode === "ssh") {
       let target: DesktopSshEnvironmentTarget;
@@ -207,6 +265,12 @@ export function AddEnvironmentDialog({
       }
 
       await connectSavedBackendSshTarget(target);
+      return;
+    }
+
+    const pairingInvite = readPairingInviteAppLink(savedBackendHost.trim());
+    if (pairingInvite !== null) {
+      openPairingInvite(pairingInvite);
       return;
     }
 
@@ -442,19 +506,41 @@ export function AddEnvironmentDialog({
     <div className="space-y-4">
       {renderRemoteFields()}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
-      <Button
-        variant="outline"
-        className="w-full"
-        disabled={isAddingSavedBackend}
-        onClick={() => void handleAddSavedBackend()}
-      >
-        <PlusIcon className="size-3.5" />
-        {isAddingSavedBackend
-          ? gt("Adding…")
-          : routeTarget
-            ? gt("Add route")
-            : gt("Add environment")}
-      </Button>
+      <div className="space-y-2">
+        <Button
+          variant="outline"
+          className="w-full"
+          disabled={isAddingSavedBackend}
+          onClick={() => void handleAddSavedBackend()}
+        >
+          <PlusIcon className="size-3.5" />
+          {isAddingSavedBackend
+            ? gt("Adding…")
+            : routeTarget
+              ? gt("Add route")
+              : gt("Add environment")}
+        </Button>
+        <div className="flex justify-center">
+          <Button
+            variant="ghost-muted"
+            size="xs"
+            disabled={isAddingSavedBackend}
+            onClick={() => inviteFileInputRef.current?.click()}
+          >
+            <UploadIcon className="size-3.5" />
+            <T>
+              Import <Var>{PAIRING_INVITE_FILE_EXTENSION}</Var> file
+            </T>
+          </Button>
+        </div>
+      </div>
+      <input
+        ref={inviteFileInputRef}
+        type="file"
+        accept={`${PAIRING_INVITE_FILE_EXTENSION},${PAIRING_INVITE_MIME_TYPE}`}
+        className="hidden"
+        onChange={(event) => void handleImportInviteFile(event)}
+      />
     </div>
   );
   const renderSshFields = () => (
@@ -595,65 +681,74 @@ export function AddEnvironmentDialog({
   );
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <DialogTrigger
-              render={
-                <Button size="xs" variant="ghost-muted" aria-label={gt("Add environment")}>
-                  <PlusIcon className="size-3" />
-                  <span>
-                    <T>Add environment</T>
-                  </span>
-                </Button>
-              }
-            />
-          }
-        />
-        <TooltipPopup side="top">
-          <T>Add environment</T>
-        </TooltipPopup>
-      </Tooltip>
-      <DialogPopup className="max-h-[80dvh] sm:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>
-            {routeTarget
-              ? gt("Add a route to {environment}", { environment: routeTarget.label })
-              : gt("Add Environment")}
-          </DialogTitle>
-          <DialogDescription>
-            {routeTarget
-              ? gt(
-                  "Pair this machine again over another address, such as its Tailscale name. It joins the existing routes instead of adding a second machine.",
-                )
-              : gt("Pair another environment to this client.")}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogPanel>
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {renderConnectionModeCard({
-                mode: "remote",
-                title: gt("Remote link"),
-                description: gt("Enter a backend host and pairing code."),
-                icon: <ChevronsLeftRightEllipsisIcon aria-hidden className="size-4" />,
-              })}
-              {desktopBridge
-                ? renderConnectionModeCard({
-                    mode: "ssh",
-                    title: SSH_PROTOCOL_NAME,
-                    description: gt("Use local SSH config, agent, and tunnels for the backend."),
-                    icon: <TerminalIcon aria-hidden className="size-4" />,
-                  })
-                : null}
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <DialogTrigger
+                render={
+                  <Button size="xs" variant="ghost-muted" aria-label={gt("Add environment")}>
+                    <PlusIcon className="size-3" />
+                    <span>
+                      <T>Add environment</T>
+                    </span>
+                  </Button>
+                }
+              />
+            }
+          />
+          <TooltipPopup side="top">
+            <T>Add environment</T>
+          </TooltipPopup>
+        </Tooltip>
+        <DialogPopup className="max-h-[80dvh] sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              {routeTarget
+                ? gt("Add a route to {environment}", { environment: routeTarget.label })
+                : gt("Add Environment")}
+            </DialogTitle>
+            <DialogDescription>
+              {routeTarget
+                ? gt(
+                    "Pair this machine again over another address, such as its Tailscale name. It joins the existing routes instead of adding a second machine.",
+                  )
+                : gt("Pair another environment to this client.")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogPanel>
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {renderConnectionModeCard({
+                  mode: "remote",
+                  title: gt("Remote link"),
+                  description: gt("Enter a backend host and pairing code."),
+                  icon: <ChevronsLeftRightEllipsisIcon aria-hidden className="size-4" />,
+                })}
+                {desktopBridge
+                  ? renderConnectionModeCard({
+                      mode: "ssh",
+                      title: SSH_PROTOCOL_NAME,
+                      description: gt("Use local SSH config, agent, and tunnels for the backend."),
+                      icon: <TerminalIcon aria-hidden className="size-4" />,
+                    })
+                  : null}
+              </div>
+              <AnimatedHeight>
+                {savedBackendMode === "ssh" ? renderSshFields() : renderRemoteModeBody()}
+              </AnimatedHeight>
             </div>
-            <AnimatedHeight>
-              {savedBackendMode === "ssh" ? renderSshFields() : renderRemoteModeBody()}
-            </AnimatedHeight>
-          </div>
-        </DialogPanel>
-      </DialogPopup>
-    </Dialog>
+          </DialogPanel>
+        </DialogPopup>
+      </Dialog>
+      <PairingInviteDialog
+        invite={pendingInvite?.invite ?? null}
+        {...(pendingInvite?.expectedEnvironmentId !== undefined
+          ? { expectedEnvironmentId: pendingInvite.expectedEnvironmentId }
+          : {})}
+        onClose={() => setPendingInvite(null)}
+      />
+    </>
   );
 }

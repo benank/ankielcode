@@ -113,6 +113,7 @@ export class EnvironmentRegistry extends Context.Service<
     readonly assertKnownAddress: (
       route: ConnectionRoute,
     ) => Effect.Effect<void, ConnectionBlockedError>;
+    readonly isPlatformEnvironment: (environmentId: EnvironmentId) => Effect.Effect<boolean>;
     readonly reconcilePlatform: (
       registrations: ReadonlyArray<PlatformConnectionRegistration>,
     ) => Effect.Effect<void>;
@@ -515,6 +516,9 @@ export const make = Effect.gen(function* () {
     const { unsupportedReason: _reason, serverUpdateRequired: _update, ...rest } = next;
     return rest;
   };
+
+  const isPlatformEnvironment = (environmentId: EnvironmentId) =>
+    Ref.get(platformEnvironmentIds).pipe(Effect.map((ids) => ids.has(environmentId)));
 
   const assertKnownAddress = Effect.fn("EnvironmentRegistry.assertKnownAddress")(function* (
     route: ConnectionRoute,
@@ -1110,6 +1114,7 @@ export const make = Effect.gen(function* () {
     start,
     register,
     assertKnownAddress,
+    isPlatformEnvironment,
     reconcilePlatform,
     remove,
     removeRoute,

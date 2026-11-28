@@ -13,11 +13,13 @@ import {
   AuthAccessTokenResult,
   AuthBrowserSessionRequest,
   AuthBrowserSessionResult,
+  AuthClientMetadataDeviceType,
   AuthCreatePairingCredentialInput,
   AuthPairingCredentialResult,
   AuthRevokeClientSessionInput,
   AuthRevokePairingLinkInput,
   AuthEnvironmentScope,
+  AuthEnvironmentScopes,
   AuthTokenExchangeRequest,
   AuthSessionState,
   AuthWebSocketTicketParams,
@@ -32,6 +34,7 @@ import {
 import {
   DpopFailureReason,
   AuthSessionId,
+  IsoDateTime,
   ThreadId,
   TrimmedNonEmptyString,
 } from "./baseSchemas.ts";
@@ -82,6 +85,7 @@ export const EnvironmentRequestInvalidReason = Schema.Literals([
   "invalid_scope",
   "scope_not_granted",
   "invalid_command",
+  "pairing_invite_verification_code_mismatch",
   "invalid_history_cursor",
   "thread_transcript_too_large",
   "invalid_audio",
@@ -98,6 +102,8 @@ export type EnvironmentAuthInvalidReason = typeof EnvironmentAuthInvalidReason.T
 
 export const EnvironmentOperationForbiddenReason = Schema.Literals([
   "current_session_revoke_not_allowed",
+  "pairing_invite_limit_reached",
+  "pairing_invite_invalid_state",
 ]);
 export type EnvironmentOperationForbiddenReason = typeof EnvironmentOperationForbiddenReason.Type;
 
@@ -216,7 +222,10 @@ export class EnvironmentInternalError extends Schema.TaggedError<EnvironmentInte
   }
 }
 
-export const EnvironmentResourceNotFoundReason = Schema.Literals(["thread_not_found"]);
+export const EnvironmentResourceNotFoundReason = Schema.Literals([
+  "thread_not_found",
+  "pairing_invite_not_found",
+]);
 export type EnvironmentResourceNotFoundReason = typeof EnvironmentResourceNotFoundReason.Type;
 
 export class EnvironmentResourceNotFoundError extends Schema.TaggedError<EnvironmentResourceNotFoundError>()(
@@ -293,6 +302,16 @@ const EnvironmentPairingCredentialErrors = [
   EnvironmentRequestInvalidError,
   ...EnvironmentScopedOperationErrors,
 ] as const;
+const EnvironmentPairingInviteOwnerErrors = [
+  ...EnvironmentPairingCredentialErrors,
+  EnvironmentResourceNotFoundError,
+  EnvironmentOperationForbiddenError,
+] as const;
+const EnvironmentPairingInviteClaimErrors = [
+  ...EnvironmentSessionCreationErrors,
+  EnvironmentResourceNotFoundError,
+  EnvironmentOperationForbiddenError,
+] as const;
 const EnvironmentSessionRevokeErrors = [
   EnvironmentScopeRequiredError,
   EnvironmentOperationForbiddenError,
@@ -342,6 +361,80 @@ export const AuthPairingLinkRevokeResult = Schema.Struct({
   revoked: Schema.Boolean,
 });
 export type AuthPairingLinkRevokeResult = typeof AuthPairingLinkRevokeResult.Type;
+
+const AuthPairingInviteParams = Schema.Struct({ inviteId: TrimmedNonEmptyString });
+
+export const AuthCreatePairingInviteInput = Schema.Struct({
+  label: Schema.optionalKey(TrimmedNonEmptyString),
+  scopes: Schema.optionalKey(AuthEnvironmentScopes),
+  access: Schema.optionalKey(Schema.Unknown),
+  purpose: Schema.optionalKey(Schema.Unknown),
+});
+export type AuthCreatePairingInviteInput = typeof AuthCreatePairingInviteInput.Type;
+
+export const AuthCreatePairingInviteResult = Schema.Struct({
+  inviteId: TrimmedNonEmptyString,
+  expiresAt: IsoDateTime,
+  scopes: AuthEnvironmentScopes,
+});
+export type AuthCreatePairingInviteResult = typeof AuthCreatePairingInviteResult.Type;
+
+const AuthPairingInviteClaimMetadata = Schema.Struct({
+  clientLabel: Schema.optionalKey(TrimmedNonEmptyString),
+  clientDeviceType: AuthClientMetadataDeviceType,
+  clientOs: TrimmedNonEmptyString,
+  verificationCode: TrimmedNonEmptyString,
+  claimedAt: IsoDateTime,
+});
+
+export const AuthPairingInviteStatus = Schema.Struct({
+  ...AuthCreatePairingInviteResult.fields,
+  status: Schema.Literals(["pending", "claimed", "approved", "denied", "cancelled", "expired"]),
+  claim: Schema.optionalKey(AuthPairingInviteClaimMetadata),
+});
+export type AuthPairingInviteStatus = typeof AuthPairingInviteStatus.Type;
+
+export const AuthApprovePairingInviteInput = Schema.Struct({
+  verificationCode: TrimmedNonEmptyString,
+});
+export type AuthApprovePairingInviteInput = typeof AuthApprovePairingInviteInput.Type;
+
+export const AuthApprovePairingInviteResult = Schema.Struct({
+  status: Schema.Literal("approved"),
+  grantExpiresAt: IsoDateTime,
+});
+export type AuthApprovePairingInviteResult = typeof AuthApprovePairingInviteResult.Type;
+
+export const AuthDenyPairingInviteResult = Schema.Struct({
+  status: Schema.Literals(["denied", "cancelled"]),
+});
+export type AuthDenyPairingInviteResult = typeof AuthDenyPairingInviteResult.Type;
+
+export const AuthClaimPairingInviteInput = Schema.Struct({
+  clientLabel: Schema.optionalKey(TrimmedNonEmptyString),
+  clientDeviceType: Schema.optionalKey(AuthClientMetadataDeviceType),
+  clientOs: Schema.optionalKey(TrimmedNonEmptyString),
+});
+export type AuthClaimPairingInviteInput = typeof AuthClaimPairingInviteInput.Type;
+
+export const AuthClaimPairingInviteResult = Schema.Struct({
+  status: Schema.Literal("claimed"),
+  verificationCode: TrimmedNonEmptyString,
+  expiresAt: IsoDateTime,
+});
+export type AuthClaimPairingInviteResult = typeof AuthClaimPairingInviteResult.Type;
+
+export const AuthPairingInviteClaimStatus = Schema.Union([
+  Schema.Struct({
+    status: Schema.Literals(["claimed", "denied", "cancelled", "expired"]),
+    expiresAt: Schema.optionalKey(IsoDateTime),
+  }),
+  Schema.Struct({
+    ...AuthApprovePairingInviteResult.fields,
+    credential: TrimmedNonEmptyString,
+  }),
+]);
+export type AuthPairingInviteClaimStatus = typeof AuthPairingInviteClaimStatus.Type;
 
 export const AuthClientSessionRevokeResult = Schema.Struct({
   revoked: Schema.Boolean,
@@ -404,6 +497,56 @@ class EnvironmentAuthHttpApi extends HttpApiGroup.make("auth")
       success: AuthPairingCredentialResult,
       error: EnvironmentPairingCredentialErrors,
     }).middleware(EnvironmentAuthenticatedAuth),
+  )
+  .add(
+    HttpApiEndpoint.post("createPairingInvite", "/api/auth/pairing-invites", {
+      headers: OptionalBearerHeaders,
+      payload: AuthCreatePairingInviteInput,
+      success: AuthCreatePairingInviteResult,
+      error: EnvironmentPairingInviteOwnerErrors,
+    }).middleware(EnvironmentAuthenticatedAuth),
+  )
+  .add(
+    HttpApiEndpoint.get("getPairingInvite", "/api/auth/pairing-invites/:inviteId", {
+      headers: OptionalBearerHeaders,
+      params: AuthPairingInviteParams,
+      success: AuthPairingInviteStatus,
+      error: EnvironmentPairingInviteOwnerErrors,
+    }).middleware(EnvironmentAuthenticatedAuth),
+  )
+  .add(
+    HttpApiEndpoint.post("approvePairingInvite", "/api/auth/pairing-invites/:inviteId/approve", {
+      headers: OptionalBearerHeaders,
+      params: AuthPairingInviteParams,
+      payload: AuthApprovePairingInviteInput,
+      success: AuthApprovePairingInviteResult,
+      error: EnvironmentPairingInviteOwnerErrors,
+    }).middleware(EnvironmentAuthenticatedAuth),
+  )
+  .add(
+    HttpApiEndpoint.post("denyPairingInvite", "/api/auth/pairing-invites/:inviteId/deny", {
+      headers: OptionalBearerHeaders,
+      params: AuthPairingInviteParams,
+      success: AuthDenyPairingInviteResult,
+      error: EnvironmentPairingInviteOwnerErrors,
+    }).middleware(EnvironmentAuthenticatedAuth),
+  )
+  .add(
+    HttpApiEndpoint.post("claimPairingInvite", "/api/auth/pairing-invites/:inviteId/claim", {
+      headers: OptionalDpopProofHeaders,
+      params: AuthPairingInviteParams,
+      payload: AuthClaimPairingInviteInput,
+      success: AuthClaimPairingInviteResult,
+      error: EnvironmentPairingInviteClaimErrors,
+    }),
+  )
+  .add(
+    HttpApiEndpoint.get("getPairingInviteClaim", "/api/auth/pairing-invites/:inviteId/claim", {
+      headers: OptionalDpopProofHeaders,
+      params: AuthPairingInviteParams,
+      success: AuthPairingInviteClaimStatus,
+      error: EnvironmentPairingInviteClaimErrors,
+    }),
   )
   .add(
     HttpApiEndpoint.post("revokePairingLink", "/api/auth/pairing-links/revoke", {

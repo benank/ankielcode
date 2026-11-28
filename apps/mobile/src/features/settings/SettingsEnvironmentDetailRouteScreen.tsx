@@ -5,6 +5,7 @@ import * as Dialog from "../../components/ui/Dialog";
 import { useAtom, useAtomValue } from "@effect/atom-react";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import {
+  AuthAccessWriteScope,
   AuthProvidersManageScope,
   AuthOrchestrationReadScope,
   type EnvironmentId,
@@ -98,6 +99,7 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
     ) ?? false;
   const canManageProviders = useEnvironmentScope(environmentId, AuthProvidersManageScope);
   const canRead = useEnvironmentScope(environmentId, AuthOrchestrationReadScope);
+  const canWriteAccess = useEnvironmentScope(environmentId, AuthAccessWriteScope);
   const busy = !connected || pending !== null || running || providerBusy;
   const disabled = !allowed || busy;
   const version = config?.environment.serverVersion;
@@ -221,6 +223,37 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
             />
             {!outdated ? (
               <EnvironmentRelaySection environmentId={environmentId} connected={connected} />
+            ) : null}
+            {!outdated && connected && canWriteAccess && config !== null ? (
+              <SettingsSection title={gt("Pair another device")}>
+                {capabilities?.devicePairingInvites === true ? (
+                  <>
+                    <View className="bg-grouped-card px-4 pt-4 pb-2">
+                      <Text className="text-sm text-foreground-muted">
+                        <T>
+                          Connect your Mac or another device with Handoff, AirDrop, or a link,
+                          without typing codes.
+                        </T>
+                      </Text>
+                    </View>
+                    <SettingsActionRow
+                      icon="laptopcomputer"
+                      label={gt("Pair a Mac or device")}
+                      onPress={() =>
+                        navigation.navigate("SettingsEnvironmentPairDevice", { environmentId })
+                      }
+                    />
+                  </>
+                ) : (
+                  <View className="bg-grouped-card p-4">
+                    <Text className="text-sm text-foreground-muted">
+                      <T>
+                        Update this server to pair other devices with Handoff, AirDrop, or a link.
+                      </T>
+                    </Text>
+                  </View>
+                )}
+              </SettingsSection>
             ) : null}
             {outdated ? (
               <OutdatedServerUpdateSection

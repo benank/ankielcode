@@ -10,6 +10,7 @@ import {
   EnvironmentInternalError,
   type EnvironmentInternalErrorReason,
   EnvironmentOperationForbiddenError,
+  type EnvironmentOperationForbiddenReason,
   EnvironmentRequestInvalidError,
   type EnvironmentRequestInvalidReason,
   EnvironmentResourceNotFoundError,
@@ -134,7 +135,7 @@ function failEnvironmentScopeRequired(requiredScope: AuthEnvironmentScope) {
   );
 }
 
-function failEnvironmentOperationForbidden(reason: "current_session_revoke_not_allowed") {
+function failEnvironmentOperationForbidden(reason: EnvironmentOperationForbiddenReason) {
   return currentEnvironmentTraceId.pipe(
     Effect.flatMap((traceId) =>
       Effect.fail(
@@ -400,12 +401,16 @@ export const layer = HttpApiBuilder.group(
             );
             return yield* withEnvironmentLabel(issued);
           },
-          Effect.catchIf(EnvironmentAuth.isServerAuthCredentialError, (error) =>
-            failEnvironmentAuthInvalid(
+          Effect.catchIf(EnvironmentAuth.isServerAuthCredentialError, (error) => {
+            const dpopFailureReason = EnvironmentAuth.serverAuthDpopFailureReason(error);
+            const fail = failEnvironmentAuthInvalid(
               EnvironmentAuth.serverAuthCredentialReason(error),
-              EnvironmentAuth.serverAuthDpopFailureReason(error),
-            ),
-          ),
+              dpopFailureReason,
+            );
+            return dpopFailureReason === undefined
+              ? fail
+              : appendDpopChallengeHeader.pipe(Effect.andThen(fail));
+          }),
           Effect.catchIf(EnvironmentAuth.isServerAuthInvalidRequestError, (error) =>
             failEnvironmentInvalidRequest(EnvironmentAuth.serverAuthInvalidRequestReason(error)),
           ),
@@ -466,6 +471,137 @@ export const layer = HttpApiBuilder.group(
           },
           Effect.catchIf(EnvironmentAuth.isServerAuthInternalError, (error) =>
             failEnvironmentInternal("pairing_credential_issuance_failed", error),
+          ),
+        ),
+      )
+      .handle(
+        "createPairingInvite",
+        Effect.fn("environment.auth.createPairingInvite")(
+          function* (args) {
+            yield* annotateEnvironmentRequest(args.endpoint.name);
+            const session = yield* EnvironmentAuthenticatedPrincipal;
+            yield* appendCredentialResponseHeaders;
+            return yield* serverAuth.createPairingInvite(session, args.payload);
+          },
+          Effect.catchTags({
+            PairingInviteScopeRequiredError: (error) => failEnvironmentScopeRequired(error.scope),
+            PairingInviteInvalidRequestError: (error) =>
+              failEnvironmentInvalidRequest(error.reason),
+            PairingInviteForbiddenError: (error) => failEnvironmentOperationForbidden(error.reason),
+          }),
+          Effect.catchIf(EnvironmentAuth.isServerAuthInternalError, (error) =>
+            failEnvironmentInternal("pairing_credential_issuance_failed", error),
+          ),
+        ),
+      )
+      .handle(
+        "getPairingInvite",
+        Effect.fn("environment.auth.getPairingInvite")(
+          function* (args) {
+            yield* annotateEnvironmentRequest(args.endpoint.name);
+            const session = yield* EnvironmentAuthenticatedPrincipal;
+            yield* appendCredentialResponseHeaders;
+            return yield* serverAuth.getPairingInvite(session, args.params.inviteId);
+          },
+          Effect.catchTags({
+            PairingInviteScopeRequiredError: (error) => failEnvironmentScopeRequired(error.scope),
+            PairingInviteNotFoundError: () => failEnvironmentNotFound("pairing_invite_not_found"),
+          }),
+        ),
+      )
+      .handle(
+        "approvePairingInvite",
+        Effect.fn("environment.auth.approvePairingInvite")(
+          function* (args) {
+            yield* annotateEnvironmentRequest(args.endpoint.name);
+            const session = yield* EnvironmentAuthenticatedPrincipal;
+            yield* appendCredentialResponseHeaders;
+            return yield* serverAuth.approvePairingInvite(
+              session,
+              args.params.inviteId,
+              args.payload,
+            );
+          },
+          Effect.catchTags({
+            PairingInviteScopeRequiredError: (error) => failEnvironmentScopeRequired(error.scope),
+            PairingInviteNotFoundError: () => failEnvironmentNotFound("pairing_invite_not_found"),
+            PairingInviteInvalidRequestError: (error) =>
+              failEnvironmentInvalidRequest(error.reason),
+            PairingInviteForbiddenError: (error) => failEnvironmentOperationForbidden(error.reason),
+          }),
+          Effect.catchIf(EnvironmentAuth.isServerAuthInternalError, (error) =>
+            failEnvironmentInternal("pairing_credential_issuance_failed", error),
+          ),
+        ),
+      )
+      .handle(
+        "denyPairingInvite",
+        Effect.fn("environment.auth.denyPairingInvite")(
+          function* (args) {
+            yield* annotateEnvironmentRequest(args.endpoint.name);
+            const session = yield* EnvironmentAuthenticatedPrincipal;
+            yield* appendCredentialResponseHeaders;
+            return yield* serverAuth.denyPairingInvite(session, args.params.inviteId);
+          },
+          Effect.catchTags({
+            PairingInviteScopeRequiredError: (error) => failEnvironmentScopeRequired(error.scope),
+            PairingInviteNotFoundError: () => failEnvironmentNotFound("pairing_invite_not_found"),
+            PairingInviteForbiddenError: (error) => failEnvironmentOperationForbidden(error.reason),
+          }),
+          Effect.catchIf(EnvironmentAuth.isServerAuthInternalError, (error) =>
+            failEnvironmentInternal("pairing_link_revoke_failed", error),
+          ),
+        ),
+      )
+      .handle(
+        "claimPairingInvite",
+        Effect.fn("environment.auth.claimPairingInvite")(
+          function* (args) {
+            yield* annotateEnvironmentRequest(args.endpoint.name);
+            const request = yield* HttpServerRequest.HttpServerRequest;
+            yield* appendCredentialResponseHeaders;
+            return yield* serverAuth.claimPairingInvite(
+              request,
+              args.params.inviteId,
+              args.payload,
+            );
+          },
+          Effect.catchTags({
+            PairingInviteNotFoundError: () => failEnvironmentNotFound("pairing_invite_not_found"),
+            PairingInviteForbiddenError: (error) => failEnvironmentOperationForbidden(error.reason),
+            ServerAuthInvalidCredentialError: (error) =>
+              appendDpopChallengeHeader.pipe(
+                Effect.andThen(
+                  failEnvironmentAuthInvalid("invalid_credential", error.dpopFailureReason),
+                ),
+              ),
+          }),
+          Effect.catchIf(EnvironmentAuth.isServerAuthInternalError, (error) =>
+            failEnvironmentInternal("internal_error", error),
+          ),
+        ),
+      )
+      .handle(
+        "getPairingInviteClaim",
+        Effect.fn("environment.auth.getPairingInviteClaim")(
+          function* (args) {
+            yield* annotateEnvironmentRequest(args.endpoint.name);
+            const request = yield* HttpServerRequest.HttpServerRequest;
+            yield* appendCredentialResponseHeaders;
+            return yield* serverAuth.getPairingInviteClaim(request, args.params.inviteId);
+          },
+          Effect.catchTags({
+            PairingInviteNotFoundError: () => failEnvironmentNotFound("pairing_invite_not_found"),
+            PairingInviteForbiddenError: (error) => failEnvironmentOperationForbidden(error.reason),
+            ServerAuthInvalidCredentialError: (error) =>
+              appendDpopChallengeHeader.pipe(
+                Effect.andThen(
+                  failEnvironmentAuthInvalid("invalid_credential", error.dpopFailureReason),
+                ),
+              ),
+          }),
+          Effect.catchIf(EnvironmentAuth.isServerAuthInternalError, (error) =>
+            failEnvironmentInternal("internal_error", error),
           ),
         ),
       )

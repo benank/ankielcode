@@ -5,7 +5,9 @@ import * as Schema from "effect/Schema";
 import { EnvironmentAuthInvalidError } from "@ankielcode/contracts";
 import {
   bootstrapRemoteBearerSession,
+  claimRemotePairingInvite,
   exchangeRemoteDpopAccessToken,
+  fetchRemotePairingInviteClaim,
   issueRemoteDpopWebSocketTicket,
   issueRemoteWebSocketTicket,
   resolveRemoteDpopWebSocketConnectionUrl,
@@ -310,5 +312,87 @@ describe("remote environment authorization", () => {
       expect(new URL(url).searchParams.get("wsTicket")).toBe("old-ticket");
       expect(new URL(url).searchParams.get("dpop")).toBe("proof-3");
     }),
+  );
+
+  it.effect(
+    "claims and polls pairing invites on path-routed relay URLs with redirects refused",
+    () =>
+      Effect.gen(function* () {
+        const relayBaseUrl = "https://ankiel-relay.me.workers.dev/h/abcdefghijklmnopqrstuvwxyz/";
+        const fetch = recordedFetch(
+          Response.json({
+            status: "claimed",
+            verificationCode: "123-456",
+            expiresAt: "2026-05-01T12:05:00.000Z",
+          }),
+          Response.json({
+            status: "approved",
+            grantExpiresAt: "2026-05-01T12:10:00.000Z",
+            credential: "invite-bootstrap-credential",
+          }),
+          Response.json({
+            access_token: "dpop-access-token",
+            issued_token_type: "urn:ietf:params:oauth:token-type:access_token",
+            token_type: "DPoP",
+            expires_in: 3600,
+            scope: "orchestration:read",
+          }),
+        );
+
+        const claimed = yield* claimRemotePairingInvite({
+          httpBaseUrl: relayBaseUrl,
+          inviteId: "inv_123",
+          dpopProof: "claim-proof",
+          clientMetadata: {
+            label: "My iPhone",
+            deviceType: "mobile",
+            os: "iOS",
+          },
+        }).pipe(provideRemoteHttp(fetch.fetchFn));
+        const polled = yield* fetchRemotePairingInviteClaim({
+          httpBaseUrl: relayBaseUrl,
+          inviteId: "inv_123",
+          dpopProof: "poll-proof",
+        }).pipe(provideRemoteHttp(fetch.fetchFn));
+        yield* exchangeRemoteDpopAccessToken({
+          httpBaseUrl: relayBaseUrl,
+          credential: "invite-bootstrap-credential",
+          dpopProof: "token-proof",
+          disallowRedirects: true,
+        }).pipe(provideRemoteHttp(fetch.fetchFn));
+
+        expect(claimed).toEqual({
+          status: "claimed",
+          verificationCode: "123-456",
+          expiresAt: "2026-05-01T12:05:00.000Z",
+        });
+        expect(polled).toEqual({
+          status: "approved",
+          grantExpiresAt: "2026-05-01T12:10:00.000Z",
+          credential: "invite-bootstrap-credential",
+        });
+
+        expectFetchCall(fetch.calls, 1, {
+          url: `${relayBaseUrl}api/auth/pairing-invites/inv_123/claim`,
+          method: "POST",
+          headers: { dpop: "claim-proof" },
+          body: JSON.stringify({
+            clientLabel: "My iPhone",
+            clientDeviceType: "mobile",
+            clientOs: "iOS",
+          }),
+        });
+        expectFetchCall(fetch.calls, 2, {
+          url: `${relayBaseUrl}api/auth/pairing-invites/inv_123/claim`,
+          method: "GET",
+          headers: { dpop: "poll-proof" },
+        });
+        expectFetchCall(fetch.calls, 3, {
+          url: `${relayBaseUrl}oauth/token`,
+          method: "POST",
+          headers: { dpop: "token-proof" },
+        });
+        expect(fetch.calls.map(([, init]) => init.redirect)).toEqual(["error", "error", "error"]);
+      }),
   );
 });

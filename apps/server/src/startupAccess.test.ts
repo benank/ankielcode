@@ -11,6 +11,7 @@ import * as TestClock from "effect/testing/TestClock";
 
 import {
   acceptsPrivateNetworkConnection,
+  buildPairingUrl,
   closeNonPrivateNetworkConnections,
   loopbackUrlHostForAddress,
   resolveHeadlessConnectionString,
@@ -116,6 +117,19 @@ it("targets the bound interface when the listener binds a specific address", () 
   expect(hostFor("127.0.0.1")).toBe("127.0.0.1");
   expect(hostFor("127.0.0.2")).toBe("127.0.0.2");
   expect(hostFor("100.101.102.103")).toBe("100.101.102.103");
+});
+
+it("builds pairing URLs while preserving /h/<hostId>/ path-routed relay prefixes", () => {
+  const hostId = "abcdefghijklmnopqrstuvwxyz";
+  expect(buildPairingUrl("http://127.0.0.1:3773", "TOKEN123")).toBe(
+    "http://127.0.0.1:3773/pair#token=TOKEN123",
+  );
+  expect(buildPairingUrl(`https://${hostId}.relay.example.com/`, "TOKEN123")).toBe(
+    `https://${hostId}.relay.example.com/pair#token=TOKEN123`,
+  );
+  expect(
+    buildPairingUrl(`https://ankiel-relay.me.workers.dev/h/${hostId.toUpperCase()}`, "TOKEN123"),
+  ).toBe(`https://ankiel-relay.me.workers.dev/h/${hostId}/pair#token=TOKEN123`);
 });
 
 describe("acceptsPrivateNetworkConnection", () => {

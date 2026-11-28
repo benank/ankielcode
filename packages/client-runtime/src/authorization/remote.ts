@@ -10,12 +10,14 @@ import {
 } from "@ankielcode/contracts";
 import { encodeOAuthScope } from "@ankielcode/shared/oauthScope";
 import * as Effect from "effect/Effect";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { environmentEndpointUrl } from "../environment/endpoint.ts";
 import {
   executeEnvironmentHttpRequest,
   makeEnvironmentHttpApiGroupClient,
+  makeEnvironmentHttpApiUrlBuilder,
   RemoteEnvironmentAuthUndeclaredStatusError,
   type RemoteEnvironmentRequestError,
 } from "../rpc/http.ts";
@@ -26,6 +28,14 @@ export type RemoteEnvironmentAuthError = RemoteEnvironmentRequestError;
 const DEFAULT_REMOTE_REQUEST_TIMEOUT_MS = 10_000;
 const isUndeclaredStatusError = Schema.is(RemoteEnvironmentAuthUndeclaredStatusError);
 
+const withDisallowRedirects = <A, E, R>(
+  disallowRedirects: boolean | undefined,
+  effect: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E, R> =>
+  disallowRedirects === true
+    ? effect.pipe(Effect.provideService(FetchHttpClient.RequestInit, { redirect: "error" }))
+    : effect;
+
 const clientMetadataTokenExchangeFields = (
   clientMetadata: AuthClientPresentationMetadata | undefined,
 ) => {
@@ -35,6 +45,20 @@ const clientMetadataTokenExchangeFields = (
     ...(clientMetadata?.deviceType ? { client_device_type: clientMetadata.deviceType } : {}),
     ...(displayOs && displayOs !== "unknown" && displayOs !== "other"
       ? { client_os: displayOs }
+      : {}),
+  };
+};
+
+const clientMetadataPairingInviteFields = (
+  clientMetadata: AuthClientPresentationMetadata | undefined,
+) => {
+  const label = clientMetadata?.label?.trim();
+  const displayOs = clientMetadata?.os?.trim();
+  return {
+    ...(label ? { clientLabel: label } : {}),
+    ...(clientMetadata?.deviceType ? { clientDeviceType: clientMetadata.deviceType } : {}),
+    ...(displayOs && displayOs !== "unknown" && displayOs !== "other"
+      ? { clientOs: displayOs }
       : {}),
   };
 };
@@ -90,25 +114,83 @@ export const exchangeRemoteDpopAccessToken = Effect.fn(
   readonly scopes?: ReadonlyArray<AuthEnvironmentScope>;
   readonly clientMetadata?: AuthClientPresentationMetadata;
   readonly dpopProof: string;
+  readonly disallowRedirects?: boolean;
   readonly timeoutMs?: number;
 }) {
   const client = yield* makeEnvironmentHttpApiGroupClient(input.httpBaseUrl, "auth");
   const response = yield* executeEnvironmentHttpRequest(
     environmentEndpointUrl(input.httpBaseUrl, "/oauth/token"),
     input.timeoutMs ?? DEFAULT_REMOTE_REQUEST_TIMEOUT_MS,
-    client.token({
-      headers: { dpop: input.dpopProof },
-      payload: {
-        grant_type: AuthTokenExchangeGrantType,
-        subject_token: input.credential,
-        subject_token_type: input.credentialType ?? AuthEnvironmentBootstrapTokenType,
-        requested_token_type: AuthAccessTokenType,
-        ...(input.scopes ? { scope: encodeOAuthScope(input.scopes) } : {}),
-        ...clientMetadataTokenExchangeFields(input.clientMetadata),
-      },
-    }),
+    withDisallowRedirects(
+      input.disallowRedirects,
+      client.token({
+        headers: { dpop: input.dpopProof },
+        payload: {
+          grant_type: AuthTokenExchangeGrantType,
+          subject_token: input.credential,
+          subject_token_type: input.credentialType ?? AuthEnvironmentBootstrapTokenType,
+          requested_token_type: AuthAccessTokenType,
+          ...(input.scopes ? { scope: encodeOAuthScope(input.scopes) } : {}),
+          ...clientMetadataTokenExchangeFields(input.clientMetadata),
+        },
+      }),
+    ),
   );
   return response;
+});
+
+export const claimRemotePairingInvite = Effect.fn(
+  "clientRuntime.authorization.claimRemotePairingInvite",
+)(function* (input: {
+  readonly httpBaseUrl: string;
+  readonly inviteId: string;
+  readonly dpopProof: string;
+  readonly clientMetadata?: AuthClientPresentationMetadata;
+  readonly timeoutMs?: number;
+}) {
+  const client = yield* makeEnvironmentHttpApiGroupClient(input.httpBaseUrl, "auth");
+  const requestUrl = makeEnvironmentHttpApiUrlBuilder(input.httpBaseUrl).auth.claimPairingInvite({
+    params: { inviteId: input.inviteId },
+  });
+  return yield* executeEnvironmentHttpRequest(
+    requestUrl,
+    input.timeoutMs ?? DEFAULT_REMOTE_REQUEST_TIMEOUT_MS,
+    withDisallowRedirects(
+      true,
+      client.claimPairingInvite({
+        headers: { dpop: input.dpopProof },
+        params: { inviteId: input.inviteId },
+        payload: clientMetadataPairingInviteFields(input.clientMetadata),
+      }),
+    ),
+  );
+});
+
+export const fetchRemotePairingInviteClaim = Effect.fn(
+  "clientRuntime.authorization.fetchRemotePairingInviteClaim",
+)(function* (input: {
+  readonly httpBaseUrl: string;
+  readonly inviteId: string;
+  readonly dpopProof: string;
+  readonly timeoutMs?: number;
+}) {
+  const client = yield* makeEnvironmentHttpApiGroupClient(input.httpBaseUrl, "auth");
+  const requestUrl = makeEnvironmentHttpApiUrlBuilder(input.httpBaseUrl).auth.getPairingInviteClaim(
+    {
+      params: { inviteId: input.inviteId },
+    },
+  );
+  return yield* executeEnvironmentHttpRequest(
+    requestUrl,
+    input.timeoutMs ?? DEFAULT_REMOTE_REQUEST_TIMEOUT_MS,
+    withDisallowRedirects(
+      true,
+      client.getPairingInviteClaim({
+        headers: { dpop: input.dpopProof },
+        params: { inviteId: input.inviteId },
+      }),
+    ),
+  );
 });
 
 export const bootstrapRemoteBearerSession = Effect.fn(

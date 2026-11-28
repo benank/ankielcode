@@ -9,8 +9,10 @@ import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@ankielcode/contr
 import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
 import {
   readPairingAppLink,
+  readPairingInviteAppLink,
   readThreadAppLink,
   resolveRemotePairingTarget,
+  type PairingInvitePayload,
   type ThreadAppLink,
 } from "@ankielcode/shared/remote";
 import { useRouter } from "@tanstack/react-router";
@@ -42,6 +44,7 @@ import { allReachableShellsLiveAtom } from "../../state/shell";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { useAtomQueryRunner } from "../../state/use-atom-query-runner";
 import { stackedThreadToast, toastManager } from "../ui/toast";
+import { PairingInviteDialog } from "../settings/PairingInviteDialog";
 
 /** A link handed over by the OS is a plain click: nothing about it asks for the browser. */
 const externalClick = {
@@ -112,6 +115,8 @@ export function DesktopWebLinkCoordinator() {
   const httpBaseUrl = useEnvironmentHttpBaseUrl(primaryEnvironment?.environmentId ?? null);
   const queueRef = useRef(Promise.resolve());
   const pairedUrlsRef = useRef(new Set<string>());
+  const completedInviteIdsRef = useRef(new Set<string>());
+  const [activeInvite, setActiveInvite] = useState<PairingInvitePayload | null>(null);
   const webLinks = window.desktopBridge?.webLinks;
   // A sync IPC read; the setting only changes across a relaunch.
   const [localEnvironmentDisabled] = useState(isLocalEnvironmentDisabled);
@@ -244,10 +249,20 @@ export function DesktopWebLinkCoordinator() {
     });
   };
 
+  const openPairingInvite = (invite: PairingInvitePayload) => {
+    if (completedInviteIdsRef.current.has(invite.inviteId)) return;
+    setActiveInvite((current) => (current !== null ? current : invite));
+  };
+
   const openLink = useEffectEvent(async (url: string) => {
     const threadLink = readThreadAppLink(url);
     if (threadLink !== null) {
       await openThreadLink(threadLink);
+      return;
+    }
+    const pairingInvite = readPairingInviteAppLink(url);
+    if (pairingInvite !== null) {
+      openPairingInvite(pairingInvite);
       return;
     }
     const pairingUrl = readPairingAppLink(url);
@@ -302,5 +317,13 @@ export function DesktopWebLinkCoordinator() {
     };
   }, [ready, webLinks]);
 
-  return null;
+  return (
+    <PairingInviteDialog
+      invite={activeInvite}
+      onClose={() => setActiveInvite(null)}
+      onConnected={(_environmentId, inviteId) => {
+        completedInviteIdsRef.current.add(inviteId);
+      }}
+    />
+  );
 }

@@ -1,7 +1,12 @@
 import type { DpopFailureReason, EnvironmentId } from "@ankielcode/contracts";
 import { msg } from "gt-i18n";
 import type { RemoteEnvironmentAuthError } from "../authorization/remote.ts";
-import { detailFromError, type MarkedText, translatableDetail } from "../errors/translatable.ts";
+import {
+  detailFromError,
+  type MarkedText,
+  pairingInviteErrorMessage,
+  translatableDetail,
+} from "../errors/translatable.ts";
 import {
   ConnectionBlockedError,
   type ConnectionAttemptError,
@@ -65,7 +70,6 @@ export function mapRemoteEnvironmentError(
         hop: "server",
       });
     case "EnvironmentScopeRequiredError":
-    case "EnvironmentOperationForbiddenError":
       return new ConnectionBlockedError({
         reason: "permission",
         ...translatableDetail(
@@ -74,17 +78,41 @@ export function mapRemoteEnvironmentError(
         traceId: error.traceId,
         hop: "server",
       });
+    case "EnvironmentOperationForbiddenError": {
+      const pairingMessage = pairingInviteErrorMessage(error);
+      if (pairingMessage !== undefined) {
+        return new ConnectionBlockedError({
+          reason: "configuration",
+          ...translatableDetail(pairingMessage),
+          traceId: error.traceId,
+          hop: "server",
+        });
+      }
+      return new ConnectionBlockedError({
+        reason: "permission",
+        ...translatableDetail(
+          msg("The environment credential does not grant the required access."),
+        ),
+        traceId: error.traceId,
+        hop: "server",
+      });
+    }
     case "EnvironmentRequestInvalidError":
       return new ConnectionBlockedError({
         reason: "configuration",
-        ...translatableDetail(msg("The environment rejected the authentication request.")),
+        ...translatableDetail(
+          pairingInviteErrorMessage(error) ??
+            msg("The environment rejected the authentication request."),
+        ),
         traceId: error.traceId,
         hop: "server",
       });
     case "EnvironmentResourceNotFoundError":
       return new ConnectionBlockedError({
         reason: "configuration",
-        ...translatableDetail(msg("The environment endpoint could not be found.")),
+        ...translatableDetail(
+          pairingInviteErrorMessage(error) ?? msg("The environment endpoint could not be found."),
+        ),
         traceId: error.traceId,
         hop: "server",
       });
