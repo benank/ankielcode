@@ -102,12 +102,14 @@ public struct ThreadLaunch: Sendable, Hashable, Encodable {
   public var messageId: String
   public var text: String
   public var attachments: [ChatAttachment]
+  public var workspace: LaunchWorkspace
 
   public init(
     commandId: CommandID, threadId: String, projectId: String, title: String, modelSelection: ModelSelection,
     runtimeMode: RuntimeMode, interactionMode: InteractionMode = .default, messageId: String, text: String,
-    attachments: [ChatAttachment] = []
+    attachments: [ChatAttachment] = [], workspace: LaunchWorkspace = .root
   ) {
+    self.workspace = workspace
     self.commandId = commandId
     self.threadId = threadId
     self.projectId = projectId
@@ -125,7 +127,22 @@ public struct ThreadLaunch: Sendable, Hashable, Encodable {
     case interactionMode, workspaceStrategy, initialMessage
   }
 
-  struct Strategy: Encodable { var type = "root" }
+  struct Strategy: Encodable {
+    var type: String
+    var baseRef: String?
+    var startFromOrigin: Bool?
+
+    init(_ workspace: LaunchWorkspace) {
+      switch workspace {
+      case .root: type = "root"
+      case .worktree(let baseRef, let startFromOrigin):
+        type = "worktree"
+        self.baseRef = baseRef
+        // RN sends the flag only when on.
+        self.startFromOrigin = startFromOrigin ? true : nil
+      }
+    }
+  }
 
   struct InitialMessage: Encodable {
     var messageId: String
@@ -144,7 +161,7 @@ public struct ThreadLaunch: Sendable, Hashable, Encodable {
     try c.encode(modelSelection, forKey: .modelSelection)
     try c.encode(runtimeMode.rawValue, forKey: .runtimeMode)
     try c.encode(interactionMode.rawValue, forKey: .interactionMode)
-    try c.encode(Strategy(), forKey: .workspaceStrategy)
+    try c.encode(Strategy(workspace), forKey: .workspaceStrategy)
     try c.encode(InitialMessage(messageId: messageId, text: text, attachments: attachments), forKey: .initialMessage)
   }
 }

@@ -23,6 +23,14 @@ public final class ComposerStore {
     /// The last pick a new thread was sent with (RN's sticky selection).
     public var lastModelSelection: ModelSelection?
     public var lastRuntimeMode: RuntimeMode?
+    /// The workspace choice each project's last new thread started with (RN keeps it in the
+    /// project's draft), by `<environmentId>/<projectId>`.
+    public var workspaces: [String: NewThreadWorkspace]?
+  }
+
+  /// The remembered workspace choice for new threads in a project.
+  public func rememberedWorkspace(environmentId: String, projectId: String) -> NewThreadWorkspace? {
+    memory.workspaces?["\(environmentId)/\(projectId)"]
   }
 
   public enum AttachmentError: Error, Sendable, Hashable {
@@ -400,7 +408,10 @@ public final class ComposerStore {
     var queued = message
     if creation == nil, draft.freshContext == true { queued.freshContext = true }
     outbox.append(queued)
-    if creation != nil {
+    if let creation {
+      if let workspace = draft.workspace {
+        memory.workspaces = (memory.workspaces ?? [:]).merging(["\(ref.environmentId)/\(creation.projectId)": workspace]) { $1 }
+      }
       drafts[key] = nil
       rememberNewThread(model: model, runtimeMode: runtimeMode)
     } else {
@@ -621,7 +632,7 @@ public final class ComposerStore {
         let launch = ThreadLaunch(
           commandId: CommandID(message.commandId), threadId: message.threadId, projectId: creation.projectId,
           title: creation.title, modelSelection: model, runtimeMode: message.runtimeMode ?? .auto,
-          messageId: message.messageId, text: message.text, attachments: attachments)
+          messageId: message.messageId, text: message.text, attachments: attachments, workspace: creation.workspace ?? .root)
         let result = try await sink.launch(launch, in: environmentId)
         sink.threadLaunched(result, in: environmentId)
         return .accepted(result.sequence)

@@ -20,6 +20,10 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
   public var responseStreaming: ResponseStreamingMode = .paragraph
   /// `enablePreviewTunnel` (default on): whether device previews may reach the computer's localhost.
   public var enablePreviewTunnel = true
+  /// `defaultThreadEnvMode`: where new threads work by default (nil inherits, then the checkout).
+  public var defaultThreadEnvMode: ProjectShell.ThreadEnvMode?
+  /// `newWorktreesStartFromOrigin` (default on): new worktrees start from the remote branch.
+  public var newWorktreesStartFromOrigin = true
 
   public static let defaultAutoSettleDays = 7
   /// `MIN_`/`MAX_SIDEBAR_AUTO_SETTLE_AFTER_DAYS`; the server refuses a patch outside them.
@@ -35,6 +39,7 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
     case sidebarAutoSettleOnMerge, sidebarAutoSettleAfterDays, autoResumeLimitedThreads, snoozeLimitedThreads, snoozePresets
     case responseStreamingMode
     case enablePreviewTunnel
+    case defaultThreadEnvMode, newWorktreesStartFromOrigin
   }
 
   struct Preferences: Decodable {
@@ -61,6 +66,8 @@ public struct ServerSettings: Sendable, Hashable, Decodable {
     responseStreaming = c.loose(String.self, .responseStreamingMode).flatMap(ResponseStreamingMode.init(rawValue:)) ?? .paragraph
     snoozeLimitedThreads = c.loose(Bool.self, .snoozeLimitedThreads) ?? false
     enablePreviewTunnel = c.loose(Bool.self, .enablePreviewTunnel) ?? true
+    defaultThreadEnvMode = c.loose(String.self, .defaultThreadEnvMode).flatMap(ProjectShell.ThreadEnvMode.init(rawValue:))
+    newWorktreesStartFromOrigin = c.loose(Bool.self, .newWorktreesStartFromOrigin) ?? true
     let presets = c.loose(LossyArray<WirePreset>.self, .snoozePresets)?.elements.compactMap(\.setting)
     snoozePresets = presets.map { $0.isEmpty ? SnoozePresetSetting.defaults : $0 } ?? SnoozePresetSetting.defaults
   }

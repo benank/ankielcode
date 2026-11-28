@@ -4,14 +4,16 @@ import SwiftUI
 /// New thread (RN `NewTaskDraftScreen`): pick the computer (when there is more than one) and the
 /// project (recent first, or "No project"), write the first message in the same composer, and
 /// send. The thread id is minted here, so the app opens the thread at once with the message
-/// pending while `orchestration.launchThread` runs. Worktree and branch choices are not offered
-/// yet; threads start in the project folder.
+/// pending while `orchestration.launchThread` runs. In a Git project the thread works in the
+/// current checkout or a new worktree from a base branch; each project remembers the last choice.
 struct NewThreadView: View {
   @Environment(AppModel.self) private var model
   @Environment(PushCoordinator.self) private var push
   @Environment(\.dismiss) private var dismiss
   @State private var preparing = false
   @State private var failure: String?
+  @State private var refs = NewThreadRefs()
+  @State private var showingBranches = false
 
   private var store: ComposerStore { model.composer }
   private var draft: ComposerDraft { store.draft(ComposerTarget.newThreadKey) }
@@ -76,6 +78,10 @@ struct NewThreadView: View {
           .foregroundStyle(Palette.textPrimary)
           .multilineTextAlignment(.center)
         contextChips
+        if let workspace, refs.isGitRepo == true {
+          NewThreadWorkspaceChips(resolved: workspace, refs: refs, setMode: setWorkspaceMode) { showingBranches = true }
+            .transition(.opacity)
+        }
         if let failure {
           Text(failure)
             .font(Typography.footnote)
@@ -96,6 +102,23 @@ struct NewThreadView: View {
             .padding(.bottom, Spacing.lg)
         } else {
           ComposerView(target: target, placeholder: "Describe a task", send: { _ in Task { await start() } }, focusOnAppear: true)
+        }
+      }
+      .motion(Motion.micro, value: refs.isGitRepo)
+      .task(id: "\(computer?.id ?? "")|\(project?.workspaceRoot ?? "")") {
+        guard let computer, let project else { return }
+        await refs.load(environmentId: computer.id, cwd: project.workspaceRoot, registry: model.registry, fake: model.isComposerFake)
+      }
+      .sheet(isPresented: $showingBranches) {
+        if let workspace {
+          NewThreadBranchSheet(
+            refs: refs, selected: workspace.branch, startFromOrigin: workspace.startFromOrigin,
+            pick: { branch in updateWorkspace { $0.baseBranch = branch } },
+            setStartFromOrigin: { value in updateWorkspace { $0.startFromOrigin = value } },
+            retry: {
+              guard let computer, let project else { return }
+              Task { await refs.reload(environmentId: computer.id, cwd: project.workspaceRoot, registry: model.registry, fake: model.isComposerFake) }
+            })
         }
       }
       .navigationTitle("New thread")
@@ -144,6 +167,7 @@ struct NewThreadView: View {
                 store.updateDraft(ComposerTarget.newThreadKey) {
                   $0.projectId = option.id
                   $0.noProject = nil
+                  $0.workspace = nil
                 }
               } label: {
                 Label(option.title, systemImage: option.id == project?.id ? "checkmark" : "folder")
@@ -166,6 +190,30 @@ struct NewThreadView: View {
       .accessibilityValue(Text(project?.title ?? String(localized: "No project")))
       .accessibilityIdentifier("newThread.project")
     }
+  }
+
+  // MARK: Workspace
+
+  /// The project's workspace choice, once its branches say whether it is a Git checkout.
+  private var workspace: NewThreadWorkspace.Resolved? {
+    guard let computer, let project, let isGit = refs.isGitRepo else { return nil }
+    return NewThreadWorkspace.resolve(
+      draft: draft.workspace, remembered: store.rememberedWorkspace(environmentId: computer.id, projectId: project.id),
+      defaultMode: NewThreadWorkspace.defaultMode(project: project.defaultThreadEnvMode?.known, settings: computer.settings.defaultThreadEnvMode),
+      isGitRepo: isGit, refs: refs.refs, settingsStartFromOrigin: computer.settings.newWorktreesStartFromOrigin)
+  }
+
+  /// Changes the draft's choice, starting from what shows now.
+  private func updateWorkspace(_ change: (inout NewThreadWorkspace) -> Void) {
+    guard let computer, let project else { return }
+    var next = draft.workspace ?? store.rememberedWorkspace(environmentId: computer.id, projectId: project.id)
+      ?? NewThreadWorkspace(mode: workspace?.mode ?? .local)
+    change(&next)
+    store.updateDraft(ComposerTarget.newThreadKey) { $0.workspace = next }
+  }
+
+  private func setWorkspaceMode(_ mode: NewThreadWorkspace.Mode) {
+    updateWorkspace { $0.mode = mode }
   }
 
   // MARK: Sending
@@ -198,6 +246,14 @@ struct NewThreadView: View {
       }
     }
     guard let projectId else { return }
+    var launchWorkspace = LaunchWorkspace.root
+    if project != nil, let workspace {
+      guard let launch = workspace.launch else {
+        failure = String(localized: "Choose a base branch before creating a worktree.")
+        return
+      }
+      launchWorkspace = launch
+    }
     let ref = ThreadRef(environmentId: computer.id, threadId: UUID().uuidString.lowercased())
     let current = draft
     let title = ThreadTitleSeed.make(
@@ -206,7 +262,7 @@ struct NewThreadView: View {
     let sent = store.send(
       ComposerTarget.newThreadKey, to: ref, delivery: .start,
       thread: .init(modelSelection: selection, runtimeMode: runtime, interactionMode: nil),
-      creation: .init(projectId: projectId, title: title))
+      creation: .init(projectId: projectId, title: title, workspace: launchWorkspace))
     guard sent != nil else { return }
     if project != nil { model.preferences.values.lastProjectIds[computer.id] = projectId }
     model.navigator.open(ref)

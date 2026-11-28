@@ -254,6 +254,25 @@ struct ComposerStoreTests {
     #expect(store.memory.lastModelSelection == pick)
   }
 
+  @Test("a new thread launches into its chosen worktree, and the project remembers the choice")
+  func launchRemembersTheWorkspace() async throws {
+    let sink = FakeComposerSink()
+    let store = await makeStore(sink)
+    let key = "new-thread"
+    let choice = NewThreadWorkspace(mode: .worktree, baseBranch: "main")
+    store.updateDraft(key) { $0.workspace = choice }
+    store.setText("Try the parser", for: key)
+    let ref = ThreadRef(environmentId: "env", threadId: "t-new")
+    store.send(
+      key, to: ref, delivery: .start, thread: .init(modelSelection: ModelSelection(instanceId: "codex", model: "gpt"), runtimeMode: .auto, interactionMode: nil),
+      creation: .init(projectId: "p1", title: "Try the parser", workspace: .worktree(baseRef: "main", startFromOrigin: true)))
+    await store.idle()
+    let launches = sink.sent.compactMap { if case .launch(let launch) = $0 { launch } else { nil } }
+    #expect(launches.first?.workspace == .worktree(baseRef: "main", startFromOrigin: true))
+    #expect(store.rememberedWorkspace(environmentId: "env", projectId: "p1") == choice)
+    #expect(store.rememberedWorkspace(environmentId: "env", projectId: "p2") == nil)
+  }
+
   @Test("a refused launch can return to the new-thread draft")
   func launchFailureRestores() async throws {
     let sink = FakeComposerSink()

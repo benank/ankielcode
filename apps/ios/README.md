@@ -643,3 +643,18 @@ The fixture Claude (`DebugCatalog`) lists `/review`, `/compact`, `/clear`, `/usa
 for `ComposerSlashCommandUITests`. `swift run ankiel-probe --state <file> --live slash` prints every
 provider's commands, then on Replay arms `/clear` through the composer store and checks the next
 message reaches the server as a fresh session (deletes its thread).
+
+## New-thread workspace
+
+In a Git project the new-thread sheet offers RN's two workspaces (`NewThreadWorkspace`): the
+current checkout, or a new worktree from a base branch (the default branch unless one is picked
+from `vcs.listRefs`, with "Start from remote" following `newWorktreesStartFromOrigin` until
+changed). The default is the project's `defaultThreadEnvMode`, then the computer's; `ankiel.json`
+and the new-projects-folder rule are not read. The launch sends the matching `workspaceStrategy`,
+and the store remembers each project's last choice (`memory.workspaces`). Switching the branch of
+the current checkout, existing worktrees and tracked-repository choices are not built.
+
+With `ANKIEL_DEBUG_COMPOSER`, projects list made-up branches (`NewThreadWorkspaceUITests`).
+`swift run ankiel-probe --state <file> --live worktree --repo /tmp/<throwaway checkout>` adds the
+checkout as a project, launches a Replay thread into a new worktree through the composer store,
+checks the worktree exists, then deletes the thread and the project.

@@ -57,6 +57,8 @@ public struct ComposerDraft: Sendable, Hashable, Codable {
   public var noProject: Bool?
   /// `/clear` armed: the next message starts a fresh provider session.
   public var freshContext: Bool?
+  /// The new-thread flow's workspace choice (nil: the project's remembered or default one).
+  public var workspace: NewThreadWorkspace?
 
   public init() {}
 
@@ -66,7 +68,7 @@ public struct ComposerDraft: Sendable, Hashable, Codable {
 
   public var isEmpty: Bool {
     !hasContent && modelSelection == nil && runtimeMode == nil && projectId == nil && environmentId == nil && noProject == nil
-      && freshContext == nil
+      && freshContext == nil && workspace == nil
   }
 }
 
@@ -99,10 +101,13 @@ public struct OutboxMessage: Sendable, Hashable, Codable, Identifiable {
   public struct Creation: Sendable, Hashable, Codable {
     public var projectId: String
     public var title: String
+    /// Where the thread works; nil (older saved outboxes) is the project folder.
+    public var workspace: LaunchWorkspace?
 
-    public init(projectId: String, title: String) {
+    public init(projectId: String, title: String, workspace: LaunchWorkspace? = nil) {
       self.projectId = projectId
       self.title = title
+      self.workspace = workspace
     }
   }
 
