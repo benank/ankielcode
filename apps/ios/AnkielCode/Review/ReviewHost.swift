@@ -153,7 +153,7 @@ private struct ThreadReviewHost: ViewModifier {
         Task { await presenter.git.run(GitActionInput(stacked)) }
       }
     case .pull: Task { await presenter.git.pull() }
-    case .openPR, .hint: break
+    case .hint: break
     }
   }
 }
@@ -194,13 +194,11 @@ struct ReviewMenuButton: View {
 struct ReviewMenuSection: View {
   @Environment(\.reviewPresenter) private var presenter
   @Environment(\.runGitQuickAction) private var runQuick
-  @Environment(\.openURL) private var openURL
 
   var body: some View {
     if let presenter {
       let git = presenter.git
       let status = git.status
-      let term = GitActionRules.term(status)
       let isRepo = status?.isRepo ?? true
       Section {
         if isRepo {
@@ -213,7 +211,7 @@ struct ReviewMenuSection: View {
             }
           }
           .disabled(true)
-          quickAction(git, term: term)
+          quickAction(git)
         }
         Button {
           presenter.openGit()
@@ -231,22 +229,18 @@ struct ReviewMenuSection: View {
   }
 
   @ViewBuilder
-  private func quickAction(_ git: GitModel, term: GitActionRules.ChangeRequestTerm) -> some View {
+  private func quickAction(_ git: GitModel) -> some View {
     let action = git.quickAction
-    let blocked = !git.canWrite && !(action == .openPR)
+    let blocked = !git.canWrite
     Button {
-      if case .openPR = action, let url = git.status?.openChangeRequest.flatMap({ URL(string: $0.url) }) {
-        openURL(url)
-      } else {
-        runQuick?.run(action)
-      }
+      runQuick?.run(action)
     } label: {
       Label {
-        Text(verbatim: ReviewCopy.quickLabel(action, term: term))
+        Text(verbatim: ReviewCopy.quickLabel(action))
         if blocked {
           Text("This connection cannot change source control.")
         } else if case .hint(let hint, _) = action {
-          Text(verbatim: ReviewCopy.hint(hint, term: term))
+          Text(verbatim: ReviewCopy.hint(hint))
         }
       } icon: {
         Image(systemName: ReviewCopy.quickSymbol(action))
@@ -270,14 +264,12 @@ extension ReviewCopy {
     }
     if status.aheadCount > 0 { parts.append(String(localized: "\(status.aheadCount) ahead")) }
     if status.behindCount > 0 { parts.append(String(localized: "\(status.behindCount) behind")) }
-    if let pr = status.openChangeRequest { parts.append("\(term(GitActionRules.term(status))) #\(pr.number)") }
     return parts.joined(separator: " · ")
   }
 
   static func quickSymbol(_ action: GitActionRules.QuickAction) -> String {
     switch action {
     case .pull: "arrow.down.circle"
-    case .openPR: "arrow.up.right.circle"
     case .run(.commit): "checkmark.circle"
     case .run(.push), .run(.commitPush): "arrow.up.circle"
     default: "arrow.up.right.circle"
@@ -320,7 +312,6 @@ private struct GitProgressToastModifier: ViewModifier {
 
 struct GitProgressToast: View {
   let git: GitModel
-  @Environment(\.openURL) private var openURL
   @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
   var body: some View {
@@ -349,11 +340,6 @@ struct GitProgressToast: View {
         }
       }
       Spacer(minLength: 0)
-      if case .succeeded(.action(_, _, let url?)) = git.progress {
-        Button { openURL(url) } label: { Text("View", comment: "verb, opens the pull request") }
-          .buttonStyle(.glassProminent)
-          .controlSize(.small)
-      }
     }
     .padding(.horizontal, Spacing.lg)
     .padding(.vertical, Spacing.md)
@@ -402,9 +388,8 @@ private struct GitConfirmation: ViewModifier {
   let git: GitModel
 
   func body(content: Content) -> some View {
-    let term = GitActionRules.term(git.status)
     let branch = git.status?.refName ?? ""
-    let copy = action.map { ReviewCopy.defaultBranchCopy($0, branch: branch, term: term) }
+    let copy = action.map { ReviewCopy.defaultBranchCopy($0, branch: branch) }
     content.alert(
       Text(verbatim: copy?.title ?? String(localized: "Run action on default branch?")),
       isPresented: Binding(get: { action != nil }, set: { if !$0 { action = nil } }), presenting: action

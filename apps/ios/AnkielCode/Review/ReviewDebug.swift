@@ -132,12 +132,11 @@ enum ReviewDebug {
             try? await Task.sleep(for: .milliseconds(700))
           }
           if action.includesCommit { self.current.workingTree = .init() ; self.current.hasWorkingTreeChanges = false }
-          let pr = action == .commitPushPR || action == .createPR ? "https://example.com/tide-chart/pull/12" : nil
           continuation.yield(
             .finished(
               GitStackedActionResult(
                 action: action, branchCreated: branch,
-                toast: .init(title: action.includesCommit ? "Committed 3f2a91c" : "Pushed main", description: "Fix the tide chart scale", prURL: pr))))
+                toast: .init(title: action.includesCommit ? "Committed 3f2a91c" : "Pushed main", description: "Fix the tide chart scale"))))
           continuation.finish()
         }
       }

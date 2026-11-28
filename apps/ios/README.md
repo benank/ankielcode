@@ -210,7 +210,9 @@ the checkout's comparisons (`review.getDiffPreview`, tracked-only first, then th
 truncated comparisons read each file's patch on open) and file contents for unchanged lines
 (`review.getDiffFileContents`, git sections only, refused when the contents no longer reproduce the
 patch). Git state is `vcs.refreshStatus`; actions are `git.runStackedAction` (a progress stream) and
-`vcs.pull`. The diff is a lazy SwiftUI stack, one `Text` per line.
+`vcs.pull`. The git actions are commit, push, commit and push, and pull; there are no pull
+requests, and an older server's pull request fields are ignored. Files keep the server's order.
+The diff is a lazy SwiftUI stack, one `Text` per line.
 
 | Variable                     | Values                                                                                    | Shows                                                                                                                                                                                                                                                                                         |
 | ---------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -219,14 +221,14 @@ patch). Git state is `vcs.refreshStatus`; actions are `git.runStackedAction` (a 
 | `ANKIEL_DEBUG_REVIEW_EXPAND` | `1`                                                                                       | A git section's file opens with every unchanged region shown.                                                                                                                                                                                                                                 |
 
 `swift run ankiel-probe --state <file> --diff [threadId]` reads, without writing anything, each
-thread's turns with changes and their diffs (parsed and ordered), the checkout's status, both
+thread's turns with changes and their parsed diffs, the checkout's status, both
 comparisons, one lazy file patch and the contents check. `--git-actions <cwd>` (commit one file, push,
 commit on a feature branch) and `--git-pull <cwd>` write: point them only at a throwaway repository
 with a local bare remote, never a real checkout. `ReviewUITests` cover open → switch file →
 expand context, the line comment hand-off to the composer, the default-branch confirmation and
 scrolling a 5,000-line diff. `Fixtures/review/make-review-golden.mjs` (run from
-`packages/client-runtime`) records the TypeScript review order and git action rules the Swift ports
-must match.
+`packages/client-runtime`) records which paths "Hide test files" hides and the TypeScript git action
+rules the Swift ports must match.
 
 ## Push notifications
 

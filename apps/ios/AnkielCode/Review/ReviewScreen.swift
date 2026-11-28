@@ -18,7 +18,7 @@ struct ReviewScreen: View {
   private var review: ReviewModel { presenter.review }
 
   private var allFiles: [ReviewFile] { review.selectedDiff?.value?.files ?? [] }
-  private var files: [ReviewFile] { hideTests ? allFiles.filter { !DiffFileOrder.isTest($0.path) } : allFiles }
+  private var files: [ReviewFile] { hideTests ? allFiles.filter { !ReviewFileKind.isTest($0.path) } : allFiles }
 
   var body: some View {
     Group {

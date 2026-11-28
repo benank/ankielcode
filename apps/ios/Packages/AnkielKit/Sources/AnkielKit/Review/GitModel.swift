@@ -33,7 +33,7 @@ public enum GitProgressLabel: Sendable, Hashable {
 }
 
 public enum GitResult: Sendable, Hashable {
-  case action(title: String, description: String?, prURL: URL?)
+  case action(title: String, description: String?)
   case upToDate
   case pulled(branch: String)
 }
@@ -54,8 +54,8 @@ public struct GitActionInput: Sendable, Hashable {
 }
 
 /// The thread checkout's git status and the actions RN mobile offers on it: commit (with a
-/// message and a file selection), push, create or open a change request, pull, and the
-/// default-branch confirmation's "feature branch and continue".
+/// message and a file selection), push, commit and push, pull, and the default-branch
+/// confirmation's "feature branch and continue".
 @MainActor @Observable
 public final class GitModel {
   public let ref: ThreadRef
@@ -158,7 +158,7 @@ public final class GitModel {
         try await source.setThreadBranch(threadId: ref.threadId, branch: name, worktreePath: worktreePath)
       }
       await refresh()
-      finish(.succeeded(.action(title: result.toast.title, description: result.toast.description, prURL: result.prURL)))
+      finish(.succeeded(.action(title: result.toast.title, description: result.toast.description)))
     } catch {
       await refresh()
       finish(.failed(message: Self.describe(error)))
@@ -166,7 +166,7 @@ public final class GitModel {
   }
 
   /// "Feature branch & continue" from the default-branch confirmation: a commit takes
-  /// `featureBranch`; a push or change request first moves to a new branch (RN
+  /// `featureBranch`; a push first moves to a new branch (RN
   /// `movePendingActionToFeatureBranch`).
   public func runOnFeatureBranch(_ action: GitStackedAction) async {
     guard let cwd, canCreateFeatureBranch, !busy else { return }

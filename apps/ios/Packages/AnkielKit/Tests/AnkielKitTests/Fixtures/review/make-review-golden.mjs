@@ -1,57 +1,46 @@
-// Writes review-golden.json: the TypeScript review order (`orderDiffFilesForReview`) and git
-// action rules (`buildMenuItems`, `resolveQuickAction`, `getGitActionDisabledReason`) for sample
-// inputs, which the Swift ports must match. Run from the repo's `packages/client-runtime`:
+// Writes review-golden.json: which paths "Hide test files" hides (`isTestChangedFile`) and the
+// git action rules (`buildMenuItems`, `resolveQuickAction`, `getGitActionDisabledReason`,
+// `requiresDefaultBranchConfirmation`) for sample inputs, which the Swift ports must match. Run
+// from the repo's `packages/client-runtime`:
 //   node ../../apps/ios/Packages/AnkielKit/Tests/AnkielKitTests/Fixtures/review/make-review-golden.mjs [--check]
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const order = await import(pathToFileURL(join(process.cwd(), "src/diffFileOrder.ts")).href);
+const kind = await import(pathToFileURL(join(process.cwd(), "../shared/src/changedFileKind.ts")).href);
 const git = await import(pathToFileURL(join(process.cwd(), "src/state/gitActions.ts")).href);
 
-// Synthetic paths and import lines (no real project).
-const orderCases = [
-  [
-    { path: "src/app/main.ts", lines: ['import { tide } from "../tide/tide";', 'import "./styles.css";'] },
-    { path: "src/tide/tide.ts", lines: ['import { moon } from "./moon.js";'] },
-    { path: "src/tide/moon.ts", lines: ["export const moon = 1;"] },
-    { path: "src/tide/tide.test.ts", lines: ['import { tide } from "./tide";'] },
-    { path: "src/tide/moon.logic.test.ts", lines: [] },
-    { path: "pnpm-lock.yaml", lines: [] },
-    { path: "README.md", lines: [] },
-    { path: "dist/bundle.min.js", lines: [] },
-    { path: "src/app/styles.css", lines: [] },
-    { path: "Docs/Guide.md", lines: [] },
-    { path: "docs/api.md", lines: [] },
-    { path: "src/Tide/Upper.ts", lines: [] },
-    { path: "src/__tests__/harbor.ts", lines: [] },
-    { path: "src/harbor.ts", lines: ['const x = require("./tide/moon")'] },
-  ],
-  [
-    { path: "b/z.swift", lines: [] },
-    { path: "a/y.swift", lines: [] },
-    { path: "a/b/c.swift", lines: [] },
-    { path: "a/b/a.swift", lines: [] },
-    { path: "z.swift", lines: [] },
-    { path: "a_b.swift", lines: [] },
-    { path: "a-b.swift", lines: [] },
-    { path: "a.b.swift", lines: [] },
-    { path: "A.swift", lines: [] },
-    { path: "a10.swift", lines: [] },
-    { path: "a2.swift", lines: [] },
-  ],
+// Synthetic paths (no real project).
+const testPaths = [
+  "src/tide/tide.ts",
+  "src/tide/tide.test.ts",
+  "src/tide/moon.logic.spec.tsx",
+  "src/__tests__/harbor.ts",
+  "Tests/AnkielKitTests/TideTests.swift",
+  "src/Latest.java",
+  "src/TideTest.java",
+  "tide_test.go",
+  "test_tide.py",
+  "conftest.py",
+  "vitest.setup.ts",
+  "src/tide.stories.tsx",
+  "src/__snapshots__/tide.test.ts.snap",
+  "src/__mocks__/moon.ts",
+  "src/MockClock.ts",
+  "src/Mockup.ts",
+  "src/tide.fixture.json",
+  "fixtures/tide.json",
+  "testdata/tide.bin",
+  "src/tide.generated.test.ts",
+  "generated/tests/tide.ts",
+  "pnpm-lock.yaml",
+  "dist/bundle.min.js",
+  "Docs/Guide.md",
+  "e2e\\tide.ts",
+  "README.md",
 ];
-const orderGolden = orderCases.map((files) => ({
-  input: files.map((file) => file.path),
-  lines: Object.fromEntries(files.map((file) => [file.path, file.lines])),
-  output: order
-    .orderDiffFilesForReview(
-      files.map((file) => ({ path: file.path, additionLines: file.lines, deletionLines: [] })),
-      (file) => file.path,
-    )
-    .map((file) => file.path),
-}));
+const tests = Object.fromEntries(testPaths.map((path) => [path, kind.isTestChangedFile(path)]));
 
 const base = {
   isRepo: true,
@@ -65,6 +54,7 @@ const base = {
   behindCount: 0,
   pr: null,
 };
+// An older server still reports the branch's pull request; main's client ignores it.
 const dirty = { files: [{ path: "a.ts", insertions: 1, deletions: 0 }], insertions: 1, deletions: 0 };
 const pr = { number: 7, title: "Tides", url: "https://example.com/pr/7", baseRef: "main", headRef: "feature/tides", state: "open" };
 const statuses = {
@@ -99,14 +89,14 @@ const gitGolden = Object.fromEntries(
         {
           status,
           busy,
-          quick: git.resolveQuickAction(status, busy, status.isDefaultRef, status.hasPrimaryRemote),
+          quick: git.resolveQuickAction(status, busy, status.hasPrimaryRemote),
           items: items.map((item) => ({
             id: item.id,
             kind: item.kind,
             disabled: item.disabled,
             reason: git.getGitActionDisabledReason({ item, gitStatus: status, isBusy: busy, hasOriginRemote: status.hasPrimaryRemote }),
           })),
-          confirm: ["commit", "push", "create_pr", "commit_push", "commit_push_pr"].filter((action) =>
+          confirm: ["commit", "push", "commit_push"].filter((action) =>
             git.requiresDefaultBranchConfirmation(action, status.isDefaultRef),
           ),
         },
@@ -116,7 +106,7 @@ const gitGolden = Object.fromEntries(
 );
 gitGolden["nil"] = { status: null, busy: false, quick: git.resolveQuickAction(null, false), items: [], confirm: [] };
 
-const json = `${JSON.stringify({ synthetic: true, order: orderGolden, git: gitGolden }, null, 2)}\n`;
+const json = `${JSON.stringify({ synthetic: true, tests, git: gitGolden }, null, 2)}\n`;
 const target = join(here, "review-golden.json");
 if (process.argv.includes("--check")) {
   if (readFileSync(target, "utf8") !== json) {

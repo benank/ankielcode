@@ -1,109 +1,33 @@
 {
   "synthetic": true,
-  "order": [
-    {
-      "input": [
-        "src/app/main.ts",
-        "src/tide/tide.ts",
-        "src/tide/moon.ts",
-        "src/tide/tide.test.ts",
-        "src/tide/moon.logic.test.ts",
-        "pnpm-lock.yaml",
-        "README.md",
-        "dist/bundle.min.js",
-        "src/app/styles.css",
-        "Docs/Guide.md",
-        "docs/api.md",
-        "src/Tide/Upper.ts",
-        "src/__tests__/harbor.ts",
-        "src/harbor.ts"
-      ],
-      "lines": {
-        "src/app/main.ts": [
-          "import { tide } from \"../tide/tide\";",
-          "import \"./styles.css\";"
-        ],
-        "src/tide/tide.ts": [
-          "import { moon } from \"./moon.js\";"
-        ],
-        "src/tide/moon.ts": [
-          "export const moon = 1;"
-        ],
-        "src/tide/tide.test.ts": [
-          "import { tide } from \"./tide\";"
-        ],
-        "src/tide/moon.logic.test.ts": [],
-        "pnpm-lock.yaml": [],
-        "README.md": [],
-        "dist/bundle.min.js": [],
-        "src/app/styles.css": [],
-        "Docs/Guide.md": [],
-        "docs/api.md": [],
-        "src/Tide/Upper.ts": [],
-        "src/__tests__/harbor.ts": [],
-        "src/harbor.ts": [
-          "const x = require(\"./tide/moon\")"
-        ]
-      },
-      "output": [
-        "docs/api.md",
-        "Docs/Guide.md",
-        "README.md",
-        "src/app/styles.css",
-        "src/app/main.ts",
-        "src/tide/moon.ts",
-        "src/tide/tide.ts",
-        "src/tide/moon.logic.test.ts",
-        "src/tide/tide.test.ts",
-        "src/harbor.ts",
-        "src/Tide/Upper.ts",
-        "src/__tests__/harbor.ts",
-        "dist/bundle.min.js",
-        "pnpm-lock.yaml"
-      ]
-    },
-    {
-      "input": [
-        "b/z.swift",
-        "a/y.swift",
-        "a/b/c.swift",
-        "a/b/a.swift",
-        "z.swift",
-        "a_b.swift",
-        "a-b.swift",
-        "a.b.swift",
-        "A.swift",
-        "a10.swift",
-        "a2.swift"
-      ],
-      "lines": {
-        "b/z.swift": [],
-        "a/y.swift": [],
-        "a/b/c.swift": [],
-        "a/b/a.swift": [],
-        "z.swift": [],
-        "a_b.swift": [],
-        "a-b.swift": [],
-        "a.b.swift": [],
-        "A.swift": [],
-        "a10.swift": [],
-        "a2.swift": []
-      },
-      "output": [
-        "a_b.swift",
-        "a-b.swift",
-        "a.b.swift",
-        "A.swift",
-        "a/b/a.swift",
-        "a/b/c.swift",
-        "a/y.swift",
-        "a10.swift",
-        "a2.swift",
-        "b/z.swift",
-        "z.swift"
-      ]
-    }
-  ],
+  "tests": {
+    "src/tide/tide.ts": false,
+    "src/tide/tide.test.ts": true,
+    "src/tide/moon.logic.spec.tsx": true,
+    "src/__tests__/harbor.ts": true,
+    "Tests/AnkielKitTests/TideTests.swift": true,
+    "src/Latest.java": false,
+    "src/TideTest.java": true,
+    "tide_test.go": true,
+    "test_tide.py": true,
+    "conftest.py": true,
+    "vitest.setup.ts": true,
+    "src/tide.stories.tsx": true,
+    "src/__snapshots__/tide.test.ts.snap": true,
+    "src/__mocks__/moon.ts": true,
+    "src/MockClock.ts": true,
+    "src/Mockup.ts": false,
+    "src/tide.fixture.json": true,
+    "fixtures/tide.json": true,
+    "testdata/tide.bin": true,
+    "src/tide.generated.test.ts": false,
+    "generated/tests/tide.ts": false,
+    "pnpm-lock.yaml": false,
+    "dist/bundle.min.js": false,
+    "Docs/Guide.md": false,
+    "e2e\\tide.ts": true,
+    "README.md": false
+  },
   "git": {
     "clean": {
       "status": {
@@ -141,12 +65,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "No local commits to push."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "No local commits to include in a PR."
         }
       ],
       "confirm": []
@@ -187,12 +105,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -222,10 +134,10 @@
       },
       "busy": false,
       "quick": {
-        "label": "Commit, push & PR",
+        "label": "Commit & push",
         "disabled": false,
         "kind": "run_action",
-        "action": "commit_push_pr"
+        "action": "commit_push"
       },
       "items": [
         {
@@ -239,12 +151,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Commit or stash local changes before pushing."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "No local commits to include in a PR."
         }
       ],
       "confirm": []
@@ -288,12 +194,6 @@
         },
         {
           "id": "push",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
@@ -343,12 +243,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Commit or stash local changes before pushing."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "No local commits to include in a PR."
         }
       ],
       "confirm": []
@@ -392,12 +286,6 @@
         },
         {
           "id": "push",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
@@ -447,19 +335,11 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Commit or stash local changes before pushing."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "No local commits to include in a PR."
         }
       ],
       "confirm": [
         "push",
-        "create_pr",
-        "commit_push",
-        "commit_push_pr"
+        "commit_push"
       ]
     },
     "dirtyDefault:busy": {
@@ -504,19 +384,11 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": [
         "push",
-        "create_pr",
-        "commit_push",
-        "commit_push_pr"
+        "commit_push"
       ]
     },
     "dirtyOpenPr": {
@@ -568,12 +440,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Commit or stash local changes before pushing."
-        },
-        {
-          "id": "pr",
-          "kind": "open_pr",
-          "disabled": false,
-          "reason": null
         }
       ],
       "confirm": []
@@ -627,12 +493,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_pr",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -679,12 +539,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Commit or stash local changes before pushing."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Add an \"origin\" remote before creating a PR."
         }
       ],
       "confirm": []
@@ -731,12 +585,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -760,10 +608,10 @@
       },
       "busy": false,
       "quick": {
-        "label": "Push & create PR",
+        "label": "Push",
         "disabled": false,
         "kind": "run_action",
-        "action": "create_pr"
+        "action": "push"
       },
       "items": [
         {
@@ -774,12 +622,6 @@
         },
         {
           "id": "push",
-          "kind": "open_dialog",
-          "disabled": false,
-          "reason": null
-        },
-        {
-          "id": "pr",
           "kind": "open_dialog",
           "disabled": false,
           "reason": null
@@ -823,12 +665,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -869,19 +705,11 @@
           "kind": "open_dialog",
           "disabled": false,
           "reason": null
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": false,
-          "reason": null
         }
       ],
       "confirm": [
         "push",
-        "create_pr",
-        "commit_push",
-        "commit_push_pr"
+        "commit_push"
       ]
     },
     "aheadDefault:busy": {
@@ -920,19 +748,11 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": [
         "push",
-        "create_pr",
-        "commit_push",
-        "commit_push_pr"
+        "commit_push"
       ]
     },
     "aheadOpenPr": {
@@ -976,12 +796,6 @@
         {
           "id": "push",
           "kind": "open_dialog",
-          "disabled": false,
-          "reason": null
-        },
-        {
-          "id": "pr",
-          "kind": "open_pr",
           "disabled": false,
           "reason": null
         }
@@ -1031,12 +845,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_pr",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -1076,12 +884,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Branch is behind upstream. Pull/rebase before pushing."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "No local commits to include in a PR."
         }
       ],
       "confirm": []
@@ -1119,12 +921,6 @@
         },
         {
           "id": "push",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
@@ -1168,12 +964,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Branch is behind upstream. Pull/rebase before pushing."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Branch is behind upstream. Pull/rebase before creating a PR."
         }
       ],
       "confirm": []
@@ -1214,12 +1004,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -1243,10 +1027,10 @@
       },
       "busy": false,
       "quick": {
-        "label": "Push & create PR",
+        "label": "Push",
         "disabled": false,
         "kind": "run_action",
-        "action": "create_pr"
+        "action": "push"
       },
       "items": [
         {
@@ -1257,12 +1041,6 @@
         },
         {
           "id": "push",
-          "kind": "open_dialog",
-          "disabled": false,
-          "reason": null
-        },
-        {
-          "id": "pr",
           "kind": "open_dialog",
           "disabled": false,
           "reason": null
@@ -1306,12 +1084,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -1352,12 +1124,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "No local commits to push."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "No local commits to include in a PR."
         }
       ],
       "confirm": []
@@ -1398,12 +1164,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -1434,9 +1194,10 @@
       },
       "busy": false,
       "quick": {
-        "label": "View PR",
-        "disabled": false,
-        "kind": "open_pr"
+        "label": "Push",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "No local commits to push."
       },
       "items": [
         {
@@ -1450,12 +1211,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "No local commits to push."
-        },
-        {
-          "id": "pr",
-          "kind": "open_pr",
-          "disabled": false,
-          "reason": null
         }
       ],
       "confirm": []
@@ -1503,12 +1258,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_pr",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -1535,7 +1284,7 @@
         "label": "Push",
         "disabled": true,
         "kind": "show_hint",
-        "hint": "Add an \"origin\" remote before pushing or creating a PR."
+        "hint": "Add an \"origin\" remote before pushing."
       },
       "items": [
         {
@@ -1549,12 +1298,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Add an \"origin\" remote before pushing."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Add an \"origin\" remote before creating a PR."
         }
       ],
       "confirm": []
@@ -1595,12 +1338,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -1631,9 +1368,10 @@
       },
       "busy": false,
       "quick": {
-        "label": "View PR",
-        "disabled": false,
-        "kind": "open_pr"
+        "label": "Push",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Add an \"origin\" remote before pushing."
       },
       "items": [
         {
@@ -1647,12 +1385,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Add an \"origin\" remote before pushing."
-        },
-        {
-          "id": "pr",
-          "kind": "open_pr",
-          "disabled": false,
-          "reason": null
         }
       ],
       "confirm": []
@@ -1700,12 +1432,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_pr",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -1732,7 +1458,7 @@
         "label": "Commit",
         "disabled": true,
         "kind": "show_hint",
-        "hint": "Create and checkout a branch before pushing or opening a PR."
+        "hint": "Create and checkout a branch before pushing."
       },
       "items": [
         {
@@ -1746,12 +1472,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Detached HEAD: checkout a branch before pushing."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Detached HEAD: checkout a branch before creating a PR."
         }
       ],
       "confirm": []
@@ -1792,12 +1512,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -1828,9 +1542,10 @@
       },
       "busy": false,
       "quick": {
-        "label": "View PR",
-        "disabled": false,
-        "kind": "open_pr"
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Branch is up to date. No action needed."
       },
       "items": [
         {
@@ -1844,12 +1559,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "No local commits to push."
-        },
-        {
-          "id": "pr",
-          "kind": "open_pr",
-          "disabled": false,
-          "reason": null
         }
       ],
       "confirm": []
@@ -1897,12 +1606,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_pr",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": []
@@ -1927,10 +1630,10 @@
       },
       "busy": false,
       "quick": {
-        "label": "Create PR",
-        "disabled": false,
-        "kind": "run_action",
-        "action": "create_pr"
+        "label": "Commit",
+        "disabled": true,
+        "kind": "show_hint",
+        "hint": "Branch is up to date. No action needed."
       },
       "items": [
         {
@@ -1944,12 +1647,6 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "No local commits to push."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": false,
-          "reason": null
         }
       ],
       "confirm": []
@@ -1988,12 +1685,6 @@
         },
         {
           "id": "push",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
@@ -2038,19 +1729,11 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "No local commits to push."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": false,
-          "reason": null
         }
       ],
       "confirm": [
         "push",
-        "create_pr",
-        "commit_push",
-        "commit_push_pr"
+        "commit_push"
       ]
     },
     "defaultDeltaOnDefault:busy": {
@@ -2090,19 +1773,11 @@
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
         }
       ],
       "confirm": [
         "push",
-        "create_pr",
-        "commit_push",
-        "commit_push_pr"
+        "commit_push"
       ]
     },
     "aheadZeroDefaultDelta": {
@@ -2125,10 +1800,10 @@
       },
       "busy": false,
       "quick": {
-        "label": "Push & create PR",
+        "label": "Push",
         "disabled": false,
         "kind": "run_action",
-        "action": "create_pr"
+        "action": "push"
       },
       "items": [
         {
@@ -2142,12 +1817,6 @@
           "kind": "open_dialog",
           "disabled": false,
           "reason": null
-        },
-        {
-          "id": "pr",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "No local commits to include in a PR."
         }
       ],
       "confirm": []
@@ -2186,12 +1855,6 @@
         },
         {
           "id": "push",
-          "kind": "open_dialog",
-          "disabled": true,
-          "reason": "Git action in progress."
-        },
-        {
-          "id": "pr",
           "kind": "open_dialog",
           "disabled": true,
           "reason": "Git action in progress."

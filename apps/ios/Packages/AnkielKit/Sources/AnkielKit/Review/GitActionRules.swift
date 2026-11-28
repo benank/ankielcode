@@ -3,13 +3,11 @@ import Foundation
 /// Which git actions a checkout offers, a port of `client-runtime/src/state/gitActions.ts`. The
 /// app turns these values into copy; nothing here is user-facing text.
 public enum GitActionRules {
-  public enum MenuItemID: String, Sendable, Hashable { case commit, push, pr }
+  public enum MenuItemID: String, Sendable, Hashable { case commit, push }
 
   public struct MenuItem: Sendable, Hashable, Identifiable {
     public var id: MenuItemID
     public var disabled: Bool
-    /// `pr` opens the existing change request instead of creating one.
-    public var opensExisting: Bool
   }
 
   /// The Git sheet's rows (`buildMenuItems`).
@@ -17,27 +15,17 @@ public enum GitActionRules {
     guard let status else { return [] }
     let hasBranch = status.refName != nil
     let hasChanges = status.hasWorkingTreeChanges
-    let hasOpenPR = status.openChangeRequest != nil
     let isBehind = status.behindCount > 0
     let canPushWithoutUpstream = status.hasPrimaryRemote && !status.hasUpstream
     let canCommit = !busy && hasChanges
     let canPush = !busy && hasBranch && !hasChanges && !isBehind && status.aheadCount > 0
       && (status.hasUpstream || canPushWithoutUpstream)
-    let canCreatePR = !busy && hasBranch && !hasOpenPR && (status.aheadOfDefaultCount ?? status.aheadCount) > 0 && !isBehind
-      && (status.hasUpstream || canPushWithoutUpstream)
-    return [
-      MenuItem(id: .commit, disabled: !canCommit, opensExisting: false),
-      MenuItem(id: .push, disabled: !canPush, opensExisting: false),
-      hasOpenPR
-        ? MenuItem(id: .pr, disabled: busy, opensExisting: true)
-        : MenuItem(id: .pr, disabled: !canCreatePR, opensExisting: false),
-    ]
+    return [MenuItem(id: .commit, disabled: !canCommit), MenuItem(id: .push, disabled: !canPush)]
   }
 
   public enum QuickAction: Sendable, Hashable {
     case run(GitStackedAction)
     case pull
-    case openPR
     /// Unavailable, with why (the label shows `labelAction`).
     case hint(Hint, labelAction: HintLabel)
   }
@@ -52,33 +40,21 @@ public enum GitActionRules {
   public static func quickAction(_ status: VcsStatus?, busy: Bool) -> QuickAction {
     if busy { return .hint(.inProgress, labelAction: .commit) }
     guard let status else { return .hint(.statusUnavailable, labelAction: .commit) }
-    let isDefault = status.isDefaultRef
-    let hasOpenPR = status.openChangeRequest != nil
     let isAhead = status.aheadCount > 0
     let isBehind = status.behindCount > 0
-    let hasDefaultDelta = (status.aheadOfDefaultCount ?? status.aheadCount) > 0
     guard status.refName != nil else { return .hint(.noBranch, labelAction: .commit) }
     if status.hasWorkingTreeChanges {
       if isBehind || (!status.hasUpstream && !status.hasPrimaryRemote) { return .run(.commit) }
-      if hasOpenPR || isDefault { return .run(.commitPush) }
-      return .run(.commitPushPR)
+      return .run(.commitPush)
     }
     if !status.hasUpstream {
-      if !status.hasPrimaryRemote {
-        if hasOpenPR, !isAhead { return .openPR }
-        return .hint(.noOriginRemote, labelAction: .push)
-      }
-      if !isAhead {
-        if hasOpenPR { return .openPR }
-        return .hint(.noLocalCommits, labelAction: .push)
-      }
-      return hasOpenPR || isDefault ? .run(.push) : .run(.createPR)
+      if !status.hasPrimaryRemote { return .hint(.noOriginRemote, labelAction: .push) }
+      if !isAhead { return .hint(.noLocalCommits, labelAction: .push) }
+      return .run(.push)
     }
     if isAhead, isBehind { return .hint(.diverged, labelAction: .sync) }
     if isBehind { return .pull }
-    if isAhead { return hasOpenPR || isDefault ? .run(.push) : .run(.createPR) }
-    if hasOpenPR { return .openPR }
-    if hasDefaultDelta, !isDefault { return .run(.createPR) }
+    if isAhead { return .run(.push) }
     return .hint(.upToDate, labelAction: .commit)
   }
 
@@ -86,7 +62,6 @@ public enum GitActionRules {
     case inProgress, statusUnavailable
     case commitClean, commitUnavailable
     case pushDetached, pushDirty, pushBehind, pushNoOrigin, pushNothing, pushUnavailable
-    case viewPRUnavailable, prDetached, prNoOrigin, prNothing, prBehind, prUnavailable
   }
 
   /// Why a disabled Git sheet row is disabled (`getGitActionDisabledReason`).
@@ -94,25 +69,16 @@ public enum GitActionRules {
     guard item.disabled else { return nil }
     if busy { return .inProgress }
     guard let status else { return .statusUnavailable }
-    let hasBranch = status.refName != nil
-    let hasChanges = status.hasWorkingTreeChanges
     switch item.id {
     case .commit:
-      return hasChanges ? .commitUnavailable : .commitClean
+      return status.hasWorkingTreeChanges ? .commitUnavailable : .commitClean
     case .push:
-      if !hasBranch { return .pushDetached }
-      if hasChanges { return .pushDirty }
+      if status.refName == nil { return .pushDetached }
+      if status.hasWorkingTreeChanges { return .pushDirty }
       if status.behindCount > 0 { return .pushBehind }
       if !status.hasUpstream, !status.hasPrimaryRemote { return .pushNoOrigin }
       if status.aheadCount == 0 { return .pushNothing }
       return .pushUnavailable
-    case .pr:
-      if status.openChangeRequest != nil { return .viewPRUnavailable }
-      if !hasBranch { return .prDetached }
-      if !status.hasUpstream, !status.hasPrimaryRemote { return .prNoOrigin }
-      if (status.aheadOfDefaultCount ?? status.aheadCount) <= 0 { return .prNothing }
-      if status.behindCount > 0 { return .prBehind }
-      return .prUnavailable
     }
   }
 
@@ -139,12 +105,5 @@ public enum GitActionRules {
       resolved = candidate
     }
     return resolved
-  }
-
-  /// The host's word for a change request: GitLab says merge request.
-  public enum ChangeRequestTerm: Sendable, Hashable { case pr, mr }
-
-  public static func term(_ status: VcsStatus?) -> ChangeRequestTerm {
-    status?.sourceControlProvider?.kind == "gitlab" ? .mr : .pr
   }
 }

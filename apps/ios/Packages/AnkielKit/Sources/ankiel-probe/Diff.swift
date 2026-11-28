@@ -27,13 +27,12 @@ func probeDiff(_ session: EnvironmentSession, only threadId: String?) async thro
       let diff = try await ReviewCalls.turnDiff(threadId: thread.id, turn: turn.turnCount, via: session.rpc)
       let text = diff.reviewText
       let parsed = UnifiedDiff.parse(text)
-      let ordered = DiffFileOrder.order(parsed.files)
       let elapsed = ContinuousClock.now - started
       print(
         "  turn \(turn.turnCount) [\(turn.status)] checkpoint files \(turn.totals.count) +\(turn.totals.additions) −\(turn.totals.deletions)"
           + " | diff \(text.utf8.count) B, \(parsed.files.count) files +\(parsed.additions) −\(parsed.deletions)"
           + "\(parsed.truncated ? " TRUNCATED" : "") repos \(diff.repositories.count) (\(elapsed.formatted(.units(allowed: [.milliseconds]))))")
-      for file in ordered.prefix(6) {
+      for file in parsed.files.prefix(6) {
         let rows = DiffRows.build(file)
         print(
           "    \(file.status.rawValue.padding(toLength: 8, withPad: " ", startingAt: 0)) \(file.previousPath.map { "\($0) → " } ?? "")\(file.path)"
@@ -61,7 +60,7 @@ private func probeGit(_ session: EnvironmentSession, cwd: String) async throws {
     let status = try await ReviewCalls.status(cwd: cwd, via: session.rpc)
     print(
       "  git: repo=\(status.isRepo) ref=\(status.refName ?? "detached") default=\(status.isDefaultRef) dirty=\(status.hasWorkingTreeChanges) (\(status.workingTree.files.count) files)"
-        + " upstream=\(status.hasUpstream) ahead=\(status.aheadCount) behind=\(status.behindCount) remote=\(status.hasPrimaryRemote) pr=\(status.pr.map { "#\($0.number) \($0.state)" } ?? "none")")
+        + " upstream=\(status.hasUpstream) ahead=\(status.aheadCount) behind=\(status.behindCount) remote=\(status.hasPrimaryRemote)")
     print("  quick action: \(GitActionRules.quickAction(status, busy: false))")
     print("  menu: \(GitActionRules.menuItems(status, busy: false).map { "\($0.id.rawValue)\($0.disabled ? "(off: \(String(describing: GitActionRules.disabledReason($0, status: status, busy: false)!)))" : "")" }.joined(separator: ", "))")
   } catch {
@@ -126,4 +125,63 @@ func probeGitActions(_ session: EnvironmentSession, cwd: String) async throws {
   print("  local branches: \(branches) → next feature name \(GitActionRules.autoFeatureBranchName(existing: branches))")
   let pulled = try await ReviewCalls.pull(cwd: cwd, via: session.rpc)
   print("  pull: \(pulled.status) on \(pulled.refName)")
+}
+
+/// `--git-thread <checkout under /tmp>`: adds the checkout as a project with a local Replay thread
+/// on it and prints both ids, so the app's git menu can be driven against it.
+/// `--git-thread-cleanup <projectId>:<threadId>` deletes them. Never point it at a real checkout.
+@MainActor
+func probeGitThread(_ environment: SavedEnvironment, connector: EnvironmentConnector, repo: String) async throws {
+  guard repo.hasPrefix("/tmp/") || repo.hasPrefix("/private/tmp/") else {
+    throw ProbeFailure(description: "Pass a throwaway Git checkout under /tmp.")
+  }
+  let directory = URL.temporaryDirectory.appending(path: "ankiel-probe-git-\(UUID().uuidString)")
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let registry = EnvironmentRegistry(connector: connector, directory: directory)
+  await registry.load(adopting: environment)
+  guard let model = registry.environment(environment.environmentId) else { throw ProbeFailure(description: "Not adopted.") }
+  let store = ComposerStore(directory: directory.appending(path: "composer"), sink: registry)
+  await store.load()
+  func wait(_ what: String, _ seconds: Double, _ done: () -> Bool) async throws {
+    let deadline = Date.now.addingTimeInterval(seconds)
+    while !done() {
+      guard Date.now < deadline else { throw ProbeFailure(description: "Timed out waiting for \(what).") }
+      try await Task.sleep(for: .milliseconds(50))
+    }
+  }
+  try await wait("a live shell", 60) { model.isShellLive }
+  let side = try await connector.connect(environment)
+  defer { Task { await side.close() } }
+  let projectId = UUID().uuidString.lowercased()
+  let threadId = UUID().uuidString.lowercased()
+  _ = try await side.rpc.call(
+    "projects.mutate",
+    payload: JSONValue.object([
+      "type": "project.create", "commandId": .string(UUID().uuidString.lowercased()), "projectId": .string(projectId),
+      "title": "ankiel-probe git", "workspaceRoot": .string(repo),
+    ]), as: JSONValue.self)
+  let key = "new:\(model.id)"
+  store.setText("Git actions check", for: key)
+  guard
+    let sent = store.send(
+      key, to: ThreadRef(environmentId: model.id, threadId: threadId), delivery: .start,
+      thread: .init(modelSelection: ModelSelection(instanceId: "devReplay", model: "showcase"), runtimeMode: .fullAccess, interactionMode: nil),
+      creation: .init(projectId: projectId, title: "probe git", workspace: nil))
+  else { throw ProbeFailure(description: "The launch did not enter the outbox.") }
+  try await wait("the launch to be accepted", 60) {
+    if case .sent = store.outbox.first(where: { $0.messageId == sent.messageId })?.state { true } else { false }
+  }
+  print("git thread: \(projectId):\(threadId) environment \(model.id)")
+}
+
+func probeGitThreadCleanup(_ session: EnvironmentSession, ids: String) async throws {
+  let parts = ids.split(separator: ":").map(String.init)
+  guard parts.count == 2 else { throw ProbeFailure(description: "Pass <projectId>:<threadId>.") }
+  await deleteThread(session, parts[1])
+  _ = try await session.rpc.call(
+    "projects.mutate",
+    payload: JSONValue.object([
+      "type": "project.delete", "commandId": .string(UUID().uuidString.lowercased()), "projectId": .string(parts[0]), "force": true,
+    ]), as: JSONValue.self)
+  print("cleanup: deleted project \(parts[0])")
 }

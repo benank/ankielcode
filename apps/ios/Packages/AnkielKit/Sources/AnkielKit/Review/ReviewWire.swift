@@ -311,7 +311,6 @@ public struct VcsRefreshStatusRequest: Encodable, Sendable, Hashable {
 /// `VcsStatusResult` (also `VcsRefreshStatusResult`).
 public struct VcsStatus: Decodable, Sendable, Hashable {
   public var isRepo: Bool
-  public var sourceControlProvider: Provider?
   public var hasPrimaryRemote: Bool
   public var isDefaultRef: Bool
   public var refName: String?
@@ -320,13 +319,6 @@ public struct VcsStatus: Decodable, Sendable, Hashable {
   public var hasUpstream: Bool
   public var aheadCount: Int
   public var behindCount: Int
-  public var aheadOfDefaultCount: Int?
-  public var pr: ChangeRequest?
-
-  public struct Provider: Decodable, Sendable, Hashable {
-    public var kind: String
-    public var name: String?
-  }
 
   public struct WorkingTree: Decodable, Sendable, Hashable {
     public var files: [File]
@@ -361,26 +353,9 @@ public struct VcsStatus: Decodable, Sendable, Hashable {
     }
   }
 
-  public struct ChangeRequest: Decodable, Sendable, Hashable {
-    public var number: Int
-    public var title: String
-    public var url: String
-    /// `open`, `closed` or `merged`.
-    public var state: String
-    public var isDraft: Bool?
-
-    public init(number: Int, title: String, url: String, state: String) {
-      self.number = number
-      self.title = title
-      self.url = url
-      self.state = state
-    }
-  }
-
   public init(
     isRepo: Bool = true, refName: String?, isDefaultRef: Bool = false, hasPrimaryRemote: Bool = true,
     workingTree: WorkingTree = WorkingTree(), hasUpstream: Bool = true, aheadCount: Int = 0, behindCount: Int = 0,
-    aheadOfDefaultCount: Int? = nil, pr: ChangeRequest? = nil, providerKind: String? = nil
   ) {
     self.isRepo = isRepo
     self.refName = refName
@@ -391,20 +366,16 @@ public struct VcsStatus: Decodable, Sendable, Hashable {
     self.hasUpstream = hasUpstream
     self.aheadCount = aheadCount
     self.behindCount = behindCount
-    self.aheadOfDefaultCount = aheadOfDefaultCount
-    self.pr = pr
-    sourceControlProvider = providerKind.map { Provider(kind: $0, name: nil) }
   }
 
   enum CodingKeys: String, CodingKey {
-    case isRepo, sourceControlProvider, hasPrimaryRemote, isDefaultRef, refName, hasWorkingTreeChanges, workingTree
-    case hasUpstream, aheadCount, behindCount, aheadOfDefaultCount, pr
+    case isRepo, hasPrimaryRemote, isDefaultRef, refName, hasWorkingTreeChanges, workingTree
+    case hasUpstream, aheadCount, behindCount
   }
 
   public init(from decoder: any Decoder) throws {
     let c = try decoder.container(keyedBy: CodingKeys.self)
     isRepo = c.loose(Bool.self, .isRepo) ?? false
-    sourceControlProvider = c.loose(Provider.self, .sourceControlProvider)
     hasPrimaryRemote = c.loose(Bool.self, .hasPrimaryRemote) ?? false
     isDefaultRef = c.loose(Bool.self, .isDefaultRef) ?? false
     refName = c.loose(String.self, .refName)
@@ -413,12 +384,7 @@ public struct VcsStatus: Decodable, Sendable, Hashable {
     hasUpstream = c.loose(Bool.self, .hasUpstream) ?? false
     aheadCount = c.loose(Int.self, .aheadCount) ?? 0
     behindCount = c.loose(Int.self, .behindCount) ?? 0
-    aheadOfDefaultCount = c.loose(Int.self, .aheadOfDefaultCount)
-    pr = c.loose(ChangeRequest.self, .pr)
   }
-
-  /// An open change request, if the branch has one.
-  public var openChangeRequest: ChangeRequest? { pr?.state == "open" ? pr : nil }
 }
 
 /// `vcs.pull`.
@@ -434,16 +400,14 @@ public struct VcsPullResult: Decodable, Sendable, Hashable {
   public var refName: String
 }
 
-/// `GitStackedAction`.
+/// `GitStackedAction`. A current server refuses the retired pull request actions, so there are none.
 public enum GitStackedAction: String, Codable, Sendable, Hashable, CaseIterable {
   case commit, push
-  case createPR = "create_pr"
   case commitPush = "commit_push"
-  case commitPushPR = "commit_push_pr"
 
   /// Actions that publish, and so ask first on the default branch (`requiresDefaultBranchConfirmation`).
   public var publishes: Bool { self != .commit }
-  public var includesCommit: Bool { self == .commit || self == .commitPush || self == .commitPushPR }
+  public var includesCommit: Bool { self != .push }
 }
 
 /// `git.runStackedAction` (a stream of `GitActionProgressEvent`).
@@ -506,7 +470,8 @@ public enum GitActionProgress: Decodable, Sendable, Hashable {
   }
 }
 
-/// `GitRunStackedActionResult`, the parts the result toast and branch sync read.
+/// `GitRunStackedActionResult`, the parts the result toast and branch sync read. An older server's
+/// pull request step and "View PR" toast action are not read.
 public struct GitStackedActionResult: Decodable, Sendable, Hashable {
   public var action: String
   public var branch: Branch
@@ -521,19 +486,10 @@ public struct GitStackedActionResult: Decodable, Sendable, Hashable {
   public struct Toast: Decodable, Sendable, Hashable {
     public var title: String
     public var description: String?
-    public var cta: CTA
 
-    public struct CTA: Decodable, Sendable, Hashable {
-      /// `none`, `open_pr` or `run_action`.
-      public var kind: String
-      public var label: String?
-      public var url: String?
-    }
-
-    public init(title: String, description: String? = nil, prURL: String? = nil) {
+    public init(title: String, description: String? = nil) {
       self.title = title
       self.description = description
-      cta = CTA(kind: prURL == nil ? "none" : "open_pr", label: nil, url: prURL)
     }
   }
 
@@ -541,12 +497,6 @@ public struct GitStackedActionResult: Decodable, Sendable, Hashable {
     self.action = action.rawValue
     branch = Branch(status: branchCreated == nil ? "skipped_not_requested" : "created", name: branchCreated)
     self.toast = toast
-  }
-
-  /// The change request link the toast offers.
-  public var prURL: URL? {
-    guard toast.cta.kind == "open_pr", let url = toast.cta.url else { return nil }
-    return URL(string: url)
   }
 }
 

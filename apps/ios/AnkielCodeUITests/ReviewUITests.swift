@@ -40,9 +40,8 @@ final class ReviewUITests: HomeUITestCase {
     app.buttons["review.next"].tap()
     XCTAssertTrue(value(position, "2 of 2"), "next moves to the second file")
     app.buttons["review.previous"].tap()
+    // Files keep the server's order: the chart (with gaps) is first.
     XCTAssertTrue(value(position, "1 of 2"))
-    // The first file in review order is README.md; the chart (with gaps) is second.
-    app.buttons["review.next"].tap()
 
     let lines = app.descendants(matching: .any).matching(identifier: "review.line")
     XCTAssertTrue(lines.firstMatch.waitForExistence(timeout: 5))

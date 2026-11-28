@@ -1,18 +1,16 @@
 import AnkielKit
 import SwiftUI
 
-/// The thread checkout's git state and actions (RN `GitOverviewSheet`): commit, push, create or
-/// view the change request, pull when behind, review changes, and the worktree path.
+/// The thread checkout's git state and actions (RN `GitOverviewSheet`): commit, push, pull when
+/// behind, review changes, and the worktree path.
 struct GitSheet: View {
   let presenter: ReviewPresenter
   @Environment(\.dismiss) private var dismiss
-  @Environment(\.openURL) private var openURL
   @State private var confirming: GitStackedAction?
   @State private var committing = false
 
   private var git: GitModel { presenter.git }
   private var status: VcsStatus? { git.status }
-  private var term: GitActionRules.ChangeRequestTerm { GitActionRules.term(status) }
 
   var body: some View {
     NavigationStack {
@@ -91,15 +89,15 @@ struct GitSheet: View {
     if !items.isEmpty || behind > 0 {
       Section {
         ForEach(items) { item in
-          let blocked = !git.canWrite && !item.opensExisting
+          let blocked = !git.canWrite
           Button {
             press(item)
           } label: {
             row(
-              LocalizedStringKey(ReviewCopy.menuLabel(item, term: term)), symbol: ReviewCopy.menuSymbol(item.id),
+              LocalizedStringKey(ReviewCopy.menuLabel(item)), symbol: ReviewCopy.menuSymbol(item.id),
               detail: blocked
                 ? String(localized: "This connection cannot change source control.")
-                : GitActionRules.disabledReason(item, status: status, busy: git.busy).map { ReviewCopy.reason($0, term: term) }
+                : GitActionRules.disabledReason(item, status: status, busy: git.busy).map(ReviewCopy.reason)
                   ?? detail(item))
           }
           .disabled(item.disabled || blocked)
@@ -129,9 +127,6 @@ struct GitSheet: View {
     switch item.id {
     case .commit where status.hasWorkingTreeChanges: return String(localized: "\(status.workingTree.files.count) files changed")
     case .push where status.aheadCount > 0: return String(localized: "\(status.aheadCount) commits ahead")
-    case .pr:
-      guard let pr = status.pr else { return nil }
-      return term == .mr ? String(localized: "MR #\(pr.number) \(pr.state)") : String(localized: "PR #\(pr.number) \(pr.state)")
     default: return nil
     }
   }
@@ -153,16 +148,11 @@ struct GitSheet: View {
   }
 
   private func press(_ item: GitActionRules.MenuItem) {
-    if item.opensExisting {
-      if let url = status?.openChangeRequest.flatMap({ URL(string: $0.url) }) { openURL(url) }
-      return
-    }
     guard git.canWrite else { return }
     switch item.id {
     case .commit:
       committing = true
     case .push: publish(.push)
-    case .pr: publish(.createPR)
     }
   }
 

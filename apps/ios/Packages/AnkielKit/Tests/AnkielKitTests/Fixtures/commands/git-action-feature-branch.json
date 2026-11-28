@@ -1,7 +1,7 @@
 {
   "schema" : "gitAction",
   "value" : {
-    "action" : "commit_push_pr",
+    "action" : "commit_push",
     "actionId" : "act-3",
     "cwd" : "/Users/dev/tide-chart",
     "featureBranch" : true

@@ -266,7 +266,7 @@ public final class ReviewModel {
     if parsed.files.isEmpty {
       return ReviewDiff(files: [], truncated: parsed.truncated, raw: trimmed.isEmpty || trimmed == "[truncated]" ? nil : text)
     }
-    let files = DiffFileOrder.order(parsed.files).map { file in
+    let files = parsed.files.map { file in
       ReviewFile(
         id: file.id, path: file.path, previousPath: file.previousPath, status: file.status, additions: file.additions,
         deletions: file.deletions, diff: file, stat: nil)

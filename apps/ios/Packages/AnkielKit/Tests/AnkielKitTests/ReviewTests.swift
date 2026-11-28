@@ -293,13 +293,8 @@ struct ReviewTests {
   // MARK: Goldens
 
   struct Golden: Decodable {
-    var order: [OrderCase]
+    var tests: [String: Bool]
     var git: [String: GitCase]
-    struct OrderCase: Decodable {
-      var input: [String]
-      var lines: [String: [String]]
-      var output: [String]
-    }
     struct GitCase: Decodable {
       var status: JSONValue
       var busy: Bool
@@ -328,26 +323,27 @@ struct ReviewTests {
     }
   }
 
-  @Test("review order matches orderDiffFilesForReview")
-  func order() throws {
-    for sample in try Self.golden.order {
-      let files = sample.input.map { path in
-        DiffFile(
-          id: path, path: path, status: .modified,
-          hunks: [
-            DiffHunk(
-              oldStart: 1, oldCount: 0, newStart: 1, newCount: sample.lines[path]?.count ?? 0, context: nil,
-              lines: (sample.lines[path] ?? []).map { DiffLine(kind: .added, text: $0, oldNumber: nil, newNumber: 1) })
-          ])
-      }
-      #expect(DiffFileOrder.order(files).map(\.path) == sample.output)
+  @Test("hide test files matches isTestChangedFile")
+  func testFiles() throws {
+    for (path, isTest) in try Self.golden.tests {
+      #expect(ReviewFileKind.isTest(path) == isTest, "\(path)")
+    }
+  }
+
+  @Test("lock files, build output and snapshots fold")
+  func foldedFiles() {
+    for path in ["pnpm-lock.yaml", "dist/bundle.min.js", "a/__snapshots__/b.snap", "web/build/app.js", "x.generated.ts"] {
+      #expect(ReviewFileKind.isFolded(path), "\(path)")
+    }
+    for path in ["src/tide.ts", "src/build.ts", "README.md"] {
+      #expect(!ReviewFileKind.isFolded(path), "\(path)")
     }
   }
 
   static let hintText: [GitActionRules.Hint: String] = [
     .inProgress: "Git action in progress.", .statusUnavailable: "Git status is unavailable.",
-    .noBranch: "Create and checkout a branch before pushing or opening a PR.",
-    .noOriginRemote: "Add an \"origin\" remote before pushing or creating a PR.",
+    .noBranch: "Create and checkout a branch before pushing.",
+    .noOriginRemote: "Add an \"origin\" remote before pushing.",
     .noLocalCommits: "No local commits to push.", .diverged: "Branch has diverged from upstream. Rebase/merge first.",
     .upToDate: "Branch is up to date. No action needed.",
   ]
@@ -358,12 +354,9 @@ struct ReviewTests {
     .pushDetached: "Detached HEAD: checkout a branch before pushing.", .pushDirty: "Commit or stash local changes before pushing.",
     .pushBehind: "Branch is behind upstream. Pull/rebase before pushing.", .pushNoOrigin: "Add an \"origin\" remote before pushing.",
     .pushNothing: "No local commits to push.", .pushUnavailable: "Push is currently unavailable.",
-    .viewPRUnavailable: "View PR is currently unavailable.", .prDetached: "Detached HEAD: checkout a branch before creating a PR.",
-    .prNoOrigin: "Add an \"origin\" remote before creating a PR.", .prNothing: "No local commits to include in a PR.",
-    .prBehind: "Branch is behind upstream. Pull/rebase before creating a PR.", .prUnavailable: "Create PR is currently unavailable.",
   ]
 
-  @Test("git rules match buildMenuItems, resolveQuickAction and getGitActionDisabledReason")
+  @Test("git rules match buildMenuItems, resolveQuickAction, getGitActionDisabledReason and the confirmation")
   func gitRules() throws {
     for (name, sample) in try Self.golden.git {
       let status = sample.status.isNull ? nil : try JSONDecoder().decode(VcsStatus.self, from: JSONEncoder().encode(sample.status))
@@ -372,14 +365,12 @@ struct ReviewTests {
       case .run(let action):
         #expect(sample.quick.kind == "run_action" && sample.quick.action == action.rawValue, "\(name)")
       case .pull: #expect(sample.quick.kind == "run_pull", "\(name)")
-      case .openPR: #expect(sample.quick.kind == "open_pr", "\(name)")
       case .hint(let hint, _): #expect(sample.quick.kind == "show_hint" && sample.quick.hint == Self.hintText[hint], "\(name)")
       }
       let items = GitActionRules.menuItems(status, busy: sample.busy)
       #expect(items.map(\.id.rawValue) == sample.items.map(\.id), "\(name)")
       for (item, expected) in zip(items, sample.items) {
         #expect(item.disabled == expected.disabled, "\(name) \(item.id)")
-        #expect(item.opensExisting == (expected.kind == "open_pr"), "\(name) \(item.id)")
         let reason = GitActionRules.disabledReason(item, status: status, busy: sample.busy)
         #expect(reason.flatMap { Self.reasonText[$0] } == expected.reason, "\(name) \(item.id)")
       }
@@ -441,7 +432,7 @@ struct ReviewTests {
     ),
     (
       "git-action-feature-branch", "gitAction",
-      GitStackedActionRequest(actionId: "act-3", cwd: cwd, action: .commitPushPR, featureBranch: true)
+      GitStackedActionRequest(actionId: "act-3", cwd: cwd, action: .commitPush, featureBranch: true)
     ),
     (
       "thread-branch-update", "command",
@@ -470,14 +461,14 @@ struct ReviewTests {
     #expect(try JSONDecoder().decode(JSONValue.self, from: encoded) == fixture["value"])
   }
 
-  @Test("progress events decode without throwing, unknown kinds included")
+  @Test("progress events decode without throwing, unknown kinds and an older server's pull request step included")
   func progressDecoding() throws {
     let json = #"""
       [{"kind":"action_started","actionId":"a","cwd":"/w","action":"commit","phases":["commit"]},
        {"kind":"phase_started","actionId":"a","cwd":"/w","action":"commit","phase":"commit","label":"Committing…"},
        {"kind":"hook_output","actionId":"a","cwd":"/w","action":"commit","hookName":null,"stream":"stdout","text":"lint ok"},
        {"kind":"brand_new","actionId":"a"},
-       {"kind":"action_finished","actionId":"a","cwd":"/w","action":"commit","result":{"action":"commit","branch":{"status":"skipped_not_requested"},"commit":{"status":"created"},"push":{"status":"skipped_not_requested"},"pr":{"status":"skipped_not_requested"},"toast":{"title":"Committed abc1234","cta":{"kind":"open_pr","label":"View PR","url":"https://example.com/pr/1"}}}},
+       {"kind":"action_finished","actionId":"a","cwd":"/w","action":"commit","result":{"action":"commit","branch":{"status":"skipped_not_requested"},"commit":{"status":"created"},"push":{"status":"skipped_not_requested"},"pr":{"status":"created","url":"https://example.com/pr/1","number":1},"toast":{"title":"Committed abc1234","cta":{"kind":"open_pr","label":"View PR","url":"https://example.com/pr/1"}}}},
        {"kind":"action_failed","actionId":"a","cwd":"/w","action":"push","phase":"push","message":"Rejected"},
        42]
       """#
@@ -487,18 +478,18 @@ struct ReviewTests {
     #expect(events[2] == .hookOutput(text: "lint ok"))
     #expect(events[3] == .unknown && events[6] == .unknown)
     guard case .finished(let result) = events[4] else { Issue.record("no result"); return }
-    #expect(result.prURL?.absoluteString == "https://example.com/pr/1")
+    #expect(result.toast == .init(title: "Committed abc1234") && result.action == "commit")
     #expect(events[5] == .failed(phase: "push", message: "Rejected"))
   }
 
-  @Test("status decodes absent fields as their defaults")
+  @Test("status decodes absent fields as their defaults and ignores an older server's pull request")
   func statusDecoding() throws {
     let status = try decode(
       VcsStatus.self,
       from: Data(#"{"isRepo":true,"hasPrimaryRemote":true,"isDefaultRef":false,"refName":"x","hasWorkingTreeChanges":true,"workingTree":{"files":[{"path":"a","insertions":1,"deletions":2}],"insertions":1,"deletions":2},"hasUpstream":false,"aheadCount":1,"behindCount":0,"pr":{"number":3,"title":"T","url":"u","baseRef":"main","headRef":"x","state":"open"},"extra":1}"#.utf8))
     #expect(status.workingTree.files.count == 1)
-    #expect(status.openChangeRequest?.number == 3)
-    #expect(status.aheadOfDefaultCount == nil)
+    #expect(status.aheadCount == 1 && status.refName == "x")
+    #expect(GitActionRules.quickAction(status, busy: false) == .run(.commitPush))
   }
 
   @Test("a review comment block matches RN's formatReviewCommentContext")
@@ -630,7 +621,7 @@ struct ReviewModelTests {
     for _ in 0..<200 where !condition() { await Task.yield() }
   }
 
-  @Test("a turn section loads, parses and orders its diff; viewed marks stick per section")
+  @Test("a turn section loads and parses its diff in the server's order; viewed marks stick per section")
   func turnSection() async throws {
     let source = FakeReviewSource()
     source.turns[1] = ThreadTurnDiff(
@@ -642,7 +633,7 @@ struct ReviewModelTests {
     model.load()
     await settle { model.selectedDiff?.value != nil }
     let diff = try #require(model.selectedDiff?.value)
-    #expect(diff.files.map(\.path) == ["b.ts", "b.test.ts"])
+    #expect(diff.files.map(\.path) == ["b.test.ts", "b.ts"])
     model.toggleViewed(diff.files[0])
     #expect(model.isViewed(diff.files[0]))
     #expect(!model.isViewed(diff.files[1]))
@@ -712,7 +703,7 @@ struct ReviewModelTests {
     let fake = FakeGitSource(VcsStatus(refName: "main", isDefaultRef: true, workingTree: .init(files: [.init(path: "a", insertions: 1, deletions: 0)])))
     fake.events = [
       .started(phases: ["branch", "commit"]), .phaseStarted(phase: "commit", label: "Committing"),
-      .finished(GitStackedActionResult(action: .commit, branchCreated: "feature/update", toast: .init(title: "Committed", prURL: nil))),
+      .finished(GitStackedActionResult(action: .commit, branchCreated: "feature/update", toast: .init(title: "Committed"))),
     ]
     let model = GitModel(ref: Self.ref, source: fake, makeId: { "id-1" })
     model.update(cwd: "/w", worktreePath: nil)
@@ -722,7 +713,7 @@ struct ReviewModelTests {
     await model.run(GitActionInput(.commit, commitMessage: "Tides", filePaths: ["a"], featureBranch: true))
     #expect(fake.requests.first?.featureBranch == true && fake.requests.first?.commitMessage == "Tides")
     #expect(fake.threadBranches == ["feature/update"])
-    #expect(model.progress == .succeeded(.action(title: "Committed", description: nil, prURL: nil)))
+    #expect(model.progress == .succeeded(.action(title: "Committed", description: nil)))
   }
 
   @Test("a failed action shows the server's message; a refused session runs nothing")

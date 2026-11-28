@@ -154,7 +154,7 @@ struct FileDiffScreen: View {
 
   /// Large and generated files wait for a tap (RN `getReviewFilePreviewState`; generated is ours).
   private func suppression(_ diff: DiffFile) -> (title: LocalizedStringKey, message: LocalizedStringKey, symbol: String)? {
-    if DiffFileOrder.isGenerated(diff.path) {
+    if ReviewFileKind.isFolded(diff.path) {
       return ("Generated file", "Lock files, build output and snapshots are folded.", "gearshape.2")
     }
     let characters = diff.hunks.reduce(0) { total, hunk in total + hunk.lines.reduce(0) { $0 + $1.text.utf8.count } }

@@ -183,6 +183,16 @@ func run() async throws {
     await session.close()
     return
   }
+  if let ids = argument("--git-thread-cleanup") {
+    try await probeGitThreadCleanup(session, ids: ids)
+    await session.close()
+    return
+  }
+  if let repo = argument("--git-thread") {
+    await session.close()
+    try await probeGitThread(environment, connector: connector, repo: repo)
+    return
+  }
   if let cwd = argument("--git-actions") {
     try await probeGitActions(session, cwd: cwd)
     await session.close()
