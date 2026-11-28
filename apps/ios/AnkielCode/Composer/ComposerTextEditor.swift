@@ -22,6 +22,8 @@ struct ComposerCaretRequest: Equatable {
 struct ComposerTextEditor: UIViewRepresentable {
   var text: String
   var placeholder: String
+  /// `<instance>/<slug>` → model name, for `model:` chips.
+  var modelLabels: [String: String] = [:]
   var editable: Bool
   var maxLines: Int
   @Binding var focused: Bool
@@ -56,6 +58,7 @@ struct ComposerTextEditor: UIViewRepresentable {
     let coordinator = context.coordinator
     coordinator.parent = self
     view.placeholder = placeholder
+    view.modelLabels = modelLabels
     view.isEditable = editable
     view.onSubmit = onSubmit
     view.suggestionKeys = suggestionKeys
@@ -99,7 +102,7 @@ struct ComposerTextEditor: UIViewRepresentable {
     func apply(_ source: String, force: Bool) {
       guard let view else { return }
       if view.markedTextRange != nil { return }
-      let next = ComposerInlineTokens.collect(source, preserveTrailing: tokens)
+      let next = ComposerInlineTokens.editorTokens(source, preserveTrailing: tokens, knownModels: Set(view.modelLabels.keys))
       let current = view.serializedText()
       tokens = next
       // Positions shift as text is typed before a chip; only which chips show matters here.
@@ -182,6 +185,7 @@ nonisolated final class ComposerChipAttachment: NSTextAttachment {
 final class ComposerUITextView: UITextView {
   var onSubmit: (() -> Void)?
   var suggestionKeys: ComposerSuggestionKeys?
+  var modelLabels: [String: String] = [:]
   /// Focus asked for before the view had a window (a sheet's field focused on appear).
   var wantsFocus = false
   var placeholder = "" {
@@ -417,15 +421,20 @@ final class ComposerUITextView: UITextView {
     let tokens = renderedTokens()
     guard !tokens.isEmpty, markedTextRange == nil else { return }
     let selection = sourceSelection()
-    render(serializedText(), tokens: ComposerInlineTokens.collect(serializedText(), preserveTrailing: tokens))
+    render(serializedText(), tokens: ComposerInlineTokens.editorTokens(serializedText(), preserveTrailing: tokens, knownModels: Set(modelLabels.keys)))
     selectedRange = displayRange(start: selection.start, end: selection.end)
   }
 
   private func chip(_ token: ComposerInlineToken) -> NSAttributedString {
     let font = UIFont.preferredFont(forTextStyle: .body, compatibleWith: traitCollection)
     let chipFont = UIFont.systemFont(ofSize: font.pointSize, weight: .medium)
-    let label = token.kind == .skill ? token.value : ComposerInlineTokens.displayName(token.value)
-    let symbol = token.kind == .skill ? "sparkles" : (token.value.hasSuffix("/") ? "folder" : "doc.text")
+    let label: String
+    let symbol: String
+    switch token.kind {
+    case .skill: (label, symbol) = (token.value, "sparkles")
+    case .model: (label, symbol) = (modelLabels[token.value] ?? token.value, "cpu")
+    case .mention: (label, symbol) = (ComposerInlineTokens.displayName(token.value), token.value.hasSuffix("/") ? "folder" : "doc.text")
+    }
     let image = Self.renderChip(label: label, symbol: symbol, font: chipFont, traits: traitCollection, maxWidth: max(120, bounds.width - 8))
     let attachment = ComposerChipAttachment(token: token, image: image, baselineOffset: chipFont.descender - 1)
     attachment.accessibilityLabel = label

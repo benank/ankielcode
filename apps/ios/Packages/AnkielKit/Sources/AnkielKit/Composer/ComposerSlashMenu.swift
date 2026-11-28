@@ -126,12 +126,13 @@ public enum ComposerSlashMenu {
 public enum SearchRanking {
   public static func score(
     _ value: String, _ query: String, exact: Int, prefix: Int? = nil, boundary: Int? = nil, includes: Int? = nil, fuzzy: Int? = nil,
-    markers: [String] = [" ", "-", "_", "/"]
+    markers: [String] = [" ", "-", "_", "/"], ignorePosition: Bool = false
   ) -> Int? {
     let value = Array(value.utf16)
     let query = Array(query.utf16)
     guard !value.isEmpty, !query.isEmpty else { return nil }
-    let penalty = min(64, max(0, value.count - query.count))
+    let penalty = ignorePosition ? 0 : min(64, max(0, value.count - query.count))
+    let position = ignorePosition ? 0 : 2
     if value == query { return exact }
     if let prefix, value.starts(with: query) { return prefix + penalty }
     if let boundary {
@@ -142,10 +143,10 @@ public enum SearchRanking {
           best = min(best ?? match, match)
         }
       }
-      if let best { return boundary + best * 2 + penalty }
+      if let best { return boundary + best * position + penalty }
     }
-    if let includes, let index = firstIndex(of: query, in: value) { return includes + index * 2 + penalty }
-    if let fuzzy, let score = subsequence(value, query) { return fuzzy + score }
+    if let includes, let index = firstIndex(of: query, in: value) { return includes + index * position + penalty }
+    if let fuzzy, let score = subsequence(value, query, ignorePosition: ignorePosition) { return fuzzy + score }
     return nil
   }
 
@@ -157,7 +158,7 @@ public enum SearchRanking {
     return nil
   }
 
-  static func subsequence(_ value: [UInt16], _ query: [UInt16]) -> Int? {
+  static func subsequence(_ value: [UInt16], _ query: [UInt16], ignorePosition: Bool = false) -> Int? {
     var queryIndex = 0
     var first = -1
     var previous = -1
@@ -169,6 +170,7 @@ public enum SearchRanking {
       queryIndex += 1
       if queryIndex == query.count {
         let span = index - first + 1 - query.count
+        if ignorePosition { return gaps * 3 + span }
         return first * 2 + gaps * 3 + span + min(64, value.count - query.count)
       }
     }

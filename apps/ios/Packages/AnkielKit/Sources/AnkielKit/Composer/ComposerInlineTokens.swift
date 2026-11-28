@@ -3,10 +3,10 @@ import Foundation
 /// A mention or skill the composer draws as a chip (`shared/composerInlineTokens.ts`). The draft
 /// stays plain text; tokens are found in it again after every edit. Offsets are UTF-16.
 public struct ComposerInlineToken: Sendable, Hashable {
-  public enum Kind: String, Sendable { case mention, skill }
+  public enum Kind: String, Sendable { case mention, skill, model }
 
   public var kind: Kind
-  /// The path for a mention, the name for a skill.
+  /// The path for a mention, the name for a skill, `<instance>/<slug>` for a model.
   public var value: String
   /// The exact text the chip stands for.
   public var source: String
@@ -48,6 +48,19 @@ public enum ComposerInlineTokens {
       matches.append(token)
     }
     return matches.sorted { $0.start < $1.start }
+  }
+
+  /// What the editor draws as chips: mentions and skills, plus `model:` references to models the
+  /// computer lists (`known` holds `<instance>/<slug>`), where they overlap nothing else.
+  public static func editorTokens(_ text: String, preserveTrailing: [ComposerInlineToken] = [], knownModels: Set<String>) -> [ComposerInlineToken] {
+    var tokens = collect(text, preserveTrailing: preserveTrailing.filter { $0.kind != .model })
+    for occurrence in ComposerModelMentions.collect(text) where knownModels.contains("\(occurrence.instanceId)/\(occurrence.model)") {
+      guard !tokens.contains(where: { $0.start < occurrence.end && occurrence.start < $0.end }) else { continue }
+      tokens.append(ComposerInlineToken(
+        kind: .model, value: "\(occurrence.instanceId)/\(occurrence.model)", source: occurrence.source, start: occurrence.start,
+        end: occurrence.end))
+    }
+    return tokens.sorted { $0.start < $1.start }
   }
 
   /// `composerFileLinksToPlainText`: each file link shown by its file name, for one-line previews.

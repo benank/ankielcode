@@ -618,7 +618,9 @@ copies as its source). The parsing is RN's (`AnkielKit/Composer`: `ComposerTrigg
 worktree (else its project root) with `projects.searchEntries` (20 results, 200 ms pause; a bare
 `@` sends an empty query) and lists results above the composer. Arrows move, Return or Tab picks
 and Escape closes it with a hardware keyboard. Sent, pending and queued messages show a mention by
-its file name.
+its file name. From two letters on, the list also offers the computer's ready models (RN's ranking,
+at most 8); a pick writes `model:<instance>/<slug>`, drawn as a chip while the computer lists that
+model. Thread mentions are not built (they need the draft context records RN attaches).
 
 With `ANKIEL_DEBUG_COMPOSER`, `@` searches a made-up workspace (`MentionDebug`) instead of a
 computer. `ComposerMentionUITests` picks, deletes and sends a mention and walks the list with the

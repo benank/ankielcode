@@ -59,4 +59,17 @@ final class ComposerMentionUITests: HomeUITestCase {
     XCTAssertTrue(app.buttons["composer.suggestion.Buoy readings.md"].waitForNonExistence(timeout: 2))
     XCTAssertEqual(field.value as? String, "[TideChart.swift](src/tides/TideChart.swift) @harbor ")
   }
+
+  /// Models join the `@` list (two letters at least) and insert the `model:` reference as a chip.
+  func testAModelMentionInsertsItsReference() {
+    open()
+    field.typeText("Ask @sonnet")
+    let model = app.buttons["composer.suggestion.Claude Sonnet 5.5"]
+    XCTAssertTrue(model.waitForExistence(timeout: 5))
+    shot("mention-model")
+    model.tap()
+    XCTAssertEqual(field.value as? String, "Ask model:claudeAgent/claude-sonnet-5-5 ")
+    XCTAssertTrue(model.waitForNonExistence(timeout: 2), "the list closes after a pick")
+    shot("mention-model-chip")
+  }
 }

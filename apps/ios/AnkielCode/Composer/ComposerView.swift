@@ -172,7 +172,7 @@ struct ComposerView: View {
           .motionTransition(.opacity.combined(with: .move(edge: .bottom)))
       }
       ComposerTextEditor(
-        text: text.wrappedValue, placeholder: String(localized: placeholder), editable: !dictating,
+        text: text.wrappedValue, placeholder: String(localized: placeholder), modelLabels: modelLabels, editable: !dictating,
         maxLines: typeSize.isAccessibilitySize ? 4 : 8, focused: $focused, caretRequest: caretRequest,
         suggestionKeys: suggestions.isOpen ? suggestionKeys : nil,
         onChange: { text.wrappedValue = $0 },
@@ -215,6 +215,15 @@ struct ComposerView: View {
 
   // MARK: Suggestions
 
+  /// Models the computer lists, for `model:` chips.
+  private var modelLabels: [String: String] {
+    var labels: [String: String] = [:]
+    for provider in target.providers {
+      for model in provider.models { labels["\(provider.instanceId)/\(model.slug)"] = model.name }
+    }
+    return labels
+  }
+
   private var suggestionKeys: ComposerSuggestionKeys {
     ComposerSuggestionKeys(
       move: { suggestions.move($0) },
@@ -250,7 +259,11 @@ struct ComposerView: View {
             query: trigger.query, atMessageStart: trigger.rangeStart == 0, context: context, provider: provider, cwd: cwd,
             labels: .localized)
         case .skill: ComposerSlashMenu.skillItems(query: trigger.query, provider: provider, cwd: cwd)
-        case .path, .pullRequest: []
+        case .path:
+          ComposerModelMentions.items(
+            ModelCatalog.groups(providers: target.providers, settings: target.settings, current: selection), providers: target.providers,
+            query: trigger.query)
+        case .pullRequest: []
         }
       })
   }
