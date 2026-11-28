@@ -51,8 +51,7 @@ public final class AnkielHandoffModule: Module {
 
     let holder = self.holder
 
-    Function("startPairingActivity") {
-      (activityType: String, title: String, userInfo: [String: String], expiresAtEpochMs: Double?) in
+    Function("startPairingActivity") { (activityType: String, title: String, userInfo: [String: String], expiresAtEpochMs: Double?) in
       holder.start(
         activityType: activityType,
         title: title,
