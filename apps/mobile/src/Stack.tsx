@@ -87,6 +87,7 @@ import { SettingsClientStorageRouteScreen } from "./features/settings/SettingsCl
 import { SettingsDiagnosticsRouteScreen } from "./features/diagnostics/SettingsDiagnosticsRouteScreen";
 import { SettingsProviderAccountsRouteScreen } from "./features/settings/SettingsProviderAccountsRouteScreen";
 import { SettingsEnvironmentDetailRouteScreen } from "./features/settings/SettingsEnvironmentDetailRouteScreen";
+import { SettingsEnvironmentPairDeviceRouteScreen } from "./features/settings/SettingsEnvironmentPairDeviceRouteScreen";
 import { SettingsSourceControlProviderRouteScreen } from "./features/settings/SettingsSourceControlDetailRouteScreens";
 import { SettingsEnvironmentsRouteScreen } from "./features/settings/SettingsEnvironmentsRouteScreen";
 import { SettingsFollowUpRouteScreen } from "./features/settings/SettingsFollowUpRouteScreen";
@@ -149,6 +150,7 @@ const ROUTE_TITLES: Readonly<Record<string, string>> = {
   Settings: msg("Settings"),
   SettingsEnvironments: msg("Environments"),
   SettingsEnvironmentDetail: msg("Environment"),
+  SettingsEnvironmentPairDevice: msg("Pair a Device"),
   SettingsEnvironmentNewThreads: msg("Threads"),
   SettingsEnvironmentSourceControl: msg("Source control & issues"),
   SettingsSourceControlProvider: msg("Provider", {
@@ -227,6 +229,10 @@ const SETTINGS_SCREENS = {
   SettingsEnvironmentDetail: createNativeStackScreen({
     screen: SettingsEnvironmentDetailRouteScreen,
     linking: "settings/environments/:environmentId",
+    options: settingsPage(),
+  }),
+  SettingsEnvironmentPairDevice: createNativeStackScreen({
+    screen: SettingsEnvironmentPairDeviceRouteScreen,
     options: settingsPage(),
   }),
   // Old links to New threads and Agent behavior open Threads, which absorbed them.

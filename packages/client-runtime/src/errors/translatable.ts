@@ -1,4 +1,4 @@
-import { decodeMsg, decodeOptions, mFallback } from "gt-i18n";
+import { decodeMsg, decodeOptions, mFallback, msg } from "gt-i18n";
 import type { MFunctionType } from "gt-i18n/types";
 import * as Schema from "effect/Schema";
 
@@ -45,6 +45,39 @@ export function errorI18nMessage(error: unknown): MarkedText | undefined {
     : undefined;
 }
 
+export function pairingInviteErrorMessage(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null || !("_tag" in error) || !("reason" in error)) {
+    return undefined;
+  }
+  switch (error._tag) {
+    case "EnvironmentResourceNotFoundError":
+      return error.reason === "pairing_invite_not_found"
+        ? msg(
+            "This pairing invite was not found or has already expired. Start a new pairing request on your other device.",
+          )
+        : undefined;
+    case "EnvironmentOperationForbiddenError":
+      switch (error.reason) {
+        case "pairing_invite_invalid_state":
+          return msg(
+            "This pairing invite is no longer active or has already been claimed. Start a new pairing request on your other device.",
+          );
+        case "pairing_invite_limit_reached":
+          return msg(
+            "Too many pairing invites are currently active on this environment. Wait a moment or cancel one before trying again.",
+          );
+        default:
+          return undefined;
+      }
+    case "EnvironmentRequestInvalidError":
+      return error.reason === "pairing_invite_verification_code_mismatch"
+        ? msg("The verification code did not match. Start a new pairing request.")
+        : undefined;
+    default:
+      return undefined;
+  }
+}
+
 /**
  * What to show for an error: its marked text in the active language when it has one,
  * otherwise its non-empty `message`, otherwise null.
@@ -55,6 +88,8 @@ export function errorDisplayMessage(
 ): string | null {
   const text = errorI18nMessage(error);
   if (text !== undefined) return resolveMarkedText(text, resolve);
+  const pairingMessage = pairingInviteErrorMessage(error);
+  if (pairingMessage !== undefined) return resolve(pairingMessage);
   if (typeof error !== "object" || error === null || !("message" in error)) return null;
   return typeof error.message === "string" && error.message.trim().length > 0
     ? error.message
@@ -71,7 +106,9 @@ export function thrownErrorMessage(
 ): string | null {
   if (!(error instanceof Error)) return null;
   const text = errorI18nMessage(error);
-  return text === undefined ? error.message : resolveMarkedText(text, resolve);
+  if (text !== undefined) return resolveMarkedText(text, resolve);
+  const pairingMessage = pairingInviteErrorMessage(error);
+  return pairingMessage === undefined ? error.message : resolve(pairingMessage);
 }
 
 /** Carries another error's message, and its marked text when it has one, into `detail`. */

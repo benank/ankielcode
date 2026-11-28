@@ -221,6 +221,7 @@ export const make = Effect.gen(function* () {
       connectionProbe: true,
       attachmentUploads: true,
       accessTokenRenewal: true,
+      devicePairingInvites: true,
       questionAttachments: true,
       fileAttachments: { maxUploadBytes: PROVIDER_SEND_TURN_MAX_FILE_BYTES },
       issues: true,

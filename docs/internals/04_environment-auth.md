@@ -14,6 +14,10 @@ The environment issues its own sessions and enforces their capabilities. See
   `orchestration:operate` already grant OS-user execution (which can invoke `ankiel auth session issue`),
   so withholding access management from the default grant would not be a real boundary.
   Narrower clients receive explicit scopes.
+- **Pairing invites are claim, then approve.** An invite id is a bearer secret that only lets a
+  device ask. The claim binds the claimant's DPoP key, and the credential is released only to
+  that key after the creator approves. The verification code catches another device that claimed
+  first. Invites live in server memory and are short-lived, so a restart drops them.
 - **No recoverable secrets in read models.** Only the creation response returns a raw pairing
   credential; access listings expose metadata only.
 - **DPoP binding.** Browser cookies, bearer tokens, and DPoP tokens share the scoped session model.

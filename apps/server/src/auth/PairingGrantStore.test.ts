@@ -252,6 +252,29 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("PairingGrantStor
     }).pipe(Effect.scoped, Effect.provide(layerPairingGrantStore())),
   );
 
+  it.effect("checks unspent pairing link state by id without reading raw credentials", () =>
+    Effect.gen(function* () {
+      const grants = yield* PairingGrantStore.PairingGrantStore;
+      const toConsume = yield* grants.issueOneTimeToken({ ttl: Duration.minutes(5) });
+      const toRevoke = yield* grants.issueOneTimeToken({ ttl: Duration.minutes(5) });
+      const toExpire = yield* grants.issueOneTimeToken({ ttl: Duration.minutes(2) });
+
+      expect(yield* grants.isUnspent(toConsume.id)).toBe(true);
+      expect(yield* grants.isUnspent(toRevoke.id)).toBe(true);
+      expect(yield* grants.isUnspent(toExpire.id)).toBe(true);
+      expect(yield* grants.isUnspent("missing-link-id")).toBe(false);
+
+      yield* grants.consume(toConsume.credential);
+      expect(yield* grants.isUnspent(toConsume.id)).toBe(false);
+
+      yield* grants.revoke(toRevoke.id);
+      expect(yield* grants.isUnspent(toRevoke.id)).toBe(false);
+
+      yield* TestClock.adjust(Duration.minutes(3));
+      expect(yield* grants.isUnspent(toExpire.id)).toBe(false);
+    }).pipe(Effect.provide(Layer.merge(layerPairingGrantStore(), TestClock.layer()))),
+  );
+
   it.effect("never spends a code left by the removed agent sign-in or environment links", () =>
     Effect.gen(function* () {
       const grants = yield* PairingGrantStore.PairingGrantStore;

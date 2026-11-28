@@ -275,6 +275,18 @@ const config: ExpoConfig = {
       // System picture in picture needs background audio to start and survive outside the app.
       UIBackgroundModes: ["audio"],
       ITSAppUsesNonExemptEncryption: false,
+      NSUserActivityTypes: ["com.ankiel.ankielcode.pair-environment"],
+      UTExportedTypeDeclarations: [
+        {
+          UTTypeIdentifier: "com.ankiel.ankielcode.pairing-invite",
+          UTTypeDescription: "Ankiel Code Pairing Invite",
+          UTTypeConformsTo: ["public.json", "public.data"],
+          UTTypeTagSpecification: {
+            "public.filename-extension": ["ankielpair"],
+            "public.mime-type": ["application/vnd.ankielcode.pairing-invite+json"],
+          },
+        },
+      ],
       // Capture builds disable multitasking because iPadOS otherwise ignores orientation requests.
       ...(process.env.ANKIEL_SHOWCASE_CAPTURE_BUILD === "1"
         ? {

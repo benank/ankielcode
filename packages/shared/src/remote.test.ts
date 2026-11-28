@@ -2,13 +2,26 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   buildPairingAppLink,
+  buildPairingInviteAppLink,
   buildThreadAppLink,
+  decodePairingInviteFile,
+  encodePairingInviteFile,
+  isPairingInviteFilePath,
+  PAIRING_HANDOFF_ACTIVITY_TYPE,
+  PAIRING_INVITE_FILE_EXTENSION,
+  PAIRING_INVITE_MAX_FILE_BYTES,
+  PAIRING_INVITE_MIME_TYPE,
+  PAIRING_INVITE_UTTYPE,
+  parsePairingInviteUserInfo,
   readPairingAppLink,
+  readPairingInviteAppLink,
   readThreadAppLink,
   RemoteBackendUrlMissingError,
   RemotePairingTokenMissingError,
   RemotePairingUrlInvalidError,
   resolveRemotePairingTarget,
+  toPairingInviteUserInfo,
+  type PairingInvitePayload,
 } from "./remote.ts";
 
 describe("remote", () => {
@@ -223,5 +236,136 @@ describe("remote", () => {
       httpBaseUrl: `https://ankiel-relay.me.workers.dev/h/${hostId}/`,
       wsBaseUrl: `wss://ankiel-relay.me.workers.dev/h/${hostId}/`,
     });
+  });
+
+  it("round-trips pairing invites across files, app links, and Handoff userInfo", () => {
+    const hostId = "abcdefghijklmnopqrstuvwxyz";
+    expect(PAIRING_HANDOFF_ACTIVITY_TYPE).toBe("com.ankiel.ankielcode.pair-environment");
+    expect(PAIRING_INVITE_FILE_EXTENSION).toBe(".ankielpair");
+    expect(PAIRING_INVITE_UTTYPE).toBe("com.ankiel.ankielcode.pairing-invite");
+    expect(PAIRING_INVITE_MIME_TYPE).toBe("application/vnd.ankielcode.pairing-invite+json");
+    expect(PAIRING_INVITE_MAX_FILE_BYTES).toBe(16_384);
+
+    expect(isPairingInviteFilePath("/tmp/MacBook.ankielpair")).toBe(true);
+    expect(isPairingInviteFilePath("/tmp/MacBook.ANKIELPAIR")).toBe(true);
+    expect(isPairingInviteFilePath("/tmp/MacBook.ankielpair.json")).toBe(false);
+
+    const invite: PairingInvitePayload = {
+      version: 1,
+      inviteId: "inv_ABC-123",
+      environmentId: "env-macbook-1",
+      baseUrl: `https://ankiel-relay.me.workers.dev/h/${hostId.toUpperCase()}/ignored`,
+      label: "Ben's MacBook",
+      expiresAt: "2026-11-28T01:10:00.000Z",
+    };
+    const normalized: PairingInvitePayload = {
+      ...invite,
+      baseUrl: `https://ankiel-relay.me.workers.dev/h/${hostId}/`,
+    };
+
+    const fileJson = encodePairingInviteFile(invite);
+    expect(decodePairingInviteFile(fileJson)).toEqual(normalized);
+
+    const appLink = buildPairingInviteAppLink(invite);
+    expect(appLink.startsWith("ankielcode://pair-invite?")).toBe(true);
+    expect(readPairingInviteAppLink(appLink)).toEqual(normalized);
+    expect(readPairingInviteAppLink(buildPairingInviteAppLink(invite, "ankielcode-dev"))).toEqual(
+      normalized,
+    );
+
+    const userInfo = toPairingInviteUserInfo(invite);
+    expect(userInfo).toEqual({
+      version: "1",
+      inviteId: normalized.inviteId,
+      environmentId: normalized.environmentId,
+      baseUrl: normalized.baseUrl,
+      label: normalized.label,
+      expiresAt: normalized.expiresAt,
+    });
+    expect(parsePairingInviteUserInfo(userInfo)).toEqual(normalized);
+    expect(new TextEncoder().encode(JSON.stringify(userInfo)).byteLength).toBeLessThan(3_072);
+
+    const minimal: PairingInvitePayload = {
+      version: 1,
+      inviteId: "inv1",
+      environmentId: "env1",
+      baseUrl: "http://192.168.1.42:3773",
+    };
+    expect(decodePairingInviteFile(encodePairingInviteFile(minimal))).toEqual({
+      ...minimal,
+      baseUrl: "http://192.168.1.42:3773/",
+    });
+  });
+
+  it("rejects malformed, oversized, or untrusted pairing invites", () => {
+    const valid = {
+      version: 1,
+      inviteId: "abc_123-XYZ",
+      environmentId: "env-1",
+      baseUrl: "https://example.com/",
+    };
+
+    for (const invalid of [
+      null,
+      [],
+      { ...valid, version: 2 },
+      { ...valid, extra: "nope" },
+      { ...valid, inviteId: "" },
+      { ...valid, inviteId: "a".repeat(129) },
+      { ...valid, inviteId: "bad/id" },
+      { ...valid, environmentId: "" },
+      { ...valid, environmentId: " padded " },
+      { ...valid, environmentId: "e".repeat(257) },
+      { ...valid, environmentId: "env\n1" },
+      { ...valid, baseUrl: "ftp://example.com/" },
+      { ...valid, baseUrl: "https://user:pass@example.com/" },
+      { ...valid, baseUrl: "https://example.com/?token=secret" },
+      { ...valid, baseUrl: "https://example.com/#token=secret" },
+      { ...valid, baseUrl: `https://example.com/${"a".repeat(1_024)}` },
+      { ...valid, label: "" },
+      { ...valid, label: " padded " },
+      { ...valid, label: "bad\u0007label" },
+      { ...valid, label: "é".repeat(129) },
+      { ...valid, expiresAt: "not-a-date" },
+    ]) {
+      expect(decodePairingInviteFile(JSON.stringify(invalid))).toBeNull();
+    }
+
+    expect(decodePairingInviteFile("not json")).toBeNull();
+    expect(decodePairingInviteFile(" ".repeat(PAIRING_INVITE_MAX_FILE_BYTES + 1))).toBeNull();
+    expect(() => buildPairingInviteAppLink(valid as PairingInvitePayload, "https")).toThrowError(
+      TypeError,
+    );
+
+    expect(
+      parsePairingInviteUserInfo({
+        version: "1",
+        inviteId: "abc",
+        environmentId: "env-1",
+        baseUrl: "https://example.com/",
+        extra: "nope",
+      }),
+    ).toBeNull();
+    expect(
+      parsePairingInviteUserInfo({
+        version: 1,
+        inviteId: "abc",
+        environmentId: "env-1",
+        baseUrl: "https://example.com/",
+      }),
+    ).toBeNull();
+
+    const validLink = buildPairingInviteAppLink(valid as PairingInvitePayload);
+    for (const badLink of [
+      `${validLink}#frag`,
+      `${validLink}&extra=1`,
+      `${validLink}&inviteId=dup`,
+      validLink.replace("ankielcode://", "https://"),
+      validLink.replace("pair-invite?", "pair-invite/extra?"),
+      ` ${validLink}`,
+      `${validLink}\n`,
+    ]) {
+      expect(readPairingInviteAppLink(badLink), badLink).toBeNull();
+    }
   });
 });

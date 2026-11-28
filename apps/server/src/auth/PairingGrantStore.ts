@@ -27,6 +27,7 @@ import * as ServerConfig from "../config.ts";
 import * as AuthPairingLinks from "../persistence/AuthPairingLinks.ts";
 
 export interface BootstrapGrant {
+  readonly linkId?: string;
   readonly method: ServerAuthBootstrapMethod;
   readonly scopes: ReadonlyArray<AuthEnvironmentScope>;
   readonly subject: string;
@@ -239,6 +240,7 @@ export class PairingGrantStore extends Context.Service<
       BootstrapCredentialInternalError
     >;
     readonly streamChanges: Stream.Stream<BootstrapCredentialChange>;
+    readonly isUnspent: (id: string) => Effect.Effect<boolean, BootstrapCredentialInternalError>;
     readonly revoke: (id: string) => Effect.Effect<boolean, BootstrapCredentialInternalError>;
     readonly consume: (
       credential: string,
@@ -386,6 +388,16 @@ const make = Effect.gen(function* () {
       return revoked;
     },
   );
+
+  const isUnspent: PairingGrantStore["Service"]["isUnspent"] = Effect.fn(
+    "PairingGrantStore.isUnspent",
+  )(function* (id) {
+    const now = yield* DateTime.now;
+    const link = yield* pairingLinks
+      .getActiveById({ id, now })
+      .pipe(Effect.mapError((cause) => new BootstrapCredentialLookupError({ cause })));
+    return Option.isSome(link);
+  });
 
   const issueOneTimeToken: PairingGrantStore["Service"]["issueOneTimeToken"] = Effect.fn(
     "PairingGrantStore.issueOneTimeToken",
@@ -578,6 +590,7 @@ const make = Effect.gen(function* () {
       if (Option.isSome(consumed)) {
         yield* emitRemoved(consumed.value.id);
         return {
+          linkId: consumed.value.id,
           method: consumed.value.method,
           scopes: consumed.value.scopes,
           subject: consumed.value.subject,
@@ -652,6 +665,7 @@ const make = Effect.gen(function* () {
     issueOneTimeToken,
     revokeUnspentLinksExcept,
     listActive,
+    isUnspent,
     get streamChanges() {
       return Stream.fromPubSub(changesPubSub);
     },

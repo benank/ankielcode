@@ -63,6 +63,11 @@ function layerPairingHttp(
     readonly grantScopes?: ReadonlyArray<AuthEnvironmentScope>;
     readonly exchangeGate?: { readonly reached: () => void; readonly release: Promise<void> };
     readonly accessTokenRenewal?: boolean;
+    readonly devicePairingInvites?: boolean;
+    readonly environmentId?: string;
+    readonly redirectError?: boolean;
+    readonly inviteClaimResponse?: Response | (() => Response);
+    readonly invitePollResponse?: Response | (() => Response);
   },
 ) {
   const grantScopes = options?.grantScopes ?? AuthStandardClientScopes;
@@ -70,6 +75,10 @@ function layerPairingHttp(
   const fetchFn = ((input, init = {}) => {
     const url = String(input);
     calls.push({ url, init });
+
+    if (options?.redirectError === true) {
+      return Promise.reject(new TypeError("Failed to fetch: redirect mode is error"));
+    }
 
     if (url.endsWith("/.well-known/ankiel/environment")) {
       if (options?.failDescriptor === true) {
@@ -79,7 +88,7 @@ function layerPairingHttp(
       }
       return Promise.resolve(
         Response.json({
-          environmentId: "environment-paired",
+          environmentId: options?.environmentId ?? "environment-paired",
           label: "Paired environment",
           platform: {
             os: "linux",
@@ -91,9 +100,35 @@ function layerPairingHttp(
             repositoryIdentity: true,
             ...(options?.selfUpdate === true ? { serverSelfUpdate: "boot-service" } : {}),
             ...(options?.accessTokenRenewal === true ? { accessTokenRenewal: true } : {}),
+            ...(options?.devicePairingInvites === true ? { devicePairingInvites: true } : {}),
           },
         }),
       );
+    }
+
+    if (/\/api\/auth\/pairing-invites\/[^/]+\/claim$/.test(new URL(url).pathname)) {
+      if ((init.method ?? "GET").toUpperCase() === "POST") {
+        const response =
+          typeof options?.inviteClaimResponse === "function"
+            ? options.inviteClaimResponse()
+            : (options?.inviteClaimResponse ??
+              Response.json({
+                status: "claimed",
+                verificationCode: "847-291",
+                expiresAt: "2026-05-01T12:05:00.000Z",
+              }));
+        return Promise.resolve(response);
+      }
+      const response =
+        typeof options?.invitePollResponse === "function"
+          ? options.invitePollResponse()
+          : (options?.invitePollResponse ??
+            Response.json({
+              status: "approved",
+              grantExpiresAt: "2026-05-01T12:10:00.000Z",
+              credential: "approved-invite-credential",
+            }));
+      return Promise.resolve(response);
     }
 
     if (url.endsWith("/oauth/token")) {
@@ -164,19 +199,28 @@ function layerPairingHttp(
 }
 
 function layerPairingOnboarding(
-  options?: Parameters<typeof layerPairingHttp>[1],
+  options?: Parameters<typeof layerPairingHttp>[1] & {
+    readonly dpopSigner?: Dpop.DpopSigner["Service"];
+    readonly registered?: Array<unknown>;
+  },
   calls: Array<{ readonly url: string; readonly init: RequestInit }> = [],
   provision?: ClientCapabilities.SshEnvironmentGateway["Service"]["provision"],
 ) {
   const dependencies = Layer.mergeAll(
     layerClientPresentation,
     layerPairingHttp(calls, options),
+    options?.dpopSigner === undefined
+      ? Layer.empty
+      : Layer.succeed(Dpop.DpopSigner, options.dpopSigner),
     Layer.mock(Persistence.ConnectionTargetStore)({
       list: Effect.succeed([]),
       listDisabled: Effect.succeed([]),
     }),
     Layer.mock(Persistence.ConnectionRegistrationStore)({
-      register: () => Effect.void,
+      register: (registration) =>
+        Effect.sync(() => {
+          options?.registered?.push(registration);
+        }),
       setEnabled: () => Effect.void,
     }),
     Layer.mock(Persistence.EnvironmentCacheStore)({}),
@@ -746,5 +790,502 @@ describe("connection onboarding", () => {
         credential: { token: "bearer-token" },
       });
     }),
+  );
+
+  it.effect(
+    "claims, polls, and completes a device pairing invite over a path-routed relay URL with DPoP",
+    () => {
+      const relayBaseUrl = "https://ankiel-relay.me.workers.dev/h/abcdefghijklmnopqrstuvwxyz/";
+      const calls: Array<{ readonly url: string; readonly init: RequestInit }> = [];
+      const proofs: Array<Dpop.DpopProofInput> = [];
+      const registered: Array<unknown> = [];
+      const signer = Dpop.DpopSigner.of({
+        thumbprint: Effect.succeed("device-key"),
+        createProof: (proof) =>
+          Effect.sync(() => {
+            proofs.push(proof);
+            return `proof-${proofs.length}`;
+          }),
+      });
+      return Effect.gen(function* () {
+        const registry = yield* EnvironmentRegistry.EnvironmentRegistry;
+        const onboarding = yield* Onboarding.ConnectionOnboarding;
+
+        const claimed = yield* onboarding.claimPairingInvite({
+          invite: {
+            version: 1,
+            inviteId: "inv_relay_1",
+            environmentId: PAIRED_ENVIRONMENT_ID,
+            baseUrl: "https://ankiel-relay.me.workers.dev/h/ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            label: "Desk Mac",
+          },
+        });
+        expect(claimed).toEqual({
+          inviteId: "inv_relay_1",
+          environmentId: PAIRED_ENVIRONMENT_ID,
+          environmentLabel: "Paired environment",
+          httpBaseUrl: relayBaseUrl,
+          verificationCode: "847-291",
+          expiresAt: "2026-05-01T12:05:00.000Z",
+        });
+
+        const pollStatus = yield* onboarding.pollPairingInviteClaim({
+          httpBaseUrl: claimed.httpBaseUrl,
+          inviteId: claimed.inviteId,
+        });
+        expect(pollStatus).toEqual({
+          status: "approved",
+          grantExpiresAt: "2026-05-01T12:10:00.000Z",
+          credential: "approved-invite-credential",
+        });
+        assert(pollStatus.status === "approved");
+
+        const environmentId = yield* onboarding.completePairingInvite({
+          httpBaseUrl: claimed.httpBaseUrl,
+          environmentId: claimed.environmentId,
+          environmentLabel: claimed.environmentLabel,
+          credential: pollStatus.credential,
+        });
+
+        expect(environmentId).toBe(PAIRED_ENVIRONMENT_ID);
+        expect(proofs).toEqual([
+          {
+            method: "POST",
+            url: `${relayBaseUrl}api/auth/pairing-invites/inv_relay_1/claim`,
+          },
+          {
+            method: "GET",
+            url: `${relayBaseUrl}api/auth/pairing-invites/inv_relay_1/claim`,
+          },
+          {
+            method: "POST",
+            url: `${relayBaseUrl}oauth/token`,
+          },
+        ]);
+        expect(calls.map((call) => call.url)).toEqual([
+          `${relayBaseUrl}.well-known/ankiel/environment`,
+          `${relayBaseUrl}api/auth/pairing-invites/inv_relay_1/claim`,
+          `${relayBaseUrl}api/auth/pairing-invites/inv_relay_1/claim`,
+          `${relayBaseUrl}.well-known/ankiel/environment`,
+          `${relayBaseUrl}oauth/token`,
+        ]);
+        expect(calls.map((call) => call.init.redirect)).toEqual([
+          "error",
+          "error",
+          "error",
+          "error",
+          "error",
+        ]);
+        const claimBody = calls[1]!.init.body;
+        expect(
+          JSON.parse(
+            claimBody instanceof Uint8Array
+              ? new TextDecoder().decode(claimBody)
+              : String(claimBody),
+          ),
+        ).toEqual({
+          clientLabel: "Ankiel Code Test",
+          clientDeviceType: "desktop",
+          clientOs: "Test OS",
+        });
+        expect(registered).toHaveLength(1);
+        expect(registered[0]).toMatchObject({
+          _tag: "BearerConnectionRegistration",
+          profile: {
+            httpBaseUrl: relayBaseUrl,
+            wsBaseUrl: "wss://ankiel-relay.me.workers.dev/h/abcdefghijklmnopqrstuvwxyz/",
+          },
+          credential: {
+            _tag: "DpopConnectionCredential",
+            accessToken: "dpop-token",
+          },
+        });
+        const entry = (yield* SubscriptionRef.get(registry.entries)).get(PAIRED_ENVIRONMENT_ID);
+        expect(entry?.enabled).toBe(true);
+        expect(entry?.profile).toEqual(
+          Option.some(
+            new BearerConnectionProfile({
+              connectionId: "bearer:environment-paired:https://ankiel-relay.me.workers.dev",
+              environmentId: PAIRED_ENVIRONMENT_ID,
+              label: "Paired environment",
+              httpBaseUrl: relayBaseUrl,
+              wsBaseUrl: "wss://ankiel-relay.me.workers.dev/h/abcdefghijklmnopqrstuvwxyz/",
+            }),
+          ),
+        );
+      }).pipe(
+        Effect.provide(
+          layerPairingOnboarding(
+            {
+              accessTokenRenewal: true,
+              devicePairingInvites: true,
+              dpopSigner: signer,
+              registered,
+            },
+            calls,
+          ),
+        ),
+      );
+    },
+  );
+
+  it.effect(
+    "refuses device pairing invite operations without a DPoP signer (no bearer fallback)",
+    () => {
+      const calls: Array<{ readonly url: string; readonly init: RequestInit }> = [];
+      return Effect.gen(function* () {
+        const onboarding = yield* Onboarding.ConnectionOnboarding;
+
+        const claimError = yield* onboarding
+          .claimPairingInvite({
+            invite: {
+              version: 1,
+              inviteId: "inv_no_dpop",
+              environmentId: PAIRED_ENVIRONMENT_ID,
+              baseUrl: "https://remote.example.test/",
+            },
+          })
+          .pipe(Effect.flip);
+        const pollError = yield* onboarding
+          .pollPairingInviteClaim({
+            httpBaseUrl: "https://remote.example.test/",
+            inviteId: "inv_no_dpop",
+          })
+          .pipe(Effect.flip);
+        const completeError = yield* onboarding
+          .completePairingInvite({
+            httpBaseUrl: "https://remote.example.test/",
+            environmentId: PAIRED_ENVIRONMENT_ID,
+            environmentLabel: "Paired environment",
+            credential: "approved-invite-credential",
+          })
+          .pipe(Effect.flip);
+
+        for (const error of [claimError, pollError, completeError]) {
+          expect(error).toMatchObject({
+            _tag: "ConnectionBlockedError",
+            reason: "configuration",
+            hop: "device",
+          });
+        }
+        expect(calls).toEqual([]);
+      }).pipe(
+        Effect.provide(
+          layerPairingOnboarding({ accessTokenRenewal: true, devicePairingInvites: true }, calls),
+        ),
+      );
+    },
+  );
+
+  it.effect("rejects a pairing invite when descriptor environmentId does not match", () => {
+    const calls: Array<{ readonly url: string; readonly init: RequestInit }> = [];
+    const signer = Dpop.DpopSigner.of({
+      thumbprint: Effect.succeed("device-key"),
+      createProof: () => Effect.succeed("proof"),
+    });
+    return Effect.gen(function* () {
+      const onboarding = yield* Onboarding.ConnectionOnboarding;
+
+      const inviteMismatch = yield* onboarding
+        .claimPairingInvite({
+          invite: {
+            version: 1,
+            inviteId: "inv_mismatch",
+            environmentId: "environment-expected",
+            baseUrl: "https://remote.example.test/",
+          },
+        })
+        .pipe(Effect.flip);
+      const expectedMismatch = yield* onboarding
+        .completePairingInvite({
+          httpBaseUrl: "https://remote.example.test/",
+          environmentId: PAIRED_ENVIRONMENT_ID,
+          environmentLabel: "Paired environment",
+          credential: "approved-invite-credential",
+          expectedEnvironmentId: EnvironmentId.make("environment-other"),
+        })
+        .pipe(Effect.flip);
+
+      expect(inviteMismatch).toMatchObject({
+        _tag: "ConnectionBlockedError",
+        reason: "configuration",
+      });
+      expect(inviteMismatch.message).toContain("different machine");
+      expect(expectedMismatch).toMatchObject({
+        _tag: "ConnectionBlockedError",
+        reason: "configuration",
+      });
+      expect(calls.map((call) => call.url)).toEqual([
+        "https://remote.example.test/.well-known/ankiel/environment",
+        "https://remote.example.test/.well-known/ankiel/environment",
+      ]);
+    }).pipe(
+      Effect.provide(
+        layerPairingOnboarding(
+          {
+            accessTokenRenewal: true,
+            devicePairingInvites: true,
+            dpopSigner: signer,
+          },
+          calls,
+        ),
+      ),
+    );
+  });
+
+  it.effect.each([
+    { name: "missing devicePairingInvites", devicePairingInvites: false, accessTokenRenewal: true },
+    { name: "missing accessTokenRenewal", devicePairingInvites: true, accessTokenRenewal: false },
+  ])(
+    "rejects an older host $name without claiming the invite",
+    ({ devicePairingInvites, accessTokenRenewal }) => {
+      const calls: Array<{ readonly url: string; readonly init: RequestInit }> = [];
+      const signer = Dpop.DpopSigner.of({
+        thumbprint: Effect.succeed("device-key"),
+        createProof: () => Effect.succeed("proof"),
+      });
+      return Effect.gen(function* () {
+        const onboarding = yield* Onboarding.ConnectionOnboarding;
+        const error = yield* onboarding
+          .claimPairingInvite({
+            invite: {
+              version: 1,
+              inviteId: "inv_old_host",
+              environmentId: PAIRED_ENVIRONMENT_ID,
+              baseUrl: "https://remote.example.test/",
+            },
+          })
+          .pipe(Effect.flip);
+
+        expect(error).toMatchObject({
+          _tag: "ConnectionBlockedError",
+          reason: "unsupported",
+          hop: "server",
+        });
+        expect(error.message).toContain("Update Ankiel Code");
+        expect(calls.map((call) => call.url)).toEqual([
+          "https://remote.example.test/.well-known/ankiel/environment",
+        ]);
+      }).pipe(
+        Effect.provide(
+          layerPairingOnboarding(
+            {
+              accessTokenRenewal,
+              devicePairingInvites,
+              dpopSigner: signer,
+            },
+            calls,
+          ),
+        ),
+      );
+    },
+  );
+
+  it.effect("refuses redirects during pairing invite descriptor discovery", () => {
+    const calls: Array<{ readonly url: string; readonly init: RequestInit }> = [];
+    const signer = Dpop.DpopSigner.of({
+      thumbprint: Effect.succeed("device-key"),
+      createProof: () => Effect.succeed("proof"),
+    });
+    return Effect.gen(function* () {
+      const onboarding = yield* Onboarding.ConnectionOnboarding;
+      const error = yield* onboarding
+        .claimPairingInvite({
+          invite: {
+            version: 1,
+            inviteId: "inv_redirect",
+            environmentId: PAIRED_ENVIRONMENT_ID,
+            baseUrl: "https://remote.example.test/",
+          },
+        })
+        .pipe(Effect.flip);
+
+      expect(error).toMatchObject({
+        _tag: "ConnectionTransientError",
+        reason: "network",
+      });
+      expect(calls).toHaveLength(1);
+      expect(calls[0]!.init.redirect).toBe("error");
+    }).pipe(
+      Effect.provide(
+        layerPairingOnboarding(
+          {
+            accessTokenRenewal: true,
+            devicePairingInvites: true,
+            redirectError: true,
+            dpopSigner: signer,
+          },
+          calls,
+        ),
+      ),
+    );
+  });
+
+  it.effect.each([
+    {
+      reason: "pairing_invite_not_found",
+      status: 404,
+      body: {
+        _tag: "EnvironmentResourceNotFoundError",
+        code: "not_found",
+        reason: "pairing_invite_not_found",
+        traceId: "trace-invite-missing",
+      },
+      expectedMessage:
+        "This pairing invite was not found or has already expired. Start a new pairing request on your other device.",
+    },
+    {
+      reason: "pairing_invite_invalid_state",
+      status: 403,
+      body: {
+        _tag: "EnvironmentOperationForbiddenError",
+        code: "operation_forbidden",
+        reason: "pairing_invite_invalid_state",
+        traceId: "trace-invite-claimed",
+      },
+      expectedMessage:
+        "This pairing invite is no longer active or has already been claimed. Start a new pairing request on your other device.",
+    },
+    {
+      reason: "pairing_invite_limit_reached",
+      status: 403,
+      body: {
+        _tag: "EnvironmentOperationForbiddenError",
+        code: "operation_forbidden",
+        reason: "pairing_invite_limit_reached",
+        traceId: "trace-invite-limit",
+      },
+      expectedMessage:
+        "Too many pairing invites are currently active on this environment. Wait a moment or cancel one before trying again.",
+    },
+  ] as const)(
+    "maps $reason when claiming a pairing invite to a clear user message",
+    ({ status, body, expectedMessage }) => {
+      const signer = Dpop.DpopSigner.of({
+        thumbprint: Effect.succeed("device-key"),
+        createProof: () => Effect.succeed("proof"),
+      });
+      return Effect.gen(function* () {
+        const onboarding = yield* Onboarding.ConnectionOnboarding;
+        const error = yield* onboarding
+          .claimPairingInvite({
+            invite: {
+              version: 1,
+              inviteId: "inv_error_case",
+              environmentId: PAIRED_ENVIRONMENT_ID,
+              baseUrl: "https://remote.example.test/",
+            },
+          })
+          .pipe(Effect.flip);
+
+        expect(error).toMatchObject({
+          _tag: "ConnectionBlockedError",
+          reason: "configuration",
+          hop: "server",
+          traceId: body.traceId,
+          detail: expectedMessage,
+        });
+        expect(error.message).toBe(expectedMessage);
+      }).pipe(
+        Effect.provide(
+          layerPairingOnboarding({
+            accessTokenRenewal: true,
+            devicePairingInvites: true,
+            dpopSigner: signer,
+            inviteClaimResponse: () => Response.json(body, { status }),
+          }),
+        ),
+      );
+    },
+  );
+
+  it.effect.each([
+    {
+      kind: "primary",
+      registration: new PrimaryConnectionRegistration({
+        target: new PrimaryConnectionTarget({
+          environmentId: PAIRED_ENVIRONMENT_ID,
+          label: "Host environment",
+          httpBaseUrl: "http://127.0.0.1:3773",
+          wsBaseUrl: "ws://127.0.0.1:3773",
+        }),
+      }),
+    },
+    {
+      kind: "bearer",
+      registration: new BearerConnectionRegistration({
+        target: new BearerConnectionTarget({
+          environmentId: PAIRED_ENVIRONMENT_ID,
+          connectionId: "platform:wsl",
+          label: "WSL",
+        }),
+        profile: new BearerConnectionProfile({
+          ...PAIRED_PROFILE,
+          connectionId: "platform:wsl",
+          label: "WSL",
+          httpBaseUrl: "http://127.0.0.1:4000",
+          wsBaseUrl: "ws://127.0.0.1:4000",
+        }),
+        credential: new BearerConnectionCredential({ token: "platform-token" }),
+      }),
+    },
+  ] as const)(
+    "rejects pairing invites targeting this device's own platform-managed $kind environment before claiming or redeeming",
+    ({ registration }) => {
+      const calls: Array<{ readonly url: string; readonly init: RequestInit }> = [];
+      const signer = Dpop.DpopSigner.of({
+        thumbprint: Effect.succeed("device-key"),
+        createProof: () => Effect.succeed("proof"),
+      });
+      return Effect.gen(function* () {
+        const registry = yield* EnvironmentRegistry.EnvironmentRegistry;
+        const onboarding = yield* Onboarding.ConnectionOnboarding;
+        yield* registry.reconcilePlatform([registration]);
+
+        const claimError = yield* onboarding
+          .claimPairingInvite({
+            invite: {
+              version: 1,
+              inviteId: "inv_self_host",
+              environmentId: PAIRED_ENVIRONMENT_ID,
+              baseUrl: "https://remote.example.test/",
+            },
+          })
+          .pipe(Effect.flip);
+        const completeError = yield* onboarding
+          .completePairingInvite({
+            httpBaseUrl: "https://remote.example.test/",
+            environmentId: PAIRED_ENVIRONMENT_ID,
+            environmentLabel: "Paired environment",
+            credential: "approved-invite-credential",
+            expectedEnvironmentId: PAIRED_ENVIRONMENT_ID,
+          })
+          .pipe(Effect.flip);
+
+        for (const error of [claimError, completeError]) {
+          expect(error).toMatchObject({
+            _tag: "ConnectionBlockedError",
+            reason: "configuration",
+            detail: "This device already hosts Paired environment.",
+          });
+          expect(error.message).toBe("This device already hosts Paired environment.");
+        }
+        expect(calls.map((call) => call.url)).toEqual([
+          "https://remote.example.test/.well-known/ankiel/environment",
+          "https://remote.example.test/.well-known/ankiel/environment",
+        ]);
+      }).pipe(
+        Effect.provide(
+          layerPairingOnboarding(
+            {
+              accessTokenRenewal: true,
+              devicePairingInvites: true,
+              dpopSigner: signer,
+            },
+            calls,
+          ),
+        ),
+      );
+    },
   );
 });
