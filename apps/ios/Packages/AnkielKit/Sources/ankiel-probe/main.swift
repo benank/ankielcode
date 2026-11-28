@@ -98,11 +98,6 @@ func run() async throws {
     await session.close()
     return
   }
-  if CommandLine.arguments.contains("--usage-summary") {
-    try await probeUsageSummary(session)
-    await session.close()
-    return
-  }
   if CommandLine.arguments.contains("--streaming-setting") {
     try await probeStreamingSetting(session)
     await session.close()

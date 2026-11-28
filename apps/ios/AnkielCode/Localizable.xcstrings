@@ -82442,6 +82442,10 @@
         }
       }
     },
+    "The Internet connection appears to be offline." : {
+      "comment" : "debug",
+      "shouldTranslate" : false
+    },
     "The address reached another Ankiel Code computer than the link was made for." : {
       "localizations" : {
         "de" : {
