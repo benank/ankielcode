@@ -142,3 +142,18 @@ public enum ConnectionWakeup: Sendable, Hashable {
     }
   }
 }
+
+/// When a pull to refresh is over for one computer (RN waits for `environmentCatalog.refresh`):
+/// its rows are live, or the attempt it started ended in a state another pull would not change now.
+public enum PullRefresh {
+  public static func isSettled(_ status: ConnectionStatus, shellLive: Bool, enabled: Bool) -> Bool {
+    guard enabled else { return true }
+    switch status {
+    case .connected: return shellLive
+    case .connecting: return false
+    // Waiting out a backoff means this attempt failed; trying again (no `retryAt`) is still going.
+    case .reconnecting(_, let retryAt, _): return retryAt != nil
+    case .offline, .needsPairing, .incompatible, .failed, .disabled: return true
+    }
+  }
+}

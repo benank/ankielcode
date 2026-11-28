@@ -299,3 +299,15 @@ struct FakeLinkFailing: EnvironmentLink {
   func credentialRenewalDate() async -> Date? { nil }
   func renewCredential() async throws(ConnectionError) {}
 }
+
+struct PullRefreshTests {
+  @Test func aPullEndsWhenEachComputerIsLiveOrDoneTrying() {
+    #expect(PullRefresh.isSettled(.connected, shellLive: true, enabled: true))
+    #expect(!PullRefresh.isSettled(.connected, shellLive: false, enabled: true), "connected but the rows are still catching up")
+    #expect(!PullRefresh.isSettled(.connecting, shellLive: false, enabled: true))
+    #expect(!PullRefresh.isSettled(.reconnecting(attempt: 1, retryAt: nil, lastFailure: nil), shellLive: false, enabled: true))
+    #expect(PullRefresh.isSettled(.reconnecting(attempt: 2, retryAt: .now, lastFailure: nil), shellLive: false, enabled: true))
+    #expect(PullRefresh.isSettled(.offline, shellLive: false, enabled: true))
+    #expect(PullRefresh.isSettled(.connecting, shellLive: false, enabled: false), "a turned-off computer is not waited for")
+  }
+}

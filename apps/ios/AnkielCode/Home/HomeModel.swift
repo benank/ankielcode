@@ -191,11 +191,38 @@ final class HomeModel {
   }
 
   /// Pull to refresh (`useHomeRefresh`): reconnect computers that are down and read failed pages again.
+  /// A pull reconnects every computer and reads failed pages again, and ends once each computer is
+  /// live or done trying (RN waits for the reconnects the same way), at most 15 seconds.
   func refresh() async {
     registry.wake(.retry)
     retryFailedPages()
-    // The shell streams live; this only gives the pull a visible beat while reconnects start.
-    try? await Task.sleep(for: .milliseconds(600))
+    let deadline = ContinuousClock.now + .seconds(15)
+    // Let the wake reach every supervisor before reading their state.
+    try? await Task.sleep(for: .milliseconds(250))
+    while !Task.isCancelled, ContinuousClock.now < deadline, !refreshSettled {
+      await nextChange(of: { [weak self] in self?.refreshSettled ?? true }, until: deadline)
+    }
+  }
+
+  private var refreshSettled: Bool {
+    registry.environments.allSatisfy { PullRefresh.isSettled($0.status, shellLive: $0.isShellLive, enabled: $0.isEnabled) }
+  }
+
+  /// Returns when something `read` reads changes, or at `deadline`.
+  private func nextChange(of read: @escaping @MainActor () -> Bool, until deadline: ContinuousClock.Instant) async {
+    let once = ResumeOnce()
+    await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+      once.continuation = continuation
+      withObservationTracking {
+        _ = read()
+      } onChange: {
+        Task { @MainActor in once.resume() }
+      }
+      Task { @MainActor in
+        try? await Task.sleep(until: deadline)
+        once.resume()
+      }
+    }
   }
 
   // MARK: Sources
@@ -617,5 +644,16 @@ final class HomeModel {
     default:
       return String(localized: "Try again.")
     }
+  }
+}
+
+/// Resumes a continuation the first time it is asked to.
+@MainActor
+private final class ResumeOnce {
+  var continuation: CheckedContinuation<Void, Never>?
+
+  func resume() {
+    continuation?.resume()
+    continuation = nil
   }
 }
