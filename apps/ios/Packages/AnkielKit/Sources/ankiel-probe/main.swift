@@ -108,6 +108,15 @@ func run() async throws {
     await session.close()
     return
   }
+  if let value = argument("--set-github") {
+    // Sets the computer's GitHub integration and leaves it (for the live Issues gate test).
+    let before = session.initialConfig.settings.githubIntegrationEnabled
+    let after = try await session.rpc.call(
+      UpdateSettingsRequest.rpcTag, payload: UpdateSettingsRequest(patch: .githubIntegration(value == "on")), as: ServerSettings.self)
+    print("github integration: \(before ? "on" : "off") -> \(after.githubIntegrationEnabled ? "on" : "off")")
+    await session.close()
+    return
+  }
   if CommandLine.arguments.contains("--issues") {
     // `--enable-github` turns the computer's GitHub integration on for this read, then restores it.
     let before = session.initialConfig.settings.githubIntegrationEnabled
