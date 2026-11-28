@@ -16,19 +16,29 @@ final class ShortcutUITests: HomeUITestCase {
 
   private func quickAction(_ title: String) throws {
     XCUIDevice.shared.press(.home)
-    let icon = springboard.icons["Ankiel Code"]
-    guard icon.waitForExistence(timeout: 5) else { throw XCTSkip("The app icon is not on a Home Screen page.") }
-    for _ in 0..<3 where !icon.isHittable {
-      springboard.swipeLeft()
-    }
-    for _ in 0..<3 where !icon.isHittable {
-      springboard.swipeRight()
-    }
-    icon.press(forDuration: 1.3)
+    // The React Native app shares the name "Ankiel Code" when both are installed, and Springboard
+    // gives icons no bundle id, so use the icon whose menu offers this app's quick action.
+    let icons = springboard.icons.matching(identifier: "Ankiel Code")
+    guard icons.firstMatch.waitForExistence(timeout: 5) else { throw XCTSkip("The app icon is not on a Home Screen page.") }
     let action = springboard.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
-    XCTAssertTrue(action.waitForExistence(timeout: 4), "quick action \(title)")
-    shot("quick-actions")
-    action.tap()
+    for index in 0..<icons.count {
+      let icon = icons.element(boundBy: index)
+      for _ in 0..<3 where !icon.isHittable {
+        springboard.swipeLeft()
+      }
+      for _ in 0..<3 where !icon.isHittable {
+        springboard.swipeRight()
+      }
+      guard icon.isHittable else { continue }
+      icon.press(forDuration: 1.3)
+      if action.waitForExistence(timeout: 4) {
+        shot("quick-actions")
+        action.tap()
+        return
+      }
+      XCUIDevice.shared.press(.home)
+    }
+    XCTFail("quick action \(title)")
   }
 
   func testSearchAndRecentThreadQuickActions() throws {
@@ -41,7 +51,8 @@ final class ShortcutUITests: HomeUITestCase {
     XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
     let field = app.searchFields.firstMatch
     XCTAssertTrue(field.waitForExistence(timeout: 5))
-    XCTAssertTrue(field.value(forKey: "hasKeyboardFocus") as? Bool ?? false, "search is focused")
+    let focused = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hasKeyboardFocus == true"), object: field)
+    XCTAssertEqual(XCTWaiter.wait(for: [focused], timeout: 5), .completed, "search is focused")
 
     try quickAction(title)
     XCTAssertTrue(menu.waitForExistence(timeout: 8), "the recent thread opens")
@@ -82,7 +93,9 @@ final class ShortcutUITests: HomeUITestCase {
       throw XCTSkip("Spotlight did not open.")
     }
     spotlight.typeText(title)
-    let result = spotlight.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
+    // Cells only: the search field and web suggestions carry the title too.
+    let result = spotlight.cells.matching(NSPredicate(
+      format: "label CONTAINS %@ AND NOT identifier CONTAINS 'WebSuggestion' AND NOT label CONTAINS 'Google'", title)).firstMatch
     guard result.waitForExistence(timeout: 10) else {
       shot("spotlight-missing")
       throw XCTSkip("Spotlight has not indexed the thread yet.")
