@@ -24,8 +24,8 @@ extension Palette {
 
 extension Typography {
   /// Technical metadata (token counts, percents, timings): monospaced, uppercase, tracked.
-  static let tech = Font.system(.caption, design: .monospaced).weight(.medium)
-  static let techSmall = Font.system(.caption2, design: .monospaced).weight(.medium)
+  static let tech = monoFont(11, .caption).weight(.medium)
+  static let techSmall = monoFont(10, .caption2).weight(.medium)
 }
 
 /// Mono uppercase metadata (`.plans` spectral C): numbers that are data, not prose.
@@ -40,9 +40,8 @@ struct TechLabel: View {
 
   var body: some View {
     Text(text)
-      .font(small ? Typography.techSmall : Typography.tech)
+      .typeStyle(small ? .techSmall : .tech)
       .textCase(.uppercase)
-      .tracking(0.6)
       .monospacedDigit()
   }
 }

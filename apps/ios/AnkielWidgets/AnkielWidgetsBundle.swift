@@ -5,6 +5,8 @@ import WidgetKit
 
 @main
 struct AnkielWidgetsBundle: WidgetBundle {
+  init() { WidgetFont.registerFonts() }
+
   var body: some Widget {
     SubscriptionUsageWidget()
   }
@@ -16,7 +18,6 @@ struct SubscriptionUsageWidget: Widget {
   var body: some WidgetConfiguration {
     AppIntentConfiguration(kind: UsageWidgetStore.widgetKind, intent: SubscriptionUsageIntent.self, provider: UsageTimelineProvider()) { entry in
       SubscriptionUsageEntryView(entry: entry)
-        .containerBackground(.fill.tertiary, for: .widget)
     }
     .configurationDisplayName("Subscription usage")
     .description("Subscription quotas from your connected Ankiel Code computers.")
@@ -83,11 +84,18 @@ struct SubscriptionUsageEntryView: View {
   @Environment(\.widgetFamily) private var family
   @Environment(\.widgetRenderingMode) private var renderingMode
   @Environment(\.isLuminanceReduced) private var luminanceReduced
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
+    let monochrome = renderingMode != .fullColor || luminanceReduced
+    // The app theme's colors on the Home Screen in full color; system styles everywhere else.
+    let theme = monochrome || family.isAccessory ? nil : WidgetTheme.load()?.colors(colorScheme)
     UsageWidgetView(
       snapshot: entry.snapshot, date: entry.date, family: layoutFamily, periods: entry.periods,
-      monochrome: renderingMode != .fullColor || luminanceReduced)
+      monochrome: monochrome, theme: theme)
+      .containerBackground(for: .widget) {
+        if let theme { Color(widgetRGBA: theme.background) } else { Rectangle().fill(.fill.tertiary) }
+      }
   }
 
   private var layoutFamily: UsageWidgetLayout.Family {
@@ -97,6 +105,15 @@ struct SubscriptionUsageEntryView: View {
     case .accessoryRectangular: .accessoryRectangular
     case .accessoryCircular: .accessoryCircular
     default: .medium
+    }
+  }
+}
+
+extension WidgetFamily {
+  fileprivate var isAccessory: Bool {
+    switch self {
+    case .accessoryCircular, .accessoryRectangular, .accessoryInline: true
+    default: false
     }
   }
 }

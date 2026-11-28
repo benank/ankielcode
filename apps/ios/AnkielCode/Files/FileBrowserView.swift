@@ -241,7 +241,7 @@ private struct FileRowLabel: View {
     HStack(spacing: Spacing.sm) {
       if entry.isDirectory {
         Image(systemName: "chevron.right")
-          .font(.caption.weight(.semibold))
+          .font(Typography.caption.weight(.semibold))
           .foregroundStyle(Palette.textTertiary)
           .rotationEffect(.degrees(expanded ? 90 : 0))
           .frame(width: 14)

@@ -44,7 +44,7 @@ struct QRScannerView: View {
       Button("Close", systemImage: "xmark") { dismiss() }
         .keyboardShortcut(.cancelAction)
         .labelStyle(.iconOnly)
-        .font(.title3.weight(.semibold))
+        .font(Typography.title)
         .frame(width: 44, height: 44)
         .buttonStyle(.glass)
         .buttonBorderShape(.circle)

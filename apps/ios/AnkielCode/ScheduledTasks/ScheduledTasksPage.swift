@@ -73,7 +73,7 @@ struct ScheduledTasksPage: View {
       ForEach(tasks.computers) { computer in
         Section {
           if let error = computer.error, computer.list == nil {
-            Text(error).font(.subheadline).foregroundStyle(Palette.danger)
+            Text(error).font(Typography.subheadline).foregroundStyle(Palette.danger)
           } else if let list = computer.list {
             if list.tasks.isEmpty {
               Text("No scheduled tasks yet.").foregroundStyle(Palette.textSecondary)
@@ -103,12 +103,12 @@ struct ScheduledTasksPage: View {
             .foregroundStyle(task.enabled ? Palette.textPrimary : Palette.textSecondary)
             .lineLimit(1)
           Text(ScheduledTaskCopy.summary(task, timeZone: timeZone))
-            .font(.subheadline)
+            .font(Typography.subheadline)
             .foregroundStyle(Palette.textSecondary)
             .lineLimit(2)
           if let error = task.lastRunError {
             Text("Last run failed: \(error)")
-              .font(.footnote)
+              .font(Typography.footnote)
               .foregroundStyle(Palette.danger)
               .lineLimit(2)
           }

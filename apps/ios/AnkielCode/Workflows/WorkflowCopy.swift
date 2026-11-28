@@ -81,7 +81,7 @@ struct WorkflowChip: View {
 
   var body: some View {
     Text(Workflows.chip(name))
-      .font(.caption2.weight(.bold))
+      .font(Typography.caption2.weight(.bold))
       .foregroundStyle(Palette.textSecondary)
       .padding(.horizontal, Spacing.xs)
       .frame(minWidth: 24, minHeight: 20)
@@ -101,7 +101,7 @@ struct WorkflowStateWord: View {
         Circle().fill(color).frame(width: 7, height: 7).accessibilityHidden(true)
       }
       Text(WorkflowCopy.word(state.word))
-        .font((large ? Font.subheadline : .caption).weight(.medium))
+        .font((large ? Typography.subheadline : Typography.caption).weight(.medium))
         .foregroundStyle(Palette.textSecondary)
     }
   }

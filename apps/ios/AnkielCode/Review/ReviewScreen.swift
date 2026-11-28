@@ -332,7 +332,7 @@ struct ReviewFileRow: View {
   var body: some View {
     HStack(spacing: Spacing.md) {
       Image(systemName: ReviewCopy.statusSymbol(file.status))
-        .font(.body)
+        .font(Typography.body)
         .foregroundStyle(FileStatusTint.color(file.status))
         .frame(width: 24)
         .accessibilityHidden(true)

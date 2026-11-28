@@ -23,6 +23,10 @@ public enum ProjectGroupingMode: String, Sendable, Codable, CaseIterable {
 /// decodes on its own, so one unreadable value never resets the rest.
 public struct ClientPreferenceValues: Sendable, Hashable, Codable {
   public var themeMode: ThemeMode = .system
+  /// The color theme shown in light and in dark appearance (RN `lightThemeId` / `darkThemeId`);
+  /// nil is the default theme. Ids the app does not know fall back to the default when shown.
+  public var lightThemeId: String?
+  public var darkThemeId: String?
   /// Code block and inline code size in points; nil follows Dynamic Type.
   public var codeFontSize: Double?
   /// Wrap long code lines instead of scrolling them sideways.
@@ -46,7 +50,7 @@ public struct ClientPreferenceValues: Sendable, Hashable, Codable {
   public init() {}
 
   enum CodingKeys: String, CodingKey {
-    case themeMode, codeFontSize, codeWordBreak, followUpBehavior, projectGroupingMode
+    case themeMode, lightThemeId, darkThemeId, codeFontSize, codeWordBreak, followUpBehavior, projectGroupingMode
     case useLastProjectForNewThreads, streamHapticsEnabled, lastProjectIds
     case threadListEnvironmentId, threadListProjectKey, snoozedShelfExpanded, settledShelfExpanded, collapsedProjectGroups
   }
@@ -54,6 +58,8 @@ public struct ClientPreferenceValues: Sendable, Hashable, Codable {
   public init(from decoder: any Decoder) throws {
     let c = try decoder.container(keyedBy: CodingKeys.self)
     themeMode = c.loose(ThemeMode.self, .themeMode) ?? .system
+    lightThemeId = c.loose(String.self, .lightThemeId)
+    darkThemeId = c.loose(String.self, .darkThemeId)
     codeFontSize = c.loose(Double.self, .codeFontSize).map(Self.clampCodeFontSize)
     codeWordBreak = c.loose(Bool.self, .codeWordBreak) ?? false
     followUpBehavior = c.loose(FollowUpBehavior.self, .followUpBehavior) ?? .steer

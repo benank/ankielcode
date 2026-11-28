@@ -232,7 +232,7 @@ private struct PairingLinkRow: View {
   var body: some View {
     HStack(spacing: Spacing.md) {
       Image(systemName: "link")
-        .font(.body.weight(.medium))
+        .font(Typography.body.weight(.medium))
         .foregroundStyle(Palette.textSecondary)
         .frame(width: 28)
         .accessibilityHidden(true)
@@ -265,7 +265,7 @@ private struct AccessSessionRow: View {
   var body: some View {
     HStack(spacing: Spacing.md) {
       Image(systemName: AccessCopy.symbol(session.client.deviceType))
-        .font(.title3)
+        .font(Typography.title)
         .foregroundStyle(Palette.textSecondary)
         .frame(width: 28)
         .accessibilityHidden(true)

@@ -68,8 +68,8 @@ nonisolated struct DiffMetrics: Equatable {
   let contentWidth: CGFloat
 
   init(fontSize: Double?, columns: Int, maxNumber: Int) {
-    let size = fontSize.map { CGFloat($0) } ?? UIFont.preferredFont(forTextStyle: .footnote).pointSize
-    font = UIFont.monospacedSystemFont(ofSize: size, weight: .regular)
+    let size = fontSize.map { CGFloat($0) } ?? Typography.uiFont(.monoSmall, mono: true).pointSize
+    font = Typography.uiFont(size: size, mono: true)
     characterWidth = ("M" as NSString).size(withAttributes: [.font: font]).width
     // Spacing.sm and Spacing.lg (the design tokens are main-actor isolated).
     numberWidth = CGFloat(max(String(maxNumber).count, 2)) * characterWidth + 8

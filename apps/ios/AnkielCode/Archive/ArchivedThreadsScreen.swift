@@ -222,7 +222,7 @@ private struct ArchivedThreadRow: View {
       }
       if let branch = row.branch, !branch.isEmpty {
         Label(branch, systemImage: "arrow.triangle.branch")
-          .font(Typography.caption.monospaced())
+          .font(Typography.monoCaption)
           .foregroundStyle(Palette.textSecondary)
           .lineLimit(1)
           .labelStyle(.titleAndIcon)

@@ -159,7 +159,7 @@ struct CodeBlockView: View {
     VStack(alignment: .leading, spacing: 0) {
       HStack {
         Text(code.language ?? String(localized: "Code", comment: "label of a code block with no language"))
-          .font(Typography.caption.monospaced())
+          .font(Typography.monoCaption)
           .foregroundStyle(Palette.textSecondary)
         Spacer()
         Button {

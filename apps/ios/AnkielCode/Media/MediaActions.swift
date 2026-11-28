@@ -59,7 +59,7 @@ struct ViewerButton: View {
     Button(action: action) {
       Label(title, systemImage: systemImage)
         .labelStyle(.iconOnly)
-        .font(.body.weight(.medium))
+        .font(Typography.body.weight(.medium))
         .frame(width: 30, height: 30)
         .contentShape(.circle)
     }

@@ -94,7 +94,7 @@ private struct WorkflowsList: View {
         } icon: {
           Image(systemName: "exclamationmark.triangle").foregroundStyle(Palette.attention)
         }
-        .font(.subheadline)
+        .font(Typography.subheadline)
       }
       if !sections.isEmpty {
         Picker("Runs", selection: Binding(get: { shown }, set: { tab = $0 })) {
@@ -109,7 +109,7 @@ private struct WorkflowsList: View {
           SwiftUI.Section {
             if nodes.isEmpty {
               Text(WorkflowCopy.nothing(shown))
-                .font(.subheadline)
+                .font(Typography.subheadline)
                 .foregroundStyle(Palette.textSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Spacing.md)
@@ -126,7 +126,7 @@ private struct WorkflowsList: View {
               Button(showing ? String(localized: "Hide skipped") : String(localized: "Show \(section.skipped) skipped")) {
                 if showing { showSkipped.remove(section.id) } else { showSkipped.insert(section.id) }
               }
-              .font(.footnote)
+              .font(Typography.footnote)
               .frame(maxWidth: .infinity)
             }
           } header: {
@@ -167,14 +167,14 @@ struct WorkflowRunRow: View {
       HStack(spacing: Spacing.sm) {
         WorkflowChip(name: node.run.workflow)
         Text(node.run.workflow)
-          .font(.caption)
+          .font(Typography.caption)
           .foregroundStyle(Palette.textSecondary)
           .lineLimit(1)
         Spacer(minLength: Spacing.sm)
         WorkflowStateWord(state: state)
       }
       Text(node.run.title)
-        .font(.body.weight(.medium))
+        .font(Typography.body.weight(.medium))
         .foregroundStyle(Palette.textPrimary)
         .lineLimit(2)
       HStack(spacing: Spacing.sm) {
@@ -183,7 +183,7 @@ struct WorkflowRunRow: View {
         Spacer(minLength: Spacing.sm)
         Text(WorkflowCopy.relative(node.run.updatedAt))
       }
-      .font(.caption)
+      .font(Typography.caption)
       .foregroundStyle(Palette.textSecondary)
     }
     .padding(.vertical, Spacing.xs)

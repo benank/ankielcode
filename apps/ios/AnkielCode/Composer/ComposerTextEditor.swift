@@ -40,7 +40,7 @@ struct ComposerTextEditor: UIViewRepresentable {
     let view = ComposerUITextView()
     view.delegate = context.coordinator
     view.backgroundColor = .clear
-    view.font = UIFont.preferredFont(forTextStyle: .body)
+    view.font = Typography.uiFont(.body)
     view.adjustsFontForContentSizeCategory = true
     view.textColor = UIColor(Palette.textPrimary)
     view.textContainerInset = .zero
@@ -81,7 +81,7 @@ struct ComposerTextEditor: UIViewRepresentable {
     let width = proposal.width ?? view.bounds.width
     guard width > 0, width.isFinite else { return nil }
     let fitted = view.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude)).height
-    let lineHeight = (view.font ?? UIFont.preferredFont(forTextStyle: .body)).lineHeight
+    let lineHeight = (view.font ?? Typography.uiFont(.body)).lineHeight
     let cap = ceil(lineHeight * CGFloat(maxLines))
     let scrolls = fitted > cap + 1
     if view.isScrollEnabled != scrolls {
@@ -196,13 +196,13 @@ final class ComposerUITextView: UITextView {
 
   override init(frame: CGRect, textContainer: NSTextContainer?) {
     super.init(frame: frame, textContainer: textContainer)
-    placeholderLabel.font = UIFont.preferredFont(forTextStyle: .body)
+    placeholderLabel.font = Typography.uiFont(.body)
     placeholderLabel.adjustsFontForContentSizeCategory = true
     placeholderLabel.textColor = UIColor(Palette.textTertiary)
     placeholderLabel.isAccessibilityElement = false
     placeholderLabel.numberOfLines = 1
     addSubview(placeholderLabel)
-    registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitPreferredContentSizeCategory.self]) {
+    registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitPreferredContentSizeCategory.self, ThemeTrait.self]) {
       (view: ComposerUITextView, _: UITraitCollection) in
       view.rerenderChips()
     }
@@ -393,7 +393,7 @@ final class ComposerUITextView: UITextView {
   // MARK: Rendering
 
   private var baseAttributes: [NSAttributedString.Key: Any] {
-    [.font: font ?? UIFont.preferredFont(forTextStyle: .body), .foregroundColor: UIColor(Palette.textPrimary)]
+    [.font: font ?? Typography.uiFont(.body), .foregroundColor: UIColor(Palette.textPrimary)]
   }
 
   func resetTypingAttributes() { typingAttributes = baseAttributes }
@@ -426,8 +426,8 @@ final class ComposerUITextView: UITextView {
   }
 
   private func chip(_ token: ComposerInlineToken) -> NSAttributedString {
-    let font = UIFont.preferredFont(forTextStyle: .body, compatibleWith: traitCollection)
-    let chipFont = UIFont.systemFont(ofSize: font.pointSize, weight: .medium)
+    let font = Typography.uiFont(.body, traits: traitCollection)
+    let chipFont = Typography.uiFont(size: font.pointSize, weight: .medium)
     let label: String
     let symbol: String
     switch token.kind {

@@ -41,10 +41,19 @@ struct RootView: View {
     .sheet(isPresented: pairingPresented) {
       PairingProgressView()
     }
+    .font(Typography.body)
     .environment(\.codeAppearance, CodeAppearance(fontSize: model.preferences.values.codeFontSize, wraps: model.preferences.values.codeWordBreak))
-    .onChange(of: model.preferences.values.themeMode, initial: true) { _, mode in
-      Appearance.apply(mode)
+    .onChange(of: appearance, initial: true) { _, next in
+      Appearance.apply(next.mode, theme: next.theme)
     }
+    #if DEBUG
+      .task { await Appearance.debugTheme(model.preferences) }
+    #endif
+  }
+
+  private var appearance: AppearanceState {
+    let values = model.preferences.values
+    return AppearanceState(mode: values.themeMode, theme: ThemeSelection(lightId: values.lightThemeId, darkId: values.darkThemeId))
   }
 
   private var sheet: Binding<AppModel.Sheet?> {

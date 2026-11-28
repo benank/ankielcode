@@ -61,7 +61,7 @@ struct ScheduledTaskEditor: View {
           Text(environment?.status.isConnected == false
             ? String(localized: "This environment is disconnected. Reconnect before saving.")
             : String(localized: "This connection can read tasks but not change them."))
-            .font(.footnote)
+            .font(Typography.footnote)
             .foregroundStyle(Palette.attention)
         }
         Section(String(localized: "Task", comment: "section heading for a scheduled task")) {
@@ -190,11 +190,11 @@ struct ScheduledTaskEditor: View {
         LabeledContent("Runs", value: String(localized: "On webhook"))
         if let task = editing.task, let path = task.webhookURL ?? task.webhookPath {
           LabeledContent(task.webhookURL == nil ? String(localized: "Webhook path") : String(localized: "Webhook URL")) {
-            Text(path).textSelection(.enabled).font(.footnote.monospaced()).lineLimit(2)
+            Text(path).textSelection(.enabled).font(Typography.monoSmall).lineLimit(2)
           }
         }
         Text("Webhook settings are edited on the computer.")
-          .font(.footnote)
+          .font(Typography.footnote)
           .foregroundStyle(Palette.textSecondary)
       } else {
         Picker("Schedule", selection: $draft.schedule.mode) {
@@ -260,7 +260,7 @@ struct ScheduledTaskEditor: View {
           if on { draft.schedule.weekdays.remove(day) } else { draft.schedule.weekdays.insert(day) }
         } label: {
           Text(String(ScheduledTaskCopy.weekday(day).prefix(2)))
-            .font(.footnote.weight(.semibold))
+            .font(Typography.footnote.weight(.semibold))
             .frame(maxWidth: .infinity, minHeight: 36)
             .foregroundStyle(on ? Palette.onPrimaryButton : Palette.textPrimary)
             .background(on ? Palette.primaryButton : Palette.fill, in: .capsule)

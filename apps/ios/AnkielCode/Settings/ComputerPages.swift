@@ -442,7 +442,7 @@ private struct DiagnosisSection: View {
         ForEach(diagnosis.hops) { hop in
           HStack(spacing: Spacing.sm) {
             Image(systemName: symbol(hop.result))
-              .font(.footnote.weight(.semibold))
+              .font(Typography.footnote.weight(.semibold))
               .foregroundStyle(hop.result == .failed ? Palette.danger : Palette.textTertiary)
               .frame(width: 16)
               .accessibilityHidden(true)

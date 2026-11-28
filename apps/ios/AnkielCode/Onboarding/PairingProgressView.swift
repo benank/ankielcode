@@ -153,7 +153,7 @@ private struct StepRow: View {
             .foregroundStyle(Palette.textTertiary)
         }
       }
-      .font(.body)
+      .font(Typography.body)
       .frame(width: 24, height: 24)
       .accessibilityHidden(true)
       Text(title)

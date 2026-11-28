@@ -9,6 +9,7 @@ struct AnkielCodeApp: App {
 
   init() {
     LaunchSignposts.mark("main")
+    Appearance.configureChrome()
     #if DEBUG
       LaunchSignposts.watchStalls()
     #endif

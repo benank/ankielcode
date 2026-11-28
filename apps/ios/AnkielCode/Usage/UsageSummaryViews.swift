@@ -108,7 +108,7 @@ struct UsageSummaryList: View {
           .font(Typography.subheadline)
           .foregroundStyle(Palette.textSecondary)
         Text(metric == .cost ? UsageFormat.usd(report.costUsd) : UsageFormat.tokens(report.totals.processed))
-          .font(.system(.largeTitle, design: .rounded).weight(.semibold))
+          .font(Typography.largeTitle.weight(.semibold))
           .monospacedDigit()
           .contentTransition(.numericText())
         Text(metric == .cost ? String(localized: "* if billed at full API rate") : String(localized: "Across \(report.sessions) sessions"))

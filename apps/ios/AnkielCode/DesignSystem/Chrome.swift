@@ -34,3 +34,13 @@ struct CanvasBackground: View {
     Palette.canvas.ignoresSafeArea()
   }
 }
+
+extension View {
+  /// A grouped list or form on the theme (RN's screen and grouped cards) instead of the system
+  /// grouped colors, which no theme reaches. Rows that set their own background keep it.
+  func themedList() -> some View {
+    scrollContentBackground(.hidden)
+      .listRowBackground(Palette.groupedRow)
+      .background(Palette.canvas)
+  }
+}

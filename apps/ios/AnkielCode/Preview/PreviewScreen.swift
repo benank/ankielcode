@@ -105,7 +105,7 @@ struct PreviewScreen: View {
         }
         HStack(spacing: Spacing.xs) {
           Image(systemName: browser.address.map(PreviewLoopback.standIn).map(PreviewLoopback.isTunnelled) == true ? "desktopcomputer" : "globe")
-            .font(.footnote)
+            .font(Typography.footnote)
             .foregroundStyle(Palette.textSecondary)
             .accessibilityHidden(true)
           TextField("Enter a localhost address", text: $draft)
@@ -115,7 +115,7 @@ struct PreviewScreen: View {
             .autocorrectionDisabled()
             .submitLabel(.go)
             .focused($editing)
-            .font(.callout)
+            .font(Typography.callout)
             .onSubmit { submit(browser) }
             .accessibilityLabel(Text("Address"))
             .accessibilityIdentifier("preview.address")
@@ -149,7 +149,7 @@ struct PreviewScreen: View {
   private func barButton(_ title: LocalizedStringKey, systemImage: String, id: String, action: @escaping () -> Void) -> some View {
     Button(title, systemImage: systemImage, action: action)
       .labelStyle(.iconOnly)
-      .font(.body.weight(.medium))
+      .font(Typography.body.weight(.medium))
       .frame(minWidth: 44, minHeight: 44)
       .contentShape(.rect)
       .accessibilityIdentifier(id)
@@ -237,7 +237,7 @@ struct PreviewStateView: View {
         }
         if let diagnostics, showsRetry {
           Text(diagnostics)
-            .font(.caption2.monospaced())
+            .font(Typography.monoCaption)
             .foregroundStyle(Palette.textTertiary)
             .multilineTextAlignment(.center)
             .textSelection(.enabled)
@@ -321,15 +321,15 @@ private struct PreviewStartPage: View {
       VStack(alignment: .leading, spacing: Spacing.lg) {
         VStack(alignment: .leading, spacing: Spacing.xs) {
           Text("Open a local server")
-            .font(.title3.weight(.semibold))
+            .font(Typography.title)
           Text("Type an address like localhost:5173 below. Pages load from the computer through its connection.")
-            .font(.subheadline)
+            .font(Typography.subheadline)
             .foregroundStyle(Palette.textSecondary)
         }
         if !tabs.isEmpty {
           VStack(alignment: .leading, spacing: Spacing.sm) {
             Text("Browser tabs in this thread")
-              .font(.footnote.weight(.semibold))
+              .font(Typography.footnote.weight(.semibold))
               .foregroundStyle(Palette.textSecondary)
             VStack(spacing: 0) {
               ForEach(tabs) { tab in
@@ -342,18 +342,18 @@ private struct PreviewStartPage: View {
                       .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                       Text(tab.displayTitle ?? String(localized: "New tab"))
-                        .font(.callout.weight(.medium))
+                        .font(Typography.callout.weight(.medium))
                         .foregroundStyle(Palette.textPrimary)
                         .lineLimit(1)
                       Text(tab.url)
-                        .font(.footnote)
+                        .font(Typography.footnote)
                         .foregroundStyle(Palette.textSecondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
                     }
                     Spacer(minLength: 0)
                     Image(systemName: "arrow.up.forward")
-                      .font(.footnote)
+                      .font(Typography.footnote)
                       .foregroundStyle(Palette.textTertiary)
                       .accessibilityHidden(true)
                   }

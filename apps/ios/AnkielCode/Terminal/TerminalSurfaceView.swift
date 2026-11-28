@@ -53,7 +53,7 @@ final class TerminalSurfaceView: UIView, UITextFieldDelegate, UIEditMenuInteract
   var config = Config() {
     didSet {
       guard config != oldValue else { return }
-      inputField.font = .monospacedSystemFont(ofSize: max(config.fontSize, 13), weight: .regular)
+      inputField.font = Typography.uiFont(size: max(config.fontSize, 13), mono: true)
       backgroundColor = config.palette.backgroundColor
       viewport.backgroundColor = config.palette.backgroundColor
       applyConfigInPlace()
@@ -90,7 +90,7 @@ final class TerminalSurfaceView: UIView, UITextFieldDelegate, UIEditMenuInteract
     inputField.backgroundColor = .clear
     inputField.textColor = .clear
     inputField.tintColor = .clear
-    inputField.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+    inputField.font = Typography.uiFont(size: 13, mono: true)
     inputField.autocorrectionType = .no
     inputField.autocapitalizationType = .none
     inputField.spellCheckingType = .no
@@ -455,7 +455,7 @@ final class TerminalSurfaceView: UIView, UITextFieldDelegate, UIEditMenuInteract
 
   private func makeConfig() -> ghostty_config_t? {
     guard let configuration = ghostty_config_new() else { return nil }
-    let url = URL.temporaryDirectory.appending(path: "ankiel-terminal-\(config.palette.dark ? "dark" : "light").ghostty")
+    let url = URL.temporaryDirectory.appending(path: "ankiel-terminal-\(config.palette.theme.rawValue)-\(config.palette.dark ? "dark" : "light").ghostty")
     let contents = config.palette.ghosttyConfig(fontSize: config.fontSize, blink: config.blink)
     if (try? String(contentsOf: url, encoding: .utf8)) != contents {
       try? contents.write(to: url, atomically: true, encoding: .utf8)

@@ -19,8 +19,8 @@ struct SourceTextView: View {
   static let maxLineLength = 2_000
 
   private var uiFont: UIFont {
-    let size = code.fontSize.map { CGFloat($0) } ?? UIFont.preferredFont(forTextStyle: .footnote).pointSize
-    return UIFont.monospacedSystemFont(ofSize: size, weight: .regular)
+    let size = code.fontSize.map { CGFloat($0) } ?? Typography.uiFont(.monoSmall, mono: true).pointSize
+    return Typography.uiFont(size: size, mono: true)
   }
 
   private var characterWidth: CGFloat {

@@ -4,35 +4,54 @@ import UIKit
 /// Semantic colors. Neutral-first: a cool near-black canvas in dark mode, a cool near-white one in
 /// light mode, and color reserved for status (well under a tenth of the screen).
 enum Palette {
-  static let canvas = Color(light: 0xF6F7F9, dark: 0x0B0C0E)
-  static let surface = Color(light: 0xFFFFFF, dark: 0x141518)
-  static let surfaceRaised = Color(light: 0xFFFFFF, dark: 0x1C1D21)
-  static let fill = Color(light: 0xEDEEF1, dark: 0x232429)
-  static let separator = Color(light: 0xE1E3E8, dark: 0x2A2B31)
+  // Theme roles (`ThemePalettes.generated.swift`, from RN's theme variables): every screen,
+  // sheet and list reads these, so a theme change repaints everything.
+  static let canvas = Color(\.canvas)
+  /// Sheets and grouped lists' background.
+  static let sheet = Color(\.sheet)
+  static let surface = Color(\.surface)
+  static let surfaceRaised = Color(\.surfaceRaised)
+  /// A grouped list's rows (Settings), RN's grouped card.
+  static let groupedRow = Color(\.groupedRow)
+  static let fill = Color(\.fill)
+  static let fillStrong = Color(\.fillStrong)
+  static let border = Color(\.border)
+  static let separator = Color(\.separator)
+  static let sidebar = Color(\.sidebar)
 
-  static let textPrimary = Color(light: 0x16171A, dark: 0xF1F2F4)
-  static let textSecondary = Color(light: 0x5E626B, dark: 0xA3A7AF)
-  /// Still WCAG AA (4.5:1) on the canvas: timestamps, timers and placeholders are read, not decoration.
-  static let textTertiary = Color(light: 0x686C75, dark: 0x8C9098)
+  static let textPrimary = Color(\.textPrimary)
+  /// Contrast-corrected to WCAG AA (4.5:1) on the theme's surfaces, like RN.
+  static let textSecondary = Color(\.textSecondary)
+  /// Still WCAG AA on the theme's surfaces: timestamps, timers and placeholders are read, not decoration.
+  static let textTertiary = Color(\.textTertiary)
+  static let placeholder = Color(\.placeholder)
 
-  static let accent = Color.accentColor
-  /// Text and icons on a filled accent control (`.glassProminent`): the accent is near-black in
-  /// light mode and near-white in dark mode.
-  static let onAccent = Color(light: 0xFFFFFF, dark: 0x0B0C0E)
-  /// The composer's send button: ink on paper, inverted in dark mode.
-  static let primaryButton = Color(light: 0x16171A, dark: 0xF1F2F4)
-  static let onPrimaryButton = Color(light: 0xFFFFFF, dark: 0x0B0C0E)
-  static let working = Color(light: 0x2F6FEB, dark: 0x5B8DEF)
-  static let attention = Color(light: 0xC77700, dark: 0xF0A33A)
-  static let success = Color(light: 0x1F8A4C, dark: 0x45C07A)
-  static let danger = Color(light: 0xC8302B, dark: 0xF0625C)
+  /// The theme's action color: the app tint, switches, prominent buttons (ink in the default theme).
+  static let accent = Color(\.accent)
+  /// Text and icons on a filled accent control.
+  static let onAccent = Color(\.onAccent)
+  /// The accent as text on the canvas (contrast-corrected).
+  static let accentText = Color(\.accentText)
+  static let link = Color(\.link)
+  /// The composer's send button.
+  static let primaryButton = Color(\.primaryButton)
+  static let onPrimaryButton = Color(\.onPrimaryButton)
+
+  /// Status (`StatusColors`): RN's fixed signal hues and the theme's warning and error.
+  static let working = Color(\.signalActive)
+  static let success = Color(\.signalSuccess)
+  static let attention = Color(\.warning)
+  static let attentionSurface = Color(\.warningSurface)
+  static let danger = Color(\.danger)
+  static let dangerSurface = Color(\.dangerSurface)
 
   /// Conversation surfaces: the user's bubble, code and table blocks, inline code.
-  static let userBubble = Color(light: 0xECEDF1, dark: 0x1F2024)
-  static let codeBackground = Color(light: 0xF0F1F4, dark: 0x141518)
-  static let codeHeader = Color(light: 0xE7E8EC, dark: 0x1B1C20)
-  static let inlineCode = Color(light: 0xE6E7EB, dark: 0x25262B)
-  static let quoteBar = Color(light: 0xD3D6DC, dark: 0x3A3C43)
+  static let userBubble = Color(\.userBubble)
+  static let userBubbleText = Color(\.userBubbleText)
+  static let codeBackground = Color(\.codeBackground)
+  static let codeHeader = Color(\.fill)
+  static let inlineCode = Color(\.fill)
+  static let quoteBar = Color(\.quoteBar)
 
   /// Code tokens: muted, so code reads as text first.
   static let codeKeyword = Color(light: 0xA4327C, dark: 0xE38BC7)

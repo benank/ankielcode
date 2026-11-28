@@ -10,6 +10,7 @@
     var stale = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.themeSelection) private var themeSelection
 
     var body: some View {
       let snapshot = UsageWidgetSnapshot.build(sources)
@@ -43,11 +44,12 @@
       _ snapshot: UsageWidgetSnapshot?, _ date: Date, _ family: UsageWidgetLayout.Family, _ size: CGSize, monochrome: Bool = false
     ) -> some View {
       let accessory = family == .accessoryRectangular || family == .accessoryCircular
-      return UsageWidgetView(snapshot: snapshot, date: date, family: family, monochrome: monochrome)
+      let theme = monochrome || accessory ? nil : WidgetTheme(themeSelection).colors(colorScheme)
+      return UsageWidgetView(snapshot: snapshot, date: date, family: family, monochrome: monochrome, theme: theme)
         .padding(accessory ? 6 : 16)
         .frame(width: size.width, height: size.height)
         .background(
-          monochrome ? AnyShapeStyle(Color.gray.opacity(accessory ? 0.35 : 0.5)) : AnyShapeStyle(Palette.surfaceRaised),
+          monochrome ? AnyShapeStyle(Color.gray.opacity(accessory ? 0.35 : 0.5)) : AnyShapeStyle(theme.map { Color(widgetRGBA: $0.background) } ?? Palette.surfaceRaised),
           in: .rect(cornerRadius: accessory ? (family == .accessoryCircular ? 38 : 12) : 22))
         .foregroundStyle(monochrome ? Color.white : Palette.textPrimary)
         .environment(\.colorScheme, monochrome ? .dark : colorScheme)

@@ -12,6 +12,11 @@ struct UsageWidgetView: View {
   var periods: [String: UsageWidgetLayout.Period] = [:]
   /// Not full color: accented (tinted Home Screen), vibrant (Lock Screen) or clear glass.
   var monochrome = false
+  /// The app theme's colors for full-color rendering; nil keeps the system styles.
+  var theme: WidgetTheme.Colors?
+
+  private var secondary: Color { theme.map { Color(widgetRGBA: $0.secondaryText) } ?? .secondary }
+  private var danger: Color { theme.map { Color(widgetRGBA: $0.danger) } ?? .red }
 
   var body: some View {
     let shown = snapshot?.shown(at: date)
@@ -23,6 +28,7 @@ struct UsageWidgetView: View {
       default: system(columns, checkedAt: shown?.checkedAt, connected: snapshot != nil)
       }
     }
+    .foregroundStyle(theme.map { Color(widgetRGBA: $0.text) } ?? .primary)
     .widgetURL(UsageWidgetStore.deepLink)
   }
 
@@ -32,8 +38,8 @@ struct UsageWidgetView: View {
     VStack(alignment: .leading, spacing: family == .small ? 6 : 8) {
       if columns.isEmpty {
         Text(connected ? WidgetCopy.noLimits : WidgetCopy.openApp)
-          .font(.caption)
-          .foregroundStyle(.secondary)
+          .font(WidgetFont.sans(12, .caption))
+          .foregroundStyle(secondary)
       } else if family == .small {
         VStack(alignment: .leading, spacing: 8) { ForEach(columns) { column($0) } }
       } else {
@@ -41,9 +47,10 @@ struct UsageWidgetView: View {
       }
       Spacer(minLength: 0)
       Text(checkedAt.map { WidgetCopy.asOf($0) } ?? WidgetCopy.tapToConnect)
-        .font(.system(.caption2, design: .monospaced))
+        .font(WidgetFont.mono(10, .caption2))
+        .tracking(0.6)
         .textCase(.uppercase)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(secondary)
         .lineLimit(1)
         .minimumScaleFactor(0.8)
     }
@@ -53,13 +60,13 @@ struct UsageWidgetView: View {
   private func column(_ column: UsageWidgetLayout.Column) -> some View {
     VStack(alignment: .leading, spacing: family == .small ? 2 : 4) {
       Text(column.provider.name)
-        .font(family == .small ? .caption.weight(.bold) : .headline)
+        .font(family == .small ? WidgetFont.sans(12, .caption).weight(.semibold) : WidgetFont.sans(16, .headline).weight(.medium))
         .lineLimit(1)
         .widgetAccentable()
       if column.windows.isEmpty || family != .small {
         Text(WidgetCopy.detail(column.detail))
-          .font(.caption2)
-          .foregroundStyle(.secondary)
+          .font(WidgetFont.sans(11, .caption2))
+          .foregroundStyle(secondary)
           .lineLimit(family == .small ? 2 : 1)
       }
       ForEach(column.windows) { window in
@@ -67,8 +74,8 @@ struct UsageWidgetView: View {
       }
       if family == .large, column.hiddenCount > 0 {
         Text(WidgetCopy.more(column.hiddenCount))
-          .font(.caption2)
-          .foregroundStyle(.secondary)
+          .font(WidgetFont.sans(11, .caption2))
+          .foregroundStyle(secondary)
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -78,21 +85,21 @@ struct UsageWidgetView: View {
     VStack(alignment: .leading, spacing: 2) {
       HStack(spacing: 4) {
         Text(window.label)
-          .font(.caption2)
-          .foregroundStyle(.secondary)
+          .font(WidgetFont.sans(11, .caption2))
+          .foregroundStyle(secondary)
           .lineLimit(1)
         Spacer(minLength: 2)
         Text(WidgetCopy.percentLeft(window.remaining))
-          .font(.system(.caption2, design: .monospaced).weight(.semibold))
-          .foregroundStyle(window.remaining <= 10 && !monochrome ? Color.red : Color.primary)
+          .font(WidgetFont.mono(11, .caption2).weight(.medium))
+          .foregroundStyle(window.remaining <= 10 && !monochrome ? danger : theme.map { Color(widgetRGBA: $0.text) } ?? .primary)
           .lineLimit(1)
           .layoutPriority(1)
       }
       bar(window.remaining, driver: provider.driver)
       if family != .small, let reset = WidgetCopy.reset(window) {
         Text(reset)
-          .font(.system(size: 10, design: .monospaced))
-          .foregroundStyle(.secondary)
+          .font(WidgetFont.mono(10, .caption2))
+          .foregroundStyle(secondary)
           .lineLimit(1)
       }
     }
@@ -101,7 +108,7 @@ struct UsageWidgetView: View {
   }
 
   private func bar(_ remaining: Int, driver: String) -> some View {
-    WidgetBar(remaining: remaining, tint: monochrome ? Color.primary : remaining <= 10 ? Color.red : WidgetCopy.tint(driver))
+    WidgetBar(remaining: remaining, tint: monochrome ? Color.primary : remaining <= 10 ? danger : WidgetCopy.tint(driver))
   }
 
   // MARK: Lock Screen
@@ -117,12 +124,12 @@ struct UsageWidgetView: View {
             .lineLimit(1)
             .layoutPriority(1)
         }
-        .font(.caption.weight(.semibold))
+        .font(WidgetFont.sans(12, .caption).weight(.semibold))
         if let tightest = column.tightest {
           WidgetBar(remaining: tightest.remaining, tint: .primary)
         }
       }
-      if columns.isEmpty { Text(WidgetCopy.openApp).font(.caption) }
+      if columns.isEmpty { Text(WidgetCopy.openApp).font(WidgetFont.sans(12, .caption)) }
     }
   }
 
@@ -133,7 +140,7 @@ struct UsageWidgetView: View {
       Text(verbatim: tightest.map { String($0.0.name.prefix(1)) } ?? "–")
     } currentValueLabel: {
       Text(verbatim: tightest.map { "\($0.1.remaining)" } ?? "–")
-        .font(.system(.body, design: .monospaced).weight(.semibold))
+        .font(WidgetFont.mono(15, .body).weight(.semibold))
     }
     .gaugeStyle(.accessoryCircularCapacity)
     .widgetAccentable()

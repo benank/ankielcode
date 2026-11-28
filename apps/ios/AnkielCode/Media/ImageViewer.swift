@@ -126,7 +126,7 @@ struct ImageViewer: View {
           ShareLink(item: file) {
             Label("Share", systemImage: "square.and.arrow.up")
               .labelStyle(.iconOnly)
-              .font(.body.weight(.medium))
+              .font(Typography.body.weight(.medium))
               .frame(width: 30, height: 30)
           }
           .buttonStyle(.glass)

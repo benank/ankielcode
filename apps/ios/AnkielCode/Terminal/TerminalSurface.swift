@@ -166,7 +166,7 @@ struct TerminalAccessoryBar: View {
 
   private func keyLabel(_ label: String, active: Bool) -> some View {
     Text(verbatim: label)
-      .font(.system(.callout, design: .monospaced).weight(active ? .semibold : .regular))
+      .font(Typography.mono.weight(active ? .semibold : .regular))
       .textCase(label.count > 1 ? .uppercase : nil)
       .foregroundStyle(active ? Palette.onAccent : Palette.textPrimary)
       .frame(minWidth: label.count > 1 ? 48 : 36, minHeight: 36)
@@ -218,8 +218,8 @@ private struct SelectableText: UIViewRepresentable {
     view.isSelectable = true
     // Login flows print auth URLs; tapping one opens it.
     view.dataDetectorTypes = .link
-    view.backgroundColor = .systemBackground
-    view.textColor = .label
+    view.backgroundColor = UIColor(\.terminalBackground)
+    view.textColor = UIColor(\.terminalForeground)
     view.textContainerInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
     view.accessibilityLabel = String(localized: "Terminal output")
     view.accessibilityIdentifier = "terminal.selection"
@@ -228,6 +228,6 @@ private struct SelectableText: UIViewRepresentable {
 
   func updateUIView(_ view: UITextView, context: Context) {
     if view.text != text { view.text = text }
-    view.font = .monospacedSystemFont(ofSize: fontSize, weight: .regular)
+    view.font = Typography.uiFont(size: fontSize, mono: true)
   }
 }

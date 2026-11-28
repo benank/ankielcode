@@ -111,7 +111,7 @@ private struct ComputerPushRow: View {
   var body: some View {
     HStack(spacing: Spacing.md) {
       Image(systemName: "desktopcomputer")
-        .font(.body)
+        .font(Typography.body)
         .foregroundStyle(Palette.textSecondary)
         .frame(width: 28)
         .accessibilityHidden(true)

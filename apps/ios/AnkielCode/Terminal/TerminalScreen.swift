@@ -69,6 +69,7 @@ private struct TerminalSessionView: View {
   @State private var surface = TerminalSurfaceController()
   @Environment(AppModel.self) private var model
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.themeSelection) private var theme
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.openURL) private var openURL
 
@@ -85,7 +86,7 @@ private struct TerminalSessionView: View {
     _session = State(initialValue: TerminalSessionModel(target: target, location: location, host: presenter.host))
   }
 
-  private var palette: TerminalPalette { TerminalPalette(dark: colorScheme == .dark) }
+  private var palette: TerminalPalette { TerminalPalette(dark: colorScheme == .dark, theme: theme) }
 
   private var config: TerminalSurfaceView.Config {
     TerminalSurfaceView.Config(palette: palette, fontSize: TerminalText.size(model.preferences), blink: !reduceMotion)
@@ -114,7 +115,7 @@ private struct TerminalSessionView: View {
           focused = true
         } label: {
           Image(systemName: "keyboard")
-            .font(.title3)
+            .font(Typography.title)
             .frame(width: 48, height: 48)
         }
         .buttonStyle(.glass)

@@ -25,7 +25,7 @@ struct GeneralSettingsPage: View {
             HStack(spacing: Spacing.xs) {
               Text(Self.currentLanguage)
               Image(systemName: "arrow.up.forward")
-                .font(.footnote.weight(.semibold))
+                .font(Typography.footnote.weight(.semibold))
                 .foregroundStyle(.tertiary)
                 .accessibilityHidden(true)
             }
@@ -207,7 +207,7 @@ struct ChoiceRows<Value: Hashable>: View {
           }
           Spacer(minLength: Spacing.sm)
           Image(systemName: "checkmark")
-            .font(.body.weight(.semibold))
+            .font(Typography.body.weight(.semibold))
             .foregroundStyle(Palette.accent)
             .opacity(selection == value ? 1 : 0)
             .accessibilityHidden(true)

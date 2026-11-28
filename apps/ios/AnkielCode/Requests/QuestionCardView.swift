@@ -289,12 +289,12 @@ private struct OptionRow: View {
   private var indicator: some View {
     if multiSelect {
       Image(systemName: selected ? "checkmark.square.fill" : "square")
-        .font(.title3)
+        .font(Typography.title)
         .foregroundStyle(selected ? Palette.textPrimary : Palette.textTertiary)
         .contentTransition(.symbolEffect(.replace))
     } else {
       Image(systemName: selected ? "largecircle.fill.circle" : "circle")
-        .font(.title3)
+        .font(Typography.title)
         .foregroundStyle(selected ? Palette.textPrimary : Palette.textTertiary)
         .contentTransition(.symbolEffect(.replace))
     }

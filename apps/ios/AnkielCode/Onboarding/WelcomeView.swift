@@ -153,7 +153,7 @@ private struct HelpStep: View {
   var body: some View {
     HStack(alignment: .top, spacing: Spacing.lg) {
       Image(systemName: systemImage)
-        .font(.system(.title3, weight: .medium))
+        .font(Typography.title.weight(.medium))
         .foregroundStyle(Palette.textPrimary)
         .frame(width: 44, height: 44)
         .background(Palette.fill, in: .rect(cornerRadius: Radius.medium, style: .continuous))

@@ -2,14 +2,21 @@ import SwiftUI
 import UIKit
 
 /// The terminal's colors, as Ghostty config lines. The 16 ANSI colors are RN's Pierre palette;
-/// background, text and cursor follow the app's canvas, text and working tokens.
+/// background, text, cursor and selection are the theme's terminal roles.
 struct TerminalPalette: Equatable {
   var dark: Bool
+  var theme: ThemeID = .ankielCode
 
-  var background: UInt32 { dark ? 0x0B0C0E : 0xFCFCFD }
-  var foreground: UInt32 { dark ? 0xD9DBE0 : 0x2A2C31 }
-  var cursor: UInt32 { dark ? 0x5B8DEF : 0x2F6FEB }
-  var selection: UInt32 { dark ? 0x26324A : 0xD6E2FA }
+  init(dark: Bool, theme: ThemeSelection = .standard) {
+    self.dark = dark
+    self.theme = dark ? theme.dark : theme.light
+  }
+
+  private var colors: ThemeColors { theme.colors(dark: dark) }
+  var background: UInt32 { colors.terminalBackground >> 8 }
+  var foreground: UInt32 { colors.terminalForeground >> 8 }
+  var cursor: UInt32 { colors.terminalCursor >> 8 }
+  var selection: UInt32 { colors.terminalSelection >> 8 }
   var ansi: [UInt32] {
     dark
       ? [0x141415, 0xFF2E3F, 0x0DBE4E, 0xFFCA00, 0x009FFF, 0xC635E4, 0x08C0EF, 0xC6C6C8,
@@ -21,9 +28,11 @@ struct TerminalPalette: Equatable {
   var backgroundColor: UIColor { UIColor(rgb: background) }
   var foregroundColor: Color { Color(uiColor: UIColor(rgb: foreground)) }
 
-  /// The Ghostty config for this palette, the font size and the cursor blink.
+  /// The Ghostty config for this palette, the font size and the cursor blink. Ghostty finds
+  /// the bundled Geist Mono by family name through CoreText (`UIAppFonts` registers it).
   func ghosttyConfig(fontSize: Double, blink: Bool) -> String {
     var lines = [
+      "font-family = \(Typography.monoFamily)",
       "background = \(hex(background))",
       "foreground = \(hex(foreground))",
       "cursor-color = \(hex(cursor))",

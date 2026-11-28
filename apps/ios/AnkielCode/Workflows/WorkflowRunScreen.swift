@@ -77,7 +77,7 @@ struct WorkflowRunScreen: View {
           }
         } else {
           Text(run?.error ?? String(localized: "Loading the run's steps…"))
-            .font(.subheadline)
+            .font(Typography.subheadline)
             .foregroundStyle(Palette.textSecondary)
         }
         if node.run.status == .completed { result(node.run) }
@@ -98,14 +98,14 @@ struct WorkflowRunScreen: View {
     VStack(alignment: .leading, spacing: Spacing.xs) {
       HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
         Text(node.run.title)
-          .font(.title3.weight(.semibold))
+          .font(Typography.title)
           .frame(maxWidth: .infinity, alignment: .leading)
         WorkflowStateWord(state: Workflows.state(node), large: true)
       }
       HStack(spacing: Spacing.sm) {
         WorkflowChip(name: node.run.workflow)
         Text("\(node.run.workflow) · started \(WorkflowCopy.relative(node.run.startedAt))")
-          .font(.caption)
+          .font(Typography.caption)
           .foregroundStyle(Palette.textSecondary)
       }
     }
@@ -127,14 +127,14 @@ struct WorkflowRunScreen: View {
       HStack(spacing: Spacing.sm) {
         Circle().fill(Palette.attention).frame(width: 7, height: 7).accessibilityHidden(true)
         Text("Needs you", comment: "workflow run status: it waits on a person")
-          .font(.subheadline.weight(.medium))
+          .font(Typography.subheadline.weight(.medium))
         Text("asked \(WorkflowCopy.relative(question.askedAt))")
-          .font(.caption)
+          .font(Typography.caption)
           .foregroundStyle(Palette.textSecondary)
       }
-      Text(view.title).font(.body.weight(.semibold))
+      Text(view.title).font(Typography.body.weight(.semibold))
       if let body = view.body {
-        Text(body.replacing(/\*\*|__|`/, with: "")).font(.subheadline).foregroundStyle(Palette.textSecondary)
+        Text(body.replacing(/\*\*|__|`/, with: "")).font(Typography.subheadline).foregroundStyle(Palette.textSecondary)
       }
       VStack(spacing: Spacing.sm) {
         ForEach(Array(view.choices.enumerated()), id: \.element) { index, choice in
@@ -156,14 +156,14 @@ struct WorkflowRunScreen: View {
           Button("Ask the agent first") {
             openThread(ThreadRef(environmentId: thread.environmentId ?? route.environmentId, threadId: thread.threadId))
           }
-          .font(.subheadline)
+          .font(Typography.subheadline)
           .frame(minHeight: 44)
         }
       }
       .padding(.top, Spacing.xs)
       if !canOperate {
         Text("This connection can read runs but not answer them.")
-          .font(.caption)
+          .font(Typography.caption)
           .foregroundStyle(Palette.textSecondary)
       }
     }
@@ -172,18 +172,18 @@ struct WorkflowRunScreen: View {
   private func pauseCard(_ run: WorkflowRun, at beat: WorkflowBeat?) -> some View {
     card {
       Label {
-        Text("Paused", comment: "workflow run status").font(.subheadline.weight(.medium))
+        Text("Paused", comment: "workflow run status").font(Typography.subheadline.weight(.medium))
       } icon: {
         Image(systemName: "exclamationmark.circle").foregroundStyle(Palette.danger)
       }
-      Text(run.detail ?? String(localized: "A step failed.")).font(.subheadline)
+      Text(run.detail ?? String(localized: "A step failed.")).font(Typography.subheadline)
       Text(
         run.retired
           ? String(localized: "It cannot go on until its workflow version is registered again.")
           : run.resumesAt == nil
             ? String(localized: "It waits for you to resume it.") : String(localized: "It tries again by itself, or resume it now.")
       )
-      .font(.caption)
+      .font(Typography.caption)
       .foregroundStyle(Palette.textSecondary)
       Button {
         act(.resume, failed: String(localized: "Could not resume the run"))
@@ -209,9 +209,9 @@ struct WorkflowRunScreen: View {
             Text(label).foregroundStyle(Palette.textSecondary)
             Text(line.value).fontWeight(.medium)
           }
-          .font(.footnote)
+          .font(Typography.footnote)
         } else {
-          Text(line.value).font(.subheadline)
+          Text(line.value).font(Typography.subheadline)
         }
       }
     }
@@ -234,7 +234,7 @@ struct WorkflowRunScreen: View {
     case .together(let beats):
       VStack(alignment: .leading, spacing: 0) {
         Text("At the same time")
-          .font(.caption.weight(.medium))
+          .font(Typography.caption.weight(.medium))
           .foregroundStyle(Palette.textSecondary)
           .padding(.horizontal, Spacing.lg)
           .padding(.top, Spacing.sm)
@@ -257,7 +257,7 @@ struct WorkflowRunScreen: View {
         emphasized: paused)
       if !summary.facts.isEmpty, beat.kind == .agent {
         Text(summary.facts.map { "\($0.label) \($0.value)" }.joined(separator: " · "))
-          .font(.caption)
+          .font(Typography.caption)
           .foregroundStyle(Palette.textSecondary)
           .padding(.leading, 44)
           .padding(.trailing, Spacing.lg)
@@ -275,7 +275,7 @@ struct WorkflowRunScreen: View {
           }
         }
       }
-      .font(.footnote)
+      .font(Typography.footnote)
       .padding(.leading, 44)
       .padding(.bottom, beat.threadId != nil || beat.childRun != nil ? Spacing.sm : 0)
     }
@@ -328,24 +328,24 @@ private struct StepLine: View {
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
       Image(systemName: symbol)
-        .font(.footnote.weight(.semibold))
+        .font(Typography.footnote.weight(.semibold))
         .foregroundStyle(tint)
         .frame(width: 20)
         .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: 2) {
         Text(title)
-          .font(.subheadline.weight(emphasized ? .semibold : .medium))
+          .font(Typography.subheadline.weight(emphasized ? .semibold : .medium))
           .foregroundStyle(Palette.textPrimary)
         if let detail, !detail.isEmpty {
           Text(detail)
-            .font(.footnote)
+            .font(Typography.footnote)
             .foregroundStyle(Palette.textSecondary)
             .lineLimit(3)
         }
       }
       Spacer(minLength: Spacing.sm)
       Text(time)
-        .font(.caption.monospacedDigit())
+        .font(Typography.caption.monospacedDigit())
         .foregroundStyle(Palette.textTertiary)
     }
     .padding(.horizontal, Spacing.lg)
