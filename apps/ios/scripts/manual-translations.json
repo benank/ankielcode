@@ -6578,5 +6578,60 @@
     "ru": "например, iPad в гостиной",
     "sv": "t.ex. iPad i vardagsrummet",
     "zh-Hans": "例如：客厅的 iPad"
+  },
+  "Git actions": {
+    "de": "Git-Aktionen",
+    "es": "Acciones de Git",
+    "fr": "Actions Git",
+    "ja": "Git の操作",
+    "ko": "Git 작업",
+    "pt-BR": "Ações do Git",
+    "ru": "Действия Git",
+    "sv": "Git-åtgärder",
+    "zh-Hans": "Git 操作"
+  },
+  "Another change is still being sent.": {
+    "de": "Eine andere Änderung wird noch gesendet.",
+    "es": "Todavía se está enviando otro cambio.",
+    "fr": "Une autre modification est encore en cours d’envoi.",
+    "ja": "別の変更をまだ送信中です。",
+    "ko": "다른 변경 사항을 아직 보내는 중입니다.",
+    "pt-BR": "Outra alteração ainda está sendo enviada.",
+    "ru": "Другое изменение ещё отправляется.",
+    "sv": "En annan ändring skickas fortfarande.",
+    "zh-Hans": "另一项更改仍在发送中。"
+  },
+  "Opens the issue": {
+    "de": "Öffnet das Issue",
+    "es": "Abre la incidencia",
+    "fr": "Ouvre le ticket",
+    "ja": "Issue を開きます",
+    "ko": "이슈를 엽니다",
+    "pt-BR": "Abre a issue",
+    "ru": "Открывает задачу",
+    "sv": "Öppnar ärendet",
+    "zh-Hans": "打开该议题"
+  },
+  "Issue %@": {
+    "de": "Issue %@",
+    "es": "Incidencia %@",
+    "fr": "Ticket %@",
+    "ja": "Issue %@",
+    "ko": "이슈 %@",
+    "pt-BR": "Issue %@",
+    "ru": "Задача %@",
+    "sv": "Ärende %@",
+    "zh-Hans": "议题 %@"
+  },
+  "Issue %@ and %lld more": {
+    "de": "Issue %@ und %lld weitere",
+    "es": "Incidencia %@ y %lld más",
+    "fr": "Ticket %@ et %lld de plus",
+    "ja": "Issue %@ ほか %lld 件",
+    "ko": "이슈 %@ 외 %lld개",
+    "pt-BR": "Issue %@ e mais %lld",
+    "ru": "Задача %@ и ещё %lld",
+    "sv": "Ärende %@ och %lld till",
+    "zh-Hans": "议题 %@ 及另外 %lld 个"
   }
 }
