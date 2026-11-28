@@ -137,6 +137,7 @@ contextBridge.exposeInMainWorld("desktopBridge", {
     return () => ipcRenderer.removeListener(IpcChannels.TRACKPAD_SCROLL_END_CHANNEL, handler);
   },
   revealWindow: () => ipcRenderer.invoke(IpcChannels.REVEAL_WINDOW_CHANNEL),
+  closeWindow: () => ipcRenderer.invoke(IpcChannels.CLOSE_WINDOW_CHANNEL),
   getPrimaryPasteEnabled: () => primaryPasteEnabled,
   getSystemLocale: () => {
     const result = ipcRenderer.sendSync(IpcChannels.GET_SYSTEM_LOCALE_CHANNEL);
@@ -248,6 +249,8 @@ contextBridge.exposeInMainWorld("desktopBridge", {
     ipcRenderer.invoke(IpcChannels.PICK_PROJECT_FAVICON_CHANNEL, initialPath),
   pickThemeFiles: () => ipcRenderer.invoke(IpcChannels.PICK_THEME_FILES_CHANNEL, undefined),
   setTheme: (theme) => ipcRenderer.invoke(IpcChannels.SET_THEME_CHANNEL, theme),
+  setWindowBackground: (background) =>
+    ipcRenderer.invoke(IpcChannels.SET_WINDOW_BACKGROUND_CHANNEL, background),
   showContextMenu: (items, position, source) =>
     ipcRenderer.invoke(IpcChannels.CONTEXT_MENU_CHANNEL, {
       items,
@@ -261,6 +264,10 @@ contextBridge.exposeInMainWorld("desktopBridge", {
   startFileDrag: (input) => ipcRenderer.invoke(IpcChannels.START_FILE_DRAG_CHANNEL, input),
   openExternal: (url: string) => ipcRenderer.invoke(IpcChannels.OPEN_EXTERNAL_CHANNEL, url),
   readMedia: (url: string) => ipcRenderer.invoke(IpcChannels.READ_MEDIA_CHANNEL, url),
+  prepareMediaDrag: (input) => ipcRenderer.invoke(IpcChannels.PREPARE_MEDIA_DRAG_CHANNEL, input),
+  startMediaDrag: (id) => ipcRenderer.invoke(IpcChannels.START_MEDIA_DRAG_CHANNEL, id),
+  setRecentThreads: (threads) =>
+    ipcRenderer.invoke(IpcChannels.SET_RECENT_THREADS_CHANNEL, threads),
   checkSystemPermission: (pane: string) =>
     ipcRenderer.invoke(IpcChannels.CHECK_SYSTEM_PERMISSION_CHANNEL, pane),
   appleSpeech: {
@@ -286,6 +293,7 @@ contextBridge.exposeInMainWorld("desktopBridge", {
       ipcRenderer.removeListener(IpcChannels.MENU_ACTION_CHANNEL, wrappedListener);
     };
   },
+  setMenuState: (state) => ipcRenderer.invoke(IpcChannels.SET_MENU_STATE_CHANNEL, state),
   onSnapShotEvent: (listener) => {
     const wrappedListener = (_event: Electron.IpcRendererEvent, event: unknown) => {
       if (!isSnapShotEvent(event)) return;
@@ -330,6 +338,25 @@ contextBridge.exposeInMainWorld("desktopBridge", {
     ipcRenderer.on(IpcChannels.WINDOW_FULLSCREEN_STATE_CHANNEL, wrappedListener);
     return () => {
       ipcRenderer.removeListener(IpcChannels.WINDOW_FULLSCREEN_STATE_CHANNEL, wrappedListener);
+    };
+  },
+  getLowPowerState: () => ipcRenderer.invoke(IpcChannels.GET_LOW_POWER_STATE_CHANNEL),
+  onLowPowerStateChange: (listener) => {
+    const wrappedListener = (_event: Electron.IpcRendererEvent, lowPower: unknown) => {
+      if (typeof lowPower !== "boolean") return;
+      listener(lowPower);
+    };
+
+    ipcRenderer.on(IpcChannels.LOW_POWER_STATE_CHANNEL, wrappedListener);
+    return () => {
+      ipcRenderer.removeListener(IpcChannels.LOW_POWER_STATE_CHANNEL, wrappedListener);
+    };
+  },
+  onPowerResume: (listener) => {
+    const wrappedListener = () => listener();
+    ipcRenderer.on(IpcChannels.POWER_RESUME_CHANNEL, wrappedListener);
+    return () => {
+      ipcRenderer.removeListener(IpcChannels.POWER_RESUME_CHANNEL, wrappedListener);
     };
   },
   getUpdateState: () => ipcRenderer.invoke(IpcChannels.UPDATE_GET_STATE_CHANNEL),

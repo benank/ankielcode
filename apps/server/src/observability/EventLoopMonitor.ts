@@ -107,7 +107,7 @@ const makeNodeSampler = Effect.gen(function* () {
   });
 });
 
-export const stallMs = ({ delayMaxNs, activeMs }: EventLoopReadings) => {
+const stallMs = ({ delayMaxNs, activeMs }: EventLoopReadings) => {
   const delayMs = Math.round(delayMaxNs / 1e6) - RESOLUTION_MS;
   // libuv clocks run during macOS/Windows sleep; idle poll time distinguishes it from stalls.
   if (delayMs <= STALL_THRESHOLD_MS || activeMs < delayMs) return undefined;

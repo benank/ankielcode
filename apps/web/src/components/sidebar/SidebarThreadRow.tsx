@@ -4,7 +4,6 @@ import type { ThreadNavigationBranch } from "@ankielcode/client-runtime/state/th
 import { ThreadHoverCard, ThreadHoverCardPopup } from "../ThreadHoverCard";
 import { formatWorktreePathForDisplay } from "../../worktreeCleanup";
 import { contextMenuSourceOf } from "../../contextMenuSource";
-import { useSupportsMultiplePullRequests } from "~/hooks/useSupportsMultiplePullRequests";
 import { useDraggable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -55,7 +54,7 @@ import { readEnvironmentScope, useEnvironmentScope } from "../../state/session";
 import { formatRelativeTime, parseTimestampDate } from "../../timestampFormat";
 import type { SidebarThreadSummary } from "../../types";
 import type { EnvironmentProject } from "@ankielcode/client-runtime/state/shell";
-import { cn } from "~/lib/utils";
+import { cn, isMacPlatform } from "~/lib/utils";
 import { textDirection } from "~/textDirection";
 import { EnvironmentMachineIcon } from "../EnvironmentMachineIcon";
 import {
@@ -70,13 +69,12 @@ import {
   withoutRemovedCheckout,
   useSidebarRowSubscriptionLease,
   setFileDragActive,
+  sidebarRowKeyAction,
 } from "../Sidebar.logic";
 import { resolveLocalCheckoutBranchMismatch } from "../BranchToolbar.logic";
 import {
-  ThreadPullRequestsMiniList,
   terminalStatusFromRunningIds,
   type TerminalStatusIndicator,
-  ThreadSearchPullRequestNumber,
 } from "../ThreadStatusIndicators";
 import { useThreadShell } from "../../state/entities";
 import { ProjectFavicon, type ProjectFaviconProject } from "../ProjectFavicon";
@@ -181,21 +179,11 @@ function SidebarThreadTooltip({
   const previousProviderNames = thread.providerInstanceHistory
     .filter((instanceId) => instanceId !== modelInstanceId)
     .map((instanceId) => providerEntryByInstanceId.get(instanceId)?.displayName ?? instanceId);
-  const supportsMultiplePullRequests = useSupportsMultiplePullRequests(thread.environmentId);
   const gt = useGT();
   const m = useMessages();
   return (
     <ThreadHoverCardPopup side="right" align="start" sideOffset={4}>
-      <ThreadHoverCard
-        title={thread.title}
-        footer={
-          supportsMultiplePullRequests && thread.pullRequests.length > 0 ? (
-            <div className="border-t border-border/60 pt-2 pl-0.5 text-xs text-muted-foreground">
-              <ThreadPullRequestsMiniList pullRequests={thread.pullRequests} />
-            </div>
-          ) : null
-        }
-      >
+      <ThreadHoverCard title={thread.title}>
         {projectDisplayName ? (
           <div className="flex min-w-0 items-center gap-2">
             {project ? <ProjectFavicon project={project} className="size-3 shrink-0" /> : null}
@@ -485,6 +473,8 @@ function ThreadRenameInput(props: {
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
     if (event.key === "Enter") {
       event.preventDefault();
+      // A Return held down from the row that opened this field must not commit it.
+      if (event.repeat) return;
       settledRef.current = true;
       props.onCommit();
     } else if (event.key === "Escape") {
@@ -657,18 +647,18 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
   };
   const handleKeyDown = (event: ReactKeyboardEvent) => {
     if (event.target !== event.currentTarget) return;
-    if (
-      event.key === "F2" &&
-      !isRenaming &&
-      readEnvironmentScope(threadRef.environmentId, AuthOrchestrationOperateScope)
-    ) {
-      event.preventDefault();
-      onStartRename(threadRef, thread.title);
+    const key = sidebarRowKeyAction(event, isMacPlatform(navigator.platform));
+    if (key === null) return;
+    event.preventDefault();
+    const canRename =
+      !isRenaming && readEnvironmentScope(threadRef.environmentId, AuthOrchestrationOperateScope);
+    if (key === "rename" && canRename) {
+      // A held Return would commit the field it just opened.
+      if (!event.repeat) onStartRename(threadRef, thread.title);
       return;
     }
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    onThreadActivate(threadRef);
+    // Return still opens a thread this device cannot rename.
+    if (key === "open" || event.key === "Enter") onThreadActivate(threadRef);
   };
   const handleDoubleClick = (event: ReactMouseEvent) => {
     if (
@@ -726,7 +716,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
       ? "bg-sidebar-row-active text-sidebar-foreground light:ring-1 light:ring-inset light:ring-sidebar-border/70"
       : isSelected || props.sweepAction !== null
         ? "bg-sidebar-row-selected text-sidebar-foreground light:ring-1 light:ring-inset light:ring-sidebar-border/70"
-        : "bg-transparent text-sidebar-foreground hover:bg-sidebar-row-hover",
+        : "bg-transparent text-sidebar-foreground",
     isFileDragOver && "ring-1 ring-inset ring-primary/70",
     isFileDragOver && !props.isActive && !isSelected && "bg-sidebar-row-hover",
     props.sortable?.isDragging &&
@@ -871,8 +861,9 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
             <div
               ref={rowRef}
               role="button"
-              tabIndex={0}
+              tabIndex={-1}
               data-sidebar-row={threadKey}
+              data-sidebar-title={thread.title}
               data-sidebar-parent={branch?.parentKey ?? props.navigationParent}
               aria-label={accessibility.label}
               aria-current={accessibility.current}
@@ -1103,7 +1094,6 @@ export const SidebarSearchResultRow = memo(function SidebarSearchResultRow(props
               tabIndex={-1}
               aria-selected={props.isHighlighted}
               aria-current={accessibility.current}
-              aria-describedby={`${props.resultId}-pr`}
               aria-label={accessibility.label}
               {...dragListeners}
               onMouseMove={props.onHighlight}
@@ -1127,7 +1117,7 @@ export const SidebarSearchResultRow = memo(function SidebarSearchResultRow(props
                 "group/sidebar-row group/v2-row flex min-h-9 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-1 text-left text-sm outline-none",
                 props.isHighlighted || props.isRouteActive
                   ? "bg-sidebar-row-active text-sidebar-foreground"
-                  : "text-sidebar-muted-foreground/75 hover:bg-sidebar-row-hover hover:text-sidebar-foreground",
+                  : "text-sidebar-muted-foreground/75 hover:text-sidebar-foreground",
                 isFileDragOver && "ring-1 ring-inset ring-primary/70",
                 isFileDragOver && !props.isRouteActive && "bg-sidebar-row-hover",
               )}
@@ -1166,14 +1156,6 @@ export const SidebarSearchResultRow = memo(function SidebarSearchResultRow(props
                     {thread.title}
                   </ActivityShimmerOverlay>
                 ) : null}
-              </span>
-              <span id={`${props.resultId}-pr`} className="contents">
-                <ThreadSearchPullRequestNumber
-                  thread={thread}
-                  query={props.searchQuery}
-                  enabled={leaseLiveStatus}
-                  settled={props.isSettled}
-                />
               </span>
               <span className="min-w-8 shrink-0 text-right text-xs text-muted-foreground/55 tabular-nums">
                 <RelativeTimeLabel timestamp={resolveThreadActivityTimestamp(thread)} />

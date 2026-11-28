@@ -5,7 +5,7 @@ import type { DeviceAssetSource } from "./model.ts";
 import { createDisplayProjection, updateDisplayUv, type PhoneDisplayLayout } from "./phoneScene.ts";
 
 /** GLB resources belong to one viewer; the live framebuffer texture belongs to its stream presentation. */
-export function disposeDeviceModel(root: Object3D) {
+function disposeDeviceModel(root: Object3D) {
   const geometries = new Set<Mesh["geometry"]>();
   const materials = new Set<Material>();
   const textures = new Set<Texture>();

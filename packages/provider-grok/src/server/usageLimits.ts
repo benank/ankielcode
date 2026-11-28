@@ -62,10 +62,7 @@ function parsePeriodBoundary(value: string | undefined) {
   return Date.parse(value);
 }
 
-export function grokUsageResponseToLimits(
-  response: typeof GrokUsageResponse.Type,
-  checkedAt: string,
-) {
+function grokUsageResponseToLimits(response: typeof GrokUsageResponse.Type, checkedAt: string) {
   const period = response.config?.currentPeriod;
   const periodType = period?.type?.replace(/^USAGE_PERIOD_TYPE_/, "");
   const kind = periodType === "WEEKLY" ? "weekly" : periodType === "MONTHLY" ? "monthly" : "other";

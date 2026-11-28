@@ -164,16 +164,6 @@ export function resolveProjectFileQueryData(
   return appAtomRegistry.get(optimisticFileAtom(environmentId, cwd, relativePath))?.data ?? data;
 }
 
-export function clearProjectFileQueryData(
-  environmentId: EnvironmentId,
-  cwd: string,
-  relativePath: string,
-): void {
-  const atom = optimisticFileAtom(environmentId, cwd, relativePath);
-  appAtomRegistry.set(atom, null);
-  releaseUnsavedFile(atom);
-}
-
 function failureCause<A>(result: AsyncResult.AsyncResult<A, unknown>): unknown {
   return result._tag === "Failure" ? Cause.squash(result.cause) : null;
 }

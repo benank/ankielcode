@@ -79,7 +79,7 @@ export type ReportedProfiles = Map<
  * environment that dropped out of `targets` is forgotten, so it is reported again once it
  * becomes operable.
  */
-export function takeDueProfileReports(
+function takeDueProfileReports(
   reported: ReportedProfiles,
   targets: ReadonlyMap<EnvironmentId, EnvironmentServerConfig>,
   input: ProfileReport,

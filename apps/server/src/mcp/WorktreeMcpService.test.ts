@@ -375,35 +375,9 @@ const runHandoff = (
     return yield* service.handoff(harness.scope, input);
   }).pipe(Effect.provide(harness.layer));
 
-const runStatus = (harness: ReturnType<typeof makeHarness>) =>
-  Effect.gen(function* () {
-    const service = yield* WorktreeMcpService.WorktreeMcpService;
-    return yield* service.status(harness.scope);
-  }).pipe(Effect.provide(harness.layer));
-
 const decodeHandoffInput = Schema.decodeUnknownEffect(WorktreeMcpHandoffInput);
 
 describe("ankiel_worktree_handoff", () => {
-  // regression: #22971 a separate send let the detach settle the run before its follow-up existed
-  it.effect("commits the continuation with the thread binding", () => {
-    const harness = makeHarness();
-    return Effect.gen(function* () {
-      const result = yield* runHandoff(harness, {
-        branch: "feature/continue",
-        continuationPrompt: "Keep going.",
-      });
-      expect(result.continuation).toEqual({ status: "scheduled", delivery: "queued" });
-      expect(harness.dispatch).toHaveBeenCalledTimes(1);
-      expect(harness.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: "thread.metadata.update",
-          worktreePath: "/worktrees/project/feature/continue",
-          continuation: expect.objectContaining({ text: "Keep going." }),
-        }),
-      );
-    });
-  });
-
   it.effect("uses the fetched commit and remote PR base for an explicit local alias", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -491,15 +465,6 @@ describe("ankiel_worktree_handoff", () => {
     });
   });
 
-  it.effect("does not trip the pre-flight on similarly named branches", () => {
-    const harness = makeHarness({ existingBranchWorktreePath: null });
-    return Effect.gen(function* () {
-      const result = yield* runHandoff(harness, { branch: "feature/take" });
-      expect(result.branch).toBe("feature/take");
-      expect(harness.createWorktree).toHaveBeenCalledTimes(1);
-    });
-  });
-
   it.effect("propagates an interrupted dispatch without rolling back the worktree", () => {
     const harness = makeHarness({ dispatchInterrupts: true });
     return Effect.gen(function* () {
@@ -509,30 +474,6 @@ describe("ankiel_worktree_handoff", () => {
       }
       expect(Cause.hasInterruptsOnly(exit.cause)).toBe(true);
       expect(harness.removeWorktree).not.toHaveBeenCalled();
-    });
-  });
-
-  it.effect("falls back to the local base when no remote holds it", () => {
-    const harness = makeHarness({ worktreeBaseMissing: true });
-    return Effect.gen(function* () {
-      const result = yield* runHandoff(harness, {
-        branch: "feature/local-fallback",
-        baseRef: "dev",
-        startFromOrigin: true,
-      });
-      expect(harness.createWorktree).toHaveBeenCalledWith(
-        expect.objectContaining({ refName: "dev", baseRefName: "dev" }),
-      );
-      expect(result.startedFromOrigin).toBe(false);
-    });
-  });
-
-  it.effect("defaults startFromOrigin to the project's override", () => {
-    const harness = makeHarness({ projectNewWorktreesStartFromOrigin: true });
-    return Effect.gen(function* () {
-      const result = yield* runHandoff(harness, { branch: "feature/project-origin" });
-      expect(harness.fetchWorktreeBaseCommit).toHaveBeenCalled();
-      expect(result.startedFromOrigin).toBe(true);
     });
   });
 
@@ -597,29 +538,6 @@ describe("ankiel_worktree_handoff", () => {
     });
   });
 
-  it.effect("runs the setup script even when interrupted during the binding dispatch", () =>
-    Effect.gen(function* () {
-      const gate = yield* Deferred.make<void>();
-      const harness = makeHarness({ dispatchGate: Deferred.await(gate) });
-
-      const fiber = yield* Effect.forkChild(
-        runHandoff(harness, {
-          branch: "feature/interrupted",
-          continuationPrompt: "Keep going in the worktree.",
-        }),
-      );
-      yield* Effect.yieldNow;
-      const interruption = yield* Effect.forkChild(Fiber.interrupt(fiber));
-      yield* Effect.yieldNow;
-      yield* Deferred.succeed(gate, undefined);
-      yield* Fiber.await(fiber);
-      yield* Fiber.join(interruption);
-
-      expect(harness.dispatch).toHaveBeenCalledTimes(1);
-      expect(harness.runForThread).toHaveBeenCalledTimes(1);
-    }),
-  );
-
   it.effect("creates the worktree in the managed directory even when a call names a path", () => {
     const harness = makeHarness();
     return Effect.gen(function* () {
@@ -630,24 +548,6 @@ describe("ankiel_worktree_handoff", () => {
       const result = yield* runHandoff(harness, input);
       expect(harness.createWorktree).toHaveBeenCalledWith(expect.objectContaining({ path: null }));
       expect(result.worktreePath).toBe("/worktrees/project/feature/elsewhere");
-    });
-  });
-
-  it.effect("releases the per-thread guard after a failed handoff", () => {
-    const harness = makeHarness({
-      thread: { worktreePath: "/worktrees/project/existing" },
-    });
-    return Effect.gen(function* () {
-      const service = yield* resolveService(harness);
-
-      const first = yield* Effect.exit(
-        service.handoff(harness.scope, { branch: "feature/guard-1" }),
-      );
-      expectTypedFailure(first, { _tag: "WorktreeMcpFailure", code: "already_in_worktree" });
-      const second = yield* Effect.exit(
-        service.handoff(harness.scope, { branch: "feature/guard-2" }),
-      );
-      expectTypedFailure(second, { _tag: "WorktreeMcpFailure", code: "already_in_worktree" });
     });
   });
 
@@ -674,36 +574,6 @@ describe("ankiel_worktree_handoff", () => {
       expect(harness.createWorktree).toHaveBeenCalledTimes(1);
     }),
   );
-
-  it.effect("reports a setup script defect without failing the handoff", () => {
-    const harness = makeHarness({ setupScript: "dies" });
-    return Effect.gen(function* () {
-      const result = yield* runHandoff(harness, { branch: "feature/setup-dies" });
-      expect(result.setupScript).toEqual({ status: "failed", detail: "setup runner defect" });
-      expect(harness.dispatch).toHaveBeenCalled();
-    });
-  });
-});
-
-describe("ankiel_worktree_status", () => {
-  it.effect("reports an attached thread's worktree and branch", () => {
-    const harness = makeHarness({
-      thread: {
-        worktreePath: "/worktrees/project/existing",
-        branch: "feature/existing",
-      },
-      projectNewWorktreesStartFromOrigin: true,
-    });
-    return Effect.gen(function* () {
-      const result = yield* runStatus(harness);
-      expect(result).toMatchObject({
-        attached: true,
-        worktreePath: "/worktrees/project/existing",
-        branch: "feature/existing",
-        defaultStartFromOrigin: true,
-      });
-    });
-  });
 });
 
 describe("ankiel_worktree_list", () => {
@@ -712,20 +582,6 @@ describe("ankiel_worktree_list", () => {
       const service = yield* WorktreeMcpService.WorktreeMcpService;
       return yield* service.listRefs({ worktreePath, workspaceRoot });
     }).pipe(Effect.provide(harness.layer));
-
-  it.effect("lists refs from the thread's worktree, or the project root once it was removed", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const worktreePath = yield* fs.makeTempDirectoryScoped({ prefix: "worktree-list-" });
-      const harness = makeHarness();
-      yield* listRefs(harness, worktreePath);
-      yield* listRefs(harness, `${worktreePath}/removed`);
-      expect(harness.listRefs.mock.calls.map(([input]) => input.cwd)).toEqual([
-        worktreePath,
-        workspaceRoot,
-      ]);
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
-  );
 
   it.effect("fails instead of falling back when the worktree cannot be checked", () => {
     const harness = makeHarness({ existsFails: true });

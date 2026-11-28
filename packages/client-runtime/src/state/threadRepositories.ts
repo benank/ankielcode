@@ -179,7 +179,7 @@ function byNameThenPath(left: ThreadRepositoryScope, right: ThreadRepositoryScop
 }
 
 /** The repositories a thread reaches, by name and then path. */
-export function threadRepositoryScopes(
+function threadRepositoryScopes(
   projection: Pick<OrchestrationV2ThreadProjection, "checkpointScopes">,
 ): ReadonlyArray<ThreadRepositoryScope> {
   const scopes = projection.checkpointScopes;
@@ -311,11 +311,6 @@ export function turnChanges(turn: TurnChangesSource): TurnChanges {
  */
 export function turnHasChanges(turn: TurnChangesSource): boolean {
   return turn.files.length > 0 || (turn.repositories?.length ?? 0) > 0;
-}
-
-/** A repository file's path from the thread's folder, as the turn diff sections name it. */
-export function repositoryFilePath(relativePath: string, filePath: string): string {
-  return relativePath === "" || relativePath === "." ? filePath : `${relativePath}/${filePath}`;
 }
 
 /**
@@ -720,8 +715,6 @@ export interface RepositorySectionSummary {
   readonly changedFiles: number;
   readonly insertions: number;
   readonly deletions: number;
-  /** The branch's pull request, from the last remote read anyone made of this folder. */
-  readonly pullRequest: NonNullable<VcsStatusResult["pr"]> | null;
 }
 
 export function repositorySectionSummary(
@@ -734,6 +727,5 @@ export function repositorySectionSummary(
     changedFiles: status.workingTree.files.length,
     insertions: status.workingTree.insertions,
     deletions: status.workingTree.deletions,
-    pullRequest: status.pr,
   };
 }

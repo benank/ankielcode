@@ -84,7 +84,7 @@ const NO_NATIVE_RESUME_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const DEFAULT_MAX_IDLE_PIN_MS = 4 * 60 * 60 * 1000;
 const RELEASE_SCOPE_CLOSE_TIMEOUT_MS = 30 * 1000;
 /** Past adapters' own 10 s stop fallbacks, so they settle first when the provider answers at all. */
-export const PROVIDER_INTERRUPT_TIMEOUT_MS = 15 * 1000;
+const PROVIDER_INTERRUPT_TIMEOUT_MS = 15 * 1000;
 
 const busyTurnPrefix = (providerThreadId: ProviderThreadId) => `${providerThreadId}#`;
 const busyTurnKey = (providerThreadId: ProviderThreadId, runOrdinal: number) =>
@@ -119,7 +119,7 @@ const WORKING_RUN_STATUSES: ReadonlySet<string> = new Set([
 ]);
 
 /** Matches planDelegatedCompletionDelivery: true while a delegated task's result still wakes the thread. */
-export const delegatedTaskWillWake = (records: {
+const delegatedTaskWillWake = (records: {
   readonly thread: Pick<OrchestrationV2AppThread, "archivedAt" | "deletedAt">;
   readonly runs: ReadonlyArray<Pick<OrchestrationV2Run, "id" | "delegatedCompletion">>;
   readonly subagents: ReadonlyArray<
@@ -611,7 +611,7 @@ export const layerWithOptions = (
                   yield* agentAccessSettings(threadId);
                 const capabilities = new Set<
                   import("../mcp/McpInvocationContext.ts").McpCapability
-                >(["orchestration", "worktree", "pull-requests"]);
+                >(["orchestration", "worktree"]);
                 if (browserToolsAvailable) capabilities.add("preview");
                 if (deviceToolsAvailable) capabilities.add("device");
                 const backgroundWait = yield* registry.get(providerInstanceId).pipe(

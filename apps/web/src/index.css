@@ -181,9 +181,10 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
    default stacks are mirrored in `appearanceFonts.ts`. */
 @theme {
   --font-sans:
-    "DM Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    "Geist Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --font-mono:
-    ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    "Geist Mono Variable", ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas,
+    "Liberation Mono", monospace;
 }
 
 @theme inline {
@@ -232,11 +233,12 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
       transparent calc(var(--chat-composer-attachment-overlap) + 10px)
     );
   --color-zinc-25: oklch(99.2% 0 0);
-  --animate-skeleton: skeleton 2.4s infinite;
+  /* Looping indicators hold still in an unfocused window (--window-animation-play-state). */
+  --animate-skeleton: skeleton 2.4s infinite var(--window-animation-play-state, running);
   /* Duty-cycled indicator animations: long holds with stepped ramps, so the
      compositor updates discrete frames instead of every vsync. */
-  --animate-status-pulse: status-pulse 2s infinite;
-  --animate-status-ping: status-ping 2s infinite;
+  --animate-status-pulse: status-pulse 2s infinite var(--window-animation-play-state, running);
+  --animate-status-ping: var(--window-status-ping, status-ping) 2s infinite;
   /* Stash pulses hold a highlight for 1.2s; the row then eases back over 200ms, the count snaps.
      The row alternates two identical keyframes so each stash restarts it without a remount. */
   --animate-stash-pulse-row: stash-pulse-row 1400ms;
@@ -456,12 +458,10 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
 }
 
 @utility dialog-backdrop {
-  background: color-mix(in srgb, var(--background) 60%, transparent);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
+  background: color-mix(in srgb, var(--background) 64%, transparent);
 
   @variant dark {
-    background: color-mix(in srgb, var(--background) 64%, transparent);
+    background: color-mix(in srgb, var(--background) 68%, transparent);
   }
 }
 
@@ -564,14 +564,19 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
 
 @utility visible-animate-spin {
   animation: var(--animate-spin);
-  animation-play-state: var(--visible-animation-state, paused);
+  animation-play-state: var(--window-animation-play-state, var(--visible-animation-state, paused));
   will-change: var(--visible-animation-will-change, auto);
 }
 
+/* A 2.2s sweep stepped at 30fps, then a 0.8s rest past the text, so a long turn draws about a
+   fifth of the frames a linear sweep would at 120Hz. The pair must keep identical timing or the
+   counter-moved text jitters. */
 @keyframes live-activity-focus {
   from {
     transform: translateX(0);
+    animation-timing-function: steps(66);
   }
+  73.333%,
   to {
     transform: translateX(100%);
   }
@@ -580,7 +585,9 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
 @keyframes live-activity-focus-counter {
   from {
     transform: translateX(0);
+    animation-timing-function: steps(66);
   }
+  73.333%,
   to {
     transform: translateX(-100%);
   }
@@ -616,8 +623,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
     transparent 100%
   );
   mask-repeat: no-repeat;
-  animation: live-activity-focus 2.2s linear infinite;
-  animation-play-state: var(--visible-animation-state, paused);
+  animation: live-activity-focus 3s infinite;
+  animation-play-state: var(--window-animation-play-state, var(--visible-animation-state, paused));
   will-change: var(--visible-animation-will-change, auto);
 
   @media (prefers-reduced-motion: reduce), (forced-colors: active) {
@@ -629,8 +636,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
 
 @utility live-activity-focus-counter {
   width: 100%;
-  animation: live-activity-focus-counter 2.2s linear infinite;
-  animation-play-state: var(--visible-animation-state, paused);
+  animation: live-activity-focus-counter 3s infinite;
+  animation-play-state: var(--window-animation-play-state, var(--visible-animation-state, paused));
   will-change: var(--visible-animation-will-change, auto);
 
   @media (prefers-reduced-motion: reduce), (forced-colors: active) {
@@ -649,7 +656,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
 @utility pixel-status-strip {
   animation: pixel-status var(--pixel-duration) steps(var(--pixel-frames), jump-none)
     var(--pixel-iterations) both;
-  animation-play-state: var(--visible-animation-state, paused);
+  animation-play-state: var(--window-animation-play-state, var(--visible-animation-state, paused));
   will-change: var(--visible-animation-will-change, auto);
 
   @media (prefers-reduced-motion: reduce), (forced-colors: active) {
@@ -659,10 +666,29 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
   }
 }
 
-/* An unfocused window holds its pixels and shimmers still. */
-:root[data-window-blurred]
-  :is(.pixel-status-strip, .live-activity-focus, .live-activity-focus-counter) {
-  animation-play-state: paused;
+/* An unfocused window holds its pixels, shimmers, spinners, pulses and skeletons still. A
+   custom property, because it also has to reach shadow roots such as the Pierre file tree. A ping
+   frozen mid-burst would leave its ring on screen, so it stops instead and replays on focus. */
+:root[data-window-blurred] {
+  --window-animation-play-state: paused;
+  --window-status-ping: none;
+}
+
+/* Saving power (battery or thermal pressure, from the desktop shell): no activity shimmer, and
+   glass falls back to its opaque surface as at 100% glass opacity. The glass variables go on
+   body because appInit writes the user's glass opacity inline on the root. */
+:root[data-low-power] :is(.live-activity-focus, .live-activity-focus-counter) {
+  animation: none;
+  will-change: auto;
+}
+
+:root[data-low-power] .live-activity-focus {
+  opacity: 0;
+}
+
+:root[data-low-power] body {
+  --glass-blur: 0px;
+  --glass-opacity: 100%;
 }
 
 @utility live-activity-focus-aligned {
@@ -1208,6 +1234,14 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(ankiel-m
   }
 }
 
+/* An inactive window drops the tint from its selection and accent highlights, as AppKit does.
+   Lightness and alpha stay, so contrast and layout hold. */
+:root[data-window-blurred] {
+  --accent: oklch(from var(--app-theme-accent-surface) l 0 h);
+  --sidebar-row-active: oklch(from var(--app-theme-sidebar-row-active) l 0 h);
+  --sidebar-row-selected: oklch(from var(--app-theme-sidebar-row-selected) l 0 h);
+}
+
 /* Modified files get a muted accent so added and deleted files lead. */
 :root {
   --diff-modified-icon: color-mix(in srgb, var(--info-foreground) 50%, var(--muted-foreground));
@@ -1658,9 +1692,10 @@ code {
   --pele-critical: var(--destructive);
 }
 
-/* Window drag region (frameless titlebar) */
+/* Window drag region (frameless titlebar). Titlebar text is chrome, not page content. */
 .drag-region {
   -webkit-app-region: drag;
+  user-select: none;
 }
 
 /* Electron 44 inherits app-region. Reset children to the initial value so they
@@ -1681,21 +1716,23 @@ code {
   -webkit-app-region: no-drag;
 }
 
-/* Keep parent scrollbar styles off iframe owners to avoid WebKit resize loops: https://webkit.org/b/324485 */
-:where(:not(iframe))::-webkit-scrollbar {
+/* Keep parent scrollbar styles off iframe owners to avoid WebKit resize loops: https://webkit.org/b/324485
+   Any ::-webkit-scrollbar style replaces native scrollbars, so the macOS app leaves them alone and
+   gets overlay scrollbars that follow the system "Show scroll bars" setting. */
+:where(:root:not(.electron-macos) :not(iframe))::-webkit-scrollbar {
   width: var(--app-scrollbar-width);
 }
 
-:where(:not(iframe))::-webkit-scrollbar-track {
+:where(:root:not(.electron-macos) :not(iframe))::-webkit-scrollbar-track {
   background: transparent;
 }
 
-:where(:not(iframe))::-webkit-scrollbar-thumb {
+:where(:root:not(.electron-macos) :not(iframe))::-webkit-scrollbar-thumb {
   background: var(--app-scrollbar-thumb);
   border-radius: 3px;
 }
 
-:where(:not(iframe))::-webkit-scrollbar-thumb:hover {
+:where(:root:not(.electron-macos) :not(iframe))::-webkit-scrollbar-thumb:hover {
   background: var(--app-scrollbar-thumb-hover);
 }
 

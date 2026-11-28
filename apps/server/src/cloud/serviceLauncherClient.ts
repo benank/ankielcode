@@ -154,7 +154,7 @@ export const resolveServiceLauncherMode = Effect.fn("cloud.service_launcher_clie
   },
 );
 
-export const repointLaunchers = Effect.fn("cloud.service_launcher_client.repoint_launchers")(
+const repointLaunchers = Effect.fn("cloud.service_launcher_client.repoint_launchers")(
   function* (input: { readonly baseDir: string; readonly targetVersion: string }) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -258,7 +258,7 @@ export const awaitServiceLauncherStop = Effect.fn("cloud.service_launcher_client
   },
 );
 
-export const make = Effect.fn("cloud.service_launcher_client.make")(function* (options?: {
+const make = Effect.fn("cloud.service_launcher_client.make")(function* (options?: {
   readonly currentVersion?: string;
 }) {
   const { host, context, managed } = yield* resolveStartup(options);

@@ -917,7 +917,7 @@ const createTrace2Monitor = Effect.fnUntraced(function* (
 
 const GIT_CHECKOUT_PROGRESS_LINE = /Updating files:\s+(\d+)%\s+\((\d+)\/(\d+)\)/;
 
-export function parseGitCheckoutProgressLine(
+function parseGitCheckoutProgressLine(
   line: string,
 ): { percent: number; completed: number; total: number } | null {
   const match = GIT_CHECKOUT_PROGRESS_LINE.exec(line);
@@ -1029,7 +1029,7 @@ const collectOutput = Effect.fnUntraced(function* (
 });
 
 /** Windows Git needs core.longpaths beyond MAX_PATH (260); OS LongPathsEnabled alone is insufficient. */
-export const windowsLongPathConfigEnv = (
+const windowsLongPathConfigEnv = (
   platform: NodeJS.Platform,
   env: NodeJS.ProcessEnv,
 ): NodeJS.ProcessEnv =>

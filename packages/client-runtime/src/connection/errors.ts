@@ -123,7 +123,7 @@ const DPOP_CLOCK_HINT = msg(
 
 /** Older servers omit the DPoP category, but newer servers can also omit it for
  * a credential failure that happens after proof verification. */
-export const DPOP_UNKNOWN_HINT = msg(
+const DPOP_UNKNOWN_HINT = msg(
   "Hint: Try again. If it still fails, clock skew may be the cause; check that automatic date and time is enabled on both devices.",
 );
 

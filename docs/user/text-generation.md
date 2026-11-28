@@ -1,7 +1,7 @@
 # Text generation models
 
-Ankiel Code writes some text for you: thread titles, commit messages, pull request titles and
-descriptions, branch names, and voice transcript cleanup. Pick the model for this in
+Ankiel Code writes some text for you: thread titles, commit messages, branch names, and voice
+transcript cleanup. Pick the model for this in
 **Settings → Threads → Text generation model**. **Settings → Source control & issues** and
 **Settings → Voice** can each pick a different one.
 
@@ -31,9 +31,3 @@ Each request sends the API what the task needs, such as the staged diff for a co
 
 Turning a generator off or removing it sends its work back to the environment's text generation
 model.
-
-## What text generators can't do
-
-Review guides read the checkout over many steps, so they always use a coding agent. If your source
-control writer model is a text generator, review guides use Codex or Claude instead, and fail if
-neither is set up. To choose which, pick one in **Settings → Source control & issues → Review guide model**.

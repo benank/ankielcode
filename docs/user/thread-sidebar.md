@@ -128,7 +128,7 @@ Text generation**, under Advanced, such as a length limit or an identifier to pu
 regenerated titles. Select a project to give it its own instructions.
 
 Agents connected through Ankiel Code can use the same server-owned metadata workflow to
-rename a thread, regenerate its title, or link and unlink a pull request. These changes
+rename a thread, regenerate its title, or link and unlink an issue. These changes
 appear on desktop and mobile without requiring the originating app to remain
 open.
 
@@ -180,16 +180,11 @@ settle every thread in that section between it and the one you release on.
 The **Un-settle** and **Wake** buttons work the same way in their sections.
 Press `Escape` while dragging to cancel.
 
-By default, environments settle inactive threads after seven days and settle
-threads whose pull request merged. A closed pull request can also settle an idle
-thread. An empty thread's inactivity counts from when it was created.
-Work in progress, pending questions or approvals, and background work the agent
-is waiting on prevent automatic settlement. An open pull request does not prevent inactivity
-settlement unless you turn on **Keep threads with a PR** in **Settings → Threads**,
-but an old closed or merged pull request does not settle work you
-resumed after it closed. Your own messages count as resuming, and so does a
-message an agent sends with `ankiel_thread_send` or `ankiel thread send`. A turn that finished
-background work or a pull request watch starts on its own does not.
+By default, environments settle inactive threads after seven days. An empty thread's
+inactivity counts from when it was created. Work in progress, pending questions or approvals,
+and background work the agent is waiting on prevent automatic settlement. Your own messages
+count as new activity, and so does a message an agent sends with `ankiel_thread_send` or
+`ankiel thread send`. A turn that finished background work starts on its own does not.
 
 To keep one thread out of the settled shelf no matter how long it sits idle, open its menu,
 choose **Auto-settle behavior**, and pick **Never**. The current option is checked. Pick
@@ -218,21 +213,10 @@ A scheduled task that posts into one thread keeps running after you archive that
 each run fails. Settle the thread instead, or move or pause the task in **Settings → Scheduled
 tasks**.
 
-## Link a pull request
-
-The server finds the PR for each unsettled thread's saved branch, even when your
-apps are closed. Settled threads keep their saved links. Update the server if
-automatic branch links do not appear.
-
-On desktop, right-click a pull request link in a thread and choose
-**Link to thread** to select a different PR. Use **Unlink from thread** on the
-same link to return to the branch PR, if one exists.
-The linked pull request participates in automatic settlement.
-
 ## Find and reference work
 
 On desktop, open the command palette with `Cmd/Ctrl+K` to search threads
-across connected environments by title, branch, pull request, or project.
+across connected environments by title, branch, or project.
 Threads you open often or recently rank higher, and for three weeks the thread
 you last picked for a query ranks higher when you type that query again.
 Threads whose messages contain all your words appear below, under **In
@@ -243,13 +227,21 @@ the matching message; on an iPad with a keyboard, `Cmd+K` opens the same
 palette.
 
 Use **Settings → Keybindings** to find or customize shortcuts for searching files
-and copying a thread reference. A copied reference uses the thread's pull request
-link when available. Otherwise it copies a thread reference you can paste into an
-Ankiel Code composer as a thread chip. To copy the thread even
-when it has a PR, choose **Copy → Thread** from its context menu, or **Copy
-thread** from its long-press menu on mobile.
+and copying a thread reference. A copied reference pastes into an Ankiel Code
+composer as a thread chip. You can also choose **Copy → Thread** from a thread's
+context menu, or **Copy thread** from its long-press menu on mobile.
 **Thread ID** copies the bare ID for scripts and the `ankiel` CLI. See
 [keybindings](./keybindings.md) for custom configuration.
+
+### Recent threads and thread links
+
+On macOS, right-click Ankiel Code in the Dock to see your recent threads; on Windows,
+right-click it in the taskbar. Choose one to open it.
+
+A link of the form `ankielcode://thread/<environment ID>/<thread ID>` opens that thread
+in the desktop app, from a browser, a note, or a script. Both IDs are percent-encoded.
+The link only opens the thread. If its environment is not saved in this app, Ankiel Code
+says so and stays where it is.
 
 ## Inspect agent work
 

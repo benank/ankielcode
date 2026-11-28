@@ -1,10 +1,7 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import type * as Option from "effect/Option";
 import type {
   RepositoryIdentity,
-  ChangeRequest,
-  ChangeRequestState,
   SourceControlProviderError,
   SourceControlProviderInfo,
   SourceControlProviderKind,
@@ -28,12 +25,6 @@ export interface SourceControlProviderContext {
   readonly remoteName: string;
   readonly remoteUrl: string;
   readonly requestedHost?: string;
-}
-
-export interface SourceControlRefSelector {
-  readonly refName: string;
-  readonly owner?: string;
-  readonly repository?: string;
 }
 
 const MAX_ERROR_TRANSPORT_VALUE_LENGTH = 256;
@@ -95,17 +86,6 @@ export class SourceControlProvider extends Context.Service<
   SourceControlProvider,
   {
     readonly kind: SourceControlProviderKind;
-    /** The caller verifies owners, so hosts may drop unsupported `owner:branch` selectors. */
-    readonly headBranchProbe?: (input: {
-      readonly headSelectors: ReadonlyArray<string>;
-      readonly state: "open" | "all";
-      /** `owner:branch` to read instead of bare names, when the caller knows the head's owner. */
-      readonly ownerHeadSelector?: string | undefined;
-    }) => { readonly headSelectors: ReadonlyArray<string>; readonly limit: number };
-    readonly readChangeRequestTemplate?: (input: {
-      readonly cwd: string;
-      readonly treeish: string;
-    }) => Effect.Effect<Option.Option<string>>;
     /** Strip installation mounts from remote paths; absent means use the whole path. */
     readonly repositoryNameFromRemoteUrl?: (url: string) => string | null;
     readonly refineRepositoryIdentity?: (input: {
@@ -130,16 +110,6 @@ export class SourceControlProvider extends Context.Service<
     }) => Effect.Effect<string | null, SourceControlProviderError>;
     readonly resolveLink?: ResolveSourceControlLink;
     /**
-     * Whether `createChangeRequest` from `cwd` targets `repository`, the `owner/name` of the
-     * context's remote, for a host whose tools let configuration outside the remotes name another
-     * repository. Absent means it does.
-     */
-    readonly createsChangeRequestsIn?: (input: {
-      readonly cwd: string;
-      readonly context: SourceControlProviderContext;
-      readonly repository: string | null;
-    }) => Effect.Effect<boolean>;
-    /**
      * Told when Ankiel records `baseBranch`, a branch name on the host, as the base `branch` was cut
      * from, for a host whose own tools keep that in git config of their own.
      */
@@ -148,52 +118,6 @@ export class SourceControlProvider extends Context.Service<
       readonly branch: string;
       readonly baseBranch: string;
     }) => Effect.Effect<void>;
-    /** True when `createChangeRequest` opens the change request as a draft when asked. */
-    readonly createsDraftChangeRequests?: boolean;
-    /**
-     * The private companion of the checkout's repository, made when it has none. The branch of
-     * a private change request is pushed to `url` and never to the repository itself, which
-     * everyone can read. Absent on a host without private change requests.
-     */
-    readonly privateChangeRequestRemote?: (input: {
-      readonly cwd: string;
-      readonly context?: SourceControlProviderContext;
-    }) => Effect.Effect<
-      { readonly url: string; readonly repository: string },
-      SourceControlProviderError
-    >;
-    readonly listChangeRequests: (input: {
-      readonly cwd: string;
-      readonly context?: SourceControlProviderContext;
-      readonly source?: SourceControlRefSelector;
-      readonly headSelector: string;
-      readonly state: ChangeRequestState | "all";
-      readonly limit?: number;
-      /**
-       * `owner/name` to search instead of the repository `createChangeRequest` targets. Only a
-       * host with `createsChangeRequestsIn` can target another repository, so others ignore it.
-       */
-      readonly repository?: string;
-    }) => Effect.Effect<ReadonlyArray<ChangeRequest>, SourceControlProviderError>;
-    readonly getChangeRequest: (input: {
-      readonly cwd: string;
-      readonly context?: SourceControlProviderContext;
-      readonly reference: string;
-    }) => Effect.Effect<ChangeRequest, SourceControlProviderError>;
-    readonly createChangeRequest: (input: {
-      readonly cwd: string;
-      readonly context?: SourceControlProviderContext;
-      readonly source?: SourceControlRefSelector;
-      readonly target?: SourceControlRefSelector;
-      readonly baseRefName: string;
-      readonly headSelector: string;
-      readonly title: string;
-      readonly bodyFile: string;
-      /** Honored only by a provider with `createsDraftChangeRequests`. */
-      readonly draft?: boolean;
-      /** Asked only of a provider with `privateChangeRequestRemote`, which holds the head. */
-      readonly private?: boolean;
-    }) => Effect.Effect<void, SourceControlProviderError>;
     readonly getRepositoryCloneUrls: (input: {
       readonly cwd: string;
       readonly context?: SourceControlProviderContext;
@@ -210,11 +134,5 @@ export class SourceControlProvider extends Context.Service<
       readonly cwd: string;
       readonly context?: SourceControlProviderContext;
     }) => Effect.Effect<string | null, SourceControlProviderError>;
-    readonly checkoutChangeRequest: (input: {
-      readonly cwd: string;
-      readonly context?: SourceControlProviderContext;
-      readonly reference: string;
-      readonly force?: boolean;
-    }) => Effect.Effect<void, SourceControlProviderError>;
   }
 >()("@ankielcode/source-control-core/server/SourceControlProvider") {}

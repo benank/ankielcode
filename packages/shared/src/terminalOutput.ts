@@ -638,7 +638,7 @@ function styleAt(text: string, index: number): { readonly start: number; readonl
 }
 
 /** Keeps the last `maxChars`, preferring to start on a fresh line. */
-export function terminalOutputTail(
+function terminalOutputTail(
   text: string,
   maxChars: number,
 ): { readonly text: string; readonly truncated: boolean } {

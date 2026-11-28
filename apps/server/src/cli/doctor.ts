@@ -62,7 +62,7 @@ const lockServerHome = Effect.fn("runDoctor.lockServerHome")(function* (paths: {
   );
 });
 
-export const runDoctor = Effect.fn("runDoctor")(function* (
+const runDoctor = Effect.fn("runDoctor")(function* (
   paths: { readonly dbPath: string; readonly serverRuntimeStatePath: string },
   options: { readonly fix: boolean; readonly dryRun: boolean; readonly interactive?: boolean },
 ) {

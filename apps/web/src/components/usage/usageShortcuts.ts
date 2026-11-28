@@ -34,6 +34,16 @@ export function resolveUsageShortcut(
   ) {
     return null;
   }
+  // A focused sidebar row takes plain letters for type-to-select.
+  if (
+    target instanceof Element &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    target.closest("[data-sidebar-row]")
+  ) {
+    return null;
+  }
 
   return resolveShortcutCommand(event, keybindings, {
     context: { usagePageOpen: true },

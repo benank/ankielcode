@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import type { MouseEvent } from "react";
 
 import { readIssueListPreferences } from "../components/issue/issueListPreferences";
-import { ISSUES_PANEL_REF, PULL_REQUESTS_PANEL_REF, useRightPanelStore } from "../rightPanelStore";
+import { ISSUES_PANEL_REF, useRightPanelStore } from "../rightPanelStore";
 import { useProjects, useServerConfigs } from "../state/entities";
 
 /**
@@ -49,10 +49,8 @@ export function useOpenIssueLink(
       key: target.ref.key,
       url: targetUrl,
     };
-    // A list page's panel is the Issues page's: the pull request list's own panel shows pull
-    // requests only. Opening the tab here, not only through the URL, also brings back one that
-    // is already open.
-    if (resolvedPanelRef === PULL_REQUESTS_PANEL_REF || resolvedPanelRef === ISSUES_PANEL_REF) {
+    // Opening the tab here, not only through the URL, also brings back one that is already open.
+    if (resolvedPanelRef === ISSUES_PANEL_REF) {
       useRightPanelStore.getState().openIssue(ISSUES_PANEL_REF, { ...surface, environmentId });
       const selection = {
         selectedEnvironmentId: environmentId,

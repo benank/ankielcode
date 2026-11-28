@@ -8,11 +8,10 @@ import {
   ThreadId,
   TrimmedNonEmptyString,
 } from "./baseSchemas.ts";
-import { ThreadPullRequestKey } from "./threadPullRequest.ts";
 
 /**
  * Milestones are the coarse state changes worth telling someone about: a turn ended, an agent
- * waits on a person, a watched pull request woke its thread.
+ * waits on a person, a workflow run needs an answer.
  * They are derived from the authoritative stores and kept only in memory, so a consumer that
  * needs the full state reads it from those stores.
  */
@@ -73,15 +72,6 @@ export const MilestoneEvent = Schema.Union([
     requestId: RuntimeRequestId,
     kind: MilestoneInputKind,
     resolution: Schema.Literals(["resolved", "expired", "cancelled"]),
-  }),
-  Schema.Struct({
-    ...MilestoneEnvelope.fields,
-    type: Schema.Literal("pr.watch_wake"),
-    pullRequests: Schema.Array(ThreadPullRequestKey),
-    outcome: Schema.Literals(["completed", "failed", "cancelled", "updated", "unknown"]),
-    summary: Schema.String,
-    /** The watch ended with this wake, as a merge, a close or a read failure ends it. */
-    watchEnded: Schema.Boolean,
   }),
   Schema.Struct({
     ...MilestoneEnvelope.fields,

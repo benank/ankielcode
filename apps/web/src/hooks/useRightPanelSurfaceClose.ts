@@ -1,3 +1,4 @@
+import { msg } from "gt-react";
 import {
   AuthOrchestrationOperateScope,
   AuthPreviewOperateScope,
@@ -95,12 +96,17 @@ export function useRightPanelSurfaceClose(input: {
     }
     const localApi = readLocalApi();
     if (!localApi) return;
-    void localApi.dialogs.confirm(message).then(
-      (confirmed) => {
-        if (confirmed) closeSurfaces();
-      },
-      () => undefined,
-    );
+    void localApi.dialogs
+      .confirm(message, {
+        confirmLabel: m(msg("Close", { $context: "button, closes the browser" })),
+        destructive: false,
+      })
+      .then(
+        (confirmed) => {
+          if (confirmed) closeSurfaces();
+        },
+        () => undefined,
+      );
   };
   // The active surface closes last so the panel does not flash through it.
   const finishClose = (toClose: readonly RightPanelSurface[]) => {

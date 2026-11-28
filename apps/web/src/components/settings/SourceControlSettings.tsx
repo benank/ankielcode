@@ -471,9 +471,7 @@ function GitHubIntegrationSetting() {
         serverScoped
         {...searchableSetting("github-integration")}
         settingKeys={["githubIntegrationEnabled"]}
-        description={gt(
-          "Allow Ankiel Code to read and manage GitHub issues and pull requests on this environment.",
-        )}
+        description={gt("Allow Ankiel Code to read and manage GitHub issues on this environment.")}
         control={
           <ScopedSwitch
             settingKeys={["githubIntegrationEnabled"]}

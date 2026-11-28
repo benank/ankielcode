@@ -905,7 +905,10 @@ function ResourceTelemetryDiagnosticsBody({
           gt("Send SIGKILL to process {pid}? This cannot be handled by the process.", {
             pid: process.identity.pid,
           }),
-          { variant: "destructive" },
+          {
+            confirmLabel: gt("Kill", { $context: "verb, force-kills a process" }),
+            destructive: true,
+          },
         );
       } catch (error) {
         clearSignaling();

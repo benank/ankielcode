@@ -10,7 +10,7 @@ import { groupByProvider, type ModelOption } from "../../lib/modelOptions";
 import { findReasoningDescriptor } from "./thread-settings-sheet-state";
 
 /** Longer catalogs end in "More models…", which opens the searchable thread settings sheet. */
-export const COMPOSER_MENU_MODELS_PER_PROVIDER = 12;
+const COMPOSER_MENU_MODELS_PER_PROVIDER = 12;
 
 export type ComposerModelMenuIntent =
   | { readonly kind: "model"; readonly option: ModelOption }

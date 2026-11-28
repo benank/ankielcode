@@ -56,7 +56,7 @@ function isSameCaptureTarget(a: CaptureTarget, b: CaptureTarget): boolean {
   return a.environmentId === b.environmentId && a.threadId === b.threadId;
 }
 
-export function resolveExistingSnapShotTarget(
+function resolveExistingSnapShotTarget(
   target: CaptureTarget,
   routeThreadRef: ScopedThreadRef | null,
 ): CaptureTarget | null {
@@ -78,7 +78,7 @@ export function resolveExistingSnapShotTarget(
 }
 
 // Pin absence too: a later question must never claim an earlier capture.
-export function resolveSnapShotAttachmentTarget(
+function resolveSnapShotAttachmentTarget(
   pins: Map<string, DraftId | null>,
   id: string,
   target: CaptureTarget,
@@ -91,7 +91,7 @@ export function resolveSnapShotAttachmentTarget(
 
 const NEXT_PAINT_FALLBACK_MS = 100;
 
-export async function beginSnapShotAnimationWhenReady(
+async function beginSnapShotAnimationWhenReady(
   id: string,
   target: Promise<CaptureTarget | null>,
   pendingStarts: Set<string>,
@@ -107,7 +107,7 @@ export async function beginSnapShotAnimationWhenReady(
   }
 }
 
-export function dismissFailedSnapShot(
+function dismissFailedSnapShot(
   id: string | undefined,
   soundedIds: Set<string>,
   pendingStarts: Set<string>,
@@ -135,7 +135,7 @@ function resolveSnapShotTargetOnce(
   return resolution;
 }
 
-export function resolveSnapShotDeliveryTarget(
+function resolveSnapShotDeliveryTarget(
   targets: Map<string, Promise<CaptureTarget | null>>,
   id: string,
   resolveTarget: () => Promise<CaptureTarget | null>,
@@ -162,7 +162,7 @@ async function afterNextPaint(): Promise<void> {
   });
 }
 
-export async function deliverSnapShot(
+async function deliverSnapShot(
   bridge: DesktopBridge,
   item: DesktopPendingSnapShot,
   resolveTarget: () => CaptureTarget,

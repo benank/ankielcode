@@ -21,7 +21,6 @@ const PreferenceFields = {
   backgroundActivity: Schema.Struct({ profile: BackgroundActivityProfileSelection }),
   sourceControlWritingStyle: Schema.Struct({
     mode: Schema.String,
-    followChangeRequestTemplates: Schema.Boolean,
     customInstructions: Schema.String,
     truncated: Schema.Boolean,
   }),

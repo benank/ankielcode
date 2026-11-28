@@ -29,7 +29,6 @@ import { forkInheritedRunOrdinals, ProjectionStoreThreadNotFoundError } from "./
 import * as ThreadManagementService from "./ThreadManagementService.ts";
 
 import { formatThreadTitleContext } from "@ankielcode/provider-core/server/threadTitleContext";
-export { formatThreadTitleContext } from "@ankielcode/provider-core/server/threadTitleContext";
 
 export class ThreadTitleRegenerationService extends Context.Service<
   ThreadTitleRegenerationService,

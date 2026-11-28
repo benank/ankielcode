@@ -5,8 +5,3 @@ export {
   kiroPermissionDisposition,
   makeKiroAcpRuntime,
 } from "./server/acpSupport.ts";
-export {
-  checkKiroProviderStatus,
-  kiroAgentDescriptor,
-  kiroDefaultModelId,
-} from "./server/status.ts";

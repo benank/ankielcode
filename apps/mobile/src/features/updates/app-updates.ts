@@ -50,7 +50,7 @@ export interface AppUpdateDeferral {
   installInProgress: boolean;
 }
 
-export function createAppUpdateDeferral(): AppUpdateDeferral {
+function createAppUpdateDeferral(): AppUpdateDeferral {
   return { pendingInstall: false, installInProgress: false };
 }
 

@@ -29,7 +29,7 @@ function currentFormatters() {
 }
 
 /** Time only for today's messages; older ones lead with the day and month. */
-export function formatMessageTimestamp(
+function formatMessageTimestamp(
   input: string,
   nowMs: number = Date.now(),
   timeFormatter?: Intl.DateTimeFormat,

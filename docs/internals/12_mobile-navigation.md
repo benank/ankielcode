@@ -13,7 +13,7 @@ Opening a page has two intents:
   preserving route keys when updating in place across phones and splits.
 - **Drill in** pushes a page onto the stack with `StackActions.push` so Back returns.
 
-Lint rejects `navigate` to `Thread` or `PullRequest` because its behavior depends on what happens to
+Lint rejects `navigate` to `Thread` because its behavior depends on what happens to
 be on top. Never infer navigation intent from transition events (UIKit emits them for sidebar
 appearances too). Settings pages beside the list share one native screen whose content swaps so
 navigating between settings does not pop/push the column or unmount its header.

@@ -115,7 +115,6 @@ import { nativeLanguageName, SYSTEM_LANGUAGE } from "@ankielcode/client-runtime/
 import { SUPPORTED_LOCALES } from "../../i18n/locales";
 import { BackgroundActivitySettingsRow } from "./BackgroundActivitySettings";
 import { AdvancedSettings } from "./AdvancedSettings";
-import { PullRequestLinksOpenInAppSetting } from "./IntegrationsSettings";
 import { StorageCleanupSections } from "./StorageSettings";
 import { UpdateTrackSwitchDialog } from "./UpdateTrackSwitchDialog";
 import { environmentIdsKey } from "~/state/environmentAtomList";
@@ -220,7 +219,10 @@ function AboutVersionSection() {
           getDesktopUpdateInstallConfirmationMessage(
             updateState ?? { availableVersion: null, downloadedVersion: null },
           ),
-          { initialFocus: "confirm" },
+          {
+            confirmLabel: gt("Restart", { $context: "button, restarts the app" }),
+            destructive: false,
+          },
         );
       } catch (error) {
         setIsUpdateActionPending(false);
@@ -482,13 +484,6 @@ export function useSettingsRestore(onRestored?: () => void) {
     ...(settings.sidebarAutoSettleAfterDays !== DEFAULT_UNIFIED_SETTINGS.sidebarAutoSettleAfterDays
       ? [gt("Auto-settle inactive threads")]
       : []),
-    ...(settings.sidebarAutoSettleKeepPullRequests !==
-    DEFAULT_UNIFIED_SETTINGS.sidebarAutoSettleKeepPullRequests
-      ? [gt("Keep threads with a PR")]
-      : []),
-    ...(settings.sidebarAutoSettleOnMerge !== DEFAULT_UNIFIED_SETTINGS.sidebarAutoSettleOnMerge
-      ? [gt("Auto-settle merged threads")]
-      : []),
     ...(settings.autoResumeLimitedThreads !== DEFAULT_UNIFIED_SETTINGS.autoResumeLimitedThreads
       ? [gt("Resume after usage limits")]
       : []),
@@ -512,7 +507,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       : []),
     ...(settings.diffLayout !== DEFAULT_UNIFIED_SETTINGS.diffLayout ? [gt("Diff layout")] : []),
     ...(settings.proactivePanelsEnabled !== DEFAULT_UNIFIED_SETTINGS.proactivePanelsEnabled
-      ? [gt("Open pull requests and changes panels proactively")]
+      ? [gt("Open the changes panel proactively")]
       : []),
     ...(settings.showSkillsInSlashMenu !== DEFAULT_UNIFIED_SETTINGS.showSkillsInSlashMenu
       ? [gt("Show skills in slash menu")]
@@ -596,7 +591,10 @@ export function useSettingsRestore(onRestored?: () => void) {
         gt("Restore default settings?"),
         gt("This will reset: {settings}.", { settings: changedSettingLabels.join(", ") }),
       ].join("\n"),
-      { variant: "destructive" },
+      {
+        confirmLabel: gt("Restore", { $context: "verb, restores default settings" }),
+        destructive: true,
+      },
     );
     if (!confirmed) return;
 
@@ -671,8 +669,6 @@ export function useSettingsRestore(onRestored?: () => void) {
       sidebarProjectGroupingMode: DEFAULT_UNIFIED_SETTINGS.sidebarProjectGroupingMode,
       sidebarProjectSortOrder: DEFAULT_UNIFIED_SETTINGS.sidebarProjectSortOrder,
       sidebarAutoSettleAfterDays: DEFAULT_UNIFIED_SETTINGS.sidebarAutoSettleAfterDays,
-      sidebarAutoSettleKeepPullRequests: DEFAULT_UNIFIED_SETTINGS.sidebarAutoSettleKeepPullRequests,
-      sidebarAutoSettleOnMerge: DEFAULT_UNIFIED_SETTINGS.sidebarAutoSettleOnMerge,
       autoResumeLimitedThreads: DEFAULT_UNIFIED_SETTINGS.autoResumeLimitedThreads,
       snoozeLimitedThreads: DEFAULT_UNIFIED_SETTINGS.snoozeLimitedThreads,
       snoozePresets: DEFAULT_UNIFIED_SETTINGS.snoozePresets,
@@ -713,7 +709,6 @@ export function useSettingsRestore(onRestored?: () => void) {
       browserSearchEngine: DEFAULT_UNIFIED_SETTINGS.browserSearchEngine,
       browserCustomSearchUrl: DEFAULT_UNIFIED_SETTINGS.browserCustomSearchUrl,
       browserAutoShowFloatingPreview: DEFAULT_UNIFIED_SETTINGS.browserAutoShowFloatingPreview,
-      pullRequestLinksOpenInApp: DEFAULT_UNIFIED_SETTINGS.pullRequestLinksOpenInApp,
       enableAgentBrowserAccess: DEFAULT_UNIFIED_SETTINGS.enableAgentBrowserAccess,
     });
     onRestored?.();
@@ -1670,9 +1665,7 @@ export function DiffsSettingsPanel() {
         />
         <SettingsRow
           {...setting("default-diff-file-state")}
-          description={gt(
-            "Start with files expanded or collapsed when opening diffs or a pull request's Code tab.",
-          )}
+          description={gt("Start with files expanded or collapsed when opening diffs.")}
           resetAction={
             settings.diffFilesCollapsed !== DEFAULT_UNIFIED_SETTINGS.diffFilesCollapsed ? (
               <SettingResetButton
@@ -1717,12 +1710,10 @@ export function DiffsSettingsPanel() {
         <DiffColorsSettingsRow />
       </SettingsSection>
 
-      <SettingsSection id="pull-requests" title={gt("Pull requests")}>
+      <SettingsSection id="panels" title={gt("Panels")}>
         <SettingsRow
           {...setting("proactive-panels")}
-          description={gt(
-            "Open linked pull requests first. Otherwise, open Changes for edits to at least 3 files or 50 lines.",
-          )}
+          description={gt("Open Changes after a turn that edits at least 3 files or 50 lines.")}
           resetAction={
             settings.proactivePanelsEnabled !== DEFAULT_UNIFIED_SETTINGS.proactivePanelsEnabled ? (
               <SettingResetButton
@@ -1741,11 +1732,10 @@ export function DiffsSettingsPanel() {
               onCheckedChange={(checked) =>
                 updateSettings({ proactivePanelsEnabled: Boolean(checked) })
               }
-              aria-label={gt("Open pull requests and changes panels proactively")}
+              aria-label={gt("Open the changes panel proactively")}
             />
           }
         />
-        <PullRequestLinksOpenInAppSetting />
       </SettingsSection>
     </SettingsPageContainer>
   );
@@ -1849,10 +1839,6 @@ export function ThreadsSettingsPanel() {
     (environment?.serverConfig
       ? providersByEnvironment.get(environment.environmentId)
       : undefined) ?? EMPTY_SERVER_PROVIDERS;
-  const supportsAutoSettlementScope = connectedEnvironments.every(
-    (target) => target.serverConfig?.environment.capabilities.threadAutoSettlementScope === true,
-  );
-
   const textGenerationTargets = useTextGenerationTargets({
     environmentId,
     settings,
@@ -2006,38 +1992,6 @@ export function ThreadsSettingsPanel() {
         <SettingsSection id="auto-settle" title={gt("Auto-settle")}>
           <SettingsRow
             serverScoped
-            settingKeys={["sidebarAutoSettleOnMerge"]}
-            {...setting("auto-settle-merged-threads")}
-            description={gt(
-              "Settle a thread when its pull request merges. Closed pull requests still settle automatically.",
-            )}
-            resetAction={
-              settings.sidebarAutoSettleOnMerge !==
-              DEFAULT_UNIFIED_SETTINGS.sidebarAutoSettleOnMerge ? (
-                <SettingResetButton
-                  ariaLabel={gt("Reset auto-settle on merge to default")}
-                  onClick={() =>
-                    updateSettings({
-                      sidebarAutoSettleOnMerge: DEFAULT_UNIFIED_SETTINGS.sidebarAutoSettleOnMerge,
-                    })
-                  }
-                />
-              ) : null
-            }
-            control={
-              <ScopedSwitch
-                settingKeys={["sidebarAutoSettleOnMerge"]}
-                checked={settings.sidebarAutoSettleOnMerge}
-                onCheckedChange={(checked) =>
-                  updateSettings({ sidebarAutoSettleOnMerge: Boolean(checked) })
-                }
-                aria-label={gt("Auto-settle merged threads")}
-              />
-            }
-          />
-
-          <SettingsRow
-            serverScoped
             settingKeys={["sidebarAutoSettleAfterDays"]}
             {...setting("auto-settle-inactive-threads")}
             description={gt("Sidebar threads with no activity for this long settle automatically.")}
@@ -2080,26 +2034,6 @@ export function ThreadsSettingsPanel() {
                   onCommit={(days, options) =>
                     updateSettings({ sidebarAutoSettleAfterDays: days }, options)
                   }
-                />
-              }
-            />
-          ) : null}
-          {settings.sidebarAutoSettleAfterDays !== null && supportsAutoSettlementScope ? (
-            <SettingsRow
-              serverScoped
-              settingKeys={["sidebarAutoSettleKeepPullRequests"]}
-              title={gt("Keep threads with a PR")}
-              description={gt(
-                "Inactivity does not settle threads with a pull request. Merge and close still do.",
-              )}
-              control={
-                <ScopedSwitch
-                  settingKeys={["sidebarAutoSettleKeepPullRequests"]}
-                  checked={settings.sidebarAutoSettleKeepPullRequests}
-                  onCheckedChange={(checked) =>
-                    updateSettings({ sidebarAutoSettleKeepPullRequests: checked })
-                  }
-                  aria-label={gt("Keep threads with a PR")}
                 />
               }
             />

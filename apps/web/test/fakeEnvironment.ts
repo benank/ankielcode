@@ -5,17 +5,14 @@ import {
   type AssetCreateUrlResult,
   AuthStandardClientScopes,
   EnvironmentId,
-  EventId,
   ExecutionEnvironmentDescriptor,
   MessageId,
-  NodeId,
   OrchestrationV2DispatchCommandError,
   ORCHESTRATION_PROTOCOL_VERSION,
   ORCHESTRATION_V2_WS_METHODS,
   ProjectId,
   ProviderInstanceId,
   RunId,
-  RuntimeRequestId,
   ServerConfig,
   type ServerConfigStreamEvent,
   ThreadId,
@@ -97,16 +94,10 @@ const readyProvider = (
   checkedAt: "2026-03-17T19:12:28.000Z",
   models: models.map((model) => ({ ...model, isCustom: false, capabilities: null })),
 });
-export const CODEX_PROVIDER = readyProvider(CODEX, "codex", [
+const CODEX_PROVIDER = readyProvider(CODEX, "codex", [
   { slug: "gpt-5.4", name: "GPT-5.4" },
   { slug: "gpt-5.5", name: "GPT-5.5" },
 ]);
-export const CLAUDE_PROVIDER = {
-  ...readyProvider("claudeAgent", "claudeAgent", [
-    { slug: "claude-opus-4-6", name: "Claude Opus 4.6" },
-  ]),
-  slashCommands: [{ name: "compact" }],
-};
 
 const decodeServerConfig = Schema.decodeUnknownSync(ServerConfig);
 const makeServerConfig = (
@@ -184,7 +175,7 @@ function userItem(threadId: ThreadId, runId: RunId, id: string, ordinal: number,
   } satisfies OrchestrationV2TurnItem;
 }
 
-export function assistantItem(
+function assistantItem(
   threadId: ThreadId,
   runId: RunId,
   id: string,
@@ -272,47 +263,6 @@ export function threadWithHistory(
     );
   }
   return { id, title: `Thread ${name}`, modelSelection, runs, items };
-}
-
-/** A one-turn thread whose agent waits on an answer to one question. */
-export function threadWithQuestion(name: string, question: string): FakeThread {
-  const thread = threadWithHistory(name, 1);
-  const requestId = RuntimeRequestId.make(`${name}-request`);
-  return {
-    ...thread,
-    items: [
-      ...thread.items,
-      {
-        ...base(thread.id, RunId.make(`${name}-run-0`), `${name}-question`, 2),
-        type: "user_input_request",
-        requestId,
-        responseMode: "message",
-        questions: [
-          {
-            id: "choice",
-            header: "Choice",
-            question,
-            required: true,
-            allowCustomAnswer: false,
-            options: [{ label: "Continue", value: "continue", description: "Resume work" }],
-          },
-        ],
-      },
-    ],
-    runtimeRequests: [
-      {
-        id: requestId,
-        nodeId: NodeId.make(`${name}-node`),
-        providerTurnId: null,
-        nativeRequestRef: null,
-        kind: "user_input",
-        status: "pending",
-        responseCapability: { type: "message" },
-        createdAt: AT,
-        resolvedAt: null,
-      },
-    ],
-  };
 }
 
 const parentOf = (thread: FakeThread) => thread.sideChatOf ?? thread.providerSubagentOf;
@@ -681,43 +631,10 @@ export function installFakeEnvironment(
   };
 }
 
-/** Answers the oldest unanswered command with the server's rejection. */
-export async function rejectPendingCommand(message: string): Promise<void> {
-  const pending = pendingDispatches.shift();
-  if (!pending) throw new Error("No pending command");
-  await Effect.runPromise(
-    Deferred.fail(
-      pending.reply,
-      new OrchestrationV2DispatchCommandError({
-        commandId: pending.command.commandId,
-        commandType: pending.command.type,
-        message,
-      }),
-    ),
-  );
-}
-
-export function hasPendingAssetUrl(): boolean {
-  return pendingAssetUrls.length > 0;
-}
-
-/** Answers every held asset URL request, as a server that still has the file. */
-export async function answerAssetUrls(): Promise<void> {
-  const replies = pendingAssetUrls;
-  pendingAssetUrls = [];
-  for (const reply of replies) {
-    await Effect.runPromise(
-      Deferred.succeed(reply, { relativeUrl: "/api/assets/fake", expiresAt: 4_102_444_800_000 }),
-    );
-  }
-}
-
 /** Commands the app dispatched to the environment, oldest first. */
 export function dispatchedCommands(): ReadonlyArray<OrchestrationV2Command> {
   return dispatched;
 }
-
-type ThreadEvent = Extract<OrchestrationV2ThreadStreamItem, { readonly kind: "event" }>["event"];
 
 /** Answers one RPC method with `handler` until disposed. */
 export function answerRpc(method: string, handler: (input: never) => unknown): Disposable {
@@ -729,46 +646,4 @@ export function answerRpc(method: string, handler: (input: never) => unknown): D
       else delete handlers[method];
     },
   };
-}
-
-export async function emitTerminalMetadata(event: TerminalMetadataStreamEvent): Promise<void> {
-  if (terminalMetadataSubscriber === null) throw new Error("No terminal metadata subscription");
-  await Effect.runPromise(Queue.offer(terminalMetadataSubscriber, event));
-}
-
-/** Whether the app holds a live subscription to the thread, so events reach it. */
-export function isThreadSubscribed(threadId: ThreadId): boolean {
-  return threadSubscribers.has(threadId);
-}
-
-/** Delivers one domain event, such as a run or turn-item update, to the thread's subscription. */
-export async function emitThreadEvent(
-  threadId: ThreadId,
-  event: Pick<ThreadEvent, "type" | "payload">,
-): Promise<void> {
-  const queue = threadSubscribers.get(threadId);
-  if (!queue) throw new Error(`No live subscription for ${threadId}`);
-  sequence += 1;
-  await Effect.runPromise(
-    Queue.offer(queue, {
-      kind: "event",
-      sequence,
-      event: { ...event, id: EventId.make(`event-${sequence}`), threadId, occurredAt: AT },
-    } as OrchestrationV2ThreadStreamItem),
-  );
-}
-
-export function runningRun(threadId: ThreadId, id: string, ordinal: number, userMessageId: string) {
-  return {
-    ...run(threadId, RunId.make(id), ordinal, userMessageId),
-    status: "running" as const,
-    completedAt: null,
-  };
-}
-
-export { userItem };
-
-export async function emitVcsStatus(event: VcsStatusStreamEvent): Promise<void> {
-  if (vcsStatusSubscriber === null) throw new Error("No VCS status subscription");
-  await Effect.runPromise(Queue.offer(vcsStatusSubscriber, event));
 }

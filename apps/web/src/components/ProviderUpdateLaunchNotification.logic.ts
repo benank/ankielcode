@@ -133,9 +133,7 @@ function getProviderFailedUpdateTitle(
     : resolve(msg("{provider} update failed", { provider: providerName }));
 }
 
-export function isProviderUpdateCandidate(
-  provider: ServerProvider,
-): provider is ProviderUpdateCandidate {
+function isProviderUpdateCandidate(provider: ServerProvider): provider is ProviderUpdateCandidate {
   return (
     provider.enabled &&
     provider.compatibilityAdvisory?.latestVersionStatus !== "broken" &&
@@ -168,7 +166,7 @@ export function isProviderSettingsUpdateCandidate(
   );
 }
 
-export function hasOneClickUpdateProviderCandidate(
+function hasOneClickUpdateProviderCandidate(
   candidate: ProviderUpdateCandidate,
   providers: ReadonlyArray<ServerProvider>,
 ): boolean {

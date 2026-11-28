@@ -2,7 +2,9 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   buildPairingAppLink,
+  buildThreadAppLink,
   readPairingAppLink,
+  readThreadAppLink,
   RemoteBackendUrlMissingError,
   RemotePairingTokenMissingError,
   RemotePairingUrlInvalidError,
@@ -157,6 +159,46 @@ describe("remote", () => {
     expect(
       readPairingAppLink(`https://pair?pairingUrl=${encodeURIComponent(pairingUrl)}`),
     ).toBeNull();
+  });
+
+  it("round-trips thread links on every channel scheme", () => {
+    const thread = { environmentId: "env 1:ü", threadId: "thread-abc" };
+    const link = buildThreadAppLink(thread);
+    expect(link).toBe("ankielcode://thread/env%201%3A%C3%BC/thread-abc");
+    expect(readThreadAppLink(link)).toEqual(thread);
+    expect(readThreadAppLink(buildThreadAppLink(thread, "ankielcode-dev"))).toEqual(thread);
+  });
+
+  it("refuses thread links that are not exactly in canonical form", () => {
+    for (const link of [
+      "ankielcode://thread/env",
+      "ankielcode://thread/env/",
+      "ankielcode://thread/env/thread/",
+      "ankielcode://thread/env/thread/extra",
+      "ankielcode://thread//thread",
+      "ankielcode://thread/./thread",
+      "ankielcode://thread/env/../other/thread",
+      "ankielcode://thread/env/..",
+      "ankielcode://thread/env%2Fx/thread",
+      "ankielcode://thread/env%5Cx/thread",
+      "ankielcode://thread/env%2fx/thread",
+      "ankielcode://thread/env%E0%A4%A/thread",
+      "ankielcode://thread/env%0A/thread",
+      "ankielcode://thread/%20env/thread",
+      "ankielcode://thread/env/thread?approve=1",
+      "ankielcode://thread/env/thread#reply",
+      "ankielcode://user@thread/env/thread",
+      "ankielcode://thread:1/env/thread",
+      "ankielcode://Thread/env/thread",
+      "ankielcode://threads/env/thread",
+      "ankielcode:thread/env/thread",
+      "ankielcodex://thread/env/thread",
+      "https://thread/env/thread",
+      `ankielcode://thread/${"e".repeat(257)}/thread`,
+      "not a url",
+    ]) {
+      expect(readThreadAppLink(link), link).toBeNull();
+    }
   });
 
   it("preserves /h/<hostId>/ relay base paths for workers.dev pairing urls and hosts", () => {

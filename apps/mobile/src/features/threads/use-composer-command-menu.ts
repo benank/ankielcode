@@ -1,12 +1,5 @@
-import { threadPullRequestKeyOf } from "@ankielcode/client-runtime/thread-pull-requests";
 import * as Dialog from "../../components/ui/Dialog";
-import type {
-  EnvironmentId,
-  ProjectId,
-  ServerProvider,
-  ThreadId,
-  ThreadPullRequestLink,
-} from "@ankielcode/contracts";
+import type { EnvironmentId, ServerProvider, ThreadId } from "@ankielcode/contracts";
 import { matchComposerThreadItems } from "@ankielcode/client-runtime/composerThreadItems";
 import type { EnvironmentThreadShell } from "@ankielcode/client-runtime/state/models";
 
@@ -16,8 +9,6 @@ import {
   formatComposerContextReference,
   threadContextRecord,
 } from "@ankielcode/shared/composerContextReferences";
-import { pullRequestComposerContext } from "../../lib/composerContext";
-import { uuidv4 } from "../../lib/uuid";
 import {
   getComposerDraftSnapshot,
   setComposerDraftContext,
@@ -54,11 +45,7 @@ import { useEffect, useState } from "react";
 
 import type { ComposerEditorSelection } from "../../components/ComposerEditor";
 import { providerWorkspaceSnapshotRefresh } from "../../state/provider-workspace-snapshot-refresh";
-import {
-  useComposerPathSearch,
-  useComposerPullRequestSearch,
-  useThreadSearch,
-} from "../../state/queries";
+import { useComposerPathSearch, useThreadSearch } from "../../state/queries";
 import type { ModelOption } from "../../lib/modelOptions";
 import { m, type MessageResolver } from "../../i18n/messages";
 import type { ComposerCommandItem } from "./ComposerCommandPopover";
@@ -77,7 +64,7 @@ function composerSelectionAtEnd(draftMessage: string): ComposerEditorSelection {
  * still has the text it was placed in. Otherwise the composer's own caret is
  * clamped to the draft, and a caret from another owner starts at the end.
  */
-export function resolveComposerMenuSelection(input: {
+function resolveComposerMenuSelection(input: {
   readonly draftMessage: string;
   readonly ownerKey: string | null;
   readonly inserted: ComposerEditorSelection | null;
@@ -93,13 +80,7 @@ export function resolveComposerMenuSelection(input: {
   return { start: Math.min(input.local.start, length), end: Math.min(input.local.end, length) };
 }
 
-const PULL_REQUEST_STATE_LABELS = {
-  open: msg("open", { $context: "pull request state" }),
-  closed: msg("closed", { $context: "pull request state" }),
-  merged: msg("merged", { $context: "pull request state" }),
-} as const;
-
-export function buildComposerSlashCommandItems(
+function buildComposerSlashCommandItems(
   input: {
     readonly query: string;
     readonly atMessageStart: boolean;
@@ -178,7 +159,7 @@ export function buildComposerSlashCommandItems(
   return items;
 }
 
-export function buildComposerModelItems(
+function buildComposerModelItems(
   modelOptions: ReadonlyArray<ModelOption>,
   query: string,
   providers: ReadonlyArray<ServerProvider>,
@@ -221,7 +202,7 @@ export function buildComposerModelItems(
   }));
 }
 
-export function resolveComposerCommandSelection(input: {
+function resolveComposerCommandSelection(input: {
   readonly draftMessage: string;
   readonly trigger: Pick<ComposerTrigger, "rangeStart" | "rangeEnd">;
   readonly item: ComposerCommandItem;
@@ -249,9 +230,6 @@ export function useComposerCommandMenu({
   threadShells = EMPTY_THREAD_SHELLS,
   currentThreadId = null,
   projectCwd,
-  pullRequestProjectId = null,
-  pullRequestRepository = null,
-  threadPullRequests,
   selectedProviderStatus,
   hasThread,
   hasCompactableConversation,
@@ -271,9 +249,6 @@ export function useComposerCommandMenu({
   readonly threadShells?: ReadonlyArray<EnvironmentThreadShell>;
   readonly currentThreadId?: ThreadId | null;
   readonly projectCwd: string | null;
-  readonly pullRequestProjectId?: ProjectId | null;
-  readonly pullRequestRepository?: string | null;
-  readonly threadPullRequests?: ReadonlyArray<ThreadPullRequestLink>;
   readonly selectedProviderStatus: ServerProvider | null;
   readonly hasThread: boolean;
   readonly hasCompactableConversation: boolean;
@@ -351,38 +326,9 @@ export function useComposerCommandMenu({
     trigger?.kind === "path" ? trigger.query : "",
     { titlesOnly: true },
   );
-  const pullRequestSearch = useComposerPullRequestSearch({
-    environmentId,
-    projectId: pullRequestProjectId,
-    repository: pullRequestRepository,
-    threadPullRequests,
-    query: trigger?.kind === "pull-request" ? trigger.query : null,
-  });
 
   const items = ((): ComposerCommandItem[] => {
     if (!trigger) return [];
-
-    if (trigger.kind === "pull-request") {
-      return pullRequestSearch.entries.map((entry) => ({
-        id: `pr:${entry.projectId}:${threadPullRequestKeyOf(entry)}`,
-        type: "pull-request",
-        pullRequest: {
-          number: entry.number,
-          title: entry.title,
-          url: entry.url,
-          headBranch: entry.headBranch,
-          baseBranch: entry.baseBranch,
-          state: entry.state,
-          isDraft: entry.isDraft,
-        },
-        label: `#${entry.number}`,
-        description: `${entry.isDraft ? gt("Draft", { $context: "pull request state" }) : messages(PULL_REQUEST_STATE_LABELS[entry.state])} · ${
-          entry.repository.toLowerCase() === pullRequestRepository?.toLowerCase()
-            ? ""
-            : `${entry.repository} · `
-        }${entry.title}`,
-      }));
-    }
 
     if (trigger.kind === "slash-command") {
       const q = trigger.query.toLowerCase();
@@ -579,40 +525,6 @@ export function useComposerCommandMenu({
       setSelection({ start: result.cursor, end: result.cursor });
       return;
     }
-    if (item.type === "pull-request") {
-      if (
-        !ownerKey ||
-        trigger.kind !== "pull-request" ||
-        !items.some((candidate) => candidate.id === item.id)
-      )
-        return;
-      const record = pullRequestComposerContext(item.pullRequest, uuidv4());
-      if (
-        (getComposerDraftSnapshot(ownerKey).context?.records.length ?? 0) >=
-        COMPOSER_CONTEXT_MAX_RECORDS
-      ) {
-        Dialog.alert(
-          gt("Too many context items"),
-          gt("Remove some context from the draft and try again."),
-        );
-        return;
-      }
-      const result = replaceTextRange(
-        draftMessage,
-        trigger.rangeStart,
-        trigger.rangeEnd,
-        `${formatComposerContextReference(record)} `,
-      );
-      onChangeDraftMessage(result.text);
-      const draft = getComposerDraftSnapshot(ownerKey);
-      setComposerDraftContext(ownerKey, {
-        version: 1,
-        records: [...(draft.context?.records ?? []), record],
-      });
-      setSelection({ start: result.cursor, end: result.cursor });
-      return;
-    }
-
     const clearTriggerThen = (action: () => void) => {
       const cleared = replaceTextRange(draftMessage, trigger.rangeStart, trigger.rangeEnd, "");
       setSelection({ start: cleared.cursor, end: cleared.cursor });
@@ -647,14 +559,7 @@ export function useComposerCommandMenu({
     trigger,
     items,
     skills,
-    isLoading:
-      trigger?.kind === "pull-request" ? pullRequestSearch.isPending : pathSearch.isPending,
-    error:
-      trigger?.kind === "pull-request"
-        ? pullRequestProjectId === null || pullRequestRepository === null
-          ? gt("Pull requests are unavailable for this project.")
-          : pullRequestSearch.error
-        : null,
+    isLoading: pathSearch.isPending,
     onSelect,
   };
 }

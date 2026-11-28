@@ -149,7 +149,7 @@ function readRoutePanelsOpen(router: AnyRouter) {
   };
 }
 
-export function registerNavigationHistoryCommands(router: AnyRouter): () => void {
+function registerNavigationHistoryCommands(router: AnyRouter): () => void {
   return registerCommands(
     {
       "navigation.back": (event) => {
@@ -308,6 +308,9 @@ function registerAppShellCommands(router: AnyRouter, shellElement: Element): () 
       if (!/^\/settings(\/|$)/.test(router.state.location.pathname))
         void router.navigate({ to: "/settings" });
     }),
+    registerMenuAction("open-keybindings", () => {
+      void router.navigate({ to: "/settings/keybindings" });
+    }),
   ];
   return () => {
     for (const dispose of disposers) dispose();
@@ -328,7 +331,7 @@ function SidebarControl({ showSidebar }: { readonly showSidebar: boolean }) {
     context: { usagePageOpen },
   });
 
-  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- window keydown listener that toggles the sidebar on its shortcut
+  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- window keydown listener and desktop menu action that toggle the sidebar
   useEffect(() => {
     // A hidden sidebar would still save the toggle, so the shortcut does nothing without one.
     if (!showSidebar) return;
@@ -367,12 +370,10 @@ function SidebarControl({ showSidebar }: { readonly showSidebar: boolean }) {
     };
 
     window.addEventListener("keydown", onKeyDown, true);
-    const unsubscribe = window.desktopBridge?.onMenuAction((action) => {
-      if (action === "sidebar.toggle") toggleSidebar();
-    });
+    const unregister = registerMenuAction("sidebar.toggle", toggleSidebar);
     return () => {
       window.removeEventListener("keydown", onKeyDown, true);
-      unsubscribe?.();
+      unregister();
     };
   }, [keybindings, router, showSidebar, toggleSidebar, usagePageOpen]);
 

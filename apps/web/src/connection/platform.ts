@@ -120,6 +120,19 @@ const networkPathChanges = Stream.callback<"network-changed">((queue) =>
   ).pipe(Effect.asVoid),
 );
 
+/** A wake from sleep can leave sockets that still read as connected, so it probes them all. */
+export const powerResumeWakeups = (
+  readBridge: () => Pick<DesktopBridge, "onPowerResume"> | undefined,
+) =>
+  Stream.callback<"application-active-long">((queue) =>
+    Effect.acquireRelease(
+      Effect.sync(() =>
+        readBridge()?.onPowerResume?.(() => Queue.offerUnsafe(queue, "application-active-long")),
+      ),
+      (unsubscribe) => Effect.sync(() => unsubscribe?.()),
+    ).pipe(Effect.asVoid),
+  );
+
 const layerWakeups = Wakeups.layer({
   changes: Stream.mergeAll(
     [
@@ -159,6 +172,7 @@ const layerWakeups = Wakeups.layer({
         ).pipe(Effect.asVoid),
       ),
       networkPathChanges,
+      powerResumeWakeups(() => (typeof window === "undefined" ? undefined : window.desktopBridge)),
     ],
     { concurrency: "unbounded" },
   ),

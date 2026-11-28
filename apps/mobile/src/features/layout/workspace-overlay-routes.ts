@@ -3,8 +3,6 @@
  * Android but still sit above the workspace there.
  */
 const LISTED_OVERLAY_ROUTES: ReadonlySet<string> = new Set([
-  "PullRequestReview",
-  "PullRequestInlineComment",
   "Connections",
   "ConnectionsNew",
   "GitBranches",
@@ -27,7 +25,6 @@ const LISTED_OVERLAY_ROUTES: ReadonlySet<string> = new Set([
   "SettingsLegal",
   "ThreadAgents",
   "ThreadBackgroundWork",
-  "ThreadPullRequests",
   "ThreadQueue",
   "ThreadReviewComment",
   "ThreadDevicePreview",

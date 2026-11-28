@@ -76,7 +76,7 @@ export function makeMuseEnvironment(
   };
 }
 
-export function museVerbatimPath(path: string): string {
+function museVerbatimPath(path: string): string {
   if (path.startsWith("\\\\?\\")) return path;
   return path.startsWith("\\\\") ? `\\\\?\\UNC\\${path.slice(2)}` : `\\\\?\\${path}`;
 }

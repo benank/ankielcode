@@ -25,7 +25,7 @@ export function snapShotStatus(
   return snapShotSetupSummary(state, enabled, resolve);
 }
 
-export function snapShotSetupSummary(
+function snapShotSetupSummary(
   state: DesktopSnapShotState,
   enabled: boolean,
   resolve: MessageResolver = m,

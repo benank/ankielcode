@@ -20,7 +20,7 @@ export type ThreadMoveDestination =
       readonly placement: "before" | "after";
     };
 
-export function threadOrderAfterMove(
+function threadOrderAfterMove(
   orderedIds: readonly string[],
   movedId: string,
   destination: ThreadMoveDestination,

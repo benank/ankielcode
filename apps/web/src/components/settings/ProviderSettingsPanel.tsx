@@ -143,11 +143,12 @@ function providerInstanceName(instance: ProviderInstanceConfig): string {
 
 async function confirmProviderInstanceRemoval(
   question: string,
+  confirmLabel: string,
   consequence = "",
 ): Promise<boolean> {
   const message = `${question}\n${resolveNow(msg("Its saved settings, including any custom binary path, will be removed."))}${consequence}`;
   const confirmed = await settlePromise(() =>
-    ensureLocalApi().dialogs.confirm(message, { variant: "destructive" }),
+    ensureLocalApi().dialogs.confirm(message, { confirmLabel, destructive: true }),
   );
   return confirmed._tag === "Success" && confirmed.value;
 }
@@ -553,7 +554,7 @@ function AccessGatedProviderSettings({
 const NO_PROJECT_IDS: readonly ProjectId[] = [];
 const NO_FAVORITES: UnifiedSettings["favorites"] = [];
 
-export function EnvironmentProviderSettings({
+function EnvironmentProviderSettings({
   environmentId,
   environmentLabel,
   readOnly = false,
@@ -867,6 +868,7 @@ export function EnvironmentProviderSettings({
         gt("Remove the {provider} provider instance?", {
           provider: providerInstanceName(instance),
         }),
+        gt("Remove", { $context: "verb, removes a provider instance" }),
       );
       if (!confirmed) return;
       const updateResult = await persistProviderInstance({
@@ -920,6 +922,7 @@ export function EnvironmentProviderSettings({
       gt("Reset the {provider} provider to its defaults?", {
         provider: providerInstanceName(instance),
       }),
+      gt("Reset", { $context: "verb, resets a provider to its defaults" }),
       turnsOff ? ` ${gt("It will also be turned off.")}` : "",
     );
     if (!confirmed) return;

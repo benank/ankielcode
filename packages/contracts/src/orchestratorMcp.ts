@@ -24,12 +24,6 @@ import {
   ScheduledTaskUpsertSchedule,
 } from "./scheduledTask.ts";
 import { ProviderInteractionMode, ProviderRequestKind, RuntimeMode } from "./providerPolicy.ts";
-import { PullRequestState } from "./pullRequest.ts";
-import {
-  ThreadLinkedPullRequest,
-  ThreadPullRequestKey,
-  ThreadPullRequestLinkSource,
-} from "./threadPullRequest.ts";
 import { secretRequestPageUrl } from "./secretRequest.ts";
 import { hasOnlyPairedSurrogates } from "./threadMetadataMcp.ts";
 import { LastThreadTitleRegeneration, ThreadTitleRegeneration } from "./threadTitle.ts";
@@ -107,7 +101,7 @@ export const OrchestratorMcpTarget = Schema.Struct({
   options: Schema.optional(
     OrchestratorMcpTargetOptions.annotate({
       description:
-        "Ids vary by provider; see `orchestrator_capabilities`. Given values override inherited. [] or {} clears.",
+        "Per-provider ids from `orchestrator_capabilities`. Overrides inherited; [] or {} clears.",
     }),
   ),
 });
@@ -164,7 +158,7 @@ export const OrchestratorMcpDelegateTaskInput = Schema.Struct({
   isolation: Schema.optional(
     Schema.Literals(["shared", "worktree"]).annotate({
       description:
-        "'shared' (default): parent checkout. 'worktree': new prepared checkout from the parent commit, for a separate checkout or PR per child. Uncommitted edits stay out.",
+        "'shared' (default): parent checkout. 'worktree': new prepared checkout from the parent commit. Uncommitted edits stay out.",
     }),
   ),
   mode: Schema.optional(
@@ -338,17 +332,6 @@ export const OrchestratorMcpThreadListInput = Schema.Struct({
 });
 export type OrchestratorMcpThreadListInput = typeof OrchestratorMcpThreadListInput.Type;
 
-/** state is null until the host is read. */
-export const OrchestratorMcpThreadPullRequest = Schema.Struct({
-  ...ThreadPullRequestKey.fields,
-  url: TrimmedNonEmptyString,
-  source: ThreadPullRequestLinkSource,
-  state: Schema.NullOr(PullRequestState),
-  watching: Schema.Boolean,
-  watchStartedAt: Schema.NullOr(IsoDateTime),
-});
-export type OrchestratorMcpThreadPullRequest = typeof OrchestratorMcpThreadPullRequest.Type;
-
 /** Background work still open on the thread, as its provider reported it. */
 export const OrchestratorMcpThreadBackgroundTask = Schema.Struct({
   taskId: TrimmedNonEmptyString,
@@ -373,11 +356,6 @@ export const OrchestratorMcpThreadListItem = Schema.Struct({
   model: Schema.String,
   runtimeMode: RuntimeMode,
   interactionMode: ProviderInteractionMode,
-  linkedPullRequest: Schema.NullOr(ThreadLinkedPullRequest),
-  /** Up to 5 open linked pull requests, watched first; list_thread_pull_requests pages all of them. */
-  pullRequests: Schema.optional(Schema.Array(OrchestratorMcpThreadPullRequest)),
-  pullRequestCount: Schema.optional(NonNegativeInt),
-  openPullRequestCount: Schema.optional(NonNegativeInt),
   settled: Schema.Boolean,
   settledAt: Schema.NullOr(IsoDateTime),
   snoozed: Schema.Boolean,
@@ -435,11 +413,6 @@ export const OrchestratorMcpThreadDetail = Schema.Struct({
   model: Schema.String,
   runtimeMode: RuntimeMode,
   interactionMode: ProviderInteractionMode,
-  linkedPullRequest: Schema.NullOr(ThreadLinkedPullRequest),
-  /** Up to 5 open linked pull requests, watched first, on the first page only; list_thread_pull_requests pages all of them. */
-  pullRequests: Schema.optional(Schema.Array(OrchestratorMcpThreadPullRequest)),
-  pullRequestCount: Schema.optional(NonNegativeInt),
-  openPullRequestCount: Schema.optional(NonNegativeInt),
   titleRegeneration: Schema.NullOr(ThreadTitleRegeneration),
   lastTitleRegeneration: Schema.optional(Schema.NullOr(LastThreadTitleRegeneration)),
   branch: Schema.NullOr(Schema.String),
@@ -516,14 +489,13 @@ export const OrchestratorMcpThreadSendInput = Schema.Struct({
   mode: Schema.optional(Schema.Literals(["auto", "queue", "steer", "restart"])),
   freshContext: Schema.optional(
     Schema.Boolean.annotate({
-      description:
-        "Start a new provider session without the thread's earlier context, like /clear. Never steers.",
+      description: "New provider session without earlier context, like /clear. Never steers.",
     }),
   ),
   outputSchema: Schema.optional(
     Schema.Record(Schema.String, Schema.Json).annotate({
       description:
-        "JSON Schema for a result the turn must return as data, read back as `output` from `ankiel_thread_wait`. Never steers.",
+        "JSON Schema the turn's result must match, read back as `output` from `ankiel_thread_wait`. Never steers.",
     }),
   ),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),
@@ -579,8 +551,8 @@ export const OrchestratorMcpThreadInterruptInput = Schema.Struct({
   reason: Schema.optional(Schema.String.check(Schema.isMaxLength(2_000))),
   /**
    * Stop the thread as its Stop button does instead: interrupt its running
-   * turn whichever run that is, hold its queued messages, end its pull request
-   * watches and stop every task it delegated. `runId` is then not used.
+   * turn whichever run that is, hold its queued messages and stop every task it
+   * delegated. `runId` is then not used.
    */
   stop: Schema.optional(Schema.Boolean),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),

@@ -9,7 +9,6 @@ import * as Schema from "effect/Schema";
 
 import * as ProjectEnrichment from "../project/ProjectEnrichmentService.ts";
 import * as ProjectService from "../project/ProjectService.ts";
-import * as PullRequestService from "../pullRequest/PullRequestService.ts";
 import * as VcsStatusBroadcaster from "../vcs/VcsStatusBroadcaster.ts";
 import * as WorkspaceEntries from "../workspace/WorkspaceEntries.ts";
 import * as CheckpointCapture from "./CheckpointCaptureService.ts";
@@ -34,7 +33,6 @@ export class RunFinalizationRefreshError extends Schema.TaggedError<RunFinalizat
 ) {}
 
 export class RunFinalizationObserver extends Context.Reference<{
-  readonly refreshAfterTurn: (projectId: ProjectId) => Effect.Effect<void>;
   readonly refresh: (input: {
     readonly cwd: string;
     readonly threadId: ThreadId;
@@ -48,7 +46,6 @@ export class RunFinalizationObserver extends Context.Reference<{
 }>("ankiel/orchestration-v2/RunFinalizationObserver", {
   defaultValue: () => ({
     refresh: () => Effect.void,
-    refreshAfterTurn: () => Effect.void,
     refreshRepositories: () => Effect.void,
   }),
 }) {}
@@ -125,10 +122,9 @@ export const layerObserver = Layer.effect(
     const workspaceEntries = yield* WorkspaceEntries.WorkspaceEntries;
     const vcsStatus = yield* VcsStatusBroadcaster.VcsStatusBroadcaster;
     const projections = yield* ProjectionStore.ProjectionStoreV2;
-    const pullRequests = yield* PullRequestService.PullRequestService;
     const projects = yield* ProjectService.ProjectService;
     const enrichment = yield* ProjectEnrichment.ProjectEnrichmentService;
-    const pullRequestLookups = yield* FiberMap.make<string>();
+    const remoteRefreshes = yield* FiberMap.make<string>();
     const repositoryRefreshes = yield* FiberMap.make<ThreadId>();
     const identityRefreshes = yield* FiberMap.make<ProjectId>();
     // A turn can add the first remote (`git remote add`, `gh repo create --push`), which the
@@ -154,7 +150,6 @@ export const layerObserver = Layer.effect(
         ),
     );
     return {
-      refreshAfterTurn: pullRequests.refreshAfterTurn,
       // A project can track dozens of repositories, so the next turn must not wait for them all.
       // A newer turn's refresh replaces a running one.
       refreshRepositories: Effect.fn("RunFinalizationService.refreshRepositories")(function* ({
@@ -184,24 +179,23 @@ export const layerObserver = Layer.effect(
           );
           const thread = yield* projections.getThreadShell(threadId);
           if (!thread) return;
-          // Forge discovery probes can take seconds; like the PR lookup, the next turn must not wait.
+          // Forge discovery probes can take seconds, so the next turn must not wait for them.
           yield* refreshMissingRepositoryIdentity(thread.projectId).pipe(
             FiberMap.run(identityRefreshes, thread.projectId),
           );
           if (local.refName === null || local.isDefaultRef) return;
           if (thread.branch !== local.refName) return;
           if (thread.activeRunId !== null && thread.activeRunId !== runId) return;
-          // The forge CLI can take minutes, so the next turn must not wait for it. A newer
-          // turn's lookup replaces a running one instead of queueing behind the cwd's lock.
-          yield* vcsStatus.refreshPullRequestStatus(cwd).pipe(
+          // A newer turn's refresh replaces a running one instead of queueing behind the cwd's lock.
+          yield* vcsStatus.refreshRemoteStatusAfterTurn(cwd).pipe(
             Effect.catch((error) =>
-              Effect.logWarning("failed to refresh pull request status after run completion", {
+              Effect.logWarning("failed to refresh remote status after run completion", {
                 threadId,
                 cwd,
                 detail: error.message,
               }),
             ),
-            FiberMap.run(pullRequestLookups, cwd),
+            FiberMap.run(remoteRefreshes, cwd),
           );
         },
         (effect, { cwd }) =>

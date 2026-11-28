@@ -131,7 +131,7 @@ so the next turn after a rollback starts a fresh agent session and Ankiel Code s
 conversation, without the turns you rolled back.
 
 Registry instances are not used for Ankiel's app-owned text generation, such as thread titles, commit
-messages, branch names, or pull request descriptions. Configure a text-generation-capable provider
+messages, or branch names. Configure a text-generation-capable provider
 for those actions.
 
 ## Advanced configuration

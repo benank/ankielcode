@@ -31,7 +31,7 @@ import * as TestSourceControlHost from "@ankielcode/source-control-testing/TestS
 import * as GitHubAppSignIn from "./GitHubAppSignIn.ts";
 import * as GitHubHttpClient from "./GitHubHttpClient.ts";
 import * as GitHubGraphQlClient from "./gitHubGraphQlClient.ts";
-import { PullRequestBatchesGraphQLGroup } from "./pullRequestBatches.graphql.ts";
+import { IssuesGraphQLGroup } from "./issues.graphql.ts";
 import { driver } from "./driver.ts";
 
 const appSignedOut = Layer.mock(GitHubAppSignIn.GitHubAppSignIn)({
@@ -168,32 +168,9 @@ describe("GitHubRest", () => {
         response.setHeader("content-type", "application/json");
         response.end(
           JSON.stringify(
-            body.includes("query PullRequestByNumber")
-              ? {
-                  data: {
-                    repository: {
-                      pullRequest: {
-                        number: 7,
-                        title: "Socket request",
-                        url: "https://github.com/acme/web/pull/7",
-                        baseRefName: "main",
-                        headRefName: "feature",
-                        headRefOid: "f".repeat(40),
-                        state: "OPEN",
-                        isDraft: false,
-                        mergedAt: null,
-                        closedAt: null,
-                        updatedAt: "2026-01-02T00:00:00Z",
-                        isCrossRepository: false,
-                        headRepository: { name: "web", nameWithOwner: "acme/web" },
-                        headRepositoryOwner: { __typename: "User", login: "acme" },
-                      },
-                    },
-                  },
-                }
-              : request.url?.endsWith("graphql")
-                ? { data: { repository: { pullRequest: { additions: 3, deletions: 1 } } } }
-                : { login: "proxy-user" },
+            request.url?.endsWith("graphql")
+              ? { data: { repository: { issue: { id: "I_7", state: "OPEN", stateReason: null } } } }
+              : { login: "proxy-user" },
           ),
         );
       });
@@ -250,7 +227,7 @@ describe("GitHubRest", () => {
       yield* Effect.gen(function* () {
         const rest = yield* GitHubRest.GitHubRest;
         const client = yield* GraphQLClient.make(
-          PullRequestBatchesGraphQLGroup.middleware(GitHubGraphQlClient.GitHubGraphQlAuth),
+          IssuesGraphQLGroup.middleware(GitHubGraphQlClient.GitHubGraphQlAuth),
         ).pipe(Effect.provide(GitHubGraphQlClient.layer));
         for (const [host, apiHost, root] of [
           ["github.com", "api.github.com", ""],
@@ -262,10 +239,12 @@ describe("GitHubRest", () => {
             path: "user?per_page=1",
           });
           expect(JSON.parse(answer.body)).toEqual({ login: "proxy-user" });
-          const stats = yield* client
-            .PullRequestStats({ owner: "acme", name: "web", number: 7 })
-            .pipe(GitHubGraphQlClient.call({ host, operation: "stats" }));
-          expect(stats).toEqual({ repository: { pullRequest: { additions: 3, deletions: 1 } } });
+          const issue = yield* client
+            .IssueNodeId({ owner: "acme", name: "web", number: 7 })
+            .pipe(GitHubGraphQlClient.call({ host, operation: "issue" }));
+          expect(issue).toEqual({
+            repository: { issue: { id: "I_7", state: "OPEN", stateReason: null } },
+          });
           const [restRequest, graphqlRequest] = requests.slice(-2);
           expect(restRequest).toMatchObject({ method: "GET", path: `${root}/user?per_page=1` });
           expect(graphqlRequest).toMatchObject({
@@ -344,12 +323,6 @@ describe("GitHubRest", () => {
             ),
           ),
         );
-        const reference = yield* instance.sourceControl.getChangeRequest({
-          cwd: directory,
-          reference: "https://github.com/acme/web/pull/7",
-        });
-        expect(reference.number).toBe(7);
-        expect(requests.at(-1)?.body).toContain("query PullRequestByNumber");
         expect(yield* instance.isRepositoryStarred!("github.com", "acme/web")).toBe(true);
         expect(requests.at(-1)?.path).toBe("/user/starred/acme/web");
         yield* Effect.promise(() => NodeFSP.unlink(socketPath));

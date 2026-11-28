@@ -47,7 +47,7 @@ import type { ExpandedImagePreview } from "~/components/chat/ExpandedImagePrevie
 import { useHtmlRenderTheme } from "~/hooks/useHtmlRenderTheme";
 import { shortcutConflictKey } from "~/keybindings";
 import { useOpenIssueLink } from "~/lib/openIssueLink";
-import { useOpenChangeRequestLink } from "~/lib/openPullRequestLink";
+import { useOpenCommitLink } from "~/lib/openCommitLink";
 import { readLocalApi } from "~/localApi";
 import { cn } from "~/lib/utils";
 import { primaryServerKeybindingsAtom, serverEnvironment } from "~/state/server";
@@ -375,7 +375,7 @@ export function HtmlRenderDocument(props: {
       );
     },
   );
-  const openChangeRequestLink = useOpenChangeRequestLink(props.threadRef);
+  const openCommitLink = useOpenCommitLink(props.threadRef);
   const openIssueLink = useOpenIssueLink(props.threadRef);
   const openLink = useOpenLink(props.threadRef);
   const open = useEffectEvent((url: string, modifiers: { metaKey: boolean; ctrlKey: boolean }) => {
@@ -392,8 +392,7 @@ export function HtmlRenderDocument(props: {
     };
     if (
       props.threadRef !== undefined &&
-      (openChangeRequestLink(event, url, undefined, props.threadRef.environmentId) ||
-        openIssueLink(event, url, props.threadRef.environmentId))
+      (openCommitLink(event, url) || openIssueLink(event, url, props.threadRef.environmentId))
     ) {
       return;
     }

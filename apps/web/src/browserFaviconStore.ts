@@ -80,7 +80,7 @@ function addPendingFavicon(
   );
 }
 
-export function resolveBrowserFaviconStorage(): StateStorage {
+function resolveBrowserFaviconStorage(): StateStorage {
   const fallback = createMemoryStorage();
   const shadowedNames = new Set<string>();
   let primary: Storage;
@@ -120,7 +120,7 @@ export function resolveBrowserFaviconStorage(): StateStorage {
   };
 }
 
-export const useBrowserFaviconStore = create<BrowserFaviconStoreState>()(
+const useBrowserFaviconStore = create<BrowserFaviconStoreState>()(
   persist(
     (set) => ({
       byKey: {},
@@ -193,7 +193,7 @@ function readThreadProjectRef(threadRef: ScopedThreadRef): ScopedProjectRef | nu
   return draft ? scopeProjectRef(draft.environmentId, draft.projectId) : null;
 }
 
-export function recordFaviconForProject(
+function recordFaviconForProject(
   projectRef: ScopedProjectRef,
   favicon: DesktopPreviewFavicon,
   environmentHostname: string | null,
@@ -304,7 +304,7 @@ export function useFaviconForThreadUrl(threadRef: ScopedThreadRef, url: string):
  * A capture waiting for its thread's project still shows on that thread, and wins
  * over an older stored capture for the same origin.
  */
-export function lookupFaviconForThread(
+function lookupFaviconForThread(
   state: Pick<BrowserFaviconStoreState, "byKey" | "pendingByThreadKey">,
   threadKey: string,
   projectRef: ScopedProjectRef | null,
@@ -316,15 +316,6 @@ export function lookupFaviconForThread(
   const pending = originKey ? state.pendingByThreadKey[threadKey]?.[originKey] : undefined;
   if (pending && (!stored || pending.capturedAt > stored.capturedAt)) return pending.dataUrl;
   return stored?.dataUrl ?? null;
-}
-
-export function lookupFavicon(
-  byKey: Record<string, BrowserFaviconEntry>,
-  projectRef: ScopedProjectRef | null,
-  url: string,
-  environmentHostname: string | null,
-): string | null {
-  return lookupFaviconEntry(byKey, projectRef, url, environmentHostname)?.dataUrl ?? null;
 }
 
 function lookupFaviconEntry(
@@ -347,12 +338,4 @@ function lookupFaviconEntry(
   } catch {
     return null;
   }
-}
-
-export function resetBrowserFaviconsForTests(): void {
-  useBrowserFaviconStore.setState({
-    byKey: {},
-    pendingByThreadKey: {},
-  });
-  useBrowserFaviconStore.persist.clearStorage();
 }

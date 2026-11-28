@@ -64,8 +64,10 @@ import {
 import {
   AuthOrchestrationOperateScope,
   type ContextMenuSource,
+  type KeybindingCommand,
   ProjectId,
   type ScopedThreadRef,
+  THREAD_JUMP_KEYBINDING_COMMANDS,
   type ThreadId,
 } from "@ankielcode/contracts";
 import {
@@ -131,12 +133,17 @@ import {
   getThreadKeysToDeselectAfterDelete,
   useThreadSelectionStore,
 } from "../threadSelectionStore";
-import { canTurnThreadIntoProject, useThreadActions } from "../hooks/useThreadActions";
+import {
+  canTurnThreadIntoProject,
+  readThreadReadToggle,
+  useThreadActions,
+} from "../hooks/useThreadActions";
 import { useHandleNewThread } from "../hooks/useHandleNewThread";
 import { useOrderWhileOpen } from "../hooks/useOrderWhileOpen";
 import { useProjectPin } from "../hooks/useProjectGroupUpdate";
 import { useSidebarProjectGroups } from "../hooks/useSidebarProjectGroups";
 import { isCommandPaletteOpen, openCommandPalette } from "../commandPaletteBus";
+import { registerMenuAction } from "../shortcuts/dispatcher";
 import { registerSettleAndAdvance } from "../settleAndAdvance";
 import { resolveThreadActionProjectRef, startNewThreadFromContext } from "../lib/chatThreadActions";
 import { useClientSettings } from "../hooks/useSettings";
@@ -183,6 +190,7 @@ import {
   filterSidebarV2VisibleThreads,
   groupSidebarThreadsByProject,
   sidebarFolderExpansionKeys,
+  buildBulkReadContextMenuItems,
   buildBulkTitleRegenerationContextMenuItem,
   buildBulkUnpinContextMenuItem,
   deleteSelectedThreadEntries,
@@ -990,6 +998,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
     turnThreadIntoProject,
     reorderPinnedThread,
     reorderActiveThread,
+    markThreadRead,
     markThreadUnread,
     archiveThread,
     deleteThread,
@@ -2436,6 +2445,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
       const unpinMenuItem = buildBulkUnpinContextMenuItem({
         pinnedCount: pinnedSelectedThreads.length,
       });
+      const readToggles = selectedThreads.map(readThreadReadToggle);
       // Presets sync across environments, so the first selected thread's stand for all.
       const menuOpenedAt = new Date();
       const snoozePresets = resolveSnoozePresets(
@@ -2487,7 +2497,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                   },
                 ]
               : []),
-            { id: "mark-unread", label: gt("Mark unread ({count})", { count }) },
+            ...buildBulkReadContextMenuItems(readToggles, messages),
             {
               id: "delete",
               label: gt("Delete ({count})", { count }),
@@ -2514,7 +2524,13 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                 })
               : selectedThreads;
       if (clicked.value === "settle" && actionTargets.length === 0) return;
-      if (clicked.value !== "mark-unread" && !checkThreadOperations(actionTargets)) return;
+      if (
+        clicked.value !== "mark-read" &&
+        clicked.value !== "mark-unread" &&
+        !checkThreadOperations(actionTargets)
+      ) {
+        return;
+      }
       if (clicked.value?.startsWith("snooze:")) {
         const preset =
           clicked.value === "snooze:custom"
@@ -2592,11 +2608,16 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
         clearSelection();
         return;
       }
-      if (clicked.value === "mark-unread") {
-        for (const threadKey of threadKeys) {
-          const thread = threadByKeyRef.current.get(threadKey);
-          if (thread) markThreadUnread(scopeThreadRef(thread.environmentId, thread.id));
-        }
+      if (clicked.value === "mark-read" || clicked.value === "mark-unread") {
+        selectedThreads.forEach((thread, index) => {
+          const toggle = readToggles[index];
+          const threadRef = scopeThreadRef(thread.environmentId, thread.id);
+          if (clicked.value === "mark-read" && toggle?.kind === "mark-read") {
+            markThreadRead(threadRef, toggle.visitedAt);
+          } else if (clicked.value === "mark-unread" && toggle?.kind === "mark-unread") {
+            markThreadUnread(threadRef);
+          }
+        });
         clearSelection();
         return;
       }
@@ -2610,7 +2631,10 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
               }),
               gt("This permanently clears conversation history for these threads."),
             ].join("\n"),
-            { variant: "destructive" },
+            {
+              confirmLabel: gt("Delete", { $context: "verb, deletes a thread" }),
+              destructive: true,
+            },
           ),
         );
         if (confirmed._tag === "Failure" || !confirmed.value) return;
@@ -2750,6 +2774,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
           timestampFormat,
           thread.environmentId,
         );
+        const readToggle = readThreadReadToggle(thread);
         const threadProjectGroup =
           projectGroupsRef.current.find((project) =>
             project.memberProjectRefs.some(
@@ -2781,7 +2806,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
               canSnoozeNow: canSnooze(thread, { now: new Date().toISOString() }),
               isRegeneratingTitle,
               isRunning: !threadRuntimeCanArchive(thread.runtime),
-              hasCompletedRun: thread.latestRun?.completedAt != null,
+              readToggle: readToggle?.kind ?? null,
               canTurnIntoProject: canTurnThreadIntoProject(threadRef),
               canRename: !fromSearch,
               supports: {
@@ -2917,6 +2942,9 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
             if (toast) toastManager.add(toast);
             return;
           }
+          case "mark-read":
+            if (readToggle?.kind === "mark-read") markThreadRead(threadRef, readToggle.visitedAt);
+            return;
           case "mark-unread":
             markThreadUnread(threadRef);
             return;
@@ -2947,7 +2975,10 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
           case "archive": {
             if (confirmThreadArchive) {
               const confirmed = await settlePromise(() =>
-                api.dialogs.confirm(gt('Archive thread "{title}"?', { title: thread.title })),
+                api.dialogs.confirm(gt('Archive thread "{title}"?', { title: thread.title }), {
+                  confirmLabel: gt("Archive", { $context: "verb, archives a thread" }),
+                  destructive: false,
+                }),
               );
               if (confirmed._tag === "Failure" || !confirmed.value) return;
             }
@@ -2980,7 +3011,10 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                     gt('Delete thread "{title}"?', { title: thread.title }),
                     gt("This permanently clears conversation history for this thread."),
                   ].join("\n"),
-                  { variant: "destructive" },
+                  {
+                    confirmLabel: gt("Delete", { $context: "verb, deletes a thread" }),
+                    destructive: true,
+                  },
                 ),
               );
               if (confirmed._tag === "Failure" || !confirmed.value) return;
@@ -3010,8 +3044,31 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
       handleThreadContextMenu(threadRef, position, source, true),
   );
 
-  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- subscribes to window keydown for thread navigation shortcuts using the current thread list
+  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- subscribes to window keydown and desktop menu actions for thread navigation using the current thread list
   useEffect(() => {
+    const navigateToRowKey = (targetRowKey: string | null) => {
+      if (!targetRowKey) return false;
+      const targetDraftId = draftIdByRowKey.get(targetRowKey);
+      const targetThread = parseScopedThreadKey(targetRowKey);
+      if (targetDraftId === undefined && !targetThread) return false;
+      if (targetDraftId !== undefined) navigateToDraft(targetDraftId);
+      else if (targetThread) navigateToThread(targetThread);
+      return true;
+    };
+    const runThreadNavigation = (command: KeybindingCommand | null): boolean => {
+      const traversalDirection = threadTraversalDirectionFromCommand(command);
+      if (traversalDirection !== null) {
+        return navigateToRowKey(
+          resolveAdjacentThreadId({
+            threadIds: orderedRowKeys,
+            currentThreadId: routeRowKey,
+            direction: traversalDirection,
+          }),
+        );
+      }
+      const jumpIndex = threadJumpIndexFromCommand(command ?? "");
+      return jumpIndex !== null && navigateToRowKey(orderedRowKeys[jumpIndex] ?? null);
+    };
     const onWindowKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.repeat || isCommandPaletteOpen() || isModelPickerOpen()) {
         return;
@@ -3020,34 +3077,23 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
         platform: navigator.platform,
         context: threadShortcutContext(routeThreadRef),
       });
-      const navigateToRowKey = (targetRowKey: string | null) => {
-        if (!targetRowKey) return false;
-        const targetDraftId = draftIdByRowKey.get(targetRowKey);
-        const targetThread = parseScopedThreadKey(targetRowKey);
-        if (targetDraftId === undefined && !targetThread) return false;
-        event.preventDefault();
-        event.stopPropagation();
-        if (targetDraftId !== undefined) navigateToDraft(targetDraftId);
-        else if (targetThread) navigateToThread(targetThread);
-        return true;
-      };
-      const traversalDirection = threadTraversalDirectionFromCommand(command);
-      if (traversalDirection !== null) {
-        navigateToRowKey(
-          resolveAdjacentThreadId({
-            threadIds: orderedRowKeys,
-            currentThreadId: routeRowKey,
-            direction: traversalDirection,
-          }),
-        );
-        return;
-      }
-      const jumpIndex = threadJumpIndexFromCommand(command ?? "");
-      if (jumpIndex === null) return;
-      navigateToRowKey(orderedRowKeys[jumpIndex] ?? null);
+      if (!runThreadNavigation(command)) return;
+      event.preventDefault();
+      event.stopPropagation();
     };
     window.addEventListener("keydown", onWindowKeyDown);
-    return () => window.removeEventListener("keydown", onWindowKeyDown);
+    // The menu offers only the jumps that have a thread to open.
+    const menuCommands = [
+      ...(orderedRowKeys.length > 0 ? (["thread.previous", "thread.next"] as const) : []),
+      ...THREAD_JUMP_KEYBINDING_COMMANDS.slice(0, orderedRowKeys.length),
+    ];
+    const unregisterMenuActions = menuCommands.map((command) =>
+      registerMenuAction(command, () => runThreadNavigation(command)),
+    );
+    return () => {
+      window.removeEventListener("keydown", onWindowKeyDown);
+      for (const unregister of unregisterMenuActions) unregister();
+    };
   }, [
     draftIdByRowKey,
     keybindings,
@@ -3359,12 +3405,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
         <SidebarGroup className="flex-1" role="presentation">
           {isSearchingThreads ? (
             threadSearchResults.length > 0 ? (
-              <TooltipProvider
-                key="sidebar-thread-search-tooltips-150"
-                delay={150}
-                closeDelay={0}
-                timeout={400}
-              >
+              <TooltipProvider key="sidebar-thread-search-tooltips" closeDelay={0} timeout={400}>
                 <DndContext
                   sensors={dndSensors}
                   autoScroll={false}
@@ -3494,12 +3535,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
             </div>
           ) : null}
           {!isSearchingThreads ? (
-            <TooltipProvider
-              key="sidebar-thread-tooltips-150"
-              delay={150}
-              closeDelay={0}
-              timeout={400}
-            >
+            <TooltipProvider key="sidebar-thread-tooltips" closeDelay={0} timeout={400}>
               <DndContext
                 sensors={dndSensors}
                 autoScroll={isContextDrag ? false : SIDEBAR_AUTO_SCROLL}

@@ -1,9 +1,9 @@
 import { defineRule, type ESTree } from "@oxlint/plugins";
 
-const DETAIL_ROUTES = new Set(["Thread", "PullRequest"]);
+const DETAIL_ROUTES = new Set(["Thread"]);
 
 const MESSAGE =
-  "`navigate` to a Thread or PullRequest pushes or updates in place depending on what is on top. Use useSelectWorkspaceDetail to show it as the page, or StackActions.push to open it over the current one.";
+  "`navigate` to a Thread pushes or updates in place depending on what is on top. Use useSelectWorkspaceDetail to show it as the page, or StackActions.push to open it over the current one.";
 
 function calleeName(callee: ESTree.Expression) {
   if (callee.type === "Identifier") return callee.name;

@@ -257,7 +257,7 @@ const KEYBINDING_GROUPS = [
     title: msg("Navigation"),
     prefixes: ["sidebar", "rightPanel", "commandPalette", "filePicker", "projectSearch", "editor"],
   },
-  { id: "threads", title: msg("Threads"), prefixes: ["thread", "chat", "pullRequest"] },
+  { id: "threads", title: msg("Threads"), prefixes: ["thread", "chat"] },
   { id: "composer", title: msg("Composer"), prefixes: ["composer", "modelPicker"] },
   { id: "terminal", title: msg("Terminal"), prefixes: ["terminal"] },
   { id: "preview", title: msg("Preview & diff"), prefixes: ["preview", "diff"] },
@@ -445,6 +445,8 @@ export function buildKeybindingCommandOptions(
   for (const binding of keybindings) {
     commands.add(binding.command);
   }
+  // Retired with pull requests; contracts still accept it so older saved rules keep loading.
+  commands.delete("pullRequest.copyNumber");
   return [...commands].toSorted((left, right) =>
     compareCommands(left, right, (command) => commandLabel(command, resolve)),
   );
@@ -459,7 +461,7 @@ const COMMAND_LABELS: Partial<Record<KeybindingCommand, string>> = {
   "composer.dictation": msg("Composer: Start or Finish Dictation"),
   "thread.steerQueuedMessage": msg("Queue: Send First Queued Message"),
   "thread.editQueuedMessage": msg("Queue: Edit Last Queued Message"),
-  "thread.copyReference": msg("Pull Request: Copy Link or Thread"),
+  "thread.copyReference": msg("Thread: Copy Reference"),
   "sidebar.toggle": msg("Sidebar: Toggle"),
   "navigation.back": msg("Navigation: Back"),
   "navigation.forward": msg("Navigation: Forward"),
@@ -473,7 +475,6 @@ const COMMAND_LABELS: Partial<Record<KeybindingCommand, string>> = {
   "threadPanel.toggle": msg("Thread Panel: Toggle"),
   "rightPanel.toggleMaximized": msg("Right Panel: Toggle Maximized"),
   "rightPanel.close": msg("Right Panel: Close"),
-  "pullRequest.copyNumber": msg("Pull Request: Copy Number"),
   "diff.toggle": msg("Diff: Toggle"),
   "preview.toggle": msg("Preview: Toggle"),
   "preview.refresh": msg("Preview: Refresh"),
@@ -501,7 +502,10 @@ const COMMAND_LABELS: Partial<Record<KeybindingCommand, string>> = {
   "chat.newLocal": msg("Chat: New Local"),
   "chat.newWithoutProject": msg("Chat: New Without Project"),
   "chat.find": msg("Chat: Find"),
+  "chat.findNext": msg("Chat: Find Next"),
+  "chat.findPrevious": msg("Chat: Find Previous"),
   "editor.openFavorite": msg("Editor: Open Favorite"),
+  "environments.reconnect": msg("Environments: Reconnect"),
   "modelPicker.toggle": msg("Model Picker: Toggle"),
   "modelPicker.previousProvider": msg("Model Picker: Previous Provider"),
   "modelPicker.nextProvider": msg("Model Picker: Next Provider"),

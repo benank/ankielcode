@@ -102,19 +102,3 @@ export const refreshAfterRedemption = Effect.fn("resetCreditCoordinator.refreshA
 );
 
 export const layer = Layer.effect(ResetCreditCoordinator, make);
-
-export const layerTest = Layer.effect(
-  ResetCreditCoordinator,
-  Effect.gen(function* () {
-    let counter = 0;
-    return yield* make.pipe(
-      Effect.provideService(
-        SecureRandom.SecureRandom,
-        SecureRandom.make((size) => {
-          counter += 1;
-          return new Uint8Array(size).fill(counter);
-        }),
-      ),
-    );
-  }),
-);

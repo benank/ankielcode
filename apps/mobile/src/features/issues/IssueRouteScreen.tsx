@@ -1,7 +1,6 @@
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import { StackActions, useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import { issueEventSentence } from "@ankielcode/client-runtime/issue-presentation";
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
 import { createIssueCommentPager } from "@ankielcode/client-runtime/state/issues";
 import { visibleLinkedThreads } from "@ankielcode/client-runtime/state/threads";
 import type {
@@ -252,9 +251,6 @@ function LinkedPullRequests(props: {
   readonly links: ReadonlyArray<IssueLinkedPullRequest>;
 }) {
   const gt = useGT();
-  const navigation = useNavigation();
-  // Only a git host's tracker shares its host with the change request it links.
-  const sameHost = sourceControlClients.find(props.params.tracker) !== undefined;
   return (
     <View className="gap-2">
       <PullRequestSectionHeading>
@@ -271,19 +267,7 @@ function LinkedPullRequests(props: {
               number: String(link.number),
               title: link.title,
             })}
-            onPress={() =>
-              sameHost
-                ? navigation.dispatch(
-                    StackActions.push("PullRequest", {
-                      environmentId: props.params.environmentId,
-                      projectId: props.params.projectId,
-                      repository: link.repository,
-                      number: link.number,
-                      ...(props.params.host ? { host: props.params.host } : {}),
-                    }),
-                  )
-                : void tryOpenExternalUrl(link.url)
-            }
+            onPress={() => void tryOpenExternalUrl(link.url)}
             className="flex-row items-center gap-2 rounded-2xl bg-grouped-card p-3 active:opacity-70"
           >
             <SymbolView name={status.icon} size={15} tintColorClassName={status.tint} />
@@ -420,8 +404,6 @@ function IssueEventRow({
   const sentence = issueEventSentence(event, messages);
   const source = event.reference;
   const at = event.detail === null ? -1 : sentence.indexOf(event.detail);
-  // Only a git host's tracker shares its host with the change request it links.
-  const sameHost = sourceControlClients.find(params.tracker) !== undefined;
   const openSource = (target: IssueEventReference) => {
     const host = params.host ? { host: params.host } : {};
     if (target.kind === "issue") {
@@ -433,16 +415,6 @@ function IssueEventRow({
           ...host,
           scope: target.repository,
           issueKey: String(target.number),
-        }),
-      );
-    } else if (sameHost) {
-      navigation.dispatch(
-        StackActions.push("PullRequest", {
-          environmentId: params.environmentId,
-          projectId: params.projectId,
-          repository: target.repository,
-          number: target.number,
-          ...host,
         }),
       );
     } else {
@@ -611,7 +583,6 @@ function IssueRoute({ params }: { readonly params: IssueParams }) {
         environmentId: params.environmentId,
         projectId: params.projectId,
         repository: params.scope,
-        number: 0,
       }}
       changeRequest={detail ? { provider: detail.tracker, url: detail.url } : null}
     >

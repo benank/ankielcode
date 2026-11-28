@@ -360,7 +360,7 @@ function Sidebar({
             </SheetHeader>
             <div
               className={cn(
-                "flex h-full w-full flex-col pb-safe pt-safe",
+                "flex h-full w-full select-none flex-col pb-safe pt-safe",
                 SIDEBAR_TITLEBAR_CONTROL_SIZE,
                 side === "left" ? "pl-safe" : "pr-safe",
               )}
@@ -388,8 +388,8 @@ function Sidebar({
       >
         <div
           className={cn(
+            // The gap snaps; animating its width would relayout the main column every frame.
             "relative w-(--sidebar-width) bg-transparent",
-            "[[data-panel-animations=true]_&]:transition-[width] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
@@ -400,11 +400,11 @@ function Sidebar({
         />
         <div
           className={cn(
-            "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) md:flex",
-            "[[data-panel-animations=true]_&]:transition-[left,right,width] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
+            "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) select-none md:flex",
+            "[[data-panel-animations=true]_&]:transition-[translate] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
             side === "left"
-              ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-              : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+              ? "left-0 group-data-[collapsible=offcanvas]:-translate-x-full"
+              : "right-0 group-data-[collapsible=offcanvas]:translate-x-full",
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
               : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",

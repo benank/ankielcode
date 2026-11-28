@@ -1,8 +1,4 @@
 import {
-  capitalizeTerm,
-  sourceControlClients,
-} from "@ankielcode/client-runtime/source-control-clients";
-import {
   COMPOSER_CONTEXT_PREVIEW_COMMENT_MAX_CHARS,
   COMPOSER_CONTEXT_REVIEW_DIFF_MAX_CHARS,
   COMPOSER_CONTEXT_REVIEW_TEXT_MAX_CHARS,
@@ -51,7 +47,6 @@ import {
 } from "./terminalContext";
 import type { ReviewCommentContext } from "~/reviewCommentContext";
 import type { MessageResolver } from "~/i18n/messages";
-import { changeRequestTermKind } from "~/components/pullRequest/changeRequestTerm";
 
 const PREVIEW_LABEL_MAX_CHARS = 48;
 const RESPONSE_LABEL_MAX_CHARS = 64;
@@ -184,7 +179,7 @@ export function previewAnnotationTargetText(
   return parts.length === 0 ? record.targetSummary : parts.join(", ");
 }
 
-export function isPullRequestSummaryContext(comment: ReviewCommentPresentation): boolean {
+function isPullRequestSummaryContext(comment: ReviewCommentPresentation): boolean {
   if (comment.pullRequest !== undefined) return true;
   return (
     comment.sectionId.startsWith("pull-request:") &&
@@ -200,65 +195,6 @@ function pullRequestContextNumber(comment: ReviewCommentPresentation): number | 
 }
 
 export type PullRequestContextDisplayState = "open" | "draft" | "merged" | "closed";
-
-export function pullRequestContextDisplayState(
-  comment: ReviewCommentPresentation,
-): PullRequestContextDisplayState | null {
-  const pullRequest = comment.pullRequest;
-  if (pullRequest === undefined) return null;
-  return pullRequest.state === "open" && pullRequest.isDraft ? "draft" : pullRequest.state;
-}
-
-/** Without `resolve` the label stays English. */
-export function pullRequestContextKindLabel(
-  comment: ReviewCommentPresentation,
-  resolve?: MessageResolver,
-): string {
-  const url = comment.pullRequest?.url;
-  const host = url === undefined ? null : sourceControlClients.findByChangeRequestUrl(url);
-  const term = (host ?? sourceControlClients.get(undefined)).changeRequest.singular;
-  const state = pullRequestContextDisplayState(comment);
-  if (resolve !== undefined) {
-    const variables = { term: changeRequestTermKind({ singular: term }) };
-    switch (state) {
-      case null:
-        return resolve(
-          msg("{term, select, mr {Merge request} cr {Change request} other {Pull request}}"),
-          variables,
-        );
-      case "open":
-        return resolve(
-          msg(
-            "{term, select, mr {Open merge request} cr {Open change request} other {Open pull request}}",
-          ),
-          variables,
-        );
-      case "draft":
-        return resolve(
-          msg(
-            "{term, select, mr {Draft merge request} cr {Draft change request} other {Draft pull request}}",
-          ),
-          variables,
-        );
-      case "merged":
-        return resolve(
-          msg(
-            "{term, select, mr {Merged merge request} cr {Merged change request} other {Merged pull request}}",
-          ),
-          variables,
-        );
-      case "closed":
-        return resolve(
-          msg(
-            "{term, select, mr {Closed merge request} cr {Closed change request} other {Closed pull request}}",
-          ),
-          variables,
-        );
-    }
-  }
-  if (state === null) return capitalizeTerm(term);
-  return `${capitalizeTerm(state)} ${term}`;
-}
 
 /** Without `resolve` the fallback stays English, for records sent to the agent. */
 export function previewAnnotationContextLabel(
@@ -368,19 +304,6 @@ export function environmentContextReference(
   record: EnvironmentContextRecord,
 ): ComposerContextReference {
   return { kind: "environment", contextId: record.contextId, label: record.label };
-}
-
-export function environmentContextRecord(
-  environmentId: EnvironmentId,
-  label: string,
-): EnvironmentContextRecord {
-  return {
-    version: 1,
-    kind: "environment",
-    contextId: toKindScopedComposerContextId("environment", environmentId),
-    label: sanitizeComposerContextLabel(label, "environment"),
-    environmentId,
-  };
 }
 
 export function terminalContextRecord(context: TerminalContextDraft): TerminalContextRecord {

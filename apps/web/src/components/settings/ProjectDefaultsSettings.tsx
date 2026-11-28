@@ -19,7 +19,6 @@ import { EMPTY_SERVER_PROVIDERS } from "../../state/server";
 import { resolveEnvModeLabel, WORKTREE_SUBMODULES_LABELS } from "../BranchToolbar.logic";
 import { ProviderModelPicker } from "../chat/ProviderModelPicker";
 import { runtimeModeConfig, runtimeModeOptions } from "../chat/runtimeModeConfig";
-import { PULL_REQUEST_MERGE_METHOD_LABELS } from "../pullRequest/pullRequestDetail.logic";
 import { TraitsPicker } from "../chat/TraitsPicker";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { toastManager } from "../ui/toast";
@@ -107,8 +106,6 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
   const PermissionIcon = runtimeModeConfig[settings.defaultRuntimeMode].icon;
   const mixedWorkspace = useScopedSettingsMixed(["defaultThreadEnvMode"]);
   const mixedAutoPull = useScopedSettingsMixed(["defaultAutoPull"]);
-  const mixedAgentCredits = useScopedSettingsMixed(["removeAgentCreditsOnMerge"]);
-  const mixedMergeMethod = useScopedSettingsMixed(["pullRequestMergeMethod"]);
   const modelSource = useScopedSettingSource(["defaultModelSelection"]);
   const isProjectScope = scope.kind === "project" || scope.kind === "checkout";
   const unavailable = connectedEnvironments.length === 0;
@@ -454,90 +451,6 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
                 checked={mixedAutoPull ? false : settings.defaultAutoPull}
                 onCheckedChange={(enabled) => updateSettings({ defaultAutoPull: enabled })}
               />
-            }
-          />
-          <SettingsRow
-            serverScoped
-            settingKeys={["removeAgentCreditsOnMerge"]}
-            mixed={mixedAgentCredits}
-            {...searchableSetting("remove-agent-credits-on-merge")}
-            description={gt(
-              "Remove recognized agent credit lines from merge and squash messages on hosts that support it, keeping human co-authors. Includes auto-merge. Excludes merge queues, stack merges, and existing commits.",
-            )}
-            resetAction={
-              settings.removeAgentCreditsOnMerge ? (
-                <SettingResetButton
-                  ariaLabel={gt("Reset agent credit removal to default")}
-                  tooltip={gt("Keep agent credits")}
-                  onClick={() => updateSettings({ removeAgentCreditsOnMerge: false })}
-                />
-              ) : null
-            }
-            control={
-              <Switch
-                aria-label={gt("Remove agent credits when merging")}
-                mixed={mixedAgentCredits}
-                checked={mixedAgentCredits ? false : settings.removeAgentCreditsOnMerge}
-                onCheckedChange={(enabled) =>
-                  updateSettings({ removeAgentCreditsOnMerge: enabled })
-                }
-              />
-            }
-          />
-          <SettingsRow
-            serverScoped
-            settingKeys={["pullRequestMergeMethod"]}
-            mixed={mixedMergeMethod}
-            {...searchableSetting("pull-request-merge-method")}
-            description={
-              isProjectScope
-                ? gt("Pull requests in this project start with this method.")
-                : gt(
-                    "Pull requests start with this method. Last selected reuses whatever you chose most recently on this device.",
-                  )
-            }
-            resetAction={
-              settings.pullRequestMergeMethod !== null ? (
-                <SettingResetButton
-                  ariaLabel={gt("Reset default merge method to default")}
-                  tooltip={gt("Reset to last selected")}
-                  onClick={() => updateSettings({ pullRequestMergeMethod: null })}
-                />
-              ) : null
-            }
-            control={
-              <Select
-                value={mixedMergeMethod ? null : (settings.pullRequestMergeMethod ?? "last")}
-                onValueChange={(value) => {
-                  if (value === "last") updateSettings({ pullRequestMergeMethod: null });
-                  else if (value === "merge" || value === "squash" || value === "rebase")
-                    updateSettings({ pullRequestMergeMethod: value });
-                }}
-              >
-                <SelectTrigger size="sm" aria-label={gt("Default pull request merge method")}>
-                  <SelectValue>
-                    {(value: string | null) =>
-                      value === "merge" || value === "squash" || value === "rebase"
-                        ? m(PULL_REQUEST_MERGE_METHOD_LABELS[value])
-                        : value === "last"
-                          ? gt("Last selected")
-                          : gt("Mixed", { $context: "values differ across targets" })
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectPopup align="end" alignItemWithTrigger={false}>
-                  <SelectItem value="last">
-                    <T>Last selected</T>
-                  </SelectItem>
-                  <SelectItem value="merge">{m(PULL_REQUEST_MERGE_METHOD_LABELS.merge)}</SelectItem>
-                  <SelectItem value="squash">
-                    {m(PULL_REQUEST_MERGE_METHOD_LABELS.squash)}
-                  </SelectItem>
-                  <SelectItem value="rebase">
-                    {m(PULL_REQUEST_MERGE_METHOD_LABELS.rebase)}
-                  </SelectItem>
-                </SelectPopup>
-              </Select>
             }
           />
         </>

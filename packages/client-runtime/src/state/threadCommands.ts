@@ -37,7 +37,6 @@ import {
   sendSteeredMessageNow,
   resumeThreadQueue,
   retryWorkspacePreparation,
-  linkThreadPullRequest,
   linkThreadIssue,
   respondToThreadApproval,
   respondToThreadUserInput,
@@ -54,14 +53,12 @@ import {
   startThreadTurn,
   stopThreadSession,
   unarchiveThread,
-  unlinkThreadPullRequest,
   unlinkThreadIssue,
   unpinThread,
   unsettleThread,
   unsnoozeThread,
   updateThreadMetadata,
   visitThread,
-  watchThreadPullRequest,
 } from "../operations/commands.ts";
 import { connectionProjectionPhase } from "../connection/model.ts";
 import type { EnvironmentRegistry } from "../connection/registry.ts";
@@ -285,24 +282,6 @@ export function createThreadEnvironmentAtoms<R, E>(
     updateMetadata: createEnvironmentCommand(runtime, {
       label: "environment-data:commands:thread:update-metadata",
       execute: updateThreadMetadata,
-      scheduler,
-      concurrency,
-    }),
-    linkPullRequest: createEnvironmentCommand(runtime, {
-      label: "environment-data:commands:thread:link-pull-request",
-      execute: linkThreadPullRequest,
-      scheduler,
-      concurrency,
-    }),
-    unlinkPullRequest: createEnvironmentCommand(runtime, {
-      label: "environment-data:commands:thread:unlink-pull-request",
-      execute: unlinkThreadPullRequest,
-      scheduler,
-      concurrency,
-    }),
-    watchPullRequest: createEnvironmentCommand(runtime, {
-      label: "environment-data:commands:thread:watch-pull-request",
-      execute: watchThreadPullRequest,
       scheduler,
       concurrency,
     }),

@@ -15,7 +15,6 @@ import {
 } from "@ankielcode/shared/markdownLinks";
 import { taskListMarkerOffset } from "@ankielcode/shared/markdownTaskEdits";
 import { isHostPath, resolveWorkspaceFilePath } from "@ankielcode/shared/path";
-import { usePullRequestLinking } from "~/hooks/usePullRequestLinking";
 import {
   AuthFilesystemReadScope,
   AuthOrchestrationOperateScope,
@@ -51,7 +50,6 @@ import {
   type ServerConfig,
   type ScopedThreadRef,
   type ServerProviderSkill,
-  type ThreadPullRequestKey,
 } from "@ankielcode/contracts";
 import {
   isAtomCommandInterrupted,
@@ -172,10 +170,9 @@ import {
   WORKSPACE_BASENAME_LOOKUP_LIMIT,
   workspaceLinkLookupQuery,
 } from "@ankielcode/client-runtime/workspace-basename-lookup";
-import { resolvePullRequestPreviewTarget } from "@ankielcode/client-runtime/change-request-links";
 import { resolveIssueLinkTarget } from "@ankielcode/client-runtime/issue-links";
 import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
-import { useOpenChangeRequestLink } from "~/lib/openPullRequestLink";
+import { useOpenCommitLink } from "~/lib/openCommitLink";
 import { textDirection } from "~/textDirection";
 import { useOpenLink } from "../browser/useOpenLink";
 import { writeTextToClipboard } from "../hooks/useCopyToClipboard";
@@ -188,8 +185,7 @@ import {
   isBrowserSettingsReadError,
 } from "../browser/openFileInPreview";
 import { resolveLinkTarget } from "../browser/browserLinkTarget";
-import { PullRequestLinkPreview } from "./pullRequest/PullRequestLinkPreview";
-import { IssueLinkPreview, IssueLinkPreviewFallback } from "./issue/IssueLinkPreview";
+import { IssueLinkPreview } from "./issue/IssueLinkPreview";
 import { MarkdownCodeBlock, SuspenseShikiCodeBlock } from "./chat/MarkdownCodeBlock";
 import { createMarkdownRenderer } from "./chat/markdownRenderer";
 import type { MarkdownExtensions, WordsHastOptions } from "../markdown/wordsHast";
@@ -421,7 +417,6 @@ type MarkdownServerConfigFields = ReturnType<typeof markdownServerConfigFields>;
 
 function markdownServerConfigFields(config: ServerConfig | null) {
   return {
-    pullRequestsEnabled: config !== null,
     issuesEnabled: config?.environment.capabilities.issues === true,
     isMacOS: config?.environment.platform.os === "darwin",
     availableEditors: config?.availableEditors ?? NO_MARKDOWN_EDITORS,
@@ -437,7 +432,6 @@ function markdownServerConfigFieldsEqual(
   next: MarkdownServerConfigFields,
 ): boolean {
   return (
-    previous.pullRequestsEnabled === next.pullRequestsEnabled &&
     previous.issuesEnabled === next.issuesEnabled &&
     previous.isMacOS === next.isMacOS &&
     previous.revealInFileManager === next.revealInFileManager &&
@@ -613,7 +607,6 @@ function useChatMarkdownState(
   const openPreview = useAtomCommand(previewEnvironment.open, {
     reportFailure: false,
   });
-  const pullRequestLinking = usePullRequestLinking(threadRef?.environmentId);
   const environmentId = threadRef?.environmentId ?? explicitEnvironmentId ?? null;
   const canOperateHost = useEnvironmentScope(environmentId, AuthOrchestrationOperateScope);
   const canOperatePreview = useEnvironmentScope(environmentId, AuthPreviewOperateScope);
@@ -690,8 +683,9 @@ function useChatMarkdownState(
       },
     );
   };
-  const { pullRequestsEnabled, issuesEnabled, availableEditors, revealInFileManager, isMacOS } =
-    useAtomValue(markdownServerConfigFieldsAtom(environmentId));
+  const { issuesEnabled, availableEditors, revealInFileManager, isMacOS } = useAtomValue(
+    markdownServerConfigFieldsAtom(environmentId),
+  );
   const revealInFileManagerLabel =
     revealInFileManager === undefined
       ? undefined
@@ -744,7 +738,7 @@ function useChatMarkdownState(
         : payload.html,
     );
   };
-  const openChangeRequestLink = useOpenChangeRequestLink(threadRef, pullRequestPanelRef);
+  const openCommitLink = useOpenCommitLink(threadRef);
   const openIssueLink = useOpenIssueLink(threadRef, pullRequestPanelRef);
   const openDeferredMarkdownLink = useOpenLink(threadRef);
   // Subscribe so hydrated settings apply before the anchor synchronously decides whether to intercept _blank.
@@ -756,29 +750,6 @@ function useChatMarkdownState(
   const fileLinksKey = `${fileLinkSourcesKey(text, cwd, imageBaseDir, isStreaming ? (streamingBlocks ?? splitMarkdownBlocks(text) ?? [text]) : null)}`;
   const { markdownFileLinkMetaByHref, inlineCodeFileLinkMetaByText, fileLinkParentSuffixByPath } =
     resolveFileLinkSources(fileLinksKey, cwd, imageBaseDir);
-  const resolveThreadPullRequest = (
-    href: string,
-  ): (ThreadPullRequestKey & { readonly url: string }) | null => {
-    if (
-      threadRef === undefined ||
-      readThreadShell(threadRef) === null ||
-      !pullRequestLinking.canLink(href)
-    )
-      return null;
-    const parsed = sourceControlClients.parseChangeRequestUrl(href)?.link;
-    return parsed === undefined ? null : { ...parsed, url: href };
-  };
-  const linkedThreadPullRequestFor = (href: string) => {
-    if (threadRef === undefined || !pullRequestLinking.isLinked(readThreadShell(threadRef), href))
-      return null;
-    const parsed = sourceControlClients.parseChangeRequestUrl(href)?.link;
-    return parsed === undefined ? null : { ...parsed, url: href };
-  };
-  const updateThreadPullRequestLink = async (href: string, linked: boolean) => {
-    if (threadRef === undefined || (!linked && linkedThreadPullRequestFor(href) === null)) return;
-    if (!readEnvironmentScope(threadRef.environmentId, AuthOrchestrationOperateScope)) return;
-    await pullRequestLinking.changeLink(threadRef, href, linked);
-  };
   const openExternalLinkInPreview = (url: string) => {
     if (!threadRef || !canOperatePreview) {
       return Promise.resolve(
@@ -1065,21 +1036,17 @@ function useChatMarkdownState(
     onTaskListChange,
     onUseArtifactTemplate,
     onRunShellCommand,
-    openChangeRequestLink,
+    openCommitLink,
     openIssueLink,
     openDeferredMarkdownLink,
     openExternalLinkInPreview,
     openMarkdownMedia,
     projects,
     issueProjects,
-    linkedThreadPullRequestFor,
-    resolveThreadPullRequest,
     resolvedTheme,
-    pullRequestsEnabled,
     issuesEnabled,
     skills,
     threadRef,
-    updateThreadPullRequestLink,
   };
   return {
     componentState,
@@ -1228,7 +1195,6 @@ const CHAT_MARKDOWN_COMPONENTS = {
   a: function MarkdownAnchor({ node, href, children, title: _title, ...props }) {
     const gt = useGT();
     const {
-      canOperateHost,
       canOperatePreview,
       cwd,
       environmentId,
@@ -1236,18 +1202,12 @@ const CHAT_MARKDOWN_COMPONENTS = {
       markdownFileLinkMetaByHref,
       threadRef,
       openMarkdownMedia,
-      openChangeRequestLink,
+      openCommitLink,
       openIssueLink,
-      openDeferredMarkdownLink,
       linkTargetPreference,
       openExternalLinkInPreview,
-      projects,
       issueProjects,
-      linkedThreadPullRequestFor,
-      resolveThreadPullRequest,
-      pullRequestsEnabled,
       issuesEnabled,
-      updateThreadPullRequestLink,
       fileLinkChip,
       renderContextReference,
     } = use(ChatMarkdownRendererContext);
@@ -1298,19 +1258,6 @@ const CHAT_MARKDOWN_COMPONENTS = {
             ? plainHastText(node)
             : undefined;
       const isPullRequestAutolink = pullRequestCopy !== undefined;
-      const confirmBeforeOpen = pullRequestAutolink === "reference";
-      const pullRequestCandidateUrl =
-        confirmBeforeOpen && href
-          ? sourceControlClients.changeRequestUrlFromReferenceAutolink(href)
-          : href;
-      const pullRequestPreviewTarget = pullRequestCandidateUrl
-        ? resolvePullRequestPreviewTarget({
-            environmentId,
-            projects,
-            pullRequestsEnabled,
-            url: pullRequestCandidateUrl,
-          })
-        : null;
       const issueTarget =
         issuesEnabled && environmentId !== null && href
           ? resolveIssueLinkTarget({ url: href, projects: issueProjects })
@@ -1363,7 +1310,7 @@ const CHAT_MARKDOWN_COMPONENTS = {
             }
             if (
               !href ||
-              openChangeRequestLink(event, href, undefined, environmentId ?? undefined) ||
+              openCommitLink(event, href) ||
               openIssueLink(event, href, environmentId ?? undefined)
             ) {
               return;
@@ -1428,17 +1375,9 @@ const CHAT_MARKDOWN_COMPONENTS = {
             const api = readLocalApi();
             if (!api) return;
             const source = contextMenuSourceOf(event);
-            const threadLinkAction = !canOperateHost
-              ? undefined
-              : linkedThreadPullRequestFor(href) !== null
-                ? "unlink-from-thread"
-                : resolveThreadPullRequest(href) === null
-                  ? undefined
-                  : "link-to-thread";
             void showExternalLinkContextMenu({
               href,
               canOpenInPreview,
-              threadLinkAction,
               position: { x: event.clientX, y: event.clientY },
               showContextMenu: (items, position) => api.contextMenu.show(items, position, source),
               openInPreview: async (target) => {
@@ -1457,25 +1396,8 @@ const CHAT_MARKDOWN_COMPONENTS = {
                   unavailableMessage: msg("Clipboard API is unavailable while copying link."),
                   failureMessage: msg("Failed to copy link to the clipboard."),
                 }),
-              updateThreadLink: updateThreadPullRequestLink,
-              reportFailure: (operation, cause) => {
-                reportMarkdownActionFailure({ operation, target: href }, cause);
-                if (
-                  operation === "link-pull-request-to-thread" ||
-                  operation === "unlink-pull-request-from-thread"
-                ) {
-                  toastManager.add(
-                    stackedThreadToast({
-                      type: "error",
-                      title:
-                        operation === "link-pull-request-to-thread"
-                          ? gt("Unable to link pull request")
-                          : gt("Unable to unlink pull request"),
-                      description: thrownErrorMessage(cause, m) ?? gt("The request failed."),
-                    }),
-                  );
-                }
-              },
+              reportFailure: (operation, cause) =>
+                reportMarkdownActionFailure({ operation, target: href }, cause),
             });
           }}
         >
@@ -1490,48 +1412,6 @@ const CHAT_MARKDOWN_COMPONENTS = {
       );
       if (!faviconHost || !href) {
         return link;
-      }
-      if (pullRequestPreviewTarget !== null) {
-        return (
-          <PullRequestLinkPreview
-            link={link}
-            originalUrl={href}
-            target={pullRequestPreviewTarget}
-            confirmBeforeOpen={confirmBeforeOpen}
-            onOpenPullRequest={(targetUrl) =>
-              openChangeRequestLink(
-                {
-                  metaKey: false,
-                  ctrlKey: false,
-                  preventDefault: () => undefined,
-                  stopPropagation: () => undefined,
-                },
-                targetUrl,
-                undefined,
-                environmentId ?? undefined,
-              )
-            }
-            // A reference that is not a pull request may still be an issue this app can show.
-            onOpenFallback={async (url) => {
-              const opened = openIssueLink(
-                {
-                  metaKey: false,
-                  ctrlKey: false,
-                  preventDefault: () => undefined,
-                  stopPropagation: () => undefined,
-                },
-                url,
-                environmentId ?? undefined,
-              );
-              if (!opened) await openDeferredMarkdownLink(url);
-            }}
-            fallback={
-              issuePreviewTarget === null ? undefined : (
-                <IssueLinkPreviewFallback originalUrl={href} target={issuePreviewTarget} />
-              )
-            }
-          />
-        );
       }
       if (issuePreviewTarget !== null) {
         return <IssueLinkPreview link={link} originalUrl={href} target={issuePreviewTarget} />;

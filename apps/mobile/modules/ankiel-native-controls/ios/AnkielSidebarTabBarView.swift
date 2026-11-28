@@ -40,7 +40,7 @@ final class AnkielSidebarTabBarView: ExpoView, UITabBarDelegate {
   private let composeButton = UIButton(type: .system)
   private lazy var tabBarTrailing = tabBar.trailingAnchor.constraint(equalTo: trailingAnchor)
   private var itemsByTab: [String: UITabBarItem] = [:]
-  var tabs = ["threads", "pullRequests", "issues", "usage", "settings"] {
+  var tabs = ["threads", "issues", "usage", "settings"] {
     didSet { if tabs != oldValue { updateItems() } }
   }
   var selectedTab = "threads" { didSet { updateSelection() } }
@@ -108,9 +108,8 @@ final class AnkielSidebarTabBarView: ExpoView, UITabBarDelegate {
 
   private func prepareItems() {
     let iconBundle = Bundle(for: Self.self).url(forResource: "AnkielNativeControlIcons", withExtension: "bundle").flatMap(Bundle.init(url:))
-    let pullRequestIcon = UIImage(named: "pull-request", in: iconBundle, compatibleWith: nil)?.withRenderingMode(.alwaysTemplate)
     let labels = [
-      "threads": "Chats", "pullRequests": "PRs", "issues": "Issues", "workflows": "Workflows",
+      "threads": "Chats", "issues": "Issues", "workflows": "Workflows",
       "usage": "Usage", "settings": "Settings",
     ]
     let issueIcon = UIImage(named: "issue", in: iconBundle, compatibleWith: nil)?.withRenderingMode(.alwaysTemplate)
@@ -119,7 +118,7 @@ final class AnkielSidebarTabBarView: ExpoView, UITabBarDelegate {
       "usage": "chart.bar.xaxis", "settings": "gearshape",
     ]
     for (tab, label) in labels {
-      let icon = tab == "pullRequests" ? pullRequestIcon : tab == "issues" ? issueIcon : UIImage(systemName: symbols[tab] ?? "circle")
+      let icon = tab == "issues" ? issueIcon : UIImage(systemName: symbols[tab] ?? "circle")
       let item = UITabBarItem(title: nil, image: tabIcon(icon), tag: 0)
       item.accessibilityLabel = label
       item.accessibilityIdentifier = "workspace-tab-\(tab)"

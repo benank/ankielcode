@@ -127,30 +127,6 @@ const make = Effect.gen(function* () {
           }
           break;
         }
-        case "message.updated": {
-          const message = event.payload;
-          const source = message.notification?.source;
-          if (source?.kind !== "monitor" || source.pullRequest === undefined) return;
-          if (!isNew(message.createdAt)) return;
-          const stamps = [source.pullRequest, ...(source.otherPullRequests ?? [])];
-          const thread = yield* projections.getThread(event.threadId);
-          out.push({
-            ...envelope(`pr.watch_wake:${message.id}`, thread, message.createdAt, {
-              type: "system",
-              label: "pull request watch",
-            }),
-            type: "pr.watch_wake",
-            pullRequests: stamps.map(({ host, repository, number }) => ({
-              host,
-              repository,
-              number,
-            })),
-            outcome: message.notification!.outcome,
-            summary: message.notification!.summary,
-            watchEnded: stamps.some((stamp) => stamp.watchEnded === true),
-          });
-          break;
-        }
         default:
           return;
       }

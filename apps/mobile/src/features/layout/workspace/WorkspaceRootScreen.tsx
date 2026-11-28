@@ -1,6 +1,5 @@
 import { WorkspaceNoTabs } from "./WorkspaceNoTabs";
-import { isSharedSlotTab } from "./navigation-tab-order";
-import { SharedSlotTitle } from "./SharedSlotTitle";
+import { IssuesListTitle } from "./IssuesListTitle";
 import { WORKSPACE_TAB_LABELS, useEnabledNavigationTabs } from "./navigation-tabs";
 import { WorkspaceExtraTab } from "./WorkspaceExtraTab";
 import { WorkspaceSettingsList } from "../../settings/SettingsRouteScreen";
@@ -29,7 +28,6 @@ import {
 import { HomeRouteScreen } from "../../home/HomeRouteScreen";
 import { WorkspaceConnectionTitle } from "../../home/WorkspaceConnectionTitle";
 import { useAdaptiveWorkspaceLayout } from "../AdaptiveWorkspaceLayout";
-import { PullRequestsScreen } from "../../pull-requests/PullRequestsScreen";
 import { IssuesScreen } from "../../issues/IssuesScreen";
 import {
   WorkspaceTabsContext,
@@ -70,8 +68,8 @@ function WorkspaceRootTitle(props: {
     <View style={{ width: maxWidth, minHeight: 32, justifyContent: "center" }}>
       <WorkspaceConnectionTitle
         brand={
-          !settingsOpen && isSharedSlotTab(state.selectedTab) ? (
-            <SharedSlotTitle tab={state.selectedTab} />
+          !settingsOpen && state.selectedTab === "issues" ? (
+            <IssuesListTitle />
           ) : (
             <CompactBrandTitle
               accessibilityLabel={gt("{product}, {title}", {
@@ -185,8 +183,6 @@ function WorkspaceRootContent() {
             <WorkspaceNoTabs />
           ) : state.selectedTab === "threads" ? (
             <HomeRouteScreen />
-          ) : state.selectedTab === "pullRequests" ? (
-            <PullRequestsScreen />
           ) : state.selectedTab === "issues" ? (
             <IssuesScreen />
           ) : (

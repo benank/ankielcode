@@ -1,7 +1,7 @@
 import type { VoiceInputPhase, VoiceInputState } from "@ankielcode/client-runtime/voice-input";
 import { useGT } from "gt-react-native";
 import { memo, useState, type ReactNode } from "react";
-import { Linking, Pressable, Text as SystemText, View, type LayoutChangeEvent } from "react-native";
+import { Linking, Pressable, View, type LayoutChangeEvent } from "react-native";
 import Animated, {
   Easing,
   ReduceMotion,
@@ -18,7 +18,6 @@ import { AppText as Text } from "../../components/ui/AppText";
 import { SymbolView, type AppSymbolName } from "../../components/ui/AppSymbol";
 import { useAndroidControlSizing } from "../../components/ui/useAndroidControlSizing";
 import { cn } from "../../lib/cn";
-import { CHROME_MAX_FONT_SCALE } from "../../lib/typography";
 import type { VoiceComposerPresentation } from "./voiceInputPresentation";
 import { VOICE_WAVEFORM_SAMPLE_COUNT } from "./voiceInputMetering";
 
@@ -236,20 +235,21 @@ const VoiceWaveform = memo(function VoiceWaveform(props: {
   );
 });
 
-/** Use system tabular figures; DM Sans lacks them and would jitter. */
+/** Tabular figures keep the ticking timer from jittering. */
 export function DictationElapsedTime(props: {
   readonly seconds: number;
   readonly className?: string;
 }) {
   return (
-    <SystemText
-      className={cn("text-xs", props.className)}
-      maxFontSizeMultiplier={CHROME_MAX_FONT_SCALE}
+    <Text
+      chrome
+      textRole="label"
+      className={props.className}
       numberOfLines={1}
       style={{ fontVariant: ["tabular-nums"] }}
     >
       {Math.floor(props.seconds / 60)}:{String(props.seconds % 60).padStart(2, "0")}
-    </SystemText>
+    </Text>
   );
 }
 

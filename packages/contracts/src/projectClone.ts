@@ -76,36 +76,10 @@ export const ProjectCloneActionResult = Schema.Struct({
 });
 export type ProjectCloneActionResult = typeof ProjectCloneActionResult.Type;
 
-function projectCloneStageLabel(stage: ProjectCloneStage): string {
-  switch (stage) {
-    case "connecting":
-      return "Connecting";
-    case "counting":
-      return "Counting objects";
-    case "receiving":
-      return "Receiving objects";
-    case "resolving":
-      return "Resolving deltas";
-    case "checkout":
-      return "Checking out files";
-  }
-}
-
 export function projectCloneDisplayName(
   snapshot: Pick<ProjectCloneSnapshot, "repository" | "destinationPath">,
 ): string {
   if (snapshot.repository) return snapshot.repository.nameWithOwner;
   const segments = snapshot.destinationPath.split(/[/\\]/).filter((segment) => segment.length > 0);
   return segments[segments.length - 1] ?? snapshot.destinationPath;
-}
-
-export function projectCloneProgressSummary(
-  snapshot: Pick<ProjectCloneSnapshot, "stage" | "percent" | "detail" | "stalled">,
-): string {
-  const parts = [projectCloneStageLabel(snapshot.stage)];
-  if (snapshot.percent !== null) parts.push(`${snapshot.percent}%`);
-  // The detail carries git's last transfer speed, which a stall makes a lie.
-  if (snapshot.stalled) parts.push("Stalled");
-  else if (snapshot.detail) parts.push(snapshot.detail);
-  return parts.join(" · ");
 }

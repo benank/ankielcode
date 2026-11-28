@@ -20,47 +20,28 @@ import {
 import { msg } from "gt-react";
 import {
   ConnectionTransientError,
-  ConnectionBlockedError,
   CredentialStore,
   ProfileStore,
-  PullRequestRoutingPermissions,
-  StoredPullRequestRoutingPermission,
-  pullRequestRoutingConnectionKey,
-  pullRequestRoutingPermissionFor,
 } from "@ankielcode/client-runtime/connection";
-import { EnvironmentQueryStore } from "@ankielcode/client-runtime/state/query-persistence";
 import { EnvironmentId, ServerConfig, ThreadId, VcsListRefsResult } from "@ankielcode/contracts";
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
-import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import * as Stream from "effect/Stream";
 import { m } from "../i18n/messages";
 import { projectFaviconCache } from "../assets/projectFaviconCache";
 
 const DATABASE_NAME = "ankielcode:connection-runtime";
-const DATABASE_VERSION = 5;
+const DATABASE_VERSION = 6;
 const CATALOG_STORE_NAME = "catalog";
 const SHELL_STORE_NAME = "shell";
 const THREAD_STORE_NAME = "thread";
 const SERVER_CONFIG_STORE_NAME = "server-config";
 const VCS_REFS_STORE_NAME = "vcs-refs";
-const QUERY_STORE_NAME = "query";
-const QUERY_UPDATED_INDEX_NAME = "environment-updated";
-const QUERY_MAX_ROWS = 256;
-const QUERY_MAX_BYTES = 32 * 1024 * 1024;
-const QUERY_MAX_PAYLOAD_BYTES = 4 * 1024 * 1024;
-const QUERY_MAX_AGE_MS = 30 * 24 * 60 * 60_000;
-// A stats answer saves one row per listed PR, so the bounds index is walked once per batch of
-// saves. Each walk trims a batch below the caps, so the caps hold between walks. The batch count
-// lives in the database, so tabs sharing it share one count.
-const QUERY_PRUNE_BATCH_ROWS = 32;
-const QUERY_PRUNE_BATCH_BYTES = 1024 * 1024;
+const RETIRED_QUERY_STORE_NAME = "query";
 const CATALOG_KEY = "document";
 const StoredShellSnapshot = StoredOrchestrationShellSnapshot;
 const StoredShellSnapshotJson = Schema.fromJsonString(StoredShellSnapshot);
@@ -79,10 +60,6 @@ const StoredVcsRefs = Schema.Struct({
   refs: VcsListRefsResult,
 });
 const StoredVcsRefsJson = Schema.fromJsonString(StoredVcsRefs);
-const isStoredQuery = Schema.is(
-  Schema.Struct({ environmentId: Schema.String, payload: Schema.String, updatedAt: Schema.Number }),
-);
-const isQueryBatch = Schema.is(Schema.Struct({ rows: Schema.Number, bytes: Schema.Number }));
 const ConnectionCatalogDocumentJson = Schema.fromJsonString(ConnectionCatalogDocument);
 const decodeConnectionCatalogDocument = Schema.decodeUnknownEffect(ConnectionCatalogDocumentJson);
 const encodeConnectionCatalogDocument = Schema.encodeEffect(ConnectionCatalogDocumentJson);
@@ -102,9 +79,6 @@ const CATALOG_FAILURE = {
   encode: msg("Could not encode the local connection catalog: {cause}"),
   load: msg("Could not load the local connection catalog: {cause}"),
   save: msg("Could not save the local connection catalog: {cause}"),
-  "save pull request routing permissions in": msg(
-    "Could not save pull request routing permissions in the local connection catalog: {cause}",
-  ),
 };
 
 function catalogError(operation: keyof typeof CATALOG_FAILURE, cause: unknown) {
@@ -170,10 +144,9 @@ const openDatabase = Effect.fn("web.connectionStorage.openDatabase")(function* (
         if (!request.result.objectStoreNames.contains(VCS_REFS_STORE_NAME)) {
           request.result.createObjectStore(VCS_REFS_STORE_NAME);
         }
-        if (!request.result.objectStoreNames.contains(QUERY_STORE_NAME)) {
-          request.result
-            .createObjectStore(QUERY_STORE_NAME)
-            .createIndex(QUERY_UPDATED_INDEX_NAME, ["environmentId", "updatedAt", "bytes"]);
+        // Held cached pull request answers, which nothing reads anymore.
+        if (request.result.objectStoreNames.contains(RETIRED_QUERY_STORE_NAME)) {
+          request.result.deleteObjectStore(RETIRED_QUERY_STORE_NAME);
         }
       });
       request.addEventListener("error", () => {
@@ -374,77 +347,6 @@ function removeDatabaseValuesInRangeOnConnection(
   }).pipe(Effect.withSpan("web.connectionStorage.removeDatabaseValuesInRange"));
 }
 
-// Mirrors mobile's pull-request cache bounds, per environment.
-function saveQueryOnConnection(
-  database: IDBDatabase,
-  environmentId: EnvironmentId,
-  key: string,
-  payload: string,
-  updatedAt: number,
-) {
-  return Effect.callback<void, ConnectionTransientError>((resume) => {
-    try {
-      const bytes = new TextEncoder().encode(payload).length;
-      const transaction = database.transaction(QUERY_STORE_NAME, "readwrite");
-      transaction.addEventListener("abort", () => {
-        resume(
-          Effect.fail(
-            catalogError("write", transaction.error ?? m(msg("Unknown IndexedDB write error"))),
-          ),
-        );
-      });
-      transaction.addEventListener("complete", () => {
-        resume(Effect.void);
-      });
-      const store = transaction.objectStore(QUERY_STORE_NAME);
-      // An answer too large to keep must not leave its older copy to paint on the next start.
-      if (bytes > QUERY_MAX_PAYLOAD_BYTES) {
-        store.delete(queryCacheKey(environmentId, key));
-        return;
-      }
-      store.put({ environmentId, payload, updatedAt, bytes }, queryCacheKey(environmentId, key));
-      const batchKey = queryBatchKey(environmentId);
-      const batchRequest = store.get(batchKey);
-      batchRequest.addEventListener("success", () => {
-        const batch: unknown = batchRequest.result;
-        const rows = (isQueryBatch(batch) ? batch.rows : 0) + 1;
-        const written = (isQueryBatch(batch) ? batch.bytes : 0) + bytes;
-        if (
-          isQueryBatch(batch) &&
-          rows < QUERY_PRUNE_BATCH_ROWS &&
-          written < QUERY_PRUNE_BATCH_BYTES
-        ) {
-          store.put({ rows, bytes: written }, batchKey);
-          return;
-        }
-        store.put({ rows: 0, bytes: 0 }, batchKey);
-        const request = store
-          .index(QUERY_UPDATED_INDEX_NAME)
-          .openKeyCursor(IDBKeyRange.bound([environmentId], [environmentId, []]), "prev");
-        let kept = 0;
-        let totalBytes = 0;
-        request.addEventListener("success", () => {
-          const cursor = request.result;
-          if (cursor === null) return;
-          const [, rowUpdatedAt, rowBytes] = cursor.key as [string, number, number];
-          kept += 1;
-          totalBytes += rowBytes;
-          if (
-            kept > QUERY_MAX_ROWS - QUERY_PRUNE_BATCH_ROWS ||
-            totalBytes > QUERY_MAX_BYTES - QUERY_PRUNE_BATCH_BYTES ||
-            rowUpdatedAt < updatedAt - QUERY_MAX_AGE_MS
-          ) {
-            store.delete(cursor.primaryKey);
-          }
-          cursor.continue();
-        });
-      });
-    } catch (cause) {
-      resume(Effect.fail(catalogError("write", cause)));
-    }
-  }).pipe(Effect.withSpan("web.connectionStorage.saveQuery"));
-}
-
 function readDatabaseValue(database: DatabaseHandle, storeName: string, key: IDBValidKey) {
   return withDatabase(database, (opened) => readDatabaseValueOnConnection(opened, storeName, key));
 }
@@ -478,14 +380,6 @@ function removeDatabaseValuesInRange(
 
 function threadCacheKey(environmentId: EnvironmentId, threadId: ThreadId) {
   return `${environmentId}:${threadId}`;
-}
-
-function queryCacheKey(environmentId: EnvironmentId, key: string) {
-  return `${environmentId}:v1:${key}`;
-}
-
-function queryBatchKey(environmentId: EnvironmentId) {
-  return `${environmentId}:batch`;
 }
 
 function vcsRefsCacheKey(environmentId: EnvironmentId, cwd: string) {
@@ -618,110 +512,6 @@ export const makeCatalogStore = Effect.fn("web.connectionStorage.makeCatalogStor
   return { read, update } satisfies CatalogStore;
 });
 
-// The stored names predate the rename and stay, so a tab still on an older version and an
-// updated one read and revoke the same grants.
-const PULL_REQUEST_ROUTING_KEY_PREFIX = "ankielcode:github-routing:";
-const PULL_REQUEST_ROUTING_CHANGED = "ankielcode:github-routing-changed";
-const isStoredPullRequestRoutingPermission = Schema.is(StoredPullRequestRoutingPermission);
-const encodeStoredPullRequestRoutingPermission = Schema.encodeSync(
-  Schema.fromJsonString(StoredPullRequestRoutingPermission),
-);
-
-/** Each grant has its own key so stale tabs and unrelated catalog saves cannot restore trust. */
-export function makeBrowserPullRequestRoutingPermissions(
-  browser: Pick<Window, "localStorage"> & EventTarget = window,
-) {
-  const read = (key: string): StoredPullRequestRoutingPermission | null => {
-    try {
-      const raw = browser.localStorage.getItem(key);
-      const value: unknown = raw === null ? null : JSON.parse(raw);
-      return isStoredPullRequestRoutingPermission(value) &&
-        key === `${PULL_REQUEST_ROUTING_KEY_PREFIX}${value.environmentId}`
-        ? value
-        : null;
-    } catch {
-      return null;
-    }
-  };
-  const readAll = (): ReadonlyArray<StoredPullRequestRoutingPermission> => {
-    try {
-      const values: StoredPullRequestRoutingPermission[] = [];
-      const storage = browser.localStorage;
-      for (let index = 0; index < storage.length; index++) {
-        const key = storage.key(index);
-        if (key?.startsWith(PULL_REQUEST_ROUTING_KEY_PREFIX)) {
-          const value = read(key);
-          if (value !== null) values.push(value);
-        }
-      }
-      return values;
-    } catch {
-      return [];
-    }
-  };
-  const write = (environmentId: EnvironmentId, value: StoredPullRequestRoutingPermission | null) =>
-    Effect.try({
-      try: () => {
-        const key = `${PULL_REQUEST_ROUTING_KEY_PREFIX}${environmentId}`;
-        if (value === null) browser.localStorage.removeItem(key);
-        else browser.localStorage.setItem(key, encodeStoredPullRequestRoutingPermission(value));
-        browser.dispatchEvent(new Event(PULL_REQUEST_ROUTING_CHANGED));
-      },
-      catch: (cause) => catalogError("save pull request routing permissions in", cause),
-    });
-  return PullRequestRoutingPermissions.of({
-    get: Effect.fn("PullRequestRoutingPermissions.get")(function (entry) {
-      return Effect.sync(() => {
-        const value = read(`${PULL_REQUEST_ROUTING_KEY_PREFIX}${entry.target.environmentId}`);
-        return pullRequestRoutingPermissionFor(entry, value === null ? [] : [value]);
-      });
-    }),
-    changes: Stream.callback<ReadonlyArray<StoredPullRequestRoutingPermission>>((queue) =>
-      Effect.acquireRelease(
-        Effect.sync(() => {
-          const listener = (event: Event) => {
-            if (event.type === "storage") {
-              const key = (event as StorageEvent).key;
-              if (key !== null && !key?.startsWith(PULL_REQUEST_ROUTING_KEY_PREFIX)) return;
-            }
-            Queue.offerUnsafe(queue, readAll());
-          };
-          browser.addEventListener("storage", listener);
-          browser.addEventListener(PULL_REQUEST_ROUTING_CHANGED, listener);
-          Queue.offerUnsafe(queue, readAll());
-          return listener;
-        }),
-        (listener) =>
-          Effect.sync(() => {
-            browser.removeEventListener("storage", listener);
-            browser.removeEventListener(PULL_REQUEST_ROUTING_CHANGED, listener);
-          }),
-      ).pipe(Effect.asVoid),
-    ),
-    set: Effect.fn("PullRequestRoutingPermissions.set")(function* (entry, permission) {
-      const connectionKey = pullRequestRoutingConnectionKey(entry);
-      if (connectionKey === null)
-        return yield* new ConnectionBlockedError({
-          reason: "configuration",
-          detail: m(msg("This environment does not have a saved connection endpoint.")),
-        });
-      return yield* write(
-        entry.target.environmentId,
-        permission === "off"
-          ? null
-          : {
-              environmentId: entry.target.environmentId,
-              connectionKey,
-              permission,
-            },
-      );
-    }),
-    forget: Effect.fn("PullRequestRoutingPermissions.forget")(function (environmentId) {
-      return write(environmentId, null);
-    }),
-  });
-}
-
 // MessageChannel yields without nested-timer clamping or background throttling.
 const yieldToBrowserTask = Effect.callback<void>((resume) => {
   const { port1, port2 } = new MessageChannel();
@@ -746,7 +536,6 @@ export const layer = Layer.effectContext(
       (owned) => owned.close,
     );
     const catalog = yield* makeCatalogStore(makeCatalogBackend(database));
-    const pullRequestRoutingPermissions = makeBrowserPullRequestRoutingPermissions();
     // Remembers each thread row's encoding, so a save only encodes rows that changed.
     const encodeStoredShellSnapshot = makeStoredShellSnapshotEncoder({
       yieldToHost: yieldToBrowserTask,
@@ -1075,52 +864,17 @@ export const layer = Layer.effectContext(
               VCS_REFS_STORE_NAME,
               IDBKeyRange.bound(`${environmentId}:`, `${environmentId}:\uffff`),
             ),
-            removeDatabaseValuesInRange(
-              database,
-              QUERY_STORE_NAME,
-              IDBKeyRange.bound(`${environmentId}:`, `${environmentId}:\uffff`),
-            ),
           ],
           { concurrency: "unbounded", discard: true },
         ).pipe(Effect.mapError((cause) => persistenceError("clear-environment", cause)));
       }),
     });
 
-    const queryStore: NonNullable<typeof EnvironmentQueryStore.Service> = {
-      load: Effect.fn("EnvironmentQueryStore.load")(
-        function* (environmentId, key) {
-          const stored = yield* readDatabaseValue(
-            database,
-            QUERY_STORE_NAME,
-            queryCacheKey(environmentId, key),
-          );
-          const now = yield* Clock.currentTimeMillis;
-          return isStoredQuery(stored) &&
-            stored.environmentId === environmentId &&
-            stored.updatedAt >= now - QUERY_MAX_AGE_MS
-            ? Option.some(stored.payload)
-            : Option.none();
-        },
-        Effect.catch(() => Effect.succeedNone),
-      ),
-      save: (environmentId, key, payload) =>
-        Clock.currentTimeMillis.pipe(
-          Effect.flatMap((now) =>
-            withDatabase(database, (opened) =>
-              saveQueryOnConnection(opened, environmentId, key, payload, now),
-            ),
-          ),
-          Effect.catch(() => Effect.logWarning("Offline query database save failed")),
-        ),
-    };
-
     return Context.make(Persistence.ConnectionTargetStore, targetStore).pipe(
-      Context.add(PullRequestRoutingPermissions, pullRequestRoutingPermissions),
       Context.add(Persistence.ConnectionRegistrationStore, registrationStore),
       Context.add(ProfileStore.ConnectionProfileStore, profileStore),
       Context.add(CredentialStore.ConnectionCredentialStore, credentialStore),
       Context.add(Persistence.EnvironmentCacheStore, cacheStore),
-      Context.add(EnvironmentQueryStore, queryStore),
     );
   }),
 );

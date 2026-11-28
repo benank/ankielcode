@@ -27,6 +27,7 @@ import { resolveWorkGroupScrollAnchor } from "@ankielcode/client-runtime/work-lo
 import type { WorkflowOpening } from "@ankielcode/client-runtime/state/subagentRuntime";
 import { observeResize } from "~/lib/observeResize";
 import { preserveReadingPosition } from "~/lib/preserveReadingPosition";
+import { scopeSelectAllTo } from "~/lib/selectAllWithin";
 import { useStableCallback } from "~/hooks/useStableCallback";
 
 const NOOP_USE_ARTIFACT_TEMPLATE = () => {};
@@ -96,7 +97,6 @@ import { type ThreadFindMatch } from "./threadFind";
 import { useThreadFindNavigation } from "./useThreadFindNavigation";
 import { TooltipScrollDismissArea } from "../ui/tooltip";
 import { WorktreeSetupCard } from "./WorktreeSetupCard";
-import { useOpenPrLink } from "~/lib/openPullRequestLink";
 import { useMediaQuery } from "~/hooks/useMediaQuery";
 import { cn } from "~/lib/utils";
 import { type TimestampFormat } from "@ankielcode/contracts/settings";
@@ -476,7 +476,6 @@ const ConversationTimeline = memo(function ConversationTimeline({
     setExpandedAttemptIds(paintedExpandedAttemptIds);
   }
   const citationThreadRef = parseScopedThreadKey(routeThreadKey);
-  const openPullRequest = useOpenPrLink(citationThreadRef ?? undefined);
   const [minimapStripMap] = useState(() => new Map<string, HTMLSpanElement>());
   const normalizedFindQuery = findQuery.trim();
   const findActive = findExpanded;
@@ -1065,8 +1064,10 @@ const ConversationTimeline = memo(function ConversationTimeline({
       measureTimelineGutter(viewportElement);
       scheduleMinimapRefresh();
     });
+    const stopScopingSelectAll = scopeSelectAllTo(viewportElement);
     return () => {
       stopObserving();
+      stopScopingSelectAll();
       setTimelineViewportElement(null);
     };
   };
@@ -1093,7 +1094,6 @@ const ConversationTimeline = memo(function ConversationTimeline({
     onSendAppMessage,
     onAppFullscreenChange,
     onFileDownload,
-    openPullRequest,
     onOpenToolDiff,
     onOpenThread,
     renderHtmlRender,

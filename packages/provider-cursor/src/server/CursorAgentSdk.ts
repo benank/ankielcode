@@ -20,7 +20,6 @@ import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
@@ -1186,17 +1185,3 @@ export const makeCursorAgentSdkRunner = Effect.fn("makeCursorAgentSdkRunner")(fu
     assertComplete: Effect.void,
   });
 });
-
-export const layer = Layer.effect(
-  CursorAgentSdkRunner,
-  Effect.gen(function* () {
-    const { native: nativeEventLogger } = yield* ProviderEventLoggers.ProviderEventLoggers;
-    return yield* makeCursorAgentSdkRunner((input) =>
-      makeCursorAgentSdkProtocolLogger({
-        nativeEventLogger,
-        threadId: input.threadId,
-        providerSessionId: input.providerSessionId,
-      }),
-    );
-  }),
-);

@@ -7,21 +7,20 @@ import {
   QUEUED_TURN_START_GRACE_MS,
   resolveSnoozePresets,
   snoozeWakeLabel,
-  threadWokeAt,
 } from "@ankielcode/client-runtime/state/thread-settled";
+import type { SnoozePreset } from "@ankielcode/client-runtime/state/thread-settled";
 import {
-  hasUnseenRunFailure,
-  type SnoozePreset,
-} from "@ankielcode/client-runtime/state/thread-settled";
+  resolveThreadPixelKind,
+  resolveThreadRowStatus,
+  resolveThreadWokeAt,
+  threadHasUnseenCompletion,
+} from "@ankielcode/client-runtime/state/thread-read";
 import type { EnvironmentThreadShell } from "@ankielcode/client-runtime/state/shell";
 import type {
   buildThreadNavigationTree,
   ThreadNavigationBranch,
 } from "@ankielcode/client-runtime/state/threads";
-import {
-  resolveThreadProviderStack,
-  threadRuntimeCanArchive,
-} from "@ankielcode/client-runtime/state/models";
+import { resolveThreadProviderStack } from "@ankielcode/client-runtime/state/models";
 import {
   threadSearchMatchKey,
   threadSearchSubject,
@@ -80,14 +79,6 @@ export function resolveThreadListV2ProviderDrivers(
   return currentDriver === undefined ? [] : drivers;
 }
 
-export type ThreadListV2Status =
-  | "approval"
-  | "input"
-  | "working"
-  | "waiting"
-  | "failed"
-  | "limited"
-  | "ready";
 export type ThreadListV2SwipeAction = "archive" | "settle" | "unsettle" | "snooze" | "unsnooze";
 
 /**
@@ -253,71 +244,6 @@ export function threadListV2LayoutTime(input: {
 export const THREAD_LIST_V2_SETTLED_INITIAL_COUNT = 10;
 export const THREAD_LIST_V2_SETTLED_PAGE_COUNT = 25;
 
-export function threadHasUnseenCompletion(
-  thread: Pick<EnvironmentThreadShell, "latestRun" | "lastVisitedAt">,
-): boolean {
-  const completedAt = thread.latestRun?.completedAt;
-  if (!completedAt) return false;
-  const status = thread.latestRun?.status;
-  if (status === "interrupted" || status === "cancelled") return false;
-  const completedAtMs = Date.parse(completedAt);
-  if (Number.isNaN(completedAtMs)) return false;
-  if (!thread.lastVisitedAt) return false;
-  const lastVisitedAtMs = Date.parse(thread.lastVisitedAt);
-  if (Number.isNaN(lastVisitedAtMs)) return true;
-  return completedAtMs > lastVisitedAtMs;
-}
-
-export function resolveThreadListV2WokeAt(
-  thread: EnvironmentThreadShell,
-  options: { readonly now: string },
-): string | null {
-  // Older servers cannot persist an acknowledgement.
-  if (thread.lastVisitedAt === undefined || thread.settledOverride === "settled") return null;
-  const wokeAt = threadWokeAt(thread, options);
-  const wokeAtMs = Date.parse(wokeAt ?? "");
-  const lastVisitedAtMs = Date.parse(thread.lastVisitedAt ?? "");
-  return !Number.isNaN(wokeAtMs) && (Number.isNaN(lastVisitedAtMs) || lastVisitedAtMs < wokeAtMs)
-    ? wokeAt
-    : null;
-}
-
-export function resolveThreadListV2Status(
-  thread: Pick<
-    EnvironmentThreadShell,
-    | "hasPendingApprovals"
-    | "hasPendingUserInput"
-    | "pendingSubagentRequest"
-    | "runtime"
-    | "blockedOnThreadWait"
-    | "subagentTurnActive"
-  >,
-): ThreadListV2Status {
-  if (thread.hasPendingApprovals || thread.pendingSubagentRequest === "approval") {
-    return "approval";
-  }
-  if (thread.hasPendingUserInput || thread.pendingSubagentRequest === "user_input") {
-    return "input";
-  }
-  if (thread.runtime?.status === "running" && thread.blockedOnThreadWait === true) {
-    return "waiting";
-  }
-  if (
-    thread.subagentTurnActive === true ||
-    (thread.runtime !== null &&
-      ["preparing", "queued", "starting", "running", "waiting"].includes(thread.runtime.status))
-  ) {
-    return "working";
-  }
-  if (thread.runtime?.status === "idle") {
-    return "waiting";
-  }
-  if (thread.runtime?.status === "failed") {
-    return thread.runtime.lastErrorClass === "usage_limit" ? "limited" : "failed";
-  }
-  return "ready";
-}
-
 export function threadListV2RowAccessibilityLabel(
   input: {
     readonly title: string;
@@ -348,81 +274,6 @@ export function threadListV2RowAccessibilityLabel(
   ]
     .filter((part) => part !== null)
     .join(", ");
-}
-
-/** Row status: a failure the user has already opened settles to ready, like Done. */
-export function resolveThreadListV2RowStatus(
-  thread: Parameters<typeof resolveThreadListV2Status>[0] &
-    Pick<EnvironmentThreadShell, "latestRun" | "lastVisitedAt">,
-): ThreadListV2Status {
-  const status = resolveThreadListV2Status(thread);
-  // A runtime failure without a failed run has nothing to date it, so it stays.
-  if (status !== "failed" || thread.latestRun?.status !== "failed") return status;
-  return hasUnseenRunFailure(thread) ? status : "ready";
-}
-
-/** The pixel light a row shows, as on the web sidebar; none while nothing needs a look. */
-export function resolveThreadListV2PixelKind(
-  thread: Parameters<typeof resolveThreadListV2RowStatus>[0],
-  wokeAt: string | null,
-): PixelStatusKind | null {
-  switch (resolveThreadListV2RowStatus(thread)) {
-    case "working":
-      return "working";
-    case "waiting":
-      return "waiting";
-    case "approval":
-    case "input":
-    case "limited":
-      return "attention";
-    case "failed":
-      return "failed";
-    case "ready":
-      return wokeAt !== null ? "attention" : threadHasUnseenCompletion(thread) ? "done" : null;
-  }
-}
-
-export type ThreadListV2ReadToggle =
-  | { readonly kind: "mark-read"; readonly visitedAt: string }
-  | { readonly kind: "mark-unread" };
-
-/**
- * What the row's read toggle does: clear the light a visit clears, or bring back the one
- * mark-unread brings back. Null when neither would change the row, so a toggle always shows.
- */
-export function resolveThreadListV2ReadToggle(
-  thread: Parameters<typeof resolveThreadListV2PixelKind>[0] &
-    Pick<EnvironmentThreadShell, "runtime">,
-  wokeAt: string | null,
-): ThreadListV2ReadToggle | null {
-  // Older servers cannot persist a visit.
-  if (thread.lastVisitedAt === undefined) return null;
-  const light = resolveThreadListV2PixelKind(thread, wokeAt);
-  const run = thread.latestRun;
-  // The thread's own times, not this device's clock: the server keeps the later visit.
-  const visitedAt = [wokeAt, run?.completedAt ?? run?.startedAt ?? run?.requestedAt]
-    .filter((value): value is string => value != null && !Number.isNaN(Date.parse(value)))
-    .reduce<string | null>(
-      (latest, value) =>
-        latest === null || Date.parse(value) > Date.parse(latest) ? value : latest,
-      null,
-    );
-  if (visitedAt !== null) {
-    const seen =
-      thread.lastVisitedAt !== null && Date.parse(thread.lastVisitedAt) >= Date.parse(visitedAt)
-        ? thread.lastVisitedAt
-        : visitedAt;
-    if (resolveThreadListV2PixelKind({ ...thread, lastVisitedAt: seen }, null) !== light) {
-      return { kind: "mark-read", visitedAt };
-    }
-  }
-  const completedAtMs = Date.parse(run?.completedAt ?? "");
-  if (Number.isNaN(completedAtMs) || !threadRuntimeCanArchive(thread.runtime)) return null;
-  // The server marks a thread unread by moving its visit to just before the run completed.
-  const unseen = new Date(completedAtMs - 1).toISOString();
-  return resolveThreadListV2PixelKind({ ...thread, lastVisitedAt: unseen }, null) !== light
-    ? { kind: "mark-unread" }
-    : null;
 }
 
 function parseTimestampMs(isoDate: string): number {
@@ -678,7 +529,7 @@ function resolveThreadListV2ItemTimeLabel(
   if (showSnoozeWakeLabel) return "";
   if (
     variant === "card" &&
-    (resolveThreadListV2RowStatus(thread) !== "ready" ||
+    (resolveThreadRowStatus(thread) !== "ready" ||
       item.wokeAt !== null ||
       threadHasUnseenCompletion(thread))
   )
@@ -916,7 +767,7 @@ function groupIntoProjectFolders(
     if (collapsed) {
       for (const entry of rows) {
         if (shown.includes(entry)) continue;
-        const kind = resolveThreadListV2PixelKind(entry.item.thread, entry.item.wokeAt);
+        const kind = resolveThreadPixelKind(entry.item.thread, entry.item.wokeAt);
         if (
           kind !== null &&
           (hiddenStatus === null || PIXEL_URGENCY[kind] > PIXEL_URGENCY[hiddenStatus])
@@ -1097,7 +948,7 @@ export function buildThreadListV2Items(input: {
         variant: slim.has(thread) ? "slim" : "card",
         snoozed: snoozedThreads.has(thread),
         pinned: pinnedThreads.has(thread),
-        wokeAt: slim.has(thread) ? null : resolveThreadListV2WokeAt(thread, { now }),
+        wokeAt: slim.has(thread) ? null : resolveThreadWokeAt(thread, { now }),
         isLast: index === results.length - 1,
       })),
       hiddenSettledCount: 0,
@@ -1170,7 +1021,7 @@ export function buildThreadListV2Items(input: {
       variant: "card",
       snoozed: false,
       pinned: true,
-      wokeAt: resolveThreadListV2WokeAt(thread, { now }),
+      wokeAt: resolveThreadWokeAt(thread, { now }),
       isLast: false,
     });
   }
@@ -1180,7 +1031,7 @@ export function buildThreadListV2Items(input: {
       variant: "card",
       snoozed: false,
       pinned: false,
-      wokeAt: resolveThreadListV2WokeAt(thread, { now }),
+      wokeAt: resolveThreadWokeAt(thread, { now }),
       isLast: false,
     });
   }
@@ -1191,7 +1042,7 @@ export function buildThreadListV2Items(input: {
       variant: "card",
       snoozed: false,
       pinned: false,
-      wokeAt: resolveThreadListV2WokeAt(thread, { now }),
+      wokeAt: resolveThreadWokeAt(thread, { now }),
       isLast: false,
     });
   }

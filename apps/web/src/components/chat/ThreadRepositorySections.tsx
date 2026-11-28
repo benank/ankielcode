@@ -121,11 +121,6 @@ const RepositorySection = memo(function RepositorySection(props: {
           </span>
           {summary?.isRepository ? (
             <span className="ml-auto flex shrink-0 items-baseline gap-2 ps-2 font-mono tabular-nums">
-              {summary.pullRequest ? (
-                <span className="font-sans font-normal text-muted-foreground">
-                  #{summary.pullRequest.number}
-                </span>
-              ) : null}
               {summary.changedFiles > 0 ? (
                 <>
                   <span className="text-diff-addition-foreground">

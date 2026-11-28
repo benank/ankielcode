@@ -22,7 +22,7 @@ const decodeCapabilities = Schema.decodeUnknownSync(
 );
 export type KdeCapturePaths = { readonly bundle: string; readonly dataHome: string };
 
-export function kdeCapturePaths(paths: KdeCapturePaths) {
+function kdeCapturePaths(paths: KdeCapturePaths) {
   return {
     executable: NodePath.join(paths.dataHome, "ankielcode", "kde-capture", KDE_CAPTURE_EXECUTABLE),
     desktop: NodePath.join(paths.dataHome, "applications", DESKTOP_FILE),

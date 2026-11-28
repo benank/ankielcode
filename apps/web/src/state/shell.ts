@@ -103,7 +103,7 @@ function catalogIsComplete(
   );
 }
 
-export function createAllEnvironmentProjectSnapshotsReadyAtom(input: {
+function createAllEnvironmentProjectSnapshotsReadyAtom(input: {
   readonly catalogValueAtom: Atom.Atom<EnvironmentCatalogState>;
   readonly shellStateValueAtom: (environmentId: EnvironmentId) => Atom.Atom<EnvironmentShellState>;
   readonly requiresPrimaryEnvironment: boolean;

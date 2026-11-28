@@ -8,6 +8,7 @@ import {
   preventTerminalCloseShortcut,
 } from "../../lib/terminalCloseShortcut";
 import { isInSideChatPane } from "../../lib/sideChatPane";
+import { registerMenuAction } from "../../shortcuts/dispatcher";
 import { getTerminalFocusOwner, type TerminalFocusOwner } from "../../lib/terminalFocus";
 import type { ComposerHandleRef } from "../../composerHandleContext";
 import type { BranchToolbarHandle } from "../BranchToolbar";
@@ -27,6 +28,13 @@ const SIDE_CHAT_PANE_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
   "rightPanel.toggle",
   "rightPanel.close",
   "rightPanel.toggleMaximized",
+]);
+
+/** What an embedded side chat runs anywhere in its pane: its own find. */
+const SIDE_CHAT_FIND_COMMANDS: ReadonlySet<KeybindingCommand> = new Set([
+  "chat.find",
+  "chat.findNext",
+  "chat.findPrevious",
 ]);
 
 interface ChatShortcutsInput {
@@ -126,7 +134,7 @@ export function useChatShortcuts(input: ChatShortcutsInput) {
       context: input.getShortcutContext(event.target),
     });
     let run: ChatShortcutHandler | undefined;
-    if (command === "chat.find") run = input.commands[command];
+    if (command && SIDE_CHAT_FIND_COMMANDS.has(command)) run = input.commands[command];
     else if (command && event.target instanceof Node && composerElement?.contains(event.target)) {
       run = composerShortcutCommands(input.composerRef, input.branchToolbarRef)[command];
     }
@@ -134,6 +142,24 @@ export function useChatShortcuts(input: ChatShortcutsInput) {
     event.preventDefault();
     event.stopPropagation();
   });
+  const runMenuCommand = useEffectEvent((command: KeybindingCommand) => {
+    input.commands[command]?.({
+      event: new KeyboardEvent("keydown"),
+      terminalFocusOwner: getTerminalFocusOwner(),
+    });
+  });
+  // Re-register only when the set of commands changes, not with each render's handlers.
+  const menuCommands = input.enabled && !embedded ? Object.keys(input.commands).join(" ") : "";
+  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- registers the chat's commands with the desktop menu bar and the chords a focused browser page forwards
+  useEffect(() => {
+    if (menuCommands === "") return;
+    const disposers = (menuCommands.split(" ") as KeybindingCommand[]).map((command) =>
+      registerMenuAction(command, () => runMenuCommand(command)),
+    );
+    return () => {
+      for (const dispose of disposers) dispose();
+    };
+  }, [menuCommands]);
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- attaches keydown listeners for chat shortcuts and find dismissal: on the window, or on an embedded chat's side chat pane
   useEffect(() => {
     const target: Pick<HTMLElement, "addEventListener" | "removeEventListener"> | null = embedded

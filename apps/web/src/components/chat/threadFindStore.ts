@@ -70,6 +70,28 @@ export function attachThreadFindTimeline(timeline: ThreadFindTimeline): () => vo
   };
 }
 
+interface ThreadFindStepper {
+  readonly threadKey: string;
+  readonly step: (delta: 1 | -1) => void;
+}
+
+let attachedStepper: ThreadFindStepper | null = null;
+
+/** Attaches the open find bar's match stepping; returns the detach. */
+export function attachThreadFindStepper(stepper: ThreadFindStepper): () => void {
+  attachedStepper = stepper;
+  return () => {
+    if (attachedStepper === stepper) attachedStepper = null;
+  };
+}
+
+/** Moves to the next or previous match, as the find bar's arrows do; false when it is not open. */
+export function stepThreadFind(threadKey: string, delta: 1 | -1): boolean {
+  if (attachedStepper?.threadKey !== threadKey) return false;
+  attachedStepper.step(delta);
+  return true;
+}
+
 function readThreadFindPosition(threadKey: string, query: string): ThreadFindStart | undefined {
   return timelineFor(threadKey)?.readPosition(query);
 }

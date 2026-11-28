@@ -14,7 +14,11 @@ import { AdvertisedEndpoint } from "./remoteAccess.ts";
 import { ExecutionEnvironmentDescriptor } from "./environment.ts";
 import { type ClientSettings, type QuitConfirmationMode, SnapShotShortcut } from "./settings.ts";
 import type { EditorId } from "./editor.ts";
-import { KeybindingShortcut, type PreviewForwardedShortcut } from "./keybindings.ts";
+import {
+  type KeybindingCommand,
+  KeybindingShortcut,
+  type PreviewForwardedShortcut,
+} from "./keybindings.ts";
 
 export interface ContextMenuItem<T extends string = string> {
   id: T;
@@ -28,8 +32,73 @@ export interface ContextMenuItem<T extends string = string> {
   iconImage?: string;
   separatorBefore?: boolean;
   checked?: boolean;
+  /** A shortcut hint shown beside the item; native menus never register it. */
+  accelerator?: KeybindingShortcut;
   children?: readonly ContextMenuItem<T>[];
 }
+
+export type DesktopMenu = "file" | "edit" | "view" | "go" | "thread";
+
+/**
+ * Keybinding commands in the desktop menu bar, in order within each menu. A click runs the
+ * command in the renderer; the shown accelerator follows the user's binding.
+ */
+export const DESKTOP_MENU_COMMANDS = [
+  { command: "chat.new", menu: "file" },
+  { command: "chat.find", menu: "edit" },
+  { command: "chat.findNext", menu: "edit" },
+  { command: "chat.findPrevious", menu: "edit" },
+  { command: "sidebar.toggle", menu: "view" },
+  { command: "terminal.toggle", menu: "view", separatorBefore: true },
+  { command: "rightPanel.toggle", menu: "view" },
+  { command: "threadPanel.toggle", menu: "view" },
+  { command: "diff.toggle", menu: "view" },
+  { command: "preview.toggle", menu: "view" },
+  { command: "navigation.back", menu: "go" },
+  { command: "navigation.forward", menu: "go" },
+  { command: "commandPalette.toggle", menu: "go", separatorBefore: true },
+  { command: "thread.previous", menu: "go", separatorBefore: true },
+  { command: "thread.next", menu: "go" },
+  { command: "thread.jump.1", menu: "go", separatorBefore: true },
+  { command: "thread.jump.2", menu: "go" },
+  { command: "thread.jump.3", menu: "go" },
+  { command: "thread.jump.4", menu: "go" },
+  { command: "thread.jump.5", menu: "go" },
+  { command: "thread.jump.6", menu: "go" },
+  { command: "thread.jump.7", menu: "go" },
+  { command: "thread.jump.8", menu: "go" },
+  { command: "thread.jump.9", menu: "go" },
+  { command: "thread.stop", menu: "thread" },
+  { command: "thread.settle", menu: "thread", separatorBefore: true },
+  { command: "thread.pin", menu: "thread" },
+  { command: "thread.copyReference", menu: "thread", separatorBefore: true },
+  { command: "thread.regenerateTitle", menu: "thread" },
+  { command: "environments.reconnect", menu: "thread", separatorBefore: true },
+] as const satisfies ReadonlyArray<{
+  readonly command: KeybindingCommand;
+  readonly menu: DesktopMenu;
+  readonly separatorBefore?: true;
+}>;
+export type DesktopMenuCommand = (typeof DESKTOP_MENU_COMMANDS)[number]["command"];
+
+const DESKTOP_MENU_COMMAND_SET: ReadonlySet<string> = new Set(
+  DESKTOP_MENU_COMMANDS.map((entry) => entry.command),
+);
+export const isDesktopMenuCommand = (value: string): value is DesktopMenuCommand =>
+  DESKTOP_MENU_COMMAND_SET.has(value);
+
+/** Changes to the menu bar's commands; keys left out keep their last value. */
+export const DesktopMenuStateSchema = Schema.Struct({
+  shortcuts: Schema.optionalKey(
+    Schema.Record(Schema.String, Schema.NullOr(KeybindingShortcut)).check(
+      Schema.isMaxProperties(64),
+    ),
+  ),
+  enabled: Schema.optionalKey(
+    Schema.Record(Schema.String, Schema.Boolean).check(Schema.isMaxProperties(64)),
+  ),
+});
+export type DesktopMenuState = typeof DesktopMenuStateSchema.Type;
 
 export type QuitShortcutHintEvent =
   | { readonly state: "down"; readonly mode: Exclude<QuitConfirmationMode, "direct"> }
@@ -46,6 +115,7 @@ export interface ContextMenuItemSchemaType {
   readonly iconImage?: string;
   readonly separatorBefore?: boolean;
   readonly checked?: boolean;
+  readonly accelerator?: KeybindingShortcut;
   readonly children?: readonly ContextMenuItemSchemaType[];
 }
 
@@ -60,6 +130,7 @@ export const ContextMenuItemSchema: Schema.Codec<ContextMenuItemSchemaType> = Sc
   iconImage: Schema.optionalKey(Schema.String),
   separatorBefore: Schema.optionalKey(Schema.Boolean),
   checked: Schema.optionalKey(Schema.Boolean),
+  accelerator: Schema.optionalKey(KeybindingShortcut),
   children: Schema.optionalKey(
     Schema.Array(
       Schema.suspend((): Schema.Codec<ContextMenuItemSchemaType> => ContextMenuItemSchema),
@@ -99,6 +170,16 @@ export const DesktopUpdateStatusSchema = Schema.Literals([
 ]);
 export const DesktopRuntimeArchSchema = Schema.Literals(["arm64", "x64", "other"]);
 export const DesktopThemeSchema = Schema.Literals(["light", "dark", "system"]);
+/**
+ * The colour the renderer paints behind its chrome, so a new window opens in the active theme.
+ * `followsSystem` marks a colour that is only right while the system keeps the same appearance.
+ */
+export const DesktopWindowBackgroundSchema = Schema.Struct({
+  color: Schema.String.check(Schema.isPattern(/^#[0-9a-f]{6}$/)),
+  dark: Schema.Boolean,
+  followsSystem: Schema.Boolean,
+});
+export type DesktopWindowBackground = typeof DesktopWindowBackgroundSchema.Type;
 export const DesktopUpdateChannelSchema = Schema.Literals(["latest", "nightly"]);
 export const DesktopAppStageLabelSchema = Schema.Literals(["Latest", "Dev", "Nightly"]);
 
@@ -1064,6 +1145,26 @@ export const DesktopMediaReadSchema = Schema.Struct({
 });
 export type DesktopMediaRead = typeof DesktopMediaReadSchema.Type;
 
+/** A file the main process downloads ahead of a drag; `name` names the file, never the URL. */
+export const DesktopMediaDragInputSchema = Schema.Struct({
+  url: Schema.String.check(Schema.isMaxLength(16_384)),
+  name: Schema.String.check(Schema.isMaxLength(1024)),
+});
+export type DesktopMediaDragInput = typeof DesktopMediaDragInputSchema.Type;
+
+export const DESKTOP_RECENT_THREADS_LIMIT = 8;
+
+export const DesktopRecentThreadSchema = Schema.Struct({
+  environmentId: Schema.String.check(Schema.isMaxLength(256)),
+  threadId: Schema.String.check(Schema.isMaxLength(256)),
+  title: Schema.String.check(Schema.isMaxLength(256)),
+});
+export type DesktopRecentThread = typeof DesktopRecentThreadSchema.Type;
+
+export const DesktopRecentThreadsSchema = Schema.Array(DesktopRecentThreadSchema).check(
+  Schema.isMaxLength(DESKTOP_RECENT_THREADS_LIMIT),
+);
+
 /** `value` is the resolved locale from `prepare` and the transcript from `transcribe`. */
 export const DesktopAppleSpeechResultSchema = Schema.Union([
   Schema.Struct({ ok: Schema.Literal(true), value: Schema.String }),
@@ -1141,6 +1242,8 @@ export interface DesktopBridge {
    * only the main process can spend a notification click's activation token.
    */
   revealWindow: () => Promise<void>;
+  /** Closes the main window as its close button does; absent in older desktop builds. */
+  closeWindow?: () => Promise<void>;
   /**
    * The OS locale as a BCP-47 tag, which the renderer cannot read for itself:
    * the packaged app ships only the `en-US` Chromium locale pak, so
@@ -1214,6 +1317,7 @@ export interface DesktopBridge {
   pickProjectFavicon: (initialPath?: string) => Promise<string | null>;
   pickThemeFiles: () => Promise<readonly PickedThemeFile[] | null>;
   setTheme: (theme: DesktopTheme) => Promise<void>;
+  setWindowBackground: (background: DesktopWindowBackground) => Promise<void>;
   showContextMenu: <T extends string>(
     items: readonly ContextMenuItem<T>[],
     position?: { x: number; y: number },
@@ -1225,15 +1329,31 @@ export interface DesktopBridge {
   openExternal: (url: string) => Promise<boolean>;
   /** Reads http(s) media in the main process, outside renderer CORS and CSP; null on network failure. */
   readMedia: (url: string) => Promise<DesktopMediaRead | null>;
+  /**
+   * Downloads an image to a temp file ahead of a drag out of the app (macOS and Windows), and
+   * returns the id `startMediaDrag` takes; null when it cannot. Absent in older desktop builds.
+   */
+  prepareMediaDrag?: (input: DesktopMediaDragInput) => Promise<string | null>;
+  /** Hands a prepared file to the OS drag; call it from `dragstart`, while the button is down. */
+  startMediaDrag?: (id: string) => Promise<boolean>;
+  /** Recent threads for the macOS dock menu and the Windows jump list; absent in older builds. */
+  setRecentThreads?: (threads: readonly DesktopRecentThread[]) => Promise<void>;
   openSystemSettings: (pane: SystemSettingsPane) => Promise<boolean>;
   checkSystemPermission: (pane: SystemSettingsPane) => Promise<boolean>;
   probeRemoteEditors: () => Promise<readonly EditorId[]>;
   pasteAsText: () => Promise<void>;
   onMenuAction: (listener: (action: string) => void) => () => void;
+  /** Absent in desktop builds without a command menu bar. */
+  setMenuState?: (state: DesktopMenuState) => Promise<void>;
   onSnapShotEvent: (listener: (event: DesktopSnapShotEvent) => void) => () => void;
   onQuitShortcut: (listener: (event: QuitShortcutHintEvent) => void) => () => void;
   getWindowFullscreenState: () => boolean;
   onWindowFullscreenStateChange: (listener: (fullscreen: boolean) => void) => () => void;
+  /** On battery, or a serious or critical thermal state (macOS); absent in older desktop builds. */
+  getLowPowerState?: () => Promise<boolean>;
+  onLowPowerStateChange?: (listener: (lowPower: boolean) => void) => () => void;
+  /** The system woke from sleep; absent in older desktop builds. */
+  onPowerResume?: (listener: () => void) => () => void;
   getWindowZoomFactor: () => number;
   getUpdateState: () => Promise<DesktopUpdateState>;
   /** `minimumVersion` is a track switch's checked release; nothing older is offered after. */
@@ -1428,18 +1548,19 @@ export interface DesktopPreviewBridge {
   onFindResult: (listener: (event: DesktopPreviewFindResultEvent) => void) => () => void;
 }
 
-export type ConfirmDialogVariant = "default" | "destructive";
-
 export interface ConfirmDialogOptions {
-  readonly variant?: ConfirmDialogVariant;
-  /** Which button takes focus on open. Defaults to Cancel; destructive confirms always keep Cancel. */
-  readonly initialFocus?: "confirm" | "cancel";
+  /** The confirm button names the action ("Delete", "Archive"), never "Confirm" or "OK". */
+  readonly confirmLabel: string;
+  /** A red confirm button, and Cancel keeps focus so Return can't confirm. Otherwise Return confirms. */
+  readonly destructive: boolean;
+  /** Keeps Cancel focused for prompts the user didn't start, so a keystroke meant for the page can't approve them. */
+  readonly focusCancel?: true;
 }
 
 export interface LocalApi {
   dialogs: {
     pickFolder: (options?: PickFolderOptions) => Promise<string | null>;
-    confirm: (message: string, options?: ConfirmDialogOptions) => Promise<boolean>;
+    confirm: (message: string, options: ConfirmDialogOptions) => Promise<boolean>;
   };
   shell: {
     openExternal: (url: string) => Promise<void>;

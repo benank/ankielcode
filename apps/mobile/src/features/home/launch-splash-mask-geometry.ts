@@ -1,11 +1,11 @@
 export const SPLASH_BACKGROUND_COLOR = "#121211";
 export const SPLASH_MARK_COLOR = "#F2F2EE";
 // Matches expo-splash-screen `imageWidth` in apps/mobile/app.config.ts for 1:1 handoff.
-export const SPLASH_ICON_SIZE = 100;
+const SPLASH_ICON_SIZE = 100;
 
 // Motion measured frame by frame from X's iOS launch: an ease-out dip to 70%, then a zoom whose
 // log-scale speed ramps up over 90ms and holds at about 0.41 per 60Hz frame.
-export const SPLASH_DIP_SCALE = 0.7;
+const SPLASH_DIP_SCALE = 0.7;
 export const SPLASH_DIP_DURATION_MS = 250;
 const EXPAND_RAMP_MS = 90;
 const EXPAND_LOG_SPEED_PER_MS = 0.0246;

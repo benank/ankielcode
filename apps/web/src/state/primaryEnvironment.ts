@@ -19,7 +19,7 @@ export const hostEnvironmentIdAtom = Atom.make<string | null>(null).pipe(
 );
 
 // This computer's environment: the primary, else a connection to the service sharing the app's Ankiel home.
-export function createLocalEnvironmentIdAtom(input: {
+function createLocalEnvironmentIdAtom(input: {
   readonly primaryEnvironmentIdAtom: Atom.Atom<EnvironmentId | null>;
   readonly hostEnvironmentIdAtom: Atom.Atom<string | null>;
   readonly catalogValueAtom: Atom.Atom<{ readonly entries: ReadonlyMap<EnvironmentId, unknown> }>;

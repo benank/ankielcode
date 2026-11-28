@@ -83,7 +83,7 @@ function subscribeReviewCommentSelection(listener: () => void): () => void {
   };
 }
 
-export function getReviewCommentSelection(): ReviewCommentSelection {
+function getReviewCommentSelection(): ReviewCommentSelection {
   return selection;
 }
 
@@ -146,7 +146,7 @@ export function clearReviewCommentTarget() {
 }
 
 /** A selection made in another sheet, thread or section, or over another diff, reads as empty. */
-export function selectReviewCommentSelection(
+function selectReviewCommentSelection(
   current: ReviewCommentSelection,
   scope: ReviewCommentSelectionScope | null,
 ): ReviewCommentSelection {

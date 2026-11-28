@@ -3,27 +3,18 @@ import { msg } from "gt-react";
 
 import { m } from "../../i18n/messages";
 
-type ExternalLinkContextMenuAction =
-  | "open-in-preview"
-  | "open-external"
-  | "copy-link"
-  | "link-to-thread"
-  | "unlink-from-thread";
+type ExternalLinkContextMenuAction = "open-in-preview" | "open-external" | "copy-link";
 
 type ExternalLinkContextMenuFailureOperation =
   | "show-link-context-menu"
   | "open-link-in-preview"
   | "open-link-external"
-  | "copy-link"
-  | "link-pull-request-to-thread"
-  | "unlink-pull-request-from-thread";
+  | "copy-link";
 
 const FAILURE_OPERATION_BY_ACTION = {
   "open-in-preview": "open-link-in-preview",
   "open-external": "open-link-external",
   "copy-link": "copy-link",
-  "link-to-thread": "link-pull-request-to-thread",
-  "unlink-from-thread": "unlink-pull-request-from-thread",
 } as const satisfies Record<ExternalLinkContextMenuAction, ExternalLinkContextMenuFailureOperation>;
 
 const EXTERNAL_LINK_CONTEXT_MENU_ITEMS = [
@@ -32,33 +23,20 @@ const EXTERNAL_LINK_CONTEXT_MENU_ITEMS = [
   { id: "copy-link", label: msg("Copy Link") },
 ] as const satisfies readonly ContextMenuItem<ExternalLinkContextMenuAction>[];
 
-function externalLinkContextMenuItems(options: {
-  readonly canOpenInPreview: boolean;
-  readonly threadLinkAction?: "link-to-thread" | "unlink-from-thread" | undefined;
-}): readonly ContextMenuItem<ExternalLinkContextMenuAction>[] {
-  const items = (
-    options.canOpenInPreview
+function externalLinkContextMenuItems(
+  canOpenInPreview: boolean,
+): readonly ContextMenuItem<ExternalLinkContextMenuAction>[] {
+  return (
+    canOpenInPreview
       ? EXTERNAL_LINK_CONTEXT_MENU_ITEMS
       : EXTERNAL_LINK_CONTEXT_MENU_ITEMS.filter((item) => item.id !== "open-in-preview")
   ).map((item) => ({ id: item.id, label: m(item.label) }));
-  if (options.threadLinkAction === undefined) return items;
-  return [
-    {
-      id: options.threadLinkAction,
-      label:
-        options.threadLinkAction === "link-to-thread"
-          ? m(msg("Link to thread"))
-          : m(msg("Unlink from thread")),
-    },
-    ...items,
-  ];
 }
 
 interface ShowExternalLinkContextMenuOptions {
   readonly href: string;
   readonly position: { readonly x: number; readonly y: number };
   readonly canOpenInPreview?: boolean;
-  readonly threadLinkAction?: "link-to-thread" | "unlink-from-thread" | undefined;
   readonly showContextMenu: (
     items: readonly ContextMenuItem<ExternalLinkContextMenuAction>[],
     position: { readonly x: number; readonly y: number },
@@ -66,7 +44,6 @@ interface ShowExternalLinkContextMenuOptions {
   readonly openInPreview: (href: string) => Promise<void>;
   readonly openExternal: (href: string) => Promise<void>;
   readonly copyLink: (href: string) => Promise<unknown>;
-  readonly updateThreadLink?: (href: string, linked: boolean) => Promise<void>;
   readonly reportFailure: (
     operation: ExternalLinkContextMenuFailureOperation,
     cause: unknown,
@@ -96,20 +73,15 @@ export async function showExternalLinkContextMenu({
   href,
   position,
   canOpenInPreview = true,
-  threadLinkAction,
   showContextMenu,
   openInPreview,
   openExternal,
   copyLink,
-  updateThreadLink,
   reportFailure,
 }: ShowExternalLinkContextMenuOptions): Promise<void> {
   let action: ExternalLinkContextMenuAction | null;
   try {
-    action = await showContextMenu(
-      externalLinkContextMenuItems({ canOpenInPreview, threadLinkAction }),
-      position,
-    );
+    action = await showContextMenu(externalLinkContextMenuItems(canOpenInPreview), position);
   } catch (cause) {
     reportFailure("show-link-context-menu", cause);
     return;
@@ -122,8 +94,6 @@ export async function showExternalLinkContextMenu({
       await openExternal(href);
     } else if (action === "copy-link") {
       await copyLink(href);
-    } else if (action === "link-to-thread" || action === "unlink-from-thread") {
-      await updateThreadLink?.(href, action === "link-to-thread");
     }
   } catch (cause) {
     if (action) reportFailure(FAILURE_OPERATION_BY_ACTION[action], cause);

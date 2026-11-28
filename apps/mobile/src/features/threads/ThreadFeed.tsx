@@ -11,7 +11,7 @@ import { collectMobileAssistantTextSelectors } from "../../lib/assistantCitation
 import { Button } from "../../components/ui/Button";
 import * as Dialog from "../../components/ui/Dialog";
 import { ASSISTANT_CITATION_MAX_TEXT_LENGTH, type AssistantCitation } from "@ankielcode/contracts";
-import { useOpenPullRequest } from "../../native/useOpenPullRequest";
+import { useOpenIssueLink } from "../../native/useOpenIssueLink";
 import { useWorkspaceSettledContentWidth } from "../layout/workspace-content-width";
 import { useVisibleSecondClock } from "./use-visible-second-clock";
 import {
@@ -3072,7 +3072,7 @@ export const ThreadFeed = memo(function ThreadFeed(props: ThreadFeedProps) {
   const workflowOpening = useWorkflowOpening(props.detailRef);
   const deviceType = useDeviceType();
   const duoColumns = useNativeWorkspaceColumnsSupported() && isDuoDevice(deviceType);
-  const openPullRequest = useOpenPullRequest();
+  const openPullRequest = useOpenIssueLink();
   const navigation = useNavigation();
   const openLinkedThread = useOpenLinkedThread();
   const openLocalPreview = useOpenLocalPreview();

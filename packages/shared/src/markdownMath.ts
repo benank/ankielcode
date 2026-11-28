@@ -11,7 +11,7 @@ const mathParser = unified()
   .use(remarkMath, { singleDollarTextMath: true })
   .freeze();
 
-export function parseMarkdownWithMath(source: string) {
+function parseMarkdownWithMath(source: string) {
   return mathParser.parse(source);
 }
 
@@ -77,10 +77,4 @@ function mayContainDollarMath(text: string): boolean {
     }
   }
   return false;
-}
-
-export function mathKind(className: string | undefined): "inline" | "display" | null {
-  if (!className?.includes("language-math")) return null;
-  if (className.includes("math-display")) return "display";
-  return className.includes("math-inline") ? "inline" : null;
 }

@@ -6,6 +6,14 @@ also lists the command IDs and defaults available in your version.
 To free a default shortcut for another command, choose **Unassign** from its row's
 actions menu. **Reset to default** brings it back.
 
+## Desktop menu bar
+
+On macOS, the menu bar lists common commands under File, Edit, View, Go,
+and Thread, with the shortcut each one uses, including ones you change in
+Settings. Commands that do nothing on the current screen are greyed out;
+**Edit → Find Next** and **Find Previous** work while find is open in a thread.
+**Help → Keyboard Shortcuts** opens **Settings → Keybindings**.
+
 ## Composer controls
 
 `mod+shift+d` starts dictation in the focused editor, or the composer, and finishes it on the next press;
@@ -34,7 +42,8 @@ Use `mod+shift+m` to choose a model and `mod+shift+h` to choose a host.
 To step a new thread to the next machine instead of opening the menu, bind
 **Composer: Cycle Host** in Keybindings. It has no default shortcut.
 Use `mod+shift+e` for effort, `mod+shift+a` for permissions, `mod+shift+x` for the
-workspace, and `mod+shift+g` for the Git branch. The workspace menu includes the
+workspace, and `mod+shift+g` for the Git branch (while find is open in the thread,
+`mod+shift+g` goes to the previous match instead). The workspace menu includes the
 current checkout, a new worktree, and the previous worktree when available.
 Use `mod+shift+l` to reuse the previous worktree directly.
 
@@ -53,18 +62,14 @@ on macOS and Ctrl on Windows and Linux, including GNOME, KDE Plasma, Niri, and
 Hyprland. If a custom desktop shortcut takes the same keys, choose another binding
 in Settings.
 
-## Copy pull request references
+## Copy a thread reference
 
-With a PR open in the right panel or on the Pull requests page, use `mod+shift+c`
-to copy its URL and `mod+shift+k` to copy its number with a `#` prefix.
-Both shortcuts can be changed in Settings. Search for “Copy Link or Thread”
-or “Copy Number”. They copy the selected PR and leave terminal input alone.
-Without a PR, `mod+shift+c` copies the thread itself, which pastes into a
-composer as a thread chip.
+`mod+shift+c` copies the current thread, which pastes into a composer as a thread chip. It can be
+changed in Settings and leaves terminal input alone.
 
 ## Find in a diff
 
-Click into a diff in the Diff panel or a pull request's Code tab, then press
+Click into a diff in the Diff panel, then press
 `mod+f` to search every file in it, including folded files and unchanged lines
 hidden between changes. Enter and `Shift+Enter` move between matches, and a
 match in a folded file opens it. Escape closes the search. This shortcut is not
@@ -131,7 +136,8 @@ Join modifiers and a key with `+`, such as `mod+shift+d` or `ctrl+l`.
 
 Available context keys are `terminalFocus`, `terminalOpen`, `previewFocus`,
 `previewOpen`, `rightPanelOpen`, `modelPickerOpen`, `usagePageOpen`, `composerFocus`,
-`draftThreadRoute`, `turnRunning`, `composerEmpty`, `editableFocus`, `isWeb`, and `isDesktop`.
+`draftThreadRoute`, `turnRunning`, `composerEmpty`, `editableFocus`, `threadFindOpen`, `isWeb`,
+and `isDesktop`. `threadFindOpen` is true while find is open in the thread.
 In a thread, `rightPanelOpen` is true while its right panel is open; the default
 `mod+t` uses it to open the panel's new-tab menu.
 `draftThreadRoute` is true on a draft thread, including a restored draft, until it is first sent.
@@ -155,8 +161,10 @@ Combine keys with `!` for not, `&&` for and, `||` for or, and parentheses:
 `chat.find` searches conversation messages and proposed plans in the active thread. Entering a
 query searches the entire thread, including older messages. Thread search requires server support;
 update an older server to enable it. Select **Retry** if a search fails. It defaults to
-`mod+f` outside terminals and previews. Press **Enter** or **Shift+Enter** to move between matches,
-and **Escape** to close find.
+`mod+f` outside terminals and previews. Press **Enter** or **Shift+Enter** in the find field to
+move between matches, and **Escape** to close find. While find is open, `chat.findNext` (`mod+g`
+or `F3`) and `chat.findPrevious` (`mod+shift+g` or `Shift+F3`) do the same from anywhere in the
+thread.
 
 ## Find on a browser page
 
@@ -173,11 +181,16 @@ a shortcut.
 
 ## Commands with special behavior
 
-`thread.stop` interrupts the running turn in the focused thread. It has no default
-shortcut; assign one in **Settings → Keybindings**.
+`thread.stop` (`mod+.` by default) interrupts the running turn in the focused thread, like
+**Thread → Stop** in the menu bar. It does nothing when no turn is running.
 
 `thread.regenerateTitle` generates a new title for the focused thread, like
 **Regenerate title** in the thread menu. It has no default shortcut.
+
+`environments.reconnect` retries every enabled environment that is not connected, like
+**Thread → Reconnect Environments** in the menu bar or **Reconnect environments** in the
+command palette. It has no default shortcut. When your computer wakes from sleep, the desktop app
+checks every connection on its own and reconnects any that dropped.
 
 `thread.undo` (`mod+z` by default) reverses the actions shown in the notice at the
 bottom of the sidebar, such as unpin, settle, snooze, archive, or discarding a
@@ -198,10 +211,12 @@ through the pages you have visited, like a browser's back and forward buttons.
 ## Reserved shortcuts
 
 `mod+w` closes the focused terminal or the active right-panel tab. When nothing
-remains to close, it does nothing; it never closes the window.
+remains to close, `Cmd+W` closes the window on macOS, like its close button, and
+the app keeps running.
+On Windows and Linux, `Ctrl+W` then does nothing; it never closes the window.
 
 `mod+shift+t` reopens the last closed tab across the app, including files,
-diffs, pull requests, browsers, and devices, in the order you closed them.
+diffs, browsers, and devices, in the order you closed them.
 A browser opens in a fresh session without its old page history. Incognito tabs
 can reopen until you reload or quit the app. This shortcut does not undo deleted work.
 

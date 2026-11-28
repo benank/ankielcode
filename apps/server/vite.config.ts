@@ -7,7 +7,6 @@ import baseConfig from "../../vite.config.ts";
 import { resolveTaggedSourceVersion } from "../../scripts/lib/tagged-source-version.ts";
 import rootPackageJson from "../../package.json" with { type: "json" };
 import packageJson from "./package.json" with { type: "json" };
-import { WeightedShardSequencer } from "./src/testUtils/weightedShardSequencer.ts";
 
 // NSIS install time tracks file count, not bytes.
 import {
@@ -146,7 +145,6 @@ export default mergeConfig(
     test: {
       // Parallel sqlite/git/worktree/orchestration tests introduce load-sensitive flakes.
       fileParallelism: false,
-      sequence: { sequencer: WeightedShardSequencer },
       setupFiles: [
         "./src/testUtils/gitConfig.setup.ts",
         "./src/testUtils/managedServiceEnv.setup.ts",

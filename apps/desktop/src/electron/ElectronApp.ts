@@ -95,7 +95,7 @@ const addScopedAppListener = <Args extends ReadonlyArray<unknown>>(
       }),
   ).pipe(Effect.asVoid);
 
-export function toSystemLocaleTag(identifier: string, hourCycle?: "h12" | "h23"): string {
+function toSystemLocaleTag(identifier: string, hourCycle?: "h12" | "h23"): string {
   const [base = "", keywords = ""] = identifier.split("@");
   const languageTag = base.replace(/_/g, "-");
   // Intl ignores rg extensions, so the macOS region override must replace the region subtag.

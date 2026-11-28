@@ -1,7 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import "@fontsource-variable/dm-sans/opsz.css";
+import "@fontsource-variable/geist/wght.css";
+import "@fontsource-variable/geist/wght-italic.css";
+import "@fontsource-variable/geist-mono/wght.css";
+import "@fontsource-variable/geist-mono/wght-italic.css";
 import "./index.css";
 
 import { trackKeyboardLayout } from "./keyboardLayout";

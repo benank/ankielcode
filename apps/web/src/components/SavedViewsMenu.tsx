@@ -32,7 +32,7 @@ export interface SavedView<Preferences> {
 }
 
 /**
- * What one list (pull requests, issues) stores and how it compares its list controls. `Stored`
+ * What one list (issues) stores and how it compares its list controls. `Stored`
  * is the schema's decoded shape, which may spell absent fields as `undefined`.
  */
 export interface SavedViewsKind<Preferences extends Stored, Stored, Encoded> {
@@ -40,7 +40,6 @@ export interface SavedViewsKind<Preferences extends Stored, Stored, Encoded> {
   readonly schema: Schema.Codec<ReadonlyArray<SavedView<Stored>>, Encoded>;
   readonly empty: ReadonlyArray<SavedView<Stored>>;
   /** Picks whole translated sentences for this list; never inject it into copy. */
-  readonly list: "pullRequest" | "issue";
   /** `msg()` text, resolved where it renders. */
   readonly placeholder: string;
   /** `msg()` text or "". */
@@ -72,10 +71,7 @@ export function SavedViewsMenu<Preferences extends Stored, Stored, Encoded>({
   if (selectedView && selectedId !== selectedView.id) setSelectedId(selectedView.id);
   const modified = selectedView !== undefined && !kind.matches(selectedView, preferences);
   const nameError = editor ? savedViewNameError(editor.name, views, editor.id, messages) : null;
-  const savedViewsLabel = gt(
-    "{list, select, pullRequest {Saved pull request views} other {Saved issue views}}",
-    { list: kind.list },
-  );
+  const savedViewsLabel = gt("Saved issue views");
 
   function persist(
     update: (current: ReadonlyArray<SavedView<Stored>>) => ReadonlyArray<SavedView<Stored>>,
@@ -99,10 +95,7 @@ export function SavedViewsMenu<Preferences extends Stored, Stored, Encoded>({
     }
     toastManager.add({
       type: "error",
-      title: gt(
-        "{list, select, pullRequest {Could not save PR views} other {Could not save issue views}}",
-        { list: kind.list },
-      ),
+      title: gt("Could not save issue views"),
       description: gt(
         "Local storage is unavailable or full. Try again after freeing space or allowing storage.",
       ),
@@ -234,13 +227,7 @@ export function SavedViewsMenu<Preferences extends Stored, Stored, Encoded>({
           >
             <DialogHeader>
               <DialogTitle>
-                {editor?.id
-                  ? gt("{list, select, pullRequest {Rename PR view} other {Rename issue view}}", {
-                      list: kind.list,
-                    })
-                  : gt("{list, select, pullRequest {Save PR view} other {Save issue view}}", {
-                      list: kind.list,
-                    })}
+                {editor?.id ? gt("Rename issue view") : gt("Save issue view")}
               </DialogTitle>
               <DialogDescription>
                 <T>Save your search, filters, and sort order on this device.</T>

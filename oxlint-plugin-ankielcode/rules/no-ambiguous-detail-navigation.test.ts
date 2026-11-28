@@ -11,7 +11,7 @@ describe("ankielcode/no-ambiguous-detail-navigation", () => {
     "allows selections, explicit pushes, and other routes",
     `
       selectDetail({ name: "Thread", params });
-      navigation.dispatch(StackActions.push("PullRequest", params));
+      navigation.dispatch(StackActions.push("Thread", params));
       navigation.navigate("ThreadFiles", params);
     `,
   );
@@ -19,7 +19,7 @@ describe("ankielcode/no-ambiguous-detail-navigation", () => {
   rule.invalid("reports navigating to a thread", `navigation.navigate("Thread", params);`);
 
   rule.invalid(
-    "reports a navigate action to a pull request",
-    `navigation.dispatch(CommonActions.navigate("PullRequest", params));`,
+    "reports a navigate action to a thread",
+    `navigation.dispatch(CommonActions.navigate("Thread", params));`,
   );
 });

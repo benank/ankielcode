@@ -1,5 +1,3 @@
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
-import { changeRequestTermKind } from "../../../lib/changeRequestTerm";
 import { SymbolView } from "../../../components/ui/AppSymbol";
 import { msg } from "gt-react-native";
 import type { ComponentProps } from "react";
@@ -22,11 +20,9 @@ export function SheetActionButton(props: {
 }
 
 export function menuItemIconName(
-  icon: "commit" | "push" | "pr",
+  icon: "commit" | "push",
 ): ComponentProps<typeof SymbolView>["name"] {
-  if (icon === "commit") return "checkmark.circle";
-  if (icon === "push") return "arrow.up.circle";
-  return "arrow.up.right.circle";
+  return icon === "commit" ? "checkmark.circle" : "arrow.up.circle";
 }
 
 export function statusSummary(
@@ -36,8 +32,6 @@ export function statusSummary(
     readonly workingTree?: { readonly files: readonly { readonly path: string }[] };
     readonly aheadCount?: number;
     readonly behindCount?: number;
-    readonly pr?: { readonly state?: string; readonly number?: number } | null;
-    readonly sourceControlProvider?: { readonly kind: string } | null;
   } | null,
   resolve: MessageResolver,
 ): string {
@@ -80,19 +74,5 @@ export function statusSummary(
       ),
     );
   }
-  if (gitStatus.pr?.state === "open") {
-    const term = changeRequestTermKind(
-      sourceControlClients.get(gitStatus.sourceControlProvider?.kind).changeRequest,
-    );
-    parts.push(
-      resolve(
-        msg(
-          "{term, select, mr {MR #{number} open} cr {change request #{number} open} other {PR #{number} open}}",
-          { term, number: gitStatus.pr.number },
-        ),
-      ),
-    );
-  }
-
   return parts.join(" \u00b7 ");
 }

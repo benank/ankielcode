@@ -712,7 +712,6 @@ export function ThreadRelationshipsPanel(props: {
     const relationshipLink = (
       <Tooltip>
         <TooltipTrigger
-          delay={200}
           render={
             <ThreadDetailsControl
               size="sm"
@@ -753,7 +752,6 @@ export function ThreadRelationshipsPanel(props: {
           <div className={THREAD_DETAILS_PANEL_SPLIT_GROUP_CLASS}>
             <Tooltip>
               <TooltipTrigger
-                delay={200}
                 render={
                   <ThreadDetailsControl
                     size="sm"

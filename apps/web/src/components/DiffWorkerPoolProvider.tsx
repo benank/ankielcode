@@ -102,7 +102,7 @@ function DiffWorkerReady({ children }: { children?: ReactNode }) {
   );
 }
 
-export function useDiffWorkerPoolReady(workerPool: WorkerPoolManager | undefined) {
+function useDiffWorkerPoolReady(workerPool: WorkerPoolManager | undefined) {
   const [readyPool, setReadyPool] = useState<WorkerPoolManager>();
   const ready = workerPool
     ? readyPool === workerPool || workerPool.isInitialized() || !workerPool.isWorkingPool()
@@ -143,7 +143,7 @@ function subscribeSharedWorkerPool(onStoreChange: () => void) {
   };
 }
 
-export function useDiffWorkerPool() {
+function useDiffWorkerPool() {
   return useSyncExternalStore(
     subscribeSharedWorkerPool,
     () => sharedWorkerPool?.pool,

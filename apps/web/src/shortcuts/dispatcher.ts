@@ -1,4 +1,8 @@
-import type { KeybindingCommand, ResolvedKeybindingsConfig } from "@ankielcode/contracts";
+import {
+  isDesktopMenuCommand,
+  type KeybindingCommand,
+  type ResolvedKeybindingsConfig,
+} from "@ankielcode/contracts";
 
 import { resolveShortcutCommand, type ShortcutMatchContext } from "../keybindings";
 import { isEditableFocused } from "../lib/editableFocus";
@@ -32,6 +36,11 @@ export interface CommandScopeOptions {
    * scopes may also handle, such as scroll keys.
    */
   readonly observe?: (event: KeyboardEvent, consumed: boolean) => void;
+  /**
+   * Whether the desktop menu bar offers these commands, for screens they do nothing on. `when`
+   * guards keys and is not read for menu clicks. Defaults to always.
+   */
+  readonly menu?: () => boolean;
 }
 
 interface CommandScope {
@@ -43,6 +52,11 @@ interface CommandScope {
 const globalScopes: CommandScope[] = [];
 const captureScopes: CommandScope[] = [];
 const observerScopes: CommandScope[] = [];
+const menuCommandListeners = new Set<() => void>();
+
+function notifyMenuCommands() {
+  for (const listener of menuCommandListeners) listener();
+}
 
 function readFocusContext(event: KeyboardEvent): Partial<ShortcutMatchContext> {
   return {
@@ -121,9 +135,11 @@ function ensureKeydownListener() {
 function pushScope(list: CommandScope[], scope: CommandScope): () => void {
   ensureKeydownListener();
   list.push(scope);
+  notifyMenuCommands();
   return () => {
     const index = list.lastIndexOf(scope);
     if (index !== -1) list.splice(index, 1);
+    notifyMenuCommands();
   };
 }
 
@@ -140,9 +156,41 @@ type MenuActionHandler = () => void;
 const menuActionHandlers = new Map<string, MenuActionHandler[]>();
 let menuActionInstalled = false;
 
-export function dispatchMenuAction(action: string): void {
-  const handlers = menuActionHandlers.get(action);
-  handlers?.at(-1)?.();
+/** Runs whenever a command scope or menu action is registered or removed. */
+export function subscribeMenuCommands(listener: () => void): () => void {
+  menuCommandListeners.add(listener);
+  return () => {
+    menuCommandListeners.delete(listener);
+  };
+}
+
+// Newest scope first, capture scopes ahead of the rest, as a keydown reaches them.
+function* menuCommandHandlers(command: KeybindingCommand) {
+  for (const scopes of [captureScopes, globalScopes]) {
+    for (let index = scopes.length - 1; index >= 0; index -= 1) {
+      const scope = scopes[index];
+      const handler = scope?.commands[command];
+      if (handler && (scope.options.menu?.() ?? true)) yield handler;
+    }
+  }
+}
+
+/** Whether a menu bar item for this action would reach a handler on the current screen. */
+export function isMenuActionAvailable(action: string): boolean {
+  if ((menuActionHandlers.get(action)?.length ?? 0) > 0) return true;
+  return isDesktopMenuCommand(action) && !menuCommandHandlers(action).next().done;
+}
+
+/** A menu click runs the command's own handler; menu bar commands fall back to the key scopes. */
+function dispatchMenuAction(action: string): void {
+  const handler = menuActionHandlers.get(action)?.at(-1);
+  if (handler) return handler();
+  if (!isDesktopMenuCommand(action)) return;
+  // Handlers read and claim a keydown; the menu has none, so it hands them an inert one.
+  const event = new KeyboardEvent("keydown");
+  for (const run of menuCommandHandlers(action)) {
+    if (run(event) !== false) return;
+  }
 }
 
 function ensureMenuActionListener() {
@@ -159,8 +207,10 @@ export function registerMenuAction(action: string, handler: MenuActionHandler): 
   const handlers = menuActionHandlers.get(action) ?? [];
   handlers.push(handler);
   menuActionHandlers.set(action, handlers);
+  notifyMenuCommands();
   return () => {
     const index = handlers.lastIndexOf(handler);
     if (index !== -1) handlers.splice(index, 1);
+    notifyMenuCommands();
   };
 }

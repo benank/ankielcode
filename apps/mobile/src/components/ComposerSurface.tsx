@@ -27,9 +27,9 @@ import { useUniwindTheme } from "../lib/useUniwindTheme";
 import { GlassSurface } from "./ui/GlassSurface";
 
 const COLLAPSED_EDITOR_DEFAULT_INSET = 6;
-// iOS puts line-height slack above glyphs. DM Sans's lowercase midline is
-// descender (0.31em) + half x-height (0.504em) above the line bottom.
-const LOWERCASE_MIDLINE_EM = 0.562;
+// iOS puts line-height slack above glyphs. Geist's lowercase midline is
+// descender (0.295em) + half x-height (0.53em) above the line bottom.
+const LOWERCASE_MIDLINE_EM = 0.56;
 
 function lowercaseMidline(text: ScaledTextRole): number {
   return text.lineHeight - LOWERCASE_MIDLINE_EM * text.fontSize;

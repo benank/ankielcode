@@ -17,7 +17,7 @@ const ExactName = Schema.String.check(
 
 const WorkflowTool = Tool.make("ankiel_workflow", {
   description:
-    "Durable workflow runs on this server. start: `workflow`, `input`, `idempotencyKey` (same key, same run). list: runs, by `status`. read: one run and its steps. questions: what runs ask a person. hooks: the URL paths that start runs. store: what workflows keep, under keys starting with `key`; store_set a `key` to `value`; store_delete. signal: wake a wait with `value`, addressed by `runId` and `wait`, or by `workflow` and `channel`; answers a question as `{choice, reason?}`. resume: run a paused run's failed step again. cancel.",
+    "Durable workflow runs on this server. start: `workflow`, `input`, `idempotencyKey` (same key, same run). list: runs by `status`. read: a run and its steps. questions: what runs ask a person. hooks: URL paths that start runs. store: workflow data under keys starting with `key`; store_set `key` to `value`; store_delete. signal: wake a wait with `value`, by `runId` and `wait` or by `workflow` and `channel`; answers a question as `{choice, reason?}`. resume: rerun a paused run's failed step. cancel.",
   parameters: Schema.Struct({
     action: Schema.Literals([
       ...WORKFLOW_READ_ACTIONS,

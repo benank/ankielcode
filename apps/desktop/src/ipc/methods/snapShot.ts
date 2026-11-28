@@ -60,7 +60,7 @@ function snapShotScreenFrame(
   };
 }
 
-export function snapShotRelativeFrame(
+function snapShotRelativeFrame(
   frame: DesktopSnapShotAnimationDestination["viewportFrame"],
   bounds: Electron.Rectangle,
   zoom: number,

@@ -1,7 +1,6 @@
 import * as Schema from "effect/Schema";
 
 import { IssueRef } from "./issue.ts";
-import { PullRequestRef } from "./pullRequest.ts";
 
 export const WorkflowRunStatus = Schema.Literals([
   "running",
@@ -170,7 +169,7 @@ export const WorkflowRunsSubscribeInput = Schema.Struct({});
 export const WorkflowRunGetInput = Schema.Struct({ runId: Schema.String });
 
 /**
- * Something a run touched: an issue, a pull request, or a kind added later. `kind` is open, so a
+ * Something a run touched: an issue, or a kind added later. `kind` is open, so a
  * client shows a kind it does not know by its title and `url`. `key` is the thing's identity in
  * its kind; `address` is whatever that kind needs to open it.
  */
@@ -189,10 +188,12 @@ export const WorkflowRunReference = Schema.Struct({
 });
 export type WorkflowRunReference = typeof WorkflowRunReference.Type;
 
-/** The kinds of reference runs record today; `address` is an `IssueRef` or a `PullRequestRef`. */
-export const WorkflowReferenceKind = { issue: "issue", pullRequest: "pullRequest" } as const;
+/**
+ * The kinds of reference runs record today; `address` is an `IssueRef`. Older runs also recorded
+ * pull requests, which show by their title and `url` like any kind a client does not know.
+ */
+export const WorkflowReferenceKind = { issue: "issue" } as const;
 export const WorkflowIssueAddress = IssueRef;
-export const WorkflowPullRequestAddress = PullRequestRef;
 
 /** One run with its steps, in the order they started, and what it touched. */
 export const WorkflowRunDetail = Schema.Struct({

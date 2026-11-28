@@ -49,7 +49,7 @@ export function threadFamilyRead(
  * shell deltas carry every change; a family copy read before the shell removed that thread is
  * stale.
  */
-export function threadFamilyRowsMissingFromShell(input: {
+function threadFamilyRowsMissingFromShell(input: {
   readonly shellThreads: ReadonlyArray<OrchestrationV2ThreadShell>;
   readonly families: ReadonlyArray<OrchestrationV2ThreadFamily>;
   readonly removedAt: ReadonlyMap<ThreadId, number>;

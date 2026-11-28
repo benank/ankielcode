@@ -443,7 +443,7 @@ export function useEnvironmentIdentificationMode(): EnvironmentIdentificationMod
   });
 }
 
-export async function prepareModelPreferencesPatch(
+async function prepareModelPreferencesPatch(
   settings: ServerSettings,
   patch: ServerSettingsPatch,
 ): Promise<ServerSettingsPatch> {
@@ -810,19 +810,6 @@ export function useUpdatePrimarySettings() {
 
 export function updateClientSettings(patch: ClientSettingsPatch): Promise<void> {
   return persistClientSettingsPatch(patch);
-}
-
-export function __resetClientSettingsPersistenceForTests(): void {
-  clientSettingsHydrationGeneration += 1;
-  clientSettingsSnapshot = DEFAULT_CLIENT_SETTINGS;
-  clientSettingsHydrationStatus = "pending";
-  clientSettingsHydrationPromise = null;
-  clientSettingsPersistenceQueue = Promise.resolve();
-  deferredClientSettingsPatchCount = 0;
-  unsubscribeOtherTabClientSettings?.();
-  unsubscribeOtherTabClientSettings = null;
-  clientSettingsListeners.clear();
-  clientSettingsHydrationListeners.clear();
 }
 
 export function __setClientSettingsForTests(settings: ClientSettings): void {

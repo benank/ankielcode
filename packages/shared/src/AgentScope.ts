@@ -58,7 +58,7 @@ export const AgentScopeThreadId = Context.Reference<string | undefined>(
   { defaultValue: () => undefined },
 );
 
-export const AGENT_OOM_SCORE_ADJ = 800;
+const AGENT_OOM_SCORE_ADJ = 800;
 
 export const RAISE_OOM_SCORE_LINE = `{ echo ${AGENT_OOM_SCORE_ADJ} >/proc/self/oom_score_adj; } 2>/dev/null`;
 

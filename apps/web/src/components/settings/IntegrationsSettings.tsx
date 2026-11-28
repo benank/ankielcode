@@ -132,7 +132,7 @@ export interface ServerProfileData {
   readonly clear: (environmentId: EnvironmentId, profileId: string) => Promise<void>;
 }
 
-export async function clearBrowserProfileData(
+async function clearBrowserProfileData(
   bridge: BrowserProfileDataBridge | null,
   environmentIds: ReadonlyArray<EnvironmentId>,
   profileId: string,
@@ -186,7 +186,7 @@ class ProfileLimitReachedError extends Schema.TaggedError<ProfileLimitReachedErr
 
 const isProfileLimitReachedError = Schema.is(ProfileLimitReachedError);
 
-export const importFailureReason = (cause: unknown): BrowserImportFailureReason => {
+const importFailureReason = (cause: unknown): BrowserImportFailureReason => {
   const message = String((cause as { message?: unknown } | undefined)?.message ?? "");
   return (
     BrowserImportFailureReason.literals.find((reason) => message.includes(`failed: ${reason}.`)) ??
@@ -813,39 +813,6 @@ function BrowserSearchEngineSetting() {
         />
       ) : null}
     </>
-  );
-}
-
-export function PullRequestLinksOpenInAppSetting() {
-  const searchableSetting = useSearchableSetting();
-  const gt = useGT();
-  const openInApp = useClientSettings((settings) => settings.pullRequestLinksOpenInApp);
-  const updateSettings = useUpdatePrimarySettings();
-
-  return (
-    <SettingsRow
-      {...searchableSetting("pull-request-links-open-in-app")}
-      description={gt(
-        "Clicking a pull request link opens it in Ankiel Code. Turn off to open pull request links like any other link, on your git host.",
-      )}
-      resetAction={
-        openInApp ? null : (
-          <SettingResetButton
-            ariaLabel={gt("Reset open pull requests in Ankiel Code to default")}
-            onClick={() => updateSettings({ pullRequestLinksOpenInApp: true })}
-          />
-        )
-      }
-      control={
-        <Switch
-          checked={openInApp}
-          onCheckedChange={(checked) =>
-            updateSettings({ pullRequestLinksOpenInApp: Boolean(checked) })
-          }
-          aria-label={gt("Open pull requests in Ankiel Code")}
-        />
-      }
-    />
   );
 }
 

@@ -48,7 +48,7 @@ history at startup, not just live RPC traffic.
 
 ## Turn completion and checkpoints
 
-A provider turn ending and follow-up work settling (checkpoints, diffs, PR sync) are separate
+A provider turn ending and follow-up work settling (checkpoints, diffs, remote status) are separate
 milestones. Late finalization must not keep the client showing provider work as active or extend
 recorded provider duration.
 
@@ -62,7 +62,7 @@ Reverting a checkpoint must coordinate workspace state with the provider convers
 provider cannot roll back its conversation, reject the revert before touching the filesystem.
 
 Thread settlement is server-owned. Clients render persisted settlement state rather than deriving it
-from local clocks or PR caches.
+from local clocks.
 
 ## Desktop process isolation
 

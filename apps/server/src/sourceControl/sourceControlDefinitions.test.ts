@@ -1,6 +1,6 @@
 import { expect, it } from "@effect/vitest";
 
-import { changeRequestsClosedBy, sourceControlDefinitions } from "./sourceControlDefinitions.ts";
+import { sourceControlDefinitions } from "./sourceControlDefinitions.ts";
 
 it.each([
   "C:/repos/project",
@@ -28,23 +28,4 @@ it.each([
   "https://github.com/acme/web/issues/0",
 ])("does not read %s as an issue", (url) => {
   expect(sourceControlDefinitions.parseIssueUrl(url)).toBeNull();
-});
-
-it.each([
-  ["gh pr merge 19 --squash", [19]],
-  ['gh pr merge "19" --squash', [19]],
-  ['/bin/zsh -lc "gh pr merge 19"', [19]],
-  ['gh pr merge 19 --squash --subject "Release 20"', [19]],
-  [`/bin/zsh -lc "gh pr merge 19 --subject 'Release 20'"`, [19]],
-  ["gh pr merge 19 --body 'see https://github.com/o/r/pull/20'", [19]],
-  ["gh pr merge 19 --body https://github.com/o/r/pull/20", [19]],
-  ["gh pr merge 19 # then 20", [19]],
-  ["gh pr merge --squash --match-head-commit 3b2f958 #19", [19]],
-  ["gh pr close https://github.com/o/r/pull/19 && gh pr merge 20", [19, 20]],
-  ["gh pr merge --squash", "any"],
-  ["gh stack merge", "any"],
-  ["gh pr merge 19 && gh pr merge --auto", "any"],
-] as const)("%s closes %j", (command, expected) => {
-  const closed = changeRequestsClosedBy(command);
-  expect(closed === "any" ? closed : [...closed]).toEqual(expected);
 });

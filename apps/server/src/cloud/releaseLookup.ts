@@ -101,7 +101,7 @@ export class ReleaseLookup extends Context.Service<
   }
 >()("@ankielcode/server/cloud/releaseLookup") {}
 
-export const make = Effect.fn("ReleaseLookup.make")(function* () {
+const make = Effect.fn("ReleaseLookup.make")(function* () {
   // Unauthenticated GitHub API calls are rate limited per address, so repeated opens share a lookup.
   const cache = yield* Cache.make({
     capacity: 4,

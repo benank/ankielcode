@@ -160,7 +160,7 @@ export const CodexScanState = Schema.Struct({
 });
 export type CodexScanState = typeof CodexScanState.Type;
 
-export function initialCodexScanState(): CodexScanState {
+function initialCodexScanState(): CodexScanState {
   return {
     model: "",
     speed: "standard",
@@ -207,7 +207,7 @@ function isForkCopy(state: CodexScanState, timestampMs: number): boolean {
  * Identified request-ledger entries report spending independently of context snapshots.
  * Legacy snapshots validate request deltas against cumulative counters.
  */
-export function parseCodexLine(line: string, state: CodexScanState): readonly UsageRecord[] {
+function parseCodexLine(line: string, state: CodexScanState): readonly UsageRecord[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(line);
@@ -488,7 +488,7 @@ function codexSpeed(serviceTier: unknown): UsageSpeed {
   return "standard";
 }
 
-export const codexUsageFormat: TranscriptUsageFormat<CodexScanState> = {
+const codexUsageFormat: TranscriptUsageFormat<CodexScanState> = {
   selectFields: {
     type: true,
     timestamp: true,

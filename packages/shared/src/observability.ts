@@ -288,7 +288,7 @@ function truncateNestedValue(value: unknown): unknown {
 }
 
 /** Clones only when clamping; never mutates attributes shared with other tracers. */
-export function truncateTraceAttributes(attributes: TraceAttributes): TraceAttributes {
+function truncateTraceAttributes(attributes: TraceAttributes): TraceAttributes {
   let truncated: Record<string, unknown> | undefined;
   for (const [key, value] of Object.entries(attributes)) {
     if (typeof value === "string" && ALWAYS_TRUNCATED_TRACE_ATTRIBUTES.has(key)) {

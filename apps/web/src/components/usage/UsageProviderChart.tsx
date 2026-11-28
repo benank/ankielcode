@@ -60,7 +60,7 @@ function valueFor(
   return metric === "tokens" ? entry.totalTokens : entry.costUsd;
 }
 
-export function buildPeriodColumns(
+function buildPeriodColumns(
   periods: readonly string[],
   byPeriod: ReadonlyMap<string, DailyTotals | HourlyTotals>,
   metric: UsageChartMetric,

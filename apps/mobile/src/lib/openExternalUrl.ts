@@ -4,7 +4,6 @@ import { Linking } from "react-native";
 const ExternalUrlTarget = Schema.Literals([
   "file-preview",
   "markdown-link",
-  "pull-request",
   "provider-auth",
   "mcp-app",
   "secret-request",

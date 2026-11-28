@@ -122,7 +122,7 @@ interface SpawnedCursorWorker {
   readonly close: (graceful: boolean) => Effect.Effect<void>;
 }
 
-export const makeCursorAgentSdkProcessRunner = Effect.fn("makeCursorAgentSdkProcessRunner")(
+const makeCursorAgentSdkProcessRunner = Effect.fn("makeCursorAgentSdkProcessRunner")(
   function* (options: {
     readonly resolveLaunch: Effect.Effect<CursorSdkWorkerLaunch>;
     readonly protocolLoggerFor: (

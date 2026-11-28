@@ -5,7 +5,6 @@ import { resolvePathLinkTarget } from "@ankielcode/shared/fileLinks";
 import { documentChipKindForFileName } from "~/pierre-icons";
 import { isSvgAttachment } from "@ankielcode/shared/image";
 import { useRenderedAppearance } from "../../hooks/useTheme";
-import { PullRequestGlyph } from "../pullRequest/pullRequestIcons";
 import { ReadOnlySourcePreview } from "../files/AttachmentFilePreview";
 import { useRightPanelStore } from "~/rightPanelStore";
 import { COMPOSER_CONTEXT_KINDS } from "@ankielcode/contracts";
@@ -39,21 +38,16 @@ import {
   ContextChipPopover as UserMessageContextPopover,
   FileChip,
   ImageChipButton,
-  PULL_REQUEST_CHIP_KINDS,
-  PullRequestChip,
   UnresolvedChip,
 } from "../contextChipParts";
 import {
-  isPullRequestSummaryContext,
   previewAnnotationTargetText,
-  pullRequestContextDisplayState,
-  pullRequestContextKindLabel,
   reviewCommentContextLabel,
   reviewCommentRangeText,
   reviewCommentSectionText,
 } from "~/lib/composerContextRecords";
 import { formatComposerContextReference } from "@ankielcode/shared/composerContextReferences";
-import { ContextChip, ContextChipLabel, type ContextChipKind } from "../ContextChip";
+import { ContextChip, ContextChipLabel } from "../ContextChip";
 import { createContextPresentationRegistry } from "../contextPresentationRegistry";
 import type { ChatMarkdownContextReference } from "../ChatMarkdown";
 import {
@@ -127,28 +121,6 @@ function UserMessageSkillChip(props: {
       description={skill ? skillPopoverDescription(skill) : null}
       copyMarkdown={props.copyMarkdown}
       onViewInstructions={skillInstructionsOpener(threadRef, skill)}
-    />
-  );
-}
-
-function UserMessagePullRequestContextChip(props: {
-  record: Extract<KnownComposerContextRecord, { kind: "review-comment" }>;
-  copyMarkdown: string;
-  kind: ContextChipKind;
-}) {
-  const { activeThreadEnvironmentId, openPullRequest } = use(TimelineRowCtx);
-  const messages = useMessages();
-  const metadata = props.record.pullRequest;
-  if (metadata === undefined) return null;
-  return (
-    <PullRequestChip
-      metadata={metadata}
-      environmentId={activeThreadEnvironmentId}
-      label={reviewCommentContextLabel(props.record, messages)}
-      kindLabel={pullRequestContextKindLabel(props.record, messages)}
-      kind={props.kind}
-      copyMarkdown={props.copyMarkdown}
-      onOpen={openPullRequest}
     />
   );
 }
@@ -481,37 +453,14 @@ const userMessageContextPresentationRegistry = createContextPresentationRegistry
         if (record.kind !== "review-comment") {
           return <UnavailableUserMessageContextChip {...context} />;
         }
-        const isPullRequest = isPullRequestSummaryContext(record);
         const label = reviewCommentContextLabel(record, context.m);
-        const kindLabel = isPullRequest
-          ? pullRequestContextKindLabel(record, context.m)
-          : context.m(msg("Review comment"));
-        const pullRequestState = pullRequestContextDisplayState(record) ?? "unknown";
-        if (isPullRequest && record.pullRequest !== undefined) {
-          return (
-            <UserMessagePullRequestContextChip
-              record={record}
-              copyMarkdown={context.copyMarkdown}
-              kind={PULL_REQUEST_CHIP_KINDS[pullRequestState]}
-            />
-          );
-        }
+        const kindLabel = context.m(msg("Review comment"));
         return (
           <UserMessageContextPopover
             copyMarkdown={context.copyMarkdown}
-            accessibleLabel={
-              record.pullRequest
-                ? context.m(
-                    msg("{kind}, {label}, {title}", {
-                      kind: kindLabel,
-                      label,
-                      title: record.pullRequest.title,
-                    }),
-                  )
-                : context.m(msg("{kind}, {label}", { kind: kindLabel, label }))
-            }
-            kind={isPullRequest ? PULL_REQUEST_CHIP_KINDS[pullRequestState] : "review-comment"}
-            icon={isPullRequest ? <PullRequestGlyph.pullRequest /> : <MessageCircleIcon />}
+            accessibleLabel={context.m(msg("{kind}, {label}", { kind: kindLabel, label }))}
+            kind="review-comment"
+            icon={<MessageCircleIcon />}
             label={label}
           >
             <UserMessageReviewCommentCard

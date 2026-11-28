@@ -7,11 +7,11 @@ import type * as Undici from "undici";
 const requireUndici = NodeModule.createRequire(import.meta.url);
 
 /** Node 26 bundles h2-capable undici 8; Node 22/24 and Electron stay on HTTP/1.1 with 6/7. */
-export const builtinFetchUsesHttp2 = (bundledUndiciVersion: string | undefined) =>
+const builtinFetchUsesHttp2 = (bundledUndiciVersion: string | undefined) =>
   Number.parseInt(bundledUndiciVersion ?? "", 10) >= 8;
 
 /** Preserves the EnvHttpProxyAgent installed by --use-env-proxy / NODE_USE_ENV_PROXY. */
-export function installHttp1FetchDispatcher(): void {
+function installHttp1FetchDispatcher(): void {
   const undici = requireUndici("undici") as typeof Undici;
   // Node's agent comes from its internal undici copy, so `instanceof` against the npm class is false.
   const usesEnvProxy = undici.getGlobalDispatcher().constructor.name === "EnvHttpProxyAgent";

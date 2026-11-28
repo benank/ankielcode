@@ -10,6 +10,7 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
 import android.text.TextPaint
+import com.facebook.react.common.assets.ReactFontManager
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -598,9 +599,21 @@ internal class ReviewDiffCanvasDrawing(context: Context) {
 }
 
 private object ReviewDiffTypefaces {
-  val regular: Typeface = Typeface.create("monospace", Typeface.NORMAL)
-  private val medium: Typeface = Typeface.create("monospace-medium", Typeface.NORMAL)
-  val bold: Typeface = Typeface.create("monospace", Typeface.BOLD)
+  // The app's bundled Geist Mono (expo-font in app.config.ts), else the system monospace.
+  private const val BUNDLED_FAMILY = "GeistMono-Regular"
+  private val fonts = ReactFontManager.getInstance()
+  private val bundled = BUNDLED_FAMILY in fonts.customFontFamilies
+
+  private fun create(weight: Int, systemFamily: String, systemStyle: Int): Typeface =
+    if (bundled) {
+      fonts.getTypeface(BUNDLED_FAMILY, weight, false, null)
+    } else {
+      Typeface.create(systemFamily, systemStyle)
+    }
+
+  val regular: Typeface = create(400, "monospace", Typeface.NORMAL)
+  private val medium: Typeface = create(500, "monospace-medium", Typeface.NORMAL)
+  val bold: Typeface = create(700, "monospace", Typeface.BOLD)
 
   fun forWeight(weight: String): Typeface = when (weight.lowercase()) {
     "medium", "semibold", "semi-bold" -> medium

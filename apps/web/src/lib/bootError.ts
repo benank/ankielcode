@@ -12,7 +12,7 @@ const UPDATE_DOWNLOAD_FAILED = "The update download failed. Try Download update 
 const UPDATE_INSTALL_FAILED = "The update install failed. Try Restart to update again.";
 
 /** The update button only appears when the desktop updater has a newer build to offer. */
-export function updateActionFor(state: DesktopUpdateState | null | undefined) {
+function updateActionFor(state: DesktopUpdateState | null | undefined) {
   switch (state?.status) {
     case "available":
       return { kind: "download" } as const;
@@ -67,7 +67,7 @@ export interface BootErrorEnvironment {
 }
 
 /** Plain text that is shown and copied as-is, so users see exactly what they share. */
-export function buildErrorReport(error: unknown, environment: BootErrorEnvironment) {
+function buildErrorReport(error: unknown, environment: BootErrorEnvironment) {
   const parts: Array<string> = [];
   const seen = new Set<unknown>();
   let current = error;

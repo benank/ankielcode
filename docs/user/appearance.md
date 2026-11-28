@@ -48,6 +48,12 @@ The main sidebar, right panel, and terminal drawer open and close immediately by
 in your operating system. Moving between threads always snaps to the selected thread's panel state
 without replaying its transitions.
 
+To save power, the desktop app pauses spinners and other looping indicators while its window is in
+the background. On battery, or when macOS reports the machine running hot, it also turns off
+translucent glass and the shimmer on working text, and jumps to the end of a thread instead of
+scrolling there. The composer drops its translucency while a turn is working or the thread is
+scrolling.
+
 ## Custom themes
 
 On desktop, choose **Create theme** to adjust a palette, or import an Ankiel Code or VS Code

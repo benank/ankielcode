@@ -32,7 +32,7 @@ export interface NewTaskFlowState {
   readonly expandedProvider: string | null;
 }
 
-export const INITIAL_NEW_TASK_FLOW_STATE: NewTaskFlowState = {
+const INITIAL_NEW_TASK_FLOW_STATE: NewTaskFlowState = {
   environmentId: null,
   projectKey: null,
   draftKey: null,

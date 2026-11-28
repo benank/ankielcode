@@ -760,7 +760,7 @@ function probeGlobalShortcut(accelerator: string): DesktopSnapShotShortcutAvaila
   }
 }
 
-export const make = Effect.gen(function* () {
+const make = Effect.gen(function* () {
   const environment = yield* DesktopEnvironment.DesktopEnvironment;
   const permissions = yield* MacPermissions.MacPermissions;
   const clientSettings = yield* DesktopClientSettings.DesktopClientSettings;

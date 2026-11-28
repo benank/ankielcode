@@ -177,7 +177,7 @@ function nextConfigBlobWithValue(
   return base;
 }
 
-export function deriveProviderModelsForDisplay(input: {
+function deriveProviderModelsForDisplay(input: {
   readonly liveModels: ReadonlyArray<ServerProviderModel> | undefined;
   readonly customModels: ReadonlyArray<CustomModelDefinition>;
 }): ReadonlyArray<ServerProviderModel> {
@@ -234,7 +234,7 @@ function providerEnvironmentWithoutNames(
   return (environment ?? []).filter((variable) => !names.has(variable.name));
 }
 
-export function nextProviderEnvironmentWithFieldValue(
+function nextProviderEnvironmentWithFieldValue(
   environment: ReadonlyArray<ProviderInstanceEnvironmentVariable> | undefined,
   field: ProviderEnvironmentField,
   value: string,

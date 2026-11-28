@@ -5,11 +5,17 @@ import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
 } from "@ankielcode/client-runtime/state/runtime";
-import type { EnvironmentId, ScopedThreadRef } from "@ankielcode/contracts";
+import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@ankielcode/contracts";
 import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
-import { readPairingAppLink, resolveRemotePairingTarget } from "@ankielcode/shared/remote";
+import {
+  readPairingAppLink,
+  readThreadAppLink,
+  resolveRemotePairingTarget,
+  type ThreadAppLink,
+} from "@ankielcode/shared/remote";
 import { useRouter } from "@tanstack/react-router";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
 import * as Stream from "effect/Stream";
 import { useGT } from "gt-react";
@@ -18,13 +24,13 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { openFileInPreview, openUrlInPreview } from "../../browser/openFileInPreview";
 import { isPreviewAvailableFor } from "../../browser/previewRuntime";
 import { requestConfirmDialog } from "../../confirmDialog";
+import { environmentCatalog } from "../../connection/catalog";
 import { connectPairing } from "../../connection/onboarding";
 import { isLocalEnvironmentDisabled } from "../../localEnvironment";
 import { useComposerDraftStore } from "../../composerDraftStore";
 import { useNewThreadHandler } from "../../hooks/useHandleNewThread";
 import { useScratchProject } from "../../hooks/useScratchProject";
-import { useClientSettings } from "../../hooks/useSettings";
-import { useOpenChangeRequestLink } from "../../lib/openPullRequestLink";
+import { useOpenCommitLink } from "../../lib/openCommitLink";
 import { selectActiveRightPanelSurface, useRightPanelStore } from "../../rightPanelStore";
 import { appAtomRegistry } from "../../rpc/atomRegistry";
 import { resolveThreadRouteTarget } from "../../threadRoutes";
@@ -52,6 +58,16 @@ const projectsSettled = (): Promise<void> =>
       Stream.filter((settled) => settled),
       Stream.runHead,
       Effect.asVoid,
+    ),
+  );
+
+/** Resolves once the saved environments have loaded, so a missing one is really unknown. */
+const catalogLoaded = () =>
+  Effect.runPromise(
+    AtomRegistry.toStream(appAtomRegistry, environmentCatalog.catalogValueAtom).pipe(
+      Stream.filter((catalog) => catalog.isReady),
+      Stream.runHead,
+      Effect.map(Option.getOrNull),
     ),
   );
 
@@ -84,8 +100,7 @@ export function DesktopWebLinkCoordinator() {
   const router = useRouter();
   const gt = useGT();
   const primaryEnvironment = usePrimaryEnvironment();
-  const openPullRequestsInApp = useClientSettings((settings) => settings.pullRequestLinksOpenInApp);
-  const openChangeRequest = useOpenChangeRequestLink();
+  const openCommitLink = useOpenCommitLink();
   const { scratchEnvironmentId, openScratchProject } = useScratchProject();
   const openThread = useNewThreadHandler();
   const openPreview = useAtomCommand(previewEnvironment.open, { reportFailure: false });
@@ -135,7 +150,12 @@ export function DesktopWebLinkCoordinator() {
       return;
     }
     const confirmed =
-      (await requestConfirmDialog(gt("Add the backend at {origin}?", { origin }))) ?? false;
+      (await requestConfirmDialog(gt("Add the backend at {origin}?", { origin }), {
+        confirmLabel: gt("Add", { $context: "verb, adds a backend" }),
+        destructive: false,
+        // A link from outside the app opens this, so Return alone must not pair.
+        focusCancel: true,
+      })) ?? false;
     if (!confirmed) return;
     const result = await connectPairingEnvironment({ pairingUrl });
     if (result._tag === "Failure") {
@@ -204,7 +224,32 @@ export function DesktopWebLinkCoordinator() {
     }
   });
 
+  // A thread link only navigates: it comes from outside the app, so nothing in it may act.
+  const openThreadLink = async (link: ThreadAppLink) => {
+    const catalog = await catalogLoaded();
+    const environmentId = EnvironmentId.make(link.environmentId);
+    if (catalog === null || !catalog.entries.has(environmentId)) {
+      toastManager.add(
+        stackedThreadToast({
+          type: "error",
+          title: gt("Could not open the thread"),
+          description: gt("Its environment is not saved on this computer."),
+        }),
+      );
+      return;
+    }
+    await router.navigate({
+      to: "/$environmentId/$threadId",
+      params: { environmentId, threadId: ThreadId.make(link.threadId) },
+    });
+  };
+
   const openLink = useEffectEvent(async (url: string) => {
+    const threadLink = readThreadAppLink(url);
+    if (threadLink !== null) {
+      await openThreadLink(threadLink);
+      return;
+    }
     const pairingUrl = readPairingAppLink(url);
     if (pairingUrl !== null) {
       await pairFromLink(pairingUrl);
@@ -227,8 +272,7 @@ export function DesktopWebLinkCoordinator() {
     const openUnavailableCommit = () => {
       queueRef.current = queueRef.current.then(() => openInBrowser(url)).catch(() => undefined);
     };
-    if (openChangeRequest(externalClick, url, commitThreadRef, undefined, openUnavailableCommit))
-      return;
+    if (openCommitLink(externalClick, url, commitThreadRef, openUnavailableCommit)) return;
     await openInBrowser(url);
   });
 
@@ -237,11 +281,7 @@ export function DesktopWebLinkCoordinator() {
     // link delivered at launch would miss its project and fall through to the browser. Hold
     // those links until discovery settles; an ordinary link never waits for it.
     const hold =
-      openPullRequestsInApp &&
-      (sourceControlClients.parseChangeRequestUrl(url) !== null ||
-        sourceControlClients.parseCommitUrl(url) !== null)
-        ? projectsSettled()
-        : Promise.resolve();
+      sourceControlClients.parseCommitUrl(url) !== null ? projectsSettled() : Promise.resolve();
     void hold.then(() => {
       queueRef.current = queueRef.current.then(() => openLink(url)).catch(() => undefined);
     });

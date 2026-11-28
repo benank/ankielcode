@@ -16,6 +16,7 @@ import {
   resolveThemeAppearance,
   resolveThemeHalf,
   subscribeToThemePreview,
+  themeColorToHex,
   THEME_PREVIEW_ID,
   THEME_APPEARANCE_MODE_STORAGE_KEY,
   THEME_FOLLOW_SYSTEM_STORAGE_KEY,
@@ -128,6 +129,7 @@ let lastSnapshot: ThemeSnapshot | null = null;
 let snapshotStale = true;
 let lastDesktopTheme: "light" | "dark" | "system" | null = null;
 let lastAppliedTheme: Omit<ThemeSnapshot, "resolvedTheme"> | null = null;
+let lastWindowBackground: string | null = null;
 let themeStorageReadFailure: ThemeStorageError | null = null;
 
 function emitChange() {
@@ -291,6 +293,7 @@ export function syncBrowserChromeTheme() {
 
   document.documentElement.style.backgroundColor = backgroundColor;
   document.body.style.backgroundColor = backgroundColor;
+  syncDesktopWindowBackground(backgroundColor);
   const themeColorMetas = document.querySelectorAll<HTMLMetaElement>(
     `meta[name="${THEME_COLOR_META_NAME}"]`,
   );
@@ -301,6 +304,37 @@ export function syncBrowserChromeTheme() {
   for (const element of themeColorMetas) {
     element.setAttribute("content", backgroundColor);
   }
+}
+
+/** The desktop shell opens its next window in this colour, which Electron needs as sRGB hex. */
+function syncDesktopWindowBackground(color: string) {
+  const bridge = window.desktopBridge;
+  const applied = lastAppliedTheme;
+  if (!bridge || typeof bridge.setWindowBackground !== "function" || applied === null) return;
+  // An unsaved editor draft must not become the launch colour.
+  if (document.documentElement.dataset.themeId === THEME_PREVIEW_ID) return;
+  const hex = themeColorToHex(color);
+  if (hex === null || hex.length !== 7) return;
+  const background = {
+    color: hex,
+    dark: document.documentElement.classList.contains("dark"),
+    followsSystem:
+      resolveDesktopTheme(
+        applied.theme,
+        applied.followSystem,
+        applied.appearanceMode,
+        applied.themeHalves,
+      ) === "system",
+  };
+  const key = `${background.color}|${background.dark}|${background.followsSystem}`;
+  if (key === lastWindowBackground) return;
+  lastWindowBackground = key;
+  void bridge.setWindowBackground(background).catch((cause: unknown) => {
+    console.error("Failed to sync the window background to the desktop shell.", {
+      ...safeErrorLogAttributes(cause),
+    });
+    if (lastWindowBackground === key) lastWindowBackground = null;
+  });
 }
 
 function applyTheme(theme: Theme, { suppressTransitions = false, preservePreview = true } = {}) {

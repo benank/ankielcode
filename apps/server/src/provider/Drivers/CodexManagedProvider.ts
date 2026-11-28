@@ -279,14 +279,10 @@ export const makeManagedCodexProvider = Effect.fn("makeManagedCodexProvider")(fu
   const textGeneration: ProviderInstance["textGeneration"] = {
     generateCommitMessage: (value) =>
       protect("generateCommitMessage", nativeGeneration.generateCommitMessage(value)),
-    generatePrContent: (value) =>
-      protect("generatePrContent", nativeGeneration.generatePrContent(value)),
     generateBranchName: (value) =>
       protect("generateBranchName", nativeGeneration.generateBranchName(value)),
     generateThreadTitle: (value) =>
       protect("generateThreadTitle", nativeGeneration.generateThreadTitle(value)),
-    generateReviewGuide: (value) =>
-      protect("generateReviewGuide", nativeGeneration.generateReviewGuide(value)),
     generateTranscriptionPostProcessing: (value) =>
       protect(
         "generateTranscriptionPostProcessing",

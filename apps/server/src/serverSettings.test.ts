@@ -1895,12 +1895,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
 
   it.effect("keeps the retired keys for another load when a token cannot be copied", () => {
     const cause = new ServerSecretStore.SecretStoreReadError({
-      resource: "bitbucket-access-token",
+      resource: "github-token",
       cause: PlatformError.systemError({
         _tag: "PermissionDenied",
         module: "FileSystem",
         method: "readFile",
-        pathOrDescriptor: "bitbucket-access-token",
+        pathOrDescriptor: "github-token",
         description: "Secret backend unavailable.",
       }),
     });
@@ -1920,7 +1920,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
       const fileSystem = yield* FileSystem.FileSystem;
       const serverSettings = yield* ServerSettingsModule.ServerSettingsService;
       const legacy = JSON.stringify({
-        bitbucket: { email: "me@example.com", accessToken: "\u2022\u2022\u2022\u2022\u2022\u2022" },
+        github: { tokens: { "github.com": "\u2022\u2022\u2022\u2022\u2022\u2022" } },
       });
       yield* fileSystem.writeFileString(serverConfig.settingsPath, legacy);
 
@@ -1958,6 +1958,36 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
       const raw = yield* fileSystem.readFileString(serverConfig.settingsPath);
       assert.notInclude(raw, '"github":{"hosts"');
       assert.include(raw, "sourceControlHosts");
+    }).pipe(Effect.provide(layerServerSettingsWithSecrets())),
+  );
+
+  it.effect("drops removed forges' hosts and tokens from the file and from clients", () =>
+    Effect.gen(function* () {
+      const serverConfig = yield* ServerConfig.ServerConfig;
+      const fileSystem = yield* FileSystem.FileSystem;
+      const serverSettings = yield* ServerSettingsModule.ServerSettingsService;
+      yield* fileSystem.writeFileString(
+        serverConfig.settingsPath,
+        JSON.stringify({
+          bitbucket: { email: "me@example.com", accessToken: "bb-legacy-token" },
+          sourceControlHosts: {
+            gitlab: { tokens: { "gitlab.com": "glpat-saved" } },
+            github: { hosts: { "github.com": { account: "work" } } },
+          },
+        }),
+      );
+
+      const loaded = yield* serverSettings.getSettings;
+      const updated = yield* serverSettings.updateSettings({
+        sourceControlHosts: { forgejo: { token: "forgejo-typed" } },
+      });
+
+      assert.deepEqual(Object.keys(loaded.sourceControlHosts), ["github"]);
+      assert.deepEqual(Object.keys(updated.sourceControlHosts), ["github"]);
+      const raw = yield* fileSystem.readFileString(serverConfig.settingsPath);
+      for (const token of ["bb-legacy-token", "glpat-saved", "forgejo-typed"]) {
+        assert.notInclude(raw, token);
+      }
     }).pipe(Effect.provide(layerServerSettingsWithSecrets())),
   );
 

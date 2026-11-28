@@ -2,7 +2,7 @@
 // Keyed by build and kept across boots: a chunk loaded after boot can fail on every visit.
 const CHUNK_RELOAD_GUARD_KEY = "ankielcode:chunk-load-reloaded";
 
-export function reloadOnceForChunkLoadError(
+function reloadOnceForChunkLoadError(
   getStorage: () => Storage = () => window.sessionStorage,
   reload: () => void = () => window.location.reload(),
   build = import.meta.env.APP_VERSION,

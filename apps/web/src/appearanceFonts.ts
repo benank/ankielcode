@@ -10,13 +10,23 @@ import {
   MIN_PROMPT_FONT_SIZE,
 } from "@ankielcode/contracts";
 
-// DM Sans covers Latin scripts; other scripts fall through to the platform UI font.
-export const DEFAULT_SANS_FONT_STACK =
-  '"DM Sans Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+// Geist covers Latin, Cyrillic and Vietnamese; other scripts fall through to the platform UI font.
+const SYSTEM_SANS_FONT_STACK =
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+
+export const DEFAULT_SANS_FONT_STACK = `"Geist Variable", ${SYSTEM_SANS_FONT_STACK}`;
 
 // Some engines map `ui-monospace` to a proportional font, so prefer concrete names.
-export const DEFAULT_CODE_FONT_STACK =
+const SYSTEM_CODE_FONT_STACK =
   '"SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace';
+
+export const DEFAULT_CODE_FONT_STACK = `"Geist Mono Variable", ${SYSTEM_CODE_FONT_STACK}`;
+
+// Bundled webfonts load lazily, so a canvas probe can miss them before first use.
+const BUNDLED_FONT_FAMILIES: ReadonlySet<string> = new Set([
+  "Geist Variable",
+  "Geist Mono Variable",
+]);
 
 export const TYPOGRAPHY_ADVANCED_STORAGE_KEY = "ankielcode:typography-advanced";
 
@@ -284,8 +294,8 @@ export function displayFontFamily(family: string): string {
     .replace(/^(['"])(.*)\1$/, "$2")
     .trim()
     .toLowerCase();
-  if (label === "sf pro") return appearanceFontStack(family, DEFAULT_SANS_FONT_STACK);
-  if (label === "sf mono") return DEFAULT_CODE_FONT_STACK;
+  if (label === "sf pro") return appearanceFontStack(family, SYSTEM_SANS_FONT_STACK);
+  if (label === "sf mono") return SYSTEM_CODE_FONT_STACK;
   return cssFontFamilies(family) ?? "";
 }
 
@@ -293,6 +303,7 @@ export function resolveDefaultFamilyLabel(stack: string): string | null {
   for (const raw of stack.split(",")) {
     const family = raw.trim().replace(/^(['"])(.*)\1$/, "$2");
     if (family.length === 0) continue;
+    if (BUNDLED_FONT_FAMILIES.has(family)) return family;
     if (
       /^(system-ui|sans-serif|serif|monospace|ui-monospace|-apple-system|BlinkMacSystemFont)$/i.test(
         family,

@@ -29,7 +29,7 @@ export function needsWorkspaceBasenameLookup(relativePath: string): boolean {
   );
 }
 
-export function pickWorkspaceBasenameMatch(
+function pickWorkspaceBasenameMatch(
   basename: string,
   entries: ReadonlyArray<WorkspaceEntryCandidate>,
 ): string | null {

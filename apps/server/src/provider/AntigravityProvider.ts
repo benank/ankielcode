@@ -74,7 +74,7 @@ function thinkingCapabilities(config: ThinkingConfig | null | undefined) {
   return createModelCapabilities({ optionDescriptors: [descriptor] });
 }
 
-export function buildAntigravityModelsFromSession(
+function buildAntigravityModelsFromSession(
   setup: SessionSetupResult,
   thinkingLevels: AntigravityThinkingLevels = new Map(),
 ): ReadonlyArray<ServerProviderModel> {

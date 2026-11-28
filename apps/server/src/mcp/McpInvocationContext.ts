@@ -19,7 +19,6 @@ const ALL_MCP_CAPABILITIES = [
   "orchestration",
   "worktree",
   "device",
-  "pull-requests",
   "background-wait",
 ] as const;
 export type McpCapability = (typeof ALL_MCP_CAPABILITIES)[number];
@@ -70,8 +69,6 @@ export interface McpInvocationScope {
    * see the URL they were configured with, so links they must fetch carry it. Unset in-process.
    */
   readonly origin?: string | undefined;
-  /** False when the calling thread's project is on no forge Ankiel reads; `/mcp` reads it per request. */
-  readonly forge?: boolean;
 }
 
 export const threadLinkFor = (
@@ -84,16 +81,6 @@ export class McpInvocationContext extends Context.Service<
   McpInvocationContext,
   McpInvocationScope
 >()("@ankielcode/server/mcp/McpInvocationContext") {}
-
-/**
- * `McpSchema.EnabledWhen` for tools a delegated child must not see or call.
- * EnabledWhen only receives the MCP client profile, so read the Ankiel caller from the request fiber.
- */
-export const hiddenFromSubagents = (): boolean => {
-  const fiber = Fiber.getCurrent();
-  const scope = fiber && Context.getOrUndefined(fiber.context, McpInvocationContext);
-  return scope?.thread?.subagent !== true;
-};
 
 /**
  * `McpSchema.EnabledWhen` for tools that act as the calling thread: a client
@@ -115,6 +102,18 @@ export const hiddenWithoutBackgroundWait = (): boolean => {
   );
 };
 
+const hiddenWithoutThreadCapability = (capability: McpCapability) => (): boolean => {
+  const fiber = Fiber.getCurrent();
+  const scope = fiber && Context.getOrUndefined(fiber.context, McpInvocationContext);
+  return scope === undefined || (scope.thread !== undefined && scope.capabilities.has(capability));
+};
+
+/** `hiddenFromOutsideClients`, and hidden from a thread whose browser access is off. */
+export const hiddenWithoutPreview = hiddenWithoutThreadCapability("preview");
+
+/** `hiddenFromOutsideClients`, and hidden from a thread whose device access is off. */
+export const hiddenWithoutDevice = hiddenWithoutThreadCapability("device");
+
 /** `McpSchema.EnabledWhen` for tools only a client outside a thread drives, such as the CLI. */
 export const hiddenFromThreads = (): boolean => {
   const fiber = Fiber.getCurrent();
@@ -127,13 +126,6 @@ export const hiddenUnlessWorkflowEvents = (): boolean => {
   const fiber = Fiber.getCurrent();
   const scope = fiber && Context.getOrUndefined(fiber.context, McpInvocationContext);
   return scope !== undefined && scope.thread === undefined && scope.workflows === true;
-};
-
-/** `McpSchema.EnabledWhen` for tools that act on the thread's forge, hidden where it has none. */
-export const hiddenWithoutForge = (): boolean => {
-  const fiber = Fiber.getCurrent();
-  const scope = fiber && Context.getOrUndefined(fiber.context, McpInvocationContext);
-  return scope?.forge !== false;
 };
 
 export type McpCapabilityError<C extends McpCapability> = C extends "preview"
@@ -158,17 +150,6 @@ const missingCapability = (
     ? new PreviewAutomationUnavailableError({ capability, ...fields })
     : new McpCapabilityUnavailableError({ capability, ...fields });
 };
-
-export const requireMcpCapability = <const C extends McpCapability>(
-  capability: C,
-): Effect.Effect<McpInvocationScope, McpCapabilityError<C>, McpInvocationContext> =>
-  McpInvocationContext.pipe(
-    Effect.filterOrFail(
-      (invocation) => invocation.capabilities.has(capability),
-      (invocation) => missingCapability(invocation, capability) as McpCapabilityError<C>,
-    ),
-    Effect.withSpan("mcp.requireCapability"),
-  );
 
 export const requireThreadMcpCapability = <const C extends "preview" | "device">(
   capability: C,

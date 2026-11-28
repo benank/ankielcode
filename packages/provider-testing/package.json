@@ -3,10 +3,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./fakeCli": {
-      "types": "./src/fakeCli.ts",
-      "import": "./src/fakeCli.ts"
-    },
     "./replayGate": {
       "types": "./src/replayGate.ts",
       "import": "./src/replayGate.ts"

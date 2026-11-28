@@ -203,6 +203,7 @@ const RECOVERY_KIND_SET = {
   runtime: true,
   "restart-continuations": true,
   "subagent-results": true,
+  "orphaned-remote-tasks": true,
   "delegated-completions": true,
   "unread-steers": true,
 } satisfies Record<ProjectionStore.ProjectionRecoveryKind, true>;

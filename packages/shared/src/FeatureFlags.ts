@@ -38,7 +38,7 @@ function parseList(list: string | undefined): Record<string, string> {
 
 const parse = (record: Record<string, string>) => config.parse(ConfigProvider.fromUnknown(record));
 
-export const resolve = Effect.fn("FeatureFlags.resolve")(function* (list: string | undefined) {
+const resolve = Effect.fn("FeatureFlags.resolve")(function* (list: string | undefined) {
   return yield* parse(parseList(list)).pipe(
     Effect.catch((error) =>
       Effect.logWarning(`Ignoring invalid ${VARIABLE}; every flag is off.`, error).pipe(

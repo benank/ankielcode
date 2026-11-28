@@ -103,7 +103,7 @@ export const ENRICHED_INLINE_FILE_LINK_REGEX = new RegExp(
   "u",
 );
 
-export function enrichedSkillLinkRegex(skills?: ReadonlyArray<SelectableMarkdownSkill>) {
+function enrichedSkillLinkRegex(skills?: ReadonlyArray<SelectableMarkdownSkill>) {
   const names = [...new Set(skills?.map((skill) => skill.name) ?? [])].filter(Boolean);
   if (names.length === 0) return null;
   names.sort((a, b) => b.length - a.length);
@@ -170,7 +170,7 @@ export function buildEnrichedModelReferences(
   );
 }
 
-export function enrichedModelLinkRegex(models?: ReadonlyArray<SelectableMarkdownModel>) {
+function enrichedModelLinkRegex(models?: ReadonlyArray<SelectableMarkdownModel>) {
   if (!models?.length) return null;
   const alternatives = models
     .map((model) => model.source)

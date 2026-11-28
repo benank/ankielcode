@@ -3,8 +3,16 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import * as Stream from "effect/Stream";
 
-import type { DesktopUpdateChannel } from "@ankielcode/contracts";
+import {
+  type DesktopMenuCommand,
+  type DesktopMenuState,
+  type DesktopUpdateChannel,
+  type DesktopUpdateState,
+  isDesktopMenuCommand,
+  type KeybindingShortcut,
+} from "@ankielcode/contracts";
 import * as Electron from "electron";
 import { msg } from "gt-i18n";
 
@@ -12,10 +20,13 @@ import { makeComponentLogger } from "../app/DesktopObservability.ts";
 import * as ElectronApp from "../electron/ElectronApp.ts";
 import * as ElectronDialog from "../electron/ElectronDialog.ts";
 import * as ElectronMenu from "../electron/ElectronMenu.ts";
+import * as ElectronShell from "../electron/ElectronShell.ts";
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
 import { applyLanguage, m, onLocaleChange } from "../i18n/messages.ts";
 import * as DesktopClientSettings from "../settings/DesktopClientSettings.ts";
 import * as DesktopUpdates from "../updates/DesktopUpdates.ts";
+import { isInstallableDesktopUpdateState } from "../updates/updateMachine.ts";
+import { desktopMenuCommandItems } from "./DesktopMenuCommands.ts";
 import * as DesktopWindow from "./DesktopWindow.ts";
 
 export class DesktopApplicationMenuActionError extends Schema.TaggedError<DesktopApplicationMenuActionError>()(
@@ -34,6 +45,8 @@ export class DesktopApplicationMenu extends Context.Service<
   DesktopApplicationMenu,
   {
     readonly configure: Effect.Effect<void>;
+    /** Applies the renderer's shortcuts and enabled commands for the menu bar. */
+    readonly setCommandState: (state: DesktopMenuState) => Effect.Effect<void>;
   }
 >()("@ankielcode/desktop/window/DesktopApplicationMenu") {}
 
@@ -45,6 +58,29 @@ type DesktopApplicationMenuRuntimeServices =
 const { logInfo: logUpdaterInfo } = makeComponentLogger("desktop-updater");
 
 const { logError: logMenuError } = makeComponentLogger("desktop-menu");
+
+const sameShortcut = (left: KeybindingShortcut | null, right: KeybindingShortcut | null) =>
+  left === right ||
+  (left !== null &&
+    right !== null &&
+    left.key === right.key &&
+    left.modKey === right.modKey &&
+    left.metaKey === right.metaKey &&
+    left.ctrlKey === right.ctrlKey &&
+    left.altKey === right.altKey &&
+    left.shiftKey === right.shiftKey);
+
+// True when DevTools had focus and closed, so the chord does not also close the window.
+const closeFocusedDevTools = (): boolean => {
+  const contents = Electron.webContents
+    .getAllWebContents()
+    .find((candidate) => !candidate.isDestroyed() && candidate.isDevToolsFocused());
+  contents?.closeDevTools();
+  return contents !== undefined;
+};
+
+const DOCS_URL = "https://github.com/benank/ankielcode/blob/main/docs/README.md";
+const REPORT_ISSUE_URL = "https://github.com/benank/ankielcode/issues/new";
 
 const dispatchMenuAction = Effect.fn("desktop.menu.dispatchMenuAction")(function* (
   action: string,
@@ -74,10 +110,34 @@ const trackLabel = (channel: DesktopUpdateChannel) =>
     ? m(msg("Nightly", { $context: "release track" }))
     : m(msg("Stable", { $context: "release track" }));
 
+// Restarting interrupts running tasks, so every install from the menu confirms first.
+const confirmRestartToUpdate = Effect.fn("desktop.menu.confirmRestartToUpdate")(function* (
+  updateState: DesktopUpdateState,
+) {
+  const updates = yield* DesktopUpdates.DesktopUpdates;
+  const electronDialog = yield* ElectronDialog.ElectronDialog;
+  const version = updateState.downloadedVersion ?? updateState.availableVersion;
+  const { response } = yield* electronDialog.showMessageBox({
+    type: "info",
+    title: m(msg("Update ready")),
+    message:
+      version === null
+        ? m(msg("A new version of Ankiel Code is ready to install."))
+        : m(msg("Ankiel Code {version} is ready to install."), { version }),
+    detail: m(
+      msg("Ankiel Code will restart to install it. Any running tasks will be interrupted."),
+    ),
+    buttons: [m(msg("Restart", { $context: "button, restarts the app" })), m(msg("Later"))],
+    defaultId: 0,
+    cancelId: 1,
+  });
+  if (response === 0) yield* updates.install;
+});
+
 const checkForUpdatesFromMenu = Effect.gen(function* () {
   const updates = yield* DesktopUpdates.DesktopUpdates;
   const electronDialog = yield* ElectronDialog.ElectronDialog;
-  const result = yield* updates.check("menu");
+  const result = yield* updates.check("menu", { download: true });
   const updateState = result.state;
 
   if (updateState.status === "up-to-date") {
@@ -89,56 +149,22 @@ const checkForUpdatesFromMenu = Effect.gen(function* () {
       }),
       buttons: [m(msg("OK"))],
     });
-  } else if (updateState.status === "available") {
-    const { response } = yield* electronDialog.showMessageBox({
-      type: "info",
-      title: m(msg("Update available")),
-      message:
-        updateState.availableVersion === null
-          ? m(msg("A new version of Ankiel Code is available."))
-          : m(msg("Ankiel Code {version} is available."), {
-              version: updateState.availableVersion,
-            }),
-      detail: m(msg("You're running Ankiel Code {version}."), {
-        version: updateState.currentVersion,
-      }),
-      buttons: [
-        m(msg("Download", { $context: "button, downloads an app update" })),
-        m(msg("Later")),
-      ],
-      defaultId: 0,
-      cancelId: 1,
-    });
-    if (response === 0) yield* updates.download;
-  } else if (updateState.status === "downloading") {
+  } else if (updateState.status === "available" || updateState.status === "downloading") {
+    // The check started the download; it no longer asks first.
     yield* electronDialog.showMessageBox({
       type: "info",
       title: m(msg("Update downloading")),
       message:
         updateState.availableVersion === null
-          ? m(msg("A new version of Ankiel Code is already downloading."))
-          : m(msg("Ankiel Code {version} is already downloading."), {
+          ? m(msg("A new version of Ankiel Code is downloading."))
+          : m(msg("Ankiel Code {version} is downloading."), {
               version: updateState.availableVersion,
             }),
+      detail: m(msg("Choose Restart to Update in the menu once it's ready.")),
       buttons: [m(msg("OK"))],
     });
   } else if (updateState.status === "downloaded") {
-    const version = updateState.downloadedVersion ?? updateState.availableVersion;
-    const { response } = yield* electronDialog.showMessageBox({
-      type: "info",
-      title: m(msg("Update ready")),
-      message:
-        version === null
-          ? m(msg("A new version of Ankiel Code is ready to install."))
-          : m(msg("Ankiel Code {version} is ready to install."), { version }),
-      detail: m(
-        msg("Ankiel Code will restart to install it. Any running tasks will be interrupted."),
-      ),
-      buttons: [m(msg("Restart", { $context: "button, restarts the app" })), m(msg("Later"))],
-      defaultId: 0,
-      cancelId: 1,
-    });
-    if (response === 0) yield* updates.install;
+    yield* confirmRestartToUpdate(updateState);
   } else if (updateState.status === "error") {
     yield* electronDialog.showMessageBox({
       type: "warning",
@@ -190,6 +216,7 @@ export const make = Effect.gen(function* () {
   const electronMenu = yield* ElectronMenu.ElectronMenu;
   const environment = yield* DesktopEnvironment.DesktopEnvironment;
   const electronApp = yield* ElectronApp.ElectronApp;
+  const electronShell = yield* ElectronShell.ElectronShell;
   const clientSettings = yield* Effect.serviceOption(DesktopClientSettings.DesktopClientSettings);
   const context = yield* Effect.context<DesktopApplicationMenuRuntimeServices>();
   const runPromise = Effect.runPromiseWith(context);
@@ -212,10 +239,40 @@ export const make = Effect.gen(function* () {
     );
   };
 
+  const updates = yield* DesktopUpdates.DesktopUpdates;
+  // The downloaded update "Restart to Update" installs; the item shows only while one is ready.
+  let readyUpdate: DesktopUpdateState | null = null;
+
+  const shortcuts = new Map<DesktopMenuCommand, KeybindingShortcut>();
+  // Disabled until the renderer reports the screen it shows.
+  const enabled = new Set<DesktopMenuCommand>();
+  let configured = false;
+
   const configure = Effect.gen(function* () {
+    const commandItems = (menu: Parameters<typeof desktopMenuCommandItems>[0]) =>
+      desktopMenuCommandItems(
+        menu,
+        { platform: environment.platform, shortcuts, enabled },
+        (command) => runMenuEffect(command, dispatchMenuAction(command)),
+      );
+    const openUrlClick = (url: string) => () => {
+      void runPromise(electronShell.openExternal(url));
+    };
     const checkForUpdatesClick = () => {
       runMenuEffect("check-for-updates", handleCheckForUpdatesMenuClick);
     };
+    const updateItems: Electron.MenuItemConstructorOptions[] = [
+      { label: m(msg("Check for Updates...")), click: checkForUpdatesClick },
+      {
+        label: m(msg("Restart to Update")),
+        visible: readyUpdate !== null,
+        click: () => {
+          if (readyUpdate !== null) {
+            runMenuEffect("restart-to-update", confirmRestartToUpdate(readyUpdate));
+          }
+        },
+      },
+    ];
     const settingsClick = () => {
       runMenuEffect("open-settings", dispatchMenuAction("open-settings"));
     };
@@ -247,10 +304,7 @@ export const make = Effect.gen(function* () {
         label: environment.displayName,
         submenu: [
           { role: "about", label: m(msg("About {appName}"), { appName: environment.displayName }) },
-          {
-            label: m(msg("Check for Updates...")),
-            click: checkForUpdatesClick,
-          },
+          ...updateItems,
           { type: "separator" },
           {
             label: m(msg("Settings...")),
@@ -276,6 +330,8 @@ export const make = Effect.gen(function* () {
       {
         label: m(msg("File", { $context: "menu bar title" })),
         submenu: [
+          ...commandItems("file"),
+          { type: "separator" },
           ...(environment.platform === "darwin"
             ? []
             : [
@@ -286,27 +342,33 @@ export const make = Effect.gen(function* () {
                 },
                 { type: "separator" as const },
               ]),
-          {
-            label: m(msg("Close Developer Tools")),
-            accelerator: "CmdOrCtrl+W",
-            visible: false,
-            click: () => {
-              Electron.webContents
-                .getAllWebContents()
-                .find((contents) => !contents.isDestroyed() && contents.isDevToolsFocused())
-                ?.closeDevTools();
-            },
-          },
-          // Cmd/Ctrl+W belongs to the renderer's tab close; it must never close the window.
-          environment.platform === "darwin"
-            ? { label: m(msg("Close Window")), click: (_item, window) => window?.close() }
-            : {
-                role: "quit",
-                label:
-                  environment.platform === "win32"
-                    ? m(msg("Exit", { $context: "File menu item, quits the app" }))
-                    : m(msg("Quit")),
-              },
+          // The app window never hands Cmd/Ctrl+W to the menu, so the chord only closes focused
+          // DevTools; on macOS the renderer closes the window itself when nothing claims it.
+          ...(environment.platform === "darwin"
+            ? [
+                {
+                  label: m(msg("Close Window")),
+                  accelerator: "CmdOrCtrl+W",
+                  click: (_item: Electron.MenuItem, window: Electron.BaseWindow | undefined) => {
+                    if (!closeFocusedDevTools()) window?.close();
+                  },
+                },
+              ]
+            : [
+                {
+                  label: m(msg("Close Developer Tools")),
+                  accelerator: "CmdOrCtrl+W",
+                  visible: false,
+                  click: closeFocusedDevTools,
+                },
+                {
+                  role: "quit" as const,
+                  label:
+                    environment.platform === "win32"
+                      ? m(msg("Exit", { $context: "File menu item, quits the app" }))
+                      : m(msg("Quit")),
+                },
+              ]),
         ],
       },
       {
@@ -326,9 +388,30 @@ export const make = Effect.gen(function* () {
           { role: "delete", label: m(msg("Delete", { $context: "Edit menu item" })) },
           { type: "separator" },
           { role: "selectAll", label: m(msg("Select All", { $context: "Edit menu item" })) },
+          { type: "separator" },
+          ...commandItems("edit"),
           ...(environment.platform === "darwin"
             ? [
                 { type: "separator" as const },
+                {
+                  label: m(msg("Spelling and Grammar")),
+                  submenu: [
+                    {
+                      role: "toggleSpellChecker" as const,
+                      label: m(msg("Check Spelling While Typing")),
+                    },
+                  ],
+                },
+                {
+                  label: m(msg("Substitutions")),
+                  submenu: [
+                    { role: "showSubstitutions" as const, label: m(msg("Show Substitutions")) },
+                    { type: "separator" as const },
+                    { role: "toggleSmartQuotes" as const, label: m(msg("Smart Quotes")) },
+                    { role: "toggleSmartDashes" as const, label: m(msg("Smart Dashes")) },
+                    { role: "toggleTextReplacement" as const, label: m(msg("Text Replacement")) },
+                  ],
+                },
                 {
                   label: m(msg("Speech", { $context: "menu, text-to-speech" })),
                   submenu: [
@@ -343,23 +426,29 @@ export const make = Effect.gen(function* () {
       {
         label: m(msg("View", { $context: "menu bar title" })),
         submenu: [
-          /* Native reload/DevTools/zoom roles target focused guests; these commands must target the app. */
-          {
-            label: m(msg("Reload")),
-            accelerator: "CmdOrCtrl+R",
-            click: mainContentsClick("reload"),
-          },
-          {
-            label: m(msg("Force Reload")),
-            accelerator: "Shift+CmdOrCtrl+R",
-            click: mainContentsClick("forceReload"),
-          },
-          {
-            label: m(msg("Toggle Developer Tools")),
-            accelerator: environment.platform === "darwin" ? "Alt+Command+I" : "Ctrl+Shift+I",
-            click: mainContentsClick("toggleDevTools"),
-          },
+          ...commandItems("view"),
           { type: "separator" },
+          /* Native reload/DevTools/zoom roles target focused guests; these commands must target the app. */
+          ...(environment.isDevelopment || !environment.isPackaged
+            ? [
+                {
+                  label: m(msg("Reload")),
+                  accelerator: "CmdOrCtrl+R",
+                  click: mainContentsClick("reload"),
+                },
+                {
+                  label: m(msg("Force Reload")),
+                  accelerator: "Shift+CmdOrCtrl+R",
+                  click: mainContentsClick("forceReload"),
+                },
+                {
+                  label: m(msg("Toggle Developer Tools")),
+                  accelerator: environment.platform === "darwin" ? "Alt+Command+I" : "Ctrl+Shift+I",
+                  click: mainContentsClick("toggleDevTools"),
+                },
+                { type: "separator" as const },
+              ]
+            : []),
           { label: m(msg("Actual Size")), accelerator: "CmdOrCtrl+0", click: zoomClick("reset") },
           { label: m(msg("Zoom In")), accelerator: "CmdOrCtrl+=", click: zoomClick("in") },
           {
@@ -403,6 +492,14 @@ export const make = Effect.gen(function* () {
         ],
       },
       {
+        label: m(msg("Go", { $context: "menu bar menu of navigation commands" })),
+        submenu: commandItems("go"),
+      },
+      {
+        label: m(msg("Thread", { $context: "menu bar title" })),
+        submenu: commandItems("thread"),
+      },
+      {
         // Electron's default Window submenu adds a Ctrl+W close role off macOS.
         role: "windowMenu",
         label: m(msg("Window", { $context: "menu bar title" })),
@@ -424,16 +521,46 @@ export const make = Effect.gen(function* () {
         role: "help",
         label: m(msg("Help", { $context: "menu bar title" })),
         submenu: [
+          { label: m(msg("Documentation")), click: openUrlClick(DOCS_URL) },
           {
-            label: m(msg("Check for Updates...")),
-            click: checkForUpdatesClick,
+            label: m(msg("Keyboard Shortcuts")),
+            click: () => runMenuEffect("open-keybindings", dispatchMenuAction("open-keybindings")),
           },
+          { label: m(msg("Report an Issue")), click: openUrlClick(REPORT_ISSUE_URL) },
+          { type: "separator" },
+          ...updateItems,
         ],
       },
     );
 
     yield* electronMenu.setApplicationMenu(template);
+    configured = true;
   }).pipe(Effect.withSpan("desktop.menu.configure"));
+
+  const setCommandState = Effect.fn("desktop.menu.setCommandState")(function* (
+    state: DesktopMenuState,
+  ) {
+    let shortcutsChanged = false;
+    for (const [command, shortcut] of Object.entries(state.shortcuts ?? {})) {
+      if (!isDesktopMenuCommand(command)) continue;
+      if (sameShortcut(shortcuts.get(command) ?? null, shortcut)) continue;
+      shortcutsChanged = true;
+      if (shortcut === null) shortcuts.delete(command);
+      else shortcuts.set(command, shortcut);
+    }
+    const enabledChanges = new Map<string, boolean>();
+    for (const [command, isEnabled] of Object.entries(state.enabled ?? {})) {
+      if (!isDesktopMenuCommand(command) || enabled.has(command) === isEnabled) continue;
+      if (isEnabled) enabled.add(command);
+      else enabled.delete(command);
+      enabledChanges.set(command, isEnabled);
+    }
+    if (!configured) return;
+    // Accelerators are fixed once built; enabled flags flip in place.
+    if (shortcutsChanged) yield* configure;
+    else if (enabledChanges.size > 0)
+      yield* electronMenu.setApplicationMenuItemsEnabled(enabledChanges);
+  });
 
   // Load the saved language before the first build so the menu never starts in English.
   const applySavedLanguage = Effect.gen(function* () {
@@ -446,8 +573,22 @@ export const make = Effect.gen(function* () {
     }
   });
 
+  // Readiness flips about once per release, so a rebuild is cheaper than tracking the item.
+  const trackReadyUpdate = Effect.fn("desktop.menu.trackReadyUpdate")(function* (
+    state: DesktopUpdateState,
+  ) {
+    const next = isInstallableDesktopUpdateState(state) ? state : null;
+    const flipped = (next === null) !== (readyUpdate === null);
+    readyUpdate = next;
+    if (flipped && configured) yield* configure;
+  });
+  const updateStates = yield* updates.subscribe;
+  yield* trackReadyUpdate(updateStates.latest);
+  yield* updateStates.changes.pipe(Stream.runForEach(trackReadyUpdate), Effect.forkScoped);
+
   let rebuildsOnLocaleChange = false;
   return DesktopApplicationMenu.of({
+    setCommandState,
     configure: applySavedLanguage.pipe(
       Effect.andThen(configure),
       Effect.tap(() =>

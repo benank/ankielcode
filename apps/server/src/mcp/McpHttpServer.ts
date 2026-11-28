@@ -1,8 +1,6 @@
-import * as Cache from "effect/Cache";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
-import * as Duration from "effect/Duration";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -21,7 +19,6 @@ import {
   DeviceToolError,
   OrchestratorMcpFailure,
   PreviewAutomationError,
-  ThreadId,
 } from "@ankielcode/contracts";
 
 import packageJson from "../../package.json" with { type: "json" };
@@ -35,9 +32,6 @@ import * as HtmlRender from "../htmlRender/HtmlRender.ts";
 import * as MilestoneEvents from "../milestones/MilestoneEvents.ts";
 import * as ThreadCommandExecutor from "../orchestration-v2/ThreadCommandExecutor.ts";
 import * as ThreadManagementService from "../orchestration-v2/ThreadManagementService.ts";
-import * as ProjectionStore from "../orchestration-v2/ProjectionStore.ts";
-import * as PullRequestService from "../pullRequest/PullRequestService.ts";
-import * as PullRequestWatchService from "../pullRequest/PullRequestWatchService.ts";
 import { advertisedJsonSchema } from "./advertisedJsonSchema.ts";
 import * as McpInvocationContext from "./McpInvocationContext.ts";
 import * as McpToolAccess from "./McpToolAccess.ts";
@@ -76,10 +70,8 @@ import {
 import * as WorktreeHandlers from "./toolkits/worktree/handlers.ts";
 import { WorktreeToolkit } from "./toolkits/worktree/tools.ts";
 import * as WorktreeMcpService from "./WorktreeMcpService.ts";
-import * as PullRequestsHandlers from "./toolkits/pullRequests/handlers.ts";
 import * as ToolSearchHandlers from "./toolkits/toolSearch/handlers.ts";
 import { ToolSearchToolkit } from "./toolkits/toolSearch/tools.ts";
-import { PullRequestsToolkit } from "./toolkits/pullRequests/tools.ts";
 import * as DeviceHandlers from "./toolkits/device/handlers.ts";
 import {
   DeviceScreenshotTool,
@@ -187,8 +179,6 @@ const makeMcpAuthMiddleware = Effect.gen(function* () {
     Effect.map((settings) => settings.workflowsEnabled),
     Effect.orElseSucceed(() => false),
   );
-  const pullRequests = yield* Effect.serviceOption(PullRequestService.PullRequestService);
-  const projections = yield* Effect.serviceOption(ProjectionStore.ProjectionStoreV2);
   const sessions = yield* Effect.serviceOption(SessionStore.SessionStore);
   // Auth runs once per request, so a response that streams on ends when the outside client's
   // session is revoked or expires. `events/stream` ends itself first with
@@ -213,22 +203,6 @@ const makeMcpAuthMiddleware = Effect.gen(function* () {
       ),
     );
   };
-  // Every request reads it, and a remote added mid-thread shows the tools within a minute.
-  const forgeOfThread = yield* Cache.make({
-    capacity: 1_000,
-    timeToLive: Duration.minutes(1),
-    lookup: (threadId: ThreadId): Effect.Effect<boolean | undefined> =>
-      Option.isNone(pullRequests) || Option.isNone(projections)
-        ? Effect.undefined
-        : projections.value.getThreadShell(threadId).pipe(
-            Effect.flatMap((thread) =>
-              thread === null
-                ? Effect.undefined
-                : pullRequests.value.servesProject(thread.projectId),
-            ),
-            Effect.orElseSucceed(() => undefined),
-          ),
-  });
   const authenticateRequest = Effect.fn("McpHttpServer.authenticateRequest")(function* (
     request: HttpServerRequest.HttpServerRequest,
   ) {
@@ -254,15 +228,10 @@ const makeMcpAuthMiddleware = Effect.gen(function* () {
     }
     const workflows = yield* workflowsEnabled;
     const origin = Option.getOrUndefined(Option.map(requestUrl(request), (url) => url.origin));
-    const forge =
-      invocation.thread === undefined
-        ? undefined
-        : yield* Cache.get(forgeOfThread, invocation.thread.threadId);
     return {
       ...invocation,
       workflows,
       origin,
-      ...(forge === undefined ? {} : { forge }),
     };
   });
   // Untraced: a span here would wrap the tool call; the HTTP server span already covers it.
@@ -305,7 +274,6 @@ export const layerCliClientAuthenticator = Layer.effect(
                   capabilities: new Set<McpInvocationContext.McpCapability>([
                     "orchestration",
                     "worktree",
-                    "pull-requests",
                   ]),
                   issuedAt,
                 })),
@@ -329,7 +297,7 @@ const layerMcpAuthMiddleware = HttpRouter.middleware<{
 }>()(makeMcpAuthMiddleware).layer;
 
 /** Claude Code spills oversized results to files, losing locators; bound both text and its preferred structuredContent. */
-export const MAX_SNAPSHOT_TEXT_BYTES = 20_000;
+const MAX_SNAPSHOT_TEXT_BYTES = 20_000;
 const MAX_SNAPSHOT_VISIBLE_TEXT_CHARS = 8_000;
 // Page text and the ARIA tree both shrink to this before either drops below it.
 const SNAPSHOT_TEXT_FLOOR_CHARS = 2_000;
@@ -1093,7 +1061,7 @@ const imageToolRegistration = <Tools extends Record<string, Tool.Any>, A, E, R, 
     Layer.provide(McpToolAccess.HandlersLayer.layer(handlers)),
   );
 
-export const layerHtmlToolkit = Layer.mergeAll(
+const layerHtmlToolkit = Layer.mergeAll(
   toolkitRegistration(HtmlRenderToolkit, HtmlHandlers.layerRender),
   imageToolRegistration(registerHtmlPreview(), HtmlHandlers.layerPreview),
 ).pipe(Layer.provide(HtmlRender.layer));
@@ -1121,7 +1089,7 @@ export const layerOrchestratorToolkit = toolkitRegistration(
 export const layerThreadToolkit = toolkitRegistration(ThreadToolkit, ThreadHandlers.layer);
 const layerWorkflowToolkit = toolkitRegistration(WorkflowToolkit, WorkflowHandlers.layer);
 
-export const layerMessageToolkit = toolkitRegistration(MessageToolkit, MessageHandlers.layer);
+const layerMessageToolkit = toolkitRegistration(MessageToolkit, MessageHandlers.layer);
 
 const layerWorktreeToolkitRegistration = toolkitRegistration(
   WorktreeToolkit,
@@ -1149,11 +1117,6 @@ export const layerAttachmentToolkit = toolkitRegistration(
   AttachmentHandlers.layer,
 );
 
-export const layerPullRequestsToolkit = toolkitRegistration(
-  PullRequestsToolkit,
-  PullRequestsHandlers.layer,
-).pipe(Layer.provide(PullRequestWatchService.layer));
-
 const layerDeviceStandardToolkitRegistration = toolkitRegistration(
   DeviceStandardToolkit,
   DeviceHandlers.layerStandard,
@@ -1164,7 +1127,7 @@ const layerDeviceScreenshotRegistration = imageToolRegistration(
   DeviceHandlers.layerScreenshot,
 );
 
-export const layerDeviceToolkit = Layer.mergeAll(
+const layerDeviceToolkit = Layer.mergeAll(
   layerDeviceStandardToolkitRegistration,
   layerDeviceScreenshotRegistration,
 );
@@ -1210,7 +1173,6 @@ export const layerTools = Layer.mergeAll(
   layerThemeToolkit,
   layerPreviewControlsRegistration,
   layerWorktreeToolkitRegistration,
-  layerPullRequestsToolkit,
   layerDeviceToolkit,
   layerHtmlToolkit,
   layerMessageToolkit,
@@ -1259,7 +1221,7 @@ const layerDeferredListing = McpServer.visibility(
 );
 
 /** Outside layerTools: the clients its budget measures never list `tool_search`. */
-export const layerToolSearch = Layer.mergeAll(
+const layerToolSearch = Layer.mergeAll(
   toolkitRegistration(ToolSearchToolkit, ToolSearchHandlers.layer),
   layerDeferredListing,
 ).pipe(Layer.provide(layerToolExposure));
@@ -1304,7 +1266,7 @@ const layerWebhookTransport = Layer.unwrap(
  * Milestones as MCP events (SEP-3415) for outside clients to poll, stream or receive by webhook.
  * Protocol-level, so no thread lists them.
  */
-export const layerMilestoneEvents = Layer.effectDiscard(
+const layerMilestoneEvents = Layer.effectDiscard(
   Effect.gen(function* () {
     const annotations = Context.make(McpSchema.EnabledWhen, McpInvocationContext.hiddenFromThreads);
     const events = yield* MilestoneEvents.make;

@@ -72,11 +72,6 @@ import { backgroundWorkHoldsCompletion } from "@ankielcode/shared/orchestrationV
 import { runRanAfter } from "@ankielcode/shared/orchestrationV2ThreadError";
 import { resolveProjectSettings } from "@ankielcode/shared/projectSettings";
 import { formatThreadLink } from "@ankielcode/shared/threadLinks";
-import { threadPullRequestUpdatedAtMs } from "@ankielcode/shared/threadPullRequests";
-import {
-  normalizeThreadPullRequestKey,
-  visibleThreadPullRequests,
-} from "../sourceControl/threadPullRequests.ts";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
@@ -159,7 +154,6 @@ const DEFAULT_THREAD_LIST_LIMIT = 10;
 const DEFAULT_THREAD_READ_LIMIT = 10;
 const DEFAULT_THREAD_RUN_LIMIT = 10;
 const DEFAULT_THREAD_ITEM_MAX_CHARS = 500;
-const THREAD_PULL_REQUEST_PREVIEW_LIMIT = 5;
 // Claude Code saves MCP results over ~25k tokens to a file instead of showing them. Bytes, not
 // chars: CJK text runs near one token per char, which a char budget lets through at 30k tokens.
 const THREAD_READ_RESULT_MAX_BYTES = 30_000;
@@ -952,41 +946,6 @@ function threadBackgroundWork(
   };
 }
 
-function threadPullRequests(
-  links: OrchestrationV2ThreadShell["pullRequests"],
-  includeLinks = true,
-): Pick<
-  OrchestratorMcpThreadListItem,
-  "pullRequests" | "pullRequestCount" | "openPullRequestCount"
-> {
-  const visible = visibleThreadPullRequests(links ?? []);
-  if (!includeLinks) return { pullRequestCount: visible.length };
-  const open = visible.filter(
-    (link) => link.snapshot?.state !== "merged" && link.snapshot?.state !== "closed",
-  );
-  return {
-    pullRequests: open
-      .toSorted(
-        (left, right) =>
-          Number(right.watch !== undefined) - Number(left.watch !== undefined) ||
-          threadPullRequestUpdatedAtMs(right) - threadPullRequestUpdatedAtMs(left),
-      )
-      .slice(0, THREAD_PULL_REQUEST_PREVIEW_LIMIT)
-      .map((link) => ({
-        host: normalizeThreadPullRequestKey(link).host,
-        repository: link.repository,
-        number: link.number,
-        url: link.url,
-        source: link.source,
-        state: link.snapshot?.state ?? null,
-        watching: link.watch !== undefined,
-        watchStartedAt: link.watch?.startedAt ?? null,
-      })),
-    pullRequestCount: visible.length,
-    openPullRequestCount: open.length,
-  };
-}
-
 // Awaited background work keeps a thread live after its turn ends, as auto-settle and the sidebar treat it.
 function threadStatus(
   activeStatus: OrchestratorMcpThreadListItem["status"] | null | undefined,
@@ -1028,8 +987,6 @@ function listItemFromShell(
     model: shell.modelSelection.model,
     runtimeMode: shell.runtimeMode,
     interactionMode: shell.interactionMode,
-    linkedPullRequest: shell.linkedPullRequest ?? null,
-    ...threadPullRequests(shell.pullRequests),
     ...threadSettlement(shell),
     ...threadSnooze(shell, nowMs),
     pinned: shell.pinnedAt != null,
@@ -1049,7 +1006,6 @@ function threadDetail(
   itemCount: number,
   shell: OrchestrationV2ThreadShell,
   nowMs: number,
-  firstPage: boolean,
 ): OrchestratorMcpThreadDetail {
   const latest = ThreadManagementService.latestRun(projection);
   const active = ThreadManagementService.latestActiveRun(projection);
@@ -1067,8 +1023,6 @@ function threadDetail(
     model: projection.thread.modelSelection.model,
     runtimeMode: projection.thread.runtimeMode,
     interactionMode: projection.thread.interactionMode,
-    linkedPullRequest: projection.thread.linkedPullRequest ?? null,
-    ...threadPullRequests(projection.thread.pullRequests, firstPage),
     titleRegeneration:
       projection.thread.titleRegeneration === undefined ||
       projection.thread.titleRegeneration === null
@@ -3501,9 +3455,6 @@ const make = Effect.gen(function* () {
         timeline.totalItems,
         shell,
         yield* Clock.currentTimeMillis,
-        input.afterPosition === undefined &&
-          input.itemId === undefined &&
-          (input.beforePosition === undefined || input.beforePosition >= timeline.totalItems),
       );
       const recentRuns = target.runs
         .toSorted((left, right) => right.ordinal - left.ordinal)

@@ -14,7 +14,7 @@ import {
 import type { GrokSettings } from "../settings.ts";
 import * as HostProcess from "@ankielcode/shared/HostProcess";
 
-export const GROK_COST_USD_TICKS_PER_DOLLAR = 10_000_000_000;
+const GROK_COST_USD_TICKS_PER_DOLLAR = 10_000_000_000;
 
 function grokCostTicksToUsd(ticks: unknown): number | null {
   if (typeof ticks !== "number" || !Number.isFinite(ticks) || ticks < 0) return null;
@@ -64,7 +64,7 @@ function grokTotalsToUsage(totals: GrokUsageTotals): UsageTokenTotals {
   };
 }
 
-export function parseGrokLine(line: string): readonly UsageRecord[] {
+function parseGrokLine(line: string): readonly UsageRecord[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(line);
@@ -182,7 +182,7 @@ function parseGrokRecord(parsed: unknown): readonly UsageRecord[] {
   return results;
 }
 
-export const grokUsageFormat: TranscriptUsageFormat<void> = {
+const grokUsageFormat: TranscriptUsageFormat<void> = {
   selectFields: {
     timestamp: true,
     params: {

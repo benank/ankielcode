@@ -752,7 +752,7 @@ export function splitSearchText(
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Both activity recency and open counts halve every two weeks. */
-export const SEARCH_RECENCY_HALF_LIFE_MS = 14 * DAY_MS;
+const SEARCH_RECENCY_HALF_LIFE_MS = 14 * DAY_MS;
 /**
  * Opens closer together than this count once, so flipping between threads is
  * not frequency. Clients skip sending them.
@@ -812,12 +812,6 @@ export interface ThreadSearchSubject {
   readonly projectTitle?: string | null;
   /** Only set with two or more environments; it tells same-named threads apart. */
   readonly environmentLabel?: string | null;
-  readonly pullRequests?: ReadonlyArray<{
-    readonly number: number;
-    readonly title?: string | null;
-    /** Values such as URLs, matched only by the whole query. */
-    readonly references?: ReadonlyArray<string>;
-  }>;
   /** Latest user activity, in epoch ms. */
   readonly activityAt: number | null;
   readonly opens?: ThreadOpenStats | null;
@@ -859,8 +853,7 @@ function matchReference(
           (normalizedQuery.startsWith(folded) && notCut(normalizedQuery, folded.length))
       : at === 0;
   };
-  return (thread.id && matches(thread.id)) ||
-    thread.pullRequests?.some((pullRequest) => pullRequest.references?.some(matches))
+  return thread.id && matches(thread.id)
     ? { quality: 0.6, wholeWords: false, strong: true, primaryRanges: [] }
     : null;
 }
@@ -916,12 +909,7 @@ export interface ThreadSearchMatch {
   readonly groupQuality: number;
 }
 
-export type SearchMatchHintField =
-  | "pull-request"
-  | "branch"
-  | "project"
-  | "environment"
-  | "reference";
+export type SearchMatchHintField = "branch" | "project" | "environment" | "reference";
 
 export interface SearchMatchHint {
   readonly field: SearchMatchHintField;
@@ -965,11 +953,6 @@ function matchHint(
     readonly label: string;
     readonly text: string | null | undefined;
   }> = [
-    ...(thread.pullRequests ?? []).map((pullRequest) => ({
-      field: "pull-request" as const,
-      label: "PR",
-      text: `#${pullRequest.number}${pullRequest.title ? ` ${pullRequest.title}` : ""}`,
-    })),
     { field: "branch", label: "Branch", text: searchableBranch(thread.branch) },
     { field: "project", label: "Project", text: thread.projectTitle },
     { field: "environment", label: "Environment", text: thread.environmentLabel },
@@ -1002,10 +985,6 @@ function threadSearchFields(thread: ThreadSearchSubject): ReadonlyArray<Weighted
   const cached = threadFieldsCache.get(thread);
   if (cached) return cached;
   const fields: WeightedSearchField[] = [{ value: thread.title, weight: 1, midWord: true }];
-  for (const pullRequest of thread.pullRequests ?? []) {
-    fields.push({ value: `#${pullRequest.number}`, weight: 1 });
-    if (pullRequest.title) fields.push({ value: pullRequest.title, weight: 0.5 });
-  }
   const branch = searchableBranch(thread.branch);
   if (branch) fields.push({ value: branch, weight: 0.6 });
   if (thread.projectTitle) {

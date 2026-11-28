@@ -232,7 +232,7 @@ const makeDeriveSubagentThread =
     return ThreadId.make(`thread:subagent:${digest}`);
   };
 
-export function deriveProviderThread(input: {
+function deriveProviderThread(input: {
   readonly driver: ProviderDriverKind;
   readonly providerInstanceId?: ProviderInstanceId;
   readonly nativeThreadId: string;

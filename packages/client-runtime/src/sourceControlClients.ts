@@ -10,7 +10,6 @@ import { parseGitRemoteRepository } from "@ankielcode/shared/git";
 
 export {
   isMonochromeSourceControlIcon,
-  UNKNOWN_SOURCE_CONTROL_CLIENT,
   type ChangeRequestLink,
   type ChangeRequestTerminology,
   type HostAccountChoice,
@@ -31,11 +30,6 @@ export function readHostCredentialSettings(
   kind: string,
 ): HostCredentialSettings {
   return readSourceControlHostSettings(HostCredentialSettings, settings.sourceControlHosts[kind]);
-}
-
-/** A host's change request term where it opens a sentence: "Merge request merged". */
-export function capitalizeTerm(term: string): string {
-  return term.charAt(0).toUpperCase() + term.slice(1);
 }
 
 /** The repository a remote names, when its host has an app sign-in that could reach it. */

@@ -99,7 +99,7 @@ export function protectionPlan(input: {
 const quoteShell = (value: string) => `'${value.replaceAll("'", `'\\''`)}'`;
 const directoryOf = (file: string) => file.slice(0, file.lastIndexOf("/"));
 
-export function renderPrivilegedScript(plan: ProtectionPlan, mode: "apply" | "undo"): string {
+function renderPrivilegedScript(plan: ProtectionPlan, mode: "apply" | "undo"): string {
   const lines = ["set -e"];
   const remove = (dropIns: ReadonlyArray<DropIn>, indent = "") => {
     for (const { path } of dropIns) {
@@ -173,7 +173,7 @@ function parseUnits(text: string): Array<Map<string, string>> {
 }
 
 /** Loaded remote-access units by canonical name, so an alias such as sshd.service counts once. */
-export function loadedRemoteAccessUnits(systemctlShow: string): ReadonlyArray<string> {
+function loadedRemoteAccessUnits(systemctlShow: string): ReadonlyArray<string> {
   const units = parseUnits(systemctlShow)
     .filter((values) => values.get("LoadState") === "loaded")
     .map((values) => values.get("Id") ?? "")

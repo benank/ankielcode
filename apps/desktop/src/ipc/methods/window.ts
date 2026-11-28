@@ -4,7 +4,9 @@ import {
   DesktopAppBrandingSchema,
   DesktopEnvironmentBootstrapSchema,
   DesktopMediaReadSchema,
+  DesktopMenuStateSchema,
   DesktopThemeSchema,
+  DesktopWindowBackgroundSchema,
   EDITORS,
   EditorId,
   PickedThemeFileSchema,
@@ -33,6 +35,8 @@ import * as DesktopPrimaryPaste from "../../app/DesktopPrimaryPaste.ts";
 import * as DesktopAppSettings from "../../settings/DesktopAppSettings.ts";
 import * as DesktopWslBackend from "../../wsl/DesktopWslBackend.ts";
 import * as DesktopWslEnvironment from "../../wsl/DesktopWslEnvironment.ts";
+import * as DesktopApplicationMenu from "../../window/DesktopApplicationMenu.ts";
+import * as DesktopWindow from "../../window/DesktopWindow.ts";
 import * as ElectronApp from "../../electron/ElectronApp.ts";
 import * as ElectronAudio from "../../electron/ElectronAudio.ts";
 import * as ElectronDialog from "../../electron/ElectronDialog.ts";
@@ -43,6 +47,7 @@ import * as ElectronWindow from "../../electron/ElectronWindow.ts";
 import * as Electron from "electron";
 import { msg } from "gt-i18n";
 import * as MacPermissions from "../../permissions/MacPermissions.ts";
+import { fetchSessionMedia } from "./sessionMedia.ts";
 import { safariPermissionCheck } from "../../preview/BrowserImport/SafariPermission.ts";
 import { m } from "../../i18n/messages.ts";
 import * as IpcChannels from "../channels.ts";
@@ -307,6 +312,16 @@ export const setTheme = DesktopIpc.makeIpcMethod({
   }),
 });
 
+export const setWindowBackground = DesktopIpc.makeIpcMethod({
+  channel: IpcChannels.SET_WINDOW_BACKGROUND_CHANNEL,
+  payload: DesktopWindowBackgroundSchema,
+  result: Schema.Void,
+  handler: Effect.fn("desktop.ipc.window.setWindowBackground")(function* (background) {
+    const desktopWindow = yield* DesktopWindow.DesktopWindow;
+    yield* desktopWindow.setBackground(background);
+  }),
+});
+
 export const showContextMenu = DesktopIpc.makeIpcMethod({
   channel: IpcChannels.CONTEXT_MENU_CHANNEL,
   payload: ContextMenuInput,
@@ -329,6 +344,16 @@ export const showContextMenu = DesktopIpc.makeIpcMethod({
   }),
 });
 
+export const setMenuState = DesktopIpc.makeIpcMethod({
+  channel: IpcChannels.SET_MENU_STATE_CHANNEL,
+  payload: DesktopMenuStateSchema,
+  result: Schema.Void,
+  handler: Effect.fn("desktop.ipc.window.setMenuState")(function* (state) {
+    const menu = yield* DesktopApplicationMenu.DesktopApplicationMenu;
+    yield* menu.setCommandState(state);
+  }),
+});
+
 export const openExternal = DesktopIpc.makeIpcMethod({
   channel: IpcChannels.OPEN_EXTERNAL_CHANNEL,
   payload: Schema.String,
@@ -338,14 +363,6 @@ export const openExternal = DesktopIpc.makeIpcMethod({
     return yield* shell.openExternal(url);
   }),
 });
-
-const READ_MEDIA_MAX_BYTES = 256 * 1024 * 1024;
-
-// No URL field: media URLs can carry signed query tokens.
-class MediaReadError extends Schema.TaggedError<MediaReadError>()("MediaReadError", {
-  message: Schema.String,
-  cause: Schema.Defect(),
-}) {}
 
 // The renderer can display media it cannot fetch(); reading here keeps Save and Copy working for it.
 export const readMedia = DesktopIpc.makeIpcMethod({
@@ -362,30 +379,7 @@ export const readMedia = DesktopIpc.makeIpcMethod({
     ) {
       return null;
     }
-    const session = window.value.webContents.session;
-    return yield* Effect.tryPromise({
-      try: async () => {
-        // Like an <img>, send the session's cookies.
-        const response = await session.fetch(url, { credentials: "include" });
-        const mimeType = response.headers.get("content-type") ?? "";
-        if (!response.ok || !response.body) {
-          await response.body?.cancel();
-          return { status: response.status, mimeType, data: new Uint8Array() };
-        }
-        // The whole body crosses IPC, so stop before a huge file can exhaust main-process memory.
-        const chunks: Uint8Array[] = [];
-        let size = 0;
-        for await (const chunk of response.body) {
-          size += chunk.byteLength;
-          if (size > READ_MEDIA_MAX_BYTES) {
-            return { status: 413, mimeType, data: new Uint8Array() };
-          }
-          chunks.push(chunk);
-        }
-        return { status: response.status, mimeType, data: Buffer.concat(chunks) };
-      },
-      catch: (cause) => new MediaReadError({ message: "Could not read media.", cause }),
-    }).pipe(Effect.orElseSucceed(() => null));
+    return yield* fetchSessionMedia(window.value.webContents.session, url);
   }),
 });
 
@@ -471,6 +465,26 @@ export const revealWindow = DesktopIpc.makeIpcMethod({
       return;
     }
     yield* electronWindow.reveal(window.value);
+  }),
+});
+
+/** Closes the main window through its normal close path, which hides it on macOS. */
+export const closeWindow = DesktopIpc.makeIpcMethod({
+  channel: IpcChannels.CLOSE_WINDOW_CHANNEL,
+  payload: Schema.Undefined,
+  result: Schema.Void,
+  handler: Effect.fn("desktop.ipc.window.closeWindow")(function* (_input, event) {
+    const electronWindow = yield* ElectronWindow.ElectronWindow;
+    const window = yield* electronWindow.main;
+    if (
+      event === undefined ||
+      Option.isNone(window) ||
+      window.value.isDestroyed() ||
+      window.value.webContents.id !== event.sender.id
+    ) {
+      return;
+    }
+    yield* Effect.sync(() => window.value.close());
   }),
 });
 

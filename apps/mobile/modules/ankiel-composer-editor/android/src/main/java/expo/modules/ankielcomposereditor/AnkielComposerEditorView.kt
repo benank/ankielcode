@@ -284,10 +284,14 @@ class AnkielComposerEditorView(context: Context, appContext: AppContext) : ExpoV
   }
 
   fun setFontFamily(fontFamily: String) {
-    editor.typeface = if (fontFamily.contains("Mono", ignoreCase = true)) {
+    val fonts = ReactFontManager.getInstance()
+    // Bundled families (GeistMono-Regular) resolve by name before the generic mono fallback.
+    editor.typeface = if (
+      fontFamily !in fonts.customFontFamilies && fontFamily.contains("Mono", ignoreCase = true)
+    ) {
       Typeface.MONOSPACE
     } else {
-      ReactFontManager.getInstance().getTypeface(fontFamily, Typeface.NORMAL, context.assets)
+      fonts.getTypeface(fontFamily, Typeface.NORMAL, context.assets)
     }
     applyLineHeight()
     editor.applyPlaceholder()

@@ -1,29 +1,18 @@
 import { msg, T, useGT, useMessages } from "gt-react";
 import { contextMenuSourceOf } from "../contextMenuSource";
 import { m, type MessageResolver } from "../i18n/messages";
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
 import { scopeThreadRef } from "@ankielcode/client-runtime/environment";
 import {
   threadRuntimeIsActive,
   type EnvironmentThreadShell,
 } from "@ankielcode/client-runtime/state/shell";
-import {
-  useProjects,
-  useQuietThreadShell,
-  useServerConfigs,
-  useThreadShells,
-} from "~/state/entities";
-import {
-  threadPullRequestKeysEqual,
-  visibleThreadPullRequests,
-} from "@ankielcode/client-runtime/thread-pull-requests";
+import { useQuietThreadShell } from "~/state/entities";
 import type {
   ContextMenuItem,
   EnvironmentId,
   IssueTrackerKind,
   PreviewSessionSnapshot,
   ProjectId,
-  PullRequestState,
   ResolvedKeybindingsConfig,
   ThreadId,
 } from "@ankielcode/contracts";
@@ -97,11 +86,6 @@ import { faviconUrlForOrigin } from "@ankielcode/shared/favicon";
 import { useTheme } from "~/hooks/useTheme";
 import { useDeviceState } from "~/state/device";
 import type { PreviewPanelInlineSize } from "~/hooks/usePreviewPanelInlineSize";
-import {
-  newestPullRequestSummary,
-  pullRequestEnvironment,
-  useSharedPullRequestSummary,
-} from "~/state/pullRequests";
 import { useEnvironmentQuery } from "~/state/query";
 import { COLLAPSED_SIDEBAR_TITLEBAR_INSET_CLASS } from "~/workspaceTitlebar";
 
@@ -112,7 +96,6 @@ import { dispatchPreviewAction } from "./preview/previewActionBus";
 import { preventThumbButtonFocus, takeThumbButtonNavigation } from "./preview/thumbButtons";
 import { PierreEntryIcon } from "./chat/PierreEntryIcon";
 import { STATUS_TONE_DOT_CLASS } from "./PixelStatus";
-import { resolvePullRequestState } from "./pullRequest/pullRequestPresentation";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 import { observeResize } from "~/lib/observeResize";
 import { surfaceShortcutKey } from "~/lib/surfaceShortcutKey";
@@ -153,8 +136,7 @@ export interface RightPanelTabsProps {
   onAddTerminal: () => void;
   onAddDiff: () => void;
   onAddFiles: () => void;
-  onAddPullRequest: () => void;
-  onAddPullRequests: () => void;
+  onAddLinkedItems: () => void;
   onAddDevice: () => void;
   /** Absent where side chats are not offered. */
   onAddSideChat?: (() => void) | undefined;
@@ -162,25 +144,13 @@ export interface RightPanelTabsProps {
   terminalAvailable: boolean;
   diffAvailable: boolean;
   filesAvailable: boolean;
-  pullRequestAvailable: boolean;
-  pullRequestsAvailable: boolean;
+  linkedItemsAvailable: boolean;
   deviceAvailable: boolean;
   sideChatAvailable?: boolean;
   /** Overrides the default reason while side chats are available but cannot start. */
   sideChatDisabledReason?: string | null;
-  pullRequestStatusSeeds?: Readonly<Record<string, PullRequestTabStatusSeed>>;
   children: ReactNode;
 }
-
-export interface PullRequestTabStatus {
-  projectId: string;
-  repository: string;
-  number: number;
-  state: PullRequestState;
-  isDraft: boolean;
-}
-
-export type PullRequestTabStatusSeed = Pick<PullRequestTabStatus, "state" | "isDraft">;
 
 function shouldOpenDefaultBrowserProfileFromMenuClick(pointerType: string | undefined): boolean {
   return pointerType !== "touch";
@@ -191,8 +161,7 @@ const SURFACE_DISABLED_REASONS = {
   terminal: msg("Terminal surfaces are only available from a project thread."),
   files: msg("Files are only available when a project is open."),
   diff: msg("Diff is only available for server threads in Git repositories."),
-  pullRequest: msg("This thread's branch has no pull request yet."),
-  pullRequests: msg("This thread has no linked items."),
+  linkedItems: msg("This thread has no linked items."),
   device: msg("Devices are only available from a thread."),
   sideChat: msg("Side chats start after the first message."),
 } as const;
@@ -216,8 +185,7 @@ const SURFACE_UNAVAILABLE_HINTS = {
   terminal: msg("Available when a project is open."),
   files: msg("Available when a project is open."),
   diff: msg("Available for Git repositories."),
-  pullRequest: msg("No pull request on this branch yet."),
-  pullRequests: msg("No linked items available."),
+  linkedItems: msg("No linked items available."),
   device: msg("Available from a thread."),
   sideChat: msg("Available after the first message."),
 } as const;
@@ -280,9 +248,10 @@ type SurfaceShortcutEvent = Pick<
 > &
   Partial<Pick<KeyboardEvent, "code" | "getModifierState">>;
 
-export function surfaceShortcutActionForKey<
-  const Action extends { available: boolean; shortcut: string },
->(actions: readonly Action[], event: SurfaceShortcutEvent): Action | null {
+function surfaceShortcutActionForKey<const Action extends { available: boolean; shortcut: string }>(
+  actions: readonly Action[],
+  event: SurfaceShortcutEvent,
+): Action | null {
   if (event.defaultPrevented || event.isComposing) return null;
   if (event.metaKey || event.ctrlKey || event.altKey) return null;
   const key = surfaceShortcutKey(event);
@@ -292,12 +261,14 @@ export function surfaceShortcutActionForKey<
 }
 
 /** Skip contenteditable=false islands to find their editable host, matching the composer typing guard. */
-export function surfaceShortcutTargetsTypingContext(
+function surfaceShortcutTargetsTypingContext(
   target: { closest(selectors: string): unknown } | null,
 ): boolean {
+  // A focused sidebar row takes letters for type-to-select.
   return (
-    target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])') !=
-    null
+    target?.closest(
+      'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [data-sidebar-row]',
+    ) != null
   );
 }
 
@@ -339,8 +310,7 @@ function RightPanelEmptyState(props: {
   onAddTerminal: () => void;
   onAddDiff: () => void;
   onAddFiles: () => void;
-  onAddPullRequest: () => void;
-  onAddPullRequests: () => void;
+  onAddLinkedItems: () => void;
   onAddDevice: () => void;
   /** Absent where side chats are not offered. */
   onAddSideChat?: (() => void) | undefined;
@@ -348,8 +318,7 @@ function RightPanelEmptyState(props: {
   terminalAvailable: boolean;
   diffAvailable: boolean;
   filesAvailable: boolean;
-  pullRequestAvailable: boolean;
-  pullRequestsAvailable: boolean;
+  linkedItemsAvailable: boolean;
   deviceAvailable: boolean;
   sideChatAvailable: boolean;
   sideChatDisabledReason: string | null;
@@ -392,20 +361,12 @@ function RightPanelEmptyState(props: {
       onClick: props.onAddDiff,
     },
     {
-      label: msg("Pull request"),
-      icon: PullRequestGlyph.pullRequest,
-      shortcut: "P",
-      available: props.pullRequestAvailable,
-      disabledReason: messages(SURFACE_UNAVAILABLE_HINTS.pullRequest),
-      onClick: props.onAddPullRequest,
-    },
-    {
       label: msg("Linked items"),
       icon: PullRequestGlyph.link,
       shortcut: "L",
-      available: props.pullRequestsAvailable,
-      disabledReason: messages(SURFACE_UNAVAILABLE_HINTS.pullRequests),
-      onClick: props.onAddPullRequests,
+      available: props.linkedItemsAvailable,
+      disabledReason: messages(SURFACE_UNAVAILABLE_HINTS.linkedItems),
+      onClick: props.onAddLinkedItems,
     },
     {
       label: msg("Device"),
@@ -612,9 +573,7 @@ function surfaceTitle(
         terminalLabelsById.get(surface.activeTerminalId) ??
         getTerminalLabel(surface.activeTerminalId, resolve)
       );
-    case "pull-request":
-      return `#${surface.number}`;
-    case "pull-requests":
+    case "linked-items":
       return resolve(msg("Linked items"));
     case "issue":
       // A git host numbers its issues; a tracker with keys of its own, such as Linear, names them.
@@ -675,14 +634,12 @@ function SurfaceIcon({
   previewCapturedUrl,
   theme,
   environmentId,
-  pullRequestStatusSeed,
 }: {
   surface: RightPanelSurface;
   previewUrl: string | null;
   previewCapturedUrl: string | null;
   theme: "light" | "dark";
   environmentId: EnvironmentId | null;
-  pullRequestStatusSeed: PullRequestTabStatusSeed | undefined;
 }) {
   switch (surface.kind) {
     case "preview":
@@ -702,15 +659,7 @@ function SurfaceIcon({
       );
     case "terminal":
       return <TerminalSquare className="size-3 shrink-0" />;
-    case "pull-request":
-      return (
-        <PullRequestSurfaceIcon
-          surface={surface}
-          environmentId={environmentId}
-          seed={pullRequestStatusSeed}
-        />
-      );
-    case "pull-requests":
+    case "linked-items":
       return <PullRequestGlyph.link className="size-3 shrink-0" />;
     case "issue":
       return <IssueSurfaceIcon surface={surface} environmentId={environmentId} />;
@@ -768,30 +717,6 @@ function SideChatTabIcon(props: { environmentId: EnvironmentId | null; threadId:
   );
 }
 
-export function resolvePullRequestTabLink(
-  threads: readonly Pick<EnvironmentThreadShell, "environmentId" | "pullRequests">[],
-  environmentId: EnvironmentId | null,
-  host: string | null,
-  reference: { repository: string; number: number },
-) {
-  if (environmentId === null || host === null) return undefined;
-  // Keys are cached per object, so one target normalizes once instead of once per link.
-  const target = { host, repository: reference.repository, number: reference.number };
-  let newest: EnvironmentThreadShell["pullRequests"][number] | undefined;
-  for (const thread of threads) {
-    if (thread.environmentId !== environmentId) continue;
-    for (const link of visibleThreadPullRequests(thread.pullRequests)) {
-      if (!threadPullRequestKeysEqual(link, target)) continue;
-      if (
-        newest === undefined ||
-        (link.snapshot?.syncedAt ?? "") > (newest.snapshot?.syncedAt ?? "")
-      )
-        newest = link;
-    }
-  }
-  return newest;
-}
-
 /** The issue's own state mark, from the detail its panel already reads; a plain dot until then. */
 function IssueSurfaceIcon({
   surface,
@@ -825,70 +750,6 @@ function IssueSurfaceIcon({
       className={cn("size-3 shrink-0", presentation.toneClassName)}
     />
   );
-}
-
-function PullRequestSurfaceIcon({
-  surface,
-  environmentId,
-  seed,
-}: {
-  surface: Extract<RightPanelSurface, { kind: "pull-request" }>;
-  environmentId: EnvironmentId | null;
-  seed: PullRequestTabStatusSeed | undefined;
-}) {
-  const resolvedEnvironmentId =
-    (surface.environmentId as EnvironmentId | undefined) ?? environmentId;
-  const projects = useProjects();
-  const threads = useThreadShells();
-  const project = projects.find(
-    (entry) => entry.environmentId === resolvedEnvironmentId && entry.id === surface.projectId,
-  );
-  const identity = project?.repositoryIdentity;
-  const host =
-    surface.host ??
-    (identity?.provider
-      ? sourceControlClients.changeRequestHost(identity, identity.provider)
-      : null);
-  const configs = useServerConfigs();
-  const capabilities =
-    resolvedEnvironmentId === null
-      ? undefined
-      : configs.get(resolvedEnvironmentId)?.environment.capabilities;
-  const linkedSnapshot =
-    capabilities !== undefined
-      ? (resolvePullRequestTabLink(threads, resolvedEnvironmentId, host, surface)?.snapshot ?? null)
-      : null;
-  const detail = useEnvironmentQuery(
-    resolvedEnvironmentId === null || capabilities === undefined || linkedSnapshot !== null
-      ? null
-      : pullRequestEnvironment.detail({
-          environmentId: resolvedEnvironmentId,
-          input: {
-            projectId: surface.projectId as ProjectId,
-            ...(capabilities !== undefined && surface.host !== undefined
-              ? { host: surface.host }
-              : {}),
-            repository: surface.repository,
-            number: surface.number,
-            allowStale: false,
-          },
-        }),
-  ).data;
-  const reference = {
-    projectId: surface.projectId as ProjectId,
-    repository: surface.repository,
-    number: surface.number,
-  };
-  const sharedSummary = useSharedPullRequestSummary(resolvedEnvironmentId, reference);
-  const status = linkedSnapshot ?? newestPullRequestSummary(detail, sharedSummary) ?? seed ?? null;
-  if (status === null) {
-    return <PullRequestGlyph.pullRequest className="size-3 shrink-0 text-muted-foreground" />;
-  }
-  const presentation = resolvePullRequestState({
-    state: status.state,
-    isDraft: status.isDraft ?? detail?.isDraft ?? seed?.isDraft ?? false,
-  });
-  return <presentation.Icon className={cn("size-3 shrink-0", presentation.toneClassName)} />;
 }
 
 function SortableTabList(props: {
@@ -947,7 +808,6 @@ function RightPanelTab(
     previewCapturedUrl: string | null;
     theme: "light" | "dark";
     environmentId: EnvironmentId | null;
-    pullRequestStatusSeed: PullRequestTabStatusSeed | undefined;
     renaming: boolean;
     canRename: boolean;
     ownsDesktopTitleBar: boolean;
@@ -991,7 +851,6 @@ function RightPanelTab(
           previewCapturedUrl={props.previewCapturedUrl}
           theme={props.theme}
           environmentId={props.environmentId}
-          pullRequestStatusSeed={props.pullRequestStatusSeed}
         />
         {props.pending ? (
           <span
@@ -1228,20 +1087,12 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
       onClick: props.onAddDiff,
     },
     {
-      label: msg("Pull request"),
-      icon: PullRequestGlyph.pullRequest,
-      shortcut: "P",
-      available: props.pullRequestAvailable,
-      disabledReason: messages(SURFACE_DISABLED_REASONS.pullRequest),
-      onClick: props.onAddPullRequest,
-    },
-    {
       label: msg("Linked items"),
       icon: PullRequestGlyph.link,
       shortcut: "L",
-      available: props.pullRequestsAvailable,
-      disabledReason: messages(SURFACE_DISABLED_REASONS.pullRequests),
-      onClick: props.onAddPullRequests,
+      available: props.linkedItemsAvailable,
+      disabledReason: messages(SURFACE_DISABLED_REASONS.linkedItems),
+      onClick: props.onAddLinkedItems,
     },
     {
       label: msg("Device"),
@@ -1474,7 +1325,7 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
     >
       <div
         className={cn(
-          "flex h-[var(--workspace-topbar-height)] min-h-[var(--workspace-topbar-height)] shrink-0 items-center gap-1 pl-2",
+          "flex h-[var(--workspace-topbar-height)] min-h-[var(--workspace-topbar-height)] shrink-0 select-none items-center gap-1 pl-2",
           props.mode === "inline" && !props.layoutControls ? "pr-28" : "pr-3",
           ownsDesktopTitleBar && "drag-region",
           ownsDesktopTitleBar && "wco:pr-(--workspace-native-controls-inset)",
@@ -1525,7 +1376,6 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
                     previewCapturedUrl={favicon.capturedUrl}
                     theme={resolvedTheme}
                     environmentId={props.environmentId}
-                    pullRequestStatusSeed={props.pullRequestStatusSeeds?.[surface.id]}
                     renaming={renamingDevice === surface.id}
                     canRename={props.onRenameDevice !== undefined}
                     ownsDesktopTitleBar={ownsDesktopTitleBar}
@@ -1683,16 +1533,14 @@ export function RightPanelTabs(props: RightPanelTabsProps) {
             onAddTerminal={props.onAddTerminal}
             onAddDiff={props.onAddDiff}
             onAddFiles={props.onAddFiles}
-            onAddPullRequest={props.onAddPullRequest}
-            onAddPullRequests={props.onAddPullRequests}
+            onAddLinkedItems={props.onAddLinkedItems}
             onAddDevice={props.onAddDevice}
             onAddSideChat={props.onAddSideChat}
             browserAvailable={props.browserAvailable}
             terminalAvailable={props.terminalAvailable}
             diffAvailable={props.diffAvailable}
             filesAvailable={props.filesAvailable}
-            pullRequestAvailable={props.pullRequestAvailable}
-            pullRequestsAvailable={props.pullRequestsAvailable}
+            linkedItemsAvailable={props.linkedItemsAvailable}
             deviceAvailable={props.deviceAvailable}
             sideChatAvailable={props.sideChatAvailable === true}
             sideChatDisabledReason={props.sideChatDisabledReason ?? null}

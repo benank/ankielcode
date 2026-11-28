@@ -154,7 +154,7 @@ export interface TerminalLifecycleState {
   readonly reopened: boolean;
 }
 
-export const INITIAL_TERMINAL_LIFECYCLE: TerminalLifecycleState = {
+const INITIAL_TERMINAL_LIFECYCLE: TerminalLifecycleState = {
   wasRunning: false,
   observed: false,
   reopened: false,
@@ -173,7 +173,7 @@ export type TerminalLifecycleEvent =
 
 export type TerminalLifecycleCommand = "exit" | "reopen" | null;
 
-export function transitionTerminalLifecycle(
+function transitionTerminalLifecycle(
   state: TerminalLifecycleState,
   event: TerminalLifecycleEvent,
 ): { readonly state: TerminalLifecycleState; readonly command: TerminalLifecycleCommand } {
@@ -274,7 +274,7 @@ export interface TerminalSession {
  * measured grid whenever the server starts a new output generation, and writes
  * the launch's initial input once that grid has reached the shell.
  */
-export function createTerminalSession(
+function createTerminalSession(
   atoms: TerminalSessionAtoms,
   options: TerminalSessionOptions,
 ): TerminalSession {

@@ -70,20 +70,6 @@ export function buildThreadRouteParams(ref: ScopedThreadRef): {
   };
 }
 
-/** The router keeps reserved characters encoded in location.pathname. */
-export function isThreadRoutePathname(pathname: string, ref: ScopedThreadRef): boolean {
-  const parts = pathname.replace(/\/$/, "").split("/");
-  if (parts.length !== 3 || parts[0] !== "") return false;
-  try {
-    return (
-      decodeURIComponent(parts[1]!) === ref.environmentId &&
-      decodeURIComponent(parts[2]!) === ref.threadId
-    );
-  } catch {
-    return false;
-  }
-}
-
 export function buildDraftThreadRouteParams(draftId: DraftId): {
   draftId: DraftId;
 } {

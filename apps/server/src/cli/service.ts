@@ -42,7 +42,7 @@ const SERVICE_ENV_KEY = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/u;
  * Sets or removes (`undefined`) entries in `service.env` text and keeps every
  * other line, including comments, as the user wrote it.
  */
-export const upsertServiceEnv = (
+const upsertServiceEnv = (
   contents: string,
   entries: Readonly<Record<string, string | undefined>>,
 ): string => {

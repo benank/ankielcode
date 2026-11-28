@@ -176,7 +176,7 @@ const optionOnMissing = <A, R>(
     ),
   );
 
-export const make = Effect.gen(function* () {
+const make = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const workspacePaths = yield* WorkspacePaths.WorkspacePaths;

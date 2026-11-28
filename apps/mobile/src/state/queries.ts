@@ -1,12 +1,3 @@
-import {
-  legacyThreadPullRequestKey,
-  threadPullRequestKeyOf,
-} from "@ankielcode/client-runtime/thread-pull-requests";
-import {
-  composerPullRequestsFromLinks,
-  filterComposerPullRequestMatches,
-  withLinkedComposerPullRequestsFirst,
-} from "@ankielcode/shared/composerPullRequestMatches";
 import { resolveFilesystemReadAccess } from "@ankielcode/client-runtime/state/filesystem";
 import { environmentSession } from "./session";
 import { useEnvironmentPresentation } from "./presentation";
@@ -14,8 +5,6 @@ import type { VcsRefTarget } from "@ankielcode/client-runtime/state/vcs";
 import type {
   EnvironmentId,
   OrchestrationV2ProjectedTurnItem,
-  ProjectId,
-  ThreadPullRequestLink,
   VcsListRefsResult,
   VcsRef,
 } from "@ankielcode/contracts";
@@ -44,7 +33,6 @@ import { projectEnvironment } from "./projects";
 import { useEnvironmentQuery } from "./query";
 import { msg, useMessages } from "gt-react-native";
 import { vcsEnvironment } from "./vcs";
-import { composerPullRequests } from "./pull-requests";
 import {
   buildCheckpointDiffTargets,
   normalizeComposerPathSearchQuery,
@@ -107,108 +95,6 @@ export function useDebouncedValue<A>(value: A, delayMs: number): A {
   }, [delayMs, value]);
 
   return debounced;
-}
-
-export function useComposerPullRequestSearch(input: {
-  environmentId: EnvironmentId | null;
-  projectId: ProjectId | null;
-  repository: string | null;
-  threadPullRequests?: ReadonlyArray<ThreadPullRequestLink> | undefined;
-  query: string | null;
-}) {
-  const query = useDebouncedValue(input.query, 180);
-  const linked =
-    input.projectId === null
-      ? []
-      : composerPullRequestsFromLinks(input.threadPullRequests ?? [], input.projectId);
-  const ready =
-    query === input.query &&
-    query !== null &&
-    input.environmentId !== null &&
-    input.projectId !== null &&
-    input.repository !== null;
-  const numeric = query !== null && /^\d*$/.test(query);
-  const list = useEnvironmentQuery(
-    ready
-      ? composerPullRequests.list({
-          environmentId: input.environmentId!,
-          input: {
-            projectId: input.projectId!,
-            state: "all",
-            limit: 200,
-            ...(!numeric && query ? { query } : {}),
-          },
-        })
-      : null,
-  );
-  const number = numeric && query ? Number(query) : null;
-  const hasExact = list.data?.entries.some(
-    (entry) =>
-      entry.number === number && entry.repository.toLowerCase() === input.repository?.toLowerCase(),
-  );
-  const exact = useEnvironmentQuery(
-    ready && number !== null && Number.isSafeInteger(number) && number > 0 && !hasExact
-      ? composerPullRequests.detail({
-          environmentId: input.environmentId!,
-          input: { projectId: input.projectId!, repository: input.repository!, number },
-        })
-      : null,
-  );
-  // Only the host: the URL's full repository path would not match the project's selector.
-  const exactEntry = exact.data
-    ? { ...exact.data, host: legacyThreadPullRequestKey(exact.data).host }
-    : null;
-  const entries = (() => {
-    if (input.query === null || input.projectId === null || input.repository === null) return [];
-    if (/^\d*$/.test(input.query)) {
-      return filterComposerPullRequestMatches({
-        keyOf: threadPullRequestKeyOf,
-        entries: ready ? [...(exactEntry ? [exactEntry] : []), ...(list.data?.entries ?? [])] : [],
-        linked,
-        projectId: input.projectId,
-        repository: input.repository,
-        query: input.query,
-        limit: 20,
-      });
-    }
-    if (!ready) {
-      return withLinkedComposerPullRequestsFirst({
-        keyOf: threadPullRequestKeyOf,
-        matches: [],
-        linked,
-        query: input.query,
-        limit: 20,
-      });
-    }
-    const words = (query ?? "").toLowerCase().split(/\s+/).filter(Boolean);
-    const found = [...(exactEntry ? [exactEntry] : []), ...(list.data?.entries ?? [])].filter(
-      (entry) =>
-        entry.projectId === input.projectId &&
-        entry.repository.toLowerCase() === input.repository?.toLowerCase() &&
-        words.every((word) =>
-          `${entry.title} ${entry.headBranch} ${entry.baseBranch}`.toLowerCase().includes(word),
-        ),
-    );
-    const unique = new Map<string, (typeof found)[number]>();
-    for (const entry of found) {
-      const key = threadPullRequestKeyOf(entry);
-      if (!unique.has(key)) unique.set(key, entry);
-    }
-    return withLinkedComposerPullRequestsFirst({
-      keyOf: threadPullRequestKeyOf,
-      matches: [...unique.values()].sort((left, right) =>
-        right.updatedAt.localeCompare(left.updatedAt),
-      ),
-      linked,
-      query: query ?? "",
-      limit: 20,
-    });
-  })();
-  return {
-    entries,
-    isPending: input.query !== null && (query !== input.query || list.isPending || exact.isPending),
-    error: list.error ?? list.data?.errors[0]?.message ?? exact.error,
-  };
 }
 
 /**

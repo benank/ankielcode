@@ -4,7 +4,6 @@ import type { MFunctionType } from "gt-i18n/types";
 import type { SearchMatchHintField } from "./paletteSearch.ts";
 
 const MATCH_HINT_LABELS: Readonly<Record<SearchMatchHintField, string>> = {
-  "pull-request": msg("PR", { $context: "abbreviation of pull request" }),
   branch: msg("Branch"),
   project: msg("Project"),
   environment: msg("Environment"),

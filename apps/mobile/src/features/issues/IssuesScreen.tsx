@@ -360,7 +360,6 @@ export function IssuesScreen(
               <SavedViewsMenu
                 read={(preferences) => preferences.issueSavedViews}
                 write={(issueSavedViews) => ({ issueSavedViews })}
-                list="issue"
                 suggestedName={involvement === "assigned" ? gt("Issues Assigned to Me") : ""}
                 matches={issueViewMatches}
                 scope={{

@@ -21,7 +21,8 @@ import { useAssetUrlRefresh, useAssetUrlState } from "../../assets/assetUrls";
 import type { MessageResolver } from "../../i18n/messages";
 import { cn } from "../../lib/utils";
 import { useRightPanelStore } from "../../rightPanelStore";
-import { MediaActions, type MediaActionSource } from "../media/MediaActions";
+import { MediaActions, mediaFileName, type MediaActionSource } from "../media/MediaActions";
+import { useMediaDrag } from "../media/useMediaDrag";
 import { MediaVideoPlayer } from "../media/MediaVideoPlayer";
 import type { ExpandedImagePreview } from "./ExpandedImagePreview";
 import { markdownImageGallery, markdownImageItems } from "./markdownImageGallery";
@@ -210,6 +211,7 @@ export function ChatMarkdownImage(props: {
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const src = props.src ?? loadedSrc;
+  const drag = useMediaDrag({ ...props.actionsSource, src }, mediaFileName(props.actionsSource));
   const failed = props.sourceFailed === true || (src !== null && failedSrc === src);
   const settled = src !== null && !failed && (!props.standalone || loadedSrc !== null);
   // Cached images are complete before `onLoad` can fire.
@@ -245,7 +247,7 @@ export function ChatMarkdownImage(props: {
           data-markdown-copy={props.copyMarkdown}
           decoding="async"
           loading="lazy"
-          draggable={false}
+          {...drag}
           className={cn(
             CHAT_MARKDOWN_IMAGE_SIZE_CLASS_NAME,
             props.className,

@@ -90,7 +90,7 @@ function stripInlineTerminalLabels(prompt: string, headers: ReadonlyArray<string
   return result;
 }
 
-export function recallableComposerPrompt(
+function recallableComposerPrompt(
   messageText: string,
   keptContextIds: ReadonlySet<string> = new Set(),
 ): string {

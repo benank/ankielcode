@@ -91,7 +91,7 @@ function parseRecord(parsed: unknown): readonly UsageRecord[] {
   ];
 }
 
-export const museUsageFormat: TranscriptUsageFormat<unknown> = {
+const museUsageFormat: TranscriptUsageFormat<unknown> = {
   selectFields: {
     schema_version: true,
     record_type: true,

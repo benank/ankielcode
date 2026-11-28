@@ -19,7 +19,7 @@ import {
 } from "../channels.ts";
 
 /** Electron options for a notification; Linux notifications carry no buttons. */
-export function notificationOptions(
+function notificationOptions(
   platform: NodeJS.Platform,
   input: DesktopNotificationInput,
 ): Electron.NotificationConstructorOptions {

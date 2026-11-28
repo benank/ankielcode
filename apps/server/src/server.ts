@@ -3,8 +3,6 @@ import * as AssetSigner from "./assets/AssetSigner.ts";
 import * as WorkspacePreviewRevisions from "./assets/WorkspacePreviewRevisions.ts";
 import * as DatabaseStorage from "./persistence/DatabaseStorage.ts";
 import * as StorageCleanup from "./storageCleanup.ts";
-import * as PullRequestSyncReactor from "./orchestration-v2/PullRequestSyncReactor.ts";
-import * as PullRequestWatchReactor from "./orchestration-v2/PullRequestWatchReactor.ts";
 import * as DelegatedTaskQuestionReactor from "./orchestration-v2/DelegatedTaskQuestionReactor.ts";
 import * as MilestoneHub from "./milestones/MilestoneHub.ts";
 import * as OrchestrationMilestones from "./milestones/OrchestrationMilestones.ts";
@@ -44,20 +42,14 @@ import * as ExternalLauncher from "./process/externalLauncher.ts";
 import * as ProcessLauncher from "./process/ProcessLauncher.ts";
 import * as SpawnWorker from "./process/SpawnWorker.ts";
 import * as NodePtyAdapter from "./terminal/NodePtyAdapter.ts";
-import * as PullRequestHttp from "./pullRequest/http.ts";
 import * as SpeechModelStore from "./speech/SpeechModelStore.ts";
 import * as SpeechService from "./speech/SpeechService.ts";
 import * as CloudSpeech from "./speech/CloudSpeech.ts";
 import { speechHttpApiLayer } from "./speech/http.ts";
 import { speechStreamRouteLayer } from "./speech/stream.ts";
-import * as PullRequestProviderRegistry from "./pullRequest/PullRequestProviderRegistry.ts";
-import * as PullRequestService from "./pullRequest/PullRequestService.ts";
 import * as IssueService from "./issue/IssueService.ts";
 import * as IssueTrackerRegistry from "./issue/IssueTrackerRegistry.ts";
 import * as SqlitePersistence from "./persistence/Sqlite.ts";
-import * as PullRequestFilesViewed from "./persistence/PullRequestFilesViewed.ts";
-import * as PullRequestReviewGuides from "./persistence/PullRequestReviewGuides.ts";
-import * as PullRequestReviewGuideService from "./pullRequest/PullRequestReviewGuideService.ts";
 import * as ServerLifecycleEvents from "./serverLifecycleEvents.ts";
 import * as ModelManifest from "./provider/ModelManifest.ts";
 import * as ResetCreditCoordinator from "./provider/resetCreditCoordinator.ts";
@@ -133,8 +125,6 @@ import * as ProjectCloneTracker from "./project/ProjectCloneTracker.ts";
 import * as GitWorkflowService from "./git/GitWorkflowService.ts";
 import * as ReviewService from "./review/ReviewService.ts";
 import * as SourceControlProviderRegistry from "./sourceControl/SourceControlProviderRegistry.ts";
-import * as PullRequestReadCache from "./pullRequest/PullRequestReadCache.ts";
-import * as SourceControlRateLimit from "@ankielcode/source-control-core/server/SourceControlRateLimit";
 import * as SourceControlRepositoryService from "./sourceControl/SourceControlRepositoryService.ts";
 import * as WorktreeSetupTracker from "./project/WorktreeSetupTracker.ts";
 import * as Observability from "./observability/Observability.ts";
@@ -148,7 +138,7 @@ import * as AgentAlertPush from "./relay/AgentAlertPush.ts";
 import * as PushRegistry from "./relay/PushRegistry.ts";
 import * as AuthHttp from "./auth/http.ts";
 import * as ReplayMarkers from "./auth/replayMarkers.ts";
-import * as RemovedLinearTokens from "./issue/removedLinearTokens.ts";
+import * as RemovedFeatureSecrets from "./removedFeatureSecrets.ts";
 import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
 import * as CodexManagedTokenBroker from "./provider/CodexManagedTokenBroker.ts";
 import * as WebhookRoute from "./scheduledTasks/webhookRoute.ts";
@@ -178,8 +168,8 @@ import * as WorkflowForge from "./workflows/WorkflowForge.ts";
 import * as ProjectStore from "./orchestration-v2/ProjectStore.ts";
 import * as ThreadSearch from "./orchestration-v2/ThreadSearch.ts";
 import * as ThreadSettlementService from "./orchestration-v2/ThreadSettlementService.ts";
+import * as LinkedThreadRefreshes from "./issue/linkedThreadRefreshes.ts";
 import * as IdleCompactionService from "./orchestration-v2/IdleCompactionService.ts";
-import * as ThreadPullRequestService from "./orchestration-v2/ThreadPullRequestService.ts";
 import * as ThreadIssueService from "./orchestration-v2/ThreadIssueService.ts";
 import * as RunFinalizationService from "./orchestration-v2/RunFinalizationService.ts";
 import * as ProjectionMaintenance from "./orchestration-v2/ProjectionMaintenance.ts";
@@ -357,14 +347,6 @@ const layerRepositoryIdentityResolver = Layer.effect(
   }),
 ).pipe(Layer.provide(layerSourceControlProviderRegistry), Layer.provide(ProcessRunner.layer));
 
-const layerPullRequestService = PullRequestService.layer.pipe(
-  Layer.provide(PullRequestProviderRegistry.layer),
-  Layer.provide(PullRequestFilesViewed.layer),
-  Layer.provide(PullRequestReadCache.layer),
-  Layer.provide(layerSourceControlProviderRegistry),
-  Layer.provide(SourceControlRateLimit.layer),
-);
-
 const layerIssueService = IssueService.layer.pipe(Layer.provide(IssueTrackerRegistry.layer));
 
 // One instance serves MCP link calls and refreshes snapshots on thread events.
@@ -372,7 +354,6 @@ const layerThreadIssueService = ThreadIssueService.layer;
 
 const layerGitManager = GitManager.layer.pipe(
   Layer.provide(Layer.merge(ProjectionStoreV2.layer, ProjectStore.layer)),
-  Layer.provide(layerPullRequestService.pipe(Layer.provide(RuntimeLayer.layerProjectService))),
   Layer.provideMerge(RuntimeLayer.layerProjectSetupScriptRunner),
   Layer.provideMerge(WorktreeSetupTracker.layer),
   Layer.provideMerge(GitVcsDriver.layer),
@@ -507,7 +488,6 @@ const layerOrchestrationV2Runtime = RuntimeLayer.layerProduction.pipe(
   Layer.provide(
     WorkflowForge.layer.pipe(
       Layer.provide(layerIssueService),
-      Layer.provide(layerPullRequestService),
       Layer.provide(RuntimeLayer.layerProjectService),
     ),
   ),
@@ -517,7 +497,6 @@ const layerOrchestrationV2Runtime = RuntimeLayer.layerProduction.pipe(
   Layer.provide(
     RunFinalizationService.layerObserver.pipe(
       Layer.provide(ProjectionStoreV2.layer),
-      Layer.provide(layerPullRequestService),
       Layer.provide(RuntimeLayer.layerProjectService),
     ),
   ),
@@ -530,15 +509,11 @@ const layerOrchestrationApplication = Layer.merge(
 
 const layerThreadSettlementWorker = Layer.effectDiscard(
   ThreadSettlementService.make.pipe(Effect.flatMap((service) => service.start())),
-).pipe(Layer.provide(layerPullRequestService), Layer.provide(ProjectionStoreV2.layer));
+).pipe(Layer.provide(ProjectionStoreV2.layer));
 
 const layerIdleCompactionWorker = Layer.effectDiscard(
   IdleCompactionService.make.pipe(Effect.flatMap((service) => service.start())),
 ).pipe(Layer.provide(ProjectionStoreV2.layer));
-
-const layerThreadPullRequestWorker = Layer.effectDiscard(
-  ThreadPullRequestService.make.pipe(Effect.flatMap((service) => service.start())),
-).pipe(Layer.provide(layerPullRequestService));
 
 const layerProviderInstallationRefresh = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -595,28 +570,7 @@ const layerRuntimeCoreDependenciesBase = Layer.mergeAll(
     Layer.provide(ProjectionMaintenance.layer),
     Layer.provide(layerServerRestart),
   ),
-  layerThreadPullRequestWorker,
   KeepAwake.layer,
-  Layer.effectDiscard(
-    Effect.gen(function* () {
-      const service = yield* PullRequestSyncReactor.PullRequestSyncReactor;
-      yield* service.start();
-    }),
-  ).pipe(
-    Layer.provideMerge(PullRequestSyncReactor.layer),
-    Layer.provide(layerPullRequestService),
-    Layer.provide(ProjectionStoreV2.layer),
-  ),
-  Layer.effectDiscard(
-    Effect.gen(function* () {
-      const service = yield* PullRequestWatchReactor.PullRequestWatchReactor;
-      yield* service.start();
-    }),
-  ).pipe(
-    Layer.provide(PullRequestWatchReactor.layer),
-    Layer.provide(layerPullRequestService),
-    Layer.provide(ProjectionStoreV2.layer),
-  ),
   Layer.effectDiscard(
     Effect.gen(function* () {
       const service = yield* DelegatedTaskQuestionReactor.DelegatedTaskQuestionReactor;
@@ -632,7 +586,7 @@ const layerRuntimeCoreDependenciesBase = Layer.mergeAll(
   layerProviderInstallationRefresh,
   ProviderInstallation.layer,
   ReplayMarkers.layer,
-  RemovedLinearTokens.layer,
+  RemovedFeatureSecrets.layer,
   Layer.effectDiscard(ProjectSettingsOverrideSweep.sweep),
 ).pipe(
   Layer.provideMerge(layerOrchestrationApplication),
@@ -738,7 +692,6 @@ const layerMakeRoutes = Layer.mergeAll(
     HttpApiBuilder.layer(EnvironmentHttpApi).pipe(
       Layer.provide(AuthHttp.layer),
       Layer.provide(OrchestrationHttp.layer),
-      Layer.provide(PullRequestHttp.layer),
       Layer.provide(ProjectHttp.layer),
       Layer.provide(speechHttpApiLayer),
       Layer.provide(ServerHttp.layerServerEnvironmentHttpApi),
@@ -762,11 +715,7 @@ const layerMakeRoutes = Layer.mergeAll(
     Layer.provide(ProjectionStoreV2.layer),
   ),
 ).pipe(
-  Layer.provide(
-    PullRequestReviewGuideService.layer.pipe(Layer.provide(PullRequestReviewGuides.layer)),
-  ),
-  // Share the service so HTTP/WS clients single-flight reads and invalidate each other's cached patches.
-  Layer.provide(layerPullRequestService),
+  Layer.provide(LinkedThreadRefreshes.layer),
   Layer.provide(layerThreadIssueService),
   Layer.provide(layerIssueService),
   // The same activity instance RunExecutionService reports to, by layer memoization.

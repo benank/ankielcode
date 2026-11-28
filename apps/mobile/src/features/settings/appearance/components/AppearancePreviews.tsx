@@ -6,14 +6,11 @@ import {
   resolveMarkdownFontSizes,
   resolveMobileCodeSurface,
 } from "../../../../lib/appearancePreferences";
+import { FONT_FAMILIES } from "../../../../lib/fontFamilies";
 import { getMobileTerminalTheme } from "../../../terminal/terminalTheme";
 import { useAppearancePreferences } from "../AppearancePreferencesProvider";
 
-const CODE_FONT_FAMILY = Platform.select({
-  ios: "ui-monospace",
-  android: "monospace",
-  default: "monospace",
-});
+const CODE_FONT_FAMILY = FONT_FAMILIES.mono;
 
 export function AppearancePreviewSeparator() {
   return <View className="h-px bg-separator" />;

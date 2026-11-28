@@ -278,6 +278,8 @@ const checkedHandlers = <Handlers>(declarations: Declarations<Handlers>): Handle
 const THREAD_ONLY = new Set<unknown>([
   McpInvocationContext.hiddenFromOutsideClients,
   McpInvocationContext.hiddenWithoutBackgroundWait,
+  McpInvocationContext.hiddenWithoutPreview,
+  McpInvocationContext.hiddenWithoutDevice,
 ]);
 
 /** A tool that acts as its calling thread must be hidden from outside clients. */

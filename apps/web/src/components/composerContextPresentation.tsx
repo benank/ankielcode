@@ -25,15 +25,11 @@ import {
   type AttachmentUploadState,
 } from "~/lib/attachmentUploadState";
 import { useAttachmentUploadProgress } from "~/hooks/useAttachmentUploadProgress";
-import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 import {
   fileContextReference,
   imageContextReference,
-  isPullRequestSummaryContext,
   previewAnnotationContextId,
   previewAnnotationContextLabel,
-  pullRequestContextDisplayState,
-  pullRequestContextKindLabel,
   reviewCommentContextId,
   reviewCommentContextLabel,
   reviewCommentRangeText,
@@ -58,8 +54,6 @@ import {
   ContextChipShell,
   FileChip,
   ImageChipButton,
-  PULL_REQUEST_CHIP_KINDS,
-  PullRequestChip,
   UnresolvedChip,
 } from "./contextChipParts";
 
@@ -325,39 +319,17 @@ function FileContextChip(props: {
   );
 }
 
-function PullRequestContextChip(props: { record: ReviewCommentContext; kind: ContextChipKind }) {
-  const actions = use(ComposerContextActionsContext);
-  const messages = useMessages();
-  const metadata = props.record.pullRequest;
-  if (metadata === undefined) return null;
-  return (
-    <PullRequestChip
-      metadata={metadata}
-      environmentId={actions.environmentId}
-      label={reviewCommentContextLabel(props.record, messages)}
-      kindLabel={pullRequestContextKindLabel(props.record, messages)}
-      kind={props.kind}
-      onOpen={actions.openPullRequest}
-    />
-  );
-}
-
 function ReviewCommentContextChip(props: {
   record: ReviewCommentContext;
-  isPullRequest: boolean;
   detailsMode: ContextPresentationCapability["details"];
   kind: ContextChipKind;
 }) {
   const messages = useMessages();
   return (
     <ContextChip
-      icon={props.isPullRequest ? <PullRequestGlyph.pullRequest /> : <MessageCircleIcon />}
+      icon={<MessageCircleIcon />}
       label={reviewCommentContextLabel(props.record, messages)}
-      kindLabel={
-        props.isPullRequest
-          ? pullRequestContextKindLabel(props.record, messages)
-          : msg("Review comment")
-      }
+      kindLabel={msg("Review comment")}
       details={<ComposerReviewCommentDetails comment={props.record} />}
       detailsMode={props.detailsMode}
       kind={props.kind}
@@ -567,22 +539,11 @@ const composerContextPresentationRegistry = createContextPresentationRegistry<
         if (entry.kind !== "review-comment") {
           return <UnresolvedContextChip label={context.label} />;
         }
-        const isPullRequest = isPullRequestSummaryContext(entry.record);
-        const pullRequestState = pullRequestContextDisplayState(entry.record) ?? "unknown";
-        if (isPullRequest && entry.record.pullRequest !== undefined) {
-          return (
-            <PullRequestContextChip
-              record={entry.record}
-              kind={PULL_REQUEST_CHIP_KINDS[pullRequestState]}
-            />
-          );
-        }
         return (
           <ReviewCommentContextChip
             record={entry.record}
-            isPullRequest={isPullRequest}
             detailsMode={definition.capabilities.details}
-            kind={isPullRequest ? PULL_REQUEST_CHIP_KINDS[pullRequestState] : "review-comment"}
+            kind="review-comment"
           />
         );
       },

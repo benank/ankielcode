@@ -57,7 +57,6 @@ import {
   makeProviderFailureTurnItem,
 } from "@ankielcode/provider-core/server/failure";
 import { makeInterruptResultTurnItem } from "./runInterruptResult.ts";
-import * as RunFinalizationService from "./RunFinalizationService.ts";
 import * as ThreadCommandExecutor from "./ThreadCommandExecutor.ts";
 import * as TurnItemPositionStore from "./TurnItemPositionStore.ts";
 import { userFacingDatabaseErrorMessage } from "./UserFacingErrors.ts";
@@ -717,7 +716,6 @@ export const layer: Layer.Layer<
     const mcpAppModelContext = yield* McpAppModelContext.McpAppModelContext;
     const previewAgentActivity = yield* PreviewAgentActivity.PreviewAgentActivity;
     const turnItemPositions = yield* TurnItemPositionStore.TurnItemPositionStoreV2;
-    const finalizationObserver = yield* RunFinalizationService.RunFinalizationObserver;
     const threadCommands = yield* ThreadCommandExecutor.ThreadCommandExecutor;
 
     const writeFinalRunEvents = Effect.fn("RunExecutionService.writeFinalRunEvents")(
@@ -740,7 +738,6 @@ export const layer: Layer.Layer<
         readonly terminal: ProviderTerminalEvent;
         readonly completedAt?: DateTime.Utc;
         readonly failureItemPersisted: boolean;
-        readonly refreshAfterTurn: Effect.Effect<void>;
         readonly writeIfRunCurrent?: {
           readonly activeAttemptId: RunAttemptId;
           readonly expectedStatus: OrchestrationV2Run["status"];
@@ -808,7 +805,6 @@ export const layer: Layer.Layer<
               effects: [],
               events: earlyEvents,
             });
-            yield* input.refreshAfterTurn;
           }
           return false;
         }
@@ -1060,14 +1056,12 @@ export const layer: Layer.Layer<
                 effects: [],
                 events: restoredHandoffEvents,
               });
-              yield* input.refreshAfterTurn;
             }
             return false;
           }
         } else {
           yield* eventSink.writeWithEffects(finalization);
         }
-        yield* input.refreshAfterTurn;
         return true;
       },
     );
@@ -1102,18 +1096,6 @@ export const layer: Layer.Layer<
           Effect.map(Fiber.join),
         ),
       startRootRun: Effect.fn("RunExecutionService.startRootRun")(function* (input) {
-        // Startup failure and stream shutdown can report the same attempt.
-        const refreshAfterTurn = yield* Effect.cached(
-          finalizationObserver.refreshAfterTurn(input.appThread.projectId).pipe(
-            Effect.catchCause((cause) =>
-              Effect.logWarning("failed to refresh pull requests after run termination", {
-                threadId: input.run.threadId,
-                runId: input.run.id,
-                cause,
-              }),
-            ),
-          ),
-        );
         const failedProviderTurnId =
           input.attempt.providerTurnId ??
           idAllocator.derive.providerTurn({
@@ -1175,7 +1157,6 @@ export const layer: Layer.Layer<
                   input.providerTurnOrdinal * 100 + 1,
                 ),
                 failureItemPersisted: false,
-                refreshAfterTurn,
                 writeIfRunCurrent: {
                   activeAttemptId: input.attemptId,
                   expectedStatus: "running",
@@ -1314,7 +1295,6 @@ export const layer: Layer.Layer<
                 ...(restoredHandoffs === undefined ? {} : { restoredHandoffs }),
                 terminal: settledTerminal,
                 failureItemPersisted: settledTerminal.status === "failed",
-                refreshAfterTurn,
               });
             },
             (effect) =>
@@ -2158,7 +2138,6 @@ export const layer: Layer.Layer<
                       ...(droppedPrompt ? { promptDropped: true as const } : {}),
                     },
                     failureItemPersisted: false,
-                    refreshAfterTurn,
                   }).pipe(
                     // Storage failures can be defects; retry both failure channels.
                     Effect.catchCause((writeCause) =>
@@ -2322,7 +2301,6 @@ export const layer: Layer.Layer<
                             latestItemOrdinal + 1,
                           ),
                           failureItemPersisted: false,
-                          refreshAfterTurn,
                         }),
                       ),
                     ),

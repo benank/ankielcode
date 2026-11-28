@@ -2,8 +2,8 @@
 
 Dictate into the composer instead of typing. The transcript lands in your draft
 for review, and only sending the message sends anything to an agent. Dictation
-also works in citation comments, diff and file annotations, pull request
-comments, replies, and review summaries, and in the desktop app's browser
+also works in citation comments, diff and file annotations, issue
+comments, and in the desktop app's browser
 annotation editor.
 
 On iPhone and Android, voice input transcribes on the device by default. To opt in

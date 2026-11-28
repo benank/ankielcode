@@ -92,8 +92,6 @@ export const ExecutionEnvironmentCapabilities = Schema.Struct({
       maxUploadBytes: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
     }),
   ),
-  pullRequests: Schema.optionalKey(Schema.Boolean),
-  pullRequestChecks: Schema.optionalKey(Schema.Boolean),
   issues: Schema.optionalKey(Schema.Boolean),
   /** Side chats: hidden `lineage.sideChat` forks. Older servers ignore the fork flag. */
   sideChats: Schema.optionalKey(Schema.Boolean),
@@ -134,16 +132,12 @@ export const ExecutionEnvironmentCapabilities = Schema.Struct({
   threadProjectFromScratch: Schema.optionalKey(Schema.Boolean),
   threadTitleRegeneration: Schema.optionalKey(Schema.Boolean),
   threadVisitedTracking: Schema.optionalKey(Schema.Boolean),
-  threadPullRequestLinking: Schema.optionalKey(Schema.Boolean),
   serverResolvedCommandContext: Schema.optionalKey(Schema.Boolean),
   threadStop: Schema.optionalKey(Schema.Boolean),
   /** Absent on older servers and on Windows hosts, which cannot stop a discovered server. */
   localServerStop: Schema.optionalKey(Schema.Boolean),
   /** Honors `enablePreviewTunnel`; hide the switch where absent, since the tunnel stays on there. */
   previewTunnelSetting: Schema.optionalKey(Schema.Boolean),
-  threadPullRequests: Schema.optionalKey(Schema.Boolean),
-  threadPullRequestWatch: Schema.optionalKey(Schema.Boolean),
-  pullRequestStackActions: Schema.optionalKey(Schema.Boolean),
   serverSelfUpdate: Schema.optionalKey(ServerSelfUpdateCapability),
   /** Server answers server.getRelease from the GitHub releases it updates from. */
   releaseLookup: Schema.optionalKey(Schema.Boolean),

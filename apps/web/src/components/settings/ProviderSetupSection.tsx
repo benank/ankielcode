@@ -206,6 +206,10 @@ function ProviderSetupActions({
         "Remove the downloaded Antigravity runtime from {environment}? Google sign-in and thread history are kept.",
         { environment: environmentLabel },
       ),
+      {
+        confirmLabel: gt("Remove", { $context: "verb, removes a downloaded runtime" }),
+        destructive: true,
+      },
     );
     if (confirmed) {
       await runCommand(gt("Removing runtime"), () => removeInstall(target));

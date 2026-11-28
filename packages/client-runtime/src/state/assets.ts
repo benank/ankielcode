@@ -30,7 +30,7 @@ import { createEnvironmentQueryAtomFamily } from "./runtime.ts";
 
 const ASSET_URL_REFRESH_INTERVAL_MS = 30 * 60_000;
 const ASSET_URL_IDLE_TTL_MS = 60 * 60_000;
-export const ASSET_URL_MAX_IN_FLIGHT = 6;
+const ASSET_URL_MAX_IN_FLIGHT = 6;
 
 export class InvalidAssetCollectionKeyError extends Schema.TaggedError<InvalidAssetCollectionKeyError>()(
   "InvalidAssetCollectionKeyError",
@@ -88,9 +88,6 @@ export type AssetUrlState =
       readonly imageDimensions?: AssetImageDimensions;
       readonly fileRevision?: string;
     };
-
-export const MISSING_FILE_ACCESS_MESSAGE =
-  "This connection cannot read host files. Pair again with a new link to view it.";
 
 export function blockedAssetUrlState(
   resource: AssetResource | null,

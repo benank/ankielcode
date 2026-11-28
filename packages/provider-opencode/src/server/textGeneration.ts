@@ -20,10 +20,8 @@ const GENERATION_TIMEOUT = "3 minutes";
 
 const OpenCodeTextGenerationOperation = Schema.Literals([
   "generateCommitMessage",
-  "generatePrContent",
   "generateBranchName",
   "generateThreadTitle",
-  "generateReviewGuide",
   "generateTranscriptionPostProcessing",
 ]);
 
@@ -410,8 +408,5 @@ export const makeOpenCodeTextGeneration = Effect.fn("makeOpenCodeTextGeneration"
     return yield* TextGenerationOperations.decodeJsonReply(input, "OpenCode", rawOutput);
   });
 
-  return TextGenerationOperations.fromRunner(
-    "OpenCodeTextGeneration",
-    TextGenerationOperations.withoutInvestigation("OpenCode", runOpenCodeJson),
-  );
+  return TextGenerationOperations.fromRunner("OpenCodeTextGeneration", runOpenCodeJson);
 });

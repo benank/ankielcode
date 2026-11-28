@@ -62,7 +62,7 @@ function setReduceMotionEnabled(next: boolean) {
   for (const listener of reduceMotionListeners) listener();
 }
 
-export function subscribeReduceMotion(onChange: Listener): () => void {
+function subscribeReduceMotion(onChange: Listener): () => void {
   reduceMotionListeners.add(onChange);
   if (reduceMotionSubscription === null) {
     const subscription = AccessibilityInfo.addEventListener(
@@ -91,7 +91,7 @@ export function subscribeReduceMotion(onChange: Listener): () => void {
   };
 }
 
-export function readReduceMotionEnabled(): boolean {
+function readReduceMotionEnabled(): boolean {
   return reduceMotionEnabled ?? true;
 }
 

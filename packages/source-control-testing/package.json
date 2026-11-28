@@ -19,7 +19,6 @@
     "@ankielcode/contracts": "workspace:*",
     "@ankielcode/shared": "workspace:*",
     "@ankielcode/source-control-core": "workspace:*",
-    "@effect/platform-node": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

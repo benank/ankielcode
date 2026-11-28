@@ -25,7 +25,7 @@ const dismissKey = (environmentId: EnvironmentId, runId: RunId) => `${environmen
  * the comparison skips to the last run that ran. Detail can lag the shell, so it skips only once
  * the runs include that cancelled run.
  */
-export function offeredPromptSuggestion<Suggestion extends { readonly runId: RunId }>(
+function offeredPromptSuggestion<Suggestion extends { readonly runId: RunId }>(
   suggestion: Suggestion | null | undefined,
   latestRun: Thread["latestRun"] | undefined,
   runs: ReadonlyArray<OrchestrationV2Run>,

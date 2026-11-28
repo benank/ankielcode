@@ -1,12 +1,8 @@
-import type { EnvironmentId, ProjectId } from "@ankielcode/contracts";
-
 import type { OpenPreviewMutation } from "./browser/openFileInPreview";
 import type { ClosedView, ClosedViewEntry } from "./closedViewStore";
-import type { PullRequestListPreferences } from "./components/pullRequest/pullRequestListPreferences";
 import { openPreviewSession } from "./components/preview/openPreviewSession";
 import {
   rightPanelHostRef,
-  type RightPanelSurface,
   selectThreadRightPanelState,
   type ThreadRightPanelState,
   useRightPanelStore,
@@ -51,44 +47,6 @@ export function planNextReopen(
     return { drop, restore: entry };
   }
   return { drop, restore: null };
-}
-
-type PullRequestsSearchLike = Partial<PullRequestListPreferences> & {
-  repository?: string;
-  number?: number;
-  selectedProjectId?: ProjectId | undefined;
-  selectedHost?: string | undefined;
-  selectedEnvironmentId?: EnvironmentId | undefined;
-};
-
-export function pullRequestsSearchForRestore<S extends PullRequestsSearchLike>(
-  previous: S,
-  selected: RightPanelSurface | null,
-): S & PullRequestListPreferences {
-  const {
-    repository: _repository,
-    number: _number,
-    selectedProjectId: _projectId,
-    selectedHost: _host,
-    selectedEnvironmentId: _environmentId,
-    ...filters
-  } = previous;
-  return {
-    ...filters,
-    involvement: previous.involvement ?? "all",
-    state: previous.state ?? "open",
-    ...(selected?.kind === "pull-request"
-      ? {
-          repository: selected.repository,
-          number: selected.number,
-          selectedProjectId: selected.projectId as ProjectId,
-          ...(selected.host === undefined ? {} : { selectedHost: selected.host }),
-          ...(selected.environmentId === undefined
-            ? {}
-            : { selectedEnvironmentId: selected.environmentId as EnvironmentId }),
-        }
-      : {}),
-  } as S & PullRequestListPreferences;
 }
 
 export async function reopenClosedView(
@@ -154,9 +112,6 @@ export async function reopenClosedView(
         panels.openDevice(ref, surface.target);
         if (surface.title) panels.renameDevice(ref, surface.id, surface.title);
       } else panels.open(ref, "device");
-      break;
-    case "pull-request":
-      panels.openPullRequest(ref, surface);
       break;
     case "issue":
       panels.openIssue(ref, surface);

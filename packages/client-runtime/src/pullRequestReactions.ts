@@ -2,21 +2,9 @@ import { mFallback, msg } from "gt-i18n";
 import type { MFunctionType } from "gt-i18n/types";
 import { formatConjunctionList } from "./listFormat.ts";
 import type {
-  PullRequestComment,
-  PullRequestDetail,
-  PullRequestReaction,
-  PullRequestReactionContent,
+  IssueReaction as PullRequestReaction,
+  IssueReactionContent as PullRequestReactionContent,
 } from "@ankielcode/contracts";
-
-export function canReactPullRequestComment(
-  detail: Pick<PullRequestDetail, "provider" | "capabilities">,
-  comment: Pick<PullRequestComment, "kind">,
-): boolean {
-  return (
-    detail.capabilities.reactions === true &&
-    !(detail.provider === "gitcafe" && comment.kind === "review")
-  );
-}
 
 export const PULL_REQUEST_REACTION_ORDER: ReadonlyArray<PullRequestReactionContent> = [
   "thumbs-up",

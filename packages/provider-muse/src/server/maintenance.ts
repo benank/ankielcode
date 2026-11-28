@@ -33,7 +33,7 @@ function comparableMuseVersion(version: string): string {
 
 const MUSE_REVISION = /-R\d+(?:\.\d+)?$/;
 
-export const compareMuseVersions = (current: string, latest: string) =>
+const compareMuseVersions = (current: string, latest: string) =>
   MUSE_REVISION.test(current) === MUSE_REVISION.test(latest)
     ? compareSemverVersions(comparableMuseVersion(current), comparableMuseVersion(latest))
     : compareSemverVersions(current.replace(MUSE_REVISION, ""), latest.replace(MUSE_REVISION, ""));

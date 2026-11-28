@@ -113,8 +113,6 @@ function alertTrigger(event: OrchestrationV2DomainEvent): "raise" | "release" | 
       return backgroundWorkHoldsCompletion(event.payload.pendingBackgroundTasks ?? [])
         ? null
         : "release";
-    case "thread.pull-request-synced":
-      return "release";
     default:
       return null;
   }
@@ -140,7 +138,7 @@ const KIND_BY_PHASE: Partial<Record<AgentAwarenessPhase, PushAlertKind>> = {
 };
 
 /** Maps the shared button rule to the iOS category that registers those buttons. */
-export function alertCategory(
+function alertCategory(
   request: OrchestrationV2RuntimeRequest,
   item: OrchestrationV2TurnItem | undefined,
 ): AlertCategory | null {

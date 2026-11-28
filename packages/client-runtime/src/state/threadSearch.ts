@@ -16,7 +16,6 @@ import {
   THREAD_OPEN_DEDUPE_MS,
   type ThreadSearchSubject,
 } from "@ankielcode/shared/paletteSearch";
-import { threadSearchPullRequests } from "@ankielcode/shared/threadPullRequests";
 
 import type { EnvironmentThreadShell } from "./models.ts";
 import { getThreadSortTimestamp } from "./threadSort.ts";
@@ -213,8 +212,7 @@ export type ThreadSearchShell = Pick<
   | "latestUserMessageAt"
   | "latestUserAuthoredMessageAt"
   | "opens"
-> &
-  Partial<Pick<EnvironmentThreadShell, "pullRequests" | "linkedPullRequest" | "branchPullRequest">>;
+>;
 
 /**
  * What the web and mobile palettes rank a thread shell by. Pass the
@@ -268,7 +266,6 @@ function buildThreadSearchSubject(
     branch: thread.branch,
     projectTitle: projectTitle ?? null,
     environmentLabel: environmentLabel ?? null,
-    pullRequests: threadSearchPullRequests(thread),
     activityAt: Number.isFinite(activityAt) ? activityAt : null,
     // This client's own latest open counts too: the server merged it, or has
     // no record yet (an older server ignores opens).
@@ -277,6 +274,19 @@ function buildThreadSearchSubject(
         ? { score: 1, picks: [], ...thread.opens, openedAt: localOpenedAt }
         : (thread.opens ?? null),
   };
+}
+
+/**
+ * When a thread was last used, by the same rule as `threadRecentUse` on its subject (last
+ * message or last open, this client's included), without touching the subject cache.
+ */
+export function threadLastUsedAt(thread: ThreadSearchShell): number {
+  const activityAt = getThreadSortTimestamp(thread, "updated_at");
+  return Math.max(
+    Number.isFinite(activityAt) ? activityAt : 0,
+    thread.opens?.openedAt ?? 0,
+    localThreadOpens.get(`${thread.environmentId}:${thread.id}`) ?? 0,
+  );
 }
 
 /** Message result keys in the order a search box last showed them for `query`. */

@@ -46,7 +46,7 @@ export interface UninstallPlan {
 }
 
 /** Delete only launchers targeting this home's runtime/versions. */
-export const findOwnedLauncher = Effect.fn("cli.uninstall.find_launcher")(function* (input: {
+const findOwnedLauncher = Effect.fn("cli.uninstall.find_launcher")(function* (input: {
   readonly launchedAs: string | undefined;
   readonly versionsDir: string;
 }) {
@@ -112,7 +112,7 @@ const ownsLauncher = Effect.fn("cli.uninstall.owns_launcher")(function* (
  * point into this home's runtime/versions. A runtime started by its own path is not the installed
  * one, so the launcher this process started from does not always name them.
  */
-export const findRecordedLaunchers = Effect.fn("cli.uninstall.find_recorded_launchers")(function* (
+const findRecordedLaunchers = Effect.fn("cli.uninstall.find_recorded_launchers")(function* (
   versionsDir: string,
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -129,7 +129,7 @@ export const findRecordedLaunchers = Effect.fn("cli.uninstall.find_recorded_laun
 
 // cmd.exe needs verbatim quoting and literal paths, with delayed expansion disabled. The shell
 // starts in System32 and runs ping from there, whatever directory `ankiel uninstall` was run in.
-export function spawnWindowsRemoval(environment: NodeJS.ProcessEnv, dir: string) {
+function spawnWindowsRemoval(environment: NodeJS.ProcessEnv, dir: string) {
   const ping = windowsSystem32Path(environment, "ping.exe");
   return NodeChildProcess.spawn(
     environment["ComSpec"] ?? environment["COMSPEC"] ?? windowsSystem32Path(environment, "cmd.exe"),

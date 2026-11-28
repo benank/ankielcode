@@ -42,7 +42,7 @@ export interface DesktopSecondaryBootstrapsReader {
 }
 
 /** Empty reads clear the snapshot; failed reads retain platform registrations. */
-export function createDesktopSecondaryBootstrapsReader(
+function createDesktopSecondaryBootstrapsReader(
   resolveBridge: () => Pick<DesktopBridge, "getLocalEnvironmentBootstraps"> | undefined,
 ): DesktopSecondaryBootstrapsReader {
   let snapshot: ReadonlyArray<DesktopEnvironmentBootstrap> = [];

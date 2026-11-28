@@ -221,7 +221,7 @@ class DesktopShellCertificatesUpdateFailed extends Schema.TaggedError<DesktopShe
   }
 }
 
-export function makeApplyDesktopShellEnvironmentSnapshot(
+function makeApplyDesktopShellEnvironmentSnapshot(
   environment: NodeJS.ProcessEnv,
   platform: NodeJS.Platform,
 ) {
@@ -389,7 +389,7 @@ export const writeAllToFileDescriptor = Effect.fn(
   }
 });
 
-export function requireDesktopTelemetryWriteProgress(
+function requireDesktopTelemetryWriteProgress(
   fd: number,
   remainingBytes: number,
   written: number,
@@ -399,7 +399,7 @@ export function requireDesktopTelemetryWriteProgress(
     : Effect.fail(new DesktopTelemetryControlStalled({ fd, remainingBytes }));
 }
 
-export const makeDesktopShellEnvironmentUpdates = Effect.fn(
+const makeDesktopShellEnvironmentUpdates = Effect.fn(
   "DesktopTelemetryReceiver.makeDesktopShellEnvironmentUpdates",
 )(function* (environment: NodeJS.ProcessEnv, platform: NodeJS.Platform) {
   const applyShellEnvironment = makeApplyDesktopShellEnvironmentSnapshot(environment, platform);
@@ -776,62 +776,3 @@ export const make = Effect.fn("resourceTelemetry.desktopTelemetryReceiver.make")
 });
 
 export const layer = Layer.effect(DesktopTelemetryReceiver, make());
-
-export const layerTest = (
-  overrides: Partial<DesktopTelemetryReceiver["Service"]> = {},
-): Layer.Layer<DesktopTelemetryReceiver> => {
-  const latest = overrides.latest ?? Effect.succeedNone;
-  const changes = overrides.changes ?? Stream.empty;
-  const health =
-    overrides.health ??
-    Effect.succeed({
-      status: "unavailable" as const,
-      lastSampleAt: Option.none<DateTime.Utc>(),
-      lastError: Option.some("Desktop telemetry test implementation is unavailable."),
-    });
-  return Layer.succeed(
-    DesktopTelemetryReceiver,
-    DesktopTelemetryReceiver.of({
-      latest,
-      changes,
-      pathChanges: overrides.pathChanges ?? Stream.empty,
-      subscribe:
-        overrides.subscribe ??
-        latest.pipe(
-          Effect.map((initial) => ({
-            latest: initial,
-            changes,
-          })),
-        ),
-      health,
-      subscribeHealth:
-        overrides.subscribeHealth ??
-        health.pipe(
-          Effect.map((initial) => ({
-            latest: initial,
-            changes: Stream.empty,
-          })),
-        ),
-      setDiagnosticsDemand: Effect.fn("DesktopTelemetryReceiver.setDiagnosticsDemand")(function () {
-        return Effect.void;
-      }),
-      announceServerReady: Effect.void,
-      requestDesktopUpdate: Effect.fn("DesktopTelemetryReceiver.requestDesktopUpdate")(function () {
-        return Effect.void;
-      }),
-      commitDesktopUpdate: Effect.fn("DesktopTelemetryReceiver.commitDesktopUpdate")(function () {
-        return Effect.void;
-      }),
-      cancelDesktopUpdate: Effect.fn("DesktopTelemetryReceiver.cancelDesktopUpdate")(function () {
-        return Effect.void;
-      }),
-      desktopUpdates:
-        overrides.desktopUpdates ??
-        Effect.succeed({
-          latest: Option.none<DesktopUpdateStatusReport>(),
-          changes: Stream.empty,
-        }),
-      ...overrides,
-    }),
-  );
-};

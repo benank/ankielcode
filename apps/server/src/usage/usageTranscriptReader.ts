@@ -243,7 +243,7 @@ async function onDiskNames(
   return names;
 }
 
-export function physicalSourceIdOf(scope: string, windowsPath: string): string {
+function physicalSourceIdOf(scope: string, windowsPath: string): string {
   return NodeCrypto.createHash("sha256")
     .update(`${scope}\0${windowsPath}`)
     .digest("hex")
@@ -325,7 +325,7 @@ async function* readChunks(
 }
 
 // Match ASCII markers as raw bytes: UTF-8 cannot false-match them mid-sequence, and no line string is allocated.
-export function transcriptLineGate(markers: readonly [string, ...string[]]) {
+function transcriptLineGate(markers: readonly [string, ...string[]]) {
   const needles = markers.map((marker) => Buffer.from(marker));
   return (line: Buffer) => needles.some((needle) => line.includes(needle));
 }

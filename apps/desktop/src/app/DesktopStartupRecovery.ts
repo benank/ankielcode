@@ -44,7 +44,7 @@ const STARTUP_RECOVERY_ACTIONS = ["update", "reinstall", "releases", "copy", "qu
 type StartupRecoveryAction = (typeof STARTUP_RECOVERY_ACTIONS)[number];
 
 /** Prefer a newer build, then the last build that started on this machine, then the releases page. */
-export function resolveStartupRecoveryOffer(
+function resolveStartupRecoveryOffer(
   update: DesktopUpdateState,
   lastStartedVersion: string | null,
 ): StartupRecoveryOffer {

@@ -238,15 +238,8 @@ export function resolveFileDiffPreviousPath(fileDiff: FileDiffMetadata): string 
 }
 
 /** Includes change type to distinguish deletion/addition pairs for file-to-symlink changes. */
-export function buildFileDiffIdentityKey(fileDiff: FileDiffMetadata): string {
+function buildFileDiffIdentityKey(fileDiff: FileDiffMetadata): string {
   return `${resolveFileDiffPreviousPath(fileDiff)}\u0000${resolveFileDiffPath(fileDiff)}\u0000${fileDiff.type}`;
-}
-
-export function buildFileDiffRenderKey(fileDiff: FileDiffMetadata): string {
-  const cacheKey = fileDiff.cacheKey;
-  if (!cacheKey) return `${fileDiff.prevName ?? "none"}:${fileDiff.name}`;
-
-  return cacheKey.endsWith(":hydrated") ? cacheKey.slice(0, -":hydrated".length) : cacheKey;
 }
 
 function hashFileDiffPart(hash: number, value: string | number | boolean | undefined): number {
@@ -256,7 +249,7 @@ function hashFileDiffPart(hash: number, value: string | number | boolean | undef
 }
 
 // Pierre's whole-patch cache key would repaint every file when one changes.
-export function buildFileDiffContentVersion(fileDiff: FileDiffMetadata): number {
+function buildFileDiffContentVersion(fileDiff: FileDiffMetadata): number {
   let hash = FNV_OFFSET_BASIS_32;
   const append = (value: string | number | boolean | undefined) => {
     hash = hashFileDiffPart(hash, value);

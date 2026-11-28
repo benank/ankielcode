@@ -169,7 +169,7 @@ export class UsageService extends Context.Service<
   }
 >()("@ankielcode/server/usage/UsageService") {}
 
-export const make = Effect.gen(function* () {
+const make = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const config = yield* ServerConfig.ServerConfig;

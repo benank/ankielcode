@@ -31,7 +31,7 @@ function nativeWindowHandle(buffer: Buffer): bigint {
   throw new Error(`Unsupported Windows window handle size: ${String(buffer.length)} bytes.`);
 }
 
-export function activateWindowsForegroundWithApi(
+function activateWindowsForegroundWithApi(
   handleBuffer: Buffer,
   api: WindowsForegroundApi,
 ): boolean {

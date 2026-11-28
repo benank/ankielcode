@@ -202,7 +202,10 @@ export function ServerUpdatesAction({
               "Update the Ankiel Code desktop apps on {servers}? They will close and relaunch on those machines.",
               { servers: desktopTargets.map((target) => target.serverLabel).join(", ") },
             ),
-            { initialFocus: "confirm" },
+            {
+              confirmLabel: gt("Update", { $context: "verb, confirms the update" }),
+              destructive: false,
+            },
           )) ?? true;
         if (!confirmed) return;
       }
@@ -324,7 +327,10 @@ export function ServerUpdateAction({
             "Update the Ankiel Code desktop app that runs the {serverLabel}? It will close and relaunch on that machine.",
             { serverLabel },
           ),
-          { initialFocus: "confirm" },
+          {
+            confirmLabel: gt("Update", { $context: "verb, confirms the update" }),
+            destructive: false,
+          },
         )) ?? true;
       if (!confirmed) {
         return;

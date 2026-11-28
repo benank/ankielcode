@@ -1,6 +1,5 @@
 import { msg } from "gt-i18n";
 import { translatableMessage } from "../errors/translatable.ts";
-import type { QueryPersistence } from "./queryPersistence.ts";
 import { createCommandPermissions } from "./commandPermissions.ts";
 import { followStreamInEnvironment } from "./environmentStreams.ts";
 import { reuseUnchanged } from "./serverConfigProjection.ts";
@@ -98,7 +97,6 @@ interface EnvironmentQueryAtomOptions<Input, A, E, R> extends Omit<
     emit: (value: A) => Effect.Effect<void>,
     previous: Option.Option<A>,
   ) => Effect.Effect<A, E, R>;
-  readonly persistence?: QueryPersistence<A>;
   readonly staleTimeMs?: number;
   readonly idleTtlMs?: number;
   readonly refreshIntervalMs?: number;
@@ -409,16 +407,6 @@ export function squashAtomCommandFailure(result: {
   return typeof squashed === "string" ? new Error(squashed) : squashed;
 }
 
-export async function settleAsyncResult<A, E>(
-  execute: () => Promise<Exit.Exit<A, E>>,
-): Promise<SettledAsyncResult<A, E>> {
-  try {
-    return AsyncResult.fromExit(await execute());
-  } catch (defect) {
-    return AsyncResult.failure(Cause.die(defect));
-  }
-}
-
 export interface AtomQueryOptions extends AtomCommandOptions {
   /**
    * Force a fresh execution instead of accepting a value the atom already
@@ -465,7 +453,7 @@ export function executeAtomQuery<A, E>(
 }
 
 /** Runs an effect on the calling fiber with the services of an atom runtime. */
-export const provideAtomRuntime =
+const provideAtomRuntime =
   <R, ER>(registry: AtomRegistry.AtomRegistry, runtime: Atom.AtomRuntime<R, ER>) =>
   <A, E>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | ER> =>
     Effect.scoped(
@@ -528,10 +516,6 @@ export async function settlePromise<A>(
     return AsyncResult.failure(Cause.die(defect));
   }
 }
-
-/** Where a query's answer is persisted, so an action's reply can be saved where a read would be. */
-export const queryPersistenceKey = (label: string, input: unknown): string =>
-  JSON.stringify([label, input]);
 
 function environmentRpcKey<Input>(target: {
   readonly environmentId: EnvironmentIdType;
@@ -870,39 +854,12 @@ export function createEnvironmentQueryAtomFamily<R, ER, Input, A, E>(
           }
         };
         const onAnswer = options.onAnswer;
-        const answer = () =>
-          onAnswer === undefined
-            ? execute().pipe(Effect.map(share))
-            : execute().pipe(
-                Effect.map(share),
-                Effect.tap((value) => onAnswer(target, value, get.registry)),
-              );
-        if (!options.persistence) return answer();
-        const persistence = options.persistence;
-        const cacheKey = queryPersistenceKey(options.label, target.input);
-        const previous = Option.flatMap(
-          get.self<AsyncResult.AsyncResult<A, unknown>>(),
-          AsyncResult.value,
-        );
-        return Effect.gen(function* () {
-          const cached = Option.isSome(previous)
-            ? previous
-            : yield* persistence.load(target.environmentId, cacheKey);
-          if (
-            Option.isSome(cached) &&
-            (connection === null || connection[0].phase !== "connected")
-          ) {
-            return cached.value;
-          }
-          if (Option.isNone(previous) && Option.isSome(cached)) yield* emit(cached.value);
-          // Readers must not wait on the disk: web saves one IndexedDB row per listed PR's stats.
-          // The save ends with the query, so a removed environment's cache stays cleared.
-          return yield* answer().pipe(
-            Effect.tap((value) =>
-              persistence.save(target.environmentId, cacheKey, value).pipe(Effect.forkScoped),
-            ),
-          );
-        });
+        return onAnswer === undefined
+          ? execute().pipe(Effect.map(share))
+          : execute().pipe(
+              Effect.map(share),
+              Effect.tap((value) => onAnswer(target, value, get.registry)),
+            );
       })
       .pipe(Atom.setIdleTTL(idleTtlMs));
     const isFinal = (result: AsyncResult.AsyncResult<A, unknown>) =>
@@ -1029,7 +986,6 @@ export function createEnvironmentRpcQueryAtomFamily<
       EnvironmentRpcFailure<TTag> | EnvironmentRpcUnavailableError,
       EnvironmentSupervisor.EnvironmentSupervisor | EnvironmentRegistry.EnvironmentRegistry
     >;
-    readonly persistence?: QueryPersistence<EnvironmentRpcSuccess<TTag>>;
     readonly staleTimeMs?: number;
     readonly idleTtlMs?: number;
     readonly refreshIntervalMs?: number;
@@ -1043,7 +999,6 @@ export function createEnvironmentRpcQueryAtomFamily<
 ) {
   return createEnvironmentQueryAtomFamily(runtime, {
     label: options.label,
-    ...(options.persistence === undefined ? {} : { persistence: options.persistence }),
     ...(options.staleTimeMs === undefined ? {} : { staleTimeMs: options.staleTimeMs }),
     ...(options.idleTtlMs === undefined ? {} : { idleTtlMs: options.idleTtlMs }),
     ...(options.refreshIntervalMs === undefined
@@ -1169,7 +1124,7 @@ export function createEnvironmentRpcCommand<
       let started: Started | undefined;
       // Routing requires consent on the origin as well as the actual destination.
       // The transport check below deliberately checks the destination again.
-      return permissions.authorize(registry, environmentId, input).pipe(
+      return permissions.authorize(registry, environmentId).pipe(
         Effect.andThen(() => {
           started = options.onStart?.(target, registry);
           return (
@@ -1177,8 +1132,8 @@ export function createEnvironmentRpcCommand<
           );
         }),
         Effect.provideService(RpcPermissionGuard, {
-          authorize: (id, method, payload) =>
-            createCommandPermissions(runtime, method).authorize(registry, id, payload),
+          authorize: (id, method) =>
+            createCommandPermissions(runtime, method).authorize(registry, id),
         }),
         Effect.tap(
           (result) => options.onSuccess?.(target, registry, result, started) ?? Effect.void,

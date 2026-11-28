@@ -94,7 +94,7 @@ const groupExists = (pgid: number) => {
   }
 };
 
-export const make = Effect.fn("OpenCodeServerLedger.make")(function* (input: {
+const make = Effect.fn("OpenCodeServerLedger.make")(function* (input: {
   readonly stateDir: string;
   readonly ownerPid?: number;
 }) {
@@ -310,12 +310,3 @@ export const layer = (input: { readonly stateDir: string }) =>
       return OpenCodeServerLedger.of({ track: ledger.track });
     }),
   );
-
-export const layerTest = Layer.succeed(
-  OpenCodeServerLedger,
-  OpenCodeServerLedger.of({
-    track: Effect.fn("OpenCodeServerLedger.track")(function () {
-      return Effect.succeed(Effect.void);
-    }),
-  }),
-);

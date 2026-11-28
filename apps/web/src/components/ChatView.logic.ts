@@ -46,7 +46,6 @@ import {
   type EnvironmentContextRecord,
   type ResponseContextRecord,
   type ThreadId,
-  type ThreadLinkedPullRequest,
   type RunId,
   type WorktreeSetupSnapshot,
 } from "@ankielcode/contracts";
@@ -173,17 +172,9 @@ export function shouldRenderPreviewMiniPlayer(
   );
 }
 
-export function shouldOpenProactivePullRequest(
-  previousTargetKey: string | null | undefined,
-  targetKey: string | null,
-): boolean {
-  return targetKey !== null && targetKey !== previousTargetKey;
-}
-
 interface ProactivePanelObservation {
   threadKey: string;
   runningTurnId: RunId | null | undefined;
-  targetKey: string | null | undefined;
   userActionTurnId: RunId | null;
   userActionRevision: number;
 }
@@ -198,28 +189,10 @@ export function observeProactivePanelUserChoice(
   return {
     threadKey: input.threadKey,
     runningTurnId: sameThread ? previous.runningTurnId : undefined,
-    targetKey: sameThread ? previous.targetKey : undefined,
     userActionTurnId: input.runningTurnId ?? (sameThread ? previous.userActionTurnId : null),
     userActionRevision:
       !sameThread || newTurn ? input.userActionRevision : previous.userActionRevision,
   };
-}
-
-export function shouldRetargetThreadPullRequestPanel(
-  previous: ThreadLinkedPullRequest | null,
-  current: ThreadLinkedPullRequest | null,
-  surface: RightPanelSurface | null,
-): boolean {
-  if (previous === null || current === null || surface?.kind !== "pull-request") return false;
-  const previousRepository = previous.repository.toLowerCase();
-  return (
-    (previous.projectId !== current.projectId ||
-      previousRepository !== current.repository.toLowerCase() ||
-      previous.number !== current.number) &&
-    surface.projectId === previous.projectId &&
-    surface.repository.toLowerCase() === previousRepository &&
-    surface.number === previous.number
-  );
 }
 
 export function shouldOpenProactiveTurnDiff(input: {
@@ -392,11 +365,6 @@ export function peekRememberedThreadTimeline<T extends readonly unknown[]>(
     return null;
   }
   return (rememberedThreadTimelines.get(threadKey)?.entries as T | undefined) ?? null;
-}
-
-export function resetHeldThreadTimeline(): void {
-  rememberedThreadTimelines = new Map();
-  rememberedThreadTimelineOrder = [];
 }
 
 export function resolveThreadSwitchTimeline<T extends readonly unknown[]>(input: {
@@ -1670,7 +1638,6 @@ export function deriveThreadPendingBackgroundTasks(projection: ThreadStructure |
       activeProviderThreadId: projection.thread.activeProviderThreadId,
       hasActiveRun: false,
       runs: projection.runs,
-      pullRequests: projection.thread.pullRequests,
     }),
   ];
 }

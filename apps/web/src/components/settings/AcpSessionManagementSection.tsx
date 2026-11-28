@@ -269,7 +269,7 @@ function InstanceSessionManagement(
       gt('Permanently delete native ACP session "{session}"?', {
         session: session.title ?? session.sessionId,
       }),
-      { variant: "destructive" },
+      { confirmLabel: gt("Delete", { $context: "verb, deletes a session" }), destructive: true },
     );
     if (
       generation !== projectGeneration.current ||
@@ -373,6 +373,7 @@ function InstanceSessionManagement(
       return;
     const confirmed = await ensureLocalApi().dialogs.confirm(
       gt('Disable ACP provider "{provider}"?', { provider: provider.providerId }),
+      { confirmLabel: gt("Disable"), destructive: false },
     );
     if (
       generation !== projectGeneration.current ||

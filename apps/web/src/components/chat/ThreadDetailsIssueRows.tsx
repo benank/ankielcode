@@ -10,6 +10,7 @@ import { useState, type MouseEvent } from "react";
 
 import { cn } from "~/lib/utils";
 import { useRightPanelStore } from "~/rightPanelStore";
+import { contextMenuSourceOf } from "~/contextMenuSource";
 import { useServerConfigs } from "~/state/entities";
 import { useLinkedIssueDetail } from "~/state/issues";
 
@@ -23,6 +24,7 @@ import {
   PULL_REQUEST_ROW_NUMBER_CLASS,
   PullRequestRowLines,
 } from "../pullRequest/PullRequestListRow";
+import { showPullRequestLinkContextMenu } from "../pullRequest/pullRequestLinkContextMenu";
 import { PullRequestActorLabel } from "../pullRequest/pullRequestPresentation";
 import { ThreadDetailsControl, ThreadDetailsMoreButton } from "./ThreadDetailsControl";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
@@ -47,6 +49,10 @@ function LinkedIssueRow({
   const state = detail === null ? null : issueStatePresentation(detail.state);
   const Icon = state?.Icon ?? IssueGlyph.issue;
   const title = detail?.title ?? link.title;
+  const openInApp = () => {
+    useRightPanelStore.getState().openIssue(threadRef, link);
+    onOpen?.();
+  };
   const anchorProps = {
     href: link.url,
     target: "_blank",
@@ -57,8 +63,25 @@ function LinkedIssueRow({
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       if (configs.get(threadRef.environmentId)?.environment.capabilities.issues !== true) return;
       event.preventDefault();
-      useRightPanelStore.getState().openIssue(threadRef, link);
-      onOpen?.();
+      openInApp();
+    },
+    onContextMenu: (event: MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const canOpen =
+        configs.get(threadRef.environmentId)?.environment.capabilities.issues === true;
+      void showPullRequestLinkContextMenu({
+        url: link.url,
+        openLabel: gt("Open on {provider}", { provider: trackerPresentation.providerName }),
+        open: canOpen
+          ? {
+              label: gt("Open issue", { $context: "verb, opens the issue in the app" }),
+              run: openInApp,
+            }
+          : undefined,
+        position: { x: event.clientX, y: event.clientY },
+        source: contextMenuSourceOf(event),
+      });
     },
   };
   const glyph = (

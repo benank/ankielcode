@@ -11,11 +11,7 @@ import {
   IssueInvolvement,
   IssueListSort,
   IssueListState,
-  PullRequestInvolvement,
-  PullRequestListFilters,
-  PullRequestListState,
   type ProviderInstanceId,
-  PullRequestMergeMethod,
   PushAlertKind,
   type SidebarProjectGroupingMode,
 } from "@ankielcode/contracts";
@@ -32,25 +28,6 @@ import { MobileStorageDecodeError, MobileStorageEncodeError } from "./mobile-sto
 const PREFERENCES_KEY = "ankielcode.preferences";
 const PREFERENCES_FALLBACK_KEY = "ankielcode.preferences.fallback";
 const encodeJson = Schema.encodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
-
-export const PullRequestListControls = Schema.Struct({
-  state: PullRequestListState,
-  involvement: PullRequestInvolvement,
-  filters: PullRequestListFilters,
-  projectId: Schema.optional(Schema.String),
-  projectEnvironmentId: Schema.optional(Schema.String),
-  sort: Schema.Literals(["updated", "created", "oldest"]),
-});
-export type PullRequestListControls = typeof PullRequestListControls.Type;
-
-export const PullRequestSavedView = Schema.Struct({
-  ...SavedViewIdentity.fields,
-  environmentId: Schema.NullOr(Schema.String),
-  controls: PullRequestListControls,
-  query: Schema.String,
-});
-export type PullRequestSavedView = typeof PullRequestSavedView.Type;
-const isPullRequestSavedView = Schema.is(PullRequestSavedView);
 
 export const IssueSavedView = Schema.Struct({
   ...SavedViewIdentity.fields,
@@ -72,12 +49,6 @@ const ThreadListFilters = Schema.Struct({
 });
 export type ThreadListFilters = typeof ThreadListFilters.Type;
 
-const PullRequestListPreferences = Schema.Struct({
-  environmentId: Schema.NullOr(Schema.String),
-  controls: Schema.Record(Schema.String, PullRequestListControls),
-});
-export type PullRequestListPreferences = typeof PullRequestListPreferences.Type;
-
 /**
  * The page each workspace tab last showed, reopened when the tab returns with columns. `key` is
  * that page's route key: reopening under the same key reuses the screen a tab kept mounted.
@@ -87,16 +58,6 @@ const WorkspaceSelections = Schema.Struct({
     Schema.Struct({
       environmentId: Schema.String,
       threadId: Schema.String,
-      key: Schema.optional(Schema.String),
-    }),
-  ),
-  pullRequests: Schema.optional(
-    Schema.Struct({
-      environmentId: Schema.String,
-      projectId: Schema.String,
-      repository: Schema.String,
-      number: Schema.Number,
-      host: Schema.optional(Schema.String),
       key: Schema.optional(Schema.String),
     }),
   ),
@@ -118,16 +79,11 @@ const WorkspaceSelections = Schema.Struct({
 });
 export type WorkspaceSelections = typeof WorkspaceSelections.Type;
 
-const PullRequestActivityVisibility = Schema.Struct({
-  bots: Schema.Boolean,
-  resolved: Schema.Boolean,
-});
-export type PullRequestActivityVisibility = typeof PullRequestActivityVisibility.Type;
-
 const isThreadListFilters = Schema.is(ThreadListFilters);
-const isPullRequestActivityVisibility = Schema.is(PullRequestActivityVisibility);
+// Older builds had a pull requests tab; dropping it here keeps it out of saved order and visibility.
+const isSavedNavigationTab = (tab: unknown): tab is string =>
+  typeof tab === "string" && tab !== "pullRequests";
 const isWorkspaceSelections = Schema.is(WorkspaceSelections);
-const isPullRequestListPreferences = Schema.is(PullRequestListPreferences);
 const ThreadProject = Schema.Struct({
   environmentId: Schema.NonEmptyString,
   projectId: Schema.NonEmptyString,
@@ -137,13 +93,8 @@ const isThreadProject = Schema.is(ThreadProject);
 export interface Preferences {
   readonly navigationTabOrder?: readonly string[];
   readonly hiddenNavigationTabs?: readonly string[];
-  /** Whether pull requests or issues last held the tab bar slot they share. */
-  readonly sharedSlotTab?: "pullRequests" | "issues";
-  readonly pullRequestTabEnabled?: boolean;
+  /** Whether diffs hide test files. Named for the pull request review it started in. */
   readonly pullRequestHideTestFiles?: boolean;
-  /** Which hidden-by-default PR activity is shown: bot comments and resolved or dismissed ones. */
-  readonly pullRequestActivityVisibility?: PullRequestActivityVisibility;
-  readonly pullRequestMergeMethod?: PullRequestMergeMethod;
   readonly themeId?: MobileThemeId;
   readonly lightThemeId?: MobileThemeId;
   readonly darkThemeId?: MobileThemeId;
@@ -183,9 +134,7 @@ export interface Preferences {
   readonly threadListSnoozedShelfExpanded?: boolean;
   readonly threadListWorkingShelfExpanded?: boolean;
   readonly threadListFilters?: ThreadListFilters;
-  readonly pullRequestListFilters?: PullRequestListPreferences;
   readonly workspaceSelections?: WorkspaceSelections;
-  readonly pullRequestSavedViews?: ReadonlyArray<PullRequestSavedView>;
   readonly issueSavedViews?: ReadonlyArray<IssueSavedView>;
 }
 
@@ -230,17 +179,12 @@ export class MobilePreferencesStore extends Context.Service<
 
 const isToolCallVisibility = Schema.is(ToolCallVisibility);
 const isPushAlertKind = Schema.is(PushAlertKind);
-const isPullRequestMergeMethod = Schema.is(PullRequestMergeMethod);
 
 function sanitizePreferences(parsed: Preferences): Preferences {
   const preferences: {
     navigationTabOrder?: readonly string[];
     hiddenNavigationTabs?: readonly string[];
-    sharedSlotTab?: "pullRequests" | "issues";
-    pullRequestTabEnabled?: boolean;
     pullRequestHideTestFiles?: boolean;
-    pullRequestActivityVisibility?: PullRequestActivityVisibility;
-    pullRequestMergeMethod?: PullRequestMergeMethod;
     themeId?: MobileThemeId;
     lightThemeId?: MobileThemeId;
     darkThemeId?: MobileThemeId;
@@ -272,42 +216,20 @@ function sanitizePreferences(parsed: Preferences): Preferences {
     threadListSnoozedShelfExpanded?: boolean;
     threadListWorkingShelfExpanded?: boolean;
     threadListFilters?: ThreadListFilters;
-    pullRequestListFilters?: PullRequestListPreferences;
     workspaceSelections?: WorkspaceSelections;
-    pullRequestSavedViews?: ReadonlyArray<PullRequestSavedView>;
     issueSavedViews?: ReadonlyArray<IssueSavedView>;
   } = {};
 
   if (Array.isArray(parsed.hiddenNavigationTabs)) {
-    preferences.hiddenNavigationTabs = parsed.hiddenNavigationTabs.filter(
-      (tab): tab is string => typeof tab === "string",
-    );
+    preferences.hiddenNavigationTabs = parsed.hiddenNavigationTabs.filter(isSavedNavigationTab);
   }
 
   if (Array.isArray(parsed.navigationTabOrder)) {
-    preferences.navigationTabOrder = parsed.navigationTabOrder.filter(
-      (tab): tab is string => typeof tab === "string",
-    );
-  }
-
-  if (parsed.sharedSlotTab === "pullRequests" || parsed.sharedSlotTab === "issues") {
-    preferences.sharedSlotTab = parsed.sharedSlotTab;
-  }
-
-  if (typeof parsed.pullRequestTabEnabled === "boolean") {
-    preferences.pullRequestTabEnabled = parsed.pullRequestTabEnabled;
+    preferences.navigationTabOrder = parsed.navigationTabOrder.filter(isSavedNavigationTab);
   }
 
   if (typeof parsed.pullRequestHideTestFiles === "boolean") {
     preferences.pullRequestHideTestFiles = parsed.pullRequestHideTestFiles;
-  }
-
-  if (isPullRequestActivityVisibility(parsed.pullRequestActivityVisibility)) {
-    preferences.pullRequestActivityVisibility = parsed.pullRequestActivityVisibility;
-  }
-
-  if (isPullRequestMergeMethod(parsed.pullRequestMergeMethod)) {
-    preferences.pullRequestMergeMethod = parsed.pullRequestMergeMethod;
   }
 
   if (
@@ -431,14 +353,12 @@ function sanitizePreferences(parsed: Preferences): Preferences {
   if (isThreadListFilters(parsed.threadListFilters)) {
     preferences.threadListFilters = parsed.threadListFilters;
   }
-  if (isPullRequestListPreferences(parsed.pullRequestListFilters)) {
-    preferences.pullRequestListFilters = parsed.pullRequestListFilters;
-  }
   if (isWorkspaceSelections(parsed.workspaceSelections)) {
-    preferences.workspaceSelections = parsed.workspaceSelections;
-  }
-  if (Array.isArray(parsed.pullRequestSavedViews)) {
-    preferences.pullRequestSavedViews = parsed.pullRequestSavedViews.filter(isPullRequestSavedView);
+    // Older builds also remembered a pull request page, which no longer exists.
+    const { pullRequests: _retired, ...selections } = parsed.workspaceSelections as {
+      readonly pullRequests?: unknown;
+    } & WorkspaceSelections;
+    preferences.workspaceSelections = selections;
   }
   if (Array.isArray(parsed.issueSavedViews)) {
     preferences.issueSavedViews = parsed.issueSavedViews.filter(isIssueSavedView);

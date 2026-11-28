@@ -24,7 +24,6 @@ import * as ProjectEnrichment from "../project/ProjectEnrichmentService.ts";
 import * as ProjectFaviconResolver from "../project/ProjectFaviconResolver.ts";
 import * as ProjectService from "../project/ProjectService.ts";
 import * as RepositoryIdentityResolver from "../project/RepositoryIdentityResolver.ts";
-import * as PullRequestService from "../pullRequest/PullRequestService.ts";
 import * as VcsStatusBroadcaster from "../vcs/VcsStatusBroadcaster.ts";
 import * as WorkspaceEntries from "../workspace/WorkspaceEntries.ts";
 import * as CheckpointCapture from "./CheckpointCaptureService.ts";
@@ -91,7 +90,6 @@ const finalizationLayer = (
         }),
         Layer.succeed(RunFinalization.RunFinalizationObserver, {
           refresh,
-          refreshAfterTurn: () => Effect.void,
           refreshRepositories: ({ cwds }) =>
             Effect.sync(() => {
               steps.push(`repositories:${cwds.join(",")}`);
@@ -192,9 +190,6 @@ it.effect.each(
       Layer.mergeAll(
         layerNoProject,
         Layer.mock(WorkspaceEntries.WorkspaceEntries)({ refresh: () => Effect.void }),
-        Layer.mock(PullRequestService.PullRequestService)({
-          refreshAfterTurn: () => Effect.void,
-        }),
         Layer.mock(VcsStatusBroadcaster.VcsStatusBroadcaster)({
           refreshLocalStatus: () =>
             Effect.succeed({
@@ -205,10 +200,9 @@ it.effect.each(
               hasWorkingTreeChanges: false,
               workingTree: { files: [], insertions: 0, deletions: 0 },
             }),
-          refreshStatus: () =>
-            Effect.die("turn completion must preserve known PRs and lookup backoff"),
+          refreshStatus: () => Effect.die("turn completion must not run a full status refresh"),
           // Requested synchronously by refresh; the lookup itself runs in the background.
-          refreshPullRequestStatus: (cwd) => {
+          refreshRemoteStatusAfterTurn: (cwd) => {
             refreshed.push(cwd);
             return Deferred.succeed(lookedUp, undefined).pipe(Effect.as(null));
           },
@@ -232,7 +226,7 @@ it.effect.each(
   }).pipe(Effect.provide(layer));
 });
 
-it.effect("returns from the post-turn refresh without waiting for the PR lookup", () => {
+it.effect("returns from the post-turn refresh without waiting for the remote status read", () => {
   const threadId = ThreadId.make("thread-slow-forge");
   const runId = RunId.make("completed-run");
   const layer = RunFinalization.layerObserver.pipe(
@@ -240,9 +234,6 @@ it.effect("returns from the post-turn refresh without waiting for the PR lookup"
       Layer.mergeAll(
         layerNoProject,
         Layer.mock(WorkspaceEntries.WorkspaceEntries)({ refresh: () => Effect.void }),
-        Layer.mock(PullRequestService.PullRequestService)({
-          refreshAfterTurn: () => Effect.void,
-        }),
         Layer.mock(VcsStatusBroadcaster.VcsStatusBroadcaster)({
           refreshLocalStatus: () =>
             Effect.succeed({
@@ -253,7 +244,7 @@ it.effect("returns from the post-turn refresh without waiting for the PR lookup"
               hasWorkingTreeChanges: false,
               workingTree: { files: [], insertions: 0, deletions: 0 },
             }),
-          refreshPullRequestStatus: () => Effect.never,
+          refreshRemoteStatusAfterTurn: () => Effect.never,
         }),
         Layer.mock(ProjectionStore.ProjectionStoreV2)({
           getThreadShell: () =>
@@ -275,12 +266,12 @@ it.effect("returns from the post-turn refresh without waiting for the PR lookup"
     const result = yield* Fiber.join(refresh);
     assert.isTrue(
       Option.isSome(result),
-      "turn finalization waited on the forge PR lookup, blocking the thread's next turn",
+      "turn finalization waited on the remote status read, blocking the thread's next turn",
     );
   }).pipe(Effect.provide(layer));
 });
 
-it.effect("replaces a still-running PR lookup when a newer turn finishes", () => {
+it.effect("replaces a still-running remote status read when a newer turn finishes", () => {
   const threadId = ThreadId.make("thread-back-to-back");
   const runId = RunId.make("completed-run");
   const firstInterrupted = Deferred.makeUnsafe<void>();
@@ -291,9 +282,6 @@ it.effect("replaces a still-running PR lookup when a newer turn finishes", () =>
       Layer.mergeAll(
         layerNoProject,
         Layer.mock(WorkspaceEntries.WorkspaceEntries)({ refresh: () => Effect.void }),
-        Layer.mock(PullRequestService.PullRequestService)({
-          refreshAfterTurn: () => Effect.void,
-        }),
         Layer.mock(VcsStatusBroadcaster.VcsStatusBroadcaster)({
           refreshLocalStatus: () =>
             Effect.succeed({
@@ -304,7 +292,7 @@ it.effect("replaces a still-running PR lookup when a newer turn finishes", () =>
               hasWorkingTreeChanges: false,
               workingTree: { files: [], insertions: 0, deletions: 0 },
             }),
-          refreshPullRequestStatus: () =>
+          refreshRemoteStatusAfterTurn: () =>
             ++lookups === 1
               ? Effect.never.pipe(
                   Effect.onInterrupt(() => Deferred.succeed(firstInterrupted, undefined)),
@@ -355,7 +343,6 @@ const layerIdentityRefresh = <R>(
           ),
         ),
         Layer.mock(WorkspaceEntries.WorkspaceEntries)({ refresh: () => Effect.void }),
-        Layer.mock(PullRequestService.PullRequestService)({ refreshAfterTurn: () => Effect.void }),
         Layer.mock(VcsStatusBroadcaster.VcsStatusBroadcaster)({
           refreshLocalStatus: () =>
             Effect.succeed({

@@ -13,9 +13,12 @@ import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 
 import * as Electron from "electron";
-import { msg } from "gt-i18n";
 
-import { type DesktopSnapShotEvent, DEFAULT_CLIENT_SETTINGS } from "@ankielcode/contracts";
+import {
+  type DesktopSnapShotEvent,
+  type DesktopWindowBackground,
+  DEFAULT_CLIENT_SETTINGS,
+} from "@ankielcode/contracts";
 
 import * as DesktopAssets from "../app/DesktopAssets.ts";
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
@@ -44,11 +47,12 @@ import * as PreviewPasskeys from "../preview/Passkeys.ts";
 import * as DesktopAppSettings from "../settings/DesktopAppSettings.ts";
 import * as DesktopClientSettings from "../settings/DesktopClientSettings.ts";
 import * as ElectronApp from "../electron/ElectronApp.ts";
-import { m } from "../i18n/messages.ts";
 import * as DesktopRendererHistory from "../telemetry/DesktopRendererHistory.ts";
 import { makeQuitShortcutHandler } from "./QuitHold.ts";
 import { copyContextMenuImage } from "./ContextMenuImage.ts";
+import { buildNativeContextMenuTemplate } from "./NativeContextMenu.ts";
 import { installMainWindowRemoteRequestHeaderPolicy } from "./RemoteRequestHeaders.ts";
+import { makeUnresponsivePrompt, unresponsiveDialogOptions } from "./UnresponsiveDialog.ts";
 
 const TITLEBAR_HEIGHT = 40;
 
@@ -63,21 +67,6 @@ class ContextMenuImageCopyError extends Schema.TaggedError<ContextMenuImageCopyE
 // Match --workspace-topbar-height in apps/web/src/index.css; native macOS buttons stay 14 points at any zoom.
 const MACOS_WORKSPACE_TOPBAR_HEIGHT = 52;
 const MACOS_WINDOW_BUTTON_RADIUS = 7;
-
-function parseMailtoAddress(rawUrl: string): Option.Option<string> {
-  let url: URL;
-  try {
-    url = new URL(rawUrl);
-  } catch {
-    return Option.none();
-  }
-  if (url.protocol !== "mailto:" || url.pathname === "") return Option.none();
-  try {
-    return Option.some(decodeURIComponent(url.pathname));
-  } catch {
-    return Option.some(url.pathname);
-  }
-}
 
 function syncMacosWindowButtons(window: Electron.BrowserWindow): void {
   if (window.isDestroyed() || window.isFullScreen()) return;
@@ -150,6 +139,7 @@ export class DesktopWindow extends Context.Service<
     readonly zoomMain: (direction: MainWindowZoomDirection) => Effect.Effect<void>;
     readonly runMainContentsCommand: (command: MainWindowContentsCommand) => Effect.Effect<void>;
     readonly syncAppearance: Effect.Effect<void>;
+    readonly setBackground: (background: DesktopWindowBackground) => Effect.Effect<void>;
   }
 >()("@ankielcode/desktop/window/DesktopWindow") {}
 
@@ -171,6 +161,20 @@ function getIconOption(
 function getInitialWindowBackgroundColor(shouldUseDarkColors: boolean): string {
   return (shouldUseDarkColors ? ANKIEL_CODE_DARK_THEME_COLORS : ANKIEL_CODE_LIGHT_THEME_COLORS)
     .canvas;
+}
+
+/**
+ * The colour the renderer last painted, so a window opens in the user's theme. A colour that
+ * followed the system is dropped once the system appearance no longer matches it.
+ */
+function resolveWindowBackground(
+  stored: DesktopWindowBackground | null,
+  shouldUseDarkColors: boolean,
+): { readonly color: string; readonly dark: boolean } {
+  if (stored !== null && (!stored.followsSystem || stored.dark === shouldUseDarkColors)) {
+    return { color: stored.color, dark: stored.dark };
+  }
+  return { color: getInitialWindowBackgroundColor(shouldUseDarkColors), dark: shouldUseDarkColors };
 }
 
 type DisplayBounds = Pick<Electron.Rectangle, "x" | "y" | "width" | "height">;
@@ -255,7 +259,7 @@ function windowBoundsEqual(
   );
 }
 
-export function resolveInitialMainWindowBounds(
+function resolveInitialMainWindowBounds(
   persistedBounds: DesktopAppSettings.DesktopWindowBounds | null,
   displays: readonly DisplayBounds[],
 ): DesktopAppSettings.DesktopWindowBounds | typeof DesktopAppSettings.DEFAULT_MAIN_WINDOW_SIZE {
@@ -268,16 +272,21 @@ export function resolveInitialMainWindowBounds(
   return DesktopAppSettings.DEFAULT_MAIN_WINDOW_SIZE;
 }
 
-function buildConnectingSplashDataUrl(shouldUseDarkColors: boolean): string {
-  const background = getInitialWindowBackgroundColor(shouldUseDarkColors);
-  const label = shouldUseDarkColors ? "#9ca3af" : "#6b7280";
-  const accent = shouldUseDarkColors ? "#f8fafc" : "#1f2937";
-  const track = shouldUseDarkColors ? "rgba(248,250,252,0.18)" : "rgba(31,41,55,0.18)";
+function buildConnectingSplashDataUrl({
+  color: background,
+  dark,
+}: {
+  readonly color: string;
+  readonly dark: boolean;
+}): string {
+  const label = dark ? "#9ca3af" : "#6b7280";
+  const accent = dark ? "#f8fafc" : "#1f2937";
+  const track = dark ? "rgba(248,250,252,0.18)" : "rgba(31,41,55,0.18)";
   const html = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><style>html,body{margin:0;height:100%}body{background:${background};color:${label};font-family:system-ui,-apple-system,'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;-webkit-user-select:none;user-select:none;-webkit-app-region:drag}.spinner{width:26px;height:26px;border:3px solid ${track};border-top-color:${accent};border-radius:50%;animation:spin .8s linear infinite}.label{font-size:13px}@keyframes spin{to{transform:rotate(360deg)}}</style></head><body><div class="spinner"></div><div class="label">Connecting to WSL…</div></body></html>`;
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
 }
 
-export function isSameOriginRendererNavigation(input: {
+function isSameOriginRendererNavigation(input: {
   readonly applicationUrl: string;
   readonly navigationUrl: string;
 }): boolean {
@@ -353,6 +362,7 @@ function syncWindowAppearance(
   window: Electron.BrowserWindow,
   hasTitleBarOverlay: boolean,
   shouldUseDarkColors: boolean,
+  backgroundColor: string,
   platform: NodeJS.Platform,
 ): Effect.Effect<void> {
   return Effect.sync(() => {
@@ -360,7 +370,7 @@ function syncWindowAppearance(
       return;
     }
 
-    window.setBackgroundColor(getInitialWindowBackgroundColor(shouldUseDarkColors));
+    window.setBackgroundColor(backgroundColor);
     const { titleBarOverlay } = getWindowTitleBarOptions(shouldUseDarkColors, platform);
     if (hasTitleBarOverlay && typeof titleBarOverlay === "object") {
       window.setTitleBarOverlay(titleBarOverlay);
@@ -490,7 +500,10 @@ export const make = Effect.gen(function* () {
       show: false,
       autoHideMenuBar: true,
       ...(environment.platform === "darwin" ? { disableAutoHideCursor: true } : {}),
-      backgroundColor: getInitialWindowBackgroundColor(shouldUseDarkColors),
+      backgroundColor: resolveWindowBackground(
+        persistedSettings.windowBackground,
+        shouldUseDarkColors,
+      ).color,
       ...iconOption,
       title: environment.displayName,
       ...getWindowTitleBarOptions(shouldUseDarkColors, environment.platform),
@@ -668,97 +681,43 @@ export const make = Effect.gen(function* () {
         // Right-clicking a guest may leave native editing roles targeting the host renderer.
         contents.focus();
 
-        const menuTemplate: Electron.MenuItemConstructorOptions[] = [];
-
-        if (isBrowserContents) {
-          menuTemplate.push(
-            {
-              label: m(msg("Reload")),
-              click: () => {
-                if (!contents.isDestroyed()) contents.reload();
-              },
-            },
-            { type: "separator" },
-          );
-        }
-
-        if (params.misspelledWord) {
-          for (const suggestion of params.dictionarySuggestions.slice(0, 5)) {
-            menuTemplate.push({
-              label: suggestion,
-              click: () => {
-                if (!contents.isDestroyed()) contents.replaceMisspelling(suggestion);
-              },
-            });
-          }
-          if (params.dictionarySuggestions.length === 0) {
-            menuTemplate.push({ label: m(msg("No suggestions")), enabled: false });
-          }
-          menuTemplate.push({ type: "separator" });
-        }
-
-        if (Option.isSome(ElectronShell.parseSafeExternalUrl(params.linkURL))) {
-          menuTemplate.push(
-            {
-              label: m(msg("Copy Link")),
-              click: () => {
-                void runPromise(electronShell.copyText(params.linkURL));
-              },
-            },
-            { type: "separator" },
-          );
-        }
-
-        const mailtoAddress = parseMailtoAddress(params.linkURL);
-        if (Option.isSome(mailtoAddress)) {
-          menuTemplate.push(
-            {
-              label: m(msg("Copy Email Address")),
-              click: () => {
-                void runPromise(electronShell.copyText(mailtoAddress.value));
-              },
-            },
-            { type: "separator" },
-          );
-        }
-
-        if (params.mediaType === "image") {
-          menuTemplate.push({
-            label: m(msg("Copy Image")),
-            click: () => {
-              void runPromise(
-                Effect.tryPromise({
-                  try: () => copyContextMenuImage(contents, params),
-                  catch: (cause) => new ContextMenuImageCopyError({ cause }),
-                }).pipe(Effect.catch(() => logWindowWarning("failed to copy context-menu image"))),
-              );
-            },
-          });
-          menuTemplate.push({ type: "separator" });
-        }
-
-        menuTemplate.push(
-          {
-            role: "cut",
-            label: m(msg("Cut", { $context: "Edit menu item" })),
-            enabled: params.editFlags.canCut,
-          },
-          {
-            role: "copy",
-            label: m(msg("Copy", { $context: "Edit menu item" })),
-            enabled: params.editFlags.canCopy,
-          },
-          {
-            role: "paste",
-            label: m(msg("Paste", { $context: "Edit menu item" })),
-            enabled: params.editFlags.canPaste,
-          },
-          {
-            role: "selectAll",
-            label: m(msg("Select All", { $context: "Edit menu item" })),
-            enabled: params.editFlags.canSelectAll,
+        const menuTemplate = buildNativeContextMenuTemplate(
+          { params, platform: environment.platform, isBrowserContents },
+          (action) => {
+            if (contents.isDestroyed()) return;
+            switch (action.type) {
+              case "reload":
+                contents.reload();
+                return;
+              case "replace-misspelling":
+                contents.replaceMisspelling(action.word);
+                return;
+              case "learn-spelling":
+                contents.session.addWordToSpellCheckerDictionary(action.word);
+                return;
+              case "look-up":
+                contents.showDefinitionForSelection();
+                return;
+              case "open-link":
+                void runPromise(electronShell.openExternal(action.url));
+                return;
+              case "copy-text":
+                void runPromise(electronShell.copyText(action.text));
+                return;
+              case "copy-image":
+                void runPromise(
+                  Effect.tryPromise({
+                    try: () => copyContextMenuImage(contents, params),
+                    catch: (cause) => new ContextMenuImageCopyError({ cause }),
+                  }).pipe(
+                    Effect.catch(() => logWindowWarning("failed to copy context-menu image")),
+                  ),
+                );
+                return;
+            }
           },
         );
+        if (menuTemplate.length === 0) return;
 
         void runPromise(
           electronMenu.popupTemplate({
@@ -833,7 +792,8 @@ export const make = Effect.gen(function* () {
     window.webContents.on("before-input-event", (event, input) => {
       quitShortcutHandler(event, input);
       if (window.isDestroyed()) return;
-      // Cmd/Ctrl+W reaches the renderer; DevTools uses the native menu shortcut.
+      // Cmd/Ctrl+W reaches the renderer, which asks to close the window when nothing claims it.
+      // DevTools uses the native menu shortcut.
       window.webContents.setIgnoreMenuShortcuts(
         (environment.platform === "darwin" ? input.meta : input.control) &&
           !input.alt &&
@@ -989,7 +949,25 @@ export const make = Effect.gen(function* () {
         );
       },
     );
+    // A renderer paused at a breakpoint also stops responding; main cannot tell that apart from a
+    // hang, so open DevTools (and every dev build) skip the prompt.
+    const hangPrompt = makeUnresponsivePrompt({
+      show: (signal) => Electron.dialog.showMessageBox(window, unresponsiveDialogOptions(signal)),
+      // A plain reload can land in the hung process; the render-process-gone handler reloads.
+      reload: () => {
+        if (!window.isDestroyed()) window.webContents.forcefullyCrashRenderer();
+      },
+    });
+    if (!environment.isDevelopment) {
+      window.on("unresponsive", () => {
+        if (!window.isDestroyed() && !window.webContents.isDevToolsOpened()) {
+          hangPrompt.unresponsive();
+        }
+      });
+      window.on("responsive", hangPrompt.dismiss);
+    }
     window.webContents.on("render-process-gone", (_event, details) => {
+      hangPrompt.dismiss();
       const recoverable =
         details.reason === "crashed" ||
         details.reason === "oom" ||
@@ -1083,6 +1061,7 @@ export const make = Effect.gen(function* () {
     }
 
     window.on("closed", () => {
+      hangPrompt.dismiss();
       if (!backendHasStarted) mainClosedDuringStartup = true;
       clearDevelopmentLoadRetry();
       clearBoundsPersist();
@@ -1144,7 +1123,10 @@ export const make = Effect.gen(function* () {
     const existingWindow = yield* electronWindow.currentMainOrFirst;
     if (Option.isSome(existingWindow)) return;
 
-    const shouldUseDarkColors = yield* electronTheme.shouldUseDarkColors;
+    const background = resolveWindowBackground(
+      (yield* desktopSettings.get).windowBackground,
+      yield* electronTheme.shouldUseDarkColors,
+    );
     if (yield* Ref.get(desktopState.quitting)) return;
     const splash = yield* electronWindow.create({
       width: 360,
@@ -1157,7 +1139,7 @@ export const make = Effect.gen(function* () {
       center: true,
       show: false,
       skipTaskbar: false,
-      backgroundColor: getInitialWindowBackgroundColor(shouldUseDarkColors),
+      backgroundColor: background.color,
       title: environment.displayName,
       webPreferences: {
         contextIsolation: true,
@@ -1179,7 +1161,7 @@ export const make = Effect.gen(function* () {
         splash.show();
       }
     });
-    void splash.loadURL(buildConnectingSplashDataUrl(shouldUseDarkColors));
+    void splash.loadURL(buildConnectingSplashDataUrl(background));
     yield* logWindowInfo("connecting splash shown");
   }).pipe(
     Effect.catch((error) =>
@@ -1213,6 +1195,23 @@ export const make = Effect.gen(function* () {
     }
     yield* dispatch;
   });
+
+  const syncAppearance = Effect.gen(function* () {
+    const shouldUseDarkColors = yield* electronTheme.shouldUseDarkColors;
+    const background = resolveWindowBackground(
+      (yield* desktopSettings.get).windowBackground,
+      shouldUseDarkColors,
+    );
+    yield* electronWindow.syncAllAppearance((window, { titleBarOverlay }) =>
+      syncWindowAppearance(
+        window,
+        titleBarOverlay,
+        shouldUseDarkColors,
+        background.color,
+        environment.platform,
+      ),
+    );
+  }).pipe(Effect.withSpan("desktop.window.syncAppearance"));
 
   return DesktopWindow.of({
     createMain: createMain.pipe(Effect.flatMap(requireWindow)),
@@ -1290,12 +1289,17 @@ export const make = Effect.gen(function* () {
       else if (command === "forceReload") webContents.reloadIgnoringCache();
       else webContents.toggleDevTools();
     }),
-    syncAppearance: Effect.gen(function* () {
-      const shouldUseDarkColors = yield* electronTheme.shouldUseDarkColors;
-      yield* electronWindow.syncAllAppearance((window, { titleBarOverlay }) =>
-        syncWindowAppearance(window, titleBarOverlay, shouldUseDarkColors, environment.platform),
-      );
-    }).pipe(Effect.withSpan("desktop.window.syncAppearance")),
+    syncAppearance,
+    setBackground: Effect.fn("desktop.window.setBackground")(function* (background) {
+      yield* desktopSettings
+        .setWindowBackground(background)
+        .pipe(
+          Effect.catch((error) =>
+            logWindowWarning("failed to save the window background", { message: error.message }),
+          ),
+        );
+      yield* syncAppearance;
+    }),
   });
 });
 

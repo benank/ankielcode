@@ -8,7 +8,6 @@ import {
   type ProjectEntry,
   type ProviderDriverKind,
   type ProviderInstanceId,
-  type PullRequestContextMetadata,
   type ScopedThreadRef,
   type ServerProviderSkill,
   type ServerProviderSlashCommand,
@@ -26,14 +25,12 @@ import { msg, useGT, useMessages } from "gt-react";
 import { memo, useLayoutEffect, useRef, useState } from "react";
 
 import { type ComposerSlashCommand, type ComposerTriggerKind } from "../../composer-logic";
-import { cn } from "~/lib/utils";
 import { Badge } from "../ui/badge";
 import { Command, CommandGroup, CommandItem, CommandList } from "../ui/command";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { PierreEntryIcon } from "./PierreEntryIcon";
 import { ProviderInstanceIcon } from "./ProviderInstanceIcon";
 import { ComposerBanner } from "./ComposerBanner";
-import { resolvePullRequestState } from "../pullRequest/pullRequestPresentation";
 
 export type ComposerCommandItem =
   | {
@@ -65,13 +62,6 @@ export type ComposerCommandItem =
       type: "skill";
       provider: ProviderDriverKind;
       skill: ServerProviderSkill;
-      label: string;
-      description: string;
-    }
-  | {
-      id: string;
-      type: "pull-request";
-      pullRequest: PullRequestContextMetadata;
       label: string;
       description: string;
     }
@@ -163,9 +153,7 @@ export const ComposerCommandMenu = memo(function ComposerCommandMenu(props: {
               {props.isLoading
                 ? props.triggerKind === "skill" || props.triggerKind === "slash-command"
                   ? gt("Searching workspace skills...")
-                  : props.triggerKind === "pull-request"
-                    ? gt("Finding pull request...")
-                    : gt("Searching workspace files...")
+                  : gt("Searching workspace files...")
                 : (props.emptyStateText ??
                   (props.triggerKind === "skill"
                     ? gt("No skills found. Try / to browse provider commands.")
@@ -189,13 +177,10 @@ const ComposerCommandMenuItem = memo(function ComposerCommandMenuItem(props: {
   onHighlight: (itemId: string | null) => void;
   onSelect: (item: ComposerCommandItem) => void;
 }) {
-  const m = useMessages();
   const skillSourceKind =
     props.item.type === "skill" ? resolveProviderSkillSourceKind(props.item.skill) : null;
   const isSlashSkill =
     props.triggerKind === "slash-command" && props.item.type === "skill" ? props.item.skill : null;
-  const pullRequestPresentation =
-    props.item.type === "pull-request" ? resolvePullRequestState(props.item.pullRequest, m) : null;
   const descriptionRef = useRef<HTMLSpanElement>(null);
   const [descriptionTruncated, setDescriptionTruncated] = useState(false);
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- measures the rendered description so only cut-off text gets a tooltip
@@ -243,13 +228,6 @@ const ComposerCommandMenuItem = memo(function ComposerCommandMenuItem(props: {
           iconClassName="size-4"
         />
       ) : null}
-      {pullRequestPresentation ? (
-        <pullRequestPresentation.Icon
-          role="img"
-          aria-label={pullRequestPresentation.label}
-          className={cn("size-4 shrink-0", pullRequestPresentation.toneClassName)}
-        />
-      ) : null}
       <span className="flex min-w-0 flex-1 items-center gap-2">
         <span className="min-w-0 max-w-[45%] shrink-0 truncate font-sans text-xs font-medium">
           {isSlashSkill ? (
@@ -293,7 +271,6 @@ export function composerSuggestionOptionId(listId: string, itemId: string): stri
 
 const LISTBOX_LABEL_BY_TRIGGER: Record<ComposerTriggerKind, string> = {
   path: msg("Files and folders"),
-  "pull-request": msg("Pull requests"),
   "slash-command": msg("Commands"),
   skill: msg("Skills"),
 };

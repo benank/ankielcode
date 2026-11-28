@@ -137,7 +137,17 @@ export function attachTimelineViewport(
     scrollNode.querySelector("iframe:hover") !== null ||
     (document.activeElement instanceof HTMLIFrameElement &&
       scrollNode.contains(document.activeElement));
+  // The composer over the feed drops its backdrop blur while the feed moves under it.
+  let scrollingColumn: Element | null | undefined;
+  const handleScrollEnd = () => {
+    scrollingColumn?.removeAttribute("data-timeline-scrolling");
+    scrollingColumn = undefined;
+  };
   const handleScroll = () => {
+    if (scrollingColumn === undefined) {
+      scrollingColumn = scrollNode.closest("[data-chat-column]");
+      scrollingColumn?.setAttribute("data-timeline-scrolling", "");
+    }
     if (
       scrolledUp({
         top: scrollNode.scrollTop,
@@ -173,6 +183,7 @@ export function attachTimelineViewport(
   // Run before frame listeners resize rows, so an accordion cannot drag the reader to the end.
   window.addEventListener("message", handleFrameResize, true);
   scrollNode.addEventListener("scroll", handleScroll, { passive: true });
+  scrollNode.addEventListener("scrollend", handleScrollEnd, { passive: true });
   scrollNode.addEventListener("wheel", handleWheel, { passive: true });
   scrollNode.addEventListener("touchmove", handleTouchMove, { passive: true });
   scrollNode.addEventListener("pointerdown", handlePointerDown, { passive: true });
@@ -205,6 +216,8 @@ export function attachTimelineViewport(
       listeners.clear();
       followReleasedListeners.clear();
       scrollNode.removeEventListener("scroll", handleScroll);
+      scrollNode.removeEventListener("scrollend", handleScrollEnd);
+      handleScrollEnd();
       scrollNode.removeEventListener("wheel", handleWheel);
       scrollNode.removeEventListener("touchmove", handleTouchMove);
       scrollNode.removeEventListener("pointerdown", handlePointerDown);

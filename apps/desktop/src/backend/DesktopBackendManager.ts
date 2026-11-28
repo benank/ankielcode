@@ -447,7 +447,7 @@ const decodeDesktopTelemetryControlLine = Schema.decodeUnknownEffect(
   Schema.fromJsonString(DesktopTelemetryControlMessage),
 );
 
-export const runBackendProcess = Effect.fn("runBackendProcess")(function* (
+const runBackendProcess = Effect.fn("runBackendProcess")(function* (
   options: RunBackendProcessOptions,
 ): Effect.fn.Return<BackendProcessExit, BackendProcessError, BackendProcessRunRequirements> {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;

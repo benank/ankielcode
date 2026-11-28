@@ -7,10 +7,19 @@ import {
 } from "@ankielcode/client-runtime/environment";
 import { settlePromise, squashAtomCommandFailure } from "@ankielcode/client-runtime/state/runtime";
 import { canSnooze, threadWokeAt } from "@ankielcode/client-runtime/state/thread-settled";
-import { threadRuntimeCanArchive } from "@ankielcode/client-runtime/state/models";
+import {
+  threadRuntimeCanArchive,
+  type EnvironmentThreadShell,
+} from "@ankielcode/client-runtime/state/models";
+import {
+  resolveThreadReadToggle,
+  resolveThreadWokeAt,
+  type ThreadReadToggle,
+} from "@ankielcode/client-runtime/state/thread-read";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
+  type ConfirmDialogOptions,
   EnvironmentAuthorizationError,
   EnvironmentId,
   type ScopedThreadRef,
@@ -192,7 +201,7 @@ export class ThreadActiveReorderUnsupportedError extends Schema.TaggedError<Thre
 async function requestThreadUnpinConfirmation(input: {
   enabled: boolean;
   title: string | null;
-  confirm: ((message: string) => Promise<boolean>) | null;
+  confirm: ((message: string, options: ConfirmDialogOptions) => Promise<boolean>) | null;
 }) {
   const { confirm } = input;
   if (!input.enabled || confirm === null) {
@@ -207,11 +216,12 @@ async function requestThreadUnpinConfirmation(input: {
           : m(msg('Unpin thread "{title}"?', { title: input.title })),
         m(msg("This will move the thread out of your pinned section.")),
       ].join("\n"),
+      { confirmLabel: m(msg("Unpin")), destructive: false },
     ),
   );
 }
 
-export async function navigateAfterThreadDeletion(navigate: () => Promise<void>) {
+async function navigateAfterThreadDeletion(navigate: () => Promise<void>) {
   const result = await settlePromise(navigate);
   if (result._tag === "Failure") {
     const error = squashAtomCommandFailure(result);
@@ -241,6 +251,22 @@ function useMarkThreadUnread() {
     const thread = readThreadShell(target);
     markThreadUnreadLocal(scopedThreadKey(target), thread?.latestRun?.completedAt);
   };
+}
+
+/** The read toggle mobile shows for this thread, read at the moment a menu opens. */
+export function readThreadReadToggle(thread: EnvironmentThreadShell): ThreadReadToggle | null {
+  // Older servers cannot store a visit, so this client's own watermark stands in for it.
+  const lastVisitedAt =
+    thread.lastVisitedAt === undefined
+      ? (useUiStateStore.getState().threadLastVisitedAtById[
+          scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id))
+        ] ?? null)
+      : thread.lastVisitedAt;
+  const seen = { ...thread, lastVisitedAt };
+  return resolveThreadReadToggle(
+    seen,
+    resolveThreadWokeAt(seen, { now: new Date().toISOString() }),
+  );
 }
 
 export function useAcknowledgeThreadWoke() {
@@ -337,6 +363,7 @@ export function useThreadActions() {
     reportFailure: false,
   });
   const markThreadUnread = useMarkThreadUnread();
+  const markThreadRead = useAcknowledgeThreadWoke();
   const createProjectFromThread = useAtomCommand(projectEnvironment.createFromThread, {
     reportFailure: false,
   });
@@ -591,7 +618,7 @@ export function useThreadActions() {
             "",
             m(msg("Delete the worktree too?")),
           ].join("\n"),
-          { variant: "destructive" },
+          { confirmLabel: m(msg("Delete worktree")), destructive: true },
         ),
       );
       if (confirmationResult._tag === "Failure") {
@@ -885,7 +912,7 @@ export function useThreadActions() {
     const confirmationResult = await requestThreadUnpinConfirmation({
       enabled: confirmThreadUnpin,
       title: resolved?.thread.title ?? null,
-      confirm: localApi ? (message) => localApi.dialogs.confirm(message) : null,
+      confirm: localApi ? (message, options) => localApi.dialogs.confirm(message, options) : null,
     });
     if (confirmationResult._tag === "Failure") {
       return confirmationResult;
@@ -1029,7 +1056,10 @@ export function useThreadActions() {
               : m(msg('Delete thread "{title}"?', { title })),
             m(msg("This permanently clears conversation history for this thread.")),
           ].join("\n"),
-          { variant: "destructive" },
+          {
+            confirmLabel: m(msg("Delete", { $context: "verb, deletes a thread" })),
+            destructive: true,
+          },
         ),
       );
       if (confirmationResult._tag === "Failure") {
@@ -1057,6 +1087,7 @@ export function useThreadActions() {
     confirmAndUnpinThread,
     reorderPinnedThread,
     reorderActiveThread,
+    markThreadRead,
     markThreadUnread,
     setThreadAutoSettle,
     turnThreadIntoProject: (target: ScopedThreadRef) =>

@@ -19,7 +19,7 @@ export interface ThreadNotificationObservation {
 }
 
 /** Matches the push relay's completion confirmation: a final wake can start right after a progress wake. */
-export const RELEASED_COMPLETION_GRACE_MS = 5_000;
+const RELEASED_COMPLETION_GRACE_MS = 5_000;
 
 /**
  * Whether completion notifications are suppressed by snooze. A completion that landed

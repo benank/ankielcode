@@ -25,7 +25,7 @@ import { PixelStatus } from "../../components/PixelStatus";
 import { cn } from "../../lib/cn";
 import { resolveMarkdownLinkPresentation } from "../../lib/markdownLinks";
 import { SelectableMarkdownText } from "../../native/SelectableMarkdownText";
-import { useOpenPullRequest } from "../../native/useOpenPullRequest";
+import { useOpenIssueLink } from "../../native/useOpenIssueLink";
 import { useMarkdownPreviewStyles } from "../files/FileMarkdownPreview";
 import {
   fileRoutePathSegments,
@@ -90,7 +90,7 @@ function QuestionText(props: {
   const styles = useMarkdownPreviewStyles();
   const markdown = useLiveThreadLinkLabels(props.markdown, props.environmentId);
   const navigation = useNavigation();
-  const openPullRequest = useOpenPullRequest();
+  const openPullRequest = useOpenIssueLink();
   const openLink = (href: string) => {
     const link = resolveMarkdownLinkPresentation(href);
     if (link.kind !== "file") {

@@ -483,7 +483,7 @@ const pngSize = (base64: string) => {
   return { width: header.readUInt32BE(16), height: header.readUInt32BE(20) };
 };
 
-export const jpegSize = (base64: string) => {
+const jpegSize = (base64: string) => {
   const bytes = Buffer.from(base64, "base64");
   if (bytes.length < 4 || bytes.readUInt16BE(0) !== 0xffd8)
     throw new Error("Invalid JPEG screenshot.");

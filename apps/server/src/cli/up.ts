@@ -57,7 +57,7 @@ const readSetup = Effect.fn("cli.up.read_setup")(function* () {
 });
 
 /** Whether `ankiel up` asks about local network access: only when no flag names it. */
-export const planRoutes = (
+const planRoutes = (
   setup: { readonly lan: boolean },
   flags: { readonly lan: Option.Option<boolean> },
 ) => ({

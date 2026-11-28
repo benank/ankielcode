@@ -346,6 +346,7 @@ export function ProviderAuthenticationSection({
                           environment: environmentLabel,
                         },
                       ),
+                      { confirmLabel: gt("Sign out"), destructive: false },
                     )
                     .then((confirmed) => {
                       if (confirmed) void run(() => logout(target));

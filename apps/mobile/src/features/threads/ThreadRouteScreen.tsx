@@ -1,7 +1,6 @@
 import * as Dialog from "../../components/ui/Dialog";
 import { errorDisplayMessage } from "@ankielcode/client-runtime/errors";
 import { useRememberThreadProject } from "./useRememberThreadProject";
-import { useOpenPullRequest } from "../../native/useOpenPullRequest";
 import { makeTurnCommandMetadata } from "../../lib/commandMetadata";
 import { buildProjectThreadStartTurnInput } from "../../lib/projectThreadStartTurn";
 import { useWorktreeSetup } from "./use-worktree-setup";
@@ -462,7 +461,6 @@ function ThreadRouteContent(
   })();
   const navigation = useNavigation();
   const selectDetail = useSelectWorkspaceDetail();
-  const openPullRequest = useOpenPullRequest();
   const mergeBack = useAtomCommand(threadEnvironment.mergeBack, "merge thread back");
   const mergeBackTargetThreadId = resolveMergeBackTargetThreadId(selectedThreadDetail);
   const mergeBackRun =
@@ -1017,7 +1015,6 @@ function ThreadRouteContent(
       <GitActionProgressOverlay
         progress={gitActionProgress}
         onDismiss={() => dismissGitActionResult(gitActionThreadRef)}
-        onOpenPullRequest={openPullRequest}
       />
 
       <>

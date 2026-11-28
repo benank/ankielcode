@@ -9,7 +9,7 @@ import {
 } from "@ankielcode/shared/usageLimits";
 import { collectLimitNotices } from "@ankielcode/shared/usageLimitsCopy";
 import { useAtomValue } from "@effect/atom-react";
-import { T, useGT, useLocale, useMessages } from "gt-react";
+import { T, useGT, useMessages } from "gt-react";
 import { useState } from "react";
 
 import { formatContextWindowTokens } from "@ankielcode/client-runtime/state/context-window";
@@ -258,7 +258,6 @@ function ResetUsageButton({
 
 function ContextWindowUsage({ usage }: { readonly usage: ContextWindowSnapshot }) {
   const gt = useGT();
-  const locale = useLocale();
   const maxTokens = usage.maxTokens != null && usage.maxTokens > 0 ? usage.maxTokens : null;
   const used =
     maxTokens !== null && usage.usedPercentage !== null
@@ -298,8 +297,8 @@ function ContextWindowUsage({ usage }: { readonly usage: ContextWindowSnapshot }
           </div>
           <span className="text-xs text-muted-foreground tabular-nums">
             {gt("{used} of {max} tokens", {
-              used: usage.usedTokens.toLocaleString(locale),
-              max: maxTokens.toLocaleString(locale),
+              used: formatContextWindowTokens(usage.usedTokens),
+              max: formatContextWindowTokens(maxTokens),
             })}
           </span>
         </>

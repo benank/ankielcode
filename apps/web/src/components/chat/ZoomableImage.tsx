@@ -8,6 +8,8 @@ import {
 } from "../../lib/windowControlsOverlay";
 
 import { AttachmentImage } from "../media/AttachmentImage";
+import { mediaFileName, type MediaActionSource } from "../media/MediaActions";
+import { useMediaDrag } from "../media/useMediaDrag";
 
 const MAX_ZOOM = 8;
 
@@ -43,12 +45,15 @@ export function ZoomableImage({
   src,
   name,
   mimeType,
+  dragSource,
   onError,
   ref,
 }: {
   src: string;
   name: string;
   mimeType?: string | undefined;
+  /** What dragging the image out of the app hands over. */
+  dragSource: MediaActionSource;
   onError: () => void;
   ref?: Ref<ZoomableImageHandle>;
 }) {
@@ -72,6 +77,8 @@ export function ZoomableImage({
   } | null>(null);
   const suppressClickRef = useRef(false);
   const [dragging, setDragging] = useState(false);
+  // Above fit, a drag pans the image instead.
+  const mediaDrag = useMediaDrag({ ...dragSource, src }, mediaFileName(dragSource), zoom <= 1);
   const maxHeight = Math.max(1, Math.min(viewerSize.height * 0.86, viewerSize.height - 160));
   // A vector scales without loss, and an SVG without width and height reports a tiny default size.
   const fit = Math.min(
@@ -243,7 +250,7 @@ export function ZoomableImage({
           mimeType={mimeType}
           src={src}
           alt={name}
-          draggable={false}
+          {...mediaDrag}
           className="block max-w-none select-none"
           style={
             naturalSize.width ? { width, height } : { maxWidth: "var(--media-width)", maxHeight }

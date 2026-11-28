@@ -113,7 +113,7 @@ export const primaryServerProvidersAtom = Atom.make(
 ).pipe(Atom.withLabel("web-primary-server-providers"));
 
 /** Without a primary, global shortcuts follow unscoped Settings. */
-export function createShortcutKeybindingsAtom(input: {
+function createShortcutKeybindingsAtom(input: {
   readonly primaryEnvironmentIdAtom: Atom.Atom<EnvironmentId | null>;
   readonly primaryConfigAtom: Atom.Atom<ServerConfig | null>;
   readonly environmentsAtom: Atom.Atom<

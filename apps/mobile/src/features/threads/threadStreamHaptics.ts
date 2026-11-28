@@ -33,7 +33,7 @@ function latestStreamingAssistantMessage(
  * A new stream always ticks; growth of the same stream ticks at most once per
  * throttle window, so a fast stream reads as texture rather than a buzz.
  */
-export function shouldTickStreamHaptic(input: {
+function shouldTickStreamHaptic(input: {
   readonly previous: StreamingMessageMark | null;
   readonly latest: StreamingMessageMark | null;
   readonly lastTickAt: number;

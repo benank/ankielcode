@@ -654,7 +654,7 @@ function resetMillis(window: ServerProviderUsageWindow): number | null {
   return Number.isFinite(at) ? at : null;
 }
 
-export function elapsedShare(window: ServerProviderUsageWindow, now: number): number | null {
+function elapsedShare(window: ServerProviderUsageWindow, now: number): number | null {
   const resetsAt = resetMillis(window);
   if (resetsAt === null || window.windowDurationMins === undefined) return null;
   const length = window.windowDurationMins * MINUTE;

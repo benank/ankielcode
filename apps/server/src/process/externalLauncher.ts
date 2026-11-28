@@ -399,7 +399,7 @@ function wslUncFallbackPath(target: string, distroName: string): string {
 // wslpath -w is mount-aware, so a drive remapped in /etc/wsl.conf resolves to the
 // real letter and a Linux path resolves to the \\wsl.localhost UNC path. Fall back
 // to the UNC form by hand when wslpath is missing or fails.
-export const resolveWslFileManagerPath = Effect.fn("externalLauncher.resolveWslFileManagerPath")(
+const resolveWslFileManagerPath = Effect.fn("externalLauncher.resolveWslFileManagerPath")(
   function* (
     target: string,
     distroName: string,

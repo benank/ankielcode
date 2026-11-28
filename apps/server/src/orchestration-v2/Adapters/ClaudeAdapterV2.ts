@@ -312,7 +312,7 @@ function claudeMessageInputTokens(usage: {
   );
 }
 
-export function claudeProviderTurnTokenUsage(
+function claudeProviderTurnTokenUsage(
   usage: {
     readonly iterations?: SDKAssistantMessage["message"]["usage"]["iterations"] | undefined;
     readonly input_tokens?: number | null | undefined;
@@ -1435,9 +1435,7 @@ interface ClaudeHistoryMessage {
 }
 
 // The placeholder reply the CLI records for a failed request.
-export function claudeHistoryEndsOnFailedRequest(
-  messages: ReadonlyArray<ClaudeHistoryMessage>,
-): boolean {
+function claudeHistoryEndsOnFailedRequest(messages: ReadonlyArray<ClaudeHistoryMessage>): boolean {
   const last = messages.at(-1);
   return last?.type === "assistant" && last.message.model === "<synthetic>";
 }
@@ -1485,9 +1483,7 @@ function claudeMessagesBeforeTrailingAborts(messages: ReadonlyArray<ClaudeHistor
   return end;
 }
 
-export function claudeResumeSessionAt(
-  messages: ReadonlyArray<ClaudeHistoryMessage>,
-): string | undefined {
+function claudeResumeSessionAt(messages: ReadonlyArray<ClaudeHistoryMessage>): string | undefined {
   const end = claudeMessagesBeforeTrailingAborts(messages);
   return end === messages.length ? undefined : messages[end - 1]?.uuid;
 }
@@ -1600,7 +1596,7 @@ const CLAUDE_CAN_USE_TOOL_SHADOWED_WARNING = "CLAUDE_SDK_CAN_USE_TOOL_SHADOWED";
 
 // query() warns when canUseTool meets bypassPermissions or bare allowedTools. Ankiel installs
 // canUseTool in every mode on purpose (AskUserQuestion, ask rules), so it is per-session noise.
-export function withoutClaudeCanUseToolShadowedWarning<A>(run: () => A): A {
+function withoutClaudeCanUseToolShadowedWarning<A>(run: () => A): A {
   const emitWarning = process.emitWarning;
   process.emitWarning = function (this: NodeJS.Process, ...args: Parameters<typeof emitWarning>) {
     const [, options] = args;
@@ -2380,7 +2376,7 @@ function claudeLiveSelectionFlagSettings(
 // TTL. When the user sets Claude's subagentPromptCacheTtl, the child follows it like a native
 // subagent would. A resumed session's first request otherwise goes out before its MCP servers
 // connect, and Claude Code tells the agent they disconnected. Explicit instance values still win.
-export function claudeQueryEnvironment(
+function claudeQueryEnvironment(
   environment: NodeJS.ProcessEnv,
   appThread: Pick<OrchestrationV2AppThread, "lineage">,
   subagentPromptCacheTtl: "5m" | "1h" | undefined,
@@ -2405,7 +2401,7 @@ export function claudeQueryEnvironment(
 
 // Claude Code's auto tool search sends every MCP schema in full while they fit under a share of the
 // context window, which Ankiel's tools do on 1M models. auto:0 already means on and auto:100 off.
-export function claudeToolSearchOverride(value: string | undefined): "true" | undefined {
+function claudeToolSearchOverride(value: string | undefined): "true" | undefined {
   if (value === undefined) return undefined;
   if (value === "auto") return "true";
   if (!value.startsWith("auto:")) return undefined;
@@ -3921,7 +3917,7 @@ function claudeRuntimeQueryPolicyKey(policy: ClaudeRuntimeQueryPolicy): string {
 }
 
 // Live-query reuse must include MCP pre-approvals, which can differ for the same policy key.
-export function claudeEffectiveQueryPolicyKey(
+function claudeEffectiveQueryPolicyKey(
   queryPolicy: ClaudeRuntimeQueryPolicy,
   mcpOverrides: {
     readonly allowedTools?: ReadonlyArray<string>;
@@ -4795,7 +4791,7 @@ function toSessionPermissionUpdates(
   ];
 }
 
-export const awaitClaudeApprovalDecision = Effect.fn("awaitClaudeApprovalDecision")(function* (
+const awaitClaudeApprovalDecision = Effect.fn("awaitClaudeApprovalDecision")(function* (
   decision: Deferred.Deferred<ClaudeApprovalResponse>,
   signal: AbortSignal,
 ) {
@@ -4848,7 +4844,7 @@ const withoutSchemaDefaults = (schema: Record<string, unknown>): Record<string, 
 };
 
 // The card collects consent only; schema defaults must never grant unseen permissions.
-export function claudeMcpElicitationAcceptance(
+function claudeMcpElicitationAcceptance(
   request: ElicitationRequest,
 ): ElicitationResult | undefined {
   if (request.mode === "url" || request.requestedSchema === undefined) return undefined;
@@ -5697,9 +5693,7 @@ type PendingClaudeRuntimeRequest =
       readonly answers: Deferred.Deferred<ProviderUserInputAnswers, never>;
     };
 
-export function claudeUserInputQuestions(
-  input: unknown,
-): ReadonlyArray<OrchestrationV2UserInputQuestion> {
+function claudeUserInputQuestions(input: unknown): ReadonlyArray<OrchestrationV2UserInputQuestion> {
   const value =
     typeof input === "object" && input !== null && Reflect.get(input, "type") === "record"
       ? Reflect.get(input, "value")
@@ -5747,7 +5741,7 @@ export function claudeUserInputQuestions(
   });
 }
 
-export function claudeSdkUserInputAnswers(
+function claudeSdkUserInputAnswers(
   answers: ProviderUserInputAnswers,
 ): NonNullable<AskUserQuestionInput["answers"]> {
   return Object.fromEntries(

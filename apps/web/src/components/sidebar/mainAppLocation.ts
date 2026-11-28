@@ -9,12 +9,7 @@ export function isAppModalPage(pathname: string) {
 }
 
 export function isSidebarUtilityPage(pathname: string) {
-  return (
-    pathname.startsWith("/projects/") ||
-    pathname === "/pull-requests" ||
-    pathname === "/issues" ||
-    pathname === "/workflows"
-  );
+  return pathname.startsWith("/projects/") || pathname === "/issues" || pathname === "/workflows";
 }
 
 const SHELL_LESS_PATHS = new Set(["/pair"]);

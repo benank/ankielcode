@@ -433,7 +433,7 @@ interface PendingRequest {
 const rule = (action: string, effect: Rule["effect"]): Rule => ({ action, resource: "*", effect });
 
 /** OpenCode hides tools for names over 64 chars and rejects names over 100; hash long thread IDs. */
-export const ankielMcpServerName = Effect.fn("ankielMcpServerName")(function* (threadId: string) {
+const ankielMcpServerName = Effect.fn("ankielMcpServerName")(function* (threadId: string) {
   const name = `ankiel-code-${threadId.replaceAll(/[^a-zA-Z0-9_-]/g, "_")}`;
   if (name.length <= 64) return name;
   const crypto = yield* Digest.Digest;
@@ -712,7 +712,7 @@ const CLEAR_PROMPT_REJECTIONS: ReadonlySet<string> = new Set([
   "SkillNotFoundError",
 ]);
 
-export const OPENCODE_2_STILL_STOPPING =
+const OPENCODE_2_STILL_STOPPING =
   "OpenCode is still stopping the previous turn. Send the message again in a moment.";
 const REQUEST_REPLY_TIMEOUT = "10 seconds";
 

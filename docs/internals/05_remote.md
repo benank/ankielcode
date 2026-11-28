@@ -7,7 +7,7 @@ introduce a different execution model.
 ## Identity is independent of the route
 
 - An environment keeps its ID across restarts and endpoint changes. Repository identity can
-  correlate clones across environments (preferring `upstream` for PR features, grouping forks by
+  correlate clones across environments (preferring `upstream` for issues, grouping forks by
   `origin`), but work never silently crosses environments.
 - [Environment ID initialization](../../apps/server/src/environment/ServerEnvironment.ts) publishes
   atomically and retains repair state so concurrent initializers choose the same winner; do not
@@ -17,7 +17,7 @@ introduce a different execution model.
   Verify a direct or learned route answers as the expected environment before sending credentials.
   A saved environment can hold both a Cloudflare Relay HTTPS route and a learned same-network LAN
   route, switching between them transparently as the client moves on and off the host's network.
-- Pull request routing trust covers the saved route set: adding or changing a route revokes trust;
+- An unsupported verdict covers the saved route set: adding or changing a route drops it;
   reordering does not.
 
 ## Desktop previews tunnel loopback

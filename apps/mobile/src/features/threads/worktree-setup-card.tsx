@@ -459,7 +459,7 @@ function OutputTail({ lines }: { lines: ReadonlyArray<string> }) {
           key={slot}
           selectable
           numberOfLines={1}
-          className="text-2xs leading-5 text-foreground-secondary ios:font-[family-name:Menlo] android:font-mono"
+          className="font-mono text-2xs leading-5 text-foreground-secondary"
         >
           {lines[lines.length - OUTPUT_TAIL_SLOTS.length + slot] || "\u00a0"}
         </Text>

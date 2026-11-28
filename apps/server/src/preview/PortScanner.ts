@@ -475,7 +475,7 @@ const parseEnvironmentVariables = (
  * not carry. A job the command moved to its own group inherits the name from its parent, and
  * stopping that job does not end the command.
  */
-export const agentCommandsInGroup = (
+const agentCommandsInGroup = (
   variables: ReadonlyMap<number, ReadonlyMap<string, string>>,
   leader: ProcessTableRow,
 ): ReadonlyMap<string, string> => {
@@ -506,7 +506,7 @@ const parseProcessTable = (raw: string): ReadonlyMap<number, ProcessTableRow> =>
  * a direct child of it or its process launcher (agent CLIs and terminal shells), or one of its
  * ancestors.
  */
-export const stoppableProcessGroup = (
+const stoppableProcessGroup = (
   table: ReadonlyMap<number, ProcessTableRow>,
   pid: number,
   serverPid: number,

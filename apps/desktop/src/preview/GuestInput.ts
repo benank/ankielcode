@@ -66,7 +66,7 @@ const keyCodeFor = (key: string) => {
 };
 
 /** Electron derives text from keyCode, so typed text needs separate char events. */
-export const toKeyboardInputEvents = (
+const toKeyboardInputEvents = (
   params: Record<string, unknown>,
 ): Array<Electron.KeyboardInputEvent> => {
   const bits = typeof params["modifiers"] === "number" ? params["modifiers"] : 0;

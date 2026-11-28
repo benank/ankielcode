@@ -132,6 +132,7 @@ export async function startFanoutThread(input: {
                             "The previous request may already be running. Check its thread first. Allow another send that could create a duplicate thread?",
                           ),
                         ),
+                        { confirmLabel: m(msg("Allow retry")), destructive: false },
                       )
                       .then(
                         (confirmed) => {

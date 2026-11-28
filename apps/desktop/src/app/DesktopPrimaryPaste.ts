@@ -27,7 +27,7 @@ const dconfQuery = ChildProcess.make(
   { stdin: "ignore", stderr: "ignore" },
 );
 
-export const readGtkPrimaryPasteEnabled = Effect.gen(function* () {
+const readGtkPrimaryPasteEnabled = Effect.gen(function* () {
   const env = yield* HostProcess.Environment;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const output = yield* env.XDG_CURRENT_DESKTOP?.split(":").includes("GNOME")

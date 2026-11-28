@@ -55,7 +55,7 @@ export function themeCssLoadsRemoteFiles(css: string): boolean {
  * Selectors that theme CSS may rely on. Other class names are Tailwind utilities and change
  * between releases. themeCss.test.ts in apps/web fails when one of these leaves the source.
  */
-export const THEME_CSS_HOOKS = [
+const THEME_CSS_HOOKS = [
   { selector: '[data-slot="sidebar"]', styles: "app sidebar" },
   { selector: '[data-slot="sidebar-inner"]', styles: "sidebar surface" },
   { selector: "[data-thread-item]", styles: "sidebar thread row" },

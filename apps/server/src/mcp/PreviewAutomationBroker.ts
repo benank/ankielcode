@@ -362,7 +362,7 @@ const classifyResponseError = (
   }
 };
 
-export const make = Effect.gen(function* PreviewAutomationBrokerMake() {
+const make = Effect.gen(function* PreviewAutomationBrokerMake() {
   const random = yield* SecureRandom.SecureRandom;
   const state = yield* SynchronizedRef.make<BrokerState>({
     clients: new Map(),

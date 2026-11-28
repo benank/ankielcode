@@ -32,7 +32,7 @@ const tooLarge = (file: Downloaded) =>
   file.lines > RENDERED_MAX_LINES || file.text.length > FULL_TEXT_MAX_BYTES;
 
 /** A file's text so far, at most once per interval, ending at its whole text or past a cap. */
-export const downloadText = (src: string) =>
+const downloadText = (src: string) =>
   HttpClient.get(src).pipe(
     Effect.flatMap(HttpClientResponse.filterStatusOk),
     Effect.map((response) => response.stream),

@@ -71,11 +71,24 @@ describe("desktop preload bundle verifier", () => {
         ${validPreload}
         require("electron/common");
         require("electron/renderer");
-        require("node:events");
-        require("node:timers");
-        require("node:url");
       `),
     );
+  });
+
+  it("rejects the Node shims Electron 45 removed from sandboxed preloads", () => {
+    for (const moduleName of [
+      "events",
+      "node:events",
+      "timers",
+      "node:timers",
+      "url",
+      "node:url",
+    ]) {
+      assert.throws(
+        () => verifyPreloadBundle(`${validPreload}\nrequire("${moduleName}");`),
+        new RegExp(`unsupported sandbox imports: ${moduleName}$`),
+      );
+    }
   });
 
   it("runs a preload that reads the page's DOM while loading", () => {

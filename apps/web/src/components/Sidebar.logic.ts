@@ -1,10 +1,9 @@
 import type { EnvironmentServerConfig } from "@ankielcode/client-runtime/connection";
 import { scopeThreadRef, scopedThreadKey } from "@ankielcode/client-runtime/environment";
-import { resolveThreadWorkingStartedAt } from "@ankielcode/client-runtime/state/models";
+import type { ThreadReadToggle } from "@ankielcode/client-runtime/state/thread-read";
 import { isShownUnderParent } from "@ankielcode/client-runtime/state/threads";
 import { backgroundWorkHoldsCompletion } from "@ankielcode/shared/orchestrationV2PendingBackgroundWork";
 import type { PixelStatusTone } from "@ankielcode/shared/pixelStatus";
-import { threadPullRequestSearchTerms } from "@ankielcode/shared/threadPullRequests";
 import * as React from "react";
 import { msg } from "gt-react";
 import { m, type MessageResolver } from "../i18n/messages";
@@ -48,7 +47,6 @@ import {
   type ThreadSortInput,
 } from "@ankielcode/client-runtime/state/thread-sort";
 import type { SidebarThreadSummary, Thread } from "../types";
-import { normalizeSearchText } from "../lib/utils";
 import { isLatestRunSettled } from "../session-logic";
 import { THREAD_STATUS_TEXT } from "@ankielcode/client-runtime/state/thread-activity-announcement";
 import { observeIntersection } from "../lib/observeIntersection";
@@ -80,7 +78,32 @@ export function shouldNavigateAfterThreadPark(input: {
   );
 }
 
-export const THREAD_JUMP_HINT_SHOW_DELAY_MS = 200;
+const THREAD_JUMP_HINT_SHOW_DELAY_MS = 200;
+
+/**
+ * What a key does on a focused sidebar row. On macOS Return renames, as in Finder, and Space or
+ * Cmd+Down opens; elsewhere Enter and Space open. F2 renames everywhere.
+ */
+export function sidebarRowKeyAction(
+  event: Pick<KeyboardEvent, "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey">,
+  isMac: boolean,
+): "open" | "rename" | null {
+  const modified = event.metaKey || event.ctrlKey || event.altKey || event.shiftKey;
+  switch (event.key) {
+    case "F2":
+      return "rename";
+    case "Enter":
+      return isMac && !modified ? "rename" : "open";
+    case " ":
+      return "open";
+    case "ArrowDown":
+      return isMac && event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey
+        ? "open"
+        : null;
+    default:
+      return null;
+  }
+}
 
 export function resolveSidebarRowAccessibility(input: {
   readonly title: string;
@@ -637,6 +660,33 @@ export function buildBulkUnpinContextMenuItem(input: {
   return { id: "unpin", label: m(msg("Unpin ({count})", { count: input.pinnedCount })) };
 }
 
+/** Each read marker appears when some selected thread would change, and counts those threads. */
+export function buildBulkReadContextMenuItems(
+  toggles: ReadonlyArray<ThreadReadToggle | null>,
+  resolve: MessageResolver = m,
+): ReadonlyArray<ContextMenuItem<"mark-read" | "mark-unread">> {
+  const markRead = toggles.filter((toggle) => toggle?.kind === "mark-read").length;
+  const markUnread = toggles.filter((toggle) => toggle?.kind === "mark-unread").length;
+  return [
+    ...(markRead > 0
+      ? [
+          {
+            id: "mark-read" as const,
+            label: resolve(msg("Mark read ({count})", { count: markRead })),
+          },
+        ]
+      : []),
+    ...(markUnread > 0
+      ? [
+          {
+            id: "mark-unread" as const,
+            label: resolve(msg("Mark unread ({count})", { count: markUnread })),
+          },
+        ]
+      : []),
+  ];
+}
+
 export interface ThreadStatusPill {
   /** A `msg()` string; render it through `useMessages()`. */
   label: string;
@@ -891,25 +941,6 @@ export type SidebarThreadStatus =
   | "limited"
   | "ready";
 
-export function shouldRecedeSidebarThread(input: {
-  status: SidebarThreadStatus;
-  isUnread: boolean;
-  isWoke: boolean;
-  isActive: boolean;
-  isSelected: boolean;
-}): boolean {
-  if (input.isActive || input.isSelected || input.status === "input") {
-    return false;
-  }
-  if (input.status === "preparing" || input.status === "working" || input.status === "waiting") {
-    return true;
-  }
-  if (input.status === "ready" || input.status === "approval") {
-    return !input.isUnread && !input.isWoke;
-  }
-  return false;
-}
-
 type SidebarThreadStatusInput = Pick<
   SidebarThreadSummary,
   | "hasPendingApprovals"
@@ -1122,16 +1153,6 @@ export function searchSidebarThreads<
   return { titleMatches, contentMatches };
 }
 
-export function pullRequestMatchesSearchQuery(
-  pullRequest: Parameters<typeof threadPullRequestSearchTerms>[0],
-  query: string,
-): boolean {
-  const normalizedQuery = normalizeSearchText(query);
-  if (normalizedQuery.length === 0) return false;
-  const haystack = normalizeSearchText(threadPullRequestSearchTerms(pullRequest).join(" "));
-  return normalizedQuery.split(" ").every((token) => haystack.includes(token));
-}
-
 export const ADD_PROJECT_SCOPE_ITEM_VALUE = "add-project";
 
 export function filterSidebarProjectScopeItems<TItem extends { readonly value: string }>(input: {
@@ -1171,12 +1192,6 @@ export function reduceSidebarProjectScopeMenuState(
     case "project-settings-opened":
       return { open: false, query: "" };
   }
-}
-
-export function resolveWorkingStartedAt(
-  thread: Pick<SidebarThreadSummary, "latestRun" | "runtime">,
-): string | null {
-  return resolveThreadWorkingStartedAt(thread);
 }
 
 export function resolveThreadStatusPill(input: {

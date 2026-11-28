@@ -37,8 +37,6 @@ import {
 
 export { chatMarkdownImageSource, type ChatMarkdownImageProperties };
 
-export { remarkEnableOrderedListNumbers } from "./markdownOrderedListNumbers.ts";
-
 type MarkdownImageHastNode = {
   type?: string;
   value?: string;

@@ -276,7 +276,7 @@ const runtimeParentAssignment = (ankielHome: string | null): string =>
     : `runtime_parent=${shellQuote(`${ankielHome}/wsl-runtime`)}`;
 
 // A null archive path asks for a staging directory to copy the archive into, unless the cache is ready.
-export const buildWslRuntimeInstallScript = (
+const buildWslRuntimeInstallScript = (
   linuxArchivePath: string | null,
   runtimeId: string,
   archiveSha256: string,
@@ -381,10 +381,7 @@ export const buildWslRuntimeInstallScript = (
 // Two hours exceeds cold-install time while bounding orphan retention.
 const ORPHANED_RUNTIME_SCRATCH_MAX_AGE_MINUTES = 120;
 
-export const buildWslRuntimePruneScript = (
-  runtimeId: string,
-  ankielHome: string | null,
-): string => {
+const buildWslRuntimePruneScript = (runtimeId: string, ankielHome: string | null): string => {
   const safeRuntimeId = sanitizeWslRuntimeId(runtimeId);
   return [
     "set -eu",
@@ -442,7 +439,7 @@ const parseAbsolutePathField = (stdout: string, field: string): string | null =>
   return value.startsWith("/") ? value : null;
 };
 
-export const parseWslRuntimeRoot = (stdout: string): string | null =>
+const parseWslRuntimeRoot = (stdout: string): string | null =>
   parseAbsolutePathField(stdout, "runtimeRoot");
 
 const NODE_PTY_BINARY_MISSING_EXIT_CODE = 4;
@@ -490,7 +487,7 @@ NODE`;
 
 // Resolve version-managed Node for providers without making runtime readiness depend on it.
 // The install script already ran the staged ankiel, so running it again here only adds a second startup.
-export const buildWslRuntimeProbeScript = () =>
+const buildWslRuntimeProbeScript = () =>
   `bash -lc ${shellQuote(`${buildWslNodeEnvPreamble()}${RESOLVED_PATH_LINE}\n${ANKIEL_HOME_LINE}`)} 2>/dev/null || ${RESOLVED_PATH_LINE}`;
 
 const TOOLCHAIN_CHECK_SCRIPT = [
@@ -554,7 +551,7 @@ const parseNodeVersion = (stdout: string): string | null => {
 };
 
 // Strip only Windows CR; spaces and apostrophes must survive as one env argument.
-export const parseResolvedPath = (stdout: string): string | null => {
+const parseResolvedPath = (stdout: string): string | null => {
   const prefix = "resolvedPath:";
   const line = stdout.split("\n").find((candidate) => candidate.startsWith(prefix));
   if (line === undefined) return null;
@@ -563,7 +560,7 @@ export const parseResolvedPath = (stdout: string): string | null => {
 };
 
 // Relative values are ignored: the runtime scripts and the server would resolve them from different cwds.
-export const parseAnkielHome = (stdout: string): string | null =>
+const parseAnkielHome = (stdout: string): string | null =>
   parseAbsolutePathField(stdout, "ankielHome");
 
 const formatMissingToolsReason = (
@@ -1016,7 +1013,7 @@ const preWarmImpl = (
     }),
   ).pipe(Effect.timeoutOption(PRE_WARM_TIMEOUT), Effect.ignore);
 
-export const windowsToWslPathImpl = (
+const windowsToWslPathImpl = (
   distro: string | null,
   windowsPath: string,
 ): Effect.Effect<Option.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> => {
@@ -1155,7 +1152,7 @@ const wslServiceRegistered = Effect.scoped(
   Effect.orElseSucceed(() => false),
 );
 
-export const makeIsAvailable = Effect.fn("DesktopWslEnvironment.makeIsAvailable")(function* (
+const makeIsAvailable = Effect.fn("DesktopWslEnvironment.makeIsAvailable")(function* (
   platform: NodeJS.Platform,
   windir: string,
 ): Effect.fn.Return<
@@ -1198,68 +1195,6 @@ export interface DesktopWslEnvironmentTestStub {
     options?: EnsureWslNodePtyOptions,
   ) => EnsureWslNodePtyResult;
 }
-
-export const layerTest = (stub: DesktopWslEnvironmentTestStub = {}) => {
-  const probeDistros: Effect.Effect<readonly WslDistro[], DesktopWslDistroListError> =
-    stub.distroListError ? Effect.fail(stub.distroListError) : Effect.succeed(stub.distros ?? []);
-  return Layer.succeed(
-    DesktopWslEnvironment,
-    DesktopWslEnvironment.of({
-      isAvailable: Effect.succeed(stub.isAvailable ?? false),
-      listDistros: probeDistros.pipe(Effect.orElseSucceed(() => [])),
-      probeDistros,
-      preWarm: Effect.fn("DesktopWslEnvironment.preWarm")(function () {
-        return Effect.void;
-      }),
-      windowsToWslPath: Effect.fn("DesktopWslEnvironment.windowsToWslPath")(
-        function (distro, windowsPath) {
-          return Effect.succeed(stub.windowsToWslPath?.(distro, windowsPath) ?? Option.none());
-        },
-      ),
-      getUserHome: Effect.fn("DesktopWslEnvironment.getUserHome")(function (distro) {
-        return Effect.succeed(stub.getUserHome?.(distro) ?? Option.none<string>());
-      }),
-      getDistroIp: Effect.fn("DesktopWslEnvironment.getDistroIp")(function (distro) {
-        return Effect.succeed(stub.getDistroIp?.(distro) ?? Option.none<string>());
-      }),
-      prepareRuntime: Effect.fn("DesktopWslEnvironment.prepareRuntime")(
-        function (distro, archive, ankielHome) {
-          return Effect.succeed(
-            stub.prepareRuntime?.(distro, archive, ankielHome) ?? {
-              ok: false,
-              reason: "prepareRuntime stub not configured",
-            },
-          );
-        },
-      ),
-      pruneRuntimes: Effect.fn("DesktopWslEnvironment.pruneRuntimes")(
-        function (distro, runtimeId, ankielHome) {
-          return stub.pruneRuntimes?.(distro, runtimeId, ankielHome) ?? Effect.void;
-        },
-      ),
-      probeRuntime: Effect.fn("DesktopWslEnvironment.probeRuntime")(function (distro) {
-        return Effect.succeed(
-          stub.probeRuntime?.(distro) ?? {
-            ok: true,
-            resolvedPath: "/usr/bin:/bin",
-            ankielHome: null,
-          },
-        );
-      }),
-      ensureNodePty: Effect.fn("DesktopWslEnvironment.ensureNodePty")(
-        function (distro, linuxAppRoot, options) {
-          return Effect.succeed(
-            stub.ensureNodePty?.(distro, linuxAppRoot, options) ?? {
-              ok: false,
-              reason: "ensureNodePty stub not configured",
-              fatal: true,
-            },
-          );
-        },
-      ),
-    }),
-  );
-};
 
 export const layer = Layer.effect(
   DesktopWslEnvironment,

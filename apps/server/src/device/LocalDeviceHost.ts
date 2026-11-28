@@ -261,7 +261,7 @@ const hubEnvironment = Effect.fn("LocalDeviceHost.hubEnvironment")(function* (
 const hubPlatformArguments = (hostPlatform: NodeJS.Platform) =>
   hostPlatform === "darwin" ? [] : ["--platform", "android"];
 
-export const make = Effect.fn("LocalDeviceHost.make")(function* () {
+const make = Effect.fn("LocalDeviceHost.make")(function* () {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const config = yield* ServerConfig.ServerConfig;
   const path = yield* Path.Path;
@@ -1009,7 +1009,7 @@ export const make = Effect.fn("LocalDeviceHost.make")(function* () {
 
 export const layer = Layer.effect(DeviceHost.DeviceHost, make());
 
-export const __testing = {
+const __testing = {
   AgentDeviceDaemonFile,
   androidSdk,
   platformReason,

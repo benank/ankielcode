@@ -53,7 +53,6 @@ const DESCRIPTIONS: Record<MilestoneEventValue["type"], string> = {
   "thread.run_settled": "A thread's turn ended: completed, failed, interrupted or cancelled.",
   "thread.needs_input": "An agent waits on a person to answer a question or approve an action.",
   "thread.input_resolved": "A question or approval an agent waited on was answered, or lapsed.",
-  "pr.watch_wake": "A watched pull request changed and woke its thread.",
   "workflow.run_started": "A workflow run started.",
   "workflow.needs_input": "A workflow run asks a person a question.",
   "workflow.input_resolved":

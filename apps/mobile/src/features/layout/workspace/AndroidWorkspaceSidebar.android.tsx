@@ -9,11 +9,9 @@ import { useAndroidControlSizing } from "../../../components/ui/useAndroidContro
 import { FLOATING_TABS } from "./floating-workspace-tabs";
 import { View } from "react-native";
 import { ScreenContent } from "../../../components/ui/ScreenContent";
-import { PullRequestsScreen } from "../../pull-requests/PullRequestsScreen";
 import { ListSearchToolbar } from "./ListSearchToolbar.android";
 import { IssuesScreen } from "../../issues/IssuesScreen";
 import { selectedIssueKey } from "../../issues/issueParams";
-import { selectedPullRequestKey } from "../../pull-requests/pullRequestSelection";
 import { AndroidHomeFabLayout } from "../../home/AndroidHomeFab";
 import { useAdaptiveWorkspaceLayout } from "../adaptive-workspace-context";
 import { useAndroidWorkspaceRoot } from "./AndroidWorkspaceTabsProvider";
@@ -30,7 +28,6 @@ export function AndroidWorkspaceSidebar() {
   const insets = useSafeAreaInsets();
   const { fabSize } = useAndroidControlSizing();
   const { revealPrimarySidebar, startNewTask } = useAdaptiveWorkspaceLayout();
-  const selectedPullRequest = useNavigationState(selectedPullRequestKey);
   const selectedIssue = useNavigationState(selectedIssueKey);
   // Settings and the one-page tabs cover the sidebar.
   const coveredByPage =
@@ -53,7 +50,7 @@ export function AndroidWorkspaceSidebar() {
             </AndroidHomeFabLayout>
           ) : tab === "usage" || tab === "workflows" ? (
             <View className="flex-1 bg-screen" />
-          ) : tab === "issues" ? (
+          ) : (
             <WorkspaceTabsContext value={context}>
               <IssuesScreen
                 sidebar
@@ -61,24 +58,6 @@ export function AndroidWorkspaceSidebar() {
                 renderFrame={(filters, list) => (
                   <View className="flex-1 bg-header">
                     <ListSearchToolbar
-                      tab="issues"
-                      filters={filters}
-                      onRequestVisibility={revealPrimarySidebar}
-                    />
-                    <ScreenContent insetHorizontal>{list}</ScreenContent>
-                  </View>
-                )}
-              />
-            </WorkspaceTabsContext>
-          ) : (
-            <WorkspaceTabsContext value={context}>
-              <PullRequestsScreen
-                sidebar
-                selectedPullRequestKey={selectedPullRequest}
-                renderFrame={(filters, list) => (
-                  <View className="flex-1 bg-header">
-                    <ListSearchToolbar
-                      tab="pullRequests"
                       filters={filters}
                       onRequestVisibility={revealPrimarySidebar}
                     />

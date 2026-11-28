@@ -150,7 +150,7 @@ const runSchtasks = (...args: ReadonlyArray<string>) =>
  * Registering replaces the task, so one the CLI disabled to keep the service stopped is
  * registered disabled. The caller holds the unit lease, as the CLI does to disable it.
  */
-export async function registerServiceTask(
+async function registerServiceTask(
   unitPath: string,
   taskName: string,
   schtasks: (...args: ReadonlyArray<string>) => Promise<{ readonly stdout: string }> = runSchtasks,
@@ -339,7 +339,7 @@ const MANAGED_SERVICE_ENV_NAMES = new Set([
   SERVICE_LAUNCHER_CONTEXT_ENV,
 ]);
 
-export async function readServiceEnvironment(
+async function readServiceEnvironment(
   baseDir: string,
   inherited: NodeJS.ProcessEnv = process.env,
 ): Promise<NodeJS.ProcessEnv> {
@@ -488,7 +488,7 @@ async function removeAbandonedBackupCopies(backupRoot: string): Promise<void> {
 }
 
 /** Check before stopping the server so full disks refuse updates without an outage. */
-export async function databaseBackupBlocker(
+async function databaseBackupBlocker(
   baseDir: string,
   dbPath: string,
   probe: Partial<BackupSpaceProbe> = {},
@@ -698,7 +698,7 @@ async function discardDatabaseBackup(baseDir: string, updateId: string): Promise
   await syncDirectory(NodePath.dirname(backupDir));
 }
 
-export async function readServiceState(filePath: string): Promise<ServiceState> {
+async function readServiceState(filePath: string): Promise<ServiceState> {
   const contents = await NodeFSP.readFile(filePath, "utf8");
   const state = parseServiceState(contents) ?? adoptLegacyServiceState(contents);
   if (state === undefined) throw new Error("Service state is invalid or unsupported.");
@@ -713,7 +713,7 @@ function adoptLegacyServiceState(contents: string): ServiceState | undefined {
   return legacy && { protocol: SERVICE_LAUNCHER_PROTOCOL, activeVersion: legacy.activeVersion };
 }
 
-export async function writeServiceState(filePath: string, state: ServiceState): Promise<void> {
+async function writeServiceState(filePath: string, state: ServiceState): Promise<void> {
   await NodeFSP.mkdir(NodePath.dirname(filePath), { recursive: true, mode: 0o700 });
   await replaceFileDurably(filePath, `${JSON.stringify(state, null, 2)}\n`);
 }
@@ -901,7 +901,7 @@ const stopMarkerPath = (baseDir: string) =>
 const restartPendingPath = (baseDir: string) =>
   NodePath.join(baseDir, "runtime", SERVICE_RESTART_PENDING_FILE);
 
-export class Launcher {
+class Launcher {
   readonly #baseDir: string;
   readonly #statePath: string;
   #state: ServiceState;

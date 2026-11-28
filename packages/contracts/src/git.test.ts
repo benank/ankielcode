@@ -3,13 +3,13 @@ import * as Schema from "effect/Schema";
 
 import {
   GitCommandError,
-  GitPreparePullRequestThreadResult,
   GitRunStackedActionInput,
+  GitRunStackedActionResult,
   VcsCreateWorktreeInput,
   VcsRef,
+  VcsStatusRemoteResult,
 } from "./git.ts";
 import { WorktreeMcpHandoffInput } from "./worktreeMcp.ts";
-import { PullRequestDiffFileContentsInput } from "./pullRequest.ts";
 import { ReviewDiffFileContentsInput } from "./review.ts";
 
 const encodeVcsRef = Schema.encodeUnknownSync(VcsRef);
@@ -18,19 +18,13 @@ const encodeCreateWorktreeInput = Schema.encodeUnknownSync(VcsCreateWorktreeInpu
 const decodeCreateWorktreeInput = Schema.decodeUnknownSync(VcsCreateWorktreeInput);
 const decodeWorktreeHandoffInput = Schema.decodeUnknownSync(WorktreeMcpHandoffInput);
 const decodeGitCommandError = Schema.decodeUnknownSync(Schema.toCodecJson(GitCommandError));
-const decodePreparePullRequestThreadResult = Schema.decodeUnknownSync(
-  GitPreparePullRequestThreadResult,
-);
+const decodeRemoteStatus = Schema.decodeUnknownSync(VcsStatusRemoteResult);
+const encodeRemoteStatus = Schema.encodeUnknownSync(VcsStatusRemoteResult);
 const decodeRunStackedActionInput = Schema.decodeUnknownSync(GitRunStackedActionInput);
+const decodeRunStackedActionResult = Schema.decodeUnknownSync(GitRunStackedActionResult);
 const encodeRunStackedActionInput = Schema.encodeUnknownSync(GitRunStackedActionInput);
 const decodeReviewDiffFileContentsInput = Schema.decodeUnknownSync(ReviewDiffFileContentsInput);
 const encodeReviewDiffFileContentsInput = Schema.encodeUnknownSync(ReviewDiffFileContentsInput);
-const decodePullRequestDiffFileContentsInput = Schema.decodeUnknownSync(
-  PullRequestDiffFileContentsInput,
-);
-const encodePullRequestDiffFileContentsInput = Schema.encodeUnknownSync(
-  PullRequestDiffFileContentsInput,
-);
 
 describe("GitCommandError", () => {
   it("decodes an unknown failure reason as absent", () => {
@@ -50,22 +44,55 @@ describe("GitCommandError", () => {
   });
 });
 
-describe("GitPreparePullRequestThreadResult", () => {
-  it("defaults legacy responses to the pull request head", () => {
-    const parsed = decodePreparePullRequestThreadResult({
-      pullRequest: {
-        number: 42,
-        title: "PR threads",
-        url: "https://github.com/benank/codething-mvp/pull/42",
-        baseBranch: "main",
-        headBranch: "feature/pr-threads",
+describe("retired pull request fields", () => {
+  const remote = { hasUpstream: true, aheadCount: 0, behindCount: 0 };
+
+  it("reads an older server's status pull request as null and still sends the key", () => {
+    const parsed = decodeRemoteStatus({
+      ...remote,
+      pr: {
+        number: 1,
+        title: "Fix",
+        url: "https://github.com/owner/repo/pull/1",
+        baseRef: "main",
+        headRef: "fix",
         state: "open",
       },
-      branch: "feature/pr-threads",
-      worktreePath: "/tmp/pr-threads",
     });
+    expect(parsed.pr).toBeNull();
+    expect(encodeRemoteStatus(parsed)).toEqual({ ...remote, pr: null });
+  });
 
-    expect(parsed.isOnPullRequestHead).toBe(true);
+  it("reads an older server's pull request push result without its pull request parts", () => {
+    const result = decodeRunStackedActionResult({
+      action: "push",
+      branch: { status: "skipped_not_requested" },
+      commit: { status: "skipped_not_requested" },
+      push: { status: "pushed", branch: "fix" },
+      pr: { status: "opened_existing", url: "https://github.com/owner/repo/pull/1", number: 1 },
+      toast: {
+        title: "Pushed fix",
+        cta: { kind: "open_pr", label: "View PR", url: "https://github.com/owner/repo/pull/1" },
+      },
+    });
+    expect(result.pr).toEqual({ status: "skipped_not_requested" });
+    expect(result.toast.cta).toEqual({ kind: "none" });
+    expect(
+      decodeRunStackedActionResult({
+        ...result,
+        toast: {
+          title: "Pushed",
+          cta: { kind: "run_action", label: "Create PR", action: { kind: "create_pr" } },
+        },
+      }).toast.cta,
+    ).toEqual({ kind: "none" });
+  });
+
+  it("still decodes the pull request actions older clients send", () => {
+    expect(
+      decodeRunStackedActionInput({ actionId: "action-1", cwd: "/repo", action: "create_pr" })
+        .action,
+    ).toBe("create_pr");
   });
 });
 
@@ -92,19 +119,6 @@ describe("Git file paths", () => {
         changeType: "rename-changed",
         baseRef: "HEAD",
         headRef: null,
-        oldPath: " leading.txt",
-        newPath: "trailing.txt ",
-      },
-    },
-    {
-      operation: "pull request diff expansion",
-      decode: decodePullRequestDiffFileContentsInput,
-      encode: encodePullRequestDiffFileContentsInput,
-      input: {
-        projectId: "project-1",
-        repository: "owner/repo",
-        number: 1,
-        changeType: "rename-changed",
         oldPath: " leading.txt",
         newPath: "trailing.txt ",
       },

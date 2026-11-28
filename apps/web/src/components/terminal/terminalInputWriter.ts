@@ -7,7 +7,7 @@ type SendTerminalChunk = (chunk: string) => Promise<boolean | "not-dispatched">;
  * Orders one terminal's input into writes that fit `terminal.write`. A split write goes one chunk
  * per round trip and later input waits behind it; other writes go out immediately, like keystrokes.
  */
-export function createTerminalInputWriter(onIdle = () => {}) {
+function createTerminalInputWriter(onIdle = () => {}) {
   let pending: Promise<void> | null = null;
   const immediate = new Set<Promise<void>>();
 

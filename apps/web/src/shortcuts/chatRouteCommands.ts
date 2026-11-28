@@ -108,6 +108,10 @@ export function installChatRouteCommands(router: AnyRouter): () => void {
   const canOperatePreview = (environmentId: EnvironmentId) =>
     readEnvironmentScope(environmentId, AuthPreviewOperateScope);
 
+  const chatRouteShowing = () =>
+    router.state.matches.some((match) => match.routeId === CHAT_ROUTE_ID) &&
+    !router.state.matches.some((match) => isAppModalPage(match.pathname));
+
   const claim = (event: KeyboardEvent) => {
     event.preventDefault();
     event.stopPropagation();
@@ -195,10 +199,8 @@ export function installChatRouteCommands(router: AnyRouter): () => void {
       },
     },
     {
-      when: () =>
-        router.state.matches.some((match) => match.routeId === CHAT_ROUTE_ID) &&
-        !router.state.matches.some((match) => isAppModalPage(match.pathname)) &&
-        !isCommandPaletteOpen(),
+      when: () => chatRouteShowing() && !isCommandPaletteOpen(),
+      menu: chatRouteShowing,
       context: () => {
         const threadRef = readRouteThreadRef();
         return {

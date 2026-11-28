@@ -10,7 +10,7 @@ import { issueEnvironment } from "~/state/issues";
 import { useAtomCommand } from "~/state/use-atom-command";
 
 import { ComposerSurface } from "../chat/ComposerSurface";
-import { readableFailure } from "../pullRequest/pullRequestDetail.logic";
+import { readableFailure } from "~/lib/readableFailure";
 import { Spinner } from "../ui/spinner";
 import { toastManager } from "../ui/toast";
 

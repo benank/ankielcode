@@ -49,7 +49,7 @@ const generatePassword = Effect.gen(function* () {
 });
 
 /** OPENCODE_PASSWORD overrides OPENCODE_SERVER_PASSWORD; drop the inherited 1.x variable. */
-export const serverEnvironment = (
+const serverEnvironment = (
   environment: NodeJS.ProcessEnv,
   password: Redacted.Redacted,
 ): NodeJS.ProcessEnv => {
@@ -84,7 +84,7 @@ const describeInfoFailure = (cause: unknown) => {
 };
 
 /** Only server info proves readiness; keep credential-bearing failure details out of client text. */
-export const verifyServer = (client: OpenCodeClient, environment?: NodeJS.ProcessEnv) =>
+const verifyServer = (client: OpenCodeClient, environment?: NodeJS.ProcessEnv) =>
   client.server.info().pipe(
     Effect.timeoutOrElse({
       duration: resolveProviderProbeTimeoutMs("opencode", INFO_TIMEOUT_MS, environment),

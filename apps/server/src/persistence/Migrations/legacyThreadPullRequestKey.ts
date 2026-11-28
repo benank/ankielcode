@@ -1,7 +1,11 @@
-import type { ThreadLinkedPullRequest, ThreadPullRequestKey } from "@ankielcode/contracts";
+interface ThreadPullRequestKey {
+  readonly host: string;
+  readonly repository: string;
+  readonly number: number;
+}
 
 /**
- * Frozen for migrations 050 and 064: the change request URL parsing and key normalization they
+ * Frozen for migration 050: the change request URL parsing and key normalization it
  * shipped with. Migrations are history, so they must not follow the live source control hosts.
  */
 
@@ -85,9 +89,11 @@ function normalizeThreadPullRequestKey(
   };
 }
 
-export function legacyThreadPullRequestKey(
-  linked: Pick<ThreadLinkedPullRequest, "repository" | "number" | "url">,
-): ThreadPullRequestKey {
+export function legacyThreadPullRequestKey(linked: {
+  readonly repository: string;
+  readonly number: number;
+  readonly url: string;
+}): ThreadPullRequestKey {
   const parsed = parseChangeRequestUrl(linked.url);
   if (parsed !== null && parsed.number === linked.number) {
     const canonical = canonicalRepositoryKey(`${parsed.host}/${parsed.repository}`);

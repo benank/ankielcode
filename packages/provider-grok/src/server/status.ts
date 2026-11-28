@@ -202,7 +202,7 @@ export function grokReasoningOptionsFromModel(model: EffectAcpSchema.ModelInfo):
   };
 }
 
-export function buildGrokModelCapabilities(model: EffectAcpSchema.ModelInfo): ModelCapabilities {
+function buildGrokModelCapabilities(model: EffectAcpSchema.ModelInfo): ModelCapabilities {
   const reasoning = grokReasoningOptionsFromModel(model);
   return reasoning.options.length > 0
     ? createModelCapabilities({
@@ -256,7 +256,7 @@ export interface GrokModelsCliOutput {
 }
 
 /** Exit status is always 0; only output text indicates login state. */
-export function parseGrokModelsCliOutput(output: string): GrokModelsCliOutput {
+function parseGrokModelsCliOutput(output: string): GrokModelsCliOutput {
   const authenticated = /you are logged in/i.test(output)
     ? true
     : /not authenticated|not logged in/i.test(output)
@@ -349,7 +349,7 @@ const decodeAvailableCommand = Schema.decodeUnknownOption(
   }),
 );
 
-export function grokSlashCommandsFromInitialize(
+function grokSlashCommandsFromInitialize(
   initialized: EffectAcpSchema.InitializeResponse,
 ): ReadonlyArray<ServerProviderSlashCommand> {
   const commands = decodeAvailableCommands(initialized._meta?.availableCommands);

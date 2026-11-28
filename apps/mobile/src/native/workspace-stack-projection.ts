@@ -33,7 +33,7 @@ export function projectWorkspaceStack(
 }
 
 /** Native callbacks can arrive after a JS pop or replace; those must not pop the next screen. */
-export function nativeWorkspacePopCount(
+function nativeWorkspacePopCount(
   state: Pick<NavigationState, "index" | "routes">,
   dismissedKey: string,
 ): number {

@@ -28,7 +28,7 @@ function originOf(url: string): string | null {
  * Keeps a hidden guest painting behind the app while the desktop host captures it; Electron
  * composites no offscreen guest, so its screenshot or stream would otherwise never finish.
  */
-export function createCaptureActivity(tabId: string) {
+function createCaptureActivity(tabId: string) {
   let release: (() => void) | null = null;
   const update = (capturing: boolean) => {
     if (capturing && !release) release = acquireBrowserSurfaceActivity(tabId);
@@ -141,7 +141,7 @@ function projectDesktopNavStatus(
   }
 }
 
-export function projectDesktopState(state: DesktopPreviewTabState): DesktopPreviewOverlay {
+function projectDesktopState(state: DesktopPreviewTabState): DesktopPreviewOverlay {
   const navOrigin = state.navStatus.kind === "Idle" ? null : originOf(state.navStatus.url);
   return {
     hasWebContents: state.webContentsId !== null,
@@ -159,7 +159,7 @@ export function projectDesktopState(state: DesktopPreviewTabState): DesktopPrevi
   };
 }
 
-export function buildReportInput(args: {
+function buildReportInput(args: {
   readonly threadId: ThreadId;
   readonly tabId: string;
   readonly state: DesktopPreviewTabState;

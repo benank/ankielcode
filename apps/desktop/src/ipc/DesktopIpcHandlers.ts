@@ -10,6 +10,10 @@ import {
 import * as DesktopIpc from "./DesktopIpc.ts";
 import { installNotificationBadge } from "./methods/notificationBadge.ts";
 import { installDesktopNotifications } from "./methods/notifications.ts";
+import { installLowPowerState } from "./methods/lowPower.ts";
+import { installPowerResume } from "./methods/powerResume.ts";
+import { installRecentThreads } from "./methods/recentThreads.ts";
+import { installMediaDrag } from "./methods/mediaDrag.ts";
 import { getClientSettings, setClientSettings } from "./methods/clientSettings.ts";
 import { getConnectionCatalog, setConnectionCatalog } from "./methods/connectionCatalog.ts";
 import {
@@ -56,11 +60,14 @@ import {
   pasteAsText,
   probeRemoteEditors,
   revealWindow,
+  closeWindow,
   pickFolder,
   toLocalBackendPath,
   pickProjectFavicon,
   pickThemeFiles,
+  setMenuState,
   setTheme,
+  setWindowBackground,
   syncHtmlFullscreen,
   showContextMenu,
 } from "./methods/window.ts";
@@ -90,6 +97,10 @@ export const installDesktopIpcHandlers = Effect.fn("desktop.ipc.installHandlers"
   const ipc = yield* DesktopIpc.DesktopIpc;
   yield* installNotificationBadge();
   yield* installDesktopNotifications();
+  yield* installLowPowerState();
+  yield* installPowerResume();
+  yield* installRecentThreads();
+  yield* installMediaDrag();
   yield* PreviewIpc.installPreviewEventForwarding();
 
   yield* ipc.handle(WebLinksIpc.setReady);
@@ -150,7 +161,9 @@ export const installDesktopIpcHandlers = Effect.fn("desktop.ipc.installHandlers"
   yield* ipc.handle(pickProjectFavicon);
   yield* ipc.handle(pickThemeFiles);
   yield* ipc.handle(setTheme);
+  yield* ipc.handle(setWindowBackground);
   yield* ipc.handle(showContextMenu);
+  yield* ipc.handle(setMenuState);
   yield* ipc.handle(openExternal);
   yield* ipc.handle(readMedia);
   yield* ipc.handle(receiveProviderAuthCallback);
@@ -162,6 +175,7 @@ export const installDesktopIpcHandlers = Effect.fn("desktop.ipc.installHandlers"
   yield* ipc.handle(appleSpeechTranscribe);
   yield* ipc.handle(pasteAsText);
   yield* ipc.handle(revealWindow);
+  yield* ipc.handle(closeWindow);
   yield* ipc.handle(syncHtmlFullscreen);
   yield* ipc.handle(probeRemoteEditors);
   yield* ipc.handle(getUpdateState);

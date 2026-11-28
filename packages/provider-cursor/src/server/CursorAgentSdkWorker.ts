@@ -588,7 +588,7 @@ const runCursorSdkWorkerWithStdio = Effect.fn("CursorAgentSdkWorker.run")(functi
 });
 
 // The worker has already booted, so agent shells can drop Electron's Node flag and the AppImage env.
-export function scrubCursorWorkerEnvironment(env: NodeJS.ProcessEnv): void {
+function scrubCursorWorkerEnvironment(env: NodeJS.ProcessEnv): void {
   delete env.ELECTRON_RUN_AS_NODE;
   const scrubbed = stripAppImageRuntimeEnv(env);
   for (const key of Object.keys(env)) {

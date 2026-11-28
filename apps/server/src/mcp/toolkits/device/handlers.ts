@@ -27,7 +27,7 @@ const shellWord = (value: string) =>
   /^[a-zA-Z0-9_./:-]+$/.test(value) ? value : "'" + value.replaceAll("'", "'\"'\"'") + "'";
 
 /** `targetArgs` are the flags the command still needs; a bound launcher needs none. */
-export function agentDeviceQuickStart(
+function agentDeviceQuickStart(
   device: DeviceSummary,
   targetArgs = agentDeviceTargetArgs(device),
   command = "agent-device",
@@ -94,7 +94,7 @@ const requireDeviceAccess = McpInvocationContext.requireThreadMcpCapability("dev
   ),
 );
 
-export const resolveHostId = Effect.fn("handlers.resolveHostId")(function* (
+const resolveHostId = Effect.fn("handlers.resolveHostId")(function* (
   hosts: ReadonlyArray<DeviceHostSummary>,
   hostId: string | undefined,
 ): Effect.fn.Return<DeviceHostId | undefined, DeviceToolUnavailableError> {
@@ -382,7 +382,7 @@ const handlers = {
   ),
 } satisfies McpToolAccess.Handlers<typeof DeviceToolkit.tools>;
 
-export function pngDimensions(png: Uint8Array): { width: number; height: number } {
+function pngDimensions(png: Uint8Array): { width: number; height: number } {
   if (png.length < 24) return { width: 0, height: 0 };
   const view = new DataView(png.buffer, png.byteOffset, png.byteLength);
   const isPng =

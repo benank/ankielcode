@@ -2,11 +2,9 @@ import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { createContext, use, useState, type Dispatch, type ReactNode } from "react";
 
-import { pullRequestsSupportedAtom } from "../../../state/presentation";
-import { mobilePreferencesAtom, saveMobilePreferences } from "../../../state/preferences";
-import { useAtomCommand } from "../../../state/use-atom-command";
+import { issuesSupportedAtom } from "../../../state/presentation";
+import { mobilePreferencesAtom } from "../../../state/preferences";
 import {
-  isSharedSlotTab,
   workspaceHiddenNavigationTabs,
   resolveSelectedNavigationTab,
 } from "./navigation-tab-order";
@@ -42,11 +40,11 @@ type MobilePreferencesResult = Atom.Type<typeof mobilePreferencesAtom>;
 function resolveWorkspaceTabsSelection(
   state: WorkspaceTabsState,
   preferences: MobilePreferencesResult,
-  githubEnabled: boolean,
+  issuesEnabled: boolean,
 ): WorkspaceTabsState {
   const saved = AsyncResult.isSuccess(preferences) ? preferences.value : undefined;
   const order = resolveWorkspaceTabOrder(saved?.navigationTabOrder);
-  const hidden = workspaceHiddenNavigationTabs(state.selectedTab, saved, githubEnabled);
+  const hidden = workspaceHiddenNavigationTabs(saved, issuesEnabled);
   const selected = resolveSelectedNavigationTab(order, hidden, state.selectedTab);
   return selected && selected !== state.selectedTab
     ? workspaceTabsReducer(state, { type: "select", tab: selected })
@@ -59,7 +57,6 @@ function createWorkspaceTabsModel(selectedTab?: WorkspaceTab) {
   const stored = Atom.make(initialWorkspaceTabsState(selectedTab));
   const scrollOffsets: Record<WorkspaceSearchTab, number> = {
     threads: 0,
-    pullRequests: 0,
     issues: 0,
     workflows: 0,
     usage: 0,
@@ -71,7 +68,7 @@ function createWorkspaceTabsModel(selectedTab?: WorkspaceTab) {
       resolveWorkspaceTabsSelection(
         get(stored),
         get(mobilePreferencesAtom),
-        get(pullRequestsSupportedAtom),
+        get(issuesSupportedAtom),
       ),
     ),
     getScrollOffset: (tab: WorkspaceSearchTab) => scrollOffsets[tab],
@@ -89,11 +86,8 @@ export function WorkspaceTabsProvider(props: {
   const registry = use(RegistryContext);
   const [model] = useState(() => createWorkspaceTabsModel(props.initialTab));
   const state = useAtomValue(model.resolved);
-  const savePreferences = useAtomCommand(saveMobilePreferences);
   const dispatch = (action: WorkspaceTabsAction) => {
     registry.set(model.stored, workspaceTabsReducer(registry.get(model.resolved), action));
-    if (action.type === "select" && isSharedSlotTab(action.tab))
-      void savePreferences({ sharedSlotTab: action.tab });
   };
   const context = {
     state,

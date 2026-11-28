@@ -204,7 +204,7 @@ export function SourceControlTokenForm(props: {
   // Translates the GitHub definition's English `tokenAccess`, as the web settings do.
   const tokenAccess =
     definition.kind === "github"
-      ? gt("read and write access to pull requests and contents")
+      ? gt("read and write access to issues and contents")
       : credentials.tokenAccess;
   const { tokens } = readHostCredentialSettings(
     props.environment.serverConfig.settings,

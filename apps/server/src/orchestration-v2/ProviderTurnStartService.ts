@@ -118,7 +118,7 @@ const NON_COMPLETING_TERMINAL_RUN_STATUSES: ReadonlySet<OrchestrationV2Run["stat
   "rolled_back",
 ]);
 
-export function abandonedProviderTurns(
+function abandonedProviderTurns(
   projection: Pick<OrchestrationV2ThreadProjection, "runs" | "attempts" | "providerTurns">,
   run: Pick<OrchestrationV2Run, "ordinal">,
   providerThreadId: OrchestrationV2ProviderThread["id"],

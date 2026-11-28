@@ -324,7 +324,7 @@ export function themeColorWithAlpha(color: string, alpha: number): string {
   return rgb ? `rgba(${rgb[1]}, ${rgb[2]}, ${rgb[3]}, ${alpha})` : color;
 }
 
-export function createMobileThemeVariables(
+function createMobileThemeVariables(
   colors: ThemeColors,
   appearance: MobileThemeAppearance,
   groupedCardColor = colors.surface,

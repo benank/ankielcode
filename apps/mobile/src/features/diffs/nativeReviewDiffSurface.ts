@@ -195,7 +195,7 @@ let nativeReviewDiffViewResolutionFailed = false;
 
 type NativeReviewDiffPayloadMethod = "setRowsJson" | "setTokensJson" | "setTokensPatchJson";
 
-export function isPendingNativeViewRegistration(error: unknown): boolean {
+function isPendingNativeViewRegistration(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
   return (
     error.message.includes(`Unable to find the '${NATIVE_REVIEW_DIFF_MODULE_NAME}' view`) ||

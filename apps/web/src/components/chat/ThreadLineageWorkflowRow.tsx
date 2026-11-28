@@ -85,7 +85,6 @@ function WorkflowMemberRow({
     <li>
       <Tooltip>
         <TooltipTrigger
-          delay={200}
           render={
             <ThreadDetailsControl
               part="row"

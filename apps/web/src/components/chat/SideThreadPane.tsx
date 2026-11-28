@@ -117,7 +117,7 @@ export default function SideThreadPane(props: {
             gt('Delete side chat "{title}"?', { title: shell.title }),
             gt("This permanently clears its conversation history."),
           ].join("\n"),
-          { variant: "destructive" },
+          { confirmLabel: gt("Delete", { $context: "verb, deletes a thread" }), destructive: true },
         ),
       );
       if (confirmed._tag === "Failure" || !confirmed.value) return;

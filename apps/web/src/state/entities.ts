@@ -230,16 +230,6 @@ export function resolveThreadDetailRef(
   return ref !== null && (!options.waitForShell || options.shellExists) ? ref : null;
 }
 
-export function useThreadVisibleTurnItems(
-  ref: ScopedThreadRef | null,
-): ReadonlyArray<OrchestrationV2ProjectedTurnItem> {
-  return useAtomValue(
-    ref === null
-      ? EMPTY_VISIBLE_TURN_ITEMS_ATOM
-      : environmentThreadDetails.visibleTurnItemsAtom(ref),
-  );
-}
-
 /** Visible turn items held through streamed assistant text; see useAssistantMessageText. */
 export function useTimelineVisibleTurnItems(
   ref: ScopedThreadRef | null,
@@ -399,7 +389,7 @@ function shellParentThreadId(
 }
 
 /** Retains unchanged reachable shells so unrelated streams do not re-render the panel. */
-export function selectThreadRelationshipShells(
+function selectThreadRelationshipShells(
   threadId: ThreadId,
   projection: Pick<ThreadStructure, "thread" | "subagents" | "contextTransfers"> | null,
   threads: ReadonlyArray<OrchestrationV2ThreadShell>,

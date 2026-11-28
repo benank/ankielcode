@@ -4,7 +4,6 @@ import { useGT, useMessages } from "gt-react";
 import { ChildThreadApprovals } from "./chat/ChildThreadApprovals";
 import { draftSupportedRuntimeModes } from "./chat/runtimeModeConfig";
 import { workspaceAreaProps } from "../lib/workspaceFocus";
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
 import { resolveNewThreadModelSelection } from "@ankielcode/shared/usageLimits";
 import { queuedRunEditBlockedReason } from "@ankielcode/client-runtime/queued-run-edit";
 import { ScrollToEndButton, WorkspaceFileDropOverlay } from "./chat/TimelineOverlays";
@@ -19,8 +18,6 @@ import {
   deriveThreadPendingBackgroundTasks,
   presentThreadShellFromProjection,
 } from "./ChatView.logic";
-import { usePullRequestDraftThread } from "./chat/usePullRequestDraftThread";
-import { usePullRequestLinking } from "../hooks/usePullRequestLinking";
 import { useComposerSelection } from "./chat/useComposerSelection";
 import { useComposerFocus } from "./chat/useComposerFocus";
 import { useProjectCloneBanner } from "./chat/useProjectCloneBanner";
@@ -38,7 +35,12 @@ import { type TerminalLaunchContext, useChatTerminalActions } from "./chat/useCh
 import { useComposerSend } from "./chat/useComposerSend";
 import { useComposerResume } from "./chat/useComposerResume";
 import { ThreadFind, ThreadFindCanvas } from "./chat/ThreadFindProvider";
-import { closeThreadFind, openThreadFind, useThreadFindOpen } from "./chat/threadFindStore";
+import {
+  closeThreadFind,
+  openThreadFind,
+  stepThreadFind,
+  useThreadFindOpen,
+} from "./chat/threadFindStore";
 import { THREAD_FIND_BAR_RESERVED_HEIGHT } from "./chat/ThreadFindBar";
 import { useUsageLimitRecoveryBannerItem } from "./chat/UsageLimitRecoveryBanner";
 import {
@@ -55,7 +57,6 @@ import { RightPanelSurfaceContent } from "./chat/RightPanelSurfaceContent";
 import { usePendingThreadRequests } from "./chat/usePendingThreadRequests";
 import { isScratchProject } from "@ankielcode/client-runtime/state/projects";
 import { resolveWorktreeRepositorySelection } from "@ankielcode/client-runtime/state/thread-repositories";
-import { visibleThreadPullRequests } from "@ankielcode/shared/threadPullRequests";
 import { feedbackBannerItem } from "./chat/ComposerFeedback";
 import { freshSessionBannerItem } from "./chat/ComposerFreshSession";
 import { heldComposerSendBannerItem } from "./chat/ComposerHeldSendBanner";
@@ -128,7 +129,7 @@ import { formatModelSlugName, resolveSelectableModel } from "@ankielcode/shared/
 import { projectScriptCwd, resolveProjectScripts } from "@ankielcode/shared/projectScripts";
 import { resolveProjectSettings } from "@ankielcode/shared/projectSettings";
 import { orchestrationV2WorktreePending } from "@ankielcode/shared/orchestrationV2ThreadError";
-import { resolveThreadReferenceCopyTarget } from "@ankielcode/client-runtime/thread-reference";
+import { threadChipCopyTarget } from "@ankielcode/client-runtime/thread-reference";
 import { resolveTerminalSessionLabel } from "@ankielcode/shared/terminalLabelsCopy";
 import { useAtomValue } from "@effect/atom-react";
 import {
@@ -200,8 +201,6 @@ import {
   selectThreadPreviewMiniPlayer,
   usePreviewMiniPlayerStore,
 } from "../previewMiniPlayerStore";
-import { threadPullRequestPanelTarget } from "./pullRequest/pullRequestDetail.logic";
-import { LinkPullRequestDialogHost } from "./pullRequest/LinkPullRequestDialog";
 import { useDeviceState } from "~/state/device";
 import { BranchToolbar, type BranchToolbarHandle } from "./BranchToolbar";
 import { ComposerContextPermissions } from "./ComposerContextPermissions";
@@ -235,7 +234,6 @@ import { usePanelAnimationSettings, usePanelPresence } from "../panelAnimations"
 import { useNewThreadHandler } from "../hooks/useHandleNewThread";
 import { useWorktreeRepositoryChoices } from "../hooks/useWorktreeRepositoryChoices";
 import { useRememberedWorktreeRepositories } from "../worktreeRepositoryChoiceStore";
-import { useOpenPanelPullRequestUrl } from "../hooks/useOpenPanelPullRequestUrl";
 import { isPreviewFocused } from "../lib/previewFocus";
 import { getTerminalFocusOwner } from "../lib/terminalFocus";
 import { draftModelSelectionApplies, threadHasStarted } from "../lib/chatThreadActions";
@@ -299,7 +297,6 @@ import {
   BranchRestoreConfirmHost,
   DeviceSetupDialogHost,
   openBranchRestoreConfirm,
-  PullRequestThreadDialogHost,
   RevertConfirmHost,
 } from "./chat/ChatOverlayHosts";
 import type { AssistantCitationRequest } from "./chat/AssistantCitationSource";
@@ -346,7 +343,6 @@ import {
   shouldShowThreadErrorBanner,
 } from "./chat/ThreadErrorBanner";
 import { QueuedRunsControl, type QueuedRunsControlHandle } from "./chat/QueuedRunsControl";
-import { useThreadLinkedPullRequest } from "./pullRequest/useThreadLinkedPullRequest";
 import { useProactivePanels } from "../hooks/useProactivePanels";
 import { useIncrementalTimelineEntries } from "../hooks/useIncrementalTimelineEntries";
 import { useRightPanelSurfaceClose } from "../hooks/useRightPanelSurfaceClose";
@@ -1036,7 +1032,6 @@ export default function ChatView(props: ChatViewProps) {
     (isServerThread ? activeThread?.runtimeMode : undefined) ??
     defaultRuntimeMode;
   const isLocalDraftThread = !isServerThread && localDraftThread !== undefined;
-  const canCheckoutPullRequestIntoThread = canWriteSourceControl && isLocalDraftThread;
   const activeThreadId = activeThread?.id ?? null;
   // Turn items can lag projection hydration; keep the environment locked through that gap.
   const activeMessageCount = isServerThread
@@ -1293,24 +1288,6 @@ export default function ChatView(props: ChatViewProps) {
     canPickEnvironment: hasMultipleEnvironments,
   });
 
-  const pullRequestLinking = usePullRequestLinking(environmentId);
-  // Best effort: the thread already exists, so a failed link is only logged.
-  const linkCheckoutPullRequest = useStableCallback((threadRef: ScopedThreadRef, url: string) => {
-    pullRequestLinking.changeLink(threadRef, url, true).catch((error: unknown) => {
-      console.warn("Failed to link the checked-out pull request to its thread.", error);
-    });
-  });
-  const { handlePreparedPullRequestThreadStable, openPullRequestDialogStable } =
-    usePullRequestDraftThread({
-      routeKind,
-      draftId,
-      settings,
-      projectGroupingSettings,
-      activeProject,
-      activeThreadKey,
-      isServerThread,
-      canCheckoutPullRequestIntoThread,
-    });
   const serverConfig = activeThread
     ? (activeEnvironment?.serverConfig ?? null)
     : (primaryEnvironment?.serverConfig ?? null);
@@ -1344,8 +1321,6 @@ export default function ChatView(props: ChatViewProps) {
     providers: providerStatuses,
   });
   const modelPickerLockedProvider = supportsProviderSwitchingViaHandoff ? null : lockedProvider;
-  const pullRequestsCapabilityKnown = serverConfig !== null;
-  const supportsPullRequests = serverConfig !== null;
   const attachmentEnvironmentConfig = environmentById.get(environmentId)?.serverConfig ?? null;
   const attachmentUploadsCapabilityKnown = attachmentEnvironmentConfig !== null;
   const supportsQuestionAttachments = attachmentEnvironmentConfig !== null;
@@ -2078,44 +2053,11 @@ export default function ChatView(props: ChatViewProps) {
       threadPanelPresentation,
     ),
   );
-  const supportsThreadPullRequests = serverConfig !== null;
-  const visiblePullRequests = visibleThreadPullRequests(
-    (activeThreadShell ?? activeThread)?.pullRequests ?? [],
-  );
-  const visiblePullRequestCount = visiblePullRequests.length;
-  const pullRequestsSurfaceAvailable =
-    isServerThread && supportsThreadPullRequests && visiblePullRequestCount > 0;
   const linkedItemsSurfaceAvailable =
-    pullRequestsSurfaceAvailable ||
-    (isServerThread && (activeThreadShell?.issues?.length ?? 0) > 0);
+    isServerThread && (activeThreadShell?.issues?.length ?? 0) > 0;
   const { state: deviceState, loaded: deviceStateLoaded } = useDeviceState(
     activeThreadRef?.environmentId ?? null,
   );
-  // The thread's own change request, placed against the project it belongs to. Without a
-  // project there is nothing to resolve it against, so the caller falls back to the browser.
-  const activeProjectRepository = sourceControlClients.repositorySelector(
-    activeProject?.repositoryIdentity,
-  );
-  const {
-    linked: linkedThreadPullRequest,
-    linkedKey: linkedThreadPullRequestKey,
-    hasDetail: hasLinkedPullRequestDetail,
-  } = useThreadLinkedPullRequest({
-    serverThreadRef: isServerThread ? activeThreadRef : null,
-    environmentId: activeThreadRef?.environmentId ?? null,
-    persisted: isServerThread
-      ? (activeThreadShell?.linkedPullRequest ?? activeThread?.linkedPullRequest ?? null)
-      : (activeThread?.linkedPullRequest ?? null),
-    projectId: activeProject?.id ?? null,
-    projectRepository: activeProjectRepository,
-    threadBranch: activeThread?.branch ?? null,
-    gitStatus: gitStatusQuery.data ?? null,
-  });
-  const proactivePullRequestsKey = pullRequestsSurfaceAvailable
-    ? JSON.stringify(
-        visiblePullRequests.map((link) => [link.host, link.repository, link.number]).sort(),
-      )
-    : linkedThreadPullRequestKey;
   const activeRunningTurnId = activeRuntime?.activeRunId ?? null;
   useProactivePanels({
     threadRef: isServerThread && !embedded ? activeThreadRef : null,
@@ -2127,13 +2069,6 @@ export default function ChatView(props: ChatViewProps) {
     latestRunSettled,
     turnDiffSummaries,
     isGitRepo: gitStatusQuery.data?.isRepo,
-    linkedPullRequest: linkedThreadPullRequest,
-    hasLinkedPullRequestDetail,
-    pullRequestsKey: proactivePullRequestsKey,
-    pullRequestsCapabilityKnown,
-    supportsPullRequests,
-    pullRequestsSurfaceAvailable,
-    visiblePullRequestCount,
     onDiffPanelOpen,
   });
   // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- consumes a pending maximize request from the right panel store once the panel can maximize
@@ -2463,39 +2398,20 @@ export default function ChatView(props: ChatViewProps) {
     // oxlint-disable-next-line react/exhaustive-effect-dependencies -- The scroll-to-bottom button changes the overlay's height without resizing the observed node first.
     showScrollToBottom,
   ]);
-  const openPanelPullRequestUrl = useOpenPanelPullRequestUrl(activeThreadRef);
   const activeThreadReferenceCopyTarget =
     activeThreadRef === null || !isServerThread
       ? null
-      : resolveThreadReferenceCopyTarget(
-          {
-            threadRef: activeThreadRef,
-            title: activeThread?.title ?? "",
-            openPanelPullRequestUrl,
-            pullRequests: activeThread?.pullRequests,
-            linkedPullRequestUrl: linkedThreadPullRequest?.url ?? null,
-          },
-          messages,
-        );
+      : threadChipCopyTarget(activeThreadRef, activeThread?.title ?? "", messages);
   const copyActiveThreadReference = () => {
     if (activeThreadReferenceCopyTarget === null) return;
     void copyThreadReference(activeThreadReferenceCopyTarget);
   };
-  const pullRequestPanelTarget = activeThread
-    ? threadPullRequestPanelTarget({
-        projectId: activeThread.projectId,
-        pullRequests: visiblePullRequests,
-        linkedPullRequest: linkedThreadPullRequest,
-        branchPullRequest: activeThreadShell?.branchPullRequest ?? activeThread.branchPullRequest,
-      })
-    : null;
   const {
     activateRightPanelSurfaceStable,
     addDeviceSurfaceStable,
     addDiffSurfaceStable,
     addFilesSurfaceStable,
-    addPullRequestSurfaceStable,
-    addPullRequestsSurfaceStable,
+    addLinkedItemsSurfaceStable,
     closePreviewPanelStable,
     copyRightPanelFilePathStable,
     createBrowserSurface,
@@ -2516,7 +2432,6 @@ export default function ChatView(props: ChatViewProps) {
     activePreviewState,
     deviceState,
     deviceStateLoaded,
-    pullRequestPanelTarget,
     threadPanelPresentation,
     isServerThread,
     embedded,
@@ -2528,14 +2443,12 @@ export default function ChatView(props: ChatViewProps) {
     rightPanelOpen,
     canMaximizeRightPanel,
     rightPanelMaximized,
-    supportsPullRequests,
-    pullRequestsSurfaceAvailable: linkedItemsSurfaceAvailable,
+    linkedItemsSurfaceAvailable,
     gitCwd,
     activeProjectCwd,
     onDiffPanelOpen,
     closeRightPanelSurface,
   });
-  const pullRequestSurfaceAvailable = supportsPullRequests && pullRequestPanelTarget !== null;
   const {
     acknowledgeActiveThreadWoke,
     activeBranchMismatchKey,
@@ -2851,6 +2764,8 @@ export default function ChatView(props: ChatViewProps) {
     setTerminalUiLaunchContext(null);
   }
 
+  const threadFindEnabled = isServerThread && serverConfig?.threadFind === true;
+  const isThreadFindActive = useThreadFindOpen(activeThreadRef, threadFindEnabled);
   const getShortcutContext = (eventTarget: EventTarget | null = document.activeElement) => ({
     terminalFocus: getTerminalFocusOwner() !== null,
     terminalOpen: Boolean(terminalUiState.terminalOpen),
@@ -2871,6 +2786,7 @@ export default function ChatView(props: ChatViewProps) {
       !composerHasNonPromptContent &&
       promptRef.current.trim().length === 0,
     composerRequiresModifier: composerRequiresModifier(settings.sendShortcut, promptRef.current),
+    threadFindOpen: isThreadFindActive,
     isWeb: !isElectron,
     isDesktop: isElectron,
   });
@@ -2878,8 +2794,6 @@ export default function ChatView(props: ChatViewProps) {
   const timelineSkills = activeProviderStatus
     ? resolveProviderSkillsForCwd(activeProviderStatus, gitCwd)
     : EMPTY_PROVIDER_SKILLS;
-  const threadFindEnabled = isServerThread && serverConfig?.threadFind === true;
-  const isThreadFindActive = useThreadFindOpen(activeThreadRef, threadFindEnabled);
   const openThreadFindStable = useStableCallback((threadRef: ScopedThreadRef) => {
     if (threadFindEnabled && scopedThreadKey(threadRef) === activeThreadKey) {
       openThreadFind(activeThreadKey);
@@ -2912,6 +2826,12 @@ export default function ChatView(props: ChatViewProps) {
           return false;
         openThreadFind(activeThreadKey);
       },
+      ...(isThreadFindActive && activeThreadKey !== null
+        ? {
+            "chat.findNext": () => stepThreadFind(activeThreadKey, 1),
+            "chat.findPrevious": () => stepThreadFind(activeThreadKey, -1),
+          }
+        : {}),
       "composer.cycleHost": ({ event }) => {
         if (!canChangeEnvironment) return false;
         if (event.repeat) return;
@@ -2940,27 +2860,6 @@ export default function ChatView(props: ChatViewProps) {
       return script ? () => void runProjectScriptStable(script) : undefined;
     },
   });
-
-  const closeActiveRightPanelSurfaceStable = useStableCallback(() => {
-    if (activeRightPanelSurface) closeRightPanelSurface(activeRightPanelSurface);
-  });
-
-  // A focused desktop browser page forwards these chords as menu actions.
-  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- subscribes to desktop bridge menu actions that toggle or close the right panel
-  useEffect(() => {
-    if (embedded || backgroundThread) return;
-    return window.desktopBridge?.onMenuAction((action) => {
-      if (action === "rightPanel.toggle") toggleRightPanelStable();
-      else if (action === "rightPanel.toggleMaximized") toggleRightPanelMaximizedStable();
-      else if (action === "rightPanel.close") closeActiveRightPanelSurfaceStable();
-    });
-  }, [
-    embedded,
-    backgroundThread,
-    toggleRightPanelStable,
-    toggleRightPanelMaximizedStable,
-    closeActiveRightPanelSurfaceStable,
-  ]);
 
   usePasteToFocusComposer(embedded ? null : activeThreadId, composerRef);
   const isSubagentThread = activeThread?.lineage.relationshipToParent === "subagent";
@@ -3158,7 +3057,6 @@ export default function ChatView(props: ChatViewProps) {
     sideChatDisabledReason,
     handleNewThreadInActiveProject,
     persistThreadSettingsForNextTurn,
-    linkCheckoutPullRequest,
   });
 
   const onWorktreeSetupWorkLocally = () => {
@@ -3390,18 +3288,7 @@ export default function ChatView(props: ChatViewProps) {
         newShortcutLabel: newTerminalShortcutLabel ?? undefined,
         closeShortcutLabel: closeTerminalShortcutLabel ?? undefined,
       }}
-      pullRequest={{
-        capabilityKnown: pullRequestsCapabilityKnown,
-        supported: supportsPullRequests,
-        projectId: activeThread.projectId,
-        pullRequests: visiblePullRequests,
-        linkedPullRequest: linkedThreadPullRequest,
-        branchPullRequest: activeThreadShell?.branchPullRequest ?? activeThread.branchPullRequest,
-        onBack:
-          pullRequestsSurfaceAvailable && visiblePullRequestCount > 1
-            ? addPullRequestsSurfaceStable
-            : undefined,
-      }}
+      issuesCapabilityKnown={serverConfig !== null}
       issuesSupported={serverConfig?.environment.capabilities.issues === true}
       files={{
         projectId: activeProject?.id,
@@ -3731,7 +3618,10 @@ export default function ChatView(props: ChatViewProps) {
                   >
                     <ChildThreadApprovals threadRef={activeThreadRef} />
                     <div className="relative">
-                      <ComposerSurface.Shell contextRow={showComposerContextStrip}>
+                      <ComposerSurface.Shell
+                        contextRow={showComposerContextStrip}
+                        data-working={isWorking || undefined}
+                      >
                         <ComposerSurface.Host
                           inert={queuedRunEdit.isSaving}
                           aria-busy={queuedRunEdit.isSaving}
@@ -3864,15 +3754,6 @@ export default function ChatView(props: ChatViewProps) {
                                 getShortcutContext={getShortcutContextStable}
                                 terminalOpen={Boolean(terminalUiState.terminalOpen)}
                                 gitCwd={gitCwd}
-                                pullRequestProjectId={
-                                  supportsPullRequests ? (activeProject?.id ?? null) : null
-                                }
-                                pullRequestRepository={
-                                  supportsPullRequests ? activeProjectRepository : null
-                                }
-                                threadPullRequests={
-                                  (activeThreadShell ?? activeThread)?.pullRequests
-                                }
                                 onComposerOverlayHeightChange={publishComposerOverlayHeightStable}
                                 permissionsShownInStrip={
                                   showComposerContextStrip && !isServerThread
@@ -3957,9 +3838,6 @@ export default function ChatView(props: ChatViewProps) {
                                     : {})}
                                   envLocked={envLocked}
                                   onComposerFocusRequest={scheduleComposerFocusStable}
-                                  {...(canCheckoutPullRequestIntoThread
-                                    ? { onCheckoutPullRequestRequest: openPullRequestDialogStable }
-                                    : {})}
                                   {...(canChangeEnvironment
                                     ? { onEnvironmentChange: onEnvironmentChangeStable }
                                     : {})}
@@ -4086,9 +3964,6 @@ export default function ChatView(props: ChatViewProps) {
                     : {})}
                   startFromOrigin={startFromOrigin}
                   onStartFromOriginChange={onStartFromOriginChange}
-                  {...(canCheckoutPullRequestIntoThread
-                    ? { onCheckoutPullRequestRequest: openPullRequestDialogStable }
-                    : {})}
                   onComposerFocusRequest={scheduleComposerFocusStable}
                   {...(isServerThread && isGitRepo
                     ? { onOpenChanges: openChangesFromThreadPanelStable }
@@ -4102,14 +3977,6 @@ export default function ChatView(props: ChatViewProps) {
                     providers: providerStatuses,
                     contextWindow: activeContextWindow,
                   }}
-                />
-
-                <PullRequestThreadDialogHost
-                  threadKey={activeThreadKey}
-                  environmentId={activeThread.environmentId}
-                  threadId={activeThread.id}
-                  cwd={activeProject?.workspaceRoot ?? null}
-                  onPrepared={handlePreparedPullRequestThreadStable}
                 />
               </>
             )}
@@ -4180,16 +4047,14 @@ export default function ChatView(props: ChatViewProps) {
           onAddTerminal={addTerminalSurfaceStable}
           onAddDiff={addDiffSurfaceStable}
           onAddFiles={addFilesSurfaceStable}
-          onAddPullRequest={addPullRequestSurfaceStable}
-          onAddPullRequests={addPullRequestsSurfaceStable}
+          onAddLinkedItems={addLinkedItemsSurfaceStable}
           onAddDevice={addDeviceSurfaceStable}
           onAddSideChat={sideChatsOffered ? openSideChatStable : undefined}
           browserAvailable={canOperatePreview && browserAvailable}
           terminalAvailable={activeProject !== null && canOperateTerminal}
           diffAvailable={isServerThread && diffAvailable}
           filesAvailable={activeProject !== null}
-          pullRequestAvailable={pullRequestSurfaceAvailable}
-          pullRequestsAvailable={linkedItemsSurfaceAvailable}
+          linkedItemsAvailable={linkedItemsSurfaceAvailable}
           deviceAvailable={activeThreadRef !== null}
           sideChatAvailable={sideChat.available}
           sideChatDisabledReason={sideChatDisabledReason}
@@ -4206,7 +4071,6 @@ export default function ChatView(props: ChatViewProps) {
         worktreePath={activeThread?.worktreePath ?? null}
         onConfirm={onConfirmRevertStable}
       />
-      {embedded ? null : <LinkPullRequestDialogHost />}
       <ThreadVisitWatermark threadRef={routeThreadRef} />
       <ExpandedImageDialogHost threadKey={routeThreadKey} />
     </div>

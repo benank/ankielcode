@@ -56,6 +56,7 @@ import {
   reduceDesktopUpdateStateOnInstallFailure,
   reduceDesktopUpdateStateOnNoUpdate,
   reduceDesktopUpdateStateOnUpdateAvailable,
+  desktopUpdateProgressBarValue,
   resolveNotAppliedInstallVersion,
 } from "./updateMachine.ts";
 
@@ -86,7 +87,7 @@ const UpdateInfo = Schema.Struct({
 const DownloadProgressInfo = Schema.Struct({
   percent: Schema.Number,
 });
-export const DESKTOP_UPDATE_INSTALL_RECORD_FILE = "desktop-update-install.json";
+const DESKTOP_UPDATE_INSTALL_RECORD_FILE = "desktop-update-install.json";
 const DesktopUpdateInstallRecord = Schema.fromJsonString(
   Schema.Struct({ fromVersion: Schema.String, targetVersion: Schema.String }),
 );
@@ -199,10 +200,13 @@ export class DesktopUpdates extends Context.Service<
       channel: DesktopUpdateChannel,
       options?: { readonly minimumVersion?: string | undefined },
     ) => Effect.Effect<DesktopUpdateState, DesktopUpdateSetChannelError>;
-    /** `allowDowngrade` is for a guarded track switch, which checked that older release. */
+    /**
+     * `allowDowngrade` is for a guarded track switch, which checked that older release.
+     * `download` starts downloading a found update in the background, for checks the user asked for.
+     */
     readonly check: (
       reason: string,
-      options?: { readonly allowDowngrade?: boolean },
+      options?: { readonly allowDowngrade?: boolean; readonly download?: boolean },
     ) => Effect.Effect<DesktopUpdateCheckResult>;
     readonly download: Effect.Effect<DesktopUpdateActionResult>;
     readonly install: Effect.Effect<DesktopUpdateActionResult>;
@@ -265,7 +269,7 @@ function summarizeCause(cause: unknown, depth: number): string {
   return `${errorTag(cause)}${code}${message}${nested}`;
 }
 
-export function describeUpdateErrorCause(cause: unknown): string {
+function describeUpdateErrorCause(cause: unknown): string {
   try {
     return summarizeCause(cause, 0).slice(0, 1024);
   } catch {
@@ -375,6 +379,7 @@ export const make = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const desktopSettings = yield* DesktopAppSettings.DesktopAppSettings;
   const mockUpdates = config.mockUpdates;
+  const serviceScope = yield* Effect.scope;
 
   const appUpdateYmlConfigRef = yield* Ref.make<Option.Option<AppUpdateYmlConfig>>(Option.none());
   const activeUpdateActionRef = yield* Ref.make<Option.Option<UpdateAction>>(Option.none());
@@ -416,12 +421,23 @@ export const make = Effect.gen(function* () {
     Effect.flatMap((state) => electronWindow.sendAll(IpcChannels.UPDATE_STATE_CHANNEL, state)),
   );
 
+  // Dock (macOS) or taskbar (Windows) progress; every state change passes here, so failures clear it.
+  let shownProgressBar = -1;
+  const syncProgressBar = Effect.gen(function* () {
+    const progress = desktopUpdateProgressBarValue(yield* Ref.get(updateStateRef));
+    if (progress === shownProgressBar) return;
+    const main = yield* electronWindow.main;
+    if (Option.isNone(main)) return;
+    shownProgressBar = progress;
+    main.value.setProgressBar(progress);
+  }).pipe(Effect.catchDefect(() => Effect.void));
+
   const setState = (state: DesktopUpdateState): Effect.Effect<void> =>
     stateMutex
       .withPermits(1)(
         Ref.set(updateStateRef, state).pipe(Effect.andThen(PubSub.publish(stateChanges, state))),
       )
-      .pipe(Effect.andThen(emitState));
+      .pipe(Effect.andThen(emitState), Effect.andThen(syncProgressBar));
 
   const updateState = (
     f: (state: DesktopUpdateState) => DesktopUpdateState,
@@ -1040,9 +1056,22 @@ export const make = Effect.gen(function* () {
     };
   });
 
+  // electron-updater's own autoDownload would skip `offerable`, the action reservation and the
+  // differential-download choice, so found updates download through the usual path instead.
+  const downloadFoundUpdate = Effect.fn("desktop.updates.downloadFoundUpdate")(function* (
+    retryNotApplied: boolean,
+  ) {
+    const state = yield* Ref.get(updateStateRef);
+    if (state.status !== "available" || (yield* Ref.get(desktopState.quitting))) return;
+    // A version that did not apply is retried only when the user asks; background checks skip it.
+    if (!retryNotApplied && state.availableVersion === state.notAppliedVersion) return;
+    yield* downloadAvailableUpdate(false);
+  });
+
   const startUpdatePollers: Effect.Effect<void, never, Scope.Scope> = Effect.gen(function* () {
     yield* Effect.sleep(AUTO_UPDATE_STARTUP_DELAY).pipe(
       Effect.andThen(checkForUpdates("startup")),
+      Effect.andThen(downloadFoundUpdate(false)),
       Effect.catchCause((cause) => {
         if (Cause.hasInterruptsOnly(cause)) {
           return Effect.void;
@@ -1058,6 +1087,7 @@ export const make = Effect.gen(function* () {
     );
     yield* Effect.sleep(AUTO_UPDATE_POLL_INTERVAL).pipe(
       Effect.andThen(checkForUpdates("poll")),
+      Effect.andThen(downloadFoundUpdate(false)),
       Effect.forever,
       Effect.catchCause((cause) => {
         if (Cause.hasInterruptsOnly(cause)) {
@@ -1305,7 +1335,8 @@ export const make = Effect.gen(function* () {
       yield* Ref.set(updaterConfiguredRef, true);
 
       yield* electronUpdater.setAutoDownload(false);
-      yield* electronUpdater.setAutoInstallOnAppQuit(false);
+      // A .deb installs through a password prompt, which would appear while the app quits.
+      yield* electronUpdater.setAutoInstallOnAppQuit(!isDebPackage);
       yield* applyAutoUpdaterChannel(settings.updateChannel);
       yield* electronUpdater.setDisableDifferentialDownload(
         isArm64HostRunningIntelBuild(environment.runtimeInfo),
@@ -1405,7 +1436,7 @@ export const make = Effect.gen(function* () {
     }),
     check: Effect.fn("desktop.updates.check")(function* (
       reason: string,
-      options?: { readonly allowDowngrade?: boolean },
+      options?: { readonly allowDowngrade?: boolean; readonly download?: boolean },
     ) {
       yield* Effect.annotateCurrentSpan({ reason });
       if (!(yield* Ref.get(updaterConfiguredRef))) {
@@ -1415,6 +1446,9 @@ export const make = Effect.gen(function* () {
         };
       }
       const checked = yield* checkForUpdates(reason, "acquire", options?.allowDowngrade === true);
+      if (checked && options?.download === true) {
+        yield* downloadFoundUpdate(true).pipe(Effect.forkIn(serviceScope));
+      }
       return {
         checked,
         state: yield* Ref.get(updateStateRef),

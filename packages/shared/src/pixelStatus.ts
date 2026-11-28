@@ -146,9 +146,9 @@ const DONE = [
 
 /**
  * Live work glows the fixed signal cyan; attention and failure take the theme's warning and error;
- * done settles into a dim silver, so the only hue left on a settled list is something that needs you.
+ * a finished thread's light glows the fixed signal green. Plain "done" dots stay muted silver.
  */
-export type PixelStatusTone = "active" | "attention" | "failed" | "done";
+export type PixelStatusTone = "active" | "attention" | "failed" | "success" | "done";
 
 export interface PixelAnimation {
   readonly frames: readonly PixelFrame[];
@@ -166,7 +166,7 @@ export const PIXEL_ANIMATIONS: Record<PixelStatusKind, PixelAnimation> = {
   waiting: { frames: WAITING, durationMs: 1800, iterations: "infinite", tone: "active", dim: true },
   attention: { frames: ATTENTION, durationMs: 1300, iterations: "infinite", tone: "attention" },
   failed: { frames: FAILED, durationMs: 1500, iterations: 3, tone: "failed" },
-  done: { frames: DONE, durationMs: 0, iterations: 1, tone: "done" },
+  done: { frames: DONE, durationMs: 0, iterations: 1, tone: "success" },
 };
 
 export const PIXEL_LEVEL_OPACITY = { 1: 0.4, 2: 0.7, 3: 1 } as const;

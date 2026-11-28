@@ -45,10 +45,7 @@ const TRANSITIONS: Readonly<
 };
 
 /** Events that do not apply to the current phase leave it unchanged. */
-export function transitionShareImport(
-  phase: ShareImportPhase,
-  event: ShareImportEvent,
-): ShareImportPhase {
+function transitionShareImport(phase: ShareImportPhase, event: ShareImportEvent): ShareImportPhase {
   return TRANSITIONS[phase][event] ?? phase;
 }
 

@@ -15,7 +15,7 @@ export interface SidebarRouteReveal {
   pendingInPlace?: boolean;
 }
 
-export function pendingSidebarRouteReveal(
+function pendingSidebarRouteReveal(
   reveal: SidebarRouteReveal,
   routeKey: string | null,
   inPlace = false,
@@ -29,7 +29,7 @@ export function pendingSidebarRouteReveal(
   return reveal.pendingKey;
 }
 
-export function completeSidebarRouteReveal(reveal: SidebarRouteReveal): void {
+function completeSidebarRouteReveal(reveal: SidebarRouteReveal): void {
   reveal.pendingKey = null;
 }
 

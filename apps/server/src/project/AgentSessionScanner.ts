@@ -159,7 +159,6 @@ const CodexSessionIndexEntry = Schema.Struct({
 
 const decodeClaudeSettings = Schema.decodeUnknownOption(ClaudeSettings);
 const decodeCodexSettings = Schema.decodeUnknownOption(CodexSettings);
-const decodeTranscriptRecord = Schema.decodeUnknownOption(Schema.fromJsonString(TranscriptRecord));
 const decodeTranscriptValue = Schema.decodeUnknownOption(TranscriptRecord);
 const decodePiEntryLinks = Schema.decodeUnknownOption(
   Schema.Struct({
@@ -310,11 +309,6 @@ function selectMetadataTranscripts(transcripts: ReadonlyArray<TranscriptCandidat
     pending = nextRound;
   }
   return selected;
-}
-
-function splitTranscriptRecords(contents: string, limit: number): string[] {
-  const records = contents.endsWith("\n") ? contents.slice(0, -1) : contents;
-  return records.split("\n", limit);
 }
 
 function isTextContentBlock(block: typeof TranscriptContentBlock.Type): boolean {
@@ -502,22 +496,6 @@ function isPiConversationRecord(
     record.type === "message" &&
     (record.message?.role === "user" || record.message?.role === "assistant")
   );
-}
-
-export function parseAgentSessionTranscript(
-  input: AgentSessionTranscriptMetadata & {
-    readonly contents: string;
-  },
-  lines = splitTranscriptRecords(input.contents, MAX_IMPORT_RECORDS + 1),
-): AgentSessionThread | null {
-  if (lines.length > MAX_IMPORT_RECORDS) return null;
-  const records = lines.flatMap((line) => Option.toArray(decodeTranscriptRecord(line)));
-  const claudeFields =
-    input.source === "claudeAgent"
-      ? records.reduce(foldClaudeFields, emptyClaudeFields)
-      : emptyClaudeFields;
-  const thread = parseAgentSessionRecords(input, records, claudeFields, 0);
-  return thread === "empty" ? null : thread;
 }
 
 function parseAgentSessionRecords(

@@ -144,7 +144,7 @@ function retainBackgroundScope(environmentId: EnvironmentId, scope: BackgroundSc
   };
 }
 
-export function observeBackgroundActivitySubscription(
+function observeBackgroundActivitySubscription(
   observation: EnvironmentRpcSubscriptionObservation,
 ): Effect.Effect<Effect.Effect<void>> {
   const scope = scopeForSubscription(observation);
@@ -155,14 +155,6 @@ export function observeBackgroundActivitySubscription(
     const release = retainBackgroundScope(observation.environmentId as EnvironmentId, scope);
     return Effect.sync(release);
   });
-}
-
-export function retainedBackgroundScopes(
-  environmentId: EnvironmentId,
-): ReadonlyArray<BackgroundScope> {
-  return Array.from(retainedScopes.values(), (entry) =>
-    entry.environmentId === environmentId ? entry.scope : null,
-  ).filter((scope): scope is BackgroundScope => scope !== null);
 }
 
 export const layerObserver = Layer.succeed(

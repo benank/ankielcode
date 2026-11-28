@@ -51,7 +51,7 @@ function queryHash(query: string): string {
  * `repository.pullRequest` or `repository.issueOrPullRequest`. A NOT_FOUND deeper down is one
  * field GitHub could not resolve.
  */
-export const isNotFoundOnly = (error: unknown): boolean =>
+const isNotFoundOnly = (error: unknown): boolean =>
   GraphQLClientError.isGraphQLClientError(error) &&
   error.reason._tag === "ResponseError" &&
   error.reason.errors.every(
@@ -65,7 +65,7 @@ export const isNotFoundOnly = (error: unknown): boolean =>
   );
 
 /** GitHub's message for each error in an answer, with the field it names. */
-export const describeErrors = (error: GraphQLClientError.GraphQLClientError) =>
+const describeErrors = (error: GraphQLClientError.GraphQLClientError) =>
   error.reason._tag === "ResponseError"
     ? error.reason.errors.map(({ message, path }) =>
         path === undefined || path.length === 0 ? message : `${message} (at ${path.join(".")})`,
@@ -235,14 +235,6 @@ const layerProtocol = GraphQLProtocol.layerHttp({
 );
 
 export const layer = Layer.merge(GitHubGraphQlAuth.layer, layerProtocol);
-
-/** Isolate credentials/rate-limit scopes; transport URLs already separate hosts. */
-export const batchKey = (context: Context.Context<GitHubGraphQlTarget>) =>
-  JSON.stringify([
-    Context.getOrElse(context, GitHubRequestPolicy.PinnedGitHubCredential, () => null)
-      ?.credentialFingerprint ?? null,
-    Context.getOrElse(context, SourceControlRateLimit.CredentialScope, () => ""),
-  ]);
 
 const fromClientError = (
   target: { readonly host: string; readonly operation: string },

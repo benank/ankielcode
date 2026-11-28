@@ -19,7 +19,6 @@ import { gitHubMediaUrl, gitHubRawFileUrl } from "./gitHubMedia.ts";
 import { icon } from "./icon.ts";
 import { gitHubReferenceAutolinks } from "./referenceAutolinks.ts";
 
-const CHECKOUT_COMMAND = /^gh\s+pr\s+checkout\s+(.+)$/i;
 const CHANGE_REQUEST_REFERENCE =
   /^https?:\/\/[^/?#\s]+\/[^/\s]+\/[^/\s]+\/pull\/(\d+)(?:[/?#].*)?$/i;
 
@@ -69,7 +68,7 @@ export const definition = defineSourceControl({
     cliLabel: "GitHub CLI",
     loginCommand: "gh auth login",
     tokenEnvVar: "GH_TOKEN",
-    tokenAccess: "read and write access to pull requests and contents",
+    tokenAccess: "read and write access to issues and contents",
     newTokenUrl: (host) => `https://${host}/settings/personal-access-tokens/new`,
     appSignIn: APP_SIGN_IN,
   },
@@ -115,39 +114,13 @@ export const definition = defineSourceControl({
     candidate.pathname = `/${match[1]}/pull/${match[2]}`;
     return candidate.toString();
   },
-  changeRequestActions: new Set([
-    "merge",
-    "ready",
-    "draft",
-    "close",
-    "reopen",
-    "delete-branch",
-    "update-branch",
-    "enable-auto-merge",
-    "disable-auto-merge",
-    "revert",
-    "approve-workflows",
-  ] as const),
-  checkoutCommand: ({ number }) => `gh pr checkout ${number}`,
-  changeRequestCloseCommand: /\bgh\s+(?:pr\s+(?:merge|close)|stack\s+merge)\b/u,
-  // `new` is gh's alias for `create`.
-  changeRequestCreateCommand: /\bgh\s+pr\s+(?:create|new)\b/u,
   authorProfileUrl: (login, repositoryUrl) =>
     login.endsWith("[bot]")
       ? null
       : new URL(`/${encodeURIComponent(login)}`, repositoryUrl).toString(),
   referenceAutolinks: gitHubReferenceAutolinks,
-  changeRequestChecksUrl: (changeRequestUrl) => `${changeRequestUrl.replace(/\/+$/u, "")}/checks`,
-  // Before servers reported their actions, GitHub was the only host they acted on from a list.
-  changeRequestActionsWhenUnreported: new Set(["close", "merge", "ready", "reopen"] as const),
-  // One search reads every repository on the host.
-  changeRequestListScope: "host",
   hardLineBreaks: true,
-  reviewSummaryRequired: () => false,
-  checkoutCommandArgument: (input) => CHECKOUT_COMMAND.exec(input)?.[1]?.trim() ?? null,
   isChangeRequestReference: (url) => CHANGE_REQUEST_REFERENCE.test(url),
-  checkoutChangeRequestHost: (identity) => projectChangeRequestHost(identity, KIND),
-  changeRequestHeadRef: (number) => `refs/pull/${number}/head`,
   // `*.ghe.com` is GitHub Enterprise Cloud with data residency, one subdomain per enterprise.
   recognizeRemote: ({ host, hostname }) =>
     isGitHubHost(hostname)

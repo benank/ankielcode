@@ -19,7 +19,7 @@ function contrastOnLightCode(rgb: readonly [number, number, number]): number {
 }
 
 /** Darkens a #rrggbb(aa) color in steps that keep its hue until it reads on light code. */
-export function readableOnLightCode(color: string, minContrast = MIN_CONTRAST): string {
+function readableOnLightCode(color: string, minContrast = MIN_CONTRAST): string {
   const match = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(color);
   if (!match) return color;
   let rgb = [0, 2, 4].map((start) => Number.parseInt(match[1]!.slice(start, start + 2), 16)) as [
@@ -43,7 +43,7 @@ const FURTHER_COLORS = new Set(["#1ca1c7", "#636363", "#1a85d4"]);
 const FURTHER_MIN_CONTRAST = 6;
 
 /** The ankiel-light color for a pierre-light syntax color. */
-export function readableSyntaxColor(color: string): string {
+function readableSyntaxColor(color: string): string {
   return readableOnLightCode(
     color,
     FURTHER_COLORS.has(color.toLowerCase()) ? FURTHER_MIN_CONTRAST : MIN_CONTRAST,

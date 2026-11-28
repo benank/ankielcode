@@ -589,7 +589,7 @@ export const generatedWindowsShimTarget = (contents: string) =>
  * The `ankiel` script the install scripts and `ankiel update` write on macOS and Linux. Exec by absolute
  * path: through a symlink, argv0 is the link, and the Cursor SDK looks for its helpers beside it.
  */
-export const posixLauncherScript = (executable: string) =>
+const posixLauncherScript = (executable: string) =>
   `#!/bin/sh\nexec '${executable.replaceAll("'", "'\\''")}' "$@"\n`;
 
 /** The executable a script exactly as {@link posixLauncherScript} writes it runs; never a user's wrapper. */

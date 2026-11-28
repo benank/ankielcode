@@ -12,7 +12,7 @@ import {
 import { PreviewError } from "./previewFailure";
 
 // Word limits, measured against the @betteroffice/docx engine, which lays out in its own worker.
-export const WORD_LIMITS = {
+const WORD_LIMITS = {
   /** document.xml read and kept, about 700 pages of prose; the engine opens it in about 1 s. */
   bodyBytes: 4 * 1024 * 1024,
   bodyElements: 50_000,

@@ -54,7 +54,7 @@ export class DesktopAppUpdate extends Context.Service<
   }
 >()("@ankielcode/server/desktopUpdate/DesktopAppUpdate") {}
 
-export const make = Effect.fn("desktopUpdate.desktopAppUpdate.make")(function* () {
+const make = Effect.fn("desktopUpdate.desktopAppUpdate.make")(function* () {
   const config = yield* ServerConfig.ServerConfig;
   const random = yield* SecureRandom.SecureRandom;
   const receiver = yield* DesktopTelemetryReceiver.DesktopTelemetryReceiver;

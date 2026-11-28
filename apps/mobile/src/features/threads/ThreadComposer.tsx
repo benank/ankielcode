@@ -52,9 +52,8 @@ import {
   useComposerDraftResetGeneration,
 } from "../../state/use-composer-drafts";
 import type { ComposerDocumentAttachment } from "../../lib/composerContext";
-import { useProject, useVisibleThreadShells } from "../../state/entities";
+import { useVisibleThreadShells } from "../../state/entities";
 import { useEnvironmentScopeDenied } from "../../state/session";
-import { scopeProjectRef } from "@ankielcode/client-runtime/environment";
 
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { AppText as Text } from "../../components/ui/AppText";
@@ -266,7 +265,6 @@ function SendActionButton(props: {
 export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps) {
   const gt = useGT();
   const messages = useMessages();
-  const project = useProject(scopeProjectRef(props.environmentId, props.selectedThread.projectId));
   const { themeVariables: materialTheme } = useAppearancePreferences();
   const composerPanel = materialTheme["--color-composer-panel"];
   const navigation = useNavigation();
@@ -434,9 +432,6 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
     threadShells: useVisibleThreadShells(),
     currentThreadId: props.selectedThread.id,
     projectCwd: props.projectCwd,
-    pullRequestProjectId: props.serverConfig ? (project?.id ?? null) : null,
-    pullRequestRepository: project?.repositoryIdentity?.displayName ?? null,
-    threadPullRequests: props.selectedThread.pullRequests,
     selectedProviderStatus,
     hasThread: !props.isDraft,
     hasCompactableConversation: props.hasCompactableConversation,
@@ -804,15 +799,12 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
         style={{ maxWidth: props.contentMaxWidth }}
       >
         {props.draftControls}
-        {!isSubmissionLocked &&
-        composerMenu.trigger &&
-        (composerMenu.items.length > 0 || composerMenu.trigger.kind === "pull-request") ? (
+        {!isSubmissionLocked && composerMenu.trigger && composerMenu.items.length > 0 ? (
           <ComposerPopoverAnchor>
             <ComposerCommandPopover
               items={composerMenu.items}
               triggerKind={composerMenu.trigger.kind}
               isLoading={composerMenu.isLoading}
-              error={composerMenu.error}
               onSelect={composerMenu.onSelect}
             />
           </ComposerPopoverAnchor>

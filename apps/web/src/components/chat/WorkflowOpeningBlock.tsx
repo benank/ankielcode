@@ -135,7 +135,6 @@ function WorkflowMemberRow(props: {
     <li>
       <Tooltip>
         <TooltipTrigger
-          delay={200}
           render={
             threadId === null ? (
               <div aria-description={member.status} className={className} />

@@ -212,7 +212,7 @@ export interface EnvironmentConnectionSummary {
   readonly connectionErrorTraceId: string | null;
 }
 
-export function projectEnvironmentConnectionSummary(
+function projectEnvironmentConnectionSummary(
   environmentId: EnvironmentId,
   environment: EnvironmentPresentation,
 ): EnvironmentConnectionSummary {
@@ -324,13 +324,6 @@ export function createEnvironmentSummaryAtoms(input: {
     );
     return previous !== null && mapsEqual(previous, next) ? previous : next;
   });
-  const pullRequestsSupportedAtom = Atom.make((get) =>
-    get(environmentIdsAtom).some(
-      (environmentId) =>
-        get(input.presentationAtom(environmentId))?.serverConfig?.settings
-          .githubIntegrationEnabled === true,
-    ),
-  );
   const issuesSupportedAtom = Atom.make((get) =>
     get(environmentIdsAtom).some((environmentId) => {
       const config = get(input.presentationAtom(environmentId))?.serverConfig;
@@ -346,7 +339,6 @@ export function createEnvironmentSummaryAtoms(input: {
     identitiesAtom,
     environmentsAtom,
     machineByIdAtom,
-    pullRequestsSupportedAtom,
     issuesSupportedAtom,
   };
 }

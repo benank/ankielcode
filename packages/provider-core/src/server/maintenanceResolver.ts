@@ -321,7 +321,7 @@ function isChocolateyClaudeCommandPath(commandPath: string, env: NodeJS.ProcessE
 }
 
 /** `choco search --exact --limit-output` prints `<id>|<version>` for a match and nothing otherwise. */
-export function parseChocolateyLatestVersion(output: string, packageId: string): string | null {
+function parseChocolateyLatestVersion(output: string, packageId: string): string | null {
   for (const line of output.split(/\r?\n/)) {
     const [id, version] = line.trim().split("|", 2);
     if (id?.toLowerCase() === packageId.toLowerCase()) return nonEmptyString(version);
@@ -340,7 +340,7 @@ function isPnpmGlobalCommandPath(commandPath: string): boolean {
   );
 }
 
-export function npmGlobalPrefixFromCommandPath(
+function npmGlobalPrefixFromCommandPath(
   realCommandPath: string,
   packageName: string,
 ): string | null {
@@ -394,10 +394,7 @@ const HomebrewInfoResponse = Schema.Struct({
 
 const decodeHomebrewInfo = Schema.decodeUnknownOption(Schema.fromJsonString(HomebrewInfoResponse));
 
-export function parseHomebrewLatestVersion(
-  infoJson: string,
-  ownership: HomebrewOwnership,
-): string | null {
+function parseHomebrewLatestVersion(infoJson: string, ownership: HomebrewOwnership): string | null {
   const decoded = decodeHomebrewInfo(infoJson);
   if (Option.isNone(decoded)) {
     return null;
@@ -871,7 +868,7 @@ const followVitePlusSystemFirstShim = Effect.fn("followVitePlusSystemFirstShim")
   return { ...context, resolvedCommandPath, realCommandPath };
 });
 
-export const resolvePackageManagedProviderMaintenance = Effect.fn(
+const resolvePackageManagedProviderMaintenance = Effect.fn(
   "resolvePackageManagedProviderMaintenance",
 )(function* (
   definition: PackageManagedProviderMaintenanceDefinition,

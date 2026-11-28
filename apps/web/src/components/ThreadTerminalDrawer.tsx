@@ -161,7 +161,7 @@ function writeSystemMessage(
   terminal.write(`\r\n[terminal] ${message}\r\n`);
 }
 
-export function writeTerminalOutputUpdate(
+function writeTerminalOutputUpdate(
   terminal: Pick<GhosttyTerminalSurface, "resetAndWrite" | "write">,
   update: TerminalOutputUpdate,
 ): void {
@@ -175,7 +175,7 @@ export function writeTerminalOutputUpdate(
 // Avoid formatting unbounded scrollback selections on every output update.
 const MAX_COMPARED_SELECTION_CELLS = 3_000;
 
-export function synchronizeTerminalOutput(
+function synchronizeTerminalOutput(
   terminal: Pick<
     GhosttyTerminalSurface,
     "resetAndWrite" | "write" | "getSelection" | "getSelectionCellCount" | "clearSelection"
@@ -197,7 +197,7 @@ export function synchronizeTerminalOutput(
 }
 
 /** Writes what changed between two session notifications: new output, then the error, again after a reset. */
-export function synchronizeTerminalSession(
+function synchronizeTerminalSession(
   terminal: Parameters<typeof synchronizeTerminalOutput>[0],
   previous: Pick<TerminalSessionState, "output" | "version" | "error">,
   session: Pick<TerminalSessionState, "output" | "version" | "error">,
@@ -454,7 +454,7 @@ function writableSessionGeneration(
     : null;
 }
 
-export function shouldHandleTerminalExit(
+function shouldHandleTerminalExit(
   current: TerminalSessionState["status"],
   synchronized: TerminalSessionState["status"],
   alreadyHandled: boolean,

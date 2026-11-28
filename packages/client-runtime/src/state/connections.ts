@@ -3,22 +3,18 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
-import { AsyncResult, Atom } from "effect/reactivity";
+import { AsyncResult, Atom, type AtomRegistry } from "effect/reactivity";
 
 import * as EnvironmentRegistry from "../connection/registry.ts";
 import type { ConnectionCatalogEntry } from "../connection/catalog.ts";
 import { AVAILABLE_CONNECTION_STATE } from "../connection/model.ts";
 import * as EnvironmentSupervisor from "../connection/supervisor.ts";
 import {
-  PullRequestRoutingPermissions,
-  type PullRequestRoutingPermission,
-  type StoredPullRequestRoutingPermission,
-} from "../connection/pullRequestRoutingPermissions.ts";
-import {
   createAtomCommandScheduler,
   createRuntimeCommand,
   environmentSessionGenerationAtom,
   followStreamInEnvironment,
+  runAtomCommand,
 } from "./runtime.ts";
 
 export interface EnvironmentCatalogState {
@@ -43,7 +39,7 @@ const REFRESH_SETTLE_TIMEOUT = Duration.seconds(10);
  * each attempt, up to a cap. A connected socket is not probed (a relay can miss the quick probe),
  * and an attempt under way is not retried, since a retry restarts it.
  */
-export const refreshEnvironmentConnections = Effect.fn("refreshEnvironmentConnections")(function* (
+const refreshEnvironmentConnections = Effect.fn("refreshEnvironmentConnections")(function* (
   environmentIds: ReadonlyArray<EnvironmentIdType>,
 ) {
   const registry = yield* EnvironmentRegistry.EnvironmentRegistry;
@@ -101,34 +97,6 @@ export function createEnvironmentCatalogAtoms<R, E>(
   const catalogValueAtom = Atom.make((get) =>
     AsyncResult.getOrElse(get(catalogAtom), () => EMPTY_ENVIRONMENT_CATALOG_STATE),
   ).pipe(Atom.withLabel("environment-catalog-value"));
-
-  const pullRequestRoutingPermissionsAtom = runtime.atom(
-    Stream.unwrap(
-      PullRequestRoutingPermissions.pipe(Effect.map((permissions) => permissions.changes)),
-    ),
-    { initialValue: [] as ReadonlyArray<StoredPullRequestRoutingPermission> },
-  );
-  const pullRequestRoutingPermissionsValueAtom = Atom.make((get) =>
-    AsyncResult.getOrElse(get(pullRequestRoutingPermissionsAtom), () => []),
-  ).pipe(Atom.withLabel("environment-pull-request-routing-permissions"));
-  const setPullRequestRoutingPermission = createRuntimeCommand(runtime, {
-    label: "environment-catalog:pull-request-routing-permission",
-    scheduler: commandScheduler,
-    concurrency: serial,
-    execute: Effect.fn(function* (input: {
-      readonly environmentId: EnvironmentIdType;
-      readonly permission: PullRequestRoutingPermission;
-    }) {
-      const registry = yield* EnvironmentRegistry.EnvironmentRegistry;
-      const entry = (yield* SubscriptionRef.get(registry.entries)).get(input.environmentId);
-      if (entry === undefined)
-        return yield* new EnvironmentRegistry.EnvironmentNotRegisteredError({
-          environmentId: input.environmentId,
-        });
-      const permissions = yield* PullRequestRoutingPermissions;
-      yield* permissions.set(entry, input.permission);
-    }),
-  });
 
   const networkStatusAtom = runtime.atom(
     Stream.unwrap(
@@ -232,8 +200,6 @@ export function createEnvironmentCatalogAtoms<R, E>(
   return {
     catalogAtom,
     catalogValueAtom,
-    pullRequestRoutingPermissionsValueAtom,
-    setPullRequestRoutingPermission,
     networkStatusAtom,
     networkStatusValueAtom,
     stateAtom,
@@ -246,4 +212,15 @@ export function createEnvironmentCatalogAtoms<R, E>(
     retryNow,
     setEnabled,
   };
+}
+
+type EnvironmentCatalogAtoms = ReturnType<typeof createEnvironmentCatalogAtoms>;
+
+/** Reconnects every enabled environment that is not connected, as a pull to refresh does. */
+export function reconnectEnvironments(
+  registry: AtomRegistry.AtomRegistry,
+  catalog: Pick<EnvironmentCatalogAtoms, "catalogValueAtom" | "refresh">,
+) {
+  const environmentIds = [...enabledEnvironmentIds(registry.get(catalog.catalogValueAtom))];
+  return runAtomCommand(registry, catalog.refresh, environmentIds);
 }

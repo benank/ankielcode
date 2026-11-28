@@ -98,7 +98,7 @@ function lockSwipeAxis(
  * macOS momentum after the fingers lift decays by a near-constant ratio per
  * event; finger movement is noisier. Deltas are signed along the swipe.
  */
-export function isMomentumTail(deltas: readonly number[]): boolean {
+function isMomentumTail(deltas: readonly number[]): boolean {
   if (deltas.length < MOMENTUM_SAMPLE_SIZE) return false;
   const recent = deltas.slice(-MOMENTUM_SAMPLE_SIZE);
   if (recent.some((delta) => delta <= 0)) return false;

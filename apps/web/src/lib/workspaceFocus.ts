@@ -1,4 +1,3 @@
-import type { AnyRouter } from "@tanstack/react-router";
 import { dismissContextMenu } from "../contextMenuFallback";
 import { useRightPanelStore } from "../rightPanelStore";
 
@@ -96,7 +95,7 @@ function revealInScrollers(target: HTMLElement) {
 }
 
 /** Keeps area focus local, like VS Code's layout service focusPart/visible-neighbour actions. */
-export function createWorkspaceFocusController(doc: Document) {
+function createWorkspaceFocusController(doc: Document) {
   const lastFocused = new Map<string, HTMLElement>();
   let lastArea: string | undefined;
   // An area that took focus itself from the keyboard, or the non-tabbable default (the
@@ -215,10 +214,7 @@ export function createWorkspaceFocusController(doc: Document) {
     const area =
       name === "content"
         ? (areas.find((element) => element.dataset.workspaceArea === "composer") ??
-          areas.find(
-            (element) =>
-              element.dataset.workspaceArea === "pull-requests" || element.matches("main"),
-          ) ??
+          areas.find((element) => element.matches("main")) ??
           areas.find((element) => element.dataset.workspaceArea === "conversation") ??
           areas.find((element) => element.dataset.workspaceArea === "panel"))
         : areas.find((element) => element.dataset.workspaceArea === name);
@@ -387,9 +383,9 @@ export const getWorkspaceFocusRequestVersion = () => focusRequestVersion;
 
 /**
  * Starts workspace focus for the app: F6 area moves, focus requests, focus-loss recovery,
- * focus into a panel the user opens, and focus into the Pull Requests page on entry.
+ * and focus into a panel the user opens.
  */
-export function startWorkspaceFocus(router: AnyRouter): () => void {
+export function startWorkspaceFocus(): () => void {
   const active = createWorkspaceFocusController(document);
   controller = active;
   const stopPanels = useRightPanelStore.subscribe((state, previous) => {
@@ -402,13 +398,8 @@ export function startWorkspaceFocus(router: AnyRouter): () => void {
         requestWorkspaceFocus({ area: "panel" });
     }
   });
-  const stopRoute = router.subscribe("onResolved", ({ fromLocation, toLocation }) => {
-    if (toLocation.pathname === "/pull-requests" && fromLocation?.pathname !== "/pull-requests")
-      requestWorkspaceFocus({ area: "pull-requests" });
-  });
   return () => {
     stopPanels();
-    stopRoute();
     active.dispose();
     if (controller === active) controller = undefined;
   };

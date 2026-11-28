@@ -75,7 +75,7 @@ const ProjectReadTool = Tool.make("ankiel_project_read", {
 const ProjectCreateTool = Tool.make("ankiel_project_create", {
   ...shared,
   description:
-    "Register a project folder. `createWorkspaceRootIfMissing` creates it; a registered folder is rejected. No `workspaceRoot`: makes a git repo from `title` with README, icon, first commit (`commitError` on failure; project still exists). Clone first with `ankiel_project_clone` if needed.",
+    "Register a project folder; an already registered one is rejected. `createWorkspaceRootIfMissing` creates it. No `workspaceRoot`: makes a git repo from `title` with README, icon, first commit (`commitError` on failure; project still exists). To clone, use `ankiel_project_clone` first.",
   parameters: Schema.Struct({
     ...ProjectCreatePayload.fields,
     workspaceRoot: Schema.optional(ProjectCreatePayload.fields.workspaceRoot),
@@ -122,7 +122,7 @@ const ProjectCloneTool = Tool.make("ankiel_project_clone", {
 const ThreadLaunchTool = Tool.make("ankiel_thread_launch", {
   ...shared,
   description:
-    "Create a top-level thread in its workspace before starting. Task in `message`. Omit `projectId`, model and modes to inherit yours (outside a thread, pass `projectId` or `scratch`); modes cannot exceed yours. On error or lost reply, reuse `clientRequestId`. Follow it with `ankiel_thread_read` or `ankiel_thread_wait`. Mention it with its `link`.",
+    "Create a top-level thread, preparing its workspace first. Task in `message`. Omit `projectId`, model and modes to inherit yours (outside a thread, pass `projectId` or `scratch`); modes cannot exceed yours. On error or lost reply, reuse `clientRequestId`. Follow with `ankiel_thread_read` or `ankiel_thread_wait`. Mention it by its `link`.",
   parameters: Schema.Struct({
     projectId: Schema.optional(ProjectId),
     scratch: Schema.optional(
@@ -139,7 +139,7 @@ const ThreadLaunchTool = Tool.make("ankiel_thread_launch", {
     workspaceStrategy: Schema.optional(
       OrchestrationV2ThreadLaunchWorkspaceStrategy.annotate({
         description:
-          "'worktree': new checkout from `baseRef`. Honor a requested base. Otherwise, independent work uses the default branch as `remote/branch` (e.g. `origin/main`) with `startFromOrigin: true`; with no remote, use the local default branch. Required unpublished commits and dependent or stacked work use their local base with `startFromOrigin: false`. 'existing_worktree': bind `worktreePath`, a project worktree. 'root': project checkout, the default, not your worktree. Uncommitted edits are not copied.",
+          "'worktree': new checkout from `baseRef`. Honor a requested base; else independent work uses the remote default branch (e.g. `origin/main`) with `startFromOrigin: true`, or the local one with no remote. Work needing unpublished commits, or dependent or stacked work, uses its local base with `startFromOrigin: false`. 'existing_worktree': bind `worktreePath`, a project worktree. 'root' (default): project checkout, not your worktree. Uncommitted edits are not copied.",
       }),
     ),
     message: Schema.optional(

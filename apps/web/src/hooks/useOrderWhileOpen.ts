@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 /** Sorts `items` into `order` by key. Items missing from `order` follow, in their own order. */
-export function keepOrder<T>(
+function keepOrder<T>(
   items: ReadonlyArray<T>,
   order: ReadonlyArray<string> | null,
   key: (item: T) => string,
@@ -15,7 +15,7 @@ export function keepOrder<T>(
 }
 
 /** `order` with keys it has not seen added at the end, or `order` itself when nothing is new. */
-export function withArrivedKeys(
+function withArrivedKeys(
   order: ReadonlyArray<string> | null,
   keys: ReadonlyArray<string>,
 ): ReadonlyArray<string> | null {

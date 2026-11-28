@@ -8,7 +8,7 @@ import {
   Unlink2Icon,
   TriangleAlertIcon,
 } from "lucide-react";
-import type { PullRequestState } from "@ankielcode/contracts";
+import type { IssueLinkedPullRequestState } from "@ankielcode/contracts";
 import { msg } from "gt-react";
 
 export const PullRequestGlyph = {
@@ -52,4 +52,4 @@ export const PULL_REQUEST_STATE_PRESENTATION = {
     toneClassName: "text-merged",
     Icon: PullRequestGlyph.merged,
   },
-} as const satisfies Record<PullRequestState | "draft", PullRequestStatePresentation>;
+} as const satisfies Record<IssueLinkedPullRequestState | "draft", PullRequestStatePresentation>;

@@ -157,7 +157,7 @@ type InstallState =
   | { readonly _tag: "installed"; readonly executable: string }
   | { readonly _tag: "failed"; readonly error: PreviewBrowserInstallError };
 
-export const makePreviewBrowser = Effect.fn("PreviewBrowser.make")(function* (
+const makePreviewBrowser = Effect.fn("PreviewBrowser.make")(function* (
   options: PreviewBrowserOptions,
 ) {
   const fs = yield* FileSystem.FileSystem;

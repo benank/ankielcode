@@ -13,7 +13,6 @@ import { WorkspaceEmptyDetail } from "../WorkspaceEmptyDetail";
 import { ScreenContent } from "../../../components/ui/ScreenContent";
 import { useAndroidControlSizing } from "../../../components/ui/useAndroidControlSizing";
 import { HomeRouteScreen } from "../../home/HomeRouteScreen";
-import { PullRequestsScreen } from "../../pull-requests/PullRequestsScreen";
 import { ListSearchToolbar } from "./ListSearchToolbar.android";
 import { IssuesScreen } from "../../issues/IssuesScreen";
 import { useAdaptiveWorkspaceLayout } from "../AdaptiveWorkspaceLayout";
@@ -107,28 +106,15 @@ function WorkspaceRoot() {
                       <NativeStackScreenOptions options={{ headerShown: false }} />
                       <AppBar
                         embedded
-                        title={
-                          tab === "issues"
-                            ? gt("Issues", { $context: "screen title, list of issues" })
-                            : gt("Pull requests")
-                        }
+                        title={gt("Issues", { $context: "screen title, list of issues" })}
                       />
                       <WorkspaceEmptyDetail tab={tab} />
                     </>
-                  ) : tab === "issues" ? (
+                  ) : (
                     <IssuesScreen
                       renderFrame={(filters, list) => (
                         <>
-                          <ListSearchToolbar tab="issues" filters={filters} />
-                          <ScreenContent>{list}</ScreenContent>
-                        </>
-                      )}
-                    />
-                  ) : (
-                    <PullRequestsScreen
-                      renderFrame={(filters, list) => (
-                        <>
-                          <ListSearchToolbar tab="pullRequests" filters={filters} />
+                          <ListSearchToolbar filters={filters} />
                           <ScreenContent>{list}</ScreenContent>
                         </>
                       )}

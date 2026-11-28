@@ -35,10 +35,6 @@ const CONTEXT_CHIP_PRESENTATIONS = {
   },
   "review-comment": { accent: "#8a70dd", icon: "message-circle" },
   citation: { accent: "#8a70dd", icon: "message-circle" },
-  "pull-request": {
-    accent: "#7079e4",
-    icon: "git-pull-request-arrow",
-  },
   skill: { accent: "#b261be", icon: "skill" },
   thread: {
     accent: "#009c96",
@@ -98,24 +94,12 @@ export function composerChipSizeSuffix(record?: {
   return typeof record.sizeBytes === "number" ? formatAttachmentSize(record.sizeBytes) : "";
 }
 
-const PULL_REQUEST_CHIP_PRESENTATIONS = {
-  open: { accent: "#009f6e", icon: "git-pull-request-arrow" },
-  draft: { accent: "#7f8793", icon: "git-pull-request-draft" },
-  merged: { accent: "#8a70dd", icon: "git-merge" },
-  closed: { accent: "#d55665", icon: "git-pull-request-closed" },
-} as const satisfies Record<string, ContextChipPresentation>;
-
 export function contextChipPresentation(
   kind: string,
   record?: {
     readonly kind?: string;
     readonly name?: string;
     readonly mimeType?: string;
-    readonly sectionId?: string;
-    readonly pullRequest?: {
-      readonly state?: string;
-      readonly isDraft?: boolean;
-    };
   },
 ): ContextChipPresentation {
   const presentationKind =
@@ -128,19 +112,7 @@ export function contextChipPresentation(
       : kind === "file" &&
           imageMimeType({ name: record?.name ?? "", mimeType: record?.mimeType ?? "" }) !== null
         ? "image"
-        : kind === "review-comment" && record?.sectionId?.startsWith("pull-request:")
-          ? "pull-request"
-          : kind;
-  if (presentationKind === "pull-request") {
-    const pullRequest = record?.pullRequest;
-    const state =
-      pullRequest?.state === "open" && pullRequest.isDraft === true
-        ? "draft"
-        : (pullRequest?.state ?? "");
-    if (Object.hasOwn(PULL_REQUEST_CHIP_PRESENTATIONS, state)) {
-      return PULL_REQUEST_CHIP_PRESENTATIONS[state as keyof typeof PULL_REQUEST_CHIP_PRESENTATIONS];
-    }
-  }
+        : kind;
   return Object.hasOwn(CONTEXT_CHIP_PRESENTATIONS, presentationKind)
     ? CONTEXT_CHIP_PRESENTATIONS[presentationKind as keyof typeof CONTEXT_CHIP_PRESENTATIONS]
     : UNAVAILABLE_CONTEXT_CHIP_PRESENTATION;

@@ -1,6 +1,6 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
-import { ThreadRouteView } from "../components/ThreadRouteView";
+import { LazyThreadRouteView, preloadThreadRouteView } from "../components/LazyThreadRouteView";
 import { GlobalVoiceInputIndicator } from "../components/chat/GlobalVoiceInputIndicator";
 import { isAppModalPage } from "../components/sidebar/mainAppLocation";
 import { SidebarInset } from "../components/ui/sidebar";
@@ -14,7 +14,7 @@ function ChatRouteLayout() {
   return (
     <>
       {shownTarget ? (
-        <ThreadRouteView target={shownTarget} background={modalOpen} />
+        <LazyThreadRouteView target={shownTarget} background={modalOpen} />
       ) : modalOpen ? (
         <SidebarInset className="h-dvh" />
       ) : (
@@ -34,6 +34,8 @@ export const Route = createFileRoute("/_chat")({
     ) {
       throw redirect({ to: "/pair", replace: true });
     }
+    // Not awaited: the layout shows a placeholder until it lands and reports a failed load.
+    void preloadThreadRouteView();
     return { appModalPage: isAppModalPage(location.pathname) };
   },
   component: ChatRouteLayout,

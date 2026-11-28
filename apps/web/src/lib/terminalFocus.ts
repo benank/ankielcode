@@ -115,17 +115,6 @@ export function focusPanelTerminalAfterClose(
   if (activeSurfaceId !== previousActiveSurfaceId) focusActivePanelTerminal(threadRef);
 }
 
-/**
- * Focuses a terminal from a handler that may also navigate to its thread (a
- * sidebar terminal reveal). When it does, that thread's entry keeps this request
- * instead of focusing the drawer.
- */
-export function focusTerminalOnNavigation(threadRef: ScopedThreadRef, terminalId: string): void {
-  const threadKey = scopedThreadKey(threadRef);
-  navigationRequestThreadKey = threadKey === enteredThreadKey ? null : threadKey;
-  focusTerminal(threadRef, terminalId);
-}
-
 /** Restores composer or terminal focus; explicit terminal navigation takes precedence. */
 export function restoreFocusOnThreadEnter(
   threadRef: ScopedThreadRef,

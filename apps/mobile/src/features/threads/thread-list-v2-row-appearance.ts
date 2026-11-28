@@ -2,9 +2,10 @@ import { msg } from "gt-react-native";
 import type { ViewStyle } from "react-native";
 
 import { m, type MessageResolver } from "../../i18n/messages";
+import { FONT_FAMILIES } from "../../lib/fontFamilies";
 import type { MobileThemeVariables } from "../../lib/mobileTheme";
 
-export const THREAD_LIST_V2_MONO_FONT = "Menlo";
+export const THREAD_LIST_V2_MONO_FONT = FONT_FAMILIES.mono;
 export const THREAD_LIST_V2_ROW_CONTENT_CLASS_NAME = "px-3 py-2";
 export const THREAD_LIST_V2_ROW_DIVIDERS = false;
 // Rounded, not a pill: rows stack into a list rather than a column of buttons.

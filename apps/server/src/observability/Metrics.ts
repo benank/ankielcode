@@ -15,11 +15,11 @@ export const rpcRequestDuration = Metric.timer("ankiel_rpc_request_duration", {
   description: "RPC request handling duration.",
 });
 
-export const orchestrationCommandsTotal = Metric.counter("ankiel_orchestration_commands_total", {
+const orchestrationCommandsTotal = Metric.counter("ankiel_orchestration_commands_total", {
   description: "Total orchestration commands dispatched, by outcome.",
 });
 
-export const orchestrationCommandDuration = Metric.timer("ankiel_orchestration_command_duration", {
+const orchestrationCommandDuration = Metric.timer("ankiel_orchestration_command_duration", {
   description: "Orchestration command handling duration, excluding thread dispatch lock wait.",
 });
 

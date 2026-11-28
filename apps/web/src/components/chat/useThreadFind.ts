@@ -10,6 +10,7 @@ import { useDebouncedValue } from "~/state/queries";
 import type { ThemeAppearance } from "~/themePalette";
 import { type ThreadFindMatch, type ThreadFindStart, stepThreadFindIndex } from "./threadFind";
 import {
+  attachThreadFindStepper,
   CLOSED_THREAD_FIND,
   closeThreadFind,
   setThreadFindQuery,
@@ -164,6 +165,13 @@ export function useThreadFind({
       };
     });
   };
+
+  const stepFromShortcut = useEffectEvent((delta: 1 | -1) => step(delta));
+  // oxlint-disable-next-line ankielcode/no-unreasoned-state-sync -- lets the find next and previous shortcuts and menu items step this open find bar
+  useEffect(() => {
+    if (!isOpen || threadKey === null) return;
+    return attachThreadFindStepper({ threadKey, step: (delta) => stepFromShortcut(delta) });
+  }, [isOpen, threadKey]);
 
   // Runs from the refresh timer and after a coalesced search settles, against
   // the results and selection showing by then.

@@ -186,6 +186,57 @@ export const readPairingAppLink = (value: string): string | null => {
   return url.searchParams.get(PAIRING_APP_LINK_PARAM)?.trim() || null;
 };
 
+const THREAD_APP_LINK_HOST = "thread";
+const THREAD_APP_LINK_ID_MAX_LENGTH = 256;
+
+export interface ThreadAppLink {
+  readonly environmentId: string;
+  readonly threadId: string;
+}
+
+/** `ankielcode://thread/<environmentId>/<threadId>`, which opens that thread in the desktop app. */
+export const buildThreadAppLink = (thread: ThreadAppLink, scheme = "ankielcode"): string =>
+  `${scheme}://${THREAD_APP_LINK_HOST}/${encodeURIComponent(thread.environmentId)}/${encodeURIComponent(thread.threadId)}`;
+
+const isThreadAppLinkId = (id: string) =>
+  id.length > 0 &&
+  id.length <= THREAD_APP_LINK_ID_MAX_LENGTH &&
+  id === id.trim() &&
+  id !== "." &&
+  id !== ".." &&
+  [...id].every((char) => {
+    const code = char.charCodeAt(0);
+    return code > 0x1f && code !== 0x7f && char !== "/" && char !== "\\";
+  });
+
+const decodeThreadAppLinkId = (segment: string): string | null => {
+  try {
+    const id = decodeURIComponent(segment);
+    return isThreadAppLinkId(id) ? id : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Reads a thread link on any app channel scheme. Links come from outside the app, so anything
+ * but the exact form `buildThreadAppLink` writes is refused: no query, fragment, userinfo, port,
+ * dot segments or alternate encodings.
+ */
+export const readThreadAppLink = (value: string): ThreadAppLink | null => {
+  const url = parseUrl(value);
+  if (!url || !APP_LINK_PROTOCOL.test(url.protocol) || url.host !== THREAD_APP_LINK_HOST) {
+    return null;
+  }
+  const segments = url.pathname.split("/");
+  if (segments.length !== 3 || segments[0] !== "") return null;
+  const environmentId = decodeThreadAppLinkId(segments[1]!);
+  const threadId = decodeThreadAppLinkId(segments[2]!);
+  if (environmentId === null || threadId === null) return null;
+  const link = { environmentId, threadId };
+  return buildThreadAppLink(link, url.protocol.slice(0, -1)) === value ? link : null;
+};
+
 export const resolveRemotePairingTarget = (input: {
   readonly pairingUrl?: string;
   readonly host?: string;

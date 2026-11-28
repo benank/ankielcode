@@ -9,7 +9,7 @@ import {
   type IssueListPreferences,
 } from "./issueListPreferences";
 
-export function issueViewMatches(
+function issueViewMatches(
   view: SavedView<typeof IssueListPreferencesSchema.Type>,
   preferences: IssueListPreferences,
 ): boolean {
@@ -30,7 +30,6 @@ export const ISSUE_SAVED_VIEWS = {
     Schema.Struct({ ...SavedViewIdentity.fields, preferences: IssueListPreferencesSchema }),
   ),
   empty: [],
-  list: "issue",
   placeholder: msg("Issues Assigned to Me"),
   suggestedName: (preferences) =>
     preferences.who === "assigned" ? msg("Issues Assigned to Me") : "",

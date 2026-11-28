@@ -1,5 +1,5 @@
-import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import {
   GitRefName,
   ForwardCompatibleOptional,
@@ -16,15 +16,11 @@ const TrimmedNonEmptyStringSchema = TrimmedNonEmptyString;
 const GitFilePath = Schema.String.check(Schema.isNonEmpty());
 const GIT_LIST_BRANCHES_MAX_LIMIT = 200;
 
-export const GitStackedAction = Schema.Literals([
-  "commit",
-  "push",
-  "create_pr",
-  "commit_push",
-  "commit_push_pr",
-]);
+export const GitStackedAction = Schema.Literals(["commit", "push", "commit_push"]);
 export type GitStackedAction = typeof GitStackedAction.Type;
-export const GitActionProgressPhase = Schema.Literals(["branch", "commit", "push", "pr"]);
+/** Pull request actions older clients still send; servers refuse them with a readable error. */
+const RetiredGitStackedAction = Schema.Literals(["create_pr", "commit_push_pr"]);
+export const GitActionProgressPhase = Schema.Literals(["branch", "commit", "push"]);
 export type GitActionProgressPhase = typeof GitActionProgressPhase.Type;
 export const GitActionProgressKind = Schema.Literals([
   "action_started",
@@ -49,29 +45,32 @@ const GitPushStepStatus = Schema.Literals([
   "skipped_up_to_date",
 ]);
 const GitBranchStepStatus = Schema.Literals(["created", "skipped_not_requested"]);
-const GitPrStepStatus = Schema.Literals(["created", "opened_existing", "skipped_not_requested"]);
-const VcsStatusChangeRequestState = Schema.Literals(["open", "closed", "merged"]);
-const GitPullRequestReference = TrimmedNonEmptyStringSchema;
-const GitPullRequestState = Schema.Literals(["open", "closed", "merged"]);
-const GitPreparePullRequestThreadMode = Schema.Literals(["local", "worktree"]);
+// Retired pull request fields that older clients still require; servers send null.
+const RetiredAsNull = Schema.Unknown.pipe(
+  Schema.decodeTo(Schema.Null, {
+    decode: SchemaGetter.succeed(null),
+    encode: SchemaGetter.passthrough(),
+  }),
+);
 export const GitRunStackedActionToastRunAction = Schema.Struct({
   kind: GitStackedAction,
 });
 export type GitRunStackedActionToastRunAction = typeof GitRunStackedActionToastRunAction.Type;
+const GitRunStackedActionToastNoCta = Schema.Struct({ kind: Schema.Literal("none") });
 const GitRunStackedActionToastCta = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("none"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("open_pr"),
-    label: TrimmedNonEmptyStringSchema,
-    url: Schema.String,
-  }),
+  GitRunStackedActionToastNoCta,
   Schema.Struct({
     kind: Schema.Literal("run_action"),
     label: TrimmedNonEmptyStringSchema,
     action: GitRunStackedActionToastRunAction,
   }),
+  // An older server offers to open or create a pull request after a push.
+  Schema.Unknown.pipe(
+    Schema.decodeTo(GitRunStackedActionToastNoCta, {
+      decode: SchemaGetter.succeed({ kind: "none" as const }),
+      encode: SchemaGetter.passthrough(),
+    }),
+  ),
 ]);
 export type GitRunStackedActionToastCta = typeof GitRunStackedActionToastCta.Type;
 const GitRunStackedActionToast = Schema.Struct({
@@ -97,16 +96,6 @@ const VcsWorktree = Schema.Struct({
   path: TrimmedNonEmptyStringSchema,
   refName: GitRefName,
 });
-const GitResolvedPullRequest = Schema.Struct({
-  number: PositiveInt,
-  title: TrimmedNonEmptyStringSchema,
-  url: Schema.String,
-  baseBranch: GitRefName,
-  headBranch: GitRefName,
-  state: GitPullRequestState,
-});
-export type GitResolvedPullRequest = typeof GitResolvedPullRequest.Type;
-
 export const VcsStatusInput = Schema.Struct({
   cwd: TrimmedNonEmptyStringSchema,
 });
@@ -134,7 +123,7 @@ export type VcsPullInput = typeof VcsPullInput.Type;
 export const GitRunStackedActionInput = Schema.Struct({
   actionId: TrimmedNonEmptyStringSchema,
   cwd: TrimmedNonEmptyStringSchema,
-  action: GitStackedAction,
+  action: Schema.Union([GitStackedAction, RetiredGitStackedAction]),
   commitMessage: Schema.optional(TrimmedNonEmptyStringSchema.check(Schema.isMaxLength(10_000))),
   featureBranch: Schema.optional(Schema.Boolean),
   filePaths: Schema.optional(Schema.Array(GitFilePath).check(Schema.isMinLength(1))),
@@ -164,20 +153,6 @@ export const VcsCreateWorktreeInput = Schema.Struct({
   path: Schema.NullOr(TrimmedNonEmptyStringSchema),
 });
 export type VcsCreateWorktreeInput = typeof VcsCreateWorktreeInput.Type;
-
-export const GitPullRequestRefInput = Schema.Struct({
-  cwd: TrimmedNonEmptyStringSchema,
-  reference: GitPullRequestReference,
-});
-export type GitPullRequestRefInput = typeof GitPullRequestRefInput.Type;
-
-export const GitPreparePullRequestThreadInput = Schema.Struct({
-  cwd: TrimmedNonEmptyStringSchema,
-  reference: GitPullRequestReference,
-  mode: GitPreparePullRequestThreadMode,
-  threadId: Schema.optional(ThreadId),
-});
-export type GitPreparePullRequestThreadInput = typeof GitPreparePullRequestThreadInput.Type;
 
 export const VcsRemoveWorktreeInput = Schema.Struct({
   cwd: TrimmedNonEmptyStringSchema,
@@ -209,17 +184,6 @@ export const VcsInitInput = Schema.Struct({
   kind: Schema.optional(VcsDriverKind),
 });
 export type VcsInitInput = typeof VcsInitInput.Type;
-
-const VcsStatusChangeRequest = Schema.Struct({
-  number: PositiveInt,
-  title: TrimmedNonEmptyStringSchema,
-  url: Schema.String,
-  baseRef: GitRefName,
-  headRef: GitRefName,
-  state: VcsStatusChangeRequestState,
-  isDraft: Schema.optional(Schema.Boolean),
-  updatedAt: Schema.optional(Schema.NullOr(Schema.String)),
-});
 
 const VcsStatusLocalShape = {
   isRepo: Schema.Boolean,
@@ -256,7 +220,7 @@ const VcsStatusRemoteShape = {
   aheadCount: NonNegativeInt,
   behindCount: NonNegativeInt,
   aheadOfDefaultCount: Schema.optional(NonNegativeInt),
-  pr: Schema.NullOr(VcsStatusChangeRequest),
+  pr: RetiredAsNull,
 };
 
 export const VcsStatusLocalResult = Schema.Struct(VcsStatusLocalShape);
@@ -307,25 +271,12 @@ export const VcsCreateWorktreeResult = Schema.Struct({
 });
 export type VcsCreateWorktreeResult = typeof VcsCreateWorktreeResult.Type;
 
-export const GitResolvePullRequestResult = Schema.Struct({
-  pullRequest: GitResolvedPullRequest,
-});
-export type GitResolvePullRequestResult = typeof GitResolvePullRequestResult.Type;
-
-export const GitPreparePullRequestThreadResult = Schema.Struct({
-  pullRequest: GitResolvedPullRequest,
-  branch: GitRefName,
-  worktreePath: TrimmedNonEmptyStringSchema.pipe(Schema.NullOr),
-  /** False when local commits or edits prevented a reused worktree from reaching the PR head. */
-  isOnPullRequestHead: Schema.Boolean.pipe(Schema.withDecodingDefaultKey(Effect.succeed(true))),
-});
-export type GitPreparePullRequestThreadResult = typeof GitPreparePullRequestThreadResult.Type;
-
 export const VcsSwitchRefResult = Schema.Struct({
   refName: Schema.NullOr(GitRefName),
 });
 export type VcsSwitchRefResult = typeof VcsSwitchRefResult.Type;
 
+const GitRetiredPrStep = Schema.Struct({ status: Schema.Literal("skipped_not_requested") });
 export const GitRunStackedActionResult = Schema.Struct({
   action: GitStackedAction,
   branch: Schema.Struct({
@@ -343,14 +294,16 @@ export const GitRunStackedActionResult = Schema.Struct({
     upstreamBranch: Schema.optional(GitRefName),
     setUpstream: Schema.optional(Schema.Boolean),
   }),
-  pr: Schema.Struct({
-    status: GitPrStepStatus,
-    url: Schema.optional(Schema.String),
-    number: Schema.optional(PositiveInt),
-    baseBranch: Schema.optional(GitRefName),
-    headBranch: Schema.optional(GitRefName),
-    title: Schema.optional(TrimmedNonEmptyStringSchema),
-  }),
+  /** Retired pull request step that older clients still require; an older server may report one. */
+  pr: Schema.Union([
+    GitRetiredPrStep,
+    Schema.Unknown.pipe(
+      Schema.decodeTo(GitRetiredPrStep, {
+        decode: SchemaGetter.succeed({ status: "skipped_not_requested" as const }),
+        encode: SchemaGetter.passthrough(),
+      }),
+    ),
+  ]),
   toast: GitRunStackedActionToast,
 });
 export type GitRunStackedActionResult = typeof GitRunStackedActionResult.Type;
@@ -425,25 +378,8 @@ export class GitManagerError extends Schema.TaggedError<GitManagerError>()("GitM
   }
 }
 
-export class GitPullRequestMaterializationError extends Schema.TaggedError<GitPullRequestMaterializationError>()(
-  "GitPullRequestMaterializationError",
-  {
-    cwd: TrimmedNonEmptyStringSchema,
-    pullRequestNumber: PositiveInt,
-    headRepository: Schema.NullOr(TrimmedNonEmptyStringSchema),
-    headBranch: GitRefName,
-    localBranch: GitRefName,
-    cause: Schema.Defect(),
-  },
-) {
-  override get message(): string {
-    return `Failed to materialize pull request #${this.pullRequestNumber} branch ${this.headBranch} as ${this.localBranch}.`;
-  }
-}
-
 export const GitManagerServiceError = Schema.Union([
   GitManagerError,
-  GitPullRequestMaterializationError,
   GitCommandError,
   SourceControlProviderError,
   TextGenerationError,

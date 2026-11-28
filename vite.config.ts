@@ -1,7 +1,6 @@
 import "vite-plus/test/config";
 import { defineConfig } from "vite-plus";
 import * as NodeURL from "node:url";
-import { cachedTestTasks } from "./scripts/lib/cached-tests.ts";
 
 const TEST_EXCLUDE = [
   "**/.ankiel/**",
@@ -96,7 +95,6 @@ export default defineConfig({
   run: {
     cache: taskCacheConfig,
     tasks: {
-      ...cachedTestTasks(process.env.ANKIEL_CACHED_TESTS),
       // The two knip passes read the same files and write nothing, so they run side by side.
       // The `knip:check` script runs this task, so `vp run knip:check` and `pnpm run knip:check` both use it.
       "knip:check:all": {

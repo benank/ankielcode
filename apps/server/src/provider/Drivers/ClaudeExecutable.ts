@@ -33,7 +33,7 @@ function isExistingFile(filePath: string): boolean {
   }
 }
 
-export const ClaudeExecutableFileCheck = Context.Reference<ExecutableFileCheck>(
+const ClaudeExecutableFileCheck = Context.Reference<ExecutableFileCheck>(
   "server/provider/Drivers/ClaudeExecutableFileCheck",
   {
     defaultValue: () => isExistingFile,

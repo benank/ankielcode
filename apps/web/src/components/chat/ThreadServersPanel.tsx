@@ -191,7 +191,6 @@ function ThreadServersList(props: ThreadServersPanelProps) {
             >
               <Tooltip>
                 <TooltipTrigger
-                  delay={200}
                   render={
                     <ThreadDetailsControl
                       size="sm"
@@ -333,7 +332,7 @@ function ThreadServersList(props: ThreadServersPanelProps) {
           }
           part="row"
           tone="muted"
-          className="w-full active:scale-100"
+          className="w-full"
         >
           {hiddenCount > 0 ? (
             <ChevronDownIcon aria-hidden className="size-4 shrink-0" />

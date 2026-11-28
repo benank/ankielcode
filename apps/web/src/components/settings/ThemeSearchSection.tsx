@@ -95,7 +95,7 @@ type SearchThemes = typeof searchOpenVsxThemes;
  * flight, and which key the shown results belong to. Aborting `signal` (the
  * dialog closing) cancels all of it, including an install.
  */
-export function createThemeSearch(
+function createThemeSearch(
   view: ThemeSearchView,
   signal: AbortSignal,
   search: SearchThemes = searchOpenVsxThemes,

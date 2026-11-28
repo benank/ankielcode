@@ -2,10 +2,6 @@ import { type AssistantCitation } from "@ankielcode/contracts";
 
 import { mathWrapperOf } from "../markdown-clipboard";
 
-export {
-  createAssistantTextSelector,
-  findAssistantCitationText,
-} from "@ankielcode/shared/assistantCitations";
 import {
   createAssistantTextSelector,
   findAssistantCitationText,

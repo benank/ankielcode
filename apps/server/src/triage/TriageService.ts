@@ -49,7 +49,7 @@ const describeClient = (client: AuthClientPresentationMetadata) =>
     .join(" ");
 
 /** Picks the release tag for `version`, or `main` when the build has no tag. */
-export const pickSourceRef = (lsRemoteOutput: string, version: string) => {
+const pickSourceRef = (lsRemoteOutput: string, version: string) => {
   const commits = new Map(
     lsRemoteOutput
       .split("\n")

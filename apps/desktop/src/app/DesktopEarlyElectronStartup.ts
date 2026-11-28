@@ -68,7 +68,7 @@ function resolveEarlyDesktopSettingsPath(input: {
   return input.joinPath(stateDir, "desktop-settings.json");
 }
 
-export function resolveEarlyLinuxPasswordStorePreference(
+function resolveEarlyLinuxPasswordStorePreference(
   input: EarlyDesktopSettingsInput,
 ): LinuxPasswordStorePreference {
   const settingsPath = resolveEarlyDesktopSettingsPath(input);

@@ -14,14 +14,14 @@ import { m } from "./i18n/messages";
 
 let cachedApi: LocalApi | undefined;
 
-export function createLocalApi(): LocalApi {
+function createLocalApi(): LocalApi {
   return {
     dialogs: {
       pickFolder: async (options) => {
         if (!window.desktopBridge) return null;
         return window.desktopBridge.pickFolder(options);
       },
-      confirm: async (message, options?: ConfirmDialogOptions) => {
+      confirm: async (message, options: ConfirmDialogOptions) => {
         return requestConfirmDialog(message, options) ?? false;
       },
     },

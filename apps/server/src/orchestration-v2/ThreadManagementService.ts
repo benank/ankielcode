@@ -65,7 +65,6 @@ import * as CommandReceiptStore from "./CommandReceiptStore.ts";
 import * as Orchestrator from "./Orchestrator.ts";
 import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
 import { projectedRowEncodedBytes } from "./threadHistoryPaging.ts";
-import { threadPullRequestsOf } from "../sourceControl/threadPullRequests.ts";
 import * as ProviderSessionManager from "./ProviderSessionManager.ts";
 import * as ThreadCommandExecutor from "./ThreadCommandExecutor.ts";
 import { DispatchModeLimit, exceededDispatchModeLimit } from "./DispatchModeLimit.ts";
@@ -1257,15 +1256,6 @@ const make = Effect.gen(function* () {
     const trySettle = Effect.gen(function* () {
       const sequence = yield* orchestrator.getThreadEventSequence(input.threadId);
       const records = yield* getProjectThreadRecords(input, ["runs"]);
-      // Settling ends every watch; one the agent started after asking to settle must outlive it.
-      if (
-        threadPullRequestsOf(records.thread).some(
-          (link) =>
-            link.watch !== undefined &&
-            !DateTime.isLessThan(DateTime.makeUnsafe(link.watch.startedAt), requestedAt),
-        )
-      )
-        return true;
       const later = records.runs.filter((candidate) => candidate.ordinal > run.ordinal);
       const cancelledMessageIds = later
         .filter((candidate) => candidate.status === "cancelled")
@@ -1781,7 +1771,6 @@ const make = Effect.gen(function* () {
       hasStoppableRun ||
       hasPendingRecovery ||
       child.thread.limitRecovery?.autoResume === true ||
-      (child.thread.pullRequests ?? []).some((link) => link.watch !== undefined) ||
       derivePendingBackgroundWork({
         latestRun,
         providerThreads: child.providerThreads,

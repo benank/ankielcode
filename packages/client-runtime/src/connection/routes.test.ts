@@ -8,7 +8,7 @@ import {
   type ConnectionRoute,
   SshConnectionProfile,
 } from "./catalog.ts";
-import { pullRequestRoutingConnectionKey } from "./pullRequestRoutingPermissions.ts";
+import { connectionEndpointKey } from "./connectionEndpointKey.ts";
 import { BearerConnectionTarget, SshConnectionTarget } from "./model.ts";
 import {
   connectionRouteId,
@@ -446,15 +446,15 @@ describe("learned routes", () => {
     expect(ids(routesAfterRemoving(overLan, "ssh-desk"))).toHaveLength(2);
   });
 
-  it("keeps pull request routing trust when a route is learned", () => {
+  it("keeps the saved endpoint key when a route is learned", () => {
     const learned = mergeLearnedRoutes({
       entry: lanOnly,
       activeRoute: LAN,
       reported: [{ httpBaseUrl: "https://desk.tail1234.ts.net/" }],
       allowInsecure: true,
     })!;
-    expect(pullRequestRoutingConnectionKey(entryWithRoutes(lanOnly, learned))).toBe(
-      pullRequestRoutingConnectionKey(lanOnly),
+    expect(connectionEndpointKey(entryWithRoutes(lanOnly, learned))).toBe(
+      connectionEndpointKey(lanOnly),
     );
   });
 

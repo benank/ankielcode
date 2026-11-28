@@ -41,7 +41,6 @@ import { useSearchableSetting } from "./settingsSearch";
 import { EnvironmentIconMenu } from "./EnvironmentIconPicker";
 import { FoldedSettingsSection } from "./FoldedSettingsSection";
 import { LoadBalancingSettings } from "./LoadBalancingSettings";
-import { PullRequestRoutingSettings } from "./PullRequestRoutingSettings";
 import { Input } from "../ui/input";
 import {
   Dialog,
@@ -730,7 +729,10 @@ function ConnectionsSettingsContent({
         "Remove {environment} from this device?\nThis forgets its pairing, credentials, and cached threads here. Switch it off instead to keep it saved.",
         { environment: environment.label },
       ),
-      { variant: "destructive" },
+      {
+        confirmLabel: gt("Remove", { $context: "verb, removes a saved backend" }),
+        destructive: true,
+      },
     );
     if (confirmed === true) await removeSavedBackend(environment);
   };
@@ -1686,7 +1688,6 @@ function ConnectionsSettingsContent({
         {savedEnvironments.length === 0 ? <EmptyRemoteEnvironments /> : null}
       </SettingsSection>
       <LoadBalancingSettings environments={loadBalancingEnvironments} />
-      <PullRequestRoutingSettings environments={loadBalancingEnvironments} />
     </SettingsPageContainer>
   );
 }

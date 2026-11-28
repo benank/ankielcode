@@ -45,7 +45,10 @@ export async function confirmTerminalClose(
             ),
           ].join("\n"),
       // Closing kills the terminal's processes and its history.
-      { variant: "destructive" },
+      {
+        confirmLabel: m(msg("Close", { $context: "button, closes a terminal" })),
+        destructive: true,
+      },
     );
   } catch {
     return false;

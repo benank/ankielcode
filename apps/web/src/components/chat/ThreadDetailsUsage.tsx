@@ -12,7 +12,7 @@ import {
 } from "@ankielcode/shared/usageLimits";
 import { formatDuration, limitsNotice } from "@ankielcode/shared/usageLimitsCopy";
 import { Link } from "@tanstack/react-router";
-import { msg, useGT, useLocale, useMessages } from "gt-react";
+import { msg, useGT, useMessages } from "gt-react";
 import type { ReactNode } from "react";
 
 import { usePrimarySettings } from "../../hooks/useSettings";
@@ -109,7 +109,6 @@ export function ThreadDetailsContext({ usage }: { readonly usage: ContextWindowS
       : null;
   const gt = useGT();
   const m = useMessages();
-  const locale = useLocale();
   const usedTokens = formatContextWindowTokens(usage.usedTokens);
   return (
     <ThreadDetailsSection
@@ -144,8 +143,8 @@ export function ThreadDetailsContext({ usage }: { readonly usage: ContextWindowS
               {maxTokens !== null ? (
                 <span className="text-muted-foreground">
                   {gt("{used} of {max} tokens", {
-                    used: usage.usedTokens.toLocaleString(locale),
-                    max: maxTokens.toLocaleString(locale),
+                    used: formatContextWindowTokens(usage.usedTokens),
+                    max: formatContextWindowTokens(maxTokens),
                   })}
                 </span>
               ) : null}

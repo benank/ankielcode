@@ -2,7 +2,6 @@ import { thrownErrorMessage } from "@ankielcode/client-runtime/errors";
 import { sourceControlInstallHintText } from "@ankielcode/client-runtime/contract-labels";
 import { msg, T, useGT, useMessages, Var } from "gt-react";
 import { m, type MessageResolver } from "../i18n/messages";
-import { changeRequestTermKind } from "./pullRequest/changeRequestTerm";
 import { ThreadDetailsControl } from "./chat/ThreadDetailsControl";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import {
@@ -466,7 +465,7 @@ interface PublishRepositoryDialogProps {
   readonly offeredProviders: OfferedSourceControlProviders | undefined;
 }
 
-export function PublishRepositoryDialog(props: PublishRepositoryDialogProps) {
+function PublishRepositoryDialog(props: PublishRepositoryDialogProps) {
   const gt = useGT();
   const messages = useMessages();
   const openLink = useOpenLink(props.threadRef);
@@ -1062,7 +1061,6 @@ function CheckoutGitActionsControl({
   });
   const { data: gitStatus, error: gitStatusError } = gitStatusQuery;
   const sourceControlPresentation = getSourceControlPresentation(gitStatus?.sourceControlProvider);
-  const changeRequestTerminology = sourceControlPresentation.terminology;
   const SourceControlIcon = sourceControlPresentation.Icon;
   const isRepo = gitStatus?.isRepo ?? true;
   const hasPrimaryRemote = gitStatus?.hasPrimaryRemote ?? false;
@@ -1145,7 +1143,6 @@ function CheckoutGitActionsControl({
   const quickAction = resolveQuickAction(
     gitStatusForActions,
     isGitActionRunning,
-    isDefaultRef,
     hasPrimaryRemote,
     messages,
   );
@@ -1169,7 +1166,6 @@ function CheckoutGitActionsControl({
           action: pendingDefaultBranchAction.action,
           branchName: pendingDefaultBranchAction.branchName,
           includesCommit: pendingDefaultBranchAction.includesCommit,
-          terminology: changeRequestTerminology,
         },
         messages,
       )
@@ -1212,8 +1208,7 @@ function CheckoutGitActionsControl({
     const actionStatus = statusOverride ?? gitStatusForActions;
     const actionBranch = actionStatus?.refName ?? null;
     const actionIsDefaultBranch = featureBranch ? false : isDefaultRef;
-    const actionCanCommit =
-      action === "commit" || action === "commit_push" || action === "commit_push_pr";
+    const actionCanCommit = action === "commit" || action === "commit_push";
     const includesCommit =
       actionCanCommit &&
       (action === "commit" || !!actionStatus?.hasWorkingTreeChanges || featureBranch);
@@ -1222,14 +1217,6 @@ function CheckoutGitActionsControl({
       requiresDefaultBranchConfirmation(action, actionIsDefaultBranch) &&
       actionBranch
     ) {
-      if (
-        action !== "push" &&
-        action !== "create_pr" &&
-        action !== "commit_push" &&
-        action !== "commit_push_pr"
-      ) {
-        return false;
-      }
       setPendingDefaultBranchAction({
         action,
         branchName: actionBranch,
@@ -1278,14 +1265,9 @@ function CheckoutGitActionsControl({
     const actionResult = result.value;
     const branchUpdate = resolveThreadBranchUpdate(actionResult);
     if (branchUpdate) branchFollower?.follow(branchUpdate.branch);
-    const createdPullRequest = actionResult.pr.status === "created";
     setInlineSuccess({
-      title: createdPullRequest
-        ? gt("Created {term, select, mr {MR} cr {change request} other {PR}}", {
-            term: changeRequestTermKind(changeRequestTerminology),
-          })
-        : actionResult.toast.title,
-      description: createdPullRequest ? null : (actionResult.toast.description ?? null),
+      title: actionResult.toast.title,
+      description: actionResult.toast.description ?? null,
       expiresAtMs: inlineSuccessExpiresAt(),
     });
     return true;
@@ -1395,10 +1377,6 @@ function CheckoutGitActionsControl({
     if (item.disabled) return;
     if (item.dialogAction === "push") {
       void runGitActionWithToast({ action: "push" });
-      return;
-    }
-    if (item.dialogAction === "create_pr") {
-      void runGitActionWithToast({ action: "create_pr" });
       return;
     }
     setExcludedFiles(new Set());
@@ -1544,10 +1522,7 @@ function CheckoutGitActionsControl({
       ) : null}
       {isDetachedHead && (
         <p className="px-2 py-1.5 text-xs text-muted-foreground">
-          {gt(
-            "Detached HEAD: create and check out a branch to enable push and {term, select, mr {merge request} cr {change request} other {pull request}} actions.",
-            { term: changeRequestTermKind(changeRequestTerminology) },
-          )}
+          <T>Detached HEAD: create and check out a branch to enable push.</T>
         </p>
       )}
       {isCleanAndBehind && (

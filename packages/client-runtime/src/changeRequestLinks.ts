@@ -1,9 +1,4 @@
-import type {
-  EnvironmentId,
-  ProjectId,
-  PullRequestRef,
-  RepositoryIdentity,
-} from "@ankielcode/contracts";
+import type { EnvironmentId, ProjectId, RepositoryIdentity } from "@ankielcode/contracts";
 import type { ChangeRequestLink } from "@ankielcode/source-control-core/shared/definition";
 
 import { sourceControlClients } from "./sourceControlClients.ts";
@@ -96,37 +91,6 @@ export function resolveChangeRequestLinkTarget<Project extends ChangeRequestProj
     repository: link.repository,
     number: link.number,
     host: link.authority ?? link.host,
-  };
-}
-
-export function resolvePullRequestPreviewTarget({
-  environmentId,
-  projects,
-  pullRequestsEnabled,
-  url,
-}: {
-  environmentId: EnvironmentId | null;
-  projects: ReadonlyArray<ChangeRequestProject>;
-  pullRequestsEnabled: boolean;
-  url: string;
-}): { environmentId: EnvironmentId; input: PullRequestRef } | null {
-  if (!pullRequestsEnabled || environmentId === null) return null;
-  const parsed = sourceControlClients.parseChangeRequestUrl(url)?.link;
-  if (parsed === undefined) return null;
-  const project = findProjectForChangeRequest(
-    projects.filter((candidate) => candidate.environmentId === environmentId),
-    parsed,
-  );
-  if (project === undefined) return null;
-  return {
-    environmentId,
-    input: {
-      projectId: project.id,
-      host: parsed.authority ?? parsed.host,
-      repository:
-        sourceControlClients.repositorySelector(project.repositoryIdentity) ?? parsed.repository,
-      number: parsed.number,
-    },
   };
 }
 

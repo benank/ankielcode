@@ -68,7 +68,7 @@ export class ServerSelfUpdate extends Context.Service<
  * updates can go. The boot service says so through its IPC context. The SSH launcher and the
  * install script's `ankiel` start this home's pinned runtime directly, without one.
  */
-export const pruneRuntimesOnStart = Effect.fn("cloud.server_self_update.prune_on_start")(
+const pruneRuntimesOnStart = Effect.fn("cloud.server_self_update.prune_on_start")(
   function* (input: { readonly baseDir: string; readonly managed: boolean }) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -109,7 +109,7 @@ export const pruneRuntimesOnStart = Effect.fn("cloud.server_self_update.prune_on
 /** The client checks this when planning; the host checks again because its database may have
  * moved on since (another client updated it). Stable and Nightly each build their own commits,
  * so crossing tracks needs the target release to know every migration this database holds. */
-export function trackSwitchBlockReason(input: {
+function trackSwitchBlockReason(input: {
   readonly serverVersion: string;
   readonly targetVersion: string;
   readonly targetDatabaseMigration: number | undefined;
@@ -126,7 +126,7 @@ export function trackSwitchBlockReason(input: {
     : null;
 }
 
-export const make = Effect.fn("cloud.server_self_update.make")(function* () {
+const make = Effect.fn("cloud.server_self_update.make")(function* () {
   const serverConfig = yield* ServerConfig.ServerConfig;
   const desktopAppUpdate = yield* DesktopAppUpdate.DesktopAppUpdate;
   const launcher = yield* ServiceLauncherClient.ServiceLauncherClient;

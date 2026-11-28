@@ -35,7 +35,7 @@ type WatchSystemColorScheme = (onChange: (scheme: LinuxColorScheme) => void) => 
   readonly stop: () => void;
 };
 
-export const makeWith = Effect.fn("ElectronTheme.make")(function* (
+const makeWith = Effect.fn("ElectronTheme.make")(function* (
   watchSystemColorScheme: WatchSystemColorScheme | undefined,
 ) {
   let source: DesktopTheme = Electron.nativeTheme.themeSource;

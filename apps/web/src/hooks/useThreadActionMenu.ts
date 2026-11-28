@@ -49,7 +49,11 @@ import { threadRuntimeCanArchive } from "@ankielcode/client-runtime/state/models
 import { useCopyToClipboard } from "./useCopyToClipboard";
 import { useNewThreadHandler } from "./useHandleNewThread";
 import { useClientSettings } from "./useSettings";
-import { canTurnThreadIntoProject, useThreadActions } from "./useThreadActions";
+import {
+  canTurnThreadIntoProject,
+  readThreadReadToggle,
+  useThreadActions,
+} from "./useThreadActions";
 
 function failureToast(title: string, error: unknown) {
   toastManager.add(
@@ -87,6 +91,7 @@ export function useThreadActionMenu(input: {
     setThreadAutoSettle,
     archiveThread,
     deleteThread,
+    markThreadRead,
     markThreadUnread,
     turnThreadIntoProject,
   } = useThreadActions();
@@ -136,6 +141,7 @@ export function useThreadActionMenu(input: {
       };
       const isRegeneratingTitle = thread.titleRegeneration != null;
       const snoozePresets = resolveSnoozePresets(now, timestampFormat, threadRef.environmentId);
+      const readToggle = readThreadReadToggle(thread);
       const items = buildThreadActionMenuItems({
         canOperate: readEnvironmentScope(threadRef.environmentId, AuthOrchestrationOperateScope),
         canFind: onFind !== undefined,
@@ -148,7 +154,7 @@ export function useThreadActionMenu(input: {
         canSnoozeNow: canSnooze(thread, { now: now.toISOString() }),
         isRegeneratingTitle,
         isRunning: !threadRuntimeCanArchive(thread.runtime),
-        hasCompletedRun: thread.latestRun?.completedAt != null,
+        readToggle: readToggle?.kind ?? null,
         supports,
         snoozePresets,
         canTurnIntoProject: canTurnThreadIntoProject(threadRef),
@@ -265,6 +271,9 @@ export function useThreadActionMenu(input: {
           if (toast) toastManager.add(toast);
           return;
         }
+        case "mark-read":
+          if (readToggle?.kind === "mark-read") markThreadRead(threadRef, readToggle.visitedAt);
+          return;
         case "mark-unread":
           markThreadUnread(threadRef);
           return;
@@ -313,7 +322,10 @@ export function useThreadActionMenu(input: {
         case "archive": {
           if (confirmThreadArchive) {
             const confirmed = await settlePromise(() =>
-              api.dialogs.confirm(m(msg('Archive thread "{title}"?', { title: thread.title }))),
+              api.dialogs.confirm(m(msg('Archive thread "{title}"?', { title: thread.title })), {
+                confirmLabel: m(msg("Archive", { $context: "verb, archives a thread" })),
+                destructive: false,
+              }),
             );
             if (confirmed._tag === "Failure" || !confirmed.value) return;
           }
@@ -341,7 +353,10 @@ export function useThreadActionMenu(input: {
                   m(msg('Delete thread "{title}"?', { title: thread.title })),
                   m(msg("This permanently clears conversation history for this thread.")),
                 ].join("\n"),
-                { variant: "destructive" },
+                {
+                  confirmLabel: m(msg("Delete", { $context: "verb, deletes a thread" })),
+                  destructive: true,
+                },
               ),
             );
             if (confirmed._tag === "Failure" || !confirmed.value) return;

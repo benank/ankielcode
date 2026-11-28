@@ -15,9 +15,9 @@ import {
 import type { EnvironmentProject } from "@ankielcode/client-runtime/state/shell";
 import type { EnvironmentId } from "@ankielcode/contracts";
 import { useShallow } from "zustand/react/shallow";
-import { cn } from "~/lib/utils";
+import { cn, isMacPlatform } from "~/lib/utils";
 import { useTerminalLabelsByThreadKey } from "~/state/terminalSessions";
-import { resolveSidebarRowAccessibility } from "../Sidebar.logic";
+import { resolveSidebarRowAccessibility, sidebarRowKeyAction } from "../Sidebar.logic";
 import { ProjectFavicon, type ProjectFaviconProject } from "../ProjectFavicon";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import {
@@ -119,7 +119,10 @@ const SidebarDraftRow = memo(function SidebarDraftRow(props: {
       event.preventDefault();
       const rect = event.currentTarget.getBoundingClientRect();
       onContextMenu(draftId, { x: rect.left, y: rect.bottom }, "keyboard");
-    } else if (event.key === "Enter" || event.key === " ") {
+    } else if (
+      event.key === "Enter" ||
+      sidebarRowKeyAction(event, isMacPlatform(navigator.platform)) === "open"
+    ) {
       event.preventDefault();
       onNavigate(draftId);
     }
@@ -137,14 +140,14 @@ const SidebarDraftRow = memo(function SidebarDraftRow(props: {
     <li className="list-none py-0.5">
       <div
         role="button"
-        tabIndex={0}
+        tabIndex={-1}
         data-sidebar-row={`draft:${draftId}`}
         aria-label={accessibility.label}
         aria-current={accessibility.current}
         data-testid="sidebar-draft-row"
         className={cn(
           "group/sidebar-row relative w-full cursor-pointer overflow-hidden rounded-md text-left text-sidebar-foreground outline-none select-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-          props.isActive ? "bg-sidebar-row-active" : "hover:bg-sidebar-row-hover",
+          props.isActive && "bg-sidebar-row-active",
         )}
         onClick={handleActivate}
         onContextMenu={handleContextMenu}

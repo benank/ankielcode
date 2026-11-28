@@ -255,7 +255,7 @@ const TASKS = [
   { key: "textGenerationModelSelection", label: msg("Thread titles and other generated text") },
   {
     key: "sourceControlWriterModelSelection",
-    label: msg("Commit messages, pull requests, and branch names"),
+    label: msg("Commit messages and branch names"),
   },
   { key: "speechPostProcessingModelSelection", label: msg("Voice transcript cleanup") },
 ] as const;

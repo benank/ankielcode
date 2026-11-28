@@ -31,18 +31,20 @@ const TERMINAL_GLYPH_FALLBACKS =
   '"Symbols Nerd Font Mono", "Symbols Nerd Font", "JetBrainsMono Nerd Font", ' +
   '"JetBrainsMono NF", "FiraCode Nerd Font", "Hack Nerd Font", "MesloLGS NF", ' +
   '"CaskaydiaCove Nerd Font", "PowerlineSymbols", monospace';
-// The platform's own monospace faces; concrete names only, because an
-// unknown keyword (like ui-monospace) makes canvas font shorthand parsing
-// reject the whole string.
+// The bundled Geist Mono, then the platform's own monospace faces; concrete
+// names only, because an unknown keyword (like ui-monospace) makes canvas font
+// shorthand parsing reject the whole string.
 const DEFAULT_TERMINAL_FONT_FAMILY =
-  '"SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", ' + TERMINAL_GLYPH_FALLBACKS;
+  '"Geist Mono Variable", "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", ' +
+  TERMINAL_GLYPH_FALLBACKS;
 const CONTENT_PADDING = 4;
 const MIN_SCROLLBAR_THUMB_HEIGHT = 18;
 const CURSOR_BLINK_INTERVAL_MS = 500;
 const TERMINAL_LINK_HOVER_DELAY_MS = 250;
 /** End an unterminated synchronized update instead of freezing the last frame. */
 const SYNCHRONIZED_OUTPUT_RENDER_TIMEOUT_MS = 500;
-const TERMINAL_FONT_LOAD_TEXT = "iMW0@# .";
+// Box drawing sits in a separate unicode-range subset of the bundled mono font.
+const TERMINAL_FONT_LOAD_TEXT = "iMW0@# .─";
 const TERMINAL_FONT_LOAD_VARIANTS = [
   "normal 400",
   "normal 700",
@@ -133,7 +135,7 @@ function shouldBlinkTerminalCursor(state: {
   return state.focused && state.cursorBlinking && state.cursorVisible && !state.reducedMotion;
 }
 
-export function terminalContentOriginY(
+function terminalContentOriginY(
   mountHeight: number,
   padding: number,
   rows: number,
@@ -255,7 +257,7 @@ function terminalColumnAtOffset(row: GhosttySnapshot["rowData"][number], offset:
   return Math.max(0, row.cells.length - 1);
 }
 
-export function terminalLinkAtPositionWithRange(
+function terminalLinkAtPositionWithRange(
   rows: GhosttySnapshot["rowData"],
   rowIndex: number,
   column: number,
@@ -316,7 +318,7 @@ export function terminalLinkAtPositionWithRange(
   return null;
 }
 
-export function isTerminalCopyShortcut(
+function isTerminalCopyShortcut(
   event: Pick<KeyboardEvent, "altKey" | "code" | "ctrlKey" | "key" | "metaKey" | "shiftKey">,
   platform = navigator.platform,
 ) {
@@ -329,7 +331,7 @@ export function isTerminalCopyShortcut(
 }
 
 /** Primes native and Electron menu copy from the focused textarea; canvas has no DOM selection. */
-export function primeTerminalCopyInput(
+function primeTerminalCopyInput(
   input: Pick<HTMLTextAreaElement, "value" | "select">,
   selection: string,
 ): void {
@@ -338,7 +340,7 @@ export function primeTerminalCopyInput(
   input.select();
 }
 
-export function clearPrimedTerminalCopyInput(
+function clearPrimedTerminalCopyInput(
   input: Pick<HTMLTextAreaElement, "value">,
   primedSelection: string,
 ): void {
@@ -347,7 +349,7 @@ export function clearPrimedTerminalCopyInput(
   input.value = "";
 }
 
-export function applyTerminalCopyEvent(
+function applyTerminalCopyEvent(
   selection: string,
   clipboardData: { setData: (type: string, data: string) => void } | null | undefined,
 ): { preventDefault: boolean; claimWriteFallback: boolean } {
@@ -383,7 +385,7 @@ function isTerminalCompositionCommitInput(event: Pick<InputEvent, "inputType">):
   );
 }
 
-export function isTerminalCompositionKey(
+function isTerminalCompositionKey(
   event: Pick<KeyboardEvent, "isComposing" | "key" | "keyCode">,
   composing: boolean,
 ): boolean {
@@ -404,7 +406,7 @@ function shouldReportTerminalMouse(
 type TerminalMouseAction = "press" | "release" | "motion";
 type TerminalMouseReport = ReturnType<GhosttyTerminalCore["encodeMouse"]>;
 
-export function resolveTerminalMouseData(
+function resolveTerminalMouseData(
   action: TerminalMouseAction,
   report: TerminalMouseReport,
   previousMotionData: TerminalMouseReport | null,
@@ -431,7 +433,7 @@ function resolveTerminalMouseTrackingState(
   };
 }
 
-export function terminalWheelDeltaRows(
+function terminalWheelDeltaRows(
   event: Pick<WheelEvent, "deltaY" | "deltaMode">,
   cellHeight: number,
   viewportRows: number,
@@ -452,11 +454,7 @@ export function terminalWheelDeltaRows(
 const SELECTION_AUTOSCROLL_RAMP_PX = 50;
 const SELECTION_AUTOSCROLL_MAX_ROWS = 15;
 
-export function terminalSelectionAutoscrollRows(
-  clientY: number,
-  top: number,
-  bottom: number,
-): number {
+function terminalSelectionAutoscrollRows(clientY: number, top: number, bottom: number): number {
   const distance = clientY < top ? clientY - top : clientY > bottom ? clientY - bottom : 0;
   if (distance === 0) return 0;
   const ramp = Math.max(-1, Math.min(1, distance / SELECTION_AUTOSCROLL_RAMP_PX));
@@ -502,7 +500,7 @@ export interface TerminalSelectionClickSequence {
 
 const TERMINAL_LINK_DRAG_THRESHOLD_PX = 4;
 
-export function advanceTerminalSelectionClickSequence(
+function advanceTerminalSelectionClickSequence(
   previous: TerminalSelectionClickSequence | null,
   event: Pick<PointerEvent, "clientX" | "clientY" | "timeStamp">,
 ): TerminalSelectionClickSequence {

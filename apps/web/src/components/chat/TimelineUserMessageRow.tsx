@@ -29,7 +29,7 @@ import { useQuietThreadShell } from "../../state/entities";
 import { useEnvironmentQuery } from "../../state/query";
 import { serverEnvironment } from "../../state/server";
 import { replaceComposerContextReferences } from "@ankielcode/shared/composerContextReferences";
-import { memo, use, useState, type ReactNode } from "react";
+import { memo, use, useState, type ComponentProps, type ReactNode } from "react";
 import {
   createMessageAttachmentPreviewProjector,
   selectMessageImageResources,
@@ -57,6 +57,7 @@ import { Button, InlineButton } from "../ui/button";
 import { FreshSessionRow, ModelSwitchRow } from "./V2LifecycleRow";
 import { useAssetUrlRefresh, useAssetUrls, useAssetUrlState } from "../../assets/assetUrls";
 import { AttachmentImage } from "../media/AttachmentImage";
+import { useMediaDrag } from "../media/useMediaDrag";
 import { MediaVideoPlayer } from "../media/MediaVideoPlayer";
 import {
   buildAttachmentVideoAsset,
@@ -199,6 +200,15 @@ function UserFileCard({
       )}
     </div>
   );
+}
+
+/** A sent image, which drags out of the app as a file rather than as its signed URL. */
+function DraggableAttachmentImage(props: ComponentProps<typeof AttachmentImage>) {
+  const drag = useMediaDrag(
+    { kind: "image", name: props.name, src: props.src ?? null },
+    props.name,
+  );
+  return <AttachmentImage {...props} {...drag} />;
 }
 
 function UserVideoAttachment({
@@ -772,7 +782,7 @@ function UserTimelineRow({ row }: { row: Extract<TimelineRow, { kind: "message" 
                 }}
               >
                 {/* Isolate the thumbnail raster from nearby activity repaints in Chromium. */}
-                <AttachmentImage
+                <DraggableAttachmentImage
                   name={image.name}
                   mimeType={image.mimeType}
                   src={image.previewUrl}

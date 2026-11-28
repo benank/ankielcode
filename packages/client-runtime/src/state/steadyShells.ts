@@ -49,7 +49,7 @@ export interface SteadyShellsState {
   readonly releaseAt: number | null;
 }
 
-export const EMPTY_STEADY_SHELLS_STATE: SteadyShellsState = { shells: new Map(), releaseAt: null };
+const EMPTY_STEADY_SHELLS_STATE: SteadyShellsState = { shells: new Map(), releaseAt: null };
 
 /**
  * Decides which snapshot of each environment a thread list shows. New server rows wait for
@@ -57,7 +57,7 @@ export const EMPTY_STEADY_SHELLS_STATE: SteadyShellsState = { shells: new Map(),
  * environment that has one: at once when no other owes its rows, else when the window ends.
  * Returns `previous` itself when nothing changes.
  */
-export function stepSteadyShells(
+function stepSteadyShells(
   previous: SteadyShellsState,
   inputs: ReadonlyArray<SteadyShellInput>,
   now: number,

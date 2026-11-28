@@ -224,11 +224,7 @@ function sameColor(left: GhosttyColor, right: GhosttyColor): boolean {
 }
 
 /** Bounds String.fromCodePoint arguments for cells with enormous combining-mark sequences. */
-export function ghosttyCellText(
-  codepointView: DataView,
-  graphemeLength: number,
-  byteOffset = 0,
-): string {
+function ghosttyCellText(codepointView: DataView, graphemeLength: number, byteOffset = 0): string {
   if (graphemeLength === 1) return String.fromCodePoint(codepointView.getUint32(byteOffset, true));
   const CHUNK_SIZE = 4_096;
   let text = "";

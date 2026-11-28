@@ -246,6 +246,7 @@ export function WorkflowRunFeed({
     setBusy(true);
     const confirmed = await (requestConfirmDialog(
       gt("Cancel {title}? Its agents stop and the run cannot be resumed.", { title: run.title }),
+      { confirmLabel: gt("Stop"), destructive: true },
     ) ?? Promise.resolve(false));
     if (!confirmed) return setBusy(false);
     const result = await cancel(target);

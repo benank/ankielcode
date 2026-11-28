@@ -472,7 +472,6 @@ export interface ComposerDraftWorkspaceSelection {
   readonly branch: string | null;
   readonly worktreePath: string | null;
   readonly startFromOrigin?: boolean;
-  readonly pullRequestReference?: string;
   /**
    * Local mode chosen before refs named the current branch. It is never cleared when refs load:
    * a local task runs on the checkout, so the draft keeps following it (a later checkout change
@@ -501,7 +500,6 @@ const ComposerDraftWorkspaceSelectionSchema = Schema.Struct({
   branch: Schema.NullOr(Schema.String),
   worktreePath: Schema.NullOr(Schema.String),
   startFromOrigin: Schema.optional(Schema.Boolean),
-  pullRequestReference: Schema.optional(Schema.String),
   followsCurrentCheckout: Schema.optional(Schema.Boolean),
   repositories: Schema.optional(Schema.Array(Schema.String)),
 });
@@ -1288,8 +1286,6 @@ export async function removeDeliveredCloudQueuedMessage(
           (editor.workspaceSelection.mode !== message.creation?.workspaceMode ||
             editor.workspaceSelection.branch !== message.creation?.branch ||
             editor.workspaceSelection.worktreePath !== message.creation?.worktreePath ||
-            editor.workspaceSelection.pullRequestReference !==
-              message.creation?.pullRequestReference ||
             (editor.workspaceSelection.startFromOrigin ?? false) !==
               (message.creation?.startFromOrigin ?? false) ||
             JSON.stringify(editor.workspaceSelection.repositories) !==
@@ -2042,7 +2038,6 @@ export function createNewTaskDraft(project: {
 export function retargetNewTaskDraft(
   draftKey: string,
   project: { readonly environmentId: EnvironmentId; readonly projectId: ProjectId },
-  options?: { readonly keepPullRequestWorkspace?: boolean },
 ): void {
   updateComposerDrafts((current) => {
     const existing = current[draftKey];
@@ -2054,12 +2049,7 @@ export function retargetNewTaskDraft(
     ) {
       return current;
     }
-    const { workspaceSelection, ...retained } = normalizeDraft(existing);
-    // The PR checkout is recreated on the target machine, so only the old local path is dropped.
-    const keptWorkspaceSelection =
-      options?.keepPullRequestWorkspace && workspaceSelection?.pullRequestReference !== undefined
-        ? { ...workspaceSelection, worktreePath: null }
-        : undefined;
+    const { workspaceSelection: _workspaceSelection, ...retained } = normalizeDraft(existing);
     // Keep bytes across environment moves but drop server-specific upload stamps.
     const attachments = retained.attachments.map((attachment) =>
       attachment.uploadEnvironmentId !== undefined &&
@@ -2071,7 +2061,6 @@ export function retargetNewTaskDraft(
       ...current,
       [draftKey]: {
         ...retained,
-        ...(keptWorkspaceSelection ? { workspaceSelection: keptWorkspaceSelection } : {}),
         attachments,
         project: {
           environmentId: project.environmentId,

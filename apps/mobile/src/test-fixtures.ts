@@ -13,7 +13,7 @@ import * as DateTime from "effect/DateTime";
 
 const DEFAULT_TIMESTAMP = "2026-01-01T00:00:00.000Z";
 
-export function makeRawThreadShell(
+function makeRawThreadShell(
   input: Partial<OrchestrationV2ThreadShell> = {},
 ): OrchestrationV2ThreadShell {
   const id = input.id ?? ThreadId.make("thread-test");

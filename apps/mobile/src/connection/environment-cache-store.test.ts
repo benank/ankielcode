@@ -15,16 +15,13 @@ import {
   TurnItemId,
   type OrchestrationV2ShellSnapshot,
   type OrchestrationV2ThreadDetailSnapshot,
-  type ThreadPullRequestLink,
 } from "@ankielcode/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
-import * as Logger from "effect/Logger";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import * as TestClock from "effect/testing/TestClock";
 
 import * as MobileDatabase from "../persistence/mobile-database";
 import { make } from "./environment-cache-store";
@@ -568,80 +565,40 @@ describe("mobile SQLite environment cache store", () => {
     }),
   );
 
-  it.effect("returns cached threads before their pull request links, which load after", () =>
+  it.effect("loads a shell an older build cached with pull request links, without them", () =>
     Effect.gen(function* () {
       const memory = makeDatabase();
       const store = yield* make().pipe(
         Effect.provideService(MobileDatabase.MobileDatabase, memory.database),
       );
-      const link: ThreadPullRequestLink = {
-        host: "github.com",
-        repository: "benank/ankielcode",
-        number: 42,
-        url: "https://github.com/benank/ankielcode/pull/42",
-        source: "agent",
-        linkedAt: "2026-07-29T12:00:00.000Z",
-        snapshot: null,
-        stack: null,
-      };
-      const linked = { ...SHELL_SNAPSHOT.threads[0]!, pullRequests: [link] };
-      const unlinked = { ...SHELL_SNAPSHOT.threads[0]!, id: ThreadId.make("thread-2") };
+      const second = { ...SHELL_SNAPSHOT.threads[0]!, id: ThreadId.make("thread-2") };
       yield* store.saveShell(ENVIRONMENT_ID, {
         ...SHELL_SNAPSHOT,
-        threads: [linked, unlinked],
-      });
-
-      const shell = Option.getOrThrow(yield* store.loadShell(ENVIRONMENT_ID));
-      expect(shell.threads.map((thread) => thread.pullRequests)).toEqual([undefined, undefined]);
-      const links = yield* Effect.forkChild(shell.loadPullRequests!);
-      yield* TestClock.adjust("1 millis");
-      expect([...(yield* Fiber.join(links))]).toEqual([[THREAD_ID, [link]]]);
-    }),
-  );
-
-  it.effect("keeps cached threads when their pull request links cannot be read", () => {
-    const messages: Array<unknown> = [];
-    const logger = Logger.make(({ message }) => {
-      messages.push(message);
-    });
-    return Effect.gen(function* () {
-      const memory = makeDatabase();
-      const store = yield* make().pipe(
-        Effect.provideService(MobileDatabase.MobileDatabase, memory.database),
-      );
-      const link: ThreadPullRequestLink = {
-        host: "github.com",
-        repository: "benank/ankielcode",
-        number: 5,
-        url: "https://github.com/benank/ankielcode/pull/5",
-        source: "agent",
-        linkedAt: "2026-07-29T12:00:00.000Z",
-        snapshot: null,
-        stack: null,
-      };
-      const readable = {
-        ...SHELL_SNAPSHOT.threads[0]!,
-        id: ThreadId.make("thread-2"),
-        pullRequests: [link],
-      };
-      yield* store.saveShell(ENVIRONMENT_ID, {
-        ...SHELL_SNAPSHOT,
-        threads: [SHELL_SNAPSHOT.threads[0]!, readable],
+        threads: [SHELL_SNAPSHOT.threads[0]!, second],
       });
       const id = cacheId(ENVIRONMENT_ID, "shell", "snapshot");
       const payload = JSON.parse(memory.values.get(id)!);
       payload.snapshot.threads[0].pullRequests = [{ number: -1 }];
+      payload.snapshot.threads[1].pullRequests = [
+        {
+          host: "github.com",
+          repository: "benank/ankielcode",
+          number: 42,
+          url: "https://github.com/benank/ankielcode/pull/42",
+          source: "agent",
+          linkedAt: "2026-07-29T12:00:00.000Z",
+          snapshot: null,
+          stack: null,
+        },
+      ];
       memory.values.set(id, JSON.stringify(payload));
 
       const shell = Option.getOrThrow(yield* store.loadShell(ENVIRONMENT_ID));
-      expect(shell.threads.map((thread) => thread.id)).toEqual([THREAD_ID, readable.id]);
-      const links = yield* Effect.forkChild(shell.loadPullRequests!);
-      yield* TestClock.adjust("1 millis");
-      expect([...(yield* Fiber.join(links))]).toEqual([[readable.id, [link]]]);
-      expect(messages).toHaveLength(1);
+      expect(shell.threads.map((thread) => thread.id)).toEqual([THREAD_ID, second.id]);
+      expect(shell.threads.map((thread) => "pullRequests" in thread)).toEqual([false, false]);
       expect(memory.removed).toEqual([]);
-    }).pipe(Effect.provide(Logger.layer([logger], { mergeWithExisting: false })));
-  });
+    }),
+  );
 
   it.effect("does not write a save that a removal, clear, or newer save overtook", () =>
     Effect.gen(function* () {

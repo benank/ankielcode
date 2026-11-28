@@ -2,7 +2,6 @@ import {
   resolveDefaultBranchActionDialogCopy,
   type DefaultBranchConfirmableAction,
 } from "@ankielcode/client-runtime/state/vcs";
-import { sourceControlClients } from "@ankielcode/client-runtime/source-control-clients";
 import { resolveAutoFeatureBranchName } from "@ankielcode/shared/git";
 import * as Arr from "effect/Array";
 import * as Result from "effect/Result";
@@ -35,12 +34,7 @@ type GitConfirmSheetProps = StaticScreenProps<
   } & GitRepositoryRouteParams
 >;
 
-const CONFIRMABLE_ACTIONS: ReadonlyArray<DefaultBranchConfirmableAction> = [
-  "push",
-  "create_pr",
-  "commit_push",
-  "commit_push_pr",
-];
+const CONFIRMABLE_ACTIONS: ReadonlyArray<DefaultBranchConfirmableAction> = ["push", "commit_push"];
 
 export function GitConfirmSheet(props: GitConfirmSheetProps) {
   const gt = useGT();
@@ -51,7 +45,7 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
   const gitState = useSelectedThreadGitState(repository);
   const gitActions = useSelectedThreadGitActions(repository);
   const { canWriteSourceControl, canCreateFeatureBranch } = gitActions;
-  const { selectedThread, selectedThreadProject } = useThreadSelection();
+  const { selectedThread } = useThreadSelection();
   const threadWorktree = useSelectedThreadWorktree();
   const selectedThreadCwd = repository?.cwd ?? threadWorktree.selectedThreadCwd;
   // The Git controls that opened this sheet already hold the checkout's status subscription.
@@ -63,18 +57,13 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
         })
       : null,
   );
-  const terminology = sourceControlClients.get(
-    repository === undefined
-      ? selectedThreadProject?.repositoryIdentity?.provider
-      : gitStatus.data?.sourceControlProvider?.kind,
-  ).changeRequest;
 
   const params = props.route.params;
 
   // The route only names the action; what the sheet says about it comes from the checkout.
   const confirmAction = CONFIRMABLE_ACTIONS.find((action) => action === params.confirmAction);
   const branchName = gitStatus.data?.refName ?? null;
-  const includesCommit = confirmAction === "commit_push" || confirmAction === "commit_push_pr";
+  const includesCommit = confirmAction === "commit_push";
   const environmentId = params.environmentId ?? "";
   const threadId = params.threadId ?? "";
 
@@ -86,12 +75,11 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
               action: confirmAction,
               branchName,
               includesCommit,
-              terminology,
             },
             messages,
           )
         : null,
-    [branchName, confirmAction, includesCommit, messages, terminology],
+    [branchName, confirmAction, includesCommit, messages],
   );
 
   const continuePendingAction = async () => {

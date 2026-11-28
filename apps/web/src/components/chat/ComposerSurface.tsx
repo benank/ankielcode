@@ -21,6 +21,8 @@ function Shell({
         "before:pointer-events-none before:absolute before:inset-0 before:z-0 before:rounded-2xl before:bg-(--chat-composer-glass-surface)/(--glass-opacity) before:backdrop-blur-(--glass-blur) before:backdrop-saturate-(--glass-saturation)",
         "not-supports-[((backdrop-filter:blur(1px))_or_(-webkit-backdrop-filter:blur(1px)))]:before:bg-(--chat-composer-glass-surface)",
         "has-data-[composer-banner-surface=attached]:before:hidden",
+        // A working turn or a moving feed would re-blur every frame; the glass turns opaque instead.
+        "data-working:[--glass-blur:0px] data-working:[--glass-opacity:100%] [[data-timeline-scrolling]_&]:[--glass-blur:0px] [[data-timeline-scrolling]_&]:[--glass-opacity:100%]",
         // With a context row below, the card paints its own glass (see Host) so the row stays bare.
         "data-context-row:before:hidden",
         className,

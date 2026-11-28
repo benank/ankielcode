@@ -42,14 +42,6 @@ export function keepOrderedListNumbers(node: MarkdownListNode, source: string): 
 
 const enabledProcessors = new WeakSet<object>();
 
-/**
- * Opts a processor in. User messages use it so the sent bubble shows the numbers the composer
- * showed and the agent received; agent replies and files keep CommonMark numbering.
- */
-export function remarkEnableOrderedListNumbers(this: object): undefined {
-  enabledProcessors.add(this);
-}
-
 export function keepsOrderedListNumbers(processor: object): boolean {
   return enabledProcessors.has(processor);
 }

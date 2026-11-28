@@ -16,7 +16,7 @@ import { isThreadManagementError, threadManagementFailure } from "../../Orchestr
 import { dispatchFailure, newCommandId, readThread, unavailable } from "../../threadAccess.ts";
 import { AttachmentToolkit } from "./tools.ts";
 
-export function resolveAttachmentReferences(
+function resolveAttachmentReferences(
   requested: ReadonlyArray<ChatAttachment>,
   stored: ReadonlyArray<ChatAttachment>,
 ) {

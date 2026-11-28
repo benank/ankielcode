@@ -65,18 +65,14 @@ repository at a time. Pick it from the repository picker next to the source pick
 lists every repository the thread reaches, including ones no turn has touched, so edits you made by
 hand show up too.
 
-## Commit, push, and open pull requests
+## Commit and push
 
 Git actions run in one repository at a time.
 
 - **Desktop:** the thread details panel lists the repositories the thread changed, most
-  recent first, each with its branch and uncommitted changes. Expand one to commit, push, or open a
-  pull request there. **Other repositories...** adds any other repository of the project.
+  recent first, each with its branch and uncommitted changes. Expand one to commit or push there. **Other repositories...** adds any other repository of the project.
 - **Mobile:** open **Git controls** in the thread. The sheet lists the repositories under
-  **Repositories**; tap one for its own commit, push, and pull request actions.
-
-A pull request opened in a repository is linked to the thread under that repository, not under the
-project's.
+  **Repositories**; tap one for its own commit and push actions.
 
 ## Worktree threads
 

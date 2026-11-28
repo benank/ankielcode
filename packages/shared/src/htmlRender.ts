@@ -224,17 +224,17 @@ export function htmlRenderTheme(
 export const HTML_RENDER_THEME_GUIDE = [
   "Use theme CSS variables on :root, not fixed colors:",
   "--background, --foreground, --muted, --card, --popover, --secondary, --border, --ring, --primary, --accent, --destructive, --warning, --success, --info, --code-background",
-  "(most have a matching -foreground; accent, destructive, and warning also have -surface),",
+  "(most have -foreground; accent, destructive, and warning also -surface),",
   "--chart-1 to --chart-6, --radius, --font-sans, --font-mono.",
   "The base sheet sets background, text, and font.",
 ].join(" ");
 
 export const HTML_RENDER_LAYOUT_GUIDE = [
   `Frame width is reply width (${HTML_RENDER_COLUMN_WIDTH}px desktop, about 360px phones), on the thread background.`,
-  "Leave html, body, and the outer element with no background color, no outer card, border, banner title, or side padding. This wins over any rule that sets a page background.",
-  "Ankiel adds an overridable 8px html gutter for selection rings and shadows. Use fluid widths within it.",
-  "A box that needs its own background gets 16px padding and var(--radius) corners. Give charts fixed pixel heights.",
-  "Let content set the height. Do not use vh units or height:100% on html or body. Both are rejected or loop.",
+  "Give html, body, and the outer element no background color, outer card, border, banner title, or side padding; this beats any rule that sets a page background.",
+  "Ankiel adds an overridable 8px html gutter for selection rings and shadows; use fluid widths within it.",
+  "A box with its own background gets 16px padding and var(--radius) corners. Give charts fixed pixel heights.",
+  "Let content set the height: vh units or height:100% on html or body are rejected or loop.",
 ].join(" ");
 
 const HOST_CONTEXT_CHANGED_METHOD = "ui/notifications/host-context-changed";

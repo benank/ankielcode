@@ -83,7 +83,7 @@ export function useUsageLimitRecoveryBannerItem(
   return usageLimitRecoveryBannerItem({ ...props, resetPassed, displayPassed }, resolve);
 }
 
-export function usageLimitRecoveryBannerItem(
+function usageLimitRecoveryBannerItem(
   props: RecoveryProps,
   resolve: MessageResolver = m,
 ): ComposerBannerStackItem {

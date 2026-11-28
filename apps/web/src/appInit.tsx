@@ -26,7 +26,6 @@ import { startMainAppLocationTracking } from "./components/sidebar/mainAppLocati
 import { startDesktopUpdateLaunchNotice } from "./components/sidebar/updateEverythingRun";
 import { startSlowRpcRequestToasts } from "./components/SlowRpcRequestToastCoordinator";
 import { startThreadNotifications } from "./components/ThreadNotificationCoordinator";
-import { startGuideRunNotifications } from "./components/pullRequest/guide/PullRequestGuideRunCoordinator";
 import { APP_BASE_NAME, APP_DISPLAY_NAME, APP_STAGE_LABEL } from "./branding";
 import { resolveServerBackedAppDisplayName, resolveWindowTitle } from "./branding.logic";
 import { isElectron } from "./env";
@@ -48,6 +47,10 @@ import {
 import { syncBrowserChromeTheme } from "./hooks/useTheme";
 import { startThreadVisitedMigration } from "./hooks/useThreadVisitedMigration";
 import { installDesktopPasteAsText } from "./lib/desktopPasteAsText";
+import { startDesktopRecentThreads } from "./lib/desktopRecentThreads";
+import { trackLowPower } from "./lib/lowPower";
+import { installEnvironmentReconnect } from "./connection/reconnect";
+import { trackWindowFocus } from "./lib/visibleAnimation";
 import {
   syncDocumentElectronPlatformClasses,
   syncDocumentWindowControlsOverlayClass,
@@ -63,6 +66,7 @@ import { m } from "./i18n/messages";
 import { startI18n, subscribeI18n } from "./i18n/runtime";
 import { guardDomAgainstPageTranslation } from "./lib/pageTranslationGuard";
 import { installCommandPaletteCommands } from "./shortcuts/commandPaletteCommands";
+import { installDesktopMenuState } from "./shortcuts/desktopMenuState";
 import { registerOpenFavoriteEditorCommand } from "./components/chat/OpenInPickerShortcut";
 import { environmentThreadShells, threadEnvironment } from "./state/threads";
 import { resolveActiveThreadRouteRef, resolveThreadRouteTarget } from "./threadRoutes";
@@ -259,6 +263,9 @@ export function startAppServices(): AppRouter {
     syncDocumentWindowControlsOverlayClass();
   }
 
+  trackWindowFocus();
+  trackLowPower(window.desktopBridge);
+  installEnvironmentReconnect();
   installDesktopPasteAsText(window.desktopBridge, window);
   guardDomAgainstPageTranslation();
 
@@ -277,6 +284,7 @@ export function startAppServices(): AppRouter {
   startBrowserProfileReporting();
   installChatRouteCommands(router);
   installCommandPaletteCommands(router);
+  installDesktopMenuState(router);
   registerOpenFavoriteEditorCommand();
   startThreadOverlayRetention(router);
   // Drafts promote as their server threads arrive, wherever the user is.
@@ -293,7 +301,7 @@ export function startAppServices(): AppRouter {
     pendingThreadIdsAtom: threadEnvironment.pendingThreadIdsAtom,
   });
   startMainAppLocationTracking(router);
-  startWorkspaceFocus(router);
+  startWorkspaceFocus();
   startBackgroundThreadAnnouncements(appAtomRegistry, router);
   startThreadVisitedMigration(appAtomRegistry);
   startSshPasswordPromptQueue();
@@ -304,7 +312,7 @@ export function startAppServices(): AppRouter {
   startLegacyThreadMigrationToast();
   startPermissionUpdateNotices(router);
   startThreadNotifications(appAtomRegistry, router);
-  startGuideRunNotifications(appAtomRegistry, router);
+  startDesktopRecentThreads(window.desktopBridge, appAtomRegistry, router);
   if (isElectron) startDesktopUpdateLaunchNotice();
 
   return router;

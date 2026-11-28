@@ -34,7 +34,7 @@ const decodeMetadata = Schema.decodeUnknownSync(Schema.fromJsonString(Metadata))
 
 type SetupPaths = { readonly bundle: string; readonly dataHome: string };
 
-export async function installGnomeCaptureBundle({ bundle, dataHome }: SetupPaths) {
+async function installGnomeCaptureBundle({ bundle, dataHome }: SetupPaths) {
   const metadata = decodeMetadata(
     await NodeFSP.readFile(NodePath.join(bundle, "metadata.json"), "utf8"),
   );
