@@ -81,3 +81,36 @@ final class IssuesUITests: HomeUITestCase {
     XCTAssertFalse(app.buttons["issues.done"].exists, "Issues closed first")
   }
 }
+
+/// The live gate (RN `issuesSupportedAtom`): home's menu has Issues exactly when the dev server
+/// has GitHub integration on. Set it first (`ankiel-probe --set-github on|off`) and pass the
+/// expectation as `TEST_RUNNER_ANKIEL_TEST_ISSUES=shown|hidden`; skips otherwise.
+final class LiveIssuesGateUITests: HomeUITestCase {
+  func testMenuFollowsGitHubIntegration() async throws {
+    guard let expected = ProcessInfo.processInfo.environment["ANKIEL_TEST_ISSUES"] else {
+      throw XCTSkip("Set TEST_RUNNER_ANKIEL_TEST_ISSUES to shown or hidden.")
+    }
+    let url = URL(string: "http://127.0.0.1:14527/.well-known/ankiel/environment")!
+    guard (try? await URLSession.shared.data(from: url)) != nil else {
+      throw XCTSkip("The dev server is not running.")
+    }
+    launch()
+    // Wait for the live rows, so the computer's settings have arrived.
+    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'thread.'")).firstMatch.waitForExistence(timeout: 30))
+    let more = app.buttons["home.more"]
+    XCTAssertTrue(more.waitForExistence(timeout: 10))
+    more.tap()
+    let issues = app.buttons["home.issues"]
+    if expected == "shown" {
+      XCTAssertTrue(issues.waitForExistence(timeout: 5), "Issues shows with GitHub integration on")
+      shot("issues-gate-shown")
+      issues.tap()
+      XCTAssertTrue(app.buttons["issues.done"].waitForExistence(timeout: 10))
+      shot("issues-live-list")
+    } else {
+      XCTAssertTrue(app.buttons["home.workflows"].waitForExistence(timeout: 5), "the menu is open")
+      XCTAssertFalse(issues.exists, "Issues hides with GitHub integration off")
+      shot("issues-gate-hidden")
+    }
+  }
+}

@@ -430,6 +430,10 @@ integration on for that read and back off if it was off (it changes the server's
 | `ANKIEL_DEBUG_ISSUES`      | `fixture`, `empty`, `fail` | Canned synthetic issues (about a made-up project) instead of a computer, none, or a refusal. |
 | `ANKIEL_DEBUG_ISSUES_OPEN` | `list`, `detail`           | Opens Issues over home, or (with `fixture`) its first issue.                                 |
 
+`LiveIssuesGateUITests` checks home's menu against the dev server: set the gate first with
+`ankiel-probe --set-github on|off`, run it with `TEST_RUNNER_ANKIEL_TEST_ISSUES=shown|hidden`, and
+put the setting back afterwards; it skips without that variable.
+
 ## Sharing & access
 
 A computer's page has **Sharing & access** (web Settings "Sharing & access"; RN has no screen):
