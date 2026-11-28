@@ -11,12 +11,19 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "../../..");
-const output = join(here, "../Packages/AnkielKit/Sources/AnkielKit/Theme/ThemePalettes.generated.swift");
+const output = join(
+  here,
+  "../Packages/AnkielKit/Sources/AnkielKit/Theme/ThemePalettes.generated.swift",
+);
 
 const mobile = await import(join(repo, "apps/mobile/src/lib/mobileTheme.ts"));
 const { mixThemePreviewBase } = await import(join(repo, "packages/shared/src/themePreview.ts"));
-const { getMobileThemeVariables, getMobileThemeColors, getMobileThemePreviewColors, MOBILE_THEME_OPTIONS } =
-  mobile;
+const {
+  getMobileThemeVariables,
+  getMobileThemeColors,
+  getMobileThemePreviewColors,
+  MOBILE_THEME_OPTIONS,
+} = mobile;
 
 /** Native role ← RN variable (or `raw:<role>` for a theme color RN's variables do not expose). */
 const ROLES = {

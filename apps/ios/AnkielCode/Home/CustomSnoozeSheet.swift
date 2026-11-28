@@ -15,7 +15,7 @@ struct CustomSnoozeSheet: View {
 
   var body: some View {
     NavigationStack {
-      ThemedList(background: Palette.sheet) {
+      ThemedList(background: Palette.sheet, form: true) {
         Picker("Snooze mode", selection: $mode) {
           Text("Date and time").tag(Mode.date)
           Text("Duration").tag(Mode.duration)

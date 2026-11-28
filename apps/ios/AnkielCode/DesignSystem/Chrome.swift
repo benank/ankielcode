@@ -55,11 +55,17 @@ extension View {
 struct ThemedList<Content: View>: View {
   var background = Palette.canvas
   var rows = Palette.groupedRow
+  /// A `Form` (editors and pickers) rather than a `List`.
+  var form = false
   @ViewBuilder var content: Content
 
   var body: some View {
-    List {
-      Group { content }.listRowBackground(rows)
+    Group {
+      if form {
+        Form { Group { content }.listRowBackground(rows) }
+      } else {
+        List { Group { content }.listRowBackground(rows) }
+      }
     }
     .themedList(background)
   }

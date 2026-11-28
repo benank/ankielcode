@@ -165,20 +165,20 @@ struct ReviewScreen: View {
   private func fileList(_ diff: ReviewDiff, selection: Binding<String?>?) -> some View {
     let list = List(selection: selection) {
       Group {
-      if diff.truncated || review.selected?.turn?.repositories.contains(where: \.baselineMissing) == true {
+        if diff.truncated || review.selected?.turn?.repositories.contains(where: \.baselineMissing) == true {
+          Section {
+            notices(diff)
+          }
+        }
         Section {
-          notices(diff)
+          ForEach(files) { file in
+            row(file, selection: selection)
+          }
+        } header: {
+          if let subtitle = review.selected.flatMap(ReviewCopy.subtitle) {
+            Text(verbatim: subtitle).textCase(nil)
+          }
         }
-      }
-      Section {
-        ForEach(files) { file in
-          row(file, selection: selection)
-        }
-      } header: {
-        if let subtitle = review.selected.flatMap(ReviewCopy.subtitle) {
-          Text(verbatim: subtitle).textCase(nil)
-        }
-      }
       }
       .themedRows()
     }

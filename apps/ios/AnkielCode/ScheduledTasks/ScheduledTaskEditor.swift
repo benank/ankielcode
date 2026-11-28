@@ -51,7 +51,7 @@ struct ScheduledTaskEditor: View {
 
   var body: some View {
     NavigationStack {
-      ThemedList(background: Palette.sheet) {
+      ThemedList(background: Palette.sheet, form: true) {
         if editing.task == nil, tasks.computers.count > 1 {
           Picker("Runs on", selection: $environmentId) {
             ForEach(tasks.computers) { Text($0.label).tag($0.id) }

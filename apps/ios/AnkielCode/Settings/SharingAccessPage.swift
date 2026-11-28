@@ -412,7 +412,7 @@ struct CreatePairingLinkSheet: View {
 
   var body: some View {
     NavigationStack {
-      ThemedList(background: Palette.sheet) {
+      ThemedList(background: Palette.sheet, form: true) {
         Section {
           TextField("Name", text: $name, prompt: Text("e.g. Living room iPad"))
             .submitLabel(.done)

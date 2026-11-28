@@ -18,7 +18,7 @@ struct PairingLinkView: View {
 
   var body: some View {
     NavigationStack {
-      ThemedList(background: Palette.sheet) {
+      ThemedList(background: Palette.sheet, form: true) {
         Section {
           PasteButton(payloadType: String.self) { strings in
             guard let first = strings.first else { return }
